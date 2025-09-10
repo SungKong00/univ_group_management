@@ -126,3 +126,8 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 *.lnk
+
+####################################
+# Context system artifacts
+####################################
+context/_meta/backup_*

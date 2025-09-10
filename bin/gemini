@@ -1,0 +1,253 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
+TASKS_DIR="$ROOT_DIR/tasks"
+TEMPLATE_MD="$TASKS_DIR/template.md"
+GEMINI_ENV_CMD="${GEMINI_CLI:-}"
+
+slugify() {
+  # Lowercase, replace spaces and non-alnum with dash, trim dashes
+  local input="$*"
+  local slug
+  slug=$(echo "$input" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+  echo "$slug"
+}
+
+ensure_prereqs() {
+  mkdir -p "$TASKS_DIR" "$ROOT_DIR/.gemini" "$ROOT_DIR/context" "$TASKS_DIR/archive"
+  if [[ ! -f "$TEMPLATE_MD" ]]; then
+    echo "[gemini] Missing tasks/template.md. Creating a minimal template..." >&2
+    mkdir -p "$TASKS_DIR"
+    cat > "$TEMPLATE_MD" <<'EOF'
+# TASK
+
+## 작업 목표
+- [ ] 목표 요약:
+- [ ] 성공 기준:
+
+## 컨텍스트 요청 (태그, 파일, 영역)
+- 태그:
+- 관련 소스/디렉토리:
+
+## 개발 지시 (Claude Code용)
+- 본 섹션은 Claude가 실행할 상세 지시를 포함합니다.
+
+## 작업 로그
+- YYYY-MM-DD HH:MM [Agent] 내용
+
+## 변경 사항 요약
+- 생성/수정 파일:
+- 핵심 로직:
+
+## 컨텍스트 업데이트 요청
+- 영구 컨텍스트에 반영할 내용:
+EOF
+  fi
+  if [[ ! -f "$ROOT_DIR/.gemini/metadata.json" ]]; then
+    cat > "$ROOT_DIR/.gemini/metadata.json" <<'EOF'
+{
+  "version": 1,
+  "project": "univ_group_management",
+  "last_updated": null,
+  "static_context": {
+    "include": [
+      "context/**/*.md"
+    ],
+    "exclude": [
+      "context/CHANGELOG.md"
+    ]
+  }
+}
+EOF
+  fi
+}
+
+create_task() {
+  ensure_prereqs
+  if [[ $# -lt 1 ]]; then
+    echo "Usage: gemini task new \"<title>\"" >&2
+    exit 1
+  fi
+  local title="$*"
+  local date_prefix
+  date_prefix=$(date +%Y-%m-%d)
+  local slug
+  slug=$(slugify "$title")
+  local folder="$TASKS_DIR/${date_prefix}-${slug}"
+  if [[ -e "$folder" ]]; then
+    # ensure uniqueness by suffix
+    local n=2
+    while [[ -e "${folder}-${n}" ]]; do n=$((n+1)); done
+    folder="${folder}-${n}"
+  fi
+  mkdir -p "$folder"
+  cp "$TEMPLATE_MD" "$folder/TASK.MD"
+  printf "# SYNTHESIZED CONTEXT\n\n(아직 생성되지 않음. 'gemini task run-context' 실행)\n" > "$folder/SYNTHESIZED_CONTEXT.MD"
+  echo "[gemini] Created task: $folder"
+}
+
+detect_task_dir() {
+  # If inside a task dir (contains TASK.MD), use that; else error
+  local dir
+  dir="$(pwd)"
+  if [[ -f "$dir/TASK.MD" ]]; then
+    echo "$dir"
+    return 0
+  fi
+  # Fallback: if current dir is repo root and only one active task folder exists, choose it
+  if [[ -d "$TASKS_DIR" ]]; then
+    local candidates
+    mapfile -t candidates < <(find "$TASKS_DIR" -maxdepth 1 -mindepth 1 -type d ! -name archive)
+    if [[ ${#candidates[@]} -eq 1 && -f "${candidates[0]}/TASK.MD" ]]; then
+      echo "${candidates[0]}"
+      return 0
+    fi
+  fi
+  echo "[gemini] Could not detect task directory. Run inside a task folder (with TASK.MD)." >&2
+  exit 1
+}
+
+build_synthesis_input() {
+  local task_dir="$1"
+  local input_dir="$task_dir/synthesis_input"
+  mkdir -p "$input_dir"
+
+  # Gather static context files (simple glob approach)
+  local -a files=()
+  while IFS= read -r -d '' f; do files+=("$f"); done < <(find "$ROOT_DIR/context" -type f -name "*.md" -print0 2>/dev/null || true)
+
+  # Create CONTEXT_SOURCES.md and INPUT_CONTEXT.md
+  {
+    echo "# Context Sources"
+    echo
+    for f in "${files[@]}"; do
+      rel="${f#$ROOT_DIR/}"
+      echo "- $rel"
+    done
+  } > "$input_dir/CONTEXT_SOURCES.md"
+
+  {
+    echo "# Input Context"
+    echo
+    for f in "${files[@]}"; do
+      rel="${f#$ROOT_DIR/}"
+      echo "\n---\n## File: $rel\n"
+      cat "$f"
+      echo
+    done
+  } > "$input_dir/INPUT_CONTEXT.md"
+
+  # Build a prompt for Gemini
+  cat > "$input_dir/PROMPT.md" <<'EOF'
+You are Gemini CLI acting as a Context Synthesizer for a specific task folder.
+
+Goal:
+- Read the task goals and constraints from TASK.MD.
+- Read the project static context from INPUT_CONTEXT.md.
+- Optionally scan referenced code files if explicitly mentioned.
+- Produce a tailored, concise SYNTHESIZED_CONTEXT.MD for this task with:
+  - Objectives & constraints summary
+  - Relevant architecture/principles extracted from static context
+  - APIs, modules, and files likely involved
+  - Risks, edge cases, and test ideas
+  - Clear do/don't for coding style and patterns
+
+Output format:
+- A single Markdown document suitable to drop into SYNTHESIZED_CONTEXT.MD
+EOF
+
+  echo "[gemini] Built synthesis input under: $input_dir"
+}
+
+run_context() {
+  ensure_prereqs
+  local task_dir
+  task_dir="$(detect_task_dir)"
+
+  build_synthesis_input "$task_dir"
+
+  local prompt_file="$task_dir/synthesis_input/PROMPT.md"
+  local input_context="$task_dir/synthesis_input/INPUT_CONTEXT.md"
+  local task_md="$task_dir/TASK.MD"
+  local out_file="$task_dir/SYNTHESIZED_CONTEXT.MD"
+
+  if [[ -n "$GEMINI_ENV_CMD" ]] && command -v "$GEMINI_ENV_CMD" >/dev/null 2>&1; then
+    echo "[gemini] Detected GEMINI_CLI=$GEMINI_ENV_CMD. Attempting synthesis..."
+    # Generic invocation; adjust flags to your local Gemini CLI if needed
+    # We concatenate prompt + task + input context as a single prompt.
+    tmp_prompt="$(mktemp)"
+    {
+      cat "$prompt_file"
+      echo -e "\n\n---\n# TASK.MD\n\n"
+      cat "$task_md"
+      echo -e "\n\n---\n# PROJECT CONTEXT\n\n"
+      cat "$input_context"
+    } > "$tmp_prompt"
+    if "$GEMINI_ENV_CMD" generate --model "gemini-1.5-pro" --input-file "$tmp_prompt" > "$out_file" 2>"$task_dir/synthesis_input/gemini.log"; then
+      echo "[gemini] Wrote synthesized context: $out_file"
+    else
+      echo "[gemini] Gemini CLI call failed. See $task_dir/synthesis_input/gemini.log" >&2
+      echo "[gemini] Leaving a placeholder in $out_file" >&2
+      printf "# SYNTHESIZED CONTEXT (manual)\n\nGemini CLI 실행 실패. PROMPT.md와 INPUT_CONTEXT.md를 참조하여 수동 생성 필요." > "$out_file"
+    fi
+    rm -f "$tmp_prompt"
+  else
+    echo "[gemini] GEMINI_CLI not set or not found. Skipping auto-generation."
+    echo "[gemini] To enable, export GEMINI_CLI (e.g., 'export GEMINI_CLI=gemini')."
+  fi
+}
+
+complete_task() {
+  ensure_prereqs
+  local task_dir
+  task_dir="$(detect_task_dir)"
+  local base
+  base="$(basename "$task_dir")"
+  local dest="$TASKS_DIR/archive/$base"
+  if [[ -e "$dest" ]]; then
+    local n=2
+    while [[ -e "${dest}-${n}" ]]; do n=$((n+1)); done
+    dest="${dest}-${n}"
+  fi
+  # Touch context changelog with a line linking the task
+  mkdir -p "$ROOT_DIR/context"
+  {
+    echo "- $(date -u +%Y-%m-%dT%H:%M:%SZ) archived task: tasks/archive/$base"
+  } >> "$ROOT_DIR/context/CHANGELOG.md"
+  mv "$task_dir" "$dest"
+  echo "[gemini] Archived task to: $dest"
+}
+
+usage() {
+  cat <<EOF
+gemini - helper CLI for AI Agent workflow
+
+Usage:
+  gemini task new "<title>"      Create a new task folder from template
+  gemini task run-context         Build synthesis input and invoke Gemini CLI if configured
+  gemini task complete            Archive current task and append to context changelog
+
+Environment:
+  GEMINI_CLI   External Gemini CLI command (e.g., 'gemini')
+EOF
+}
+
+main() {
+  local cmd="${1:-}"; shift || true
+  case "$cmd" in
+    task)
+      local sub="${1:-}"; shift || true
+      case "$sub" in
+        new) create_task "$@" ;;
+        run-context) run_context ;;
+        complete) complete_task ;;
+        *) usage; exit 1 ;;
+      esac
+      ;;
+    *) usage; exit 1 ;;
+  esac
+}
+
+main "$@"
+

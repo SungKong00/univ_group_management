@@ -1,14 +1,22 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
-    id 'org.springframework.boot' version '3.5.5'
-    id 'io.spring.dependency-management' version '1.1.7'
-    id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.25'
+    id("org.jetbrains.kotlin.jvm") version "1.9.25"
+    id("org.jetbrains.kotlin.plugin.spring") version "1.9.25"
+    id("org.springframework.boot") version "3.5.5"
+    id("io.spring.dependency-management") version "1.1.7"
+    id("org.jetbrains.kotlin.plugin.jpa") version "1.9.25"
+
+    // Ktlint 플러그인
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+
+    // Detekt 플러그인 (호환성 문제로 일시 비활성화)
+    // id("io.gitlab.arturbosch.detekt") version "1.23.7"
 }
 
-group = 'org.castleKong'
-version = '0.0.1-SNAPSHOT'
-description = 'backend'
+group = "org.castleKong"
+version = "0.0.1-SNAPSHOT"
+description = "backend"
 
 java {
     toolchain {
@@ -21,34 +29,40 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
-    implementation 'org.jetbrains.kotlin:kotlin-reflect'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'com.h2database:h2'
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Spring Boot Starters
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+
+    // Kotlin & Jackson
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+    // Springdoc OpenAPI (Swagger UI)
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+
+    // Database
+    runtimeOnly("com.h2database:h2") // 테스트 및 로컬 개발용
+    runtimeOnly("org.postgresql:postgresql") // 프로덕션 DB 드라이버 (PostgreSQL 기준)
+
+    // Developer Tools
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+    // Test
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
 }
 
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll '-Xjsr305=strict'
-    }
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
 
-allOpen {
-    annotation 'jakarta.persistence.Entity'
-    annotation 'jakarta.persistence.MappedSuperclass'
-    annotation 'jakarta.persistence.Embeddable'
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
+// detekt {
+//     config.setFrom(files("detekt.yml")) // Detekt 설정 파일 경로 지정
+// }
