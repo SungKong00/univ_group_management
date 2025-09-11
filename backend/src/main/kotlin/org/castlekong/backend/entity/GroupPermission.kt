@@ -1,0 +1,19 @@
+package org.castlekong.backend.entity
+
+enum class GroupPermission {
+    GROUP_MANAGE,
+    MEMBER_VIEW,
+    MEMBER_APPROVE,
+    MEMBER_KICK,
+    ROLE_MANAGE,
+    CHANNEL_READ,
+    CHANNEL_WRITE,
+    POST_CREATE,
+    POST_UPDATE_OWN,
+    POST_DELETE_OWN,
+    POST_DELETE_ANY,
+    RECRUITMENT_CREATE,
+    RECRUITMENT_UPDATE,
+    RECRUITMENT_DELETE,
+}
+

@@ -12,7 +12,7 @@
 
 | 기능 | Endpoint | 인증 | 요청 Body | 성공 응답 (data) |
 | --- | --- | --- | --- | --- |
-| **회원가입** | `POST /auth/signup` | 불필요 | `{ "email", "name", "nickname", "userRole", "department", "studentId" }` | `{ "userId", "nickname" }` |
+| **회원가입** | `POST /auth/signup` | 불필요 | `{ "email", "name", "nickname", "globalRole", "department", "studentId" }` | `{ "userId", "nickname" }` |
 | **구글 로그인/가입** | `POST /auth/google` | 불필요 | `{ "googleAuthToken": "..." }` | `{ "accessToken": "..." }` |
 | **내 정보 조회** | `GET /users/me` | **필수** | (없음) | `{ "userId", "email", "nickname", ... }` |
 
@@ -52,9 +52,19 @@ Sheets로 내보내기
 
 | 기능 | Endpoint | 인증 | 요청 Body | 성공 응답 (data) | 권한 |
 | --- | --- | --- | --- | --- | --- |
-| **커스텀 역할 생성** | `POST /groups/{groupId}/roles` | **필수** | `{ "name", "permissions": ["...", "..."] }` | `{ "roleId", "name", ... }` | 그룹장/지도교수 |
+| **커스텀 역할 생성** | `POST /groups/{groupId}/roles` | **필수** | `{ "name", "permissions": ["...", "..."] }` | `{ "roleId", "name", ... }` | 그룹장/지도교수(또는 ROLE_MANAGE) |
 | **그룹 내 역할 목록** | `GET /groups/{groupId}/roles` | **필수** | (없음) | `[ { "roleId", "name" } ]` | 그룹 멤버 |
-| **멤버 역할 변경** | `PUT /groups/{groupId}/members/{userId}/role` | **필수** | `{ "roleId": ... }` | `null` | 그룹장/지도교수 |
+| **멤버 역할 변경** | `PUT /groups/{groupId}/members/{userId}/role` | **필수** | `{ "roleId": ... }` | `null` | 그룹장/지도교수(또는 ROLE_MANAGE) |
+
+—
+
+#### 권한 검사 표준화
+- `@PreAuthorize("hasPermission(#groupId, 'GROUP', '<PERMISSION>')")` 형태로 통일
+- 예: 가입신청 처리 → `<PERMISSION> = MEMBER_APPROVE`, 멤버 강퇴 → `MEMBER_KICK`
+
+#### 전역 역할(GlobalRole) 입력 정책
+- `globalRole` 허용 값: `STUDENT`, `PROFESSOR`, `ADMIN`
+- JWT `auth`에는 `ROLE_STUDENT|ROLE_PROFESSOR|ROLE_ADMIN`로 매핑되어 포함됨
 
 Sheets로 내보내기
 

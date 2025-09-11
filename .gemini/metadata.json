@@ -1,7 +1,48 @@
 {
   "version": 1,
   "project": "univ_group_management",
-  "last_updated": null,
+  "last_updated": "2025-09-11T18:30:00Z",
+  "tags": [
+    "auth",
+    "jwt", 
+    "spring-security",
+    "authentication",
+    "oauth2",
+    "google",
+    "user-management",
+    "api-security",
+    "permission-evaluator",
+    "rbac",
+    "group-permissions",
+    "global-role",
+    "frontend-sync",
+    "backend-only",
+    "partial-implementation",
+    "mvp",
+    "kotlin",
+    "spring-boot",
+    "h2-database",
+    "flutter",
+    "mobile",
+    "dart",
+    "ui-ux",
+    "clean-architecture",
+    "provider",
+    "dio",
+    "material-design",
+    "state-management",
+    "repository-pattern",
+    "context",
+    "architecture",
+    "api-conventions",
+    "coding-standards",
+    "security",
+    "testing",
+    "development-environment",
+    "exception-handling",
+    "validation",
+    "test-fixes"
+  ],
   "static_context": {
     "include": [
       "context/**/*.md"
@@ -9,6 +50,44 @@
     "exclude": [
       "context/CHANGELOG.md"
     ]
-  }
+  },
+  "recent_tasks": [
+    {
+      "date": "2025-09-11",
+      "title": "웹 인증 상태 이슈 해결 (뒤로가기/새로고침/로그아웃)",
+      "tags": ["flutter", "web", "auth-bugfix", "routing", "logout", "token-storage"],
+      "status": "completed",
+      "notes": "context/frontend-auth-web-error-archive.md 문서화 및 DI/라우팅/가드/로그아웃 개선 반영"
+    },
+    {
+      "date": "2025-09-11",
+      "title": "테스트 실패 문제 해결 및 예외 처리 아키텍처 개선",
+      "tags": ["testing", "exception-handling", "validation", "test-fixes", "quality-assurance"],
+      "status": "completed"
+    },
+    {
+      "date": "2025-09-11",
+      "title": "GlobalRole 및 Group PermissionEvaluator 도입, 컨텍스트/프론트 동기화",
+      "tags": ["auth", "rbac", "permission-evaluator", "context-sync", "frontend-sync"],
+      "status": "completed"
+    },
+    {
+      "date": "2025-09-11",
+      "title": "백엔드-컨텍스트 파일 간 불일치 수정 및 구현 상태 동기화",
+      "tags": ["context-sync", "documentation", "backend-analysis", "mvp"],
+      "status": "completed"
+    },
+    {
+      "date": "2025-09-11",
+      "title": "Flutter 프론트엔드 개발 - 백엔드 API 연동 대학 그룹 관리 앱",
+      "tags": ["flutter", "mobile", "auth", "ui-ux", "clean-architecture"],
+      "status": "completed"
+    },
+    {
+      "date": "2025-09-10",
+      "title": "JWT 기반 로그인 API 구현",
+      "tags": ["auth", "jwt", "spring-security"],
+      "status": "completed"
+    }
+  ]
 }
-

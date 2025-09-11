@@ -43,6 +43,15 @@ dependencies {
     // Springdoc OpenAPI (Swagger UI)
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 
+    // JWT
+    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+    implementation("io.jsonwebtoken:jjwt-impl:0.12.6")
+    implementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
+    // Google API Client for OAuth2 token verification
+    implementation("com.google.api-client:google-api-client:2.2.0")
+    implementation("com.google.oauth-client:google-oauth-client:1.34.1")
+
     // Database
     runtimeOnly("com.h2database:h2") // 테스트 및 로컬 개발용
     runtimeOnly("org.postgresql:postgresql") // 프로덕션 DB 드라이버 (PostgreSQL 기준)
@@ -53,14 +62,28 @@ dependencies {
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+    
+    // MockK for Kotlin
+    testImplementation("io.mockk:mockk:1.13.12")
+    testImplementation("com.ninja-squad:springmockk:4.0.2")
+    
+    // AssertJ (이미 spring-boot-starter-test에 포함되어 있지만 명시적으로 추가)
+    testImplementation("org.assertj:assertj-core")
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions {
+        freeCompilerArgs += "-Xjsr305=strict"
+        jvmTarget = "17"
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
+    options.encoding = "UTF-8"
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
+tasks.named("test").configure {
+    useJUnitPlatform()
 }
 
 // detekt {
