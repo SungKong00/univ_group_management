@@ -25,14 +25,21 @@ This document outlines the current database schema implementation status.
 | `id` | BIGINT | **PK**, Auto Increment | 사용자 고유 번호 |
 | `email` | VARCHAR(100) | Not Null, **Unique** | 이메일 주소 (Google OAuth2 로그인) |
 | `name` | VARCHAR(50) | Not Null | 실명 |
+| `nickname` | VARCHAR(30) | | 사용자 닉네임 |
+| `profile_image_url` | VARCHAR(500) | | 프로필 이미지 URL |
+| `bio` | VARCHAR(500) | | 자기소개 |
 | `password_hash` | VARCHAR(255) | Not Null | 패스워드 해시 (현재 사용되지 않음) |
 | `global_role` | ENUM | Not Null | 전역 역할 (STUDENT, PROFESSOR, ADMIN) |
+| `profile_completed` | BOOLEAN | Not Null | 프로필 완성 여부 (기본값: false) |
+| `email_verified` | BOOLEAN | Not Null | 이메일 인증 여부 (기본값: false) |
 | `is_active` | BOOLEAN | Not Null | 계정 활성화 상태 |
 | `created_at` | DATETIME | Not Null | 생성 일시 |
 | `updated_at` | DATETIME | Not Null | 수정 일시 |
 
-**주요 차이점:**
-- nickname, profile_image_url, bio 필드 미구현
+**최근 업데이트 (2025-09-11):**
+- ✅ nickname, profile_image_url, bio 필드 추가
+- ✅ profile_completed 필드 추가 (회원가입 플로우 제어용)
+- ✅ email_verified 필드 추가 (향후 이메일 인증 기능용)
 - password_hash 필드 존재 (Google OAuth2만 사용하므로 실제로는 사용되지 않음)
 
 ---

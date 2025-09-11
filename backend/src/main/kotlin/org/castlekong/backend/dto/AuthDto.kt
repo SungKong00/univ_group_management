@@ -21,6 +21,18 @@ data class UserResponse(
     val email: String,
     val globalRole: String,
     val isActive: Boolean,
+    val nickname: String?,
+    val profileImageUrl: String?,
+    val bio: String?,
+    val profileCompleted: Boolean,
+    val emailVerified: Boolean,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
+)
+
+data class ProfileUpdateRequest(
+    val globalRole: String,
+    val nickname: String,
+    val profileImageUrl: String?,
+    val bio: String?,
 )

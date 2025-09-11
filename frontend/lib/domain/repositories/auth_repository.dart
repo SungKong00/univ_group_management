@@ -5,8 +5,9 @@ abstract class AuthRepository {
   Future<ApiResponse<LoginResponse>> login(LoginRequest request);
   Future<ApiResponse<UserModel>> register(RegisterRequest request);
   Future<ApiResponse<void>> logout();
-  Future<ApiResponse<Map<String, dynamic>>> loginWithGoogle(String idToken);
-  Future<ApiResponse<Map<String, dynamic>>> loginWithGoogleAccessToken(String accessToken);
+  Future<ApiResponse<LoginResponse>> loginWithGoogle(String idToken);
+  Future<ApiResponse<LoginResponse>> loginWithGoogleAccessToken(String accessToken);
+  Future<ApiResponse<UserModel>> completeProfile(ProfileUpdateRequest request);
   Future<bool> isLoggedIn();
   Future<UserModel?> getCurrentUser();
   Future<void> saveUserSession(LoginResponse loginResponse);

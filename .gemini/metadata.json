@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "univ_group_management",
-  "last_updated": "2025-09-11T18:30:00Z",
+  "last_updated": "2025-09-12T09:30:00Z",
   "tags": [
     "auth",
     "jwt", 
@@ -10,6 +10,9 @@
     "oauth2",
     "google",
     "user-management",
+    "user-profile",
+    "signup-flow",
+    "role-selection",
     "api-security",
     "permission-evaluator",
     "rbac",
@@ -41,7 +44,29 @@
     "development-environment",
     "exception-handling",
     "validation",
-    "test-fixes"
+    "test-fixes",
+    "json-serialization",
+    "build-problems",
+    "troubleshooting",
+    "flutter-web",
+    "dto-parsing",
+    "api-response-format",
+    "frontend-backend-sync",
+    "oauth2-debug",
+    "widget-lifecycle",
+    "flutter-navigation",
+    "splash-screen",
+    "routing-issues",
+    "debug-logging",
+    "password-encoder",
+    "bcrypt",
+    "security-config",
+    "security-documentation",
+    "cors-policy",
+    "session-management",
+    "security-headers",
+    "auth-documentation",
+    "security-best-practices"
   ],
   "static_context": {
     "include": [
@@ -52,6 +77,34 @@
     ]
   },
   "recent_tasks": [
+    {
+      "date": "2025-09-12",
+      "title": "OAuth2 회원가입 플로우 버그 진단 및 부분 해결",
+      "tags": ["oauth2-debug", "widget-lifecycle", "flutter-navigation", "splash-screen", "routing-issues"],
+      "status": "partially-completed",
+      "notes": "Google OAuth2 로그인 후 역할선택 화면으로 이동하지 않는 문제 분석. Widget dispose 타이밍 문제 해결 (SchedulerBinding 활용), AuthProvider 리스너 중복 실행 방지. 역할선택 화면이 빠르게 사라지는 문제는 미해결 상태"
+    },
+    {
+      "date": "2025-09-11",
+      "title": "API 응답 형태 일치 작업 완료 - 백엔드/프론트엔드 표준화",
+      "tags": ["api-response-format", "frontend-backend-sync", "dto-parsing", "auth"],
+      "status": "completed",
+      "notes": "프론트엔드 AuthService가 백엔드의 표준 ApiResponse 래퍼 형태를 정확히 파싱하도록 수정, 전체 레이어에서 타입 일치성 확보"
+    },
+    {
+      "date": "2025-09-11",
+      "title": "컨텍스트 업데이트 - JSON 직렬화 에러 & Flutter 빌드 문제 해결 가이드 보강",
+      "tags": ["context-update", "json-serialization", "build-problems", "troubleshooting", "flutter-web"],
+      "status": "completed",
+      "notes": "frontend-auth-web-error-archive.md에 JSON 직렬화 에러 해결 사례 추가, troubleshooting.md에 Flutter 빌드 문제 해결 섹션 대폭 강화"
+    },
+    {
+      "date": "2025-09-11",
+      "title": "회원가입 플로우 개선 - 역할선택 및 프로필설정 기능 구현",
+      "tags": ["auth", "user-profile", "signup-flow", "role-selection", "flutter", "kotlin"],
+      "status": "completed",
+      "notes": "Google OAuth 후 역할선택 → 프로필설정 플로우 완성, User 엔티티 확장, 프로필 완성 API 구현"
+    },
     {
       "date": "2025-09-11",
       "title": "웹 인증 상태 이슈 해결 (뒤로가기/새로고침/로그아웃)",

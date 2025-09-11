@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'injection/injection.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/register_screen.dart';
+import 'presentation/screens/auth/role_selection_screen.dart';
+import 'presentation/screens/auth/profile_setup_screen.dart';
 import 'presentation/screens/home/home_screen.dart';
 import 'presentation/theme/app_theme.dart';
 import 'presentation/screens/webview/webview_screen.dart';
@@ -39,6 +42,11 @@ class MyApp extends StatelessWidget {
           '/': (context) => const SplashScreen(),
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
+          '/role-selection': (context) => const RoleSelectionScreen(),
+          '/profile-setup': (context) {
+            final selectedRole = ModalRoute.of(context)!.settings.arguments as String;
+            return ProfileSetupScreen(selectedRole: selectedRole);
+          },
           '/home': (context) => const HomeScreen(),
         },
       ),
@@ -64,9 +72,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void dispose() {
-    if (_authListener != null) {
-      final authProvider = context.read<AuthProvider>();
-      authProvider.removeListener(_authListener!);
+    if (_authListener != null && mounted) {
+      try {
+        final authProvider = context.read<AuthProvider>();
+        authProvider.removeListener(_authListener!);
+      } catch (e) {
+        // 이미 dispose된 경우 무시
+      }
     }
     super.dispose();
   }
@@ -78,13 +90,40 @@ class _SplashScreenState extends State<SplashScreen> {
       
       // AuthProvider 상태 변화 감지
       _authListener = () {
+        print('DEBUG SplashScreen: AuthProvider state changed - ${authProvider.state}');
+        print('DEBUG SplashScreen: mounted = $mounted');
         if (authProvider.state != AuthState.loading) {
           if (mounted) {
-            if (authProvider.isAuthenticated) {
-              Navigator.pushReplacementNamed(context, '/home');
-            } else {
-              Navigator.pushReplacementNamed(context, '/login');
-            }
+            // 리스너 제거 - 네비게이션은 한 번만 실행
+            authProvider.removeListener(_authListener!);
+            print('DEBUG SplashScreen: Listener removed to prevent multiple navigations');
+            
+            // 다음 프레임에서 네비게이션 실행 (widget dispose 문제 방지)
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                if (authProvider.isAuthenticated) {
+                  // 프로필 완성 여부에 따른 라우팅 분기
+                  final user = authProvider.currentUser;
+                  print('DEBUG SplashScreen: User profileCompleted = ${user?.profileCompleted}');
+                  if (user != null && !user.profileCompleted) {
+                    // 신규 사용자: 역할 선택부터 시작
+                    print('DEBUG SplashScreen: Navigating to /role-selection');
+                    Navigator.pushReplacementNamed(context, '/role-selection');
+                  } else {
+                    // 기존 사용자: 홈 화면으로 이동
+                    print('DEBUG SplashScreen: Navigating to /home');
+                    Navigator.pushReplacementNamed(context, '/home');
+                  }
+                } else {
+                  print('DEBUG SplashScreen: Navigating to /login');
+                  Navigator.pushReplacementNamed(context, '/login');
+                }
+              } else {
+                print('DEBUG SplashScreen: Widget not mounted in next frame, skipping navigation');
+              }
+            });
+          } else {
+            print('DEBUG SplashScreen: Widget not mounted, skipping navigation');
           }
         }
       };

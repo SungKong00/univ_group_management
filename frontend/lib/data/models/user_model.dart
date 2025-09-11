@@ -10,6 +10,11 @@ class UserModel extends Equatable {
   final String email;
   final String globalRole;
   final bool isActive;
+  final String? nickname;
+  final String? profileImageUrl;
+  final String? bio;
+  final bool profileCompleted;
+  final bool emailVerified;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -19,6 +24,11 @@ class UserModel extends Equatable {
     required this.email,
     required this.globalRole,
     required this.isActive,
+    this.nickname,
+    this.profileImageUrl,
+    this.bio,
+    required this.profileCompleted,
+    required this.emailVerified,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -34,6 +44,11 @@ class UserModel extends Equatable {
     String? email,
     String? globalRole,
     bool? isActive,
+    String? nickname,
+    String? profileImageUrl,
+    String? bio,
+    bool? profileCompleted,
+    bool? emailVerified,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -43,6 +58,11 @@ class UserModel extends Equatable {
       email: email ?? this.email,
       globalRole: globalRole ?? this.globalRole,
       isActive: isActive ?? this.isActive,
+      nickname: nickname ?? this.nickname,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      bio: bio ?? this.bio,
+      profileCompleted: profileCompleted ?? this.profileCompleted,
+      emailVerified: emailVerified ?? this.emailVerified,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -55,6 +75,11 @@ class UserModel extends Equatable {
         email,
         globalRole,
         isActive,
+        nickname,
+        profileImageUrl,
+        bio,
+        profileCompleted,
+        emailVerified,
         createdAt,
         updatedAt,
       ];
@@ -103,14 +128,12 @@ class RegisterRequest extends Equatable {
 @JsonSerializable()
 class LoginResponse extends Equatable {
   final String accessToken;
-  final String refreshToken;
   final String tokenType;
-  final int expiresIn;
+  final int expiresIn;  // Backend sends Long, but we convert to int
   final UserModel user;
 
   const LoginResponse({
     required this.accessToken,
-    required this.refreshToken,
     required this.tokenType,
     required this.expiresIn,
     required this.user,
@@ -124,9 +147,31 @@ class LoginResponse extends Equatable {
   @override
   List<Object?> get props => [
         accessToken,
-        refreshToken,
         tokenType,
         expiresIn,
         user,
       ];
+}
+
+@JsonSerializable()
+class ProfileUpdateRequest extends Equatable {
+  final String globalRole;
+  final String nickname;
+  final String? profileImageUrl;
+  final String? bio;
+
+  const ProfileUpdateRequest({
+    required this.globalRole,
+    required this.nickname,
+    this.profileImageUrl,
+    this.bio,
+  });
+
+  factory ProfileUpdateRequest.fromJson(Map<String, dynamic> json) =>
+      _$ProfileUpdateRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ProfileUpdateRequestToJson(this);
+
+  @override
+  List<Object?> get props => [globalRole, nickname, profileImageUrl, bio];
 }

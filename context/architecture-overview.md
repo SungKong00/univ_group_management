@@ -47,6 +47,9 @@ The backend follows a strict, single-direction data flow (`Controller` → `Serv
       "error": { "code": "...", "message": "..." } | null
   }
   ```
+  
+  **✅ 프론트엔드 연동 완료**: 프론트엔드 AuthService가 이 표준 ApiResponse 래퍼 형태를 정확히 파싱하도록 수정 완료됨. Google 로그인 API의 응답을 LoginResponse 객체로 직접 변환하여 처리하며, AuthRepository, AuthProvider 전체 레이어에서 타입 일치성이 확보됨.
+  
 - **HTTP Status Codes**: Standard codes are used (`200 OK`, `201 Created`, `204 No Content`, `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `500 Internal Server Error`).
 
 ### 2.3. Authentication & Authorization (부분 구현됨)

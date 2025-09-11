@@ -1,35 +1,50 @@
-// GENERATED-LIKE FILE (handwritten to unblock build)
-// ignore_for_file: non_constant_identifier_names, unnecessary_cast
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'api_response.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
 
 ApiResponse<T> _$ApiResponseFromJson<T>(
   Map<String, dynamic> json,
   T Function(Object? json) fromJsonT,
-) {
-  return ApiResponse<T>(
-    success: json['success'] as bool,
-    data: json['data'] == null ? null : fromJsonT(json['data']),
-    message: json['message'] as String?,
-    error: json['error'] == null
-        ? null
-        : ErrorResponse.fromJson(json['error'] as Map<String, dynamic>),
-    timestamp: json['timestamp'] as String?,
-    path: json['path'] as String?,
-  );
-}
+) =>
+    ApiResponse<T>(
+      success: json['success'] as bool,
+      data: _$nullableGenericFromJson(json['data'], fromJsonT),
+      message: json['message'] as String?,
+      error: json['error'] == null
+          ? null
+          : ErrorResponse.fromJson(json['error'] as Map<String, dynamic>),
+      timestamp: json['timestamp'] as String?,
+      path: json['path'] as String?,
+    );
 
 Map<String, dynamic> _$ApiResponseToJson<T>(
   ApiResponse<T> instance,
-  Object Function(T value) toJsonT,
-) => <String, dynamic>{
+  Object? Function(T value) toJsonT,
+) =>
+    <String, dynamic>{
       'success': instance.success,
-      'data': instance.data == null ? null : toJsonT(instance.data as T),
+      'data': _$nullableGenericToJson(instance.data, toJsonT),
       'message': instance.message,
-      'error': instance.error?.toJson(),
+      'error': instance.error,
       'timestamp': instance.timestamp,
       'path': instance.path,
     };
+
+T? _$nullableGenericFromJson<T>(
+  Object? input,
+  T Function(Object? json) fromJson,
+) =>
+    input == null ? null : fromJson(input);
+
+Object? _$nullableGenericToJson<T>(
+  T? input,
+  Object? Function(T value) toJson,
+) =>
+    input == null ? null : toJson(input);
 
 ErrorResponse _$ErrorResponseFromJson(Map<String, dynamic> json) =>
     ErrorResponse(
@@ -44,4 +59,3 @@ Map<String, dynamic> _$ErrorResponseToJson(ErrorResponse instance) =>
       'message': instance.message,
       'details': instance.details,
     };
-

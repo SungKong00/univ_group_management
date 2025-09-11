@@ -69,4 +69,26 @@ class AuthController(
                 )
         }
     }
+    
+    // 임시 디버그용 API - 모든 사용자의 profileCompleted를 false로 초기화
+    @PostMapping("/debug/reset-profile-status")
+    @Operation(summary = "[DEBUG] 모든 사용자의 profileCompleted를 false로 재설정", description = "디버그용 API - 개발 환경에서만 사용")
+    fun resetProfileStatus(): ResponseEntity<ApiResponse<String>> {
+        return try {
+            val updatedCount = authService.resetAllUsersProfileStatus()
+            ResponseEntity.ok(
+                ApiResponse.success(
+                    data = "Updated $updatedCount users' profileCompleted status to false"
+                )
+            )
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(
+                    ApiResponse.error<String>(
+                        code = "INTERNAL_SERVER_ERROR",
+                        message = "프로필 상태 초기화 중 오류가 발생했습니다: ${e.message}"
+                    )
+                )
+        }
+    }
 }

@@ -24,6 +24,16 @@ data class User(
     val globalRole: GlobalRole = GlobalRole.STUDENT,
     @Column(name = "is_active", nullable = false)
     val isActive: Boolean = true,
+    @Column(length = 50)
+    val nickname: String? = null,
+    @Column(name = "profile_image_url", length = 255)
+    val profileImageUrl: String? = null,
+    @Column(columnDefinition = "TEXT")
+    val bio: String? = null,
+    @Column(name = "profile_completed", nullable = false)
+    val profileCompleted: Boolean = false,
+    @Column(name = "email_verified", nullable = false)
+    val emailVerified: Boolean = true, // 임시로 모든 사용자 인증 완료로 설정
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),

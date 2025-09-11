@@ -38,37 +38,33 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<ApiResponse<Map<String, dynamic>>> loginWithGoogle(String idToken) async {
+  Future<ApiResponse<LoginResponse>> loginWithGoogle(String idToken) async {
     final result = await _authService.loginWithGoogle(idToken);
     if (result.isSuccess && result.data != null) {
-      final data = result.data!;
-      final accessToken = data['accessToken'] as String?;
-      final refreshToken = data['refreshToken'] as String?;
-      final user = data['user'];
-      await saveTokens(
-        accessToken: accessToken ?? '',
-        refreshToken: refreshToken,
-        userJson: user is Map<String, dynamic> ? jsonEncode(user) : null,
-      );
+      await saveUserSession(result.data!);
     }
     return result;
   }
 
   @override
-  Future<ApiResponse<Map<String, dynamic>>> loginWithGoogleAccessToken(String accessToken) async {
+  Future<ApiResponse<LoginResponse>> loginWithGoogleAccessToken(String accessToken) async {
     final result = await _authService.loginWithGoogleAccessToken(accessToken);
     if (result.isSuccess && result.data != null) {
-      final data = result.data!;
-      final accessTokenResp = data['accessToken'] as String?;
-      final refreshToken = data['refreshToken'] as String?;
-      final user = data['user'];
-      await saveTokens(
-        accessToken: accessTokenResp ?? accessToken, // 서버가 새 토큰을 발급하지 않더라도 저장
-        refreshToken: refreshToken,
-        userJson: user is Map<String, dynamic> ? jsonEncode(user) : null,
-      );
+      await saveUserSession(result.data!);
     }
     return result;
+  }
+
+  @override
+  Future<ApiResponse<UserModel>> completeProfile(ProfileUpdateRequest request) async {
+    final response = await _authService.completeProfile(request);
+    
+    // 프로필 완성 성공 시 로컬에 저장된 사용자 정보 업데이트
+    if (response.success && response.data != null) {
+      await _tokenStorage.saveUserData(jsonEncode(response.data!.toJson()));
+    }
+    
+    return response;
   }
 
   @override
@@ -96,7 +92,6 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> saveUserSession(LoginResponse loginResponse) async {
     await Future.wait([
       _tokenStorage.saveAccessToken(loginResponse.accessToken),
-      _tokenStorage.saveRefreshToken(loginResponse.refreshToken),
       _tokenStorage.saveUserData(jsonEncode(loginResponse.user.toJson())),
     ]);
   }

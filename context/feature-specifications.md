@@ -19,28 +19,44 @@
 - **HTTP 인터셉터**: 자동 Authorization 헤더 주입
 - **라우팅 가드**: 인증 상태 기반 화면 이동
 
-### 1.2. 구현된 사용자 플로우
+### 1.2. 완전히 구현된 사용자 플로우 ✅
 
+**신규 사용자 회원가입 플로우 (완전 구현됨):**
 ```
 1. 사용자 -> Google Sign-In 버튼 클릭
 2. GoogleSignInService -> Google OAuth 팝업 표시
 3. Google OAuth -> ID Token/Access Token 반환
 4. AuthService -> 백엔드 API 호출 (/api/auth/google)
 5. Backend -> Google 토큰 검증 및 사용자 생성/조회
-6. Backend -> JWT Access Token 반환
+6. Backend -> JWT Access Token 반환 (profileCompleted: false)
 7. TokenStorage -> JWT 암호화 저장
 8. AuthProvider -> 인증 상태 업데이트
-9. Navigator -> HomeScreen으로 이동
+9. SplashScreen -> profileCompleted 확인 후 /role-selection으로 라우팅
+10. 사용자 -> 역할 선택 (학생/교수)
+11. Navigator -> ProfileSetupScreen으로 이동
+12. 사용자 -> 닉네임, 프로필사진, 자기소개 입력
+13. AuthService -> 프로필 완성 API 호출 (PUT /api/users/profile)
+14. Backend -> 프로필 정보 업데이트 (profileCompleted: true)
+15. Navigator -> HomeScreen으로 이동
+```
+
+**기존 사용자 로그인 플로우 (완전 구현됨):**
+```
+1-8. 위와 동일
+9. SplashScreen -> profileCompleted가 true인 경우 /home으로 직접 라우팅
+10. Navigator -> HomeScreen으로 직접 이동
 ```
 
 ### 1.3. 기술적 구현 상세
 
 **Frontend 컴포넌트:**
 - `GoogleSignInService`: Google OAuth SDK 래핑
-- `AuthService`: HTTP 통신 서비스
+- `AuthService`: HTTP 통신 서비스 (프로필 완성 API 포함)
 - `AuthProvider`: 인증 상태 관리 (ChangeNotifier)
-- `AuthRepository`: 비즈니스 로직 레이어
+- `AuthRepository`: 비즈니스 로직 레이어 (프로필 완성 기능 포함)
 - `TokenStorage`: Secure Storage 추상화
+- `RoleSelectionScreen`: 학생/교수 역할 선택 화면
+- `ProfileSetupScreen`: 닉네임, 프로필사진, 자기소개 입력 화면
 
 **Error Handling:**
 - Google OAuth 오류 처리
@@ -48,12 +64,16 @@
 - 토큰 만료/무효 처리
 - 사용자 치화 오류 메시지
 
+**✅ 추가로 구현된 기능:**
+- **역할 선택 UI**: 학생/교수 선택 화면 구현
+- **프로필 설정 화면**: 닉네임, 프로필사진, 자기소개 입력
+- **단계별 회원가입 플로우**: Google OAuth → 역할선택 → 프로필설정
+- **User 엔티티 확장**: nickname, profileImageUrl, bio, profileCompleted, emailVerified 필드 추가
+- **프로필 완성 API**: 백엔드 API 및 프론트엔드 연동 완료
+
 **❌ 여전히 미구현:**
-- 역할 선택 UI (student/professor)
-- 추가 정보 입력 화면
 - 학교 이메일 인증
 - 교수 승인 프로세스
-- nickname, profile_image_url, bio 등 추가 필드
 
 ---
 
@@ -159,20 +179,26 @@
 
 ---
 
-## 8. User Profile & Account Management (미구현) ❌
+## 8. User Profile & Account Management (부분 구현) ⚠️
 
-**⚠️ 전체 기능이 미구현 상태입니다.**
+**✅ 구현 완료된 기능:**
+- **프로필 초기 설정**: 회원가입 시 닉네임, 프로필사진, 자기소개 입력
+- **User 엔티티 확장**: nickname, profileImageUrl, bio, profileCompleted, emailVerified 필드 추가
+- **프로필 완성 API**: `PUT /api/users/profile` 엔드포인트 구현 (프론트엔드와 연동 완료)
 
-**계획된 기능:**
-- 마이페이지
-- 프로필 편집 (사진, 닉네임, 자기소개)
+### 1.4. UI 표시 규칙 업데이트 (닉네임)
+- 홈 화면 상단 인사말은 사용자 `nickname`이 존재하면 닉네임을 우선 표시하고, 없으면 `name`으로 폴백합니다.
+- 아바타 이니셜도 동일한 규칙을 따릅니다: `nickname[0]` → 없을 때 `name[0]` → 최종 폴백 `U`.
+- **내 정보 조회 API**: `/api/users/me` 엔드포인트 구현
+- **프로필 완성 상태 관리**: profileCompleted 플래그를 통한 회원가입 플로우 제어
+
+**❌ 여전히 미구현:**
+- 마이페이지 (프로필 조회/편집 화면)
+- 프로필 편집 기능 (가입 후 수정)
 - 서비스 탈퇴
 - 계정 설정
-
-**미구현 사유:**
-- User 엔티티에 nickname, bio, profile_image_url 필드 없음
-- 프로필 관련 API 미구현
-- 프로필 UI 미구현
+- 프로필 이미지 업로드 기능 (현재는 URL만 저장)
 
 **현재 구현된 것:**
-- 기본 사용자 정보 (id, name, email, globalRole, isActive, createdAt, updatedAt) 저장
+- 확장된 사용자 정보 (id, name, email, nickname, profileImageUrl, bio, globalRole, profileCompleted, emailVerified, isActive, createdAt, updatedAt) 저장
+- 회원가입 시 프로필 완성 플로우

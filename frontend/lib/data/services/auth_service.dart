@@ -10,7 +10,7 @@ class AuthService {
   AuthService(this._dioClient);
 
   // Google OAuth2 로그인: Google ID Token을 받아 백엔드에 교환 요청
-  Future<ApiResponse<Map<String, dynamic>>> loginWithGoogle(String idToken) async {
+  Future<ApiResponse<LoginResponse>> loginWithGoogle(String idToken) async {
     try {
       final response = await _dioClient.dio.post(
         ApiEndpoints.googleLogin,
@@ -19,15 +19,11 @@ class AuthService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final body = response.data;
-        if (body is Map<String, dynamic> && body.containsKey('success')) {
-          // 표준 래퍼 형태
-          return ApiResponse<Map<String, dynamic>>.fromJson(
-            body,
-            (json) => (json as Map).cast<String, dynamic>(),
-          );
-        } else if (body is Map<String, dynamic>) {
-          // 토큰을 바로 반환하는 경우(body 자체가 data)
-          return ApiResponse.success(data: body);
+        if (body is Map<String, dynamic> && body.containsKey('success') && body['success'] == true) {
+          // 백엔드 표준 ApiResponse 래퍼 형태
+          final data = body['data'] as Map<String, dynamic>;
+          final loginResponse = LoginResponse.fromJson(data);
+          return ApiResponse.success(data: loginResponse);
         } else {
           return ApiResponse.failure(
             error: const ErrorResponse(
@@ -56,13 +52,10 @@ class AuthService {
           );
           if (resp.statusCode == 200 || resp.statusCode == 201) {
             final body = resp.data;
-            if (body is Map<String, dynamic> && body.containsKey('success')) {
-              return ApiResponse<Map<String, dynamic>>.fromJson(
-                body,
-                (json) => (json as Map).cast<String, dynamic>(),
-              );
-            } else if (body is Map<String, dynamic>) {
-              return ApiResponse.success(data: body);
+            if (body is Map<String, dynamic> && body.containsKey('success') && body['success'] == true) {
+              final data = body['data'] as Map<String, dynamic>;
+              final loginResponse = LoginResponse.fromJson(data);
+              return ApiResponse.success(data: loginResponse);
             }
           }
         } catch (_) {}
@@ -80,7 +73,7 @@ class AuthService {
   }
 
   // 대안: Access Token으로 백엔드 교환 (웹에서 idToken이 오지 않는 경우)
-  Future<ApiResponse<Map<String, dynamic>>> loginWithGoogleAccessToken(String accessToken) async {
+  Future<ApiResponse<LoginResponse>> loginWithGoogleAccessToken(String accessToken) async {
     try {
       final response = await _dioClient.dio.post(
         ApiEndpoints.googleLogin,
@@ -89,13 +82,11 @@ class AuthService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final body = response.data;
-        if (body is Map<String, dynamic> && body.containsKey('success')) {
-          return ApiResponse<Map<String, dynamic>>.fromJson(
-            body,
-            (json) => (json as Map).cast<String, dynamic>(),
-          );
-        } else if (body is Map<String, dynamic>) {
-          return ApiResponse.success(data: body);
+        if (body is Map<String, dynamic> && body.containsKey('success') && body['success'] == true) {
+          // 백엔드 표준 ApiResponse 래퍼 형태
+          final data = body['data'] as Map<String, dynamic>;
+          final loginResponse = LoginResponse.fromJson(data);
+          return ApiResponse.success(data: loginResponse);
         } else {
           return ApiResponse.failure(
             error: const ErrorResponse(
@@ -123,13 +114,10 @@ class AuthService {
           );
           if (resp.statusCode == 200 || resp.statusCode == 201) {
             final body = resp.data;
-            if (body is Map<String, dynamic> && body.containsKey('success')) {
-              return ApiResponse<Map<String, dynamic>>.fromJson(
-                body,
-                (json) => (json as Map).cast<String, dynamic>(),
-              );
-            } else if (body is Map<String, dynamic>) {
-              return ApiResponse.success(data: body);
+            if (body is Map<String, dynamic> && body.containsKey('success') && body['success'] == true) {
+              final data = body['data'] as Map<String, dynamic>;
+              final loginResponse = LoginResponse.fromJson(data);
+              return ApiResponse.success(data: loginResponse);
             }
           }
         } catch (_) {}
@@ -199,6 +187,41 @@ class AuthService {
           error: ErrorResponse(
             code: 'REGISTER_FAILED',
             message: '회원가입에 실패했습니다.',
+            details: response.statusMessage,
+          ),
+        );
+      }
+    } on DioException catch (e) {
+      return _handleDioException(e);
+    } catch (e) {
+      return ApiResponse.failure(
+        error: ErrorResponse(
+          code: 'UNKNOWN_ERROR',
+          message: '알 수 없는 오류가 발생했습니다.',
+          details: e.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<ApiResponse<UserModel>> completeProfile(ProfileUpdateRequest request) async {
+    try {
+      final response = await _dioClient.dio.put(
+        ApiEndpoints.updateProfile,
+        data: request.toJson(),
+      );
+
+      if (response.statusCode == 200) {
+        final apiResponse = ApiResponse<UserModel>.fromJson(
+          response.data,
+          (json) => UserModel.fromJson(json as Map<String, dynamic>),
+        );
+        return apiResponse;
+      } else {
+        return ApiResponse.failure(
+          error: ErrorResponse(
+            code: 'PROFILE_UPDATE_FAILED',
+            message: '프로필 완성에 실패했습니다.',
             details: response.statusMessage,
           ),
         );

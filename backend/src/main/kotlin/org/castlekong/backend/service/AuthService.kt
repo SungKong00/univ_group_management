@@ -125,6 +125,24 @@ class AuthService(
             throw IllegalArgumentException("Google userinfo fetch failed: ${'$'}{e.message}")
         }
     }
+    
+    // 임시 디버그용 메서드 - 모든 사용자의 profileCompleted를 false로 초기화
+    @Transactional
+    fun resetAllUsersProfileStatus(): Int {
+        val users = userService.findAll()
+        var updatedCount = 0
+        
+        users.forEach { user ->
+            if (user.profileCompleted) {
+                val updatedUser = user.copy(profileCompleted = false)
+                userService.save(updatedUser)
+                updatedCount++
+                println("DEBUG: Reset profileCompleted for user ${user.email}")
+            }
+        }
+        
+        return updatedCount
+    }
 }
 
 data class GoogleUserInfo(

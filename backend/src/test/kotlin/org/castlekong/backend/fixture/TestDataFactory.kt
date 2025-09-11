@@ -1,6 +1,7 @@
 package org.castlekong.backend.fixture
 
 import org.castlekong.backend.dto.GoogleLoginRequest
+import org.castlekong.backend.dto.ProfileUpdateRequest
 import org.castlekong.backend.entity.User
 import org.castlekong.backend.entity.GlobalRole
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -86,6 +87,36 @@ object TestDataFactory {
             id = 2L,
             email = "admin@example.com",
             globalRole = GlobalRole.ADMIN,
+        )
+    }
+
+    fun createProfileUpdateRequest(
+        globalRole: String = "STUDENT",
+        nickname: String = "테스트닉네임",
+        profileImageUrl: String? = null,
+        bio: String? = null,
+    ): ProfileUpdateRequest {
+        return ProfileUpdateRequest(
+            globalRole = globalRole,
+            nickname = nickname,
+            profileImageUrl = profileImageUrl,
+            bio = bio,
+        )
+    }
+
+    fun createGoogleAccessTokenRequest(
+        googleAccessToken: String = "valid.google.access.token",
+    ): GoogleLoginRequest {
+        return GoogleLoginRequest(
+            googleAuthToken = null,
+            googleAccessToken = googleAccessToken,
+        )
+    }
+
+    fun createInvalidGoogleAccessTokenRequest(): GoogleLoginRequest {
+        return GoogleLoginRequest(
+            googleAuthToken = null,
+            googleAccessToken = "invalid.google.access.token",
         )
     }
 }

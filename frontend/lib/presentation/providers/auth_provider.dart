@@ -76,10 +76,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       final result = await _authRepository.loginWithGoogle(idToken);
       if (result.isSuccess && result.data != null) {
-        // 토큰 저장은 repository에서 처리. 사용자 정보는 선택적.
-        // 가능하면 로컬 저장된 유저 정보를 읽어 상태 갱신
-        final user = await _authRepository.getCurrentUser();
-        _currentUser = user; // null일 수도 있음
+        _currentUser = result.data!.user;
         _setState(AuthState.authenticated);
         return true;
       } else {
@@ -95,7 +92,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> loginWithGoogleTokens({String? idToken, String? accessToken}) async {
     _setState(AuthState.loading);
     try {
-      ApiResponse<Map<String, dynamic>> result;
+      ApiResponse<LoginResponse> result;
       if (idToken != null && idToken.isNotEmpty) {
         result = await _authRepository.loginWithGoogle(idToken);
       } else if (accessToken != null && accessToken.isNotEmpty) {
@@ -106,8 +103,10 @@ class AuthProvider extends ChangeNotifier {
       }
 
       if (result.isSuccess && result.data != null) {
-        final user = await _authRepository.getCurrentUser();
-        _currentUser = user;
+        _currentUser = result.data!.user;
+        // 디버그: 사용자 정보 출력
+        print('DEBUG: User logged in - profileCompleted: ${_currentUser!.profileCompleted}');
+        print('DEBUG: User info - name: ${_currentUser!.name}, email: ${_currentUser!.email}');
         _setState(AuthState.authenticated);
         return true;
       } else {
@@ -158,6 +157,25 @@ class AuthProvider extends ChangeNotifier {
         await google.signOut();
       } catch (_) {}
     });
+  }
+
+  Future<bool> completeProfile(ProfileUpdateRequest request) async {
+    try {
+      _setState(AuthState.loading);
+      final response = await _authRepository.completeProfile(request);
+      
+      if (response.success && response.data != null) {
+        _currentUser = response.data;
+        _setState(AuthState.authenticated);
+        return true;
+      } else {
+        _setError(response.error?.message ?? '프로필 완성에 실패했습니다.');
+        return false;
+      }
+    } catch (e) {
+      _setError('프로필 완성 중 오류가 발생했습니다: ${e.toString()}');
+      return false;
+    }
   }
 
   void clearError() {

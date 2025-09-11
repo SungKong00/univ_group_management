@@ -30,10 +30,10 @@ lib/
 │       └── auth_repository.dart      # 인증 저장소 인터페이스
 ├── data/                            # 데이터 레이어
 │   ├── models/
-│   │   ├── user_model.dart          # 사용자 모델
+│   │   ├── user_model.dart          # 사용자 모델 (확장됨)
 │   │   └── user_model.g.dart        # 자동 생성 코드
 │   ├── services/
-│   │   └── auth_service.dart        # 인증 API 서비스
+│   │   └── auth_service.dart        # 인증 API 서비스 (프로필 완성 API 포함)
 │   └── repositories/
 │       └── auth_repository_impl.dart # 인증 저장소 구현체
 └── presentation/                    # 프레젠테이션 레이어
@@ -42,7 +42,9 @@ lib/
     ├── screens/
     │   ├── auth/
     │   │   ├── login_screen.dart    # 로그인 화면
-    │   │   └── register_screen.dart # 회원가입 화면
+    │   │   ├── register_screen.dart # 회원가입 화면
+    │   │   ├── role_selection_screen.dart # 역할 선택 화면 (학생/교수)
+    │   │   └── profile_setup_screen.dart  # 프로필 설정 화면
     │   ├── home/
     │   │   └── home_screen.dart     # 홈 화면
     │   └── webview/
@@ -126,9 +128,14 @@ class GoogleSignInService {
 // 2. 백엔드 API 호출
 class AuthService {
   Future<ApiResponse<Map<String, dynamic>>> loginWithGoogle(String idToken) async {
-    return await _dioClient.dio.post('/api/auth/google', data: {
+    return await _dioClient.dio.post(ApiEndpoints.googleLogin, data: {
       'googleAuthToken': idToken,
     });
+  }
+
+  Future<ApiResponse<UserModel>> completeProfile(ProfileUpdateRequest request) async {
+    // 표준 엔드포인트 상수 사용: PUT /users/profile
+    return await _dioClient.dio.put(ApiEndpoints.updateProfile, data: request.toJson());
   }
 }
 
@@ -138,6 +145,16 @@ class AuthProvider extends ChangeNotifier {
     // 토큰 검증 및 JWT 저장
     // 인증 상태 업데이트
     // UI 리스너 알림
+  }
+  
+  // 4. 프로필 완성 (새로 추가됨)
+  Future<bool> completeProfile({
+    required String nickname,
+    required String globalRole,
+    String? profileImageUrl,
+    String? bio,
+  }) async {
+    // 프로필 완성 API 호출 → 사용자 정보 업데이트 → profileCompleted 상태 업데이트
   }
 }
 ```
@@ -184,6 +201,10 @@ class AuthProvider extends ChangeNotifier {
   AuthState _state = AuthState.initial;
   UserModel? _currentUser;
   String? _errorMessage;
+
+  // Splash에서 인증 상태 관찰 후 안전한 네비게이션: 리스너 제거 + next frame에서 Navigator 호출
+  // 로그인/회원가입 화면에서도 isAuthenticated 시 profileCompleted 여부에 따라
+  // '/role-selection' 또는 '/home'으로 pushNamedAndRemoveUntil로 스택 정리하여 레이스 컨디션 방지.
   
   // 자동 인증 상태 확인 (개선된 에러 처리)
   Future<void> checkAuthStatus() async {
@@ -252,6 +273,82 @@ class AuthProvider extends ChangeNotifier {
 - 향후 refresh token 구현을 위한 구조적 기반 마련
 - 토큰 만료 감지 및 처리 로직 개선
 
+### 3.4. 향상된 회원가입 플로우 (2025-09-11 추가) ✅
+
+**신규 사용자 회원가입 단계**:
+```dart
+// 1. Google OAuth 인증 완료 후
+// 2. profileCompleted가 false인 경우 단계별 진행
+
+class SignupFlowManager {
+  // Step 1: 역할 선택
+  static void navigateToRoleSelection(BuildContext context) {
+    Navigator.pushNamed(context, '/role-selection');
+  }
+  
+  // Step 2: 프로필 설정
+  static void navigateToProfileSetup(BuildContext context, String role) {
+    Navigator.pushNamed(context, '/profile-setup', arguments: {'role': role});
+  }
+  
+  // Step 3: 프로필 완성 및 홈으로 이동
+  static Future<void> completeSignupAndNavigateHome(
+    BuildContext context, 
+    AuthProvider authProvider, 
+    ProfileData profileData
+  ) async {
+    final success = await authProvider.completeProfile(
+      nickname: profileData.nickname,
+      globalRole: profileData.role,
+      profileImageUrl: profileData.profileImageUrl,
+      bio: profileData.bio,
+    );
+    
+    if (success) {
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    }
+  }
+}
+```
+
+**새로운 화면 컴포넌트**:
+- **RoleSelectionScreen**: 학생/교수 역할 선택 UI
+- **ProfileSetupScreen**: 닉네임, 프로필사진, 자기소개 입력 UI
+- **교수 선택 시 안내**: 승인 필요 메시지 표시
+
+**상태 관리 개선**:
+```dart
+class AuthProvider extends ChangeNotifier {
+  bool get isProfileCompleted => _currentUser?.profileCompleted ?? false;
+  
+  Future<bool> completeProfile({
+    required String nickname,
+    required String globalRole,
+    String? profileImageUrl,
+    String? bio,
+  }) async {
+    try {
+      final success = await _authRepository.completeProfile(
+        nickname: nickname,
+        globalRole: globalRole,
+        profileImageUrl: profileImageUrl,
+        bio: bio,
+      );
+      
+      if (success) {
+        // 사용자 정보 갱신
+        await _loadUserProfile();
+        notifyListeners();
+      }
+      
+      return success;
+    } catch (e) {
+      _setError('프로필 완성 실패: ${e.toString()}');
+      return false;
+    }
+  }
+}
+
 ---
 
 ## 4. 네트워크 레이어
@@ -290,6 +387,8 @@ class ApiResponse<T> {
   // 자동 JSON 직렬화/역직렬화
 }
 ```
+
+**✅ 백엔드 API 응답 형태 일치 완료**: AuthService가 백엔드의 표준 ApiResponse 래퍼 형태 `{ "success": true, "data": {...} }`를 정확히 파싱하도록 수정됨. Google 로그인 API의 응답을 LoginResponse 객체로 직접 변환하여 처리하며, AuthRepository, AuthProvider 전체 레이어에서 타입 일치성이 확보됨. 향후 다른 API 엔드포인트들도 동일한 표준 형태로 수정할 때 이 구조를 참고할 수 있음.
 
 ### 4.3. 에러 처리
 
@@ -356,19 +455,38 @@ UI Update (Navigator.pushNamed('/home'))
 
 ### 6.1. 구현된 화면들 ✅
 
-**SplashScreen**: 초기 로딩 및 인증 상태 확인
-- AuthProvider 초기화
+**SplashScreen**: 초기 로딩 및 인증 상태 확인 (개선됨) ✅
+- AuthProvider 초기화 및 상태 변화 감지
 - 자동 로그인 여부 확인
-- 적절한 화면으로 리다이렉트
+- profileCompleted 기반 스마트 라우팅:
+  - 비인증 사용자: /login으로 이동
+  - 신규 사용자 (profileCompleted: false): /role-selection으로 이동
+  - 기존 사용자 (profileCompleted: true): /home으로 이동
+- **Flutter Widget 라이프사이클 문제 해결 (2025-09-11)**:
+  - SchedulerBinding.addPostFrameCallback으로 안전한 네비게이션 구현
+  - AuthProvider 리스너 중복 실행 방지 (네비게이션 후 리스너 자동 제거)
+  - "Looking up a deactivated widget's ancestor is unsafe" 에러 해결
 
 **LoginScreen**: Google OAuth 로그인
 - Google Sign-In 버튼
 - 에러 메시지 표시
 - 로딩 상태 관리
+- 프로필 완성 여부에 따른 라우팅 분기
 
 **RegisterScreen**: 회원가입 (기본 구조만)
 - 추가 정보 입력 예정
 - 현재는 스켈레톤 구조만
+
+**RoleSelectionScreen**: 역할 선택 화면 ✅
+- 학생/교수 역할 선택 UI
+- 교수 선택 시 승인 필요 안내 메시지
+- 선택 완료 후 프로필 설정으로 자동 이동
+
+**ProfileSetupScreen**: 프로필 설정 화면 ✅
+- 닉네임 입력 (필수)
+- 프로필 이미지 URL 입력 (선택)
+- 자기소개 입력 (선택)
+- 프로필 완성 API 연동 및 상태 관리
 
 **HomeScreen**: 인증 후 메인 화면
 - 로그아웃 기능
@@ -394,21 +512,79 @@ class AppTheme {
 }
 ```
 
-### 6.3. 라우팅 시스템
+### 6.3. 라우팅 시스템 (업데이트됨) ✅
 
 **Named Routes 사용**:
 ```dart
 MaterialApp(
-  initialRoute: '/login',
+  initialRoute: '/',  // SplashScreen부터 시작
   routes: {
     '/': (context) => const SplashScreen(),
     '/login': (context) => const LoginScreen(),
     '/register': (context) => const RegisterScreen(),
+    '/role-selection': (context) => const RoleSelectionScreen(),
+    '/profile-setup': (context) => const ProfileSetupScreen(),
     '/home': (context) => const HomeScreen(),
     '/webview': (context) => const WebViewScreen(),
   },
 )
 ```
+
+**SplashScreen 라우팅 로직 (2025-09-11 업데이트)**:
+```dart
+class _SplashScreenState extends State<SplashScreen> {
+  VoidCallback? _authListener;
+  
+  void _checkAuthStatus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = context.read<AuthProvider>();
+      
+      // AuthProvider 상태 변화 감지 - 한 번만 실행
+      _authListener = () {
+        if (authProvider.state != AuthState.loading) {
+          if (mounted) {
+            // 리스너 제거 - 중복 네비게이션 방지
+            authProvider.removeListener(_authListener!);
+            
+            // 안전한 네비게이션 (Widget dispose 문제 방지)
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                if (authProvider.isAuthenticated) {
+                  final user = authProvider.currentUser;
+                  if (user != null && !user.profileCompleted) {
+                    // 신규 사용자: 역할 선택부터 시작
+                    Navigator.pushReplacementNamed(context, '/role-selection');
+                  } else {
+                    // 기존 사용자: 홈 화면으로 이동
+                    Navigator.pushReplacementNamed(context, '/home');
+                  }
+                } else {
+                  Navigator.pushReplacementNamed(context, '/login');
+                }
+              }
+            });
+          }
+        }
+      };
+      authProvider.addListener(_authListener!);
+    });
+  }
+  
+  @override
+  void dispose() {
+    if (_authListener != null) {
+      final authProvider = context.read<AuthProvider>();
+      authProvider.removeListener(_authListener!);
+    }
+    super.dispose();
+  }
+}
+```
+
+**주요 해결사항**:
+- `SchedulerBinding.addPostFrameCallback`으로 Widget 라이프사이클 안전성 확보
+- AuthProvider 리스너 중복 실행 방지 (네비게이션 후 즉시 제거)
+- `mounted` 체크로 dispose된 Widget에서 Navigator 호출 방지
 
 ---
 

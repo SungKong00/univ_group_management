@@ -276,7 +276,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (success && mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        final user = authProvider.currentUser;
+        if (user != null && !user.profileCompleted) {
+          // 신규 사용자: 역할 선택부터 진행
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/role-selection',
+            (route) => false,
+          );
+        } else {
+          // 프로필 완료 사용자: 홈으로 이동
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/home',
+            (route) => false,
+          );
+        }
       }
     }
   }

@@ -10,14 +10,16 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // 뒤로가기 버튼을 눌렀을 때 앱 종료 확인
-        final shouldExit = await _showExitDialog(context);
-        if (shouldExit) {
-          SystemNavigator.pop();
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (!didPop) {
+          // 뒤로가기 버튼을 눌렀을 때 앱 종료 확인
+          final shouldExit = await _showExitDialog(context);
+          if (shouldExit) {
+            SystemNavigator.pop();
+          }
         }
-        return false; // 기본 뒤로가기 동작 방지
       },
       child: Scaffold(
         appBar: AppBar(
@@ -44,11 +46,12 @@ class HomeScreen extends StatelessWidget {
           }
           final user = authProvider.currentUser;
           
-          return Padding(
-            padding: AppStyles.paddingL,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          return SingleChildScrollView(
+            child: Padding(
+              padding: AppStyles.paddingL,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 // 사용자 환영 메시지
                 Card(
                   child: Padding(
@@ -58,7 +61,10 @@ class HomeScreen extends StatelessWidget {
                         CircleAvatar(
                           backgroundColor: AppTheme.primaryColor,
                           child: Text(
-                            user?.name.substring(0, 1).toUpperCase() ?? 'U',
+                            ((user?.nickname?.isNotEmpty ?? false)
+                                    ? user!.nickname!.substring(0, 1)
+                                    : (user?.name ?? 'U').substring(0, 1))
+                                .toUpperCase(),
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -71,7 +77,7 @@ class HomeScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '안녕하세요, ${user?.name ?? '사용자'}님!',
+                                '안녕하세요, ${(user?.nickname != null && user!.nickname!.isNotEmpty) ? user.nickname : (user?.name ?? '사용자')}님!',
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               const SizedBox(height: AppStyles.spacingXS),
@@ -90,71 +96,68 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppStyles.spacingL),
 
-                // 메인 기능들
+                // My Activities 섹션
+                _buildMyActivitiesSection(context),
+                const SizedBox(height: AppStyles.spacingL),
+
+                // 모집 중인 그룹 섹션
+                _buildRecruitmentSection(context),
+                const SizedBox(height: AppStyles.spacingL),
+
+                // 빠른 접근 기능들
                 Text(
-                  '그룹 관리',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  '빠른 접근',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: AppStyles.spacingM),
 
-                // 그룹 관련 기능 카드들
-                Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: AppStyles.spacingM,
-                    mainAxisSpacing: AppStyles.spacingM,
-                    children: [
-                      _buildFeatureCard(
-                        context,
-                        icon: Icons.group_add,
-                        title: '그룹 생성',
-                        subtitle: '새로운 그룹을\n만들어보세요',
-                        onTap: () {
-                          // 그룹 생성 화면으로 이동 (향후 구현)
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('그룹 생성 기능은 곧 추가될 예정입니다.')),
-                          );
-                        },
-                      ),
-                      _buildFeatureCard(
-                        context,
-                        icon: Icons.groups,
-                        title: '내 그룹',
-                        subtitle: '참여 중인 그룹을\n확인해보세요',
-                        onTap: () {
-                          // 내 그룹 목록 화면으로 이동 (향후 구현)
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('내 그룹 기능은 곧 추가될 예정입니다.')),
-                          );
-                        },
-                      ),
-                      _buildFeatureCard(
-                        context,
-                        icon: Icons.search,
-                        title: '그룹 검색',
-                        subtitle: '원하는 그룹을\n찾아보세요',
-                        onTap: () {
-                          // 그룹 검색 화면으로 이동 (향후 구현)
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('그룹 검색 기능은 곧 추가될 예정입니다.')),
-                          );
-                        },
-                      ),
-                      _buildFeatureCard(
-                        context,
-                        icon: Icons.settings,
-                        title: '설정',
-                        subtitle: '앱 설정을\n관리해보세요',
-                        onTap: () {
-                          // 설정 화면으로 이동 (향후 구현)
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('설정 기능은 곧 추가될 예정입니다.')),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                // 빠른 접근 버튼들
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildQuickActionButton(
+                      context,
+                      icon: Icons.group_add,
+                      label: '그룹 생성',
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('그룹 생성 기능은 곧 추가될 예정입니다.')),
+                        );
+                      },
+                    ),
+                    _buildQuickActionButton(
+                      context,
+                      icon: Icons.search,
+                      label: '그룹 검색',
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('그룹 검색 기능은 곧 추가될 예정입니다.')),
+                        );
+                      },
+                    ),
+                    _buildQuickActionButton(
+                      context,
+                      icon: Icons.groups,
+                      label: '내 그룹',
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('내 그룹 기능은 곧 추가될 예정입니다.')),
+                        );
+                      },
+                    ),
+                    _buildQuickActionButton(
+                      context,
+                      icon: Icons.settings,
+                      label: '설정',
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('설정 기능은 곧 추가될 예정입니다.')),
+                        );
+                      },
+                    ),
+                  ],
                 ),
+                const SizedBox(height: AppStyles.spacingM),
 
                 // 로그아웃 버튼
                 CommonButton(
@@ -164,8 +167,9 @@ class HomeScreen extends StatelessWidget {
                   width: double.infinity,
                   icon: Icons.logout,
                 ),
-                const SizedBox(height: AppStyles.spacingL),
-              ],
+                  const SizedBox(height: AppStyles.spacingL),
+                ],
+              ),
             ),
           );
         },
@@ -194,39 +198,301 @@ class HomeScreen extends StatelessWidget {
     ) ?? false;
   }
 
-  Widget _buildFeatureCard(
+  Widget _buildMyActivitiesSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'My Activities',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: AppStyles.spacingS),
+        Text(
+          '내가 참여한 그룹의 활동을 한눈에 확인하세요',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+        ),
+        const SizedBox(height: AppStyles.spacingM),
+        Card(
+          child: Padding(
+            padding: AppStyles.paddingM,
+            child: Column(
+              children: [
+                _buildActivityItem(
+                  context,
+                  icon: Icons.notifications_active,
+                  title: '새로운 공지사항',
+                  subtitle: '컴퓨터공학과 동아리에서 새로운 공지가 있습니다',
+                  time: '2시간 전',
+                ),
+                const Divider(height: AppStyles.spacingM),
+                _buildActivityItem(
+                  context,
+                  icon: Icons.event,
+                  title: 'RSVP 응답 필요',
+                  subtitle: '네트워킹 모임 참석 여부를 확인해주세요',
+                  time: '5시간 전',
+                ),
+                const Divider(height: AppStyles.spacingM),
+                _buildActivityItem(
+                  context,
+                  icon: Icons.group_add,
+                  title: '새로운 멤버 가입 승인',
+                  subtitle: '데이터 사이언스 스터디에 2명이 가입 신청했습니다',
+                  time: '1일 전',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActivityItem(
     BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
-    required VoidCallback onTap,
+    required String time,
   }) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppStyles.radiusL,
-        child: Padding(
-          padding: AppStyles.paddingM,
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+            borderRadius: AppStyles.radiusM,
+          ),
+          child: Icon(
+            icon,
+            color: AppTheme.primaryColor,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: AppStyles.spacingM),
+        Expanded(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                icon,
-                size: 40,
-                color: AppTheme.primaryColor,
-              ),
-              const SizedBox(height: AppStyles.spacingM),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
-              const SizedBox(height: AppStyles.spacingS),
+              const SizedBox(height: 2),
               Text(
                 subtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppTheme.textSecondaryColor,
                     ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        Text(
+          time,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecruitmentSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '모집 중인 그룹',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            TextButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('모집 게시판 기능은 곧 추가될 예정입니다.')),
+                );
+              },
+              child: const Text('전체보기'),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppStyles.spacingM),
+        SizedBox(
+          height: 180,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _buildRecruitmentCard(
+                context,
+                groupName: '웹 개발 스터디',
+                department: '컴퓨터공학과',
+                description: 'React와 Node.js를 함께 배워봐요',
+                recruitUntil: '2025.09.20',
+                memberCount: 12,
+                maxMembers: 20,
+              ),
+              _buildRecruitmentCard(
+                context,
+                groupName: '데이터 사이언스 연구회',
+                department: '통계학과',
+                description: 'Python과 R을 활용한 데이터 분석',
+                recruitUntil: '2025.09.25',
+                memberCount: 8,
+                maxMembers: 15,
+              ),
+              _buildRecruitmentCard(
+                context,
+                groupName: 'AI/ML 프로젝트팀',
+                department: '인공지능학과',
+                description: '실제 프로젝트로 경험을 쌓아요',
+                recruitUntil: '2025.09.30',
+                memberCount: 6,
+                maxMembers: 10,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecruitmentCard(
+    BuildContext context, {
+    required String groupName,
+    required String department,
+    required String description,
+    required String recruitUntil,
+    required int memberCount,
+    required int maxMembers,
+  }) {
+    return Container(
+      width: 280,
+      margin: const EdgeInsets.only(right: AppStyles.spacingM),
+      child: Card(
+        child: InkWell(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('그룹 상세 정보 기능은 곧 추가될 예정입니다.')),
+            );
+          },
+          borderRadius: AppStyles.radiusL,
+          child: Padding(
+            padding: AppStyles.paddingM,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        groupName,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                        borderRadius: AppStyles.radiusS,
+                      ),
+                      child: Text(
+                        '모집중',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppStyles.spacingS),
+                Text(
+                  department,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                      ),
+                ),
+                const SizedBox(height: AppStyles.spacingS),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodySmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppStyles.spacingS),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '마감: $recruitUntil',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                          ),
+                    ),
+                    Text(
+                      '$memberCount/$maxMembers명',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppStyles.radiusM,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: AppStyles.spacingS),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  borderRadius: AppStyles.radiusM,
+                ),
+                child: Icon(
+                  icon,
+                  color: AppTheme.primaryColor,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: AppStyles.spacingXS),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
             ],

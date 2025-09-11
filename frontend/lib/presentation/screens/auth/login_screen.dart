@@ -29,7 +29,13 @@ class _LoginScreenState extends State<LoginScreen> {
           // 이미 인증된 상태로 로그인 페이지에 진입한 경우 홈으로 리다이렉트
           if (authProvider.isAuthenticated) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
+              if (!mounted) return;
+              final user = authProvider.currentUser;
+              if (user != null && !user.profileCompleted) {
+                // 프로필 미완성 사용자는 역할 선택으로
+                Navigator.pushReplacementNamed(context, '/role-selection');
+              } else {
+                // 프로필 완료 사용자는 홈으로
                 Navigator.pushReplacementNamed(context, '/home');
               }
             });
@@ -147,7 +153,22 @@ class _LoginScreenState extends State<LoginScreen> {
         accessToken: tokens.accessToken,
       );
       if (success && mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        final user = authProvider.currentUser;
+        if (user != null && !user.profileCompleted) {
+          // 프로필이 완성되지 않은 새 사용자의 경우 역할 선택으로 이동
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/role-selection',
+            (route) => false,
+          );
+        } else {
+          // 기존 사용자는 홈으로 이동
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/home',
+            (route) => false,
+          );
+        }
       } else if (mounted && authProvider.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(authProvider.errorMessage!)),
