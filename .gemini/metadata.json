@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "univ_group_management",
-  "last_updated": "2025-09-12T09:30:00Z",
+  "last_updated": "2025-09-12T10:30:00Z",
   "tags": [
     "auth",
     "jwt", 
@@ -66,7 +66,17 @@
     "session-management",
     "security-headers",
     "auth-documentation",
-    "security-best-practices"
+    "security-best-practices",
+    "entity",
+    "cleanup",
+    "group",
+    "channel",
+    "post", 
+    "comment",
+    "database-schema",
+    "entity-cleanup",
+    "group-permissions",
+    "context-update"
   ],
   "static_context": {
     "include": [
@@ -77,6 +87,13 @@
     ]
   },
   "recent_tasks": [
+    {
+      "date": "2025-09-12",
+      "title": "문서 기반 그룹 엔티티 정리 및 임의 구현 내용 제거",
+      "tags": ["entity", "cleanup", "group", "channel", "post", "comment", "database-schema"],
+      "status": "completed",
+      "notes": "GroupInvite 엔티티 삭제 (문서에 정의되지 않음), GroupPermission을 기존 14개 권한으로 축소, Group 엔티티 추가 필드는 사용자 요청으로 유지, Channel/Post/Comment 엔티티는 문서 정의에 따라 확장 구현 완료"
+    },
     {
       "date": "2025-09-12",
       "title": "OAuth2 회원가입 플로우 버그 진단 및 부분 해결",

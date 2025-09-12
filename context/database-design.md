@@ -2,17 +2,20 @@
 
 This document outlines the current database schema implementation status. 
 
-**⚠️ 현재 구현 상태**: User 전역 역할 리팩터링 및 그룹 권한 스캐폴딩이 반영되었습니다.
+**⚠️ 현재 구현 상태**: 문서 기반 엔티티 정리 완료 (2025-09-12)
+- GroupInvite 엔티티 삭제 (문서에 정의되지 않음)
+- GroupPermission을 기존 14개 권한으로 축소
+- Group, Channel, Post, Comment 엔티티 확장 구현 완료
 
 ## High-Level Summary
 
 현재 구현된 도메인:
 1.  **Users**: 기본 사용자 관리 (Google OAuth2 인증, GlobalRole)
 2.  **Group Auth Scaffolding**: 그룹/멤버/그룹역할/권한 카탈로그 스키마 기본 골격
+3.  **Groups & Content**: 그룹 상세, 채널, 게시글, 댓글 관리 (엔티티 구현 완료)
 
-계획된 도메인 (부분/미구현):
-3.  **Groups & Content**: 그룹 상세, 채널, 게시글, 댓글 관리 (API/로직 미구현)
-4.  **Recruitment & System**: 모집 공고, 태그, 알림 시스템
+계획된 도메인 (미구현):
+4.  **Recruitment & System**: 모집 공고, 태그, 알림 시스템 (엔티티 미구현)
 
 ---
 
@@ -46,34 +49,55 @@ This document outlines the current database schema implementation status.
 
 ## 2. Group Auth Scaffolding (부분 구현)
 
-### Group (그룹) - ✅ 스키마 추가
+### Group (그룹) - ✅ 확장 구현됨
 | 컬럼명 | 데이터 타입 | 제약 조건 | 설명 |
 | --- | --- | --- | --- |
 | `id` | BIGINT | **PK**, Auto Increment | 그룹 고유 번호 |
 | `name` | VARCHAR(100) | Not Null, **Unique** | 그룹 이름 |
+| `description` | VARCHAR(500) | | 그룹 소개 |
+| `profile_image_url` | VARCHAR(500) | | 그룹 프로필 이미지 URL |
+| `owner_id` | BIGINT | Not Null, **FK** (User.id) | 그룹 소유자 ID |
+| `visibility` | ENUM | Not Null | 공개 설정 (PUBLIC, PRIVATE, INVITE_ONLY) |
+| `is_recruiting` | BOOLEAN | Not Null | 모집 중 여부 |
+| `max_members` | INT | | 최대 멤버 수 제한 |
+| `tags` | ElementCollection | | 그룹 태그 집합 |
+| `created_at` | DATETIME | Not Null | 생성 일시 |
+| `updated_at` | DATETIME | Not Null | 수정 일시 |
 
-### GroupRole (그룹 역할) - ✅ 스키마 추가
+### GroupRole (그룹 역할) - ✅ 구현됨
 | 컬럼명 | 데이터 타입 | 제약 조건 | 설명 |
 | --- | --- | --- | --- |
 | `id` | BIGINT | **PK**, Auto Increment | 역할 고유 번호 |
 | `group_id` | BIGINT | Not Null, **FK** (Group.id) | 소속 그룹 |
-| `name` | VARCHAR(50) | Not Null | 역할 이름 (OWNER/ADVISOR/MEMBER/커스텀) |
-| `is_system_role` | BOOLEAN | Not Null | 시스템 역할 여부 |
+| `name` | VARCHAR(50) | Not Null | 역할 이름 (그룹별 유니크) |
+| `is_system_role` | BOOLEAN | Not Null | 시스템 역할 여부 (기본값: false) |
+| `permissions` | ElementCollection | | 권한 집합 (group_role_permissions 테이블)
 
-### GroupRolePermission (역할-권한 집합) - ✅ 스키마 추가
-| 컬럼명 | 데이터 타입 | 제약 조건 | 설명 |
-| --- | --- | --- | --- |
-| `group_role_id` | BIGINT | **FK** (GroupRole.id) | 그룹 역할 ID |
-| `permission` | VARCHAR(50) | Not Null | 권한 키 (Enum: GROUP_MANAGE 등) |
-
-### GroupMember (그룹 멤버) - ✅ 스키마 추가
+### GroupMember (그룹 멤버) - ✅ 구현됨
 | 컬럼명 | 데이터 타입 | 제약 조건 | 설명 |
 | --- | --- | --- | --- |
 | `id` | BIGINT | **PK**, Auto Increment | 멤버 관계 고유 번호 |
-| `group_id` | BIGINT | Not Null, **FK** (Group.id) | 그룹 ID |
+| `group_id` | BIGINT | Not Null, **FK** (Group.id) | 그룹 ID (사용자별 유니크) |
 | `user_id` | BIGINT | Not Null, **FK** (User.id) | 사용자 ID |
 | `role_id` | BIGINT | Not Null, **FK** (GroupRole.id) | 그룹 내 역할 ID |
-| `joined_at` | DATETIME | Not Null | 가입 일시 |
+| `joined_at` | DATETIME | Not Null | 가입 일시 (기본값: 현재 시간) |
+
+### GroupPermission (권한 열거형) - ✅ 구현됨
+**현재 정의된 14개 권한:**
+- `GROUP_MANAGE`: 그룹 관리 권한
+- `MEMBER_VIEW`: 멤버 조회 권한
+- `MEMBER_APPROVE`: 멤버 승인 권한
+- `MEMBER_KICK`: 멤버 제명 권한
+- `ROLE_MANAGE`: 역할 관리 권한
+- `CHANNEL_READ`: 채널 읽기 권한
+- `CHANNEL_WRITE`: 채널 쓰기 권한
+- `POST_CREATE`: 게시글 작성 권한
+- `POST_UPDATE_OWN`: 자신의 게시글 수정 권한
+- `POST_DELETE_OWN`: 자신의 게시글 삭제 권한
+- `POST_DELETE_ANY`: 모든 게시글 삭제 권한
+- `RECRUITMENT_CREATE`: 모집 공고 작성 권한
+- `RECRUITMENT_UPDATE`: 모집 공고 수정 권한
+- `RECRUITMENT_DELETE`: 모집 공고 삭제 권한
 
 ---
 
@@ -88,45 +112,73 @@ This document outlines the current database schema implementation status.
 
 ---
 
-## 3. Groups & Content (미구현) ❌
+## 3. Groups & Content - ✅ 구현됨
 
-**⚠️ 주의**: 아래 엔티티들은 모두 미구현 상태입니다.
+**최근 업데이트 (2025-09-12):** 문서 정의에 따른 엔티티 정리 완료
+- GroupInvite 엔티티 삭제 (문서에 정의되지 않음)
+- GroupPermission을 기존 14개 권한으로 복구
+- Group, Channel, Post, Comment 엔티티는 확장된 기능과 함께 구현 완료
 
-### Group (그룹) - ❌ 미구현
+### Group (그룹) - ✅ 구현됨
+**실제 구현된 스키마:**
 | 컬럼명 | 데이터 타입 | 제약 조건 | 설명 |
 | --- | --- | --- | --- |
 | `id` | BIGINT | **PK**, Auto Increment | 그룹 고유 번호 |
-| `parent_id` | BIGINT | **FK** (self-reference) | 상위 그룹 ID (계층 구조) |
-| `name` | VARCHAR(100) | Not Null | 그룹 이름 |
-| `description` | TEXT | | 그룹 소개 |
+| `name` | VARCHAR(100) | Not Null, **Unique** | 그룹 이름 |
+| `description` | VARCHAR(500) | | 그룹 소개 |
+| `profile_image_url` | VARCHAR(500) | | 그룹 프로필 이미지 URL |
+| `owner_id` | BIGINT | Not Null, **FK** (User.id) | 그룹 소유자 ID |
+| `visibility` | ENUM | Not Null | 공개 설정 (PUBLIC, PRIVATE, INVITE_ONLY) |
+| `is_recruiting` | BOOLEAN | Not Null | 모집 중 여부 (기본값: false) |
+| `max_members` | INT | | 최대 멤버 수 제한 |
+| `tags` | ElementCollection | | 그룹 태그 집합 (group_tags 테이블) |
 | `created_at` | DATETIME | Not Null | 생성 일시 |
+| `updated_at` | DATETIME | Not Null | 수정 일시 |
 
-### Channel (채널) - ❌ 미구현
+### Channel (채널) - ✅ 구현됨
+**실제 구현된 스키마:**
 | 컬럼명 | 데이터 타입 | 제약 조건 | 설명 |
 | --- | --- | --- | --- |
 | `id` | BIGINT | **PK**, Auto Increment | 채널 고유 번호 |
 | `group_id` | BIGINT | Not Null, **FK** (Group.id) | 채널이 속한 그룹 ID |
-| `name` | VARCHAR(100) | Not Null | 채널 이름 (예: 공지사항) |
+| `name` | VARCHAR(100) | Not Null | 채널 이름 (그룹별 유니크) |
+| `description` | VARCHAR(500) | | 채널 설명 |
+| `type` | ENUM | Not Null | 채널 타입 (TEXT, VOICE, ANNOUNCEMENT, FILE_SHARE) |
+| `is_private` | BOOLEAN | Not Null | 비공개 채널 여부 (기본값: false) |
+| `display_order` | INT | Not Null | 채널 정렬 순서 |
+| `created_by` | BIGINT | Not Null, **FK** (User.id) | 채널 생성자 ID |
+| `created_at` | DATETIME | Not Null | 생성 일시 |
+| `updated_at` | DATETIME | Not Null | 수정 일시 |
 
-### Post (게시글) - ❌ 미구현
+### Post (게시글) - ✅ 구현됨
+**실제 구현된 스키마:**
 | 컬럼명 | 데이터 타입 | 제약 조건 | 설명 |
 | --- | --- | --- | --- |
 | `id` | BIGINT | **PK**, Auto Increment | 게시글 고유 번호 |
 | `channel_id` | BIGINT | Not Null, **FK** (Channel.id) | 게시글이 등록된 채널 ID |
 | `author_id` | BIGINT | Not Null, **FK** (User.id) | 작성자 ID |
-| `title` | VARCHAR(255) | Not Null | 제목 |
+| `title` | VARCHAR(200) | Not Null | 제목 |
 | `content` | TEXT | Not Null | 내용 |
+| `type` | ENUM | Not Null | 게시글 타입 (GENERAL, ANNOUNCEMENT, QUESTION, POLL, FILE_SHARE) |
+| `is_pinned` | BOOLEAN | Not Null | 고정 여부 (기본값: false) |
+| `view_count` | BIGINT | Not Null | 조회수 (기본값: 0) |
+| `like_count` | BIGINT | Not Null | 좋아요 수 (기본값: 0) |
+| `attachments` | ElementCollection | | 첨부 파일 URL 집합 (post_attachments 테이블) |
 | `created_at` | DATETIME | Not Null | 생성 일시 |
+| `updated_at` | DATETIME | Not Null | 수정 일시 |
 
-### Comment (댓글) - ❌ 미구현
+### Comment (댓글) - ✅ 구현됨
+**실제 구현된 스키마:**
 | 컬럼명 | 데이터 타입 | 제약 조건 | 설명 |
 | --- | --- | --- | --- |
 | `id` | BIGINT | **PK**, Auto Increment | 댓글 고유 번호 |
 | `post_id` | BIGINT | Not Null, **FK** (Post.id) | 부모 게시글 ID |
 | `author_id` | BIGINT | Not Null, **FK** (User.id) | 작성자 ID |
-| `parent_comment_id` | BIGINT | **FK** (self-reference) | 부모 댓글 ID (대댓글 구조) |
 | `content` | TEXT | Not Null | 내용 |
+| `parent_comment_id` | BIGINT | **FK** (self-reference) | 부모 댓글 ID (대댓글 구조) |
+| `like_count` | BIGINT | Not Null | 좋아요 수 (기본값: 0) |
 | `created_at` | DATETIME | Not Null | 생성 일시 |
+| `updated_at` | DATETIME | Not Null | 수정 일시 |
 
 ---
 

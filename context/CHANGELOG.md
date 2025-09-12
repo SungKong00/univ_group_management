@@ -108,3 +108,5 @@
 - `context/frontend-auth-web-error-archive.md`: 역할 선택 화면 플래시 및 프로필 완성 403 이슈 해결 기록 추가
 - `context/troubleshooting.md`: 5.3(해결), 5.4 섹션 추가
 - `context/frontend-maintenance.md`: 프런트 유지보수 가이드 신설 (라우팅/엔드포인트/토큰/닉네임 규칙/체크리스트)
+- 2025-09-12T00:04:17Z archived task: tasks/archive/2025-09-12-task
+- 2025-09-12T00:14:38Z archived task: tasks/archive/2025-09-12-task
