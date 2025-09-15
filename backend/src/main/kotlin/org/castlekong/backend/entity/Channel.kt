@@ -19,6 +19,10 @@ data class Channel(
     @JoinColumn(name = "group_id", nullable = false)
     val group: Group,
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workspace_id")
+    val workspace: Workspace? = null,
+
     @Column(nullable = false, length = 100)
     val name: String,
 

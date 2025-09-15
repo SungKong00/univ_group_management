@@ -24,6 +24,7 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: true
 
   # Validation 설정
   validation:
@@ -39,6 +40,9 @@ jwt:
 app:
   google:
     client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+  school-email:
+    # 콤마로 구분된 허용 도메인 목록 (하위 도메인 허용)
+    allowed-domains: hs.ac.kr
 
 # 로깅 설정
 logging:

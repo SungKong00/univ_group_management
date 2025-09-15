@@ -1,80 +1,37 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'api_response.g.dart';
-
-@JsonSerializable(genericArgumentFactories: true)
 class ApiResponse<T> {
   final bool success;
   final T? data;
-  final String? message;
-  final ErrorResponse? error;
-  final String? timestamp;
-  final String? path;
+  final ApiError? error;
 
-  const ApiResponse({
-    required this.success,
-    this.data,
-    this.message,
-    this.error,
-    this.timestamp,
-    this.path,
-  });
+  ApiResponse({required this.success, this.data, this.error});
+
+  bool get isSuccess => success && error == null;
 
   factory ApiResponse.fromJson(
     Map<String, dynamic> json,
     T Function(Object? json) fromJsonT,
-  ) =>
-      _$ApiResponseFromJson(json, fromJsonT);
-
-  Map<String, dynamic> toJson(Object Function(T value) toJsonT) =>
-      _$ApiResponseToJson(this, toJsonT);
-
-  // 성공 응답 생성자
-  factory ApiResponse.success({
-    required T data,
-    String? message,
-    String? timestamp,
-  }) {
+  ) {
     return ApiResponse<T>(
-      success: true,
-      data: data,
-      message: message,
-      timestamp: timestamp,
+      success: json['success'] == true,
+      data: json['data'] != null ? fromJsonT(json['data']) : null,
+      error: json['error'] != null
+          ? ApiError.fromJson(json['error'] as Map<String, dynamic>)
+          : null,
     );
   }
-
-  // 에러 응답 생성자
-  factory ApiResponse.failure({
-    required ErrorResponse error,
-    String? timestamp,
-    String? path,
-  }) {
-    return ApiResponse<T>(
-      success: false,
-      error: error,
-      timestamp: timestamp,
-      path: path,
-    );
-  }
-
-  bool get isSuccess => success && error == null;
-  bool get isFailure => !success || error != null;
 }
 
-@JsonSerializable()
-class ErrorResponse {
+class ApiError {
   final String code;
   final String message;
   final String? details;
 
-  const ErrorResponse({
-    required this.code,
-    required this.message,
-    this.details,
-  });
+  ApiError({required this.code, required this.message, this.details});
 
-  factory ErrorResponse.fromJson(Map<String, dynamic> json) =>
-      _$ErrorResponseFromJson(json);
-
-  Map<String, dynamic> toJson() => _$ErrorResponseToJson(this);
+  factory ApiError.fromJson(Map<String, dynamic> json) => ApiError(
+        code: (json['code'] ?? 'UNKNOWN_ERROR').toString(),
+        message: (json['message'] ?? '에러가 발생했습니다.').toString(),
+        details: json['details']?.toString(),
+      );
 }
+

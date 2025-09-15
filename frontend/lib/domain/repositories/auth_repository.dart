@@ -1,16 +1,16 @@
 import '../../core/network/api_response.dart';
-import '../../data/models/user_model.dart';
+import '../../data/models/auth_models.dart';
 
 abstract class AuthRepository {
-  Future<ApiResponse<LoginResponse>> login(LoginRequest request);
-  Future<ApiResponse<UserModel>> register(RegisterRequest request);
-  Future<ApiResponse<void>> logout();
-  Future<ApiResponse<LoginResponse>> loginWithGoogle(String idToken);
-  Future<ApiResponse<LoginResponse>> loginWithGoogleAccessToken(String accessToken);
-  Future<ApiResponse<UserModel>> completeProfile(ProfileUpdateRequest request);
-  Future<bool> isLoggedIn();
-  Future<UserModel?> getCurrentUser();
-  Future<void> saveUserSession(LoginResponse loginResponse);
-  Future<void> saveTokens({required String accessToken, String? refreshToken, String? userJson});
-  Future<void> clearUserSession();
+  Future<ApiResponse<LoginResponse>> loginWithGoogleIdToken(String idToken);
+  Future<ApiResponse<LoginResponse>> loginWithGoogleTokens({String? idToken, String? accessToken});
+  Future<ApiResponse<UserModel>> submitOnboarding(OnboardingRequest request);
+  Future<ApiResponse<UserModel>> me();
+  Future<ApiResponse<NicknameCheckResult>> checkNickname(String nickname);
+  Future<ApiResponse<void>> sendEmailOtp(String email);
+  Future<ApiResponse<void>> verifyEmailOtp(String email, String code);
+  Future<void> saveSession(LoginResponse login);
+  Future<bool> hasToken();
+  Future<void> clear();
+  Future<UserModel?> getSavedUser();
 }

@@ -1,199 +1,111 @@
 import 'package:flutter/foundation.dart';
-import '../../injection/injection.dart';
-import '../../core/auth/google_signin.dart';
-import '../../data/models/user_model.dart';
 import '../../core/network/api_response.dart';
+import '../../data/models/auth_models.dart';
 import '../../domain/repositories/auth_repository.dart';
 
-enum AuthState {
-  initial,
-  loading,
-  authenticated,
-  unauthenticated,
-  error,
-}
+enum AuthState { initial, loading, authenticated, unauthenticated, needsOnboarding, error }
 
 class AuthProvider extends ChangeNotifier {
-  final AuthRepository _authRepository;
-
-  AuthProvider(this._authRepository);
+  final AuthRepository _repo;
+  AuthProvider(this._repo);
 
   AuthState _state = AuthState.initial;
-  UserModel? _currentUser;
-  String? _errorMessage;
-
   AuthState get state => _state;
-  UserModel? get currentUser => _currentUser;
-  String? get errorMessage => _errorMessage;
-  bool get isAuthenticated => _state == AuthState.authenticated;
+  UserModel? _user;
+  UserModel? get user => _user;
+  String? _error;
+  String? get error => _error;
+
   bool get isLoading => _state == AuthState.loading;
 
-  Future<void> checkAuthStatus() async {
-    _setState(AuthState.loading);
-
-    try {
-      final isLoggedIn = await _authRepository.isLoggedIn();
-      if (isLoggedIn) {
-        final user = await _authRepository.getCurrentUser();
-        if (user != null) {
-          _currentUser = user;
-          _setState(AuthState.authenticated);
-        } else {
-          _setState(AuthState.unauthenticated);
-        }
+  Future<void> check() async {
+    _set(AuthState.loading);
+    if (await _repo.hasToken()) {
+      final me = await _repo.me();
+      if (me.isSuccess && me.data != null) {
+        _user = me.data;
+        _set(AuthState.authenticated);
       } else {
-        _setState(AuthState.unauthenticated);
+        _set(AuthState.unauthenticated);
       }
-    } catch (e) {
-      _setError('인증 상태 확인 중 오류가 발생했습니다.');
-    }
-  }
-
-  Future<bool> login(String email, String password) async {
-    _setState(AuthState.loading);
-
-    try {
-      final request = LoginRequest(email: email, password: password);
-      final result = await _authRepository.login(request);
-
-      if (result.isSuccess && result.data != null) {
-        _currentUser = result.data!.user;
-        _setState(AuthState.authenticated);
-        return true;
-      } else {
-        _setError(result.error?.message ?? '로그인에 실패했습니다.');
-        return false;
-      }
-    } catch (e) {
-      _setError('로그인 중 오류가 발생했습니다.');
-      return false;
+    } else {
+      _set(AuthState.unauthenticated);
     }
   }
 
   Future<bool> loginWithGoogle(String idToken) async {
-    _setState(AuthState.loading);
-
-    try {
-      final result = await _authRepository.loginWithGoogle(idToken);
-      if (result.isSuccess && result.data != null) {
-        _currentUser = result.data!.user;
-        _setState(AuthState.authenticated);
-        return true;
+    _set(AuthState.loading);
+    final ApiResponse<LoginResponse> res = await _repo.loginWithGoogleIdToken(idToken);
+    if (res.isSuccess && res.data != null) {
+      _user = res.data!.user;
+      if (res.data!.firstLogin) {
+        _set(AuthState.needsOnboarding);
       } else {
-        _setError(result.error?.message ?? 'Google 로그인에 실패했습니다.');
-        return false;
+        _set(AuthState.authenticated);
       }
-    } catch (e) {
-      _setError('Google 로그인 중 오류가 발생했습니다.');
-      return false;
+      return true;
     }
+    _error = res.error?.message ?? '로그인에 실패했습니다.';
+    _set(AuthState.error);
+    return false;
   }
 
   Future<bool> loginWithGoogleTokens({String? idToken, String? accessToken}) async {
-    _setState(AuthState.loading);
-    try {
-      ApiResponse<LoginResponse> result;
-      if (idToken != null && idToken.isNotEmpty) {
-        result = await _authRepository.loginWithGoogle(idToken);
-      } else if (accessToken != null && accessToken.isNotEmpty) {
-        result = await _authRepository.loginWithGoogleAccessToken(accessToken);
+    _set(AuthState.loading);
+    final ApiResponse<LoginResponse> res = await _repo.loginWithGoogleTokens(idToken: idToken, accessToken: accessToken);
+    if (res.isSuccess && res.data != null) {
+      _user = res.data!.user;
+      if (res.data!.firstLogin) {
+        _set(AuthState.needsOnboarding);
       } else {
-        _setError('유효한 Google 토큰이 없습니다.');
-        return false;
+        _set(AuthState.authenticated);
       }
-
-      if (result.isSuccess && result.data != null) {
-        _currentUser = result.data!.user;
-        // 디버그: 사용자 정보 출력
-        print('DEBUG: User logged in - profileCompleted: ${_currentUser!.profileCompleted}');
-        print('DEBUG: User info - name: ${_currentUser!.name}, email: ${_currentUser!.email}');
-        _setState(AuthState.authenticated);
-        return true;
-      } else {
-        _setError(result.error?.message ?? 'Google 로그인에 실패했습니다.');
-        return false;
-      }
-    } catch (e) {
-      _setError('Google 로그인 중 오류가 발생했습니다.');
-      return false;
+      return true;
     }
+    _error = res.error?.message ?? '로그인에 실패했습니다.';
+    _set(AuthState.error);
+    return false;
   }
 
-  Future<bool> register(String name, String email, String password) async {
-    _setState(AuthState.loading);
-
-    try {
-      final request = RegisterRequest(name: name, email: email, password: password);
-      final result = await _authRepository.register(request);
-
-      if (result.isSuccess && result.data != null) {
-        // 회원가입 성공 후 자동 로그인
-        return await login(email, password);
-      } else {
-        _setError(result.error?.message ?? '회원가입에 실패했습니다.');
-        return false;
-      }
-    } catch (e) {
-      _setError('회원가입 중 오류가 발생했습니다.');
-      return false;
+  Future<bool> submitOnboarding(OnboardingRequest req) async {
+    _set(AuthState.loading);
+    final res = await _repo.submitOnboarding(req);
+    if (res.isSuccess && res.data != null) {
+      _user = res.data;
+      _set(AuthState.authenticated);
+      return true;
     }
-  }
-
-  Future<void> logout() async {
-    // 즉시 로컬 세션 해제 후 UI 전환이 가능하도록 처리
-    try {
-      await _authRepository.clearUserSession();
-    } catch (_) {}
-    _currentUser = null;
-    _setState(AuthState.unauthenticated);
-
-    // 백그라운드로 서버 로그아웃 및 Google 세션 해제 시도 (실패 무시)
-    Future.microtask(() async {
-      try {
-        await _authRepository.logout();
-      } catch (_) {}
-      try {
-        final google = getIt<GoogleSignInService>();
-        await google.signOut();
-      } catch (_) {}
-    });
-  }
-
-  Future<bool> completeProfile(ProfileUpdateRequest request) async {
-    try {
-      _setState(AuthState.loading);
-      final response = await _authRepository.completeProfile(request);
-      
-      if (response.success && response.data != null) {
-        _currentUser = response.data;
-        _setState(AuthState.authenticated);
-        return true;
-      } else {
-        _setError(response.error?.message ?? '프로필 완성에 실패했습니다.');
-        return false;
-      }
-    } catch (e) {
-      _setError('프로필 완성 중 오류가 발생했습니다: ${e.toString()}');
-      return false;
-    }
+    _error = res.error?.message ?? '회원가입에 실패했습니다.';
+    _set(AuthState.error);
+    return false;
   }
 
   void clearError() {
-    _errorMessage = null;
+    _error = null;
     if (_state == AuthState.error) {
-      _setState(_currentUser != null 
-          ? AuthState.authenticated 
-          : AuthState.unauthenticated);
+      _set(_user != null ? AuthState.authenticated : AuthState.unauthenticated);
     }
   }
 
-  void _setState(AuthState newState) {
-    _state = newState;
+  void _set(AuthState s) {
+    _state = s;
     notifyListeners();
   }
 
-  void _setError(String message) {
-    _errorMessage = message;
-    _setState(AuthState.error);
+  // Nickname check does not mutate auth state; returns result or null on failure.
+  Future<NicknameCheckResult?> checkNickname(String nickname) async {
+    final res = await _repo.checkNickname(nickname);
+    if (res.isSuccess && res.data != null) return res.data;
+    return null;
+  }
+
+  Future<bool> sendEmailOtp(String email) async {
+    final res = await _repo.sendEmailOtp(email);
+    return res.isSuccess;
+  }
+
+  Future<bool> verifyEmailOtp(String email, String code) async {
+    final res = await _repo.verifyEmailOtp(email, code);
+    return res.isSuccess;
   }
 }

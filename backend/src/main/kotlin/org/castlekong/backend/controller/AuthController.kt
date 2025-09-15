@@ -69,6 +69,28 @@ class AuthController(
                 )
         }
     }
+
+    @PostMapping("/google/callback")
+    @Operation(summary = "Google OAuth2 콜백", description = "Google ID Token으로 로그인/회원가입")
+    fun googleCallback(
+        @RequestBody payload: Map<String, String>,
+    ): ResponseEntity<ApiResponse<LoginResponse>> {
+        val idToken = payload["id_token"]
+        if (idToken.isNullOrBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(code = "VALIDATION_ERROR", message = "id_token is required"))
+        }
+        return try {
+            val loginResponse = authService.authenticateWithGoogle(idToken)
+            ResponseEntity.ok(ApiResponse.success(loginResponse))
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(code = "AUTH_ERROR", message = e.message ?: "Invalid token"))
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(code = "INTERNAL_SERVER_ERROR", message = "서버 내부 오류"))
+        }
+    }
     
     // 임시 디버그용 API - 모든 사용자의 profileCompleted를 false로 초기화
     @PostMapping("/debug/reset-profile-status")

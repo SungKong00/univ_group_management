@@ -32,8 +32,24 @@ data class User(
     val bio: String? = null,
     @Column(name = "profile_completed", nullable = false)
     val profileCompleted: Boolean = false,
+    // 학교 이메일 인증 여부 (MVP 단계에서는 기본 true로 처리)
     @Column(name = "email_verified", nullable = false)
-    val emailVerified: Boolean = true, // 임시로 모든 사용자 인증 완료로 설정
+    val emailVerified: Boolean = true,
+    // 추가 온보딩 필드
+    @Column(name = "college", length = 100)
+    val college: String? = null,
+    @Column(name = "department", length = 100)
+    val department: String? = null,
+    @Column(name = "student_no", length = 30)
+    val studentNo: String? = null,
+    @Column(name = "school_email", length = 100)
+    val schoolEmail: String? = null,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "professor_status")
+    val professorStatus: ProfessorStatus? = null,
+    // 학년 정보 (그룹장 유고시 자동 승계를 위해)
+    @Column(name = "academic_year")
+    val academicYear: Int? = null, // 1학년: 1, 2학년: 2, ... 대학원생: null
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
@@ -46,4 +62,10 @@ enum class GlobalRole {
     STUDENT,
     PROFESSOR,
     ADMIN,
+}
+
+enum class ProfessorStatus {
+    PENDING,
+    APPROVED,
+    REJECTED,
 }

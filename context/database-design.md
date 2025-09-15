@@ -28,22 +28,30 @@ This document outlines the current database schema implementation status.
 | `id` | BIGINT | **PK**, Auto Increment | 사용자 고유 번호 |
 | `email` | VARCHAR(100) | Not Null, **Unique** | 이메일 주소 (Google OAuth2 로그인) |
 | `name` | VARCHAR(50) | Not Null | 실명 |
-| `nickname` | VARCHAR(30) | | 사용자 닉네임 |
+| `nickname` | VARCHAR(50) | | 사용자 닉네임 |
 | `profile_image_url` | VARCHAR(500) | | 프로필 이미지 URL |
 | `bio` | VARCHAR(500) | | 자기소개 |
 | `password_hash` | VARCHAR(255) | Not Null | 패스워드 해시 (현재 사용되지 않음) |
 | `global_role` | ENUM | Not Null | 전역 역할 (STUDENT, PROFESSOR, ADMIN) |
 | `profile_completed` | BOOLEAN | Not Null | 프로필 완성 여부 (기본값: false) |
-| `email_verified` | BOOLEAN | Not Null | 이메일 인증 여부 (기본값: false) |
+| `email_verified` | BOOLEAN | Not Null | 이메일 인증 여부 (기본값: true, OTP는 후순위) |
+| `department` | VARCHAR(100) | | 학과 |
+| `student_no` | VARCHAR(30) | | 학번 |
+| `school_email` | VARCHAR(100) | | 학교 이메일 (도메인 `hs.ac.kr` 권장) |
+| `professor_status` | ENUM | | 교수 승인 상태 (PENDING, APPROVED, REJECTED) |
 | `is_active` | BOOLEAN | Not Null | 계정 활성화 상태 |
 | `created_at` | DATETIME | Not Null | 생성 일시 |
 | `updated_at` | DATETIME | Not Null | 수정 일시 |
 
-**최근 업데이트 (2025-09-11):**
-- ✅ nickname, profile_image_url, bio 필드 추가
-- ✅ profile_completed 필드 추가 (회원가입 플로우 제어용)
-- ✅ email_verified 필드 추가 (향후 이메일 인증 기능용)
-- password_hash 필드 존재 (Google OAuth2만 사용하므로 실제로는 사용되지 않음)
+**최근 업데이트 (2025-09-13):**
+- ✅ 온보딩 단일 화면 대응 필드 추가: `department`, `student_no`, `school_email`, `professor_status`
+- ✅ `email_verified` 기본값 true (메일 인증은 MVP 말로 이연)
+- ✅ UserResponse에 확장 필드 노출
+  
+과거 업데이트 (2025-09-11):
+- nickname, profile_image_url, bio 필드 추가
+- profile_completed 필드 추가 (회원가입 플로우 제어용)
+- email_verified 필드 추가
 
 ---
 
@@ -63,6 +71,7 @@ This document outlines the current database schema implementation status.
 | `tags` | ElementCollection | | 그룹 태그 집합 |
 | `created_at` | DATETIME | Not Null | 생성 일시 |
 | `updated_at` | DATETIME | Not Null | 수정 일시 |
+| `deleted_at` | DATETIME | | 소프트 삭제 일시 (30일 보존 후 영구 삭제) |
 
 ### GroupRole (그룹 역할) - ✅ 구현됨
 | 컬럼명 | 데이터 타입 | 제약 조건 | 설명 |
@@ -81,6 +90,17 @@ This document outlines the current database schema implementation status.
 | `user_id` | BIGINT | Not Null, **FK** (User.id) | 사용자 ID |
 | `role_id` | BIGINT | Not Null, **FK** (GroupRole.id) | 그룹 내 역할 ID |
 | `joined_at` | DATETIME | Not Null | 가입 일시 (기본값: 현재 시간) |
+
+### GroupMemberPermissionOverride (개인 권한 오버라이드) - ✅ 추가
+| 컬럼명 | 데이터 타입 | 제약 조건 | 설명 |
+| --- | --- | --- | --- |
+| `id` | BIGINT | **PK**, Auto Increment | 오버라이드 고유 번호 |
+| `group_id` | BIGINT | Not Null, **FK** (Group.id) | 그룹 ID |
+| `user_id` | BIGINT | Not Null, **FK** (User.id) | 사용자 ID |
+| `allowed_permissions` | ElementCollection | | 추가로 허용된 권한 (열거형 컬렉션) |
+| `denied_permissions` | ElementCollection | | 명시적으로 차단된 권한 (열거형 컬렉션) |
+
+유효 권한 계산: `effective = role.permissions ∪ allowed − denied`.
 
 ### GroupPermission (권한 열거형) - ✅ 구현됨
 **현재 정의된 14개 권한:**
