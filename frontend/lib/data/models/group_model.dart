@@ -210,6 +210,15 @@ class UserSummaryModel {
       profileImageUrl: json['profileImageUrl']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'profileImageUrl': profileImageUrl,
+    };
+  }
 }
 
 // Helper functions for parsing enums

@@ -1,0 +1,674 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/workspace_provider.dart';
+import '../../../data/models/workspace_models.dart';
+import '../../widgets/loading_overlay.dart';
+
+class ChannelDetailScreen extends StatefulWidget {
+  final ChannelModel channel;
+
+  const ChannelDetailScreen({
+    super.key,
+    required this.channel,
+  });
+
+  @override
+  State<ChannelDetailScreen> createState() => _ChannelDetailScreenState();
+}
+
+class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _messageController = TextEditingController();
+  final FocusNode _messageFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 채널 선택 및 게시글 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<WorkspaceProvider>().selectChannel(widget.channel);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _messageController.dispose();
+    _messageFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<WorkspaceProvider>(
+      builder: (context, provider, child) {
+        return LoadingOverlay(
+          isLoading: provider.isLoading,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        _getChannelIcon(widget.channel.type),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          widget.channel.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (widget.channel.description != null)
+                    Text(
+                      widget.channel.description!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              elevation: 1,
+            ),
+            body: Column(
+              children: [
+                // 메시지 목록
+                Expanded(
+                  child: _buildMessageList(context, provider),
+                ),
+
+                // 메시지 입력창
+                _buildMessageComposer(context, provider),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMessageList(BuildContext context, WorkspaceProvider provider) {
+    final posts = provider.currentChannelPosts;
+
+    if (posts.isEmpty) {
+      return _buildEmptyState(context);
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.all(16),
+      itemCount: posts.length,
+      itemBuilder: (context, index) {
+        final post = posts[index];
+        return _buildMessageBubble(context, post, provider);
+      },
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            _getChannelIcon(widget.channel.type),
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '아직 메시지가 없습니다',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '첫 번째 메시지를 남겨보세요',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(
+    BuildContext context,
+    PostModel post,
+    WorkspaceProvider provider,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 작성자 정보 및 시간
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Text(
+                  post.author.name.isNotEmpty ? post.author.name[0] : '?',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                post.author.name,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _formatTimestamp(post.createdAt),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const Spacer(),
+              if (post.isPinned)
+                Icon(
+                  Icons.push_pin,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // 제목 (있는 경우만)
+          if (post.title.isNotEmpty) ...[
+            Text(
+              post.title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
+
+          // 메시지 내용
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              post.content,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+
+          // 첨부파일 (있는 경우)
+          if (post.attachments.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: post.attachments.map((attachment) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.attachment,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'File', // TODO: 파일명 추출
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+
+          // 반응 및 댓글
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              if (post.likeCount > 0) ...[
+                InkWell(
+                  onTap: () {
+                    // TODO: 좋아요 토글
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.thumb_up,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${post.likeCount}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              InkWell(
+                onTap: () => _showCommentsSheet(context, post, provider),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '댓글',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageComposer(BuildContext context, WorkspaceProvider provider) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        8,
+        16,
+        16 + MediaQuery.of(context).padding.bottom,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: _selectAttachment,
+            icon: const Icon(Icons.attach_file),
+            tooltip: '파일 첨부',
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              focusNode: _messageFocusNode,
+              decoration: InputDecoration(
+                hintText: '메시지를 입력하세요...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+              ),
+              maxLines: null,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _sendMessage(provider),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () => _sendMessage(provider),
+            icon: const Icon(Icons.send),
+            tooltip: '전송',
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _sendMessage(WorkspaceProvider provider) async {
+    final message = _messageController.text.trim();
+    if (message.isEmpty) return;
+
+    _messageController.clear();
+
+    try {
+      await provider.createPost(
+        channelId: widget.channel.id,
+        title: '', // 채팅 메시지는 제목 없음
+        content: message,
+        type: PostType.general,
+      );
+
+      // 새 메시지가 추가되면 맨 아래로 스크롤
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('메시지 전송 실패: $e')),
+        );
+      }
+    }
+  }
+
+  void _selectAttachment() {
+    // TODO: 파일 선택 구현
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('파일 첨부 기능 구현 예정')),
+    );
+  }
+
+  void _showCommentsSheet(
+    BuildContext context,
+    PostModel post,
+    WorkspaceProvider provider,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => _CommentsSheet(
+          post: post,
+          provider: provider,
+          scrollController: scrollController,
+        ),
+      ),
+    );
+  }
+
+  IconData _getChannelIcon(ChannelType type) {
+    switch (type) {
+      case ChannelType.text:
+        return Icons.chat;
+      case ChannelType.voice:
+        return Icons.mic;
+      case ChannelType.announcement:
+        return Icons.campaign;
+      case ChannelType.fileShare:
+        return Icons.folder_shared;
+    }
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final diff = now.difference(timestamp);
+
+    if (diff.inDays > 0) {
+      return '${diff.inDays}일 전';
+    } else if (diff.inHours > 0) {
+      return '${diff.inHours}시간 전';
+    } else if (diff.inMinutes > 0) {
+      return '${diff.inMinutes}분 전';
+    } else {
+      return '방금 전';
+    }
+  }
+}
+
+class _CommentsSheet extends StatefulWidget {
+  final PostModel post;
+  final WorkspaceProvider provider;
+  final ScrollController scrollController;
+
+  const _CommentsSheet({
+    required this.post,
+    required this.provider,
+    required this.scrollController,
+  });
+
+  @override
+  State<_CommentsSheet> createState() => _CommentsSheetState();
+}
+
+class _CommentsSheetState extends State<_CommentsSheet> {
+  final TextEditingController _commentController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // 댓글 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.provider.loadPostComments(widget.post.id);
+    });
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final comments = widget.provider.getCommentsForPost(widget.post.id);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Header
+          Text(
+            '댓글 ${comments.length}개',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Comments list
+          Expanded(
+            child: comments.isEmpty
+                ? const Center(
+                    child: Text('아직 댓글이 없습니다'),
+                  )
+                : ListView.builder(
+                    controller: widget.scrollController,
+                    itemCount: comments.length,
+                    itemBuilder: (context, index) {
+                      final comment = comments[index];
+                      return _buildCommentTile(context, comment);
+                    },
+                  ),
+          ),
+
+          // Comment composer
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _commentController,
+                  decoration: const InputDecoration(
+                    hintText: '댓글을 입력하세요...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: null,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: _sendComment,
+                icon: const Icon(Icons.send),
+              ),
+            ],
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommentTile(BuildContext context, CommentModel comment) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 12,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Text(
+                  comment.author.name.isNotEmpty ? comment.author.name[0] : '?',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                comment.author.name,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _formatTimestamp(comment.createdAt),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 32),
+            child: Text(
+              comment.content,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _sendComment() async {
+    final content = _commentController.text.trim();
+    if (content.isEmpty) return;
+
+    _commentController.clear();
+
+    try {
+      await widget.provider.createComment(
+        postId: widget.post.id,
+        content: content,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('댓글 작성 실패: $e')),
+        );
+      }
+    }
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final diff = now.difference(timestamp);
+
+    if (diff.inDays > 0) {
+      return '${diff.inDays}일 전';
+    } else if (diff.inHours > 0) {
+      return '${diff.inHours}시간 전';
+    } else if (diff.inMinutes > 0) {
+      return '${diff.inMinutes}분 전';
+    } else {
+      return '방금 전';
+    }
+  }
+}

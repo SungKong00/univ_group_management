@@ -17,14 +17,14 @@ class ContentController(
 ) {
     // === Workspaces (compat: group-level single workspace) ===
     @GetMapping("/groups/{groupId}/workspaces")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@security.hasGroupPerm(#groupId, 'CHANNEL_READ')")
     fun getWorkspaces(@PathVariable groupId: Long): ApiResponse<List<WorkspaceResponse>> {
         val response = contentService.getWorkspacesByGroup(groupId)
         return ApiResponse.success(response)
     }
 
     @PostMapping("/groups/{groupId}/workspaces")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE')")
     @ResponseStatus(HttpStatus.CREATED)
     fun createWorkspace(
         @PathVariable groupId: Long,
@@ -39,24 +39,34 @@ class ContentController(
     fun updateWorkspace(
         @PathVariable workspaceId: Long,
         @Valid @RequestBody request: UpdateWorkspaceRequest,
+        authentication: Authentication,
     ): ApiResponse<WorkspaceResponse> {
-        val response = contentService.updateWorkspace(workspaceId, request)
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.updateWorkspace(workspaceId, request, user.id)
         return ApiResponse.success(response)
     }
 
     @DeleteMapping("/workspaces/{workspaceId}")
     @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteWorkspace(@PathVariable workspaceId: Long): ApiResponse<Unit> {
-        contentService.deleteWorkspace(workspaceId)
+    fun deleteWorkspace(
+        @PathVariable workspaceId: Long,
+        authentication: Authentication,
+    ): ApiResponse<Unit> {
+        val user = getUserByEmail(authentication.name)
+        contentService.deleteWorkspace(workspaceId, user.id)
         return ApiResponse.success()
     }
 
     // === Channels ===
     @GetMapping("/workspaces/{workspaceId}/channels")
     @PreAuthorize("isAuthenticated()")
-    fun getChannels(@PathVariable workspaceId: Long): ApiResponse<List<ChannelResponse>> {
-        val response = contentService.getChannelsByWorkspace(workspaceId)
+    fun getChannels(
+        @PathVariable workspaceId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<ChannelResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getChannelsByWorkspace(workspaceId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -100,8 +110,12 @@ class ContentController(
     // === Posts ===
     @GetMapping("/channels/{channelId}/posts")
     @PreAuthorize("isAuthenticated()")
-    fun getChannelPosts(@PathVariable channelId: Long): ApiResponse<List<PostResponse>> {
-        val response = contentService.getPosts(channelId)
+    fun getChannelPosts(
+        @PathVariable channelId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<PostResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getPosts(channelId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -120,8 +134,12 @@ class ContentController(
 
     @GetMapping("/posts/{postId}")
     @PreAuthorize("isAuthenticated()")
-    fun getPost(@PathVariable postId: Long): ApiResponse<PostResponse> {
-        val response = contentService.getPost(postId)
+    fun getPost(
+        @PathVariable postId: Long,
+        authentication: Authentication,
+    ): ApiResponse<PostResponse> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getPost(postId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -152,8 +170,12 @@ class ContentController(
     // === Comments ===
     @GetMapping("/posts/{postId}/comments")
     @PreAuthorize("isAuthenticated()")
-    fun getComments(@PathVariable postId: Long): ApiResponse<List<CommentResponse>> {
-        val response = contentService.getComments(postId)
+    fun getComments(
+        @PathVariable postId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<CommentResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getComments(postId, user.id)
         return ApiResponse.success(response)
     }
 

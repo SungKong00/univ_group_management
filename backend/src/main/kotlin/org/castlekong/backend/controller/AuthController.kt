@@ -91,7 +91,33 @@ class AuthController(
                 .body(ApiResponse.error(code = "INTERNAL_SERVER_ERROR", message = "서버 내부 오류"))
         }
     }
-    
+
+    @PostMapping("/logout")
+    @Operation(summary = "로그아웃", description = "사용자를 로그아웃하고 토큰을 무효화합니다")
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "로그아웃 성공"),
+            SwaggerApiResponse(responseCode = "401", description = "인증 실패")
+        ]
+    )
+    fun logout(): ResponseEntity<ApiResponse<String>> {
+        return try {
+            ResponseEntity.ok(
+                ApiResponse.success(
+                    data = "로그아웃되었습니다"
+                )
+            )
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(
+                    ApiResponse.error<String>(
+                        code = "INTERNAL_SERVER_ERROR",
+                        message = "로그아웃 중 오류가 발생했습니다: ${e.message}"
+                    )
+                )
+        }
+    }
+
     // 임시 디버그용 API - 모든 사용자의 profileCompleted를 false로 초기화
     @PostMapping("/debug/reset-profile-status")
     @Operation(summary = "[DEBUG] 모든 사용자의 profileCompleted를 false로 재설정", description = "디버그용 API - 개발 환경에서만 사용")

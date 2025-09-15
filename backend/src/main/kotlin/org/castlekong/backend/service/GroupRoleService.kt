@@ -16,7 +16,8 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class GroupRoleService(
     private val groupRepository: GroupRepository,
-    private val groupRoleRepository: GroupRoleRepository
+    private val groupRoleRepository: GroupRoleRepository,
+    private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
 
     @Transactional
@@ -51,6 +52,7 @@ class GroupRoleService(
         )
 
         val savedRole = groupRoleRepository.save(groupRole)
+        permissionService.invalidateGroup(groupId)
         return toGroupRoleResponse(savedRole)
     }
 
@@ -119,6 +121,7 @@ class GroupRoleService(
         )
 
         val savedRole = groupRoleRepository.save(updatedRole)
+        permissionService.invalidateGroup(groupId)
         return toGroupRoleResponse(savedRole)
     }
 
@@ -143,6 +146,7 @@ class GroupRoleService(
         }
 
         groupRoleRepository.delete(role)
+        permissionService.invalidateGroup(groupId)
     }
 
     private fun toGroupRoleResponse(groupRole: GroupRole): GroupRoleResponse {

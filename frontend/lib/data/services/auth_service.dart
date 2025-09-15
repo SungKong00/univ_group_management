@@ -85,6 +85,18 @@ class AuthService {
     }
   }
 
+  Future<ApiResponse<String>> logout() async {
+    try {
+      final Response resp = await _dio.dio.post(ApiEndpoints.logout);
+      return ApiResponse.fromJson(
+        resp.data as Map<String, dynamic>,
+        (json) => json as String,
+      );
+    } on DioException catch (e) {
+      return _errorFromDio<String>(e);
+    }
+  }
+
   ApiResponse<T> _errorFromDio<T>(DioException e) {
     final data = e.response?.data;
     if (data is Map<String, dynamic>) {

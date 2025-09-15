@@ -8,6 +8,7 @@ import '../../../core/storage/token_storage.dart';
 import '../../../data/services/group_service.dart';
 import '../../../data/models/group_model.dart';
 import '../groups/group_explorer_screen.dart';
+import '../workspace/workspace_screen.dart';
 
 class MainNavScaffold extends StatefulWidget {
   const MainNavScaffold({super.key});
@@ -30,11 +31,25 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
       const _ProfileTab(),
     ];
 
-    return Scaffold(
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        // AuthState가 unauthenticated가 되면 로그인 페이지로 이동
+        if (auth.state == AuthState.unauthenticated) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          });
+        }
+
+        return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_currentIndex]),
-        actions: const [
-          Padding(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: auth.isLoading ? null : () => _showLogoutDialog(context, auth),
+            tooltip: '로그아웃',
+          ),
+          const Padding(
             padding: EdgeInsets.only(right: 8),
             child: Icon(Icons.notifications_none),
           )
@@ -65,6 +80,42 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
           BottomNavigationBarItem(icon: Icon(Icons.workspaces_outline), label: '워크스페이스'),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: '나의 활동'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: '프로필'),
+        ],
+      ),
+    );
+      },
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, AuthProvider auth) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('로그아웃'),
+        content: const Text('정말 로그아웃하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final success = await auth.logout();
+              if (success && context.mounted) {
+                // 로그아웃 성공 시 즉시 로그인 페이지로 이동
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              } else if (!success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(auth.error ?? '로그아웃에 실패했습니다.'),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                );
+              }
+            },
+            child: const Text('로그아웃'),
+          ),
         ],
       ),
     );
@@ -499,25 +550,130 @@ class _SectionListSkeleton extends StatelessWidget {
   }
 }
 
-class _WorkspaceTab extends StatelessWidget {
+class _WorkspaceTab extends StatefulWidget {
   const _WorkspaceTab();
   @override
+  State<_WorkspaceTab> createState() => _WorkspaceTabState();
+}
+
+class _WorkspaceTabState extends State<_WorkspaceTab> {
+  late final GroupService _service;
+  List<GroupSummaryModel> _myGroups = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _service = GroupService(DioClient(SharedPrefsTokenStorage()));
+    _loadMyGroups();
+  }
+
+  Future<void> _loadMyGroups() async {
+    try {
+      // TODO: 내가 속한 그룹 목록을 가져오는 API 호출
+      // 현재는 모든 그룹을 가져옴 (임시)
+      final res = await _service.explore(page: 0, size: 20);
+      if (!mounted) return;
+      if (res.isSuccess && res.data != null) {
+        setState(() {
+          _myGroups = res.data!.content;
+          _loading = false;
+        });
+      } else {
+        setState(() => _loading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Skeleton list of workspaces
-    final items = List.generate(10, (i) => '워크스페이스 ${i + 1}');
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_myGroups.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.workspaces_outlined,
+              size: 64,
+              color: Colors.grey,
+            ),
+            SizedBox(height: 16),
+            Text(
+              '아직 참여한 그룹이 없습니다',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '그룹 탐색에서 원하는 그룹을 찾아보세요',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemBuilder: (context, index) {
+        final group = _myGroups[index];
         return ListTile(
-          leading: const CircleAvatar(child: Icon(Icons.group_work)),
-          title: Text(items[index]),
-          subtitle: const Text('설명 텍스트가 여기에 표시됩니다'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {},
+          leading: CircleAvatar(
+            backgroundImage: group.profileImageUrl != null
+                ? NetworkImage(group.profileImageUrl!)
+                : null,
+            child: group.profileImageUrl == null
+                ? const Icon(Icons.group_work)
+                : null,
+          ),
+          title: Text(group.name),
+          subtitle: Text(group.description ?? '${group.university ?? ''} ${group.department ?? ''}'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (group.isRecruiting)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '모집중',
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+          onTap: () {
+            // 워크스페이스 화면으로 이동
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WorkspaceScreen(groupId: group.id),
+              ),
+            );
+          },
         );
       },
       separatorBuilder: (_, __) => const Divider(height: 1),
-      itemCount: items.length,
+      itemCount: _myGroups.length,
     );
   }
 }

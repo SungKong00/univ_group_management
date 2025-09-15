@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../data/models/group_model.dart';
 import '../../providers/group_provider.dart';
+import '../../screens/workspace/workspace_screen.dart';
 
 class GroupTreeWidget extends StatelessWidget {
   final List<GroupTreeNode> nodes;
@@ -265,7 +266,14 @@ class GroupTreeNodeWidget extends StatelessWidget {
     final gp = context.read<GroupProvider>();
     final isMember = await gp.checkGroupMembership(group.id);
     if (isMember) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('워크스페이스로 이동 (구현 예정)')));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => WorkspaceScreen(
+            groupId: group.id,
+            groupName: group.name,
+          ),
+        ),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('그룹 소개 페이지로 이동 (구현 예정)')));
     }

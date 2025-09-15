@@ -9,7 +9,7 @@ class GroupRepositoryImpl implements GroupRepository {
 
   @override
   Future<ApiResponse<List<GroupHierarchyNode>>> getGroupHierarchy() async {
-    return _client.get(
+    return _client.getWithParser(
       '/groups/hierarchy',
       (data) {
         final items = data as List<dynamic>;
@@ -21,7 +21,7 @@ class GroupRepositoryImpl implements GroupRepository {
   @override
   Future<ApiResponse<List<GroupSummaryModel>>> getAllGroups() async {
     // Page<ApiResponse> 형태를 받아 content만 추출해 List로 반환
-    return _client.get(
+    return _client.getWithParser(
       '/groups/explore',
       (data) {
         final page = data as Map<String, dynamic>; // { content, totalElements, ... }
@@ -63,7 +63,7 @@ class GroupRepositoryImpl implements GroupRepository {
 
   @override
   Future<ApiResponse<List<GroupSummaryModel>>> getSubGroups(int parentId) async {
-    return _client.get(
+    return _client.getWithParser(
       '/groups/$parentId/sub-groups',
       (data) {
         final items = data as List<dynamic>;
@@ -74,7 +74,7 @@ class GroupRepositoryImpl implements GroupRepository {
 
   @override
   Future<ApiResponse<bool>> checkGroupMembership(int groupId) async {
-    return _client.get(
+    return _client.getWithParser(
       '/groups/$groupId/me/permissions',
       (data) {
         final permissions = (data as List<dynamic>).map((e) => e.toString()).toSet();

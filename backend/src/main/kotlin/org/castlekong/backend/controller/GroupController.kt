@@ -80,7 +80,7 @@ class GroupController(
     }
 
     @PutMapping("/{groupId}")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE')")
+    @PreAuthorize("@security.isOwner(#groupId)")
     fun updateGroup(
         @PathVariable groupId: Long,
         @Valid @RequestBody request: UpdateGroupRequest,
@@ -92,7 +92,7 @@ class GroupController(
     }
 
     @DeleteMapping("/{groupId}")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE')")
+    @PreAuthorize("@security.isOwner(#groupId)")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteGroup(
         @PathVariable groupId: Long,
@@ -137,9 +137,21 @@ class GroupController(
         return ApiResponse.success(response)
     }
 
+    // 내 멤버십 조회 (멤버 여부 판별용)
+    @GetMapping("/{groupId}/members/me")
+    @PreAuthorize("isAuthenticated()")
+    fun getMyMembership(
+        @PathVariable groupId: Long,
+        authentication: Authentication,
+    ): ApiResponse<GroupMemberResponse> {
+        val user = getUserByEmail(authentication.name)
+        val response = groupService.getMyMembership(groupId, user.id)
+        return ApiResponse.success(response)
+    }
+
     // 멤버 역할 변경
     @PutMapping("/{groupId}/members/{userId}/role")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE_MEMBERS')")
+    @PreAuthorize("@security.hasGroupPerm(#groupId, 'ROLE_MANAGE')")
     fun updateMemberRole(
         @PathVariable groupId: Long,
         @PathVariable userId: Long,
@@ -153,7 +165,7 @@ class GroupController(
 
     // 멤버 강제 탈퇴
     @DeleteMapping("/{groupId}/members/{userId}")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE_MEMBERS')")
+    @PreAuthorize("@security.hasGroupPerm(#groupId, 'MEMBER_KICK')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun removeMember(
         @PathVariable groupId: Long,
@@ -249,14 +261,14 @@ class GroupController(
     // === 그룹 가입 신청 관리 ===
     
     @GetMapping("/{groupId}/join-requests")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE_MEMBERS')")
+    @PreAuthorize("@security.hasGroupPerm(#groupId, 'MEMBER_APPROVE')")
     fun getGroupJoinRequests(@PathVariable groupId: Long): ApiResponse<List<GroupJoinRequestResponse>> {
         val response = groupService.getGroupJoinRequestsByGroup(groupId)
         return ApiResponse.success(response)
     }
     
     @PatchMapping("/{groupId}/join-requests/{requestId}")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE_MEMBERS')")
+    @PreAuthorize("@security.hasGroupPerm(#groupId, 'MEMBER_APPROVE')")
     fun reviewGroupJoinRequest(
         @PathVariable groupId: Long,
         @PathVariable requestId: Long,
@@ -284,14 +296,14 @@ class GroupController(
     }
     
     @GetMapping("/{groupId}/sub-groups/requests")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE')")
+    @PreAuthorize("@security.isOwner(#groupId)")
     fun getSubGroupRequests(@PathVariable groupId: Long): ApiResponse<List<SubGroupRequestResponse>> {
         val response = groupService.getSubGroupRequestsByParentGroup(groupId)
         return ApiResponse.success(response)
     }
     
     @PatchMapping("/{groupId}/sub-groups/requests/{requestId}")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE')")
+    @PreAuthorize("@security.isOwner(#groupId)")
     fun reviewSubGroupRequest(
         @PathVariable groupId: Long,
         @PathVariable requestId: Long,
@@ -314,7 +326,7 @@ class GroupController(
     // === 지도교수 관리 ===
     
     @PostMapping("/{groupId}/professors/{professorId}")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE')")
+    @PreAuthorize("@security.isOwner(#groupId)")
     @ResponseStatus(HttpStatus.CREATED)
     fun assignProfessor(
         @PathVariable groupId: Long,
@@ -327,7 +339,7 @@ class GroupController(
     }
     
     @DeleteMapping("/{groupId}/professors/{professorId}")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE')")
+    @PreAuthorize("@security.isOwner(#groupId)")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun removeProfessor(
         @PathVariable groupId: Long,
@@ -348,7 +360,7 @@ class GroupController(
     // === 그룹장 권한 위임 ===
     
     @PostMapping("/{groupId}/transfer-ownership/{newOwnerId}")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE')")
+    @PreAuthorize("@security.isOwner(#groupId)")
     fun transferOwnership(
         @PathVariable groupId: Long,
         @PathVariable newOwnerId: Long,

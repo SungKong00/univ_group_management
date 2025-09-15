@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/nav_provider.dart';
 import '../../widgets/groups/group_tree_widget.dart';
 import '../../../data/models/group_model.dart';
+import '../workspace/workspace_screen.dart';
 
 class GroupExplorerScreen extends StatefulWidget {
   const GroupExplorerScreen({super.key});
@@ -56,13 +57,20 @@ class _GroupExplorerScreenState extends State<GroupExplorerScreen> {
   @override
   void initState() {
     super.initState();
-    // 화면 로드 시 그룹 데이터 가져오기 후 사용자 학과 경로 자동 펼침
+    // 화면 로드 시 그룹 데이터 가져오기 후 사용자 학과/계열 경로 자동 펼침
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final groupProvider = context.read<GroupProvider>();
-      final dept = context.read<AuthProvider>().user?.department;
+      final auth = context.read<AuthProvider>();
+      final dept = auth.user?.department;
+      final college = auth.user?.college;
       groupProvider.loadAllGroups().then((_) {
         if (dept != null && dept.isNotEmpty) {
           groupProvider.expandPathToDepartment(dept);
+        } else if (college != null && college.isNotEmpty) {
+          groupProvider.expandPathToCollege(college);
+        } else {
+          // 학과/계열 텍스트 정보가 없을 때, 내 멤버십 기준으로 자동 펼침 (계열 우선)
+          groupProvider.expandToMyAffiliation(preferDepartment: false);
         }
       });
       // 하단 탭바에서 워크스페이스 탭 활성 표시
@@ -448,21 +456,23 @@ class GroupDetailBottomSheet extends StatelessWidget {
   }
 
   void _navigateToGroupHome(BuildContext context, int groupId) async {
-    // 멤버십 확인
     final groupProvider = context.read<GroupProvider>();
     final isMember = await groupProvider.checkGroupMembership(groupId);
-    
+
     Navigator.of(context).pop(); // 모달 닫기
-    
+
     if (isMember) {
       // 멤버라면 워크스페이스로 이동
-      // TODO: 워크스페이스 페이지로 네비게이션 구현
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('워크스페이스로 이동 (구현 예정)')),
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => WorkspaceScreen(
+            groupId: groupId,
+            groupName: node.group.name,
+          ),
+        ),
       );
     } else {
-      // 비멤버라면 그룹 소개 페이지로 이동
-      // TODO: 그룹 소개 페이지로 네비게이션 구현
+      // 비멤버라면 그룹 소개 페이지(미구현)로 안내
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('그룹 소개 페이지로 이동 (구현 예정)')),
       );

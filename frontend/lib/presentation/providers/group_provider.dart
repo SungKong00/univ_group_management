@@ -45,9 +45,18 @@ class GroupProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _repo.getAllGroups();
-      if (response.isSuccess && response.data != null) {
-        _groupTree = _buildGroupTree(response.data!);
+      // Ensure hierarchy is loaded, or fetch it now.
+      if (_hierarchy.isEmpty) {
+        await fetchGroupHierarchy();
+      }
+
+      final summaryResponse = await _repo.getAllGroups();
+
+      if (summaryResponse.isSuccess &&
+          summaryResponse.data != null &&
+          _hierarchy.isNotEmpty) {
+        final summaries = summaryResponse.data!;
+        _groupTree = _buildGroupTree(summaries, _hierarchy);
 
         // 멤버십 수집: 모든 그룹에 대해 멤버 여부 확인 후 캐시
         _myGroupIds.clear();
@@ -69,7 +78,8 @@ class GroupProvider with ChangeNotifier {
           } catch (_) {}
         }
       } else {
-        _error = response.error?.message ?? '그룹 정보를 불러오는데 실패했습니다.';
+        _error = summaryResponse.error?.message ??
+            '그룹 정보를 불러오는데 실패했습니다.';
         _groupTree = [];
         _myGroupIds.clear();
       }
@@ -86,7 +96,7 @@ class GroupProvider with ChangeNotifier {
   // Fetches flat hierarchy for onboarding screen
   Future<void> fetchGroupHierarchy() async {
     if (_hierarchy.isNotEmpty) return; // Do not fetch if already loaded
-    
+
     // Use _isLoading for overall loading, but don't block if explorer is loading
     // This is a separate fetch for a different UI
     try {
@@ -109,7 +119,9 @@ class GroupProvider with ChangeNotifier {
   // Toggles the expansion state of a node in the tree
   void toggleNode(GroupTreeNode node) {
     node.isExpanded = !node.isExpanded;
-    if (node.isExpanded && node.group.groupType == GroupType.department && node.children.isEmpty) {
+    if (node.isExpanded &&
+        node.group.groupType == GroupType.department &&
+        node.children.isEmpty) {
       // If a department node is expanded and has no children, try to load subgroups
       loadSubGroups(node.group.id);
     }
@@ -128,7 +140,8 @@ class GroupProvider with ChangeNotifier {
       if (response.isSuccess && response.data != null) {
         _subGroupCache[groupId] = response.data!;
       } else {
-        _subGroupErrors[groupId] = response.error?.message ?? '하위 그룹을 불러오는데 실패했습니다.';
+        _subGroupErrors[groupId] =
+            response.error?.message ?? '하위 그룹을 불러오는데 실패했습니다.';
         _subGroupCache[groupId] = [];
       }
     } catch (e) {
@@ -144,46 +157,115 @@ class GroupProvider with ChangeNotifier {
   void expandPathToDepartment(String departmentName) {
     if (_groupTree.isEmpty) return;
 
-    String norm(String s) => s.replaceAll(RegExp(r"\s+"), "").toLowerCase();
-    final target = norm(departmentName);
+    final target = _norm(departmentName);
 
     // Reset all expanded states first
     _resetExpansion(_groupTree);
 
-    bool found = false;
-    for (final universityNode in _groupTree) {
-      if (universityNode.group.groupType == GroupType.university) {
-        for (final collegeNode in universityNode.children) {
-          if (collegeNode.group.groupType == GroupType.college) {
-            // Check if the department is directly under this college (college name as department)
-            final collegeName = collegeNode.group.name;
-            final collegeDept = collegeNode.group.department ?? '';
-            if (norm(collegeDept) == target || norm(collegeName) == target) {
-              universityNode.isExpanded = true;
-              collegeNode.isExpanded = true;
-              found = true;
-              break;
-            }
-            // Check if department is under a department group (e.g., AI/SW 계열 -> AI시스템반도체학과)
-            for (final deptNode in collegeNode.children) {
-              if (deptNode.group.groupType == GroupType.department) {
-                final dn = deptNode.group.department ?? deptNode.group.name;
-                if (norm(dn) == target) {
-                  universityNode.isExpanded = true;
-                  collegeNode.isExpanded = true;
-                  deptNode.isExpanded = true;
-                  found = true;
-                  break;
-                }
-              }
-            }
-          }
-          if (found) break;
+    // Find the target node
+    GroupTreeNode? targetNode;
+
+    void findNode(List<GroupTreeNode> nodes) {
+      for (final node in nodes) {
+        final dn = node.group.department ?? node.group.name;
+        if (_norm(dn).contains(target)) {
+          targetNode = node;
+          return;
         }
+        if (node.children.isNotEmpty) {
+          findNode(node.children);
+        }
+        if (targetNode != null) return;
       }
-      if (found) break;
     }
+
+    findNode(_groupTree);
+
+    // Expand all parents of the target node
+    if (targetNode != null) {
+      _expandParents(targetNode!, _groupTree);
+    }
+
     notifyListeners();
+  }
+  
+  void _expandParents(GroupTreeNode targetNode, List<GroupTreeNode> allNodes) {
+    targetNode.isExpanded = true;
+
+    // Find parent and expand it recursively
+    for (final node in allNodes) {
+      if (node.children.contains(targetNode)) {
+        _expandParents(node, _groupTree);
+        return;
+      }
+      if (node.children.isNotEmpty) {
+        _expandParents(targetNode, node.children);
+      }
+    }
+  }
+
+  // Expands the path to a specific college (계열/단과대학) in the tree
+  void expandPathToCollege(String collegeName) {
+    if (_groupTree.isEmpty) return;
+
+    final target = _norm(collegeName);
+
+    // Reset expansion first to ensure a clean state
+    _resetExpansion(_groupTree);
+
+    GroupTreeNode? targetNode;
+
+    void findCollege(List<GroupTreeNode> nodes) {
+      for (final node in nodes) {
+        if (node.group.groupType == GroupType.college) {
+          final name = node.group.college ?? node.group.name;
+          if (_norm(name).contains(target)) {
+            targetNode = node;
+            return;
+          }
+        }
+        if (node.children.isNotEmpty) findCollege(node.children);
+        if (targetNode != null) return;
+      }
+    }
+
+    findCollege(_groupTree);
+
+    if (targetNode != null) {
+      _expandParents(targetNode!, _groupTree);
+      notifyListeners();
+    }
+  }
+
+  // 멤버십 기반 자동 펼침: 학과 멤버십 우선, 없으면 계열 멤버십으로 확장
+  void expandToMyAffiliation({bool preferDepartment = true}) {
+    if (_groupTree.isEmpty || _myGroupIds.isEmpty) return;
+
+    GroupTreeNode? _findFirst(bool Function(GroupTreeNode) pred, List<GroupTreeNode> nodes) {
+      for (final n in nodes) {
+        if (pred(n)) return n;
+        final r = _findFirst(pred, n.children);
+        if (r != null) return r;
+      }
+      return null;
+    }
+
+    // Reset first
+    _resetExpansion(_groupTree);
+
+    GroupTreeNode? targetNode;
+    if (preferDepartment) {
+      targetNode = _findFirst((n) => n.group.groupType == GroupType.department && _myGroupIds.contains(n.group.id), _groupTree);
+      targetNode ??= _findFirst((n) => n.group.groupType == GroupType.college && _myGroupIds.contains(n.group.id), _groupTree);
+    } else {
+      targetNode = _findFirst((n) => n.group.groupType == GroupType.college && _myGroupIds.contains(n.group.id), _groupTree);
+      targetNode ??= _findFirst((n) => n.group.groupType == GroupType.department && _myGroupIds.contains(n.group.id), _groupTree);
+    }
+
+    if (targetNode != null) {
+      _expandParents(targetNode, _groupTree);
+      notifyListeners();
+    }
   }
 
   // Checks if the current user is a member of a given group
@@ -198,44 +280,33 @@ class GroupProvider with ChangeNotifier {
 
   // --- Helper Methods ---
 
-  // Builds the GroupTreeNode hierarchy from a flat list of GroupSummaryModel
-  List<GroupTreeNode> _buildGroupTree(List<GroupSummaryModel> flatGroups) {
+  // Builds the GroupTreeNode hierarchy using parent IDs
+  List<GroupTreeNode> _buildGroupTree(
+      List<GroupSummaryModel> summaries, List<GroupHierarchyNode> hierarchy) {
+    final Map<int, GroupSummaryModel> summaryMap = {
+      for (var s in summaries) s.id: s
+    };
     final Map<int, GroupTreeNode> nodeMap = {};
     final List<GroupTreeNode> rootNodes = [];
 
-    // Create all nodes first
-    for (final group in flatGroups) {
-      nodeMap[group.id] = GroupTreeNode(group: group);
+    // Create all nodes first, using hierarchy for structure and summary for data
+    for (final hierarchyNode in hierarchy) {
+      final summary = summaryMap[hierarchyNode.id];
+      if (summary != null) {
+        nodeMap[hierarchyNode.id] = GroupTreeNode(group: summary);
+      }
     }
 
-    // Assign children and identify roots
-    for (final group in flatGroups) {
-      final node = nodeMap[group.id]!;
-      // Find parent by checking group's type and parent's type
-      // University has no parent
-      // College's parent is University
-      // Department's parent is College or Department (for tracks)
-      // Lab's parent is Department
-
-      GroupTreeNode? parentNode;
-      if (group.groupType == GroupType.college && group.university != null) {
-        // Find university node
-        parentNode = nodeMap.values.firstWhereOrNull(
-            (n) => n.group.groupType == GroupType.university && n.group.name == group.university);
-      } else if (group.groupType == GroupType.department && group.college != null) {
-        // Find college node
-        parentNode = nodeMap.values.firstWhereOrNull(
-            (n) => n.group.groupType == GroupType.college && n.group.name == group.college);
-      } else if (group.groupType == GroupType.lab && group.department != null) {
-        // Find department node
-        parentNode = nodeMap.values.firstWhereOrNull(
-            (n) => n.group.groupType == GroupType.department && n.group.name == group.department);
-      }
-
-      if (parentNode != null) {
-        parentNode.children.add(node);
-      } else if (group.groupType == GroupType.university) {
-        rootNodes.add(node);
+    // Assign children using parentId
+    for (final hierarchyNode in hierarchy) {
+      final node = nodeMap[hierarchyNode.id];
+      if (node != null) {
+        if (hierarchyNode.parentId != null) {
+          final parentNode = nodeMap[hierarchyNode.parentId];
+          parentNode?.children.add(node);
+        } else {
+          rootNodes.add(node);
+        }
       }
     }
 
@@ -253,6 +324,12 @@ class GroupProvider with ChangeNotifier {
       _resetExpansion(node.children);
     }
   }
+
+  // 이름 정규화: 공백 제거, 소문자화, 한국어 접미사(대학/학부/계열/학과) 제거
+  String _norm(String s) => s
+      .replaceAll(RegExp(r"\s+"), "")
+      .toLowerCase()
+      .replaceAll(RegExp(r"(대학|학부|계열|학과)"), "");
 }
 
 extension _IterableExtension<T> on Iterable<T> {

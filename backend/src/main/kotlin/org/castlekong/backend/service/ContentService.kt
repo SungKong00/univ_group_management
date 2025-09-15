@@ -20,7 +20,40 @@ class ContentService(
     private val commentRepository: CommentRepository,
     private val groupMemberRepository: GroupMemberRepository,
     private val overrideRepository: GroupMemberPermissionOverrideRepository,
+    private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
+    private fun systemRolePermissions(roleName: String): Set<GroupPermission> = when (roleName.uppercase()) {
+        "OWNER" -> GroupPermission.entries.toSet()
+        "ADVISOR" -> GroupPermission.entries
+            .toSet()
+            .minus(
+                setOf(
+                    GroupPermission.GROUP_MANAGE,
+                    GroupPermission.ROLE_MANAGE,
+                    GroupPermission.MEMBER_APPROVE,
+                    GroupPermission.MEMBER_KICK,
+                    GroupPermission.RECRUITMENT_CREATE,
+                    GroupPermission.RECRUITMENT_UPDATE,
+                    GroupPermission.RECRUITMENT_DELETE,
+                ),
+            )
+        "MEMBER" -> setOf(
+            GroupPermission.CHANNEL_READ,
+            GroupPermission.POST_READ,
+            GroupPermission.POST_CREATE,
+            GroupPermission.COMMENT_READ,
+            GroupPermission.COMMENT_CREATE,
+        )
+        else -> emptySet()
+    }
+
+    private fun getEffectivePermissions(groupId: Long, userId: Long): Set<GroupPermission> =
+        permissionService.getEffective(groupId, userId, ::systemRolePermissions)
+
+    private fun ensurePermission(groupId: Long, userId: Long, required: GroupPermission) {
+        val effective = getEffectivePermissions(groupId, userId)
+        if (!effective.contains(required)) throw BusinessException(ErrorCode.FORBIDDEN)
+    }
     // Workspaces
     fun getWorkspacesByGroup(groupId: Long): List<WorkspaceResponse> {
         val group = groupRepository.findById(groupId)
@@ -47,9 +80,10 @@ class ContentService(
     }
 
     @Transactional
-    fun updateWorkspace(workspaceId: Long, request: UpdateWorkspaceRequest): WorkspaceResponse {
+    fun updateWorkspace(workspaceId: Long, request: UpdateWorkspaceRequest, requesterId: Long): WorkspaceResponse {
         val ws = workspaceRepository.findById(workspaceId)
             .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+        ensurePermission(ws.group.id, requesterId, GroupPermission.GROUP_MANAGE)
         val updated = ws.copy(
             name = request.name ?: ws.name,
             description = request.description ?: ws.description,
@@ -59,9 +93,10 @@ class ContentService(
     }
 
     @Transactional
-    fun deleteWorkspace(workspaceId: Long) {
+    fun deleteWorkspace(workspaceId: Long, requesterId: Long) {
         val ws = workspaceRepository.findById(workspaceId)
             .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+        ensurePermission(ws.group.id, requesterId, GroupPermission.GROUP_MANAGE)
         // delete channels, posts, comments under workspace
         channelRepository.findByWorkspace_Id(workspaceId).forEach { ch ->
             postRepository.findByChannel_Id(ch.id).forEach { p ->
@@ -74,8 +109,12 @@ class ContentService(
     }
 
     // Channels
-    fun getChannelsByWorkspace(workspaceId: Long): List<ChannelResponse> =
-        channelRepository.findByWorkspace_Id(workspaceId).map { toChannelResponse(it) }
+    fun getChannelsByWorkspace(workspaceId: Long, requesterId: Long): List<ChannelResponse> {
+        val workspace = workspaceRepository.findById(workspaceId)
+            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+        ensurePermission(workspace.group.id, requesterId, GroupPermission.CHANNEL_READ)
+        return channelRepository.findByWorkspace_Id(workspaceId).map { toChannelResponse(it) }
+    }
 
     @Transactional
     fun createChannel(workspaceId: Long, request: CreateChannelRequest, creatorId: Long): ChannelResponse {
@@ -128,12 +167,17 @@ class ContentService(
     }
 
     // Posts
-    fun getPosts(channelId: Long): List<PostResponse> =
-        postRepository.findByChannel_Id(channelId).map { toPostResponse(it) }
+    fun getPosts(channelId: Long, requesterId: Long): List<PostResponse> {
+        val channel = channelRepository.findById(channelId)
+            .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
+        ensurePermission(channel.group.id, requesterId, GroupPermission.POST_READ)
+        return postRepository.findByChannel_Id(channelId).map { toPostResponse(it) }
+    }
 
-    fun getPost(postId: Long): PostResponse {
+    fun getPost(postId: Long, requesterId: Long): PostResponse {
         val post = postRepository.findById(postId)
             .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
+        ensurePermission(post.channel.group.id, requesterId, GroupPermission.POST_READ)
         return toPostResponse(post)
     }
 
@@ -143,6 +187,7 @@ class ContentService(
             .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
         val author = userRepository.findById(authorId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+        ensurePermission(channel.group.id, author.id, GroupPermission.POST_CREATE)
         val type = request.type?.let { runCatching { PostType.valueOf(it) }.getOrDefault(PostType.GENERAL) } ?: PostType.GENERAL
         val post = Post(
             channel = channel,
@@ -176,15 +221,24 @@ class ContentService(
         val post = postRepository.findById(postId)
             .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
         if (post.author.id != requesterId) {
-            throw BusinessException(ErrorCode.FORBIDDEN)
+            // allow moderators with POST_DELETE_ANY
+            val groupId = post.channel.group.id
+            val perms = getEffectivePermissions(groupId, requesterId)
+            if (!perms.contains(GroupPermission.POST_DELETE_ANY)) {
+                throw BusinessException(ErrorCode.FORBIDDEN)
+            }
         }
         commentRepository.findByPost_Id(postId).forEach { commentRepository.delete(it) }
         postRepository.delete(post)
     }
 
     // Comments
-    fun getComments(postId: Long): List<CommentResponse> =
-        commentRepository.findByPost_Id(postId).map { toCommentResponse(it) }
+    fun getComments(postId: Long, requesterId: Long): List<CommentResponse> {
+        val post = postRepository.findById(postId)
+            .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
+        ensurePermission(post.channel.group.id, requesterId, GroupPermission.COMMENT_READ)
+        return commentRepository.findByPost_Id(postId).map { toCommentResponse(it) }
+    }
 
     @Transactional
     fun createComment(postId: Long, request: CreateCommentRequest, authorId: Long): CommentResponse {
@@ -192,6 +246,7 @@ class ContentService(
             .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
         val author = userRepository.findById(authorId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+        ensurePermission(post.channel.group.id, author.id, GroupPermission.COMMENT_CREATE)
         val parent = request.parentCommentId?.let {
             commentRepository.findById(it).orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }
         }
@@ -287,18 +342,7 @@ class ContentService(
         if (!effective.contains(GroupPermission.CHANNEL_MANAGE)) throw BusinessException(ErrorCode.FORBIDDEN)
     }
 
-    private fun systemRolePermissions(roleName: String): Set<GroupPermission> = when (roleName.uppercase()) {
-        "OWNER" -> GroupPermission.entries.toSet()
-        "ADVISOR", "PROFESSOR" -> GroupPermission.entries.toSet()
-        "MEMBER" -> setOf(
-            GroupPermission.CHANNEL_READ,
-            GroupPermission.POST_CREATE,
-            GroupPermission.POST_READ,
-            GroupPermission.COMMENT_CREATE,
-            GroupPermission.COMMENT_READ
-        )
-        else -> emptySet()
-    }
+    // moved to top and expanded
 }
 
 // removed compat response; using WorkspaceResponse

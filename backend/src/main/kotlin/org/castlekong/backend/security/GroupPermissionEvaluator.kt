@@ -16,6 +16,7 @@ class GroupPermissionEvaluator(
     private val userRepository: UserRepository,
     private val groupMemberRepository: GroupMemberRepository,
     private val overrideRepository: GroupMemberPermissionOverrideRepository,
+    private val permissionService: PermissionService,
 ) : PermissionEvaluator {
 
     override fun hasPermission(authentication: Authentication?, targetDomainObject: Any?, permission: Any?): Boolean {
@@ -42,28 +43,33 @@ class GroupPermissionEvaluator(
 
         val member = groupMemberRepository.findByGroupIdAndUserId(targetId, user.id).orElse(null) ?: return false
 
-        val role: GroupRole = member.role
-        val basePermissions: Set<GroupPermission> =
-            if (role.isSystemRole) systemRolePermissions(role.name)
-            else role.permissions
-
-        val override = overrideRepository.findByGroupIdAndUserId(targetId, user.id).orElse(null)
-        val effective = if (override != null) {
-            basePermissions
-                .plus(override.allowedPermissions)
-                .minus(override.deniedPermissions)
-        } else basePermissions
-
-        return effective.map { it.name }.toSet().contains(permission)
+        val effective = permissionService.getEffective(targetId, user.id, ::systemRolePermissions)
+        return effective.any { it.name == permission }
     }
 
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> {
         return when (roleName.uppercase()) {
             "OWNER" -> GroupPermission.entries.toSet()
-            "ADVISOR" -> GroupPermission.entries.toSet() // refine if limited
+            // ADVISOR: Full moderation and channel manage, but no group/role/member/recruitment management
+            "ADVISOR" -> GroupPermission.entries
+                .toSet()
+                .minus(
+                    setOf(
+                        GroupPermission.GROUP_MANAGE,
+                        GroupPermission.ROLE_MANAGE,
+                        GroupPermission.MEMBER_APPROVE,
+                        GroupPermission.MEMBER_KICK,
+                        GroupPermission.RECRUITMENT_CREATE,
+                        GroupPermission.RECRUITMENT_UPDATE,
+                        GroupPermission.RECRUITMENT_DELETE,
+                    ),
+                )
             "MEMBER" -> setOf(
                 GroupPermission.CHANNEL_READ,
+                GroupPermission.POST_READ,
                 GroupPermission.POST_CREATE,
+                GroupPermission.COMMENT_READ,
+                GroupPermission.COMMENT_CREATE,
                 GroupPermission.POST_UPDATE_OWN,
                 GroupPermission.POST_DELETE_OWN,
             )

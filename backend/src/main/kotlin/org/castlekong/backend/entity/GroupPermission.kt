@@ -3,7 +3,6 @@ package org.castlekong.backend.entity
 enum class GroupPermission {
     GROUP_MANAGE,
     MEMBER_READ,
-    MEMBER_VIEW,
     MEMBER_APPROVE,
     MEMBER_KICK,
     ROLE_READ,

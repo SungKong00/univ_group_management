@@ -77,4 +77,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<ApiResponse<void>> verifyEmailOtp(String email, String code) {
     return _service.verifyEmailOtp(email, code);
   }
+
+  @override
+  Future<ApiResponse<String>> logout() async {
+    final res = await _service.logout();
+    if (res.isSuccess) {
+      await clear();
+    }
+    return res;
+  }
 }

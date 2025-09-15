@@ -100,12 +100,12 @@ class DataInitializer(
                 )
             )
         }
-        // PROFESSOR
-        if (!groupRoleRepository.findByGroupIdAndName(group.id, "PROFESSOR").isPresent) {
+        // ADVISOR
+        if (!groupRoleRepository.findByGroupIdAndName(group.id, "ADVISOR").isPresent) {
             groupRoleRepository.save(
                 GroupRole(
                     group = group,
-                    name = "PROFESSOR",
+                    name = "ADVISOR",
                     isSystemRole = true,
                     permissions = GroupPermission.entries.toSet(),
                     priority = 99

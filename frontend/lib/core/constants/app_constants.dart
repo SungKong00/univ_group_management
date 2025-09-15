@@ -25,6 +25,7 @@ class ApiEndpoints {
   // Auth (Google OAuth2)
   static const String googleCallback = '/auth/google/callback';
   static const String googleFallback = '/auth/google';
+  static const String logout = '/auth/logout';
 
   // Users
   static const String users = '/users';

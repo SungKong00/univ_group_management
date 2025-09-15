@@ -70,20 +70,55 @@ interface GroupMemberRepository : JpaRepository<GroupMember, Long> {
     fun countByGroupId(groupId: Long): Long
     fun findByGroupId(groupId: Long, pageable: Pageable): Page<GroupMember>
     fun findByUserId(userId: Long): List<GroupMember>
-    
+
     // 지도교수 관련 메소드 (특정 권한을 가진 멤버 조회)
-    @Query("SELECT gm FROM GroupMember gm WHERE gm.group.id = :groupId AND gm.role.name = 'PROFESSOR'")
-    fun findProfessorsByGroupId(groupId: Long): List<GroupMember>
-    
+    @Query("SELECT gm FROM GroupMember gm WHERE gm.group.id = :groupId AND gm.role.name = 'ADVISOR'")
+    fun findAdvisorsByGroupId(groupId: Long): List<GroupMember>
+
     // 그룹장 유고시 자동 승계를 위한 후보자 조회 (가입일 오래된 순, 학년 높은 순)
     @Query("""
-        SELECT gm FROM GroupMember gm 
-        WHERE gm.group.id = :groupId 
-        AND gm.role.name != 'OWNER' 
+        SELECT gm FROM GroupMember gm
+        WHERE gm.group.id = :groupId
+        AND gm.role.name != 'OWNER'
         AND gm.user.globalRole = 'STUDENT'
         ORDER BY gm.user.academicYear DESC NULLS LAST, gm.joinedAt ASC
     """)
     fun findSuccessionCandidates(groupId: Long): List<GroupMember>
+
+    // 계층구조 포함 멤버 수 집계 (H2 호환 버전)
+    @Query("""
+        SELECT COUNT(DISTINCT gm.user_id)
+        FROM group_members gm
+        WHERE gm.group_id = :groupId
+        OR gm.group_id IN (
+            SELECT g1.id FROM groups g1 WHERE g1.parent_id = :groupId
+            UNION ALL
+            SELECT g2.id FROM groups g2
+            INNER JOIN groups g1 ON g2.parent_id = g1.id
+            WHERE g1.parent_id = :groupId
+            UNION ALL
+            SELECT g3.id FROM groups g3
+            INNER JOIN groups g2 ON g3.parent_id = g2.id
+            INNER JOIN groups g1 ON g2.parent_id = g1.id
+            WHERE g1.parent_id = :groupId
+        )
+    """, nativeQuery = true)
+    fun countMembersWithHierarchy(groupId: Long): Long
+
+    // 특정 그룹의 모든 상위 그룹 조회 (최대 3단계)
+    @Query("""
+        SELECT DISTINCT g.id FROM groups g WHERE
+        (g.id = (SELECT parent_id FROM groups WHERE id = :groupId))
+        OR (g.id = (SELECT g2.parent_id FROM groups g2
+                    INNER JOIN groups g1 ON g2.id = g1.parent_id
+                    WHERE g1.id = :groupId))
+        OR (g.id = (SELECT g3.parent_id FROM groups g3
+                    INNER JOIN groups g2 ON g3.id = g2.parent_id
+                    INNER JOIN groups g1 ON g2.id = g1.parent_id
+                    WHERE g1.id = :groupId))
+        ORDER BY g.id
+    """, nativeQuery = true)
+    fun findParentGroupIds(groupId: Long): List<Long>
 }
 
 @Repository

@@ -9,6 +9,7 @@ abstract class AuthRepository {
   Future<ApiResponse<NicknameCheckResult>> checkNickname(String nickname);
   Future<ApiResponse<void>> sendEmailOtp(String email);
   Future<ApiResponse<void>> verifyEmailOtp(String email, String code);
+  Future<ApiResponse<String>> logout();
   Future<void> saveSession(LoginResponse login);
   Future<bool> hasToken();
   Future<void> clear();

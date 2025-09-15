@@ -108,4 +108,25 @@ class AuthProvider extends ChangeNotifier {
     final res = await _repo.verifyEmailOtp(email, code);
     return res.isSuccess;
   }
+
+  Future<bool> logout() async {
+    _set(AuthState.loading);
+    try {
+      final res = await _repo.logout();
+      if (res.isSuccess) {
+        _user = null;
+        _error = null;
+        _set(AuthState.unauthenticated);
+        return true;
+      } else {
+        _error = res.error?.message ?? '로그아웃에 실패했습니다.';
+        _set(AuthState.error);
+        return false;
+      }
+    } catch (e) {
+      _error = '로그아웃 중 오류가 발생했습니다.';
+      _set(AuthState.error);
+      return false;
+    }
+  }
 }

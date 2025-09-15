@@ -9,7 +9,20 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('홈')),
+      appBar: AppBar(
+        title: const Text('홈'),
+        actions: [
+          Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              return IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: auth.isLoading ? null : () => _showLogoutDialog(context, auth),
+                tooltip: '로그아웃',
+              );
+            },
+          ),
+        ],
+      ),
       body: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           final user = auth.user;
@@ -126,6 +139,37 @@ class HomeScreen extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, AuthProvider auth) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('로그아웃'),
+        content: const Text('정말 로그아웃하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final success = await auth.logout();
+              if (!success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(auth.error ?? '로그아웃에 실패했습니다.'),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                );
+              }
+            },
+            child: const Text('로그아웃'),
+          ),
+        ],
       ),
     );
   }

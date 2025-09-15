@@ -30,7 +30,47 @@ class DioClient {
     );
   }
 
-  Future<ApiResponse<T>> get<T>(
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    return await dio.get(path, queryParameters: queryParameters);
+  }
+
+  Future<Response> post(
+    String path, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    return await dio.post(path, data: data, queryParameters: queryParameters);
+  }
+
+  Future<Response> put(
+    String path, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    return await dio.put(path, data: data, queryParameters: queryParameters);
+  }
+
+  Future<Response> delete(
+    String path, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    return await dio.delete(path, data: data, queryParameters: queryParameters);
+  }
+
+  Future<Response> patch(
+    String path, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    return await dio.patch(path, data: data, queryParameters: queryParameters);
+  }
+
+  // Legacy API for backwards compatibility
+  Future<ApiResponse<T>> getWithParser<T>(
     String path,
     T Function(dynamic data) parser, {
     Map<String, dynamic>? queryParameters,

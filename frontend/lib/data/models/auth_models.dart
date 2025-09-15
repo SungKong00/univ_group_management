@@ -6,7 +6,8 @@ class UserModel {
   final String email;
   final String role; // STUDENT|PROFESSOR|ADMIN
   final String? professorStatus; // PENDING|APPROVED|REJECTED (optional)
-  final String? department; // 사용자의 소속 학과/계열 명칭
+  final String? department; // 사용자의 소속 학과 명칭
+  final String? college; // 사용자의 소속 계열/단과대학 명칭
 
   UserModel({
     required this.id,
@@ -15,6 +16,7 @@ class UserModel {
     required this.role,
     this.professorStatus,
     this.department,
+    this.college,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -24,6 +26,7 @@ class UserModel {
         role: (json['role'] ?? 'STUDENT').toString(),
         professorStatus: json['professorStatus']?.toString(),
         department: (json['department'] ?? json['dept'])?.toString(),
+        college: json['college']?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -33,6 +36,7 @@ class UserModel {
         'role': role,
         if (professorStatus != null) 'professorStatus': professorStatus,
         if (department != null) 'department': department,
+        if (college != null) 'college': college,
       };
 
   String toJsonString() => jsonEncode(toJson());

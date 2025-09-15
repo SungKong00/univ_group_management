@@ -105,7 +105,7 @@ This document outlines the current database schema implementation status.
 ### GroupPermission (권한 열거형) - ✅ 구현됨
 **현재 정의된 14개 권한:**
 - `GROUP_MANAGE`: 그룹 관리 권한
-- `MEMBER_VIEW`: 멤버 조회 권한
+- `MEMBER_READ`: 멤버 조회 권한
 - `MEMBER_APPROVE`: 멤버 승인 권한
 - `MEMBER_KICK`: 멤버 제명 권한
 - `ROLE_MANAGE`: 역할 관리 권한

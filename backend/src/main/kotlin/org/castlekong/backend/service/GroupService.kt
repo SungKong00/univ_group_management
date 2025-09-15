@@ -24,6 +24,7 @@ class GroupService(
     private val postRepository: PostRepository,
     private val commentRepository: CommentRepository,
     private val overrideRepository: org.castlekong.backend.repository.GroupMemberPermissionOverrideRepository,
+    private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
 
     @Transactional
@@ -76,9 +77,9 @@ class GroupService(
         
         val professorRole = GroupRole(
             group = group,
-            name = "PROFESSOR",
+            name = "ADVISOR",
             isSystemRole = true,
-            permissions = GroupPermission.values().toSet(), // 그룹장과 동일한 모든 권한
+            permissions = GroupPermission.values().toSet(), // preset refined in evaluator
             priority = 99
         )
         
@@ -143,7 +144,7 @@ class GroupService(
     fun getGroups(pageable: Pageable): Page<GroupSummaryResponse> {
         return groupRepository.findByDeletedAtIsNull(pageable)
             .map { group ->
-                val memberCount = groupMemberRepository.countByGroupId(group.id)
+                val memberCount = getGroupMemberCountWithHierarchy(group)
                 toGroupSummaryResponse(group, memberCount.toInt())
             }
     }
@@ -151,9 +152,22 @@ class GroupService(
     fun getAllGroups(): List<GroupSummaryResponse> {
         return groupRepository.findAll().filter { it.deletedAt == null }
             .map { group ->
-                val memberCount = groupMemberRepository.countByGroupId(group.id)
+                val memberCount = getGroupMemberCountWithHierarchy(group)
                 toGroupSummaryResponse(group, memberCount.toInt())
             }
+    }
+
+    private fun getGroupMemberCountWithHierarchy(group: Group): Long {
+        return when (group.groupType) {
+            GroupType.UNIVERSITY, GroupType.COLLEGE -> {
+                // 대학교나 계열인 경우 하위 그룹 멤버들도 포함하여 집계
+                groupMemberRepository.countMembersWithHierarchy(group.id)
+            }
+            else -> {
+                // 학과나 기타 그룹인 경우 직접 가입 멤버만 집계
+                groupMemberRepository.countByGroupId(group.id)
+            }
+        }
     }
 
     @Transactional
@@ -248,10 +262,20 @@ class GroupService(
             }
         }
 
+        // 선택한 그룹에 가입
+        val primaryMember = joinGroupDirect(group, user)
+
+        // 계층구조 자동 소속: 상위 그룹들에 자동 가입
+        joinParentGroupsAutomatically(group, user)
+
+        return toGroupMemberResponse(primaryMember)
+    }
+
+    private fun joinGroupDirect(group: Group, user: User): GroupMember {
         // 기본 MEMBER 역할 확보 (없으면 생성)
-        val memberRole = groupRoleRepository.findByGroupIdAndName(groupId, "MEMBER").orElseGet {
-            // OWNER / PROFESSOR 기본 역할도 보장
-            if (!groupRoleRepository.findByGroupIdAndName(groupId, "OWNER").isPresent) {
+        val memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").orElseGet {
+            // OWNER / ADVISOR 기본 역할도 보장
+            if (!groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").isPresent) {
                 groupRoleRepository.save(
                     GroupRole(
                         group = group,
@@ -262,11 +286,11 @@ class GroupService(
                     )
                 )
             }
-            if (!groupRoleRepository.findByGroupIdAndName(groupId, "PROFESSOR").isPresent) {
+            if (!groupRoleRepository.findByGroupIdAndName(group.id, "ADVISOR").isPresent) {
                 groupRoleRepository.save(
                     GroupRole(
                         group = group,
-                        name = "PROFESSOR",
+                        name = "ADVISOR",
                         isSystemRole = true,
                         permissions = GroupPermission.values().toSet(),
                         priority = 99
@@ -297,8 +321,19 @@ class GroupService(
             joinedAt = LocalDateTime.now()
         )
 
-        val savedMember = groupMemberRepository.save(groupMember)
-        return toGroupMemberResponse(savedMember)
+        return groupMemberRepository.save(groupMember)
+    }
+
+    private fun joinParentGroupsAutomatically(currentGroup: Group, user: User) {
+        // 상위 그룹들을 재귀적으로 찾아서 자동 가입
+        var parentGroup = currentGroup.parent
+        while (parentGroup != null) {
+            // 이미 멤버가 아닌 경우에만 가입
+            if (groupMemberRepository.findByGroupIdAndUserId(parentGroup.id, user.id).isEmpty) {
+                joinGroupDirect(parentGroup, user)
+            }
+            parentGroup = parentGroup.parent
+        }
     }
 
     @Transactional
@@ -314,7 +349,53 @@ class GroupService(
         val groupMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
             .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
 
+        // 현재 그룹에서 탈퇴
         groupMemberRepository.delete(groupMember)
+        // Invalidate permission cache for that member in this group
+        permissionService.invalidate(groupId, userId)
+
+        // 계층구조 연쇄 탈퇴: 하위 그룹에서 자동 탈퇴
+        leaveChildGroupsAutomatically(group, userId)
+
+        // 상위 그룹에서 연쇄 탈퇴 검토 (해당 사용자가 다른 하위 그룹에 속하지 않은 경우)
+        leaveParentGroupsIfNoOtherMembership(group, userId)
+    }
+
+    private fun leaveChildGroupsAutomatically(currentGroup: Group, userId: Long) {
+        // 현재 그룹의 모든 하위 그룹에서 탈퇴
+        val subGroups = groupRepository.findByParentId(currentGroup.id)
+        subGroups.forEach { subGroup ->
+            val memberInSubGroup = groupMemberRepository.findByGroupIdAndUserId(subGroup.id, userId)
+            if (memberInSubGroup.isPresent) {
+                groupMemberRepository.delete(memberInSubGroup.get())
+                // 재귀적으로 하위 그룹들도 처리
+                leaveChildGroupsAutomatically(subGroup, userId)
+            }
+        }
+    }
+
+    private fun leaveParentGroupsIfNoOtherMembership(currentGroup: Group, userId: Long) {
+        var parentGroup = currentGroup.parent
+        while (parentGroup != null) {
+            // 해당 사용자가 이 상위 그룹의 다른 하위 그룹에 속하는지 확인
+            val siblingGroups = groupRepository.findByParentId(parentGroup.id)
+            val hasOtherMembership = siblingGroups.any { siblingGroup ->
+                siblingGroup.id != currentGroup.id &&
+                groupMemberRepository.findByGroupIdAndUserId(siblingGroup.id, userId).isPresent
+            }
+
+            if (!hasOtherMembership) {
+                // 다른 하위 그룹에 속하지 않으므로 상위 그룹에서도 탈퇴
+                val parentMember = groupMemberRepository.findByGroupIdAndUserId(parentGroup.id, userId)
+                if (parentMember.isPresent) {
+                    groupMemberRepository.delete(parentMember.get())
+                }
+                parentGroup = parentGroup.parent
+            } else {
+                // 다른 하위 그룹에 속하므로 상위 그룹에는 유지
+                break
+            }
+        }
     }
 
     fun getGroupMembers(groupId: Long, pageable: Pageable): Page<GroupMemberResponse> {
@@ -336,6 +417,14 @@ class GroupService(
                 type = group.groupType
             )
         }
+    }
+
+    fun getMyMembership(groupId: Long, userId: Long): GroupMemberResponse {
+        groupRepository.findById(groupId)
+            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+        val existing = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+        if (existing.isPresent) return toGroupMemberResponse(existing.get())
+        throw BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND)
     }
 
     @Transactional
@@ -387,6 +476,7 @@ class GroupService(
 
         val updated = groupMember.copy(role = newRole)
         val saved = groupMemberRepository.save(updated)
+        permissionService.invalidate(groupId, targetUserId)
         return toGroupMemberResponse(saved)
     }
 
@@ -626,10 +716,10 @@ class GroupService(
         if (!groupRepository.existsById(parentGroupId)) {
             throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
         }
-        
+
         return groupRepository.findByParentId(parentGroupId)
             .map { subGroup ->
-                val memberCount = groupMemberRepository.countByGroupId(subGroup.id)
+                val memberCount = getGroupMemberCountWithHierarchy(subGroup)
                 toGroupSummaryResponse(subGroup, memberCount.toInt())
             }
     }
@@ -654,7 +744,7 @@ class GroupService(
             throw BusinessException(ErrorCode.INVALID_REQUEST)
         }
         
-        val professorRole = groupRoleRepository.findByGroupIdAndName(groupId, "PROFESSOR")
+        val professorRole = groupRoleRepository.findByGroupIdAndName(groupId, "ADVISOR")
             .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
         
         // 이미 그룹 멤버인지 확인
@@ -664,6 +754,7 @@ class GroupService(
             // 이미 멤버라면 역할을 지도교수로 변경
             val updated = existingMember.get().copy(role = professorRole)
             val saved = groupMemberRepository.save(updated)
+            permissionService.invalidate(groupId, professorUserId)
             return toGroupMemberResponse(saved)
         } else {
             // 새로 지도교수로 추가
@@ -674,6 +765,7 @@ class GroupService(
                 joinedAt = LocalDateTime.now()
             )
             val saved = groupMemberRepository.save(groupMember)
+            permissionService.invalidate(groupId, professorUserId)
             return toGroupMemberResponse(saved)
         }
     }
@@ -692,7 +784,7 @@ class GroupService(
             .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
             
         // 지도교수 역할인지 확인
-        if (groupMember.role.name != "PROFESSOR") {
+        if (groupMember.role.name != "ADVISOR") {
             throw BusinessException(ErrorCode.INVALID_REQUEST)
         }
         
@@ -702,6 +794,7 @@ class GroupService(
             
         val updated = groupMember.copy(role = memberRole)
         groupMemberRepository.save(updated)
+        permissionService.invalidate(groupId, professorUserId)
     }
     
     fun getProfessors(groupId: Long): List<GroupMemberResponse> {
@@ -709,7 +802,7 @@ class GroupService(
             throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
         }
         
-        return groupMemberRepository.findProfessorsByGroupId(groupId)
+        return groupMemberRepository.findAdvisorsByGroupId(groupId)
             .map { toGroupMemberResponse(it) }
     }
     
@@ -883,6 +976,7 @@ class GroupService(
             )
         }
         overrideRepository.save(overrideEntity)
+        permissionService.invalidate(groupId, userId)
         return getMemberPermissionOverride(groupId, userId)
     }
 
@@ -910,34 +1004,39 @@ class GroupService(
             tags.size,
             pageable
         ).map { g ->
-            val memberCount = groupMemberRepository.countByGroupId(g.id)
+            val memberCount = getGroupMemberCountWithHierarchy(g)
             toGroupSummaryResponse(g, memberCount.toInt())
         }
     }
 
-    private fun systemRolePermissions(roleName: String): Set<GroupPermission> {
-        return when (roleName.uppercase()) {
-            "OWNER" -> GroupPermission.entries.toSet()
-            "ADVISOR", "PROFESSOR" -> GroupPermission.entries.toSet()
-            "MEMBER" -> setOf(
-                GroupPermission.CHANNEL_READ,
-                GroupPermission.POST_CREATE,
-                GroupPermission.POST_READ,
-                GroupPermission.COMMENT_CREATE,
-                GroupPermission.COMMENT_READ
+    private fun systemRolePermissions(roleName: String): Set<GroupPermission> = when (roleName.uppercase()) {
+        "OWNER" -> GroupPermission.entries.toSet()
+        "ADVISOR" -> GroupPermission.entries
+            .toSet()
+            .minus(
+                setOf(
+                    GroupPermission.GROUP_MANAGE,
+                    GroupPermission.ROLE_MANAGE,
+                    GroupPermission.MEMBER_APPROVE,
+                    GroupPermission.MEMBER_KICK,
+                    GroupPermission.RECRUITMENT_CREATE,
+                    GroupPermission.RECRUITMENT_UPDATE,
+                    GroupPermission.RECRUITMENT_DELETE,
+                ),
             )
-            else -> emptySet()
-        }
+        "MEMBER" -> setOf(
+            GroupPermission.CHANNEL_READ,
+            GroupPermission.POST_CREATE,
+            GroupPermission.POST_READ,
+            GroupPermission.COMMENT_CREATE,
+            GroupPermission.COMMENT_READ
+        )
+        else -> emptySet()
     }
 
     // === 나의 유효 권한 조회 ===
     fun getMyEffectivePermissions(groupId: Long, userId: Long): Set<String> {
-        val group = groupRepository.findById(groupId).orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
-        val member = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
-        val base = if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions
-        val override = overrideRepository.findByGroupIdAndUserId(groupId, userId).orElse(null)
-        val effective = if (override != null) base.plus(override.allowedPermissions).minus(override.deniedPermissions) else base
+        val effective = permissionService.getEffective(groupId, userId, ::systemRolePermissions)
         return effective.map { it.name }.toSet()
     }
 }
