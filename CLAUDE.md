@@ -87,6 +87,13 @@ Gemini, 에러 아카이브에서 관련 항목을 찾아 요약하고, 현재 �
 - **작업 완료**: `bash -c './bin/gemini task complete'`
   - 완료 시 "컨텍스트 업데이트 요청"이 콘솔에 표시되며, 이를 Gemini에 전달하여 반영 작업을 위임합니다.
 
+## 6. Flutter 개발 환경 설정
+
+### 포트 설정 (중요!)
+- **Flutter 웹 실행 포트**: 반드시 **5173번 포트**를 사용해야 함
+- **올바른 실행 명령어**: `flutter run -d chrome --web-hostname localhost --web-port 5173`
+- **잘못된 명령어**: ~~`--web-port 3000`~~ (작동하지 않음)
+
 ## 7. 트러블슈팅
 
 - **EISDIR (디렉터리 읽기 오류)**

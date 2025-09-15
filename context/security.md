@@ -7,10 +7,14 @@
 - Google OAuth2와 연동하여 외부 인증 공급자 활용
 - JwtAuthenticationFilter를 통한 토큰 검증
 
-### 권한 관리
+### 권한 관리 (업데이트)
 - Spring Security의 Method-level 보안 활용 (@PreAuthorize)
 - GlobalRole과 GroupRole을 통한 역할 기반 접근 제어 (RBAC)
-- CustomPermissionEvaluator를 통한 세밀한 권한 검증
+- Custom PermissionEvaluator(`GroupPermissionEvaluator`)로 세밀 권한 검증
+  - 전역 관리자(`ROLE_ADMIN`)는 즉시 통과
+  - 그룹 멤버의 역할 권한을 가져와 시스템 역할이면 내장 권한 집합을 사용
+  - 개인 오버라이드가 존재할 경우: `effective = rolePermissions ∪ allowed − denied`
+  - `@security.hasGroupPerm(#groupId, 'PERMISSION')` 표현식으로 사용
 
 ## 2. 패스워드 보안
 
@@ -59,7 +63,8 @@ fun passwordEncoder(): PasswordEncoder {
 ## 5. API 엔드포인트 보안
 
 ### Public 엔드포인트
-- `/api/auth/google` - Google OAuth2 인증
+- `/api/auth/google` - Google OAuth2 인증 (레거시 페이로드)
+- `/api/auth/google/callback` - Google OAuth2 인증 (ID Token 콜백)
 - `/swagger-ui/**`, `/v3/api-docs/**` - API 문서
 - `/h2-console/**` - 개발용 H2 데이터베이스 콘솔
 - `OPTIONS` 메서드 - CORS preflight 요청
@@ -68,6 +73,19 @@ fun passwordEncoder(): PasswordEncoder {
 - 위 Public 엔드포인트를 제외한 모든 API
 - JWT 토큰을 통한 인증 필수
 - Method-level 보안을 통한 세밀한 권한 제어
+- 예시: `@PreAuthorize("@security.hasGroupPerm(#groupId, 'ROLE_MANAGE')")`
+
+### 채널/워크스페이스 권한 범주 (제안)
+- Workspace: `WORKSPACE_READ`, `WORKSPACE_MANAGE`
+- Channel: `CHANNEL_READ`, `CHANNEL_CREATE`, `CHANNEL_UPDATE`, `CHANNEL_DELETE` (관리), `CHANNEL_INVITE` (초대는 관리와 별도로 분리, 채널 manage에 포함되지 않음)
+- Post: `POST_CREATE`, `POST_UPDATE_OWN`, `POST_DELETE_OWN`, `POST_DELETE_ANY`
+- Comment: `COMMENT_CREATE`, `COMMENT_UPDATE_OWN`, `COMMENT_DELETE_OWN`, `COMMENT_DELETE_ANY`
+
+핀 기능은 사용하지 않음. 채널/게시글 권한은 역할 및 개인 오버라이드로 최종 결정됩니다.
+
+### 이메일 인증 도메인 정책
+- 허용 도메인(서버 설정): `app.school-email.allowed-domains: hs.ac.kr`
+- 프론트엔드 힌트: `@hs.ac.kr`만 표시 (실제 검증은 서버가 수행)
 
 ## 6. 보안 헤더
 

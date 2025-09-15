@@ -11,8 +11,8 @@ This document outlines the project's scope, starting with the Minimum Viable Pro
 **Core Goal:** To enable new users to discover attractive groups through the **[Explore]** and **[Recruitment]** tabs, join them, and experience systematic announcements and detailed permission management within their groups.
 
 ### 현재 구현 상태 요약:
-- **✅ 완료**: 인증 시스템 (Google OAuth + JWT)
-- **✅ 완료**: Flutter Frontend 기초 구조
+- **✅ 완료**: 인증 시스템 (Google OAuth + JWT), 단일 온보딩 UI(닉네임 중복 확인 포함)
+- **(삭제됨)**: Flutter Frontend 기초 구조
 - **✅ 완료**: Spring Boot Backend 기초 구조
 - **❌ 미구현**: 그룹 관리, 미버십, 권한 시스템
 - **❌ 미구현**: 모집 게시판, 게시글/댓글 시스템
@@ -53,6 +53,15 @@ This document outlines the project's scope, starting with the Minimum Viable Pro
         - Edit profile picture, nickname, bio.
         - View a list of their groups.
         - Logout and leave the service.
+
+---
+
+## 3. MVP 우선순위/이연 항목 (인증 관련)
+
+- ✅ 단일 온보딩 화면 도입: `POST /api/users`로 일괄 제출, 제출 후 `/api/me` 갱신
+- ✅ 닉네임 중복 확인: `GET /api/users/nickname-check` 연동 및 제안 칩 UX
+- ⚠️ 이메일 인증(OTP) 이연: UI/플로우는 MVP 말 구현, 서버 엔드포인트만 준비(`send/verify`), 허용 도메인 `hs.ac.kr`
+- ⚠️ 교수 역할 승인 이연: 관리자 승인/반려 플로우 및 UI는 후순위, 승인 전까지 `professorStatus=PENDING` 배너 노출
 
 ---
 

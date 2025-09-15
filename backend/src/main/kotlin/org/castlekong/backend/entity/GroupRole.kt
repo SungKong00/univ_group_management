@@ -24,6 +24,9 @@ data class GroupRole(
     @Column(name = "is_system_role", nullable = false)
     val isSystemRole: Boolean = false,
 
+    @Column(nullable = false)
+    val priority: Int = 0,
+
     @ElementCollection(targetClass = GroupPermission::class, fetch = FetchType.EAGER)
     @CollectionTable(name = "group_role_permissions", joinColumns = [JoinColumn(name = "group_role_id")])
     @Enumerated(EnumType.STRING)

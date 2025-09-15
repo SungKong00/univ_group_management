@@ -3,6 +3,7 @@ package org.castlekong.backend.security
 import org.castlekong.backend.entity.GroupPermission
 import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupMemberPermissionOverrideRepository
 import org.castlekong.backend.repository.UserRepository
 import org.springframework.security.access.PermissionEvaluator
 import org.springframework.security.core.Authentication
@@ -14,6 +15,7 @@ import java.io.Serializable
 class GroupPermissionEvaluator(
     private val userRepository: UserRepository,
     private val groupMemberRepository: GroupMemberRepository,
+    private val overrideRepository: GroupMemberPermissionOverrideRepository,
 ) : PermissionEvaluator {
 
     override fun hasPermission(authentication: Authentication?, targetDomainObject: Any?, permission: Any?): Boolean {
@@ -41,11 +43,18 @@ class GroupPermissionEvaluator(
         val member = groupMemberRepository.findByGroupIdAndUserId(targetId, user.id).orElse(null) ?: return false
 
         val role: GroupRole = member.role
-        val permissions: Set<GroupPermission> =
+        val basePermissions: Set<GroupPermission> =
             if (role.isSystemRole) systemRolePermissions(role.name)
             else role.permissions
 
-        return permissions.map { it.name }.toSet().contains(permission)
+        val override = overrideRepository.findByGroupIdAndUserId(targetId, user.id).orElse(null)
+        val effective = if (override != null) {
+            basePermissions
+                .plus(override.allowedPermissions)
+                .minus(override.deniedPermissions)
+        } else basePermissions
+
+        return effective.map { it.name }.toSet().contains(permission)
     }
 
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> {

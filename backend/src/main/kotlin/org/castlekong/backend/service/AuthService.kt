@@ -52,6 +52,7 @@ class AuthService(
             accessToken = accessToken,
             expiresIn = 86400000L, // 24시간 (밀리초)
             user = userService.convertToUserResponse(user),
+            firstLogin = !user.profileCompleted,
         )
     }
 
@@ -74,6 +75,7 @@ class AuthService(
             accessToken = accessJwt,
             expiresIn = 86400000L,
             user = userService.convertToUserResponse(user),
+            firstLogin = !user.profileCompleted,
         )
     }
 
