@@ -9,6 +9,7 @@ import '../../../data/services/group_service.dart';
 import '../../../data/models/group_model.dart';
 import '../groups/group_explorer_screen.dart';
 import '../workspace/workspace_screen.dart';
+import '../workspace/workspace_desktop_skeleton.dart';
 
 class MainNavScaffold extends StatefulWidget {
   const MainNavScaffold({super.key});
@@ -666,7 +667,7 @@ class _WorkspaceTabState extends State<_WorkspaceTab> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => WorkspaceScreen(groupId: group.id),
+                builder: (context) => const WorkspaceDesktopSkeleton(),
               ),
             );
           },

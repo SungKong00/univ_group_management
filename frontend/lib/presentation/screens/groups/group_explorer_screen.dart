@@ -6,6 +6,7 @@ import '../../providers/nav_provider.dart';
 import '../../widgets/groups/group_tree_widget.dart';
 import '../../../data/models/group_model.dart';
 import '../workspace/workspace_screen.dart';
+import '../workspace/workspace_desktop_skeleton.dart';
 
 class GroupExplorerScreen extends StatefulWidget {
   const GroupExplorerScreen({super.key});
@@ -465,10 +466,7 @@ class GroupDetailBottomSheet extends StatelessWidget {
       // 멤버라면 워크스페이스로 이동
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => WorkspaceScreen(
-            groupId: groupId,
-            groupName: node.group.name,
-          ),
+          builder: (context) => const WorkspaceDesktopSkeleton(),
         ),
       );
     } else {
