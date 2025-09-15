@@ -4,9 +4,9 @@
 -- =====================================================================
 
 -- 1) 사용자 (Users)
--- password 컬럼이 아닌 password_hash 컬럼을 사용합니다.
-INSERT INTO users (id, email, name, password_hash, global_role, profile_completed, created_at, updated_at, is_active, email_verified)
-VALUES (1, 'admin@example.com', 'Admin', 'password', 'ADMIN', true, NOW(), NOW(), true, true);
+-- castlekong1019@gmail.com을 기본 사용자로 설정
+INSERT INTO users (id, email, name, password_hash, global_role, profile_completed, created_at, updated_at, is_active, email_verified, nickname, department, student_no)
+VALUES (1, 'castlekong1019@gmail.com', 'Castlekong', '', 'STUDENT', true, NOW(), NOW(), true, true, 'castlekong', 'AI/SW계열', '20250001');
 
 -- 2) 최상위 그룹: 대학교 (University)
 INSERT INTO groups (id, name, owner_id, university, group_type, visibility, is_recruiting, created_at, updated_at)

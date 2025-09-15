@@ -21,21 +21,10 @@ class DataInitializer(
 
     @Transactional
     override fun run(args: ApplicationArguments?) {
-        // Ensure dev owner user exists
+        // data.sql에서 이미 castlekong1019@gmail.com 계정이 생성되므로 별도 처리 불필요
         val ownerEmail = "castlekong1019@gmail.com"
-        val owner = userRepository.findByEmail(ownerEmail).orElseGet {
-            val user = User(
-                name = "Castlekong",
-                email = ownerEmail,
-                password = "",
-                globalRole = GlobalRole.STUDENT,
-                profileCompleted = true,
-                nickname = "castlekong",
-                department = "AI/SW계열",
-                studentNo = "20250001",
-                emailVerified = true,
-            )
-            userRepository.save(user)
+        val owner = userRepository.findByEmail(ownerEmail).orElseThrow {
+            RuntimeException("castlekong1019@gmail.com 계정이 data.sql에서 생성되지 않았습니다.")
         }
 
         // groups가 비어 있을 때만 기본 학교/계열/학과 시드 생성 (data.sql과 충돌 방지)
@@ -43,8 +32,9 @@ class DataInitializer(
             seedDefaultGroups(owner)
         }
 
-        // 개발 편의: 지정 계정을 모든 그룹의 그룹장으로 설정
-        assignAsOwnerForAllGroups(owner)
+        // data.sql에서 이미 올바른 owner_id로 설정되므로 소유권 전환 로직 불필요
+        // 모든 그룹에 기본 역할만 보장
+        ensureDefaultRolesForAllGroups()
     }
 
     private fun seedDefaultGroups(owner: User) {
@@ -142,49 +132,23 @@ class DataInitializer(
         }
     }
 
-    private fun assignAsOwnerForAllGroups(targetOwner: User) {
+    private fun ensureDefaultRolesForAllGroups() {
         val groups = groupRepository.findAll()
         groups.forEach { group ->
             ensureDefaultRoles(group)
+
+            // 그룹 소유자를 OWNER 멤버로 추가 (아직 멤버가 아닌 경우에만)
             val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").orElseThrow()
-            val memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").orElseThrow()
+            val existing = groupMemberRepository.findByGroupIdAndUserId(group.id, group.owner.id)
 
-            val previousOwner = group.owner
-
-            // 1) 대상 소유자를 OWNER 멤버로 우선 보장 (없으면 생성, 있으면 역할 업데이트)
-            val existing = groupMemberRepository.findByGroupIdAndUserId(group.id, targetOwner.id)
-            if (existing.isPresent) {
-                val updatedMember = existing.get().copy(role = ownerRole)
-                groupMemberRepository.save(updatedMember)
-            } else {
-                val newMember = GroupMember(
+            if (!existing.isPresent) {
+                val ownerMember = GroupMember(
                     group = group,
-                    user = targetOwner,
+                    user = group.owner,
                     role = ownerRole,
                     joinedAt = LocalDateTime.now()
                 )
-                groupMemberRepository.save(newMember)
-            }
-
-            // 2) Group 엔티티의 owner 업데이트 (멤버 보장 이후)
-            if (previousOwner.id != targetOwner.id) {
-                val updated = group.copy(owner = targetOwner, updatedAt = LocalDateTime.now())
-                groupRepository.save(updated)
-
-                // 3) 이전 그룹장을 MEMBER로 강등 (멤버십 없으면 추가)
-                val prevMembership = groupMemberRepository.findByGroupIdAndUserId(group.id, previousOwner.id)
-                if (prevMembership.isPresent) {
-                    val demoted = prevMembership.get().copy(role = memberRole)
-                    groupMemberRepository.save(demoted)
-                } else {
-                    val demoted = GroupMember(
-                        group = group,
-                        user = previousOwner,
-                        role = memberRole,
-                        joinedAt = LocalDateTime.now()
-                    )
-                    groupMemberRepository.save(demoted)
-                }
+                groupMemberRepository.save(ownerMember)
             }
         }
     }
