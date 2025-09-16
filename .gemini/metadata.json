@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "univ_group_management",
-  "last_updated": "2025-09-13T21:05:00Z",
+  "last_updated": "2025-09-16T12:00:00Z",
   "tags": [
     "auth",
     "jwt",
@@ -67,7 +67,10 @@
     "pagination",
     "api-response-handling",
     "retry-logic",
-    "error-logging"
+    "error-logging",
+    "workspace",
+    "member-management",
+    "channel-management"
   ],
   "static_context": {
     "include": [
@@ -78,6 +81,19 @@
     ]
   },
   "recent_tasks": [
+    {
+      "date": "2025-09-16",
+      "title": "워크스페이스 관리 기능 완성 컨텍스트 업데이트",
+      "tags": [
+        "context-update",
+        "workspace",
+        "member-management",
+        "channel-management",
+        "documentation"
+      ],
+      "status": "completed",
+      "notes": "troubleshooting.md에 워크스페이스 관리 기능 가이드 추가, feature-specifications.md에 완성된 워크스페이스 기능 상태 업데이트, metadata.json에 관련 태그 추가"
+    },
     {
       "date": "2025-09-13",
       "title": "그룹 탐색/소프트 삭제/개인 권한 오버라이드 구현 및 문서화",

@@ -112,6 +112,11 @@ data class UpdateGroupRoleRequest(
     val priority: Int? = null,
 )
 
+data class UpdateMemberRoleRequest(
+    @field:NotNull(message = "역할 ID는 필수입니다")
+    val roleId: Long,
+)
+
 data class UserSummaryResponse(
     val id: Long,
     val name: String,
@@ -181,11 +186,6 @@ data class ReviewGroupJoinRequestRequest(
     val responseMessage: String? = null,
 )
 
-// 멤버 역할 변경 요청 DTO
-data class UpdateMemberRoleRequest(
-    @field:NotNull(message = "역할 ID는 필수입니다")
-    val roleId: Long,
-)
 
 // 멤버 개인 권한 오버라이드 요청/응답
 data class MemberPermissionOverrideRequest(

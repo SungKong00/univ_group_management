@@ -400,7 +400,7 @@ class GroupController(
 
     // === 워크스페이스 조회 (명세서 요구사항) ===
     @GetMapping("/{groupId}/workspace")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'MEMBER_READ')")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
     fun getWorkspace(
         @PathVariable groupId: Long,
         authentication: Authentication,

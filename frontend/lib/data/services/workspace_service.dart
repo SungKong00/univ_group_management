@@ -1,7 +1,8 @@
-import '../../core/network/dio_client.dart';
-import '../models/workspace_models.dart';
-import '../models/group_model.dart';
 import 'package:dio/dio.dart';
+
+import '../../core/network/dio_client.dart';
+import '../models/group_model.dart';
+import '../models/workspace_models.dart';
 
 class WorkspaceService {
   final DioClient _dioClient;
@@ -20,6 +21,16 @@ class WorkspaceService {
       // 백엔드 WorkspaceDto를 프론트엔드 모델로 변환
       final workspaceDto = WorkspaceDtoModel.fromJson(data['data']);
       return workspaceDto.toWorkspaceDetailModel();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        throw WorkspaceAccessException(
+          message: e.response?.data is Map<String, dynamic>
+              ? (e.response?.data['error']?['message']?.toString() ?? '접근 권한이 없습니다.')
+              : '접근 권한이 없습니다.',
+          statusCode: 403,
+        );
+      }
+      throw Exception('Failed to load workspace: ${e.message}');
     } catch (e) {
       throw Exception('Failed to load workspace: $e');
     }
@@ -27,6 +38,34 @@ class WorkspaceService {
 
   /// 기존 워크스페이스 조회 (하위 호환성을 위해 유지)
   Future<WorkspaceDetailModel> getWorkspaceByGroup(int groupId) async {
+    try {
+      // 백엔드의 통합 워크스페이스 API를 직접 호출 (권한 확인 포함)
+      final response = await _dioClient.get('/groups/$groupId/workspace');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to fetch workspace');
+      }
+
+      // 백엔드 WorkspaceDto를 프론트엔드 모델로 변환
+      final workspaceDto = WorkspaceDtoModel.fromJson(data['data']);
+      return workspaceDto.toWorkspaceDetailModel();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        throw WorkspaceAccessException(
+          message: e.response?.data is Map<String, dynamic>
+              ? (e.response?.data['error']?['message']?.toString() ?? '접근 권한이 없습니다.')
+              : '접근 권한이 없습니다.',
+          statusCode: 403,
+        );
+      }
+      throw Exception('Failed to load workspace: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to load workspace: $e');
+    }
+  }
+
+  /// 더 이상 사용하지 않는 복잡한 구현 (참고용으로 보존)
+  Future<WorkspaceDetailModel> _getWorkspaceByGroupLegacy(int groupId) async {
     try {
       // 0) 내 멤버십 확인 (비회원 접근 차단)
       GroupMemberModel? myMembership;
@@ -128,7 +167,14 @@ class WorkspaceService {
         members: members,
       );
     } on DioException catch (e) {
-      // 상위 단계(그룹/워크스페이스 자체 500 등)
+      if (e.response?.statusCode == 403) {
+        throw WorkspaceAccessException(
+          message: e.response?.data is Map<String, dynamic>
+              ? (e.response?.data['error']?['message']?.toString() ?? '접근 권한이 없습니다.')
+              : '접근 권한이 없습니다.',
+          statusCode: 403,
+        );
+      }
       throw Exception('Failed to load workspace: ${e.message}');
     } catch (e) {
       throw Exception('Failed to load workspace: $e');
@@ -375,4 +421,87 @@ class WorkspaceService {
       throw Exception('가입 신청에 실패했습니다: $e');
     }
   }
+
+  // === 멤버 관리 API ===
+
+  /// 그룹 역할 목록 조회
+  Future<List<GroupRoleModel>> getGroupRoles(int groupId) async {
+    try {
+      final response = await _dioClient.get('/groups/$groupId/roles');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to fetch group roles');
+      }
+      return (data['data'] as List).map((e) => GroupRoleModel.fromJson(e)).toList();
+    } catch (e) {
+      throw Exception('Failed to load group roles: $e');
+    }
+  }
+
+  /// 멤버 역할 변경
+  Future<GroupMemberModel> updateMemberRole({
+    required int groupId,
+    required int userId,
+    required int roleId,
+  }) async {
+    try {
+      final response = await _dioClient.put('/groups/$groupId/members/$userId/role', data: {
+        'roleId': roleId,
+      });
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to update member role');
+      }
+      return GroupMemberModel.fromJson(data['data']);
+    } catch (e) {
+      throw Exception('Failed to update member role: $e');
+    }
+  }
+
+  /// 멤버 강제 탈퇴
+  Future<void> removeMember({
+    required int groupId,
+    required int userId,
+  }) async {
+    try {
+      final response = await _dioClient.delete('/groups/$groupId/members/$userId');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to remove member');
+      }
+    } catch (e) {
+      throw Exception('Failed to remove member: $e');
+    }
+  }
+
+  /// 그룹장 위임
+  Future<void> delegateLeadership({
+    required int groupId,
+    required int newLeaderId,
+  }) async {
+    try {
+      final response = await _dioClient.patch('/groups/$groupId/leader', data: {
+        'newLeaderId': newLeaderId,
+      });
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to delegate leadership');
+      }
+    } catch (e) {
+      throw Exception('Failed to delegate leadership: $e');
+    }
+  }
+}
+
+class WorkspaceAccessException implements Exception {
+  final String message;
+  final int? statusCode;
+
+  const WorkspaceAccessException({
+    required this.message,
+    this.statusCode,
+  });
+
+  @override
+  String toString() => 'WorkspaceAccessException($statusCode): $message';
 }

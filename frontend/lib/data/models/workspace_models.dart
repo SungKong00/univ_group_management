@@ -374,6 +374,19 @@ class WorkspaceDtoModel {
 
   /// WorkspaceDetailModel로 변환
   WorkspaceDetailModel toWorkspaceDetailModel() {
+    // members 배열에서 내 멤버십을 찾아서 실제 권한 정보 가져오기
+    GroupMemberModel? actualMyMembership;
+
+    // 현재 사용자의 실제 멤버십을 members 리스트에서 찾기
+    // myRole을 기준으로 해당하는 멤버를 찾거나, 첫 번째 멤버를 내 멤버십으로 가정
+    if (members.isNotEmpty) {
+      // 역할 이름이 일치하는 멤버를 찾기
+      actualMyMembership = members.firstWhere(
+        (member) => member.role.name == myRole,
+        orElse: () => members.first, // 찾지 못하면 첫 번째 멤버 사용 (임시)
+      );
+    }
+
     return WorkspaceDetailModel(
       workspace: WorkspaceModel(
         id: 0, // 워크스페이스 ID는 별도 조회 필요
@@ -395,7 +408,7 @@ class WorkspaceDtoModel {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
-      myMembership: GroupMemberModel(
+      myMembership: actualMyMembership ?? GroupMemberModel(
         id: 0,
         groupId: groupId,
         user: UserSummaryModel(id: 0, name: '', email: ''),
@@ -404,7 +417,10 @@ class WorkspaceDtoModel {
           groupId: groupId,
           name: myRole,
           isSystemRole: true,
-          permissions: [],
+          // 기본 관리자 권한을 부여 (임시)
+          permissions: myRole == 'OWNER' || myRole == '그룹장' || myRole == 'ADMIN'
+            ? ['GROUP_MANAGE', 'MEMBER_APPROVE', 'MEMBER_KICK', 'CHANNEL_MANAGE', 'ROLE_MANAGE']
+            : [],
         ),
         joinedAt: DateTime.now(),
       ),

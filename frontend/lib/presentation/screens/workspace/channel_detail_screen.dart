@@ -4,7 +4,7 @@ import '../../providers/workspace_provider.dart';
 import '../../../data/models/workspace_models.dart';
 import '../../widgets/loading_overlay.dart';
 
-class ChannelDetailScreen extends StatefulWidget {
+class ChannelDetailScreen extends StatelessWidget {
   final ChannelModel channel;
 
   const ChannelDetailScreen({
@@ -13,10 +13,73 @@ class ChannelDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<ChannelDetailScreen> createState() => _ChannelDetailScreenState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  _getChannelIcon(channel.type),
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    channel.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (channel.description != null)
+              Text(
+                channel.description!,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        elevation: 1,
+      ),
+      body: ChannelDetailView(
+        channel: channel,
+        autoLoad: true,
+        showLoadingOverlay: true,
+      ),
+    );
+  }
 }
 
-class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
+class ChannelDetailView extends StatefulWidget {
+  final ChannelModel channel;
+  final bool autoLoad;
+  final EdgeInsets contentPadding;
+  final bool showLoadingOverlay;
+
+  const ChannelDetailView({
+    super.key,
+    required this.channel,
+    this.autoLoad = false,
+    this.contentPadding = const EdgeInsets.all(16),
+    this.showLoadingOverlay = false,
+  });
+
+  @override
+  State<ChannelDetailView> createState() => _ChannelDetailViewState();
+}
+
+class _ChannelDetailViewState extends State<ChannelDetailView> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _messageController = TextEditingController();
   final FocusNode _messageFocusNode = FocusNode();
@@ -24,11 +87,21 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.autoLoad) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<WorkspaceProvider>().selectChannel(widget.channel);
+      });
+    }
+  }
 
-    // 채널 선택 및 게시글 로드
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<WorkspaceProvider>().selectChannel(widget.channel);
-    });
+  @override
+  void didUpdateWidget(covariant ChannelDetailView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.autoLoad && widget.channel.id != oldWidget.channel.id) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<WorkspaceProvider>().selectChannel(widget.channel);
+      });
+    }
   }
 
   @override
@@ -43,77 +116,34 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
   Widget build(BuildContext context) {
     return Consumer<WorkspaceProvider>(
       builder: (context, provider, child) {
-        return LoadingOverlay(
-          isLoading: provider.isLoading,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        _getChannelIcon(widget.channel.type),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          widget.channel.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (widget.channel.description != null)
-                    Text(
-                      widget.channel.description!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+        final posts = provider.currentChannelPosts;
+        final content = Column(
+          children: [
+            Expanded(
+              child: posts.isEmpty
+                  ? _buildEmptyState(context)
+                  : ListView.builder(
+                      controller: _scrollController,
+                      padding: widget.contentPadding,
+                      itemCount: posts.length,
+                      itemBuilder: (context, index) {
+                        final post = posts[index];
+                        return _buildMessageBubble(context, post, provider);
+                      },
                     ),
-                ],
-              ),
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              elevation: 1,
             ),
-            body: Column(
-              children: [
-                // 메시지 목록
-                Expanded(
-                  child: _buildMessageList(context, provider),
-                ),
-
-                // 메시지 입력창
-                _buildMessageComposer(context, provider),
-              ],
-            ),
-          ),
+            _buildMessageComposer(context, provider),
+          ],
         );
-      },
-    );
-  }
 
-  Widget _buildMessageList(BuildContext context, WorkspaceProvider provider) {
-    final posts = provider.currentChannelPosts;
+        if (widget.showLoadingOverlay) {
+          return LoadingOverlay(
+            isLoading: provider.isLoading,
+            child: content,
+          );
+        }
 
-    if (posts.isEmpty) {
-      return _buildEmptyState(context);
-    }
-
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16),
-      itemCount: posts.length,
-      itemBuilder: (context, index) {
-        final post = posts[index];
-        return _buildMessageBubble(context, post, provider);
+        return content;
       },
     );
   }
@@ -157,7 +187,6 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 작성자 정보 및 시간
           Row(
             children: [
               CircleAvatar(
@@ -196,8 +225,6 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
             ],
           ),
           const SizedBox(height: 8),
-
-          // 제목 (있는 경우만)
           if (post.title.isNotEmpty) ...[
             Text(
               post.title,
@@ -207,8 +234,6 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
             ),
             const SizedBox(height: 4),
           ],
-
-          // 메시지 내용
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
@@ -221,8 +246,6 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
-
-          // 첨부파일 (있는 경우)
           if (post.attachments.isNotEmpty) ...[
             const SizedBox(height: 8),
             Wrap(
@@ -230,10 +253,7 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
               runSpacing: 8,
               children: post.attachments.map((attachment) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(8),
@@ -248,7 +268,7 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'File', // TODO: 파일명 추출
+                        'File',
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -260,22 +280,15 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
               }).toList(),
             ),
           ],
-
-          // 반응 및 댓글
           const SizedBox(height: 8),
           Row(
             children: [
               if (post.likeCount > 0) ...[
                 InkWell(
-                  onTap: () {
-                    // TODO: 좋아요 토글
-                  },
+                  onTap: () {},
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -302,10 +315,7 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
                 onTap: () => _showCommentsSheet(context, post, provider),
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -396,12 +406,11 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
     try {
       await provider.createPost(
         channelId: widget.channel.id,
-        title: '', // 채팅 메시지는 제목 없음
+        title: '',
         content: message,
         type: PostType.general,
       );
 
-      // 새 메시지가 추가되면 맨 아래로 스크롤
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
@@ -421,7 +430,6 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
   }
 
   void _selectAttachment() {
-    // TODO: 파일 선택 구현
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('파일 첨부 기능 구현 예정')),
     );
@@ -452,19 +460,6 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
     );
   }
 
-  IconData _getChannelIcon(ChannelType type) {
-    switch (type) {
-      case ChannelType.text:
-        return Icons.chat;
-      case ChannelType.voice:
-        return Icons.mic;
-      case ChannelType.announcement:
-        return Icons.campaign;
-      case ChannelType.fileShare:
-        return Icons.folder_shared;
-    }
-  }
-
   String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
     final diff = now.difference(timestamp);
@@ -478,6 +473,19 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
     } else {
       return '방금 전';
     }
+  }
+}
+
+IconData _getChannelIcon(ChannelType type) {
+  switch (type) {
+    case ChannelType.text:
+      return Icons.chat;
+    case ChannelType.voice:
+      return Icons.mic;
+    case ChannelType.announcement:
+      return Icons.campaign;
+    case ChannelType.fileShare:
+      return Icons.folder_shared;
   }
 }
 

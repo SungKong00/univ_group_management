@@ -29,6 +29,8 @@ data class Channel(
     val type: ChannelType = ChannelType.TEXT,
     @Column(name = "is_private", nullable = false)
     val isPrivate: Boolean = false,
+    @Column(name = "is_public", nullable = false)
+    val isPublic: Boolean = false,
     @Column(name = "display_order", nullable = false)
     val displayOrder: Int = 0,
     @ManyToOne(fetch = FetchType.LAZY)

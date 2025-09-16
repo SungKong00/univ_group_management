@@ -11,9 +11,13 @@ class WorkspaceProvider extends ChangeNotifier {
   WorkspaceDetailModel? _currentWorkspace;
   bool _isLoading = false;
   String? _error;
+  bool _accessDenied = false;
 
   // Current tab index (0: 공지, 1: 채널, 2: 멤버)
   int _currentTabIndex = 0;
+
+  // Sidebar visibility state
+  bool _isSidebarVisible = true;
 
   // Current channel (when in channel detail view)
   ChannelModel? _currentChannel;
@@ -24,7 +28,9 @@ class WorkspaceProvider extends ChangeNotifier {
   WorkspaceDetailModel? get currentWorkspace => _currentWorkspace;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  bool get isAccessDenied => _accessDenied;
   int get currentTabIndex => _currentTabIndex;
+  bool get isSidebarVisible => _isSidebarVisible;
   ChannelModel? get currentChannel => _currentChannel;
   List<PostModel> get currentChannelPosts => _currentChannelPosts;
 
@@ -60,11 +66,17 @@ class WorkspaceProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       _error = null;
+      _accessDenied = false;
       notifyListeners();
 
       _currentWorkspace = await _workspaceService.getWorkspaceByGroup(groupId);
 
       _isLoading = false;
+      notifyListeners();
+    } on WorkspaceAccessException catch (e) {
+      _isLoading = false;
+      _accessDenied = true;
+      _error = e.message;
       notifyListeners();
     } catch (e) {
       _isLoading = false;
@@ -77,6 +89,20 @@ class WorkspaceProvider extends ChangeNotifier {
   void setTabIndex(int index) {
     _currentTabIndex = index;
     notifyListeners();
+  }
+
+  /// 사이드바 토글
+  void toggleSidebar() {
+    _isSidebarVisible = !_isSidebarVisible;
+    notifyListeners();
+  }
+
+  /// 사이드바 표시/숨김 설정
+  void setSidebarVisible(bool visible) {
+    if (_isSidebarVisible != visible) {
+      _isSidebarVisible = visible;
+      notifyListeners();
+    }
   }
 
   /// 채널 선택 및 상세 정보 로드
@@ -238,14 +264,14 @@ class WorkspaceProvider extends ChangeNotifier {
   }
 
   /// 새 채널 생성
-  Future<void> createChannel({
+  Future<bool> createChannel({
     required String name,
     String? description,
     ChannelType type = ChannelType.text,
     bool isPrivate = false,
   }) async {
     try {
-      if (_currentWorkspace == null) return;
+      if (_currentWorkspace == null) return false;
 
       final newChannel = await _workspaceService.createChannel(
         workspaceId: _currentWorkspace!.workspace.id,
@@ -269,14 +295,16 @@ class WorkspaceProvider extends ChangeNotifier {
       );
 
       notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 
   /// 채널 삭제
-  Future<void> deleteChannel(int channelId) async {
+  Future<bool> deleteChannel(int channelId) async {
     try {
       await _workspaceService.deleteChannel(channelId);
 
@@ -302,9 +330,11 @@ class WorkspaceProvider extends ChangeNotifier {
 
         notifyListeners();
       }
+      return true;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 
@@ -321,8 +351,10 @@ class WorkspaceProvider extends ChangeNotifier {
     _currentChannelPosts.clear();
     _postComments.clear();
     _currentTabIndex = 0;
+    _isSidebarVisible = true;
     _isLoading = false;
     _error = null;
+    _accessDenied = false;
     notifyListeners();
   }
 
@@ -332,6 +364,131 @@ class WorkspaceProvider extends ChangeNotifier {
       await _workspaceService.requestJoinGroup(groupId: groupId, message: message);
       return true;
     } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // === 멤버 관리 메서드 ===
+
+  /// 그룹 역할 목록 조회
+  Future<List<GroupRoleModel>> getGroupRoles(int groupId) async {
+    try {
+      return await _workspaceService.getGroupRoles(groupId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// 멤버 역할 변경
+  Future<bool> updateMemberRole({
+    required int groupId,
+    required int userId,
+    required int roleId,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final updatedMember = await _workspaceService.updateMemberRole(
+        groupId: groupId,
+        userId: userId,
+        roleId: roleId,
+      );
+
+      // 현재 워크스페이스의 멤버 목록에서 해당 멤버 업데이트
+      if (_currentWorkspace != null) {
+        final updatedMembers = _currentWorkspace!.members.map((member) {
+          if (member.user.id == userId) {
+            return updatedMember;
+          }
+          return member;
+        }).toList();
+
+        _currentWorkspace = WorkspaceDetailModel(
+          workspace: _currentWorkspace!.workspace,
+          group: _currentWorkspace!.group,
+          myMembership: _currentWorkspace!.myMembership,
+          channels: _currentWorkspace!.channels,
+          announcements: _currentWorkspace!.announcements,
+          members: updatedMembers,
+        );
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 멤버 강제 탈퇴
+  Future<bool> removeMember({
+    required int groupId,
+    required int userId,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _workspaceService.removeMember(groupId: groupId, userId: userId);
+
+      // 현재 워크스페이스의 멤버 목록에서 해당 멤버 제거
+      if (_currentWorkspace != null) {
+        final updatedMembers = _currentWorkspace!.members
+            .where((member) => member.user.id != userId)
+            .toList();
+
+        _currentWorkspace = WorkspaceDetailModel(
+          workspace: _currentWorkspace!.workspace,
+          group: _currentWorkspace!.group,
+          myMembership: _currentWorkspace!.myMembership,
+          channels: _currentWorkspace!.channels,
+          announcements: _currentWorkspace!.announcements,
+          members: updatedMembers,
+        );
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 그룹장 위임
+  Future<bool> delegateLeadership({
+    required int groupId,
+    required int newLeaderId,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _workspaceService.delegateLeadership(
+        groupId: groupId,
+        newLeaderId: newLeaderId,
+      );
+
+      // 워크스페이스를 다시 로드하여 최신 상태 반영
+      await loadWorkspace(groupId);
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
       _error = e.toString();
       notifyListeners();
       return false;

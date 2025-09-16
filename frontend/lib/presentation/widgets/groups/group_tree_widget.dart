@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../data/models/group_model.dart';
 import '../../providers/group_provider.dart';
 import '../../screens/workspace/workspace_screen.dart';
-import '../../screens/workspace/workspace_desktop_skeleton.dart';
 
 class GroupTreeWidget extends StatelessWidget {
   final List<GroupTreeNode> nodes;
@@ -269,7 +268,10 @@ class GroupTreeNodeWidget extends StatelessWidget {
     if (isMember) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => const WorkspaceDesktopSkeleton(),
+          builder: (context) => WorkspaceScreen(
+            groupId: group.id,
+            groupName: group.name,
+          ),
         ),
       );
     } else {

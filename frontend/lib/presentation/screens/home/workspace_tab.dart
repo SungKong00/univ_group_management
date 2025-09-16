@@ -3,7 +3,7 @@ import '../../../core/network/dio_client.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../../data/services/group_service.dart';
 import '../../../data/models/group_model.dart';
-import '../workspace/workspace_desktop_skeleton.dart';
+import '../workspace/workspace_screen.dart';
 
 class WorkspaceTab extends StatefulWidget {
   const WorkspaceTab({super.key});
@@ -122,7 +122,10 @@ class _WorkspaceTabState extends State<WorkspaceTab> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const WorkspaceDesktopSkeleton(),
+                builder: (context) => WorkspaceScreen(
+                  groupId: group.id,
+                  groupName: group.name,
+                ),
               ),
             );
           },

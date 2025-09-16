@@ -319,3 +319,4 @@
 - frontend-architecture.md: 라우트에 `/admin/...`, `/me/applications` 추가, 그룹 상세는 워크스페이스 1:1 전제로 설명 보완.
 - api-conventions.md: 마이페이지/관리자 API 초안 엔드포인트 표 추가.
 - security.md: 권한 카테고리 제안(Workspace/Channel/Post/Comment) 추가.
+- 2025-09-16T07:37:56Z archived task: tasks/archive/2025-09-16-task
