@@ -22,42 +22,53 @@ class ContentService(
     private val overrideRepository: GroupMemberPermissionOverrideRepository,
     private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
-    private fun systemRolePermissions(roleName: String): Set<GroupPermission> = when (roleName.uppercase()) {
-        "OWNER" -> GroupPermission.entries.toSet()
-        "ADVISOR" -> GroupPermission.entries
-            .toSet()
-            .minus(
+    private fun systemRolePermissions(roleName: String): Set<GroupPermission> =
+        when (roleName.uppercase()) {
+            "OWNER" -> GroupPermission.entries.toSet()
+            "ADVISOR" ->
+                GroupPermission.entries
+                    .toSet()
+                    .minus(
+                        setOf(
+                            GroupPermission.GROUP_MANAGE,
+                            GroupPermission.ROLE_MANAGE,
+                            GroupPermission.MEMBER_APPROVE,
+                            GroupPermission.MEMBER_KICK,
+                            GroupPermission.RECRUITMENT_CREATE,
+                            GroupPermission.RECRUITMENT_UPDATE,
+                            GroupPermission.RECRUITMENT_DELETE,
+                        ),
+                    )
+            "MEMBER" ->
                 setOf(
-                    GroupPermission.GROUP_MANAGE,
-                    GroupPermission.ROLE_MANAGE,
-                    GroupPermission.MEMBER_APPROVE,
-                    GroupPermission.MEMBER_KICK,
-                    GroupPermission.RECRUITMENT_CREATE,
-                    GroupPermission.RECRUITMENT_UPDATE,
-                    GroupPermission.RECRUITMENT_DELETE,
-                ),
-            )
-        "MEMBER" -> setOf(
-            GroupPermission.CHANNEL_READ,
-            GroupPermission.POST_READ,
-            GroupPermission.POST_CREATE,
-            GroupPermission.COMMENT_READ,
-            GroupPermission.COMMENT_CREATE,
-        )
-        else -> emptySet()
-    }
+                    GroupPermission.CHANNEL_READ,
+                    GroupPermission.POST_READ,
+                    GroupPermission.POST_CREATE,
+                    GroupPermission.COMMENT_READ,
+                    GroupPermission.COMMENT_CREATE,
+                )
+            else -> emptySet()
+        }
 
-    private fun getEffectivePermissions(groupId: Long, userId: Long): Set<GroupPermission> =
-        permissionService.getEffective(groupId, userId, ::systemRolePermissions)
+    private fun getEffectivePermissions(
+        groupId: Long,
+        userId: Long,
+    ): Set<GroupPermission> = permissionService.getEffective(groupId, userId, ::systemRolePermissions)
 
-    private fun ensurePermission(groupId: Long, userId: Long, required: GroupPermission) {
+    private fun ensurePermission(
+        groupId: Long,
+        userId: Long,
+        required: GroupPermission,
+    ) {
         val effective = getEffectivePermissions(groupId, userId)
         if (!effective.contains(required)) throw BusinessException(ErrorCode.FORBIDDEN)
     }
+
     // Workspaces
     fun getWorkspacesByGroup(groupId: Long): List<WorkspaceResponse> {
-        val group = groupRepository.findById(groupId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+        val group =
+            groupRepository.findById(groupId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         if (group.deletedAt != null) throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
         val existing = workspaceRepository.findByGroup_Id(groupId)
         if (existing.isNotEmpty()) return existing.map { toWorkspaceResponse(it) }
@@ -67,159 +78,256 @@ class ContentService(
     }
 
     @Transactional
-    fun createWorkspace(groupId: Long, request: CreateWorkspaceRequest): WorkspaceResponse {
-        val group = groupRepository.findById(groupId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+    fun createWorkspace(
+        groupId: Long,
+        request: CreateWorkspaceRequest,
+    ): WorkspaceResponse {
+        val group =
+            groupRepository.findById(groupId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         if (group.deletedAt != null) throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
-        val ws = Workspace(
-            group = group,
-            name = request.name,
-            description = request.description,
-        )
+        val ws =
+            Workspace(
+                group = group,
+                name = request.name,
+                description = request.description,
+            )
         return toWorkspaceResponse(workspaceRepository.save(ws))
     }
 
     @Transactional
-    fun updateWorkspace(workspaceId: Long, request: UpdateWorkspaceRequest, requesterId: Long): WorkspaceResponse {
-        val ws = workspaceRepository.findById(workspaceId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+    fun updateWorkspace(
+        workspaceId: Long,
+        request: UpdateWorkspaceRequest,
+        requesterId: Long,
+    ): WorkspaceResponse {
+        val ws =
+            workspaceRepository.findById(workspaceId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         ensurePermission(ws.group.id, requesterId, GroupPermission.GROUP_MANAGE)
-        val updated = ws.copy(
-            name = request.name ?: ws.name,
-            description = request.description ?: ws.description,
-            updatedAt = LocalDateTime.now(),
-        )
+        val updated =
+            ws.copy(
+                name = request.name ?: ws.name,
+                description = request.description ?: ws.description,
+                updatedAt = LocalDateTime.now(),
+            )
         return toWorkspaceResponse(workspaceRepository.save(updated))
     }
 
     @Transactional
-    fun deleteWorkspace(workspaceId: Long, requesterId: Long) {
-        val ws = workspaceRepository.findById(workspaceId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+    fun deleteWorkspace(
+        workspaceId: Long,
+        requesterId: Long,
+    ) {
+        val ws =
+            workspaceRepository.findById(workspaceId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         ensurePermission(ws.group.id, requesterId, GroupPermission.GROUP_MANAGE)
-        // delete channels, posts, comments under workspace
-        channelRepository.findByWorkspace_Id(workspaceId).forEach { ch ->
-            postRepository.findByChannel_Id(ch.id).forEach { p ->
-                commentRepository.findByPost_Id(p.id).forEach { commentRepository.delete(it) }
-                postRepository.delete(p)
-            }
-            channelRepository.delete(ch)
-        }
+
+        // 배치로 워크스페이스 하위 컨텐츠 삭제
+        deleteWorkspaceContentsBatch(workspaceId)
         workspaceRepository.delete(ws)
     }
 
+    @Transactional
+    fun deleteWorkspaceContentsBatch(workspaceId: Long) {
+        val channels = channelRepository.findByWorkspace_Id(workspaceId)
+        val channelIds = channels.map { it.id }
+
+        if (channelIds.isNotEmpty()) {
+            // 배치 크기로 청크 단위 처리
+            val batchSize = 50
+            channelIds.chunked(batchSize).forEach { chunk ->
+                // 게시물 ID들을 한 번에 조회
+                val postIds = postRepository.findPostIdsByChannelIds(chunk)
+
+                if (postIds.isNotEmpty()) {
+                    // 댓글들을 배치로 삭제
+                    postIds.chunked(batchSize).forEach { postChunk ->
+                        commentRepository.deleteByPostIds(postChunk)
+                    }
+                    // 게시물들을 배치로 삭제
+                    postRepository.deleteByChannelIds(chunk)
+                }
+            }
+            // 채널들을 배치로 삭제
+            channelRepository.deleteAll(channels)
+        }
+    }
+
     // Channels
-    fun getChannelsByWorkspace(workspaceId: Long, requesterId: Long): List<ChannelResponse> {
-        val workspace = workspaceRepository.findById(workspaceId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+    fun getChannelsByWorkspace(
+        workspaceId: Long,
+        requesterId: Long,
+    ): List<ChannelResponse> {
+        val workspace =
+            workspaceRepository.findById(workspaceId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         ensurePermission(workspace.group.id, requesterId, GroupPermission.CHANNEL_READ)
         return channelRepository.findByWorkspace_Id(workspaceId).map { toChannelResponse(it) }
     }
 
     @Transactional
-    fun createChannel(workspaceId: Long, request: CreateChannelRequest, creatorId: Long): ChannelResponse {
-        val workspace = workspaceRepository.findById(workspaceId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+    fun createChannel(
+        workspaceId: Long,
+        request: CreateChannelRequest,
+        creatorId: Long,
+    ): ChannelResponse {
+        val workspace =
+            workspaceRepository.findById(workspaceId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         val group = workspace.group
-        val creator = userRepository.findById(creatorId)
-            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+        val creator =
+            userRepository.findById(creatorId)
+                .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         // permission: group owner or role has CHANNEL_WRITE
         validateChannelManagePermission(group.id, creator.id)
         val type = request.type?.let { runCatching { ChannelType.valueOf(it) }.getOrDefault(ChannelType.TEXT) } ?: ChannelType.TEXT
-        val channel = Channel(
-            group = group,
-            workspace = workspace,
-            name = request.name,
-            description = request.description,
-            type = type,
-            isPrivate = false,
-            displayOrder = 0,
-            createdBy = creator,
-        )
+        val channel =
+            Channel(
+                group = group,
+                workspace = workspace,
+                name = request.name,
+                description = request.description,
+                type = type,
+                isPrivate = false,
+                displayOrder = 0,
+                createdBy = creator,
+            )
         return toChannelResponse(channelRepository.save(channel))
     }
 
     @Transactional
-    fun updateChannel(channelId: Long, request: UpdateChannelRequest, userId: Long): ChannelResponse {
-        val channel = channelRepository.findById(channelId)
-            .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
+    fun updateChannel(
+        channelId: Long,
+        request: UpdateChannelRequest,
+        userId: Long,
+    ): ChannelResponse {
+        val channel =
+            channelRepository.findById(channelId)
+                .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
         validateChannelManagePermission(channel.group.id, userId)
         val type = request.type?.let { runCatching { ChannelType.valueOf(it) }.getOrNull() } ?: channel.type
-        val updated = channel.copy(
-            name = request.name ?: channel.name,
-            description = request.description ?: channel.description,
-            type = type,
-            updatedAt = LocalDateTime.now(),
-        )
+        val updated =
+            channel.copy(
+                name = request.name ?: channel.name,
+                description = request.description ?: channel.description,
+                type = type,
+                updatedAt = LocalDateTime.now(),
+            )
         return toChannelResponse(channelRepository.save(updated))
     }
 
     @Transactional
-    fun deleteChannel(channelId: Long, userId: Long) {
-        val channel = channelRepository.findById(channelId)
-            .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
+    fun deleteChannel(
+        channelId: Long,
+        userId: Long,
+    ) {
+        val channel =
+            channelRepository.findById(channelId)
+                .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
         validateChannelManagePermission(channel.group.id, userId)
-        postRepository.findByChannel_Id(channelId).forEach { p ->
-            commentRepository.findByPost_Id(p.id).forEach { commentRepository.delete(it) }
-            postRepository.delete(p)
-        }
+
+        // 배치로 채널 컨텐츠 삭제
+        deleteChannelContentsBatch(channelId)
         channelRepository.delete(channel)
     }
 
+    @Transactional
+    fun deleteChannelContentsBatch(channelId: Long) {
+        val postIds = postRepository.findPostIdsByChannelIds(listOf(channelId))
+
+        if (postIds.isNotEmpty()) {
+            // 배치 크기로 청크 단위 처리
+            val batchSize = 50
+            postIds.chunked(batchSize).forEach { chunk ->
+                // 댓글들을 배치로 삭제
+                commentRepository.deleteByPostIds(chunk)
+            }
+            // 게시물들을 배치로 삭제
+            postRepository.deleteByChannelIds(listOf(channelId))
+        }
+    }
+
     // Posts
-    fun getPosts(channelId: Long, requesterId: Long): List<PostResponse> {
-        val channel = channelRepository.findById(channelId)
-            .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
+    fun getPosts(
+        channelId: Long,
+        requesterId: Long,
+    ): List<PostResponse> {
+        val channel =
+            channelRepository.findById(channelId)
+                .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
         ensurePermission(channel.group.id, requesterId, GroupPermission.POST_READ)
         return postRepository.findByChannel_Id(channelId).map { toPostResponse(it) }
     }
 
-    fun getPost(postId: Long, requesterId: Long): PostResponse {
-        val post = postRepository.findById(postId)
-            .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
+    fun getPost(
+        postId: Long,
+        requesterId: Long,
+    ): PostResponse {
+        val post =
+            postRepository.findById(postId)
+                .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
         ensurePermission(post.channel.group.id, requesterId, GroupPermission.POST_READ)
         return toPostResponse(post)
     }
 
     @Transactional
-    fun createPost(channelId: Long, request: CreatePostRequest, authorId: Long): PostResponse {
-        val channel = channelRepository.findById(channelId)
-            .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
-        val author = userRepository.findById(authorId)
-            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+    fun createPost(
+        channelId: Long,
+        request: CreatePostRequest,
+        authorId: Long,
+    ): PostResponse {
+        val channel =
+            channelRepository.findById(channelId)
+                .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
+        val author =
+            userRepository.findById(authorId)
+                .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         ensurePermission(channel.group.id, author.id, GroupPermission.POST_CREATE)
         val type = request.type?.let { runCatching { PostType.valueOf(it) }.getOrDefault(PostType.GENERAL) } ?: PostType.GENERAL
-        val post = Post(
-            channel = channel,
-            author = author,
-            title = request.title ?: "",
-            content = request.content,
-            type = type,
-        )
+        val post =
+            Post(
+                channel = channel,
+                author = author,
+                title = request.title ?: "",
+                content = request.content,
+                type = type,
+            )
         return toPostResponse(postRepository.save(post))
     }
 
     @Transactional
-    fun updatePost(postId: Long, request: UpdatePostRequest, requesterId: Long): PostResponse {
-        val post = postRepository.findById(postId)
-            .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
+    fun updatePost(
+        postId: Long,
+        request: UpdatePostRequest,
+        requesterId: Long,
+    ): PostResponse {
+        val post =
+            postRepository.findById(postId)
+                .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
         if (post.author.id != requesterId) {
             throw BusinessException(ErrorCode.FORBIDDEN)
         }
         val type = request.type?.let { runCatching { PostType.valueOf(it) }.getOrNull() } ?: post.type
-        val updated = post.copy(
-            title = request.title ?: post.title,
-            content = request.content ?: post.content,
-            type = type,
-            updatedAt = LocalDateTime.now(),
-        )
+        val updated =
+            post.copy(
+                title = request.title ?: post.title,
+                content = request.content ?: post.content,
+                type = type,
+                updatedAt = LocalDateTime.now(),
+            )
         return toPostResponse(postRepository.save(updated))
     }
 
     @Transactional
-    fun deletePost(postId: Long, requesterId: Long) {
-        val post = postRepository.findById(postId)
-            .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
+    fun deletePost(
+        postId: Long,
+        requesterId: Long,
+    ) {
+        val post =
+            postRepository.findById(postId)
+                .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
         if (post.author.id != requesterId) {
             // allow moderators with POST_DELETE_ANY
             val groupId = post.channel.group.id
@@ -228,55 +336,85 @@ class ContentService(
                 throw BusinessException(ErrorCode.FORBIDDEN)
             }
         }
-        commentRepository.findByPost_Id(postId).forEach { commentRepository.delete(it) }
+
+        // 배치로 댓글 삭제
+        deletePostCommentsBatch(postId)
         postRepository.delete(post)
     }
 
+    @Transactional
+    fun deletePostCommentsBatch(postId: Long) {
+        // 댓글들을 배치로 삭제
+        commentRepository.deleteByPostIds(listOf(postId))
+    }
+
     // Comments
-    fun getComments(postId: Long, requesterId: Long): List<CommentResponse> {
-        val post = postRepository.findById(postId)
-            .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
+    fun getComments(
+        postId: Long,
+        requesterId: Long,
+    ): List<CommentResponse> {
+        val post =
+            postRepository.findById(postId)
+                .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
         ensurePermission(post.channel.group.id, requesterId, GroupPermission.COMMENT_READ)
         return commentRepository.findByPost_Id(postId).map { toCommentResponse(it) }
     }
 
     @Transactional
-    fun createComment(postId: Long, request: CreateCommentRequest, authorId: Long): CommentResponse {
-        val post = postRepository.findById(postId)
-            .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
-        val author = userRepository.findById(authorId)
-            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+    fun createComment(
+        postId: Long,
+        request: CreateCommentRequest,
+        authorId: Long,
+    ): CommentResponse {
+        val post =
+            postRepository.findById(postId)
+                .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
+        val author =
+            userRepository.findById(authorId)
+                .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         ensurePermission(post.channel.group.id, author.id, GroupPermission.COMMENT_CREATE)
-        val parent = request.parentCommentId?.let {
-            commentRepository.findById(it).orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }
-        }
-        val comment = Comment(
-            post = post,
-            author = author,
-            content = request.content,
-            parentComment = parent,
-        )
+        val parent =
+            request.parentCommentId?.let {
+                commentRepository.findById(it).orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }
+            }
+        val comment =
+            Comment(
+                post = post,
+                author = author,
+                content = request.content,
+                parentComment = parent,
+            )
         return toCommentResponse(commentRepository.save(comment))
     }
 
     @Transactional
-    fun updateComment(commentId: Long, request: UpdateCommentRequest, requesterId: Long): CommentResponse {
-        val comment = commentRepository.findById(commentId)
-            .orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }
+    fun updateComment(
+        commentId: Long,
+        request: UpdateCommentRequest,
+        requesterId: Long,
+    ): CommentResponse {
+        val comment =
+            commentRepository.findById(commentId)
+                .orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }
         if (comment.author.id != requesterId) {
             throw BusinessException(ErrorCode.FORBIDDEN)
         }
-        val updated = comment.copy(
-            content = request.content ?: comment.content,
-            updatedAt = LocalDateTime.now(),
-        )
+        val updated =
+            comment.copy(
+                content = request.content ?: comment.content,
+                updatedAt = LocalDateTime.now(),
+            )
         return toCommentResponse(commentRepository.save(updated))
     }
 
     @Transactional
-    fun deleteComment(commentId: Long, requesterId: Long) {
-        val comment = commentRepository.findById(commentId)
-            .orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }
+    fun deleteComment(
+        commentId: Long,
+        requesterId: Long,
+    ) {
+        val comment =
+            commentRepository.findById(commentId)
+                .orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }
         if (comment.author.id != requesterId) {
             throw BusinessException(ErrorCode.FORBIDDEN)
         }
@@ -284,56 +422,64 @@ class ContentService(
     }
 
     // DTOs
-    private fun toChannelResponse(channel: Channel) = ChannelResponse(
-        id = channel.id,
-        groupId = channel.group.id,
-        name = channel.name,
-        description = channel.description,
-        type = channel.type.name,
-        isPrivate = channel.isPrivate,
-        displayOrder = channel.displayOrder,
-        createdAt = channel.createdAt,
-        updatedAt = channel.updatedAt,
-    )
+    private fun toChannelResponse(channel: Channel) =
+        ChannelResponse(
+            id = channel.id,
+            groupId = channel.group.id,
+            name = channel.name,
+            description = channel.description,
+            type = channel.type.name,
+            isPrivate = channel.isPrivate,
+            displayOrder = channel.displayOrder,
+            createdAt = channel.createdAt,
+            updatedAt = channel.updatedAt,
+        )
 
-    private fun toWorkspaceResponse(workspace: Workspace) = WorkspaceResponse(
-        id = workspace.id,
-        groupId = workspace.group.id,
-        name = workspace.name,
-        description = workspace.description,
-        createdAt = workspace.createdAt,
-        updatedAt = workspace.updatedAt,
-    )
+    private fun toWorkspaceResponse(workspace: Workspace) =
+        WorkspaceResponse(
+            id = workspace.id,
+            groupId = workspace.group.id,
+            name = workspace.name,
+            description = workspace.description,
+            createdAt = workspace.createdAt,
+            updatedAt = workspace.updatedAt,
+        )
 
-    private fun toPostResponse(post: Post) = PostResponse(
-        id = post.id,
-        channelId = post.channel.id,
-        author = toUserSummaryResponse(post.author),
-        title = post.title,
-        content = post.content,
-        type = post.type.name,
-        isPinned = post.isPinned,
-        viewCount = post.viewCount,
-        likeCount = post.likeCount,
-        attachments = post.attachments,
-        createdAt = post.createdAt,
-        updatedAt = post.updatedAt,
-    )
+    private fun toPostResponse(post: Post) =
+        PostResponse(
+            id = post.id,
+            channelId = post.channel.id,
+            author = toUserSummaryResponse(post.author),
+            title = post.title,
+            content = post.content,
+            type = post.type.name,
+            isPinned = post.isPinned,
+            viewCount = post.viewCount,
+            likeCount = post.likeCount,
+            attachments = post.attachments,
+            createdAt = post.createdAt,
+            updatedAt = post.updatedAt,
+        )
 
-    private fun toCommentResponse(comment: Comment) = CommentResponse(
-        id = comment.id,
-        postId = comment.post.id,
-        author = toUserSummaryResponse(comment.author),
-        content = comment.content,
-        parentCommentId = comment.parentComment?.id,
-        likeCount = comment.likeCount,
-        createdAt = comment.createdAt,
-        updatedAt = comment.updatedAt,
-    )
+    private fun toCommentResponse(comment: Comment) =
+        CommentResponse(
+            id = comment.id,
+            postId = comment.post.id,
+            author = toUserSummaryResponse(comment.author),
+            content = comment.content,
+            parentCommentId = comment.parentComment?.id,
+            likeCount = comment.likeCount,
+            createdAt = comment.createdAt,
+            updatedAt = comment.updatedAt,
+        )
 
-    private fun validateChannelManagePermission(groupId: Long, userId: Long) {
-        val group = groupRepository.findById(groupId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+    private fun validateChannelManagePermission(
+        groupId: Long,
+        userId: Long,
+    ) {
+        val group =
+            groupRepository.findById(groupId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         if (group.owner.id == userId) return
         val member = groupMemberRepository.findByGroupIdAndUserId(groupId, userId).orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         val rolePerms = if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions

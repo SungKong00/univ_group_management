@@ -18,7 +18,9 @@ class ContentController(
     // === Workspaces (compat: group-level single workspace) ===
     @GetMapping("/groups/{groupId}/workspaces")
     @PreAuthorize("@security.hasGroupPerm(#groupId, 'CHANNEL_READ')")
-    fun getWorkspaces(@PathVariable groupId: Long): ApiResponse<List<WorkspaceResponse>> {
+    fun getWorkspaces(
+        @PathVariable groupId: Long,
+    ): ApiResponse<List<WorkspaceResponse>> {
         val response = contentService.getWorkspacesByGroup(groupId)
         return ApiResponse.success(response)
     }
@@ -216,6 +218,7 @@ class ContentController(
         return ApiResponse.success()
     }
 
-    private fun getUserByEmail(email: String) = userService.findByEmail(email)
-        ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
+    private fun getUserByEmail(email: String) =
+        userService.findByEmail(email)
+            ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
 }

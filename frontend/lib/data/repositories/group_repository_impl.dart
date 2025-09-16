@@ -82,4 +82,25 @@ class GroupRepositoryImpl implements GroupRepository {
       },
     );
   }
+
+  @override
+  Future<ApiResponse<Map<int, bool>>> checkBatchGroupMembership(List<int> groupIds) async {
+    // TODO: Implement when backend supports batch membership checking
+    // For now, fall back to individual calls
+    final Map<int, bool> results = {};
+
+    for (final groupId in groupIds) {
+      try {
+        final response = await checkGroupMembership(groupId);
+        results[groupId] = response.isSuccess && (response.data ?? false);
+      } catch (_) {
+        results[groupId] = false;
+      }
+    }
+
+    return ApiResponse<Map<int, bool>>(
+      success: true,
+      data: results,
+    );
+  }
 }

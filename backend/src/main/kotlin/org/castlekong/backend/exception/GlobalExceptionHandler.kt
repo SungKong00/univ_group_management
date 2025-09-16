@@ -12,29 +12,31 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
-
     private val logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     @ExceptionHandler(BusinessException::class)
     fun handleBusinessException(e: BusinessException): ResponseEntity<ApiResponse<Unit>> {
         logger.warn("Business exception occurred: {}", e.message)
-        
-        val status = when (e.errorCode) {
-            ErrorCode.UNAUTHORIZED -> HttpStatus.UNAUTHORIZED
-            ErrorCode.FORBIDDEN -> HttpStatus.FORBIDDEN
-            ErrorCode.USER_NOT_FOUND,
-            ErrorCode.GROUP_NOT_FOUND,
-            ErrorCode.GROUP_ROLE_NOT_FOUND,
-            ErrorCode.GROUP_MEMBER_NOT_FOUND,
-            ErrorCode.CHANNEL_NOT_FOUND,
-            ErrorCode.POST_NOT_FOUND,
-            ErrorCode.COMMENT_NOT_FOUND -> HttpStatus.NOT_FOUND
-            ErrorCode.USER_ALREADY_EXISTS,
-            ErrorCode.GROUP_NAME_ALREADY_EXISTS,
-            ErrorCode.GROUP_ROLE_NAME_ALREADY_EXISTS,
-            ErrorCode.ALREADY_GROUP_MEMBER -> HttpStatus.CONFLICT
-            else -> HttpStatus.BAD_REQUEST
-        }
+
+        val status =
+            when (e.errorCode) {
+                ErrorCode.UNAUTHORIZED -> HttpStatus.UNAUTHORIZED
+                ErrorCode.FORBIDDEN -> HttpStatus.FORBIDDEN
+                ErrorCode.USER_NOT_FOUND,
+                ErrorCode.GROUP_NOT_FOUND,
+                ErrorCode.GROUP_ROLE_NOT_FOUND,
+                ErrorCode.GROUP_MEMBER_NOT_FOUND,
+                ErrorCode.CHANNEL_NOT_FOUND,
+                ErrorCode.POST_NOT_FOUND,
+                ErrorCode.COMMENT_NOT_FOUND,
+                -> HttpStatus.NOT_FOUND
+                ErrorCode.USER_ALREADY_EXISTS,
+                ErrorCode.GROUP_NAME_ALREADY_EXISTS,
+                ErrorCode.GROUP_ROLE_NAME_ALREADY_EXISTS,
+                ErrorCode.ALREADY_GROUP_MEMBER,
+                -> HttpStatus.CONFLICT
+                else -> HttpStatus.BAD_REQUEST
+            }
 
         val response = ApiResponse.error<Unit>(e.errorCode.name, e.errorCode.message)
         return ResponseEntity.status(status).body(response)
@@ -50,11 +52,12 @@ class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationException(e: MethodArgumentNotValidException): ResponseEntity<ApiResponse<Unit>> {
         logger.warn("Validation failed: {}", e.message)
-        
-        val errors = e.bindingResult.allErrors
-            .filterIsInstance<FieldError>()
-            .joinToString(", ") { "${it.field}: ${it.defaultMessage}" }
-        
+
+        val errors =
+            e.bindingResult.allErrors
+                .filterIsInstance<FieldError>()
+                .joinToString(", ") { "${it.field}: ${it.defaultMessage}" }
+
         val response = ApiResponse.error<Unit>("INVALID_REQUEST", "입력값이 유효하지 않습니다: $errors")
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
     }

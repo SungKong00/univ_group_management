@@ -18,14 +18,14 @@ class DataInitializer(
     private val groupRoleRepository: GroupRoleRepository,
     private val groupMemberRepository: GroupMemberRepository,
 ) : ApplicationRunner {
-
     @Transactional
     override fun run(args: ApplicationArguments?) {
         // data.sql에서 이미 castlekong1019@gmail.com 계정이 생성되므로 별도 처리 불필요
         val ownerEmail = "castlekong1019@gmail.com"
-        val owner = userRepository.findByEmail(ownerEmail).orElseThrow {
-            RuntimeException("castlekong1019@gmail.com 계정이 data.sql에서 생성되지 않았습니다.")
-        }
+        val owner =
+            userRepository.findByEmail(ownerEmail).orElseThrow {
+                RuntimeException("castlekong1019@gmail.com 계정이 data.sql에서 생성되지 않았습니다.")
+            }
 
         // groups가 비어 있을 때만 기본 학교/계열/학과 시드 생성 (data.sql과 충돌 방지)
         if (groupRepository.count() == 0L) {
@@ -43,33 +43,35 @@ class DataInitializer(
         val dept = "AI/SW학과"
 
         // Top: University
-        val top = groupRepository.findByUniversityAndCollegeAndDepartment(univ, null, null).firstOrNull()
-            ?: groupService.createGroup(
-                CreateGroupRequest(
-                    name = univ,
-                    description = "$univ 최상위 조직",
-                    university = univ,
-                    college = null,
-                    department = null,
-                    groupType = GroupType.UNIVERSITY,
-                ),
-                owner.id
-            ).let { groupRepository.findById(it.id).orElseThrow() }
+        val top =
+            groupRepository.findByUniversityAndCollegeAndDepartment(univ, null, null).firstOrNull()
+                ?: groupService.createGroup(
+                    CreateGroupRequest(
+                        name = univ,
+                        description = "$univ 최상위 조직",
+                        university = univ,
+                        college = null,
+                        department = null,
+                        groupType = GroupType.UNIVERSITY,
+                    ),
+                    owner.id,
+                ).let { groupRepository.findById(it.id).orElseThrow() }
 
         // Middle: College
-        val mid = groupRepository.findByUniversityAndCollegeAndDepartment(univ, college, null).firstOrNull()
-            ?: groupService.createGroup(
-                CreateGroupRequest(
-                    name = college,
-                    description = "$college 소속 조직",
-                    parentId = top.id,
-                    university = univ,
-                    college = college,
-                    department = null,
-                    groupType = GroupType.COLLEGE,
-                ),
-                owner.id
-            ).let { groupRepository.findById(it.id).orElseThrow() }
+        val mid =
+            groupRepository.findByUniversityAndCollegeAndDepartment(univ, college, null).firstOrNull()
+                ?: groupService.createGroup(
+                    CreateGroupRequest(
+                        name = college,
+                        description = "$college 소속 조직",
+                        parentId = top.id,
+                        university = univ,
+                        college = college,
+                        department = null,
+                        groupType = GroupType.COLLEGE,
+                    ),
+                    owner.id,
+                ).let { groupRepository.findById(it.id).orElseThrow() }
 
         // Bottom: Department/Track
         groupRepository.findByUniversityAndCollegeAndDepartment(univ, college, dept).firstOrNull()
@@ -83,7 +85,7 @@ class DataInitializer(
                     department = dept,
                     groupType = GroupType.DEPARTMENT,
                 ),
-                owner.id
+                owner.id,
             )
     }
 
@@ -96,8 +98,8 @@ class DataInitializer(
                     name = "OWNER",
                     isSystemRole = true,
                     permissions = GroupPermission.entries.toSet(),
-                    priority = 100
-                )
+                    priority = 100,
+                ),
             )
         }
         // ADVISOR
@@ -108,8 +110,8 @@ class DataInitializer(
                     name = "ADVISOR",
                     isSystemRole = true,
                     permissions = GroupPermission.entries.toSet(),
-                    priority = 99
-                )
+                    priority = 99,
+                ),
             )
         }
         // MEMBER
@@ -119,15 +121,16 @@ class DataInitializer(
                     group = group,
                     name = "MEMBER",
                     isSystemRole = true,
-                    permissions = setOf(
-                        GroupPermission.CHANNEL_READ,
-                        GroupPermission.POST_CREATE,
-                        GroupPermission.POST_READ,
-                        GroupPermission.COMMENT_CREATE,
-                        GroupPermission.COMMENT_READ
-                    ),
-                    priority = 1
-                )
+                    permissions =
+                        setOf(
+                            GroupPermission.CHANNEL_READ,
+                            GroupPermission.POST_CREATE,
+                            GroupPermission.POST_READ,
+                            GroupPermission.COMMENT_CREATE,
+                            GroupPermission.COMMENT_READ,
+                        ),
+                    priority = 1,
+                ),
             )
         }
     }
@@ -142,12 +145,13 @@ class DataInitializer(
             val existing = groupMemberRepository.findByGroupIdAndUserId(group.id, group.owner.id)
 
             if (!existing.isPresent) {
-                val ownerMember = GroupMember(
-                    group = group,
-                    user = group.owner,
-                    role = ownerRole,
-                    joinedAt = LocalDateTime.now()
-                )
+                val ownerMember =
+                    GroupMember(
+                        group = group,
+                        user = group.owner,
+                        role = ownerRole,
+                        joinedAt = LocalDateTime.now(),
+                    )
                 groupMemberRepository.save(ownerMember)
             }
         }

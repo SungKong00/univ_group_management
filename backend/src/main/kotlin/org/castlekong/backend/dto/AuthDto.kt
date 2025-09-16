@@ -1,11 +1,10 @@
 package org.castlekong.backend.dto
 
-import jakarta.validation.constraints.NotBlank
 import java.time.LocalDateTime
 
 data class GoogleLoginRequest(
-    val googleAuthToken: String? = null,    // ID Token (권장)
-    val googleAccessToken: String? = null,  // Web에서 ID Token 미제공 시 대안
+    val googleAuthToken: String? = null, // ID Token (권장)
+    val googleAccessToken: String? = null, // Web에서 ID Token 미제공 시 대안
 )
 
 data class LoginResponse(

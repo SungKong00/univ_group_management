@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'core/storage/token_storage.dart';
-import 'core/network/dio_client.dart';
-import 'data/repositories/auth_repository_impl.dart';
-import 'data/repositories/group_repository_impl.dart';
-import 'data/services/auth_service.dart';
-import 'data/services/workspace_service.dart';
+import 'core/di/service_locator.dart';
 import 'domain/repositories/auth_repository.dart';
-import 'domain/repositories/group_repository.dart';
+import 'data/services/workspace_service.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/group_provider.dart';
+import 'presentation/providers/group_tree_provider.dart';
+import 'presentation/providers/group_membership_provider.dart';
+import 'presentation/providers/group_subgroups_provider.dart';
 import 'presentation/providers/nav_provider.dart';
 import 'presentation/providers/workspace_provider.dart';
 import 'presentation/screens/auth/login_screen.dart';
@@ -17,44 +15,30 @@ import 'presentation/screens/auth/register_screen.dart';
 import 'presentation/screens/main/main_nav_scaffold.dart';
 import 'presentation/theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Manual DI wiring
-  final TokenStorage storage = SharedPrefsTokenStorage();
-  final DioClient apiClient = DioClient(storage); // Use DioClient directly
-  final authService = AuthService(apiClient);
-  final workspaceService = WorkspaceService(apiClient);
-  final AuthRepository authRepo = AuthRepositoryImpl(authService, storage);
-  final GroupRepository groupRepo = GroupRepositoryImpl(apiClient);
+  // Setup dependency injection
+  await setupServiceLocator();
 
-  runApp(MyApp(
-    authRepo: authRepo,
-    groupRepo: groupRepo,
-    workspaceService: workspaceService,
-  ));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final AuthRepository authRepo;
-  final GroupRepository groupRepo;
-  final WorkspaceService workspaceService;
-
-  const MyApp({
-    super.key,
-    required this.authRepo,
-    required this.groupRepo,
-    required this.workspaceService,
-  });
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider(authRepo)..check()),
-        ChangeNotifierProvider(create: (_) => GroupProvider(groupRepo)),
+        ChangeNotifierProvider(create: (_) => AuthProvider(locator<AuthRepository>())..check()),
+        ChangeNotifierProvider(create: (_) => GroupProvider(
+          locator<GroupTreeProvider>(),
+          locator<GroupMembershipProvider>(),
+          locator<GroupSubgroupsProvider>(),
+        )),
         ChangeNotifierProvider(create: (_) => NavProvider()),
-        ChangeNotifierProvider(create: (_) => WorkspaceProvider(workspaceService)),
+        ChangeNotifierProvider(create: (_) => WorkspaceProvider(locator<WorkspaceService>())),
       ],
       child: MaterialApp(
         title: '대학 그룹 관리',

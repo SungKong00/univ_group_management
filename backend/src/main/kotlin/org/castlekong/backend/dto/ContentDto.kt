@@ -105,3 +105,13 @@ data class CommentResponse(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 )
+
+// 명세서에서 요구하는 WorkspaceDto
+data class WorkspaceDto(
+    val groupId: Long,
+    val groupName: String,
+    val myRole: String,
+    val notices: List<PostResponse>,
+    val channels: List<ChannelResponse>,
+    val members: List<GroupMemberResponse>,
+)

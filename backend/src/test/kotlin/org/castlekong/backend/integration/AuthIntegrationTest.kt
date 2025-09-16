@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 @ActiveProfiles("test")
 @DisplayName("인증 API 통합 테스트")
 class AuthIntegrationTest {
-
     @Autowired
     private lateinit var mockMvc: MockMvc
 

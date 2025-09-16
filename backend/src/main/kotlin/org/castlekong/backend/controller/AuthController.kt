@@ -31,13 +31,14 @@ class AuthController(
         @Valid @RequestBody googleLoginRequest: GoogleLoginRequest,
     ): ResponseEntity<ApiResponse<LoginResponse>> {
         return try {
-            val loginResponse = when {
-                !googleLoginRequest.googleAuthToken.isNullOrBlank() ->
-                    authService.authenticateWithGoogle(googleLoginRequest.googleAuthToken)
-                !googleLoginRequest.googleAccessToken.isNullOrBlank() ->
-                    authService.authenticateWithGoogleAccessToken(googleLoginRequest.googleAccessToken)
-                else -> throw ValidationException("Google token is required")
-            }
+            val loginResponse =
+                when {
+                    !googleLoginRequest.googleAuthToken.isNullOrBlank() ->
+                        authService.authenticateWithGoogle(googleLoginRequest.googleAuthToken)
+                    !googleLoginRequest.googleAccessToken.isNullOrBlank() ->
+                        authService.authenticateWithGoogleAccessToken(googleLoginRequest.googleAccessToken)
+                    else -> throw ValidationException("Google token is required")
+                }
             ResponseEntity.ok(
                 ApiResponse.success(
                     data = loginResponse,
@@ -97,23 +98,23 @@ class AuthController(
     @ApiResponses(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "로그아웃 성공"),
-            SwaggerApiResponse(responseCode = "401", description = "인증 실패")
-        ]
+            SwaggerApiResponse(responseCode = "401", description = "인증 실패"),
+        ],
     )
     fun logout(): ResponseEntity<ApiResponse<String>> {
         return try {
             ResponseEntity.ok(
                 ApiResponse.success(
-                    data = "로그아웃되었습니다"
-                )
+                    data = "로그아웃되었습니다",
+                ),
             )
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(
                     ApiResponse.error<String>(
                         code = "INTERNAL_SERVER_ERROR",
-                        message = "로그아웃 중 오류가 발생했습니다: ${e.message}"
-                    )
+                        message = "로그아웃 중 오류가 발생했습니다: ${e.message}",
+                    ),
                 )
         }
     }
@@ -126,16 +127,16 @@ class AuthController(
             val updatedCount = authService.resetAllUsersProfileStatus()
             ResponseEntity.ok(
                 ApiResponse.success(
-                    data = "Updated $updatedCount users' profileCompleted status to false"
-                )
+                    data = "Updated $updatedCount users' profileCompleted status to false",
+                ),
             )
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(
                     ApiResponse.error<String>(
                         code = "INTERNAL_SERVER_ERROR",
-                        message = "프로필 상태 초기화 중 오류가 발생했습니다: ${e.message}"
-                    )
+                        message = "프로필 상태 초기화 중 오류가 발생했습니다: ${e.message}",
+                    ),
                 )
         }
     }

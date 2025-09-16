@@ -337,6 +337,84 @@ class GroupMemberModel {
   }
 }
 
+/// 백엔드 WorkspaceDto에 대응하는 모델 (명세서 요구사항)
+class WorkspaceDtoModel {
+  final int groupId;
+  final String groupName;
+  final String myRole;
+  final List<PostModel> notices;
+  final List<ChannelModel> channels;
+  final List<GroupMemberModel> members;
+
+  const WorkspaceDtoModel({
+    required this.groupId,
+    required this.groupName,
+    required this.myRole,
+    required this.notices,
+    required this.channels,
+    required this.members,
+  });
+
+  factory WorkspaceDtoModel.fromJson(Map<String, dynamic> json) {
+    return WorkspaceDtoModel(
+      groupId: (json['groupId'] ?? 0) as int,
+      groupName: (json['groupName'] ?? '').toString(),
+      myRole: (json['myRole'] ?? 'MEMBER').toString(),
+      notices: ((json['notices'] as List?) ?? [])
+          .map((e) => PostModel.fromJson(e))
+          .toList(),
+      channels: ((json['channels'] as List?) ?? [])
+          .map((e) => ChannelModel.fromJson(e))
+          .toList(),
+      members: ((json['members'] as List?) ?? [])
+          .map((e) => GroupMemberModel.fromJson(e))
+          .toList(),
+    );
+  }
+
+  /// WorkspaceDetailModel로 변환
+  WorkspaceDetailModel toWorkspaceDetailModel() {
+    return WorkspaceDetailModel(
+      workspace: WorkspaceModel(
+        id: 0, // 워크스페이스 ID는 별도 조회 필요
+        groupId: groupId,
+        name: groupName,
+        description: null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      group: GroupModel(
+        id: groupId,
+        name: groupName,
+        description: null,
+        owner: UserSummaryModel(id: 0, name: '', email: ''),
+        visibility: GroupVisibility.public,
+        groupType: GroupType.autonomous,
+        isRecruiting: false,
+        tags: [],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      myMembership: GroupMemberModel(
+        id: 0,
+        groupId: groupId,
+        user: UserSummaryModel(id: 0, name: '', email: ''),
+        role: GroupRoleModel(
+          id: 0,
+          groupId: groupId,
+          name: myRole,
+          isSystemRole: true,
+          permissions: [],
+        ),
+        joinedAt: DateTime.now(),
+      ),
+      channels: channels,
+      announcements: notices,
+      members: members,
+    );
+  }
+}
+
 /// 워크스페이스 전체 정보 (3개 탭 데이터 포함)
 class WorkspaceDetailModel {
   final WorkspaceModel workspace;

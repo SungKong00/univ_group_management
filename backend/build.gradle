@@ -89,6 +89,11 @@ tasks.named("test").configure {
     useJUnitPlatform()
 }
 
+// bootRun 메모리 설정 (개발환경 최적화)
+tasks.named("bootRun").configure {
+    jvmArgs = ['-Xmx1g', '-Xms512m', '-XX:MaxMetaspaceSize=256m']
+}
+
 // detekt {
 //     config.setFrom(files("detekt.yml")) // Detekt 설정 파일 경로 지정
 // }

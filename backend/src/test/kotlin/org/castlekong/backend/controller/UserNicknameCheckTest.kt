@@ -19,10 +19,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc(addFilters = false)
 class UserNicknameCheckTest {
     @Autowired lateinit var mockMvc: MockMvc
+
     @Autowired lateinit var objectMapper: ObjectMapper
 
     @MockkBean lateinit var userService: UserService
+
     @MockkBean lateinit var emailVerificationService: org.castlekong.backend.service.EmailVerificationService
+
     @MockkBean lateinit var jwtTokenProvider: JwtTokenProvider
 
     @Test
@@ -30,8 +33,10 @@ class UserNicknameCheckTest {
     fun nickname_available() {
         every { userService.nicknameExists("newNick") } returns false
 
-        mockMvc.perform(get("/api/users/nickname-check").param("nickname", "newNick")
-            .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(
+            get("/api/users/nickname-check").param("nickname", "newNick")
+                .accept(MediaType.APPLICATION_JSON),
+        )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.available").value(true))
     }

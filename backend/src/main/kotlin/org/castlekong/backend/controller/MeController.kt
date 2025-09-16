@@ -24,9 +24,10 @@ class MeController(
     @Operation(summary = "내 정보 조회", description = "현재 로그인한 사용자의 정보를 조회합니다 (/api/me)")
     fun getMe(authentication: Authentication): ResponseEntity<ApiResponse<UserResponse>> {
         return try {
-            val user = userService.findByEmail(authentication.name)
-                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
+            val user =
+                userService.findByEmail(authentication.name)
+                    ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
             ResponseEntity.ok(ApiResponse.success(userService.convertToUserResponse(user)))
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -34,4 +35,3 @@ class MeController(
         }
     }
 }
-

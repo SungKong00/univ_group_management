@@ -26,7 +26,10 @@ class EmailVerificationService(
     }
 
     @Transactional
-    fun sendCode(userEmail: String, req: EmailSendRequest) {
+    fun sendCode(
+        userEmail: String,
+        req: EmailSendRequest,
+    ) {
         if (!isAllowedDomain(req.email)) {
             throw IllegalArgumentException("E_BAD_DOMAIN: 허용되지 않은 도메인입니다")
         }
@@ -49,9 +52,13 @@ class EmailVerificationService(
     }
 
     @Transactional
-    fun verifyCode(userEmail: String, req: EmailVerifyRequest) {
-        val record = emailVerificationRepository.findTopByEmailOrderByCreatedAtDesc(req.email)
-            ?: throw IllegalArgumentException("E_OTP_MISMATCH: 코드가 일치하지 않아요")
+    fun verifyCode(
+        userEmail: String,
+        req: EmailVerifyRequest,
+    ) {
+        val record =
+            emailVerificationRepository.findTopByEmailOrderByCreatedAtDesc(req.email)
+                ?: throw IllegalArgumentException("E_OTP_MISMATCH: 코드가 일치하지 않아요")
 
         if (LocalDateTime.now().isAfter(record.expiresAt)) {
             throw IllegalArgumentException("E_OTP_EXPIRED: 코드가 만료되었어요")
@@ -63,13 +70,15 @@ class EmailVerificationService(
         }
 
         // 사용자 업데이트: schoolEmail, emailVerified=true
-        val user = userService.findByEmail(userEmail)
-            ?: throw IllegalArgumentException("USER_NOT_FOUND: 사용자 없음")
+        val user =
+            userService.findByEmail(userEmail)
+                ?: throw IllegalArgumentException("USER_NOT_FOUND: 사용자 없음")
 
-        val updated = user.copy(
-            schoolEmail = req.email,
-            emailVerified = true,
-        )
+        val updated =
+            user.copy(
+                schoolEmail = req.email,
+                emailVerified = true,
+            )
         userService.save(updated)
     }
 }

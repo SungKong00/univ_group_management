@@ -18,15 +18,14 @@ import org.springframework.web.bind.annotation.RequestParam
 class GroupController(
     private val groupService: GroupService,
     private val groupRoleService: GroupRoleService,
-    private val userService: UserService
+    private val userService: UserService,
 ) {
-
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     fun createGroup(
         @Valid @RequestBody request: CreateGroupRequest,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<GroupResponse> {
         // 개발 편의: 인증된 사용자가 DB에 없으면 자동 생성
         val email = authentication.name
@@ -74,7 +73,9 @@ class GroupController(
     }
 
     @GetMapping("/{groupId}")
-    fun getGroup(@PathVariable groupId: Long): ApiResponse<GroupResponse> {
+    fun getGroup(
+        @PathVariable groupId: Long,
+    ): ApiResponse<GroupResponse> {
         val response = groupService.getGroup(groupId)
         return ApiResponse.success(response)
     }
@@ -84,7 +85,7 @@ class GroupController(
     fun updateGroup(
         @PathVariable groupId: Long,
         @Valid @RequestBody request: UpdateGroupRequest,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<GroupResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupService.updateGroup(groupId, request, user.id)
@@ -96,7 +97,7 @@ class GroupController(
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteGroup(
         @PathVariable groupId: Long,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<Unit> {
         val user = getUserByEmail(authentication.name)
         groupService.deleteGroup(groupId, user.id)
@@ -108,7 +109,7 @@ class GroupController(
     fun createJoinRequest(
         @PathVariable groupId: Long,
         @RequestBody request: JoinGroupRequest,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<GroupJoinRequestResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupService.createGroupJoinRequest(groupId, request.message, user.id)
@@ -120,7 +121,7 @@ class GroupController(
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun leaveGroup(
         @PathVariable groupId: Long,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<Unit> {
         val user = getUserByEmail(authentication.name)
         groupService.leaveGroup(groupId, user.id)
@@ -131,7 +132,7 @@ class GroupController(
     @PreAuthorize("@security.hasGroupPerm(#groupId, 'MEMBER_READ')")
     fun getGroupMembers(
         @PathVariable groupId: Long,
-        pageable: Pageable
+        pageable: Pageable,
     ): ApiResponse<Page<GroupMemberResponse>> {
         val response = groupService.getGroupMembers(groupId, pageable)
         return ApiResponse.success(response)
@@ -156,7 +157,7 @@ class GroupController(
         @PathVariable groupId: Long,
         @PathVariable userId: Long,
         @Valid @RequestBody request: UpdateMemberRoleRequest,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<GroupMemberResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupService.updateMemberRole(groupId, userId, request.roleId, user.id)
@@ -170,7 +171,7 @@ class GroupController(
     fun removeMember(
         @PathVariable groupId: Long,
         @PathVariable userId: Long,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<Unit> {
         val user = getUserByEmail(authentication.name)
         groupService.removeMember(groupId, userId, user.id)
@@ -194,7 +195,7 @@ class GroupController(
         @PathVariable groupId: Long,
         @PathVariable userId: Long,
         @Valid @RequestBody request: MemberPermissionOverrideRequest,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<MemberPermissionOverrideResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupService.setMemberPermissionOverride(groupId, userId, request, user.id)
@@ -208,7 +209,7 @@ class GroupController(
     fun createGroupRole(
         @PathVariable groupId: Long,
         @Valid @RequestBody request: CreateGroupRoleRequest,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<GroupRoleResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupRoleService.createGroupRole(groupId, request, user.id)
@@ -217,7 +218,9 @@ class GroupController(
 
     @GetMapping("/{groupId}/roles")
     @PreAuthorize("@security.hasGroupPerm(#groupId, 'ROLE_READ')")
-    fun getGroupRoles(@PathVariable groupId: Long): ApiResponse<List<GroupRoleResponse>> {
+    fun getGroupRoles(
+        @PathVariable groupId: Long,
+    ): ApiResponse<List<GroupRoleResponse>> {
         val response = groupRoleService.getGroupRoles(groupId)
         return ApiResponse.success(response)
     }
@@ -226,7 +229,7 @@ class GroupController(
     @PreAuthorize("@security.hasGroupPerm(#groupId, 'ROLE_READ')")
     fun getGroupRole(
         @PathVariable groupId: Long,
-        @PathVariable roleId: Long
+        @PathVariable roleId: Long,
     ): ApiResponse<GroupRoleResponse> {
         val response = groupRoleService.getGroupRole(groupId, roleId)
         return ApiResponse.success(response)
@@ -238,7 +241,7 @@ class GroupController(
         @PathVariable groupId: Long,
         @PathVariable roleId: Long,
         @Valid @RequestBody request: UpdateGroupRoleRequest,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<GroupRoleResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupRoleService.updateGroupRole(groupId, roleId, request, user.id)
@@ -251,7 +254,7 @@ class GroupController(
     fun deleteGroupRole(
         @PathVariable groupId: Long,
         @PathVariable roleId: Long,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<Unit> {
         val user = getUserByEmail(authentication.name)
         groupRoleService.deleteGroupRole(groupId, roleId, user.id)
@@ -259,130 +262,151 @@ class GroupController(
     }
 
     // === 그룹 가입 신청 관리 ===
-    
+
     @GetMapping("/{groupId}/join-requests")
     @PreAuthorize("@security.hasGroupPerm(#groupId, 'MEMBER_APPROVE')")
-    fun getGroupJoinRequests(@PathVariable groupId: Long): ApiResponse<List<GroupJoinRequestResponse>> {
+    fun getGroupJoinRequests(
+        @PathVariable groupId: Long,
+    ): ApiResponse<List<GroupJoinRequestResponse>> {
         val response = groupService.getGroupJoinRequestsByGroup(groupId)
         return ApiResponse.success(response)
     }
-    
+
     @PatchMapping("/{groupId}/join-requests/{requestId}")
     @PreAuthorize("@security.hasGroupPerm(#groupId, 'MEMBER_APPROVE')")
     fun reviewGroupJoinRequest(
         @PathVariable groupId: Long,
         @PathVariable requestId: Long,
         @Valid @RequestBody request: ReviewGroupJoinRequestRequest,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<GroupJoinRequestResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupService.reviewGroupJoinRequest(requestId, request, user.id)
         return ApiResponse.success(response)
     }
-    
+
     // === 하위 그룹 생성 신청 관리 ===
-    
+
     @PostMapping("/{groupId}/sub-groups/requests")
     @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     fun createSubGroupRequest(
         @PathVariable groupId: Long,
         @Valid @RequestBody request: CreateSubGroupRequest,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<SubGroupRequestResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupService.createSubGroupRequest(groupId, request, user.id)
         return ApiResponse.success(response)
     }
-    
+
     @GetMapping("/{groupId}/sub-groups/requests")
     @PreAuthorize("@security.isOwner(#groupId)")
-    fun getSubGroupRequests(@PathVariable groupId: Long): ApiResponse<List<SubGroupRequestResponse>> {
+    fun getSubGroupRequests(
+        @PathVariable groupId: Long,
+    ): ApiResponse<List<SubGroupRequestResponse>> {
         val response = groupService.getSubGroupRequestsByParentGroup(groupId)
         return ApiResponse.success(response)
     }
-    
+
     @PatchMapping("/{groupId}/sub-groups/requests/{requestId}")
     @PreAuthorize("@security.isOwner(#groupId)")
     fun reviewSubGroupRequest(
         @PathVariable groupId: Long,
         @PathVariable requestId: Long,
         @Valid @RequestBody request: ReviewSubGroupRequestRequest,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<SubGroupRequestResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupService.reviewSubGroupRequest(requestId, request, user.id)
         return ApiResponse.success(response)
     }
-    
+
     // === 하위 그룹 조회 ===
-    
+
     @GetMapping("/{groupId}/sub-groups")
-    fun getSubGroups(@PathVariable groupId: Long): ApiResponse<List<GroupSummaryResponse>> {
+    fun getSubGroups(
+        @PathVariable groupId: Long,
+    ): ApiResponse<List<GroupSummaryResponse>> {
         val response = groupService.getSubGroups(groupId)
         return ApiResponse.success(response)
     }
-    
+
     // === 지도교수 관리 ===
-    
+
     @PostMapping("/{groupId}/professors/{professorId}")
     @PreAuthorize("@security.isOwner(#groupId)")
     @ResponseStatus(HttpStatus.CREATED)
     fun assignProfessor(
         @PathVariable groupId: Long,
         @PathVariable professorId: Long,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<GroupMemberResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupService.assignProfessor(groupId, professorId, user.id)
         return ApiResponse.success(response)
     }
-    
+
     @DeleteMapping("/{groupId}/professors/{professorId}")
     @PreAuthorize("@security.isOwner(#groupId)")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun removeProfessor(
         @PathVariable groupId: Long,
         @PathVariable professorId: Long,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<Unit> {
         val user = getUserByEmail(authentication.name)
         groupService.removeProfessor(groupId, professorId, user.id)
         return ApiResponse.success()
     }
-    
+
     @GetMapping("/{groupId}/professors")
-    fun getProfessors(@PathVariable groupId: Long): ApiResponse<List<GroupMemberResponse>> {
+    fun getProfessors(
+        @PathVariable groupId: Long,
+    ): ApiResponse<List<GroupMemberResponse>> {
         val response = groupService.getProfessors(groupId)
         return ApiResponse.success(response)
     }
-    
+
     // === 그룹장 권한 위임 ===
-    
+
     @PostMapping("/{groupId}/transfer-ownership/{newOwnerId}")
     @PreAuthorize("@security.isOwner(#groupId)")
     fun transferOwnership(
         @PathVariable groupId: Long,
         @PathVariable newOwnerId: Long,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<GroupMemberResponse> {
         val user = getUserByEmail(authentication.name)
         val response = groupService.transferOwnership(groupId, newOwnerId, user.id)
         return ApiResponse.success(response)
     }
 
-    private fun getUserByEmail(email: String) = userService.findByEmail(email)
-        ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
+    private fun getUserByEmail(email: String) =
+        userService.findByEmail(email)
+            ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
 
     // === 내 유효 권한 조회 ===
     @GetMapping("/{groupId}/me/permissions")
     @PreAuthorize("isAuthenticated()")
     fun getMyPermissions(
         @PathVariable groupId: Long,
-        authentication: Authentication
+        authentication: Authentication,
     ): ApiResponse<Set<String>> {
         val user = getUserByEmail(authentication.name)
         val perms = groupService.getMyEffectivePermissions(groupId, user.id)
         return ApiResponse.success(perms)
+    }
+
+    // === 워크스페이스 조회 (명세서 요구사항) ===
+    @GetMapping("/{groupId}/workspace")
+    @PreAuthorize("@security.hasGroupPerm(#groupId, 'MEMBER_READ')")
+    fun getWorkspace(
+        @PathVariable groupId: Long,
+        authentication: Authentication,
+    ): ApiResponse<org.castlekong.backend.dto.WorkspaceDto> {
+        val user = getUserByEmail(authentication.name)
+        val response = groupService.getWorkspace(groupId, user.id)
+        return ApiResponse.success(response)
     }
 }

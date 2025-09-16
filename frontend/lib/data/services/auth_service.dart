@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/network/api_response.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/error/error_handler.dart';
 import '../models/auth_models.dart';
 
 class AuthService {
@@ -98,23 +99,7 @@ class AuthService {
   }
 
   ApiResponse<T> _errorFromDio<T>(DioException e) {
-    final data = e.response?.data;
-    if (data is Map<String, dynamic>) {
-      try {
-        return ApiResponse<T>.fromJson(
-          data,
-          (json) => json as T,
-        );
-      } catch (_) {}
-    }
-    return ApiResponse<T>(
-      success: false,
-      error: ApiError(
-        code: 'NETWORK_ERROR',
-        message: e.message ?? '네트워크 오류가 발생했습니다.',
-        details: e.response?.statusMessage,
-      ),
-    );
+    return ErrorHandler.handleDioError<T>(e);
   }
 
   // --- Email OTP (mockable for MVP) ---

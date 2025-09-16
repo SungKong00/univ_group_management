@@ -29,9 +29,10 @@ class RoleController(
         @RequestBody req: RoleApplyRequest,
     ): ResponseEntity<ApiResponse<Unit>> {
         return try {
-            val user = userService.findByEmail(authentication.name)
-                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
+            val user =
+                userService.findByEmail(authentication.name)
+                    ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
             userService.applyRole(user.id, req.role)
             ResponseEntity.ok(ApiResponse.success())
         } catch (e: IllegalArgumentException) {
@@ -43,4 +44,3 @@ class RoleController(
         }
     }
 }
-

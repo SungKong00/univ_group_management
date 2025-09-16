@@ -11,7 +11,10 @@ class SecurityExpressionHelper(
     private val groupRepository: GroupRepository,
     private val userRepository: UserRepository,
 ) {
-    fun hasGroupPerm(groupId: Long, permission: String): Boolean {
+    fun hasGroupPerm(
+        groupId: Long,
+        permission: String,
+    ): Boolean {
         val auth = SecurityContextHolder.getContext().authentication
         return groupPermissionEvaluator.hasPermission(auth, groupId, "GROUP", permission)
     }

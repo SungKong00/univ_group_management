@@ -8,7 +8,24 @@ class WorkspaceService {
 
   WorkspaceService(this._dioClient);
 
-  /// 그룹의 워크스페이스 조회 (그룹과 워크스페이스는 1:1)
+  /// 새로운 통합 워크스페이스 API 호출 (명세서 요구사항)
+  Future<WorkspaceDetailModel> getWorkspaceByGroupNew(int groupId) async {
+    try {
+      final response = await _dioClient.get('/groups/$groupId/workspace');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to fetch workspace');
+      }
+
+      // 백엔드 WorkspaceDto를 프론트엔드 모델로 변환
+      final workspaceDto = WorkspaceDtoModel.fromJson(data['data']);
+      return workspaceDto.toWorkspaceDetailModel();
+    } catch (e) {
+      throw Exception('Failed to load workspace: $e');
+    }
+  }
+
+  /// 기존 워크스페이스 조회 (하위 호환성을 위해 유지)
   Future<WorkspaceDetailModel> getWorkspaceByGroup(int groupId) async {
     try {
       // 0) 내 멤버십 확인 (비회원 접근 차단)

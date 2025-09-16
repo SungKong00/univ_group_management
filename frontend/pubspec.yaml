@@ -12,6 +12,7 @@ dependencies:
   dio: ^5.3.2
   shared_preferences: ^2.2.2
   google_sign_in: ^6.2.1
+  get_it: ^7.6.4
 
 dev_dependencies:
   flutter_test:

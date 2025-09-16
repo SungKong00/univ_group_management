@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../core/network/api_response.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/error/error_handler.dart';
 import '../models/group_model.dart';
 
 class GroupService {
@@ -22,16 +23,22 @@ class GroupService {
   }
 
   Future<ApiResponse<_Page<GroupSummaryModel>>> explore({int page = 0, int size = 10}) async {
-    final Response resp = await _dio.dio.get(
-      '/groups',
-      queryParameters: {
-        'page': page,
-        'size': size,
-        'sort': 'createdAt,desc',
-      },
-    );
-    final json = _ensureMap(resp.data, '/groups');
-    return _parsePageApiResponse<GroupSummaryModel>(json, (item) => GroupSummaryModel.fromJson(item as Map<String, dynamic>));
+    try {
+      final Response resp = await _dio.dio.get(
+        '/groups',
+        queryParameters: {
+          'page': page,
+          'size': size,
+          'sort': 'createdAt,desc',
+        },
+      );
+      final json = _ensureMap(resp.data, '/groups');
+      return _parsePageApiResponse<GroupSummaryModel>(json, (item) => GroupSummaryModel.fromJson(item as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return ErrorHandler.handleDioError<_Page<GroupSummaryModel>>(e);
+    } catch (e) {
+      return ErrorHandler.handleGenericError<_Page<GroupSummaryModel>>(e);
+    }
   }
 
   // 전체 그룹 조회 (트리뷰용)
@@ -47,26 +54,32 @@ class GroupService {
     int page = 0,
     int size = 1000,
   }) async {
-    final queryParams = <String, dynamic>{
-      if (recruiting != null) 'recruiting': recruiting,
-      if (visibility != null) 'visibility': visibility,
-      if (groupType != null) 'groupType': groupType,
-      if (university != null) 'university': university,
-      if (college != null) 'college': college,
-      if (department != null) 'department': department,
-      if (query != null) 'q': query,
-      if (tags != null && tags.isNotEmpty) 'tags': tags.join(','),
-      'page': page,
-      'size': size,
-    };
+    try {
+      final queryParams = <String, dynamic>{
+        if (recruiting != null) 'recruiting': recruiting,
+        if (visibility != null) 'visibility': visibility,
+        if (groupType != null) 'groupType': groupType,
+        if (university != null) 'university': university,
+        if (college != null) 'college': college,
+        if (department != null) 'department': department,
+        if (query != null) 'q': query,
+        if (tags != null && tags.isNotEmpty) 'tags': tags.join(','),
+        'page': page,
+        'size': size,
+      };
 
-    final Response resp = await _dio.dio.get(
-      '/groups/explore',
-      queryParameters: queryParams,
-    );
+      final Response resp = await _dio.dio.get(
+        '/groups/explore',
+        queryParameters: queryParams,
+      );
 
-    final json = _ensureMap(resp.data, '/groups/explore');
-    return _parsePageApiResponse<GroupSummaryModel>(json, (item) => GroupSummaryModel.fromJson(item as Map<String, dynamic>));
+      final json = _ensureMap(resp.data, '/groups/explore');
+      return _parsePageApiResponse<GroupSummaryModel>(json, (item) => GroupSummaryModel.fromJson(item as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return ErrorHandler.handleDioError<_Page<GroupSummaryModel>>(e);
+    } catch (e) {
+      return ErrorHandler.handleGenericError<_Page<GroupSummaryModel>>(e);
+    }
   }
 
   // 그룹 상세 정보 조회

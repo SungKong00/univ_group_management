@@ -11,24 +11,17 @@ import java.time.LocalDateTime
 data class EmailVerification(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
-
     @Column(nullable = false, length = 100)
     val email: String,
-
     @Column(nullable = false, length = 6)
     val code: String,
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "expires_at", nullable = false)
     val expiresAt: LocalDateTime,
-
     @Column(name = "verified", nullable = false)
     val verified: Boolean = false,
-
     @Column(name = "attempts", nullable = false)
     val attempts: Int = 0,
 )
-

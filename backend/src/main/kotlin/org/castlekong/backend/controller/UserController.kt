@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.castlekong.backend.dto.*
-import org.castlekong.backend.service.UserService
 import org.castlekong.backend.service.EmailVerificationService
+import org.castlekong.backend.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -30,9 +30,10 @@ class UserController(
     ): ResponseEntity<ApiResponse<UserResponse>> {
         return try {
             val userEmail = authentication.name
-            val user = userService.findByEmail(userEmail)
-                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
+            val user =
+                userService.findByEmail(userEmail)
+                    ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
 
             val updatedUser = userService.submitSignupProfile(user.id, request)
             ResponseEntity.ok(ApiResponse.success(userService.convertToUserResponse(updatedUser)))
@@ -53,16 +54,20 @@ class UserController(
     ): ResponseEntity<ApiResponse<NicknameCheckResponse>> {
         return try {
             val exists = userService.nicknameExists(nickname)
-            val suggestions = if (exists) {
-                val base = nickname.take(12)
-                listOf(1, 2, 3).map { "$base${"%02d".format((10..99).random())}" }
-            } else emptyList()
+            val suggestions =
+                if (exists) {
+                    val base = nickname.take(12)
+                    listOf(1, 2, 3).map { "$base${"%02d".format((10..99).random())}" }
+                } else {
+                    emptyList()
+                }
             ResponseEntity.ok(ApiResponse.success(NicknameCheckResponse(!exists, suggestions)))
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(code = "INTERNAL_SERVER_ERROR", message = "서버 내부 오류"))
         }
     }
+
     @PutMapping("/profile")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "프로필 완성", description = "사용자 프로필을 완성합니다 (역할, 닉네임, 프로필 이미지, 자기소개)")
@@ -80,14 +85,15 @@ class UserController(
     ): ResponseEntity<ApiResponse<UserResponse>> {
         return try {
             val userEmail = authentication.name
-            val user = userService.findByEmail(userEmail)
-                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(
-                        ApiResponse.error<UserResponse>(
-                            code = "USER_NOT_FOUND",
-                            message = "사용자를 찾을 수 없습니다.",
-                        ),
-                    )
+            val user =
+                userService.findByEmail(userEmail)
+                    ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(
+                            ApiResponse.error<UserResponse>(
+                                code = "USER_NOT_FOUND",
+                                message = "사용자를 찾을 수 없습니다.",
+                            ),
+                        )
 
             val updatedUser = userService.completeProfile(user.id, request)
             val userResponse = userService.convertToUserResponse(updatedUser)
@@ -124,19 +130,18 @@ class UserController(
             SwaggerApiResponse(responseCode = "404", description = "사용자 없음"),
         ],
     )
-    fun getCurrentUser(
-        authentication: Authentication,
-    ): ResponseEntity<ApiResponse<UserResponse>> {
+    fun getCurrentUser(authentication: Authentication): ResponseEntity<ApiResponse<UserResponse>> {
         return try {
             val userEmail = authentication.name
-            val user = userService.findByEmail(userEmail)
-                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(
-                        ApiResponse.error<UserResponse>(
-                            code = "USER_NOT_FOUND",
-                            message = "사용자를 찾을 수 없습니다.",
-                        ),
-                    )
+            val user =
+                userService.findByEmail(userEmail)
+                    ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(
+                            ApiResponse.error<UserResponse>(
+                                code = "USER_NOT_FOUND",
+                                message = "사용자를 찾을 수 없습니다.",
+                            ),
+                        )
 
             val userResponse = userService.convertToUserResponse(user)
             ResponseEntity.ok(
@@ -152,7 +157,6 @@ class UserController(
                 )
         }
     }
-
 
     @GetMapping("/search")
     @PreAuthorize("isAuthenticated()")
@@ -184,9 +188,10 @@ class UserController(
         authentication: Authentication,
         @RequestParam(required = false, defaultValue = "PENDING") status: String,
     ): ResponseEntity<ApiResponse<List<GroupJoinRequestResponse>>> {
-        val user = userService.findByEmail(authentication.name)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
+        val user =
+            userService.findByEmail(authentication.name)
+                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
         val list = userService.getMyJoinRequests(user.id, status)
         return ResponseEntity.ok(ApiResponse.success(list))
     }
@@ -197,9 +202,10 @@ class UserController(
         authentication: Authentication,
         @RequestParam(required = false, defaultValue = "PENDING") status: String,
     ): ResponseEntity<ApiResponse<List<SubGroupRequestResponse>>> {
-        val user = userService.findByEmail(authentication.name)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
+        val user =
+            userService.findByEmail(authentication.name)
+                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
         val list = userService.getMySubGroupRequests(user.id, status)
         return ResponseEntity.ok(ApiResponse.success(list))
     }

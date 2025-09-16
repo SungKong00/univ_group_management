@@ -1,9 +1,8 @@
 package org.castlekong.backend.security
 
 import org.castlekong.backend.entity.GroupPermission
-import org.castlekong.backend.entity.GroupRole
-import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupMemberPermissionOverrideRepository
+import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.UserRepository
 import org.springframework.security.access.PermissionEvaluator
 import org.springframework.security.core.Authentication
@@ -18,8 +17,11 @@ class GroupPermissionEvaluator(
     private val overrideRepository: GroupMemberPermissionOverrideRepository,
     private val permissionService: PermissionService,
 ) : PermissionEvaluator {
-
-    override fun hasPermission(authentication: Authentication?, targetDomainObject: Any?, permission: Any?): Boolean {
+    override fun hasPermission(
+        authentication: Authentication?,
+        targetDomainObject: Any?,
+        permission: Any?,
+    ): Boolean {
         // Not used in our design; use the (Serializable targetId, String targetType, permission) variant
         return false
     }
@@ -51,28 +53,30 @@ class GroupPermissionEvaluator(
         return when (roleName.uppercase()) {
             "OWNER" -> GroupPermission.entries.toSet()
             // ADVISOR: Full moderation and channel manage, but no group/role/member/recruitment management
-            "ADVISOR" -> GroupPermission.entries
-                .toSet()
-                .minus(
-                    setOf(
-                        GroupPermission.GROUP_MANAGE,
-                        GroupPermission.ROLE_MANAGE,
-                        GroupPermission.MEMBER_APPROVE,
-                        GroupPermission.MEMBER_KICK,
-                        GroupPermission.RECRUITMENT_CREATE,
-                        GroupPermission.RECRUITMENT_UPDATE,
-                        GroupPermission.RECRUITMENT_DELETE,
-                    ),
+            "ADVISOR" ->
+                GroupPermission.entries
+                    .toSet()
+                    .minus(
+                        setOf(
+                            GroupPermission.GROUP_MANAGE,
+                            GroupPermission.ROLE_MANAGE,
+                            GroupPermission.MEMBER_APPROVE,
+                            GroupPermission.MEMBER_KICK,
+                            GroupPermission.RECRUITMENT_CREATE,
+                            GroupPermission.RECRUITMENT_UPDATE,
+                            GroupPermission.RECRUITMENT_DELETE,
+                        ),
+                    )
+            "MEMBER" ->
+                setOf(
+                    GroupPermission.CHANNEL_READ,
+                    GroupPermission.POST_READ,
+                    GroupPermission.POST_CREATE,
+                    GroupPermission.COMMENT_READ,
+                    GroupPermission.COMMENT_CREATE,
+                    GroupPermission.POST_UPDATE_OWN,
+                    GroupPermission.POST_DELETE_OWN,
                 )
-            "MEMBER" -> setOf(
-                GroupPermission.CHANNEL_READ,
-                GroupPermission.POST_READ,
-                GroupPermission.POST_CREATE,
-                GroupPermission.COMMENT_READ,
-                GroupPermission.COMMENT_CREATE,
-                GroupPermission.POST_UPDATE_OWN,
-                GroupPermission.POST_DELETE_OWN,
-            )
             else -> emptySet()
         }
     }

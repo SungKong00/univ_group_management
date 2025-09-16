@@ -20,31 +20,34 @@ import java.time.LocalDateTime
 @WebMvcTest(controllers = [MeController::class])
 class MeControllerTest {
     @Autowired lateinit var mockMvc: MockMvc
+
     @Autowired lateinit var objectMapper: ObjectMapper
 
     @MockkBean lateinit var userService: UserService
+
     @MockkBean lateinit var jwtTokenProvider: JwtTokenProvider
 
     @Test
     @WithMockUser(username = "user@example.com")
     fun getMe_success() {
         val now = LocalDateTime.now()
-        val user = org.castlekong.backend.entity.User(
-            name = "User",
-            email = "user@example.com",
-            password = "",
-        )
+        val user =
+            org.castlekong.backend.entity.User(
+                name = "User",
+                email = "user@example.com",
+                password = "",
+            )
         every { userService.findByEmail("user@example.com") } returns user
-        every { userService.convertToUserResponse(user) } returns UserResponse(
-            id = 1L, name = "User", email = "user@example.com", globalRole = "STUDENT",
-            isActive = true, nickname = null, profileImageUrl = null, bio = null,
-            profileCompleted = false, emailVerified = false,
-            createdAt = now, updatedAt = now
-        )
+        every { userService.convertToUserResponse(user) } returns
+            UserResponse(
+                id = 1L, name = "User", email = "user@example.com", globalRole = "STUDENT",
+                isActive = true, nickname = null, profileImageUrl = null, bio = null,
+                profileCompleted = false, emailVerified = false,
+                createdAt = now, updatedAt = now,
+            )
 
         mockMvc.perform(get("/api/me").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk)
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
     }
 }
-

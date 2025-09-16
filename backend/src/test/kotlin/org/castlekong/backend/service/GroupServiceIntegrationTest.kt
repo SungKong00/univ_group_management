@@ -2,13 +2,13 @@ package org.castlekong.backend.service
 
 import org.assertj.core.api.Assertions.*
 import org.castlekong.backend.dto.CreateGroupRequest
+import org.castlekong.backend.entity.GlobalRole
 import org.castlekong.backend.entity.GroupVisibility
 import org.castlekong.backend.entity.User
-import org.castlekong.backend.entity.GlobalRole
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
-import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.GroupRoleRepository
 import org.castlekong.backend.repository.UserRepository
 import org.junit.jupiter.api.BeforeEach
@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional
 @ActiveProfiles("test")
 @Transactional
 class GroupServiceIntegrationTest {
-
     @Autowired
     private lateinit var groupService: GroupService
 
@@ -44,29 +43,31 @@ class GroupServiceIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        testUser = userRepository.save(
-            User(
-                name = "테스트 사용자",
-                email = "test@example.com",
-                password = "hashedPassword",
-                globalRole = GlobalRole.STUDENT,
-                profileCompleted = true
+        testUser =
+            userRepository.save(
+                User(
+                    name = "테스트 사용자",
+                    email = "test@example.com",
+                    password = "hashedPassword",
+                    globalRole = GlobalRole.STUDENT,
+                    profileCompleted = true,
+                ),
             )
-        )
     }
 
     @Test
     @DisplayName("그룹 생성이 성공한다")
     fun createGroup_Success() {
         // given
-        val request = CreateGroupRequest(
-            name = "테스트 그룹",
-            description = "테스트용 그룹입니다",
-            visibility = GroupVisibility.PUBLIC,
-            isRecruiting = true,
-            maxMembers = 50,
-            tags = setOf("스터디", "개발")
-        )
+        val request =
+            CreateGroupRequest(
+                name = "테스트 그룹",
+                description = "테스트용 그룹입니다",
+                visibility = GroupVisibility.PUBLIC,
+                isRecruiting = true,
+                maxMembers = 50,
+                tags = setOf("스터디", "개발"),
+            )
 
         // when
         val response = groupService.createGroup(request, testUser.id)
@@ -96,10 +97,11 @@ class GroupServiceIntegrationTest {
     @DisplayName("그룹 조회가 성공한다")
     fun getGroup_Success() {
         // given
-        val request = CreateGroupRequest(
-            name = "조회 테스트 그룹",
-            description = "조회 테스트용 그룹입니다"
-        )
+        val request =
+            CreateGroupRequest(
+                name = "조회 테스트 그룹",
+                description = "조회 테스트용 그룹입니다",
+            )
         val createdGroup = groupService.createGroup(request, testUser.id)
 
         // when
@@ -150,15 +152,16 @@ class GroupServiceIntegrationTest {
         val groupRequest = CreateGroupRequest(name = "가입 테스트 그룹")
         val createdGroup = groupService.createGroup(groupRequest, testUser.id)
 
-        val newUser = userRepository.save(
-            User(
-                name = "새로운 사용자",
-                email = "new@example.com",
-                password = "hashedPassword",
-                globalRole = GlobalRole.STUDENT,
-                profileCompleted = true
+        val newUser =
+            userRepository.save(
+                User(
+                    name = "새로운 사용자",
+                    email = "new@example.com",
+                    password = "hashedPassword",
+                    globalRole = GlobalRole.STUDENT,
+                    profileCompleted = true,
+                ),
             )
-        )
 
         // when
         val response = groupService.joinGroup(createdGroup.id, newUser.id)
@@ -192,15 +195,16 @@ class GroupServiceIntegrationTest {
         val groupRequest = CreateGroupRequest(name = "탈퇴 테스트 그룹")
         val createdGroup = groupService.createGroup(groupRequest, testUser.id)
 
-        val newUser = userRepository.save(
-            User(
-                name = "탈퇴할 사용자",
-                email = "leave@example.com",
-                password = "hashedPassword",
-                globalRole = GlobalRole.STUDENT,
-                profileCompleted = true
+        val newUser =
+            userRepository.save(
+                User(
+                    name = "탈퇴할 사용자",
+                    email = "leave@example.com",
+                    password = "hashedPassword",
+                    globalRole = GlobalRole.STUDENT,
+                    profileCompleted = true,
+                ),
             )
-        )
 
         groupService.joinGroup(createdGroup.id, newUser.id)
 
@@ -232,15 +236,16 @@ class GroupServiceIntegrationTest {
         val groupRequest = CreateGroupRequest(name = "멤버 조회 테스트 그룹")
         val createdGroup = groupService.createGroup(groupRequest, testUser.id)
 
-        val newUser = userRepository.save(
-            User(
-                name = "추가 멤버",
-                email = "member@example.com",
-                password = "hashedPassword",
-                globalRole = GlobalRole.STUDENT,
-                profileCompleted = true
+        val newUser =
+            userRepository.save(
+                User(
+                    name = "추가 멤버",
+                    email = "member@example.com",
+                    password = "hashedPassword",
+                    globalRole = GlobalRole.STUDENT,
+                    profileCompleted = true,
+                ),
             )
-        )
         groupService.joinGroup(createdGroup.id, newUser.id)
 
         val pageable = PageRequest.of(0, 10)

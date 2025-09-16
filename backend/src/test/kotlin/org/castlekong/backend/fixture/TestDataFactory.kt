@@ -2,8 +2,8 @@ package org.castlekong.backend.fixture
 
 import org.castlekong.backend.dto.GoogleLoginRequest
 import org.castlekong.backend.dto.ProfileUpdateRequest
-import org.castlekong.backend.entity.User
 import org.castlekong.backend.entity.GlobalRole
+import org.castlekong.backend.entity.User
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -43,9 +43,7 @@ object TestDataFactory {
         )
     }
 
-    fun createGoogleLoginRequest(
-        googleAuthToken: String = TEST_GOOGLE_TOKEN,
-    ): GoogleLoginRequest {
+    fun createGoogleLoginRequest(googleAuthToken: String = TEST_GOOGLE_TOKEN): GoogleLoginRequest {
         return GoogleLoginRequest(
             googleAuthToken = googleAuthToken,
         )
@@ -104,9 +102,7 @@ object TestDataFactory {
         )
     }
 
-    fun createGoogleAccessTokenRequest(
-        googleAccessToken: String = "valid.google.access.token",
-    ): GoogleLoginRequest {
+    fun createGoogleAccessTokenRequest(googleAccessToken: String = "valid.google.access.token"): GoogleLoginRequest {
         return GoogleLoginRequest(
             googleAuthToken = null,
             googleAccessToken = googleAccessToken,
