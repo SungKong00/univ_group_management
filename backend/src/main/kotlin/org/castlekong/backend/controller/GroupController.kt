@@ -409,4 +409,14 @@ class GroupController(
         val response = groupService.getWorkspace(groupId, user.id)
         return ApiResponse.success(response)
     }
+
+    // === 관리자 통계 ===
+    @GetMapping("/{groupId}/admin/stats")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    fun getAdminStats(
+        @PathVariable groupId: Long,
+    ): ApiResponse<AdminStatsResponse> {
+        val stats = groupService.getAdminStats(groupId)
+        return ApiResponse.success(stats)
+    }
 }

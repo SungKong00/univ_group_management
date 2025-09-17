@@ -18,8 +18,8 @@
 
 -   **`gemini task run-context` 실행 시**:
     1.  현재 작업 폴더의 `TASK.MD` 파일을 읽어달라는 요청으로 이해합니다.
-    2.  `TASK.MD`의 내용을 바탕으로 `.gemini/metadata.json`을 참고하여 관련 있는 `context/` 문서들을 식별하고, 필요하다면 `src/` 또는 `lib/`의 코드 구조를 분석합니다.
-    3.  분석이 끝나면, 수집된 모든 정보를 종합하여 `SYNTHESIZED_CONTEXT.MD` 파일의 초안을 작성하여 제안합니다.
+    2.  `TASK.MD`의 '컨텍스트 요청'을 바탕으로 `.gemini/metadata.json`을 참고하여 관련 있는 `context/` 문서 및 소스 코드 파일(`src/`, `lib/` 등)을 식별합니다.
+    3.  분석이 끝나면, 식별된 파일들의 **절대 경로 목록**을 `SYNTHESIZED_CONTEXT.MD` 파일에 기록하여 Claude에게 전달합니다. Claude는 이 경로 목록을 사용하여 직접 파일 내용을 읽습니다.
 
 -   **개발 진행 중**:
     1.  개발 사이클 동안, 저는 `TASK.MD`의 '작업 로그'를 주시하며 Claude Code나 Codex의 활동을 파악합니다.

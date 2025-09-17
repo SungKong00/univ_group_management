@@ -30,6 +30,17 @@ Sheets로 내보내기
 | **그룹 정보 수정** | `PUT /groups/{groupId}` | **필수** | `{ "name", "description" }` | `{ "groupId", "name", ... }` | 그룹장/지도교수 |
 | **그룹 삭제** | `DELETE /groups/{groupId}` | **필수** | (없음) | `null` | 그룹장/지도교수 |
 
+---
+
+### 3.1. 워크스페이스 (Workspace) API (v1.5 신규)
+
+| 기능 | Endpoint | 인증 | 요청 Body | 성공 응답 (data) | 권한 |
+| --- | --- | --- | --- | --- | --- |
+| **워크스페이스 조회** | `GET /groups/{groupId}/workspace` | **필수** | (없음) | `WorkspaceDto` | **그룹 멤버** |
+
+- **`WorkspaceDto` 상세**: `{ groupId, groupName, myRole, notices: List<Post>, channels: List<Channel>, members: List<Member> }`
+- **설명**: 워크스페이스 진입 시 필요한 모든 데이터(공지, 채널, 멤버 목록 등)를 한 번에 제공하는 **핵심 통합 API**입니다. 프론트엔드는 이 API 하나로 초기 화면을 모두 구성할 수 있습니다.
+
 Sheets로 내보내기
 
 ---

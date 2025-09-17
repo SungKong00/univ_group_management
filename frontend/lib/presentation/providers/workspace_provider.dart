@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../data/models/workspace_models.dart';
+import '../../data/models/auth_models.dart';
 import '../../data/services/workspace_service.dart';
 
 class WorkspaceProvider extends ChangeNotifier {
@@ -393,7 +394,7 @@ class WorkspaceProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      final updatedMember = await _workspaceService.updateMemberRole(
+      await _workspaceService.updateMemberRole(
         groupId: groupId,
         userId: userId,
         roleId: roleId,
@@ -403,7 +404,19 @@ class WorkspaceProvider extends ChangeNotifier {
       if (_currentWorkspace != null) {
         final updatedMembers = _currentWorkspace!.members.map((member) {
           if (member.user.id == userId) {
-            return updatedMember;
+            return GroupMemberModel(
+              id: member.id,
+              groupId: member.groupId,
+              user: member.user,
+              role: GroupRoleModel(
+                id: roleId,
+                groupId: member.role.groupId,
+                name: member.role.name, // 기존 이름 유지, 실제로는 역할 정보를 다시 조회해야 할 수도 있음
+                isSystemRole: member.role.isSystemRole,
+                permissions: member.role.permissions,
+              ),
+              joinedAt: member.joinedAt,
+            );
           }
           return member;
         }).toList();
@@ -493,5 +506,296 @@ class WorkspaceProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  // === 관리자 기능 메서드 ===
+
+  /// 관리자 통계 조회
+  Future<AdminStatsModel> getAdminStats(int groupId) async {
+    try {
+      final stats = await _workspaceService.getAdminStats(groupId);
+      return AdminStatsModel.fromJson(stats);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// 역할 생성
+  Future<bool> createRole({
+    required int groupId,
+    required String name,
+    required List<String> permissions,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _workspaceService.createRole(
+        groupId: groupId,
+        name: name,
+        permissions: permissions,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 역할 수정
+  Future<bool> updateRole({
+    required int groupId,
+    required int roleId,
+    required String name,
+    required List<String> permissions,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _workspaceService.updateRole(
+        groupId: groupId,
+        roleId: roleId,
+        name: name,
+        permissions: permissions,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 역할 삭제
+  Future<bool> deleteRole({
+    required int groupId,
+    required int roleId,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _workspaceService.deleteRole(
+        groupId: groupId,
+        roleId: roleId,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 가입 대기 멤버 목록 조회
+  Future<List<PendingMemberModel>> getPendingMembers(int groupId) async {
+    try {
+      final pendingMembers = await _workspaceService.getPendingMembers(groupId);
+      return pendingMembers.map((json) => PendingMemberModel.fromJson(json)).toList();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// 가입 승인/반려
+  Future<bool> decideMembership({
+    required int groupId,
+    required int userId,
+    required bool approve,
+    String? reason,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _workspaceService.decideMembership(
+        groupId: groupId,
+        userId: userId,
+        approve: approve,
+        reason: reason,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 개인 권한 오버라이드 조회
+  Future<Map<String, dynamic>> getMemberPermissions({
+    required int groupId,
+    required int userId,
+  }) async {
+    try {
+      return await _workspaceService.getMemberPermissions(
+        groupId: groupId,
+        userId: userId,
+      );
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// 개인 권한 오버라이드 설정
+  Future<bool> setMemberPermissions({
+    required int groupId,
+    required int userId,
+    required Map<String, String> overrides,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _workspaceService.setMemberPermissions(
+        groupId: groupId,
+        userId: userId,
+        overrides: overrides,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 그룹 정보 수정
+  Future<bool> updateGroupInfo({
+    required int groupId,
+    String? name,
+    String? description,
+    List<String>? tags,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _workspaceService.updateGroupInfo(
+        groupId: groupId,
+        name: name,
+        description: description,
+        tags: tags,
+      );
+
+      // 워크스페이스를 다시 로드하여 최신 상태 반영
+      await loadWorkspace(groupId);
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 공지사항 작성
+  Future<bool> createAnnouncement({
+    required int groupId,
+    required String title,
+    required String content,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _workspaceService.createAnnouncement(
+        groupId: groupId,
+        title: title,
+        content: content,
+      );
+
+      // 워크스페이스를 다시 로드하여 최신 공지사항 반영
+      await loadWorkspace(groupId);
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 권한 확인 헬퍼 메서드들
+  bool get canManageRoles => canManageMembers; // 멤버 관리 권한이 있으면 역할도 관리 가능
+  bool get canViewAdminPages => canManageMembers || canManageChannels || canManage;
+}
+
+// 관리자 통계 모델 추가
+class AdminStatsModel {
+  final int pendingCount;
+  final int memberCount;
+  final int roleCount;
+  final int channelCount;
+
+  AdminStatsModel({
+    required this.pendingCount,
+    required this.memberCount,
+    required this.roleCount,
+    required this.channelCount,
+  });
+
+  factory AdminStatsModel.fromJson(Map<String, dynamic> json) {
+    return AdminStatsModel(
+      pendingCount: json['pendingCount'] ?? 0,
+      memberCount: json['memberCount'] ?? 0,
+      roleCount: json['roleCount'] ?? 0,
+      channelCount: json['channelCount'] ?? 0,
+    );
+  }
+}
+
+// 가입 대기 멤버 모델 추가
+class PendingMemberModel {
+  final UserModel user;
+  final DateTime appliedAt;
+  final String? message;
+
+  PendingMemberModel({
+    required this.user,
+    required this.appliedAt,
+    this.message,
+  });
+
+  factory PendingMemberModel.fromJson(Map<String, dynamic> json) {
+    return PendingMemberModel(
+      user: UserModel.fromJson(json['user']),
+      appliedAt: DateTime.parse(json['appliedAt']),
+      message: json['message'],
+    );
   }
 }

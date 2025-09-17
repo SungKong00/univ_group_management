@@ -259,6 +259,241 @@ class WorkspaceService {
     }
   }
 
+  /// 관리자 통계 조회
+  Future<Map<String, dynamic>> getAdminStats(int groupId) async {
+    try {
+      final response = await _dioClient.get('/groups/$groupId/admin/stats');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to fetch admin stats');
+      }
+      return data['data'];
+    } catch (e) {
+      throw Exception('Failed to load admin stats: $e');
+    }
+  }
+
+  /// 그룹 역할 목록 조회
+  Future<List<GroupRoleModel>> getGroupRoles(int groupId) async {
+    try {
+      final response = await _dioClient.get('/groups/$groupId/roles');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to fetch roles');
+      }
+      final List<dynamic> rolesList = data['data'];
+      return rolesList.map((role) => GroupRoleModel.fromJson(role)).toList();
+    } catch (e) {
+      throw Exception('Failed to load roles: $e');
+    }
+  }
+
+  /// 역할 생성
+  Future<Map<String, dynamic>> createRole({
+    required int groupId,
+    required String name,
+    required List<String> permissions,
+  }) async {
+    try {
+      final response = await _dioClient.post('/groups/$groupId/roles', data: {
+        'roleName': name,
+        'permissions': permissions,
+      });
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to create role');
+      }
+      return data['data'];
+    } catch (e) {
+      throw Exception('Failed to create role: $e');
+    }
+  }
+
+  /// 역할 수정
+  Future<Map<String, dynamic>> updateRole({
+    required int groupId,
+    required int roleId,
+    required String name,
+    required List<String> permissions,
+  }) async {
+    try {
+      final response = await _dioClient.patch('/groups/$groupId/roles/$roleId', data: {
+        'roleName': name,
+        'permissions': permissions,
+      });
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to update role');
+      }
+      return data['data'];
+    } catch (e) {
+      throw Exception('Failed to update role: $e');
+    }
+  }
+
+  /// 역할 삭제
+  Future<void> deleteRole({
+    required int groupId,
+    required int roleId,
+  }) async {
+    try {
+      final response = await _dioClient.delete('/groups/$groupId/roles/$roleId');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to delete role');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete role: $e');
+    }
+  }
+
+  /// 가입 대기 멤버 목록 조회
+  Future<List<Map<String, dynamic>>> getPendingMembers(int groupId) async {
+    try {
+      final response = await _dioClient.get('/groups/$groupId/members?status=pending');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to fetch pending members');
+      }
+      return List<Map<String, dynamic>>.from(data['data']);
+    } catch (e) {
+      throw Exception('Failed to load pending members: $e');
+    }
+  }
+
+  /// 가입 승인/반려
+  Future<void> decideMembership({
+    required int groupId,
+    required int userId,
+    required bool approve,
+    String? reason,
+  }) async {
+    try {
+      final response = await _dioClient.post('/groups/$groupId/members/$userId/decision', data: {
+        'approve': approve,
+        'reason': reason,
+      });
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to decide membership');
+      }
+    } catch (e) {
+      throw Exception('Failed to decide membership: $e');
+    }
+  }
+
+  /// 멤버 역할 변경
+  Future<void> updateMemberRole({
+    required int groupId,
+    required int userId,
+    required int roleId,
+  }) async {
+    try {
+      final response = await _dioClient.patch('/groups/$groupId/members/$userId/role', data: {
+        'roleId': roleId,
+      });
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to update member role');
+      }
+    } catch (e) {
+      throw Exception('Failed to update member role: $e');
+    }
+  }
+
+  /// 멤버 강제 탈퇴
+  Future<void> removeMember({
+    required int groupId,
+    required int userId,
+  }) async {
+    try {
+      final response = await _dioClient.delete('/groups/$groupId/members/$userId');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to remove member');
+      }
+    } catch (e) {
+      throw Exception('Failed to remove member: $e');
+    }
+  }
+
+  /// 개인 권한 오버라이드 조회
+  Future<Map<String, dynamic>> getMemberPermissions({
+    required int groupId,
+    required int userId,
+  }) async {
+    try {
+      final response = await _dioClient.get('/groups/$groupId/members/$userId/permissions');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to fetch member permissions');
+      }
+      return data['data'];
+    } catch (e) {
+      throw Exception('Failed to load member permissions: $e');
+    }
+  }
+
+  /// 개인 권한 오버라이드 설정
+  Future<void> setMemberPermissions({
+    required int groupId,
+    required int userId,
+    required Map<String, String> overrides, // ALLOW, DENY, INHERIT
+  }) async {
+    try {
+      final response = await _dioClient.put('/groups/$groupId/members/$userId/permissions', data: {
+        'overrides': overrides,
+      });
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to set member permissions');
+      }
+    } catch (e) {
+      throw Exception('Failed to set member permissions: $e');
+    }
+  }
+
+  /// 그룹 정보 수정
+  Future<void> updateGroupInfo({
+    required int groupId,
+    String? name,
+    String? description,
+    List<String>? tags,
+  }) async {
+    try {
+      final requestData = <String, dynamic>{};
+      if (name != null) requestData['name'] = name;
+      if (description != null) requestData['description'] = description;
+      if (tags != null) requestData['tags'] = tags;
+
+      final response = await _dioClient.put('/groups/$groupId', data: requestData);
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to update group info');
+      }
+    } catch (e) {
+      throw Exception('Failed to update group info: $e');
+    }
+  }
+
+  /// 그룹장 위임
+  Future<void> delegateLeadership({
+    required int groupId,
+    required int newLeaderId,
+  }) async {
+    try {
+      final response = await _dioClient.patch('/groups/$groupId/leader', data: {
+        'newLeaderId': newLeaderId,
+      });
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to delegate leadership');
+      }
+    } catch (e) {
+      throw Exception('Failed to delegate leadership: $e');
+    }
+  }
+
   /// 채널의 게시글 목록 조회
   Future<List<PostModel>> getChannelPosts(int channelId) async {
     try {
@@ -422,75 +657,48 @@ class WorkspaceService {
     }
   }
 
-  // === 멤버 관리 API ===
-
-  /// 그룹 역할 목록 조회
-  Future<List<GroupRoleModel>> getGroupRoles(int groupId) async {
-    try {
-      final response = await _dioClient.get('/groups/$groupId/roles');
-      final data = response.data;
-      if (data['success'] != true) {
-        throw Exception(data['error']?['message'] ?? 'Failed to fetch group roles');
-      }
-      return (data['data'] as List).map((e) => GroupRoleModel.fromJson(e)).toList();
-    } catch (e) {
-      throw Exception('Failed to load group roles: $e');
-    }
-  }
-
-  /// 멤버 역할 변경
-  Future<GroupMemberModel> updateMemberRole({
+  /// 공지사항 작성
+  Future<void> createAnnouncement({
     required int groupId,
-    required int userId,
-    required int roleId,
+    required String title,
+    required String content,
   }) async {
     try {
-      final response = await _dioClient.put('/groups/$groupId/members/$userId/role', data: {
-        'roleId': roleId,
+      // 워크스페이스 정보를 먼저 가져와서 기본 채널 ID 확보
+      final workspaceResponse = await _dioClient.get('/groups/$groupId/workspace');
+      if (workspaceResponse.data['success'] != true) {
+        throw Exception('워크스페이스 정보를 가져올 수 없습니다');
+      }
+
+      final channels = workspaceResponse.data['data']['channels'] as List;
+      if (channels.isEmpty) {
+        throw Exception('공지사항을 작성할 채널이 없습니다');
+      }
+
+      // 첫 번째 채널을 공지 채널로 사용 (또는 announcement 타입 채널 찾기)
+      final announcementChannel = channels.firstWhere(
+        (channel) => channel['type'] == 'ANNOUNCEMENT',
+        orElse: () => channels.first,
+      );
+
+      final channelId = announcementChannel['id'];
+
+      // 게시글 작성 API 호출
+      final response = await _dioClient.post('/channels/$channelId/posts', data: {
+        'title': title,
+        'content': content,
+        'type': 'ANNOUNCEMENT',
       });
+
       final data = response.data;
       if (data['success'] != true) {
-        throw Exception(data['error']?['message'] ?? 'Failed to update member role');
+        throw Exception(data['error']?['message'] ?? 'Failed to create announcement');
       }
-      return GroupMemberModel.fromJson(data['data']);
     } catch (e) {
-      throw Exception('Failed to update member role: $e');
+      throw Exception('공지사항 작성에 실패했습니다: $e');
     }
   }
 
-  /// 멤버 강제 탈퇴
-  Future<void> removeMember({
-    required int groupId,
-    required int userId,
-  }) async {
-    try {
-      final response = await _dioClient.delete('/groups/$groupId/members/$userId');
-      final data = response.data;
-      if (data['success'] != true) {
-        throw Exception(data['error']?['message'] ?? 'Failed to remove member');
-      }
-    } catch (e) {
-      throw Exception('Failed to remove member: $e');
-    }
-  }
-
-  /// 그룹장 위임
-  Future<void> delegateLeadership({
-    required int groupId,
-    required int newLeaderId,
-  }) async {
-    try {
-      final response = await _dioClient.patch('/groups/$groupId/leader', data: {
-        'newLeaderId': newLeaderId,
-      });
-      final data = response.data;
-      if (data['success'] != true) {
-        throw Exception(data['error']?['message'] ?? 'Failed to delegate leadership');
-      }
-    } catch (e) {
-      throw Exception('Failed to delegate leadership: $e');
-    }
-  }
 }
 
 class WorkspaceAccessException implements Exception {

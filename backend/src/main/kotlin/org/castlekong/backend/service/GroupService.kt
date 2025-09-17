@@ -15,6 +15,7 @@ class GroupService(
     private val groupMemberService: GroupMemberService,
     private val groupRequestService: GroupRequestService,
     private val workspaceManagementService: WorkspaceManagementService,
+    private val adminStatsService: AdminStatsService, // 추가
 ) {
     // === 그룹 관리 위임 ===
     @Transactional
@@ -240,5 +241,9 @@ class GroupService(
         userId: Long,
     ): WorkspaceDto {
         return workspaceManagementService.getWorkspace(groupId, userId)
+    }
+
+    fun getAdminStats(groupId: Long): AdminStatsResponse {
+        return adminStatsService.getStats(groupId)
     }
 }

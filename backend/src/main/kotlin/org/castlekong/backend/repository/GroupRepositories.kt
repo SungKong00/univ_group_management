@@ -218,6 +218,9 @@ interface GroupJoinRequestRepository : JpaRepository<GroupJoinRequest, Long> {
 
     fun findByGroupId(groupId: Long): List<GroupJoinRequest>
 
+    // 추가: 상태별 개수 카운트
+    fun countByGroupIdAndStatus(groupId: Long, status: GroupJoinRequestStatus): Long
+
     // 배치 삭제 메서드
     @Modifying
     @Query("DELETE FROM GroupJoinRequest gjr WHERE gjr.group.id IN :groupIds")

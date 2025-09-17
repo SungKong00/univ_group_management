@@ -482,6 +482,9 @@ class WorkspaceDetailModel {
   /// 채널 관리 권한 여부
   bool get canManageChannels => hasPermission('CHANNEL_MANAGE');
 
+  /// 역할 관리 권한 여부
+  bool get canManageRoles => canManageMembers; // 멤버 관리 권한이 있으면 역할도 관리 가능
+
   /// 공지 작성 권한 여부
   bool get canCreateAnnouncements => hasPermission('POST_CREATE') &&
       (myMembership?.role.name == '그룹장' || myMembership?.role.name == '지도교수');

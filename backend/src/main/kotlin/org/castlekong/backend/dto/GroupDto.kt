@@ -198,3 +198,10 @@ data class MemberPermissionOverrideResponse(
     val denied: Set<String>,
     val effective: Set<String>,
 )
+
+data class AdminStatsResponse(
+    val pendingCount: Int,
+    val memberCount: Int,
+    val roleCount: Int,
+    val channelCount: Int,
+)

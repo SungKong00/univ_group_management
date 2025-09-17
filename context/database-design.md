@@ -1,3 +1,7 @@
+> **⚠️ 주의: 이 문서는 더 이상 관리되지 않습니다.**
+> 
+> **최신 DB 설계 문서는 [docs/설계 문서/DB 설계/엔티티 설계.md](docs/설계%20문서/DB%20설계/엔티티%20설계.md) 에서 확인해주세요.**
+
 # Database Design (Entity Relationship Diagram)
 
 This document outlines the current database schema implementation status. 

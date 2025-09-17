@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/workspace_provider.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../../data/models/workspace_models.dart';
+import 'member_permission_screen.dart';
 
 /// 멤버 관리 화면 (UI/UX 명세서 G-3 구현)
 /// 탭: 현재 멤버 | 가입 대기
@@ -148,6 +149,16 @@ class _MemberManagementScreenState extends State<MemberManagementScreen>
                           ],
                         ),
                       ),
+                      const PopupMenuItem(
+                        value: 'permissions',
+                        child: Row(
+                          children: [
+                            Icon(Icons.lock_person),
+                            SizedBox(width: 8),
+                            Text('개인 권한 설정'),
+                          ],
+                        ),
+                      ),
                       if (member.role.name != 'OWNER') ...[
                         const PopupMenuItem(
                           value: 'remove',
@@ -183,30 +194,191 @@ class _MemberManagementScreenState extends State<MemberManagementScreen>
 
   /// 가입 대기 탭
   Widget _buildPendingMembersTab() {
-    // TODO: 가입 대기 멤버 목록을 가져오는 API 구현 필요
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.hourglass_empty, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            '가입 대기 중인 멤버가 없습니다',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
+    return FutureBuilder<List<PendingMemberModel>>(
+      future: context.read<WorkspaceProvider>().getPendingMembers(widget.workspace.group.id),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '가입 대기 목록을 불러올 수 없습니다',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  snapshot.error.toString(),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            '새로운 가입 신청이 들어오면 여기에 표시됩니다',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
+          );
+        }
+
+        final pendingMembers = snapshot.data ?? [];
+
+        if (pendingMembers.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.hourglass_empty, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  '가입 대기 중인 멤버가 없습니다',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '새로운 가입 신청이 들어오면 여기에 표시됩니다',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: pendingMembers.length,
+          itemBuilder: (context, index) {
+            final pendingMember = pendingMembers[index];
+            return _buildPendingMemberCard(pendingMember);
+          },
+        );
+      },
+    );
+  }
+
+  /// 가입 대기 멤버 카드
+  Widget _buildPendingMemberCard(PendingMemberModel pendingMember) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  child: Text(
+                    pendingMember.user.name.isNotEmpty
+                        ? pendingMember.user.name[0].toUpperCase()
+                        : '?',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pendingMember.user.name,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '신청일: ${_formatDate(pendingMember.appliedAt)}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (pendingMember.message?.isNotEmpty == true) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '가입 신청 메시지',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      pendingMember.message!,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _showRejectDialog(pendingMember),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    child: const Text('거절'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => _approveMember(pendingMember),
+                    child: const Text('승인'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -216,6 +388,9 @@ class _MemberManagementScreenState extends State<MemberManagementScreen>
     switch (action) {
       case 'change_role':
         _showRoleChangeDialog(member);
+        break;
+      case 'permissions':
+        _navigateToMemberPermissions(member);
         break;
       case 'remove':
         _showRemoveMemberDialog(member);
@@ -430,6 +605,19 @@ class _MemberManagementScreenState extends State<MemberManagementScreen>
     );
   }
 
+  /// 개인 권한 설정 화면으로 이동
+  void _navigateToMemberPermissions(GroupMemberModel member) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MemberPermissionScreen(
+          workspace: widget.workspace,
+          member: member,
+        ),
+      ),
+    );
+  }
+
   /// 그룹장 위임 다이얼로그
   void _showDelegateLeadershipDialog(GroupMemberModel member) {
     showDialog(
@@ -549,6 +737,162 @@ class _MemberManagementScreenState extends State<MemberManagementScreen>
         return '멤버';
       default:
         return roleName;
+    }
+  }
+
+  /// 멤버 승인
+  Future<void> _approveMember(PendingMemberModel pendingMember) async {
+    try {
+      final success = await context.read<WorkspaceProvider>().decideMembership(
+        groupId: widget.workspace.group.id,
+        userId: pendingMember.user.id,
+        approve: true,
+      );
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${pendingMember.user.name}님의 가입을 승인했어요'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // 페이지 새로고침을 위해 setState 호출
+          setState(() {});
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('가입 승인에 실패했습니다'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('가입 승인에 실패했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// 반려 다이얼로그 표시
+  void _showRejectDialog(PendingMemberModel pendingMember) {
+    String? selectedReason;
+    final customReasonController = TextEditingController();
+
+    final rejectReasons = [
+      '기준 미달',
+      '인원 충원 완료',
+      '기타',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('가입 신청 반려 - ${pendingMember.user.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('반려 사유를 선택해주세요:'),
+              const SizedBox(height: 16),
+              ...rejectReasons.map((reason) {
+                return RadioListTile<String>(
+                  value: reason,
+                  groupValue: selectedReason,
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedReason = value;
+                    });
+                  },
+                  title: Text(reason),
+                  contentPadding: EdgeInsets.zero,
+                );
+              }).toList(),
+              if (selectedReason == '기타') ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: customReasonController,
+                  decoration: const InputDecoration(
+                    hintText: '사유를 입력해주세요',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: selectedReason != null
+                  ? () {
+                      Navigator.of(context).pop();
+                      final reason = selectedReason == '기타'
+                          ? customReasonController.text.trim()
+                          : selectedReason!;
+                      _rejectMember(pendingMember, reason);
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
+              child: const Text('반려'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 멤버 반려
+  Future<void> _rejectMember(PendingMemberModel pendingMember, String reason) async {
+    try {
+      final success = await context.read<WorkspaceProvider>().decideMembership(
+        groupId: widget.workspace.group.id,
+        userId: pendingMember.user.id,
+        approve: false,
+        reason: reason,
+      );
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${pendingMember.user.name}님의 가입 신청을 반려했어요'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          // 페이지 새로고침을 위해 setState 호출
+          setState(() {});
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('가입 반려에 실패했습니다'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('가입 반려에 실패했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

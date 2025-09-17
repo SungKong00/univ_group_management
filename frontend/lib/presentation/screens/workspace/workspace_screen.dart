@@ -12,6 +12,8 @@ import 'tabs/members_tab.dart';
 import 'member_management_screen.dart';
 import 'channel_management_screen.dart';
 import 'group_info_screen.dart';
+import 'admin_home_screen.dart';
+import '../home/home_screen.dart';
 
 class WorkspaceScreen extends StatefulWidget {
   final int groupId;
@@ -56,6 +58,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
     context.read<WorkspaceProvider>().exitChannel();
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _navigateToHome() {
+    context.read<WorkspaceProvider>().exitChannel();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -344,6 +355,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
                       context,
                       title: '관리자 기능',
                       children: [
+                        _buildSidebarItem(
+                          context,
+                          icon: Icons.admin_panel_settings,
+                          label: '관리자 홈',
+                          selected: false,
+                          onTap: () => _showAdminHome(context, workspace),
+                        ),
                         if (workspace.canManageMembers)
                           _buildSidebarItem(
                             context,
@@ -491,6 +509,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
             ),
             const SizedBox(width: 8),
           ],
+          IconButton(
+            onPressed: _navigateToHome,
+            icon: const Icon(Icons.home, color: AppTheme.onTextSecondary),
+            tooltip: '홈으로 돌아가기',
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1327,6 +1351,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
             const SizedBox(height: 16),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAdminHome(BuildContext context, WorkspaceDetailModel workspace) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AdminHomeScreen(workspace: workspace),
       ),
     );
   }

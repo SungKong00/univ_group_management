@@ -24,6 +24,9 @@ interface ChannelRepository : JpaRepository<Channel, Long> {
 
     fun findByGroupIdOrderByDisplayOrder(groupId: Long): List<Channel>
 
+    // 추가: 채널 개수 카운트
+    fun countByGroup_Id(groupId: Long): Long
+
     // 배치 삭제 메서드
     @Modifying
     @Query("DELETE FROM Channel c WHERE c.group.id IN :groupIds")
