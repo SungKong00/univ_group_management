@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional
 class UserService(
     private val userRepository: UserRepository,
     private val groupRepository: org.castlekong.backend.repository.GroupRepository,
-    private val groupService: org.castlekong.backend.service.GroupService,
+    private val groupMemberService: GroupMemberService,
     private val groupJoinRequestRepository: org.castlekong.backend.repository.GroupJoinRequestRepository,
     private val subGroupRequestRepository: org.castlekong.backend.repository.SubGroupRequestRepository,
     private val groupMemberRepository: org.castlekong.backend.repository.GroupMemberRepository,
@@ -171,7 +171,7 @@ class UserService(
             }
 
             if (targetGroup != null) {
-                runCatching { groupService.joinGroup(targetGroup.id, saved.id) }
+                runCatching { groupMemberService.joinGroup(targetGroup.id, saved.id) }
                     .onFailure { e -> println("DEBUG: Auto-join failed for user ${saved.id} to group ${targetGroup.id}: ${e.message}") }
             }
         } catch (e: Exception) {

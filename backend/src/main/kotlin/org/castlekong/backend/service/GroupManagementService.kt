@@ -29,6 +29,7 @@ class GroupManagementService(
     private val groupJoinRequestRepository: GroupJoinRequestRepository,
     private val subGroupRequestRepository: SubGroupRequestRepository,
     private val groupMapper: GroupMapper,
+    private val channelInitializationService: ChannelInitializationService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GroupManagementService::class.java)
@@ -73,7 +74,7 @@ class GroupManagementService(
         val roles = createDefaultRolesAndAddOwner(savedGroup, owner)
 
         // 기본 채널 생성 및 권한 바인딩 설정
-        createDefaultChannels(savedGroup, roles)
+        channelInitializationService.createDefaultChannels(savedGroup, roles.first, roles.third)
 
         // 기본 채널 생성 완료 플래그 설정
         groupRepository.save(savedGroup.copy(defaultChannelsCreated = true))
@@ -130,85 +131,6 @@ class GroupManagementService(
         return Triple(savedOwnerRole, savedProfessorRole, savedMemberRole)
     }
 
-    private fun createDefaultChannels(
-        group: Group,
-        roles: Triple<GroupRole, GroupRole, GroupRole>,
-    ) {
-        val (ownerRole, _, memberRole) = roles
-
-        // 공지사항 채널: OWNER는 모든 권한, MEMBER는 읽기 + 댓글 작성
-        val announcement =
-            Channel(
-                group = group,
-                name = "공지사항",
-                description = "그룹 공지사항 채널",
-                type = ChannelType.ANNOUNCEMENT,
-                isPrivate = false,
-                displayOrder = 0,
-                createdBy = group.owner,
-            )
-        val savedAnnouncement = channelRepository.save(announcement)
-
-        val announcementOwnerBinding = ChannelRoleBinding.create(
-            channel = savedAnnouncement,
-            groupRole = ownerRole,
-            permissions = setOf(
-                ChannelPermission.CHANNEL_VIEW,
-                ChannelPermission.POST_READ,
-                ChannelPermission.POST_WRITE,
-                ChannelPermission.COMMENT_WRITE,
-                ChannelPermission.FILE_UPLOAD
-            )
-        )
-        val announcementMemberBinding = ChannelRoleBinding.create(
-            channel = savedAnnouncement,
-            groupRole = memberRole,
-            permissions = setOf(
-                ChannelPermission.CHANNEL_VIEW,
-                ChannelPermission.POST_READ,
-                ChannelPermission.COMMENT_WRITE
-            )
-        )
-        channelRoleBindingRepository.save(announcementOwnerBinding)
-        channelRoleBindingRepository.save(announcementMemberBinding)
-
-        // 자유게시판 채널: OWNER는 모든 권한, MEMBER는 읽기/쓰기/댓글 작성
-        val free =
-            Channel(
-                group = group,
-                name = "자유게시판",
-                description = "자유롭게 대화하는 채널",
-                type = ChannelType.TEXT,
-                isPrivate = false,
-                displayOrder = 1,
-                createdBy = group.owner,
-            )
-        val savedFree = channelRepository.save(free)
-
-        val freeOwnerBinding = ChannelRoleBinding.create(
-            channel = savedFree,
-            groupRole = ownerRole,
-            permissions = setOf(
-                ChannelPermission.CHANNEL_VIEW,
-                ChannelPermission.POST_READ,
-                ChannelPermission.POST_WRITE,
-                ChannelPermission.COMMENT_WRITE,
-                ChannelPermission.FILE_UPLOAD
-            )
-        )
-        val freeMemberBinding = ChannelRoleBinding.create(
-            channel = savedFree,
-            groupRole = memberRole,
-            permissions = setOf(
-                ChannelPermission.CHANNEL_VIEW,
-                ChannelPermission.POST_READ,
-                ChannelPermission.POST_WRITE,
-                ChannelPermission.COMMENT_WRITE
-            )
-        )
-        channelRoleBindingRepository.save(freeOwnerBinding)
-        channelRoleBindingRepository.save(freeMemberBinding)
-    }
 
     @Transactional
     fun ensureDefaultChannelsIfNeeded(group: Group) {
@@ -220,84 +142,10 @@ class GroupManagementService(
         val memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER")
             .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
-        val hasAnnouncement = channelRepository.findByGroupIdAndType(group.id, ChannelType.ANNOUNCEMENT).isNotEmpty()
-        val hasText = channelRepository.findByGroupIdAndType(group.id, ChannelType.TEXT).isNotEmpty()
+        val wasCreated = channelInitializationService.ensureDefaultChannelsExist(group, ownerRole, memberRole)
 
-        if (!hasAnnouncement) {
-            val announcement = Channel(
-                group = group,
-                name = "공지사항",
-                description = "그룹 공지사항 채널",
-                type = ChannelType.ANNOUNCEMENT,
-                isPrivate = false,
-                displayOrder = 0,
-                createdBy = group.owner,
-            )
-            val savedAnnouncement = channelRepository.save(announcement)
-            val announcementOwnerBinding = ChannelRoleBinding.create(
-                channel = savedAnnouncement,
-                groupRole = ownerRole,
-                permissions = setOf(
-                    ChannelPermission.CHANNEL_VIEW,
-                    ChannelPermission.POST_READ,
-                    ChannelPermission.POST_WRITE,
-                    ChannelPermission.COMMENT_WRITE,
-                    ChannelPermission.FILE_UPLOAD
-                )
-            )
-            val announcementMemberBinding = ChannelRoleBinding.create(
-                channel = savedAnnouncement,
-                groupRole = memberRole,
-                permissions = setOf(
-                    ChannelPermission.CHANNEL_VIEW,
-                    ChannelPermission.POST_READ,
-                    ChannelPermission.COMMENT_WRITE
-                )
-            )
-            channelRoleBindingRepository.save(announcementOwnerBinding)
-            channelRoleBindingRepository.save(announcementMemberBinding)
-        }
-
-        if (!hasText) {
-            val free = Channel(
-                group = group,
-                name = "자유게시판",
-                description = "자유롭게 대화하는 채널",
-                type = ChannelType.TEXT,
-                isPrivate = false,
-                displayOrder = 1,
-                createdBy = group.owner,
-            )
-            val savedFree = channelRepository.save(free)
-            val freeOwnerBinding = ChannelRoleBinding.create(
-                channel = savedFree,
-                groupRole = ownerRole,
-                permissions = setOf(
-                    ChannelPermission.CHANNEL_VIEW,
-                    ChannelPermission.POST_READ,
-                    ChannelPermission.POST_WRITE,
-                    ChannelPermission.COMMENT_WRITE,
-                    ChannelPermission.FILE_UPLOAD
-                )
-            )
-            val freeMemberBinding = ChannelRoleBinding.create(
-                channel = savedFree,
-                groupRole = memberRole,
-                permissions = setOf(
-                    ChannelPermission.CHANNEL_VIEW,
-                    ChannelPermission.POST_READ,
-                    ChannelPermission.POST_WRITE,
-                    ChannelPermission.COMMENT_WRITE
-                )
-            )
-            channelRoleBindingRepository.save(freeOwnerBinding)
-            channelRoleBindingRepository.save(freeMemberBinding)
-        }
-
-        // 두 타입 모두 존재하면 플래그 갱신
-        val finalHasAnnouncement = channelRepository.findByGroupIdAndType(group.id, ChannelType.ANNOUNCEMENT).isNotEmpty()
-        val finalHasText = channelRepository.findByGroupIdAndType(group.id, ChannelType.TEXT).isNotEmpty()
-        if (finalHasAnnouncement && finalHasText) {
+        if (wasCreated) {
+            // 채널이 생성되었으면 플래그 갱신
             groupRepository.save(group.copy(defaultChannelsCreated = true))
         }
     }

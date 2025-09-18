@@ -8,7 +8,7 @@ import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.GroupRoleRepository
 import org.castlekong.backend.repository.SubGroupRequestRepository
-import org.castlekong.backend.service.GroupService
+import org.castlekong.backend.service.GroupManagementService
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
@@ -21,7 +21,7 @@ class AdminController(
     private val groupMemberRepository: GroupMemberRepository,
     private val groupRoleRepository: GroupRoleRepository,
     private val groupRepository: GroupRepository,
-    private val groupService: GroupService,
+    private val groupManagementService: GroupManagementService,
 ) {
     @GetMapping("/join-requests")
     @PreAuthorize("hasRole('ADMIN')")
@@ -170,7 +170,7 @@ class AdminController(
             )
         if (status == SubGroupRequestStatus.APPROVED) {
             val parent = groupRepository.findById(r.parentGroup.id).orElseThrow()
-            groupService.createGroup(
+            groupManagementService.createGroup(
                 CreateGroupRequest(
                     name = r.requestedGroupName,
                     description = r.requestedGroupDescription,

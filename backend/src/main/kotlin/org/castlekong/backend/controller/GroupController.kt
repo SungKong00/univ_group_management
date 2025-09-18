@@ -2,9 +2,7 @@ package org.castlekong.backend.controller
 
 import jakarta.validation.Valid
 import org.castlekong.backend.dto.*
-import org.castlekong.backend.service.GroupRoleService
-import org.castlekong.backend.service.GroupService
-import org.castlekong.backend.service.UserService
+import org.castlekong.backend.service.*
 import org.castlekong.backend.security.SecurityExpressionHelper
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -17,7 +15,11 @@ import org.springframework.web.bind.annotation.RequestParam
 @RestController
 @RequestMapping("/api/groups")
 class GroupController(
-    private val groupService: GroupService,
+    private val groupManagementService: GroupManagementService,
+    private val groupMemberService: GroupMemberService,
+    private val groupRequestService: GroupRequestService,
+    private val workspaceManagementService: WorkspaceManagementService,
+    private val adminStatsService: AdminStatsService,
     private val groupRoleService: GroupRoleService,
     private val userService: UserService,
     private val securityExpressionHelper: SecurityExpressionHelper,
@@ -30,20 +32,20 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<GroupResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.createGroup(request, user.id)
+        val response = groupManagementService.createGroup(request, user.id)
         return ApiResponse.success(response)
     }
 
     @GetMapping
     fun getGroups(pageable: Pageable): ApiResponse<Page<GroupSummaryResponse>> {
-        val response = groupService.getGroups(pageable)
+        val response = groupManagementService.getGroups(pageable)
         return ApiResponse.success(response)
     }
 
     @GetMapping("/all")
     @io.swagger.v3.oas.annotations.Operation(summary = "모든 그룹 조회", description = "페이징 없이 모든 그룹의 요약 정보를 반환합니다.")
     fun getAllGroups(): ApiResponse<List<GroupSummaryResponse>> {
-        val response = groupService.getAllGroups()
+        val response = groupManagementService.getAllGroups()
         return ApiResponse.success(response)
     }
 
@@ -61,14 +63,14 @@ class GroupController(
         @RequestParam(required = false) tags: String?, // comma-separated
     ): ApiResponse<Page<GroupSummaryResponse>> {
         val tagSet = tags?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet() ?: emptySet()
-        val response = groupService.searchGroups(pageable, recruiting, visibility, groupType, university, college, department, q, tagSet)
+        val response = groupManagementService.searchGroups(pageable, recruiting, visibility, groupType, university, college, department, q, tagSet)
         return ApiResponse.success(response)
     }
 
     @GetMapping("/hierarchy")
     @io.swagger.v3.oas.annotations.Operation(summary = "전체 계열/학과 계층 구조 조회", description = "온보딩 시 계열/학과 선택 UI를 구성하기 위한 전체 그룹 목록을 반환합니다.")
     fun getGroupHierarchy(): ApiResponse<List<GroupHierarchyNodeDto>> {
-        val groups = groupService.getAllGroupsForHierarchy()
+        val groups = groupManagementService.getAllGroupsForHierarchy()
         return ApiResponse.success(groups)
     }
 
@@ -76,7 +78,7 @@ class GroupController(
     fun getGroup(
         @PathVariable groupId: Long,
     ): ApiResponse<GroupResponse> {
-        val response = groupService.getGroup(groupId)
+        val response = groupManagementService.getGroup(groupId)
         return ApiResponse.success(response)
     }
 
@@ -88,7 +90,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<GroupResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.updateGroup(groupId, request, user.id)
+        val response = groupManagementService.updateGroup(groupId, request, user.id)
         return ApiResponse.success(response)
     }
 
@@ -100,7 +102,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<Unit> {
         val user = getUserByEmail(authentication.name)
-        groupService.deleteGroup(groupId, user.id)
+        groupManagementService.deleteGroup(groupId, user.id)
         return ApiResponse.success()
     }
 
@@ -112,7 +114,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<GroupJoinRequestResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.createGroupJoinRequest(groupId, request.message, user.id)
+        val response = groupRequestService.createGroupJoinRequest(groupId, request.message, user.id)
         return ApiResponse.success(response)
     }
 
@@ -124,7 +126,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<Unit> {
         val user = getUserByEmail(authentication.name)
-        groupService.leaveGroup(groupId, user.id)
+        groupMemberService.leaveGroup(groupId, user.id)
         return ApiResponse.success()
     }
 
@@ -134,7 +136,7 @@ class GroupController(
         @PathVariable groupId: Long,
         pageable: Pageable,
     ): ApiResponse<Page<GroupMemberResponse>> {
-        val response = groupService.getGroupMembers(groupId, pageable)
+        val response = groupMemberService.getGroupMembers(groupId, pageable)
         return ApiResponse.success(response)
     }
 
@@ -146,7 +148,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<GroupMemberResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.getMyMembership(groupId, user.id)
+        val response = groupMemberService.getMyMembership(groupId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -160,7 +162,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<GroupMemberResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.updateMemberRole(groupId, userId, request.roleId, user.id)
+        val response = groupMemberService.updateMemberRole(groupId, userId, request.roleId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -174,7 +176,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<Unit> {
         val user = getUserByEmail(authentication.name)
-        groupService.removeMember(groupId, userId, user.id)
+        groupMemberService.removeMember(groupId, userId, user.id)
         return ApiResponse.success()
     }
 
@@ -245,7 +247,7 @@ class GroupController(
     fun getGroupJoinRequests(
         @PathVariable groupId: Long,
     ): ApiResponse<List<GroupJoinRequestResponse>> {
-        val response = groupService.getGroupJoinRequestsByGroup(groupId)
+        val response = groupRequestService.getGroupJoinRequestsByGroup(groupId)
         return ApiResponse.success(response)
     }
 
@@ -258,7 +260,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<GroupJoinRequestResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.reviewGroupJoinRequest(requestId, request, user.id)
+        val response = groupRequestService.reviewGroupJoinRequest(requestId, request, user.id)
         return ApiResponse.success(response)
     }
 
@@ -273,7 +275,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<SubGroupRequestResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.createSubGroupRequest(groupId, request, user.id)
+        val response = groupRequestService.createSubGroupRequest(groupId, request, user.id)
         return ApiResponse.success(response)
     }
 
@@ -282,7 +284,7 @@ class GroupController(
     fun getSubGroupRequests(
         @PathVariable groupId: Long,
     ): ApiResponse<List<SubGroupRequestResponse>> {
-        val response = groupService.getSubGroupRequestsByParentGroup(groupId)
+        val response = groupRequestService.getSubGroupRequestsByParentGroup(groupId)
         return ApiResponse.success(response)
     }
 
@@ -295,7 +297,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<SubGroupRequestResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.reviewSubGroupRequest(requestId, request, user.id)
+        val response = groupRequestService.reviewSubGroupRequest(requestId, request, user.id)
         return ApiResponse.success(response)
     }
 
@@ -305,7 +307,7 @@ class GroupController(
     fun getSubGroups(
         @PathVariable groupId: Long,
     ): ApiResponse<List<GroupSummaryResponse>> {
-        val response = groupService.getSubGroups(groupId)
+        val response = groupManagementService.getSubGroups(groupId)
         return ApiResponse.success(response)
     }
 
@@ -320,7 +322,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<GroupMemberResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.assignProfessor(groupId, professorId, user.id)
+        val response = groupMemberService.assignProfessor(groupId, professorId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -333,7 +335,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<Unit> {
         val user = getUserByEmail(authentication.name)
-        groupService.removeProfessor(groupId, professorId, user.id)
+        groupMemberService.removeProfessor(groupId, professorId, user.id)
         return ApiResponse.success()
     }
 
@@ -341,7 +343,7 @@ class GroupController(
     fun getProfessors(
         @PathVariable groupId: Long,
     ): ApiResponse<List<GroupMemberResponse>> {
-        val response = groupService.getProfessors(groupId)
+        val response = groupMemberService.getProfessors(groupId)
         return ApiResponse.success(response)
     }
 
@@ -355,7 +357,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<GroupMemberResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.transferOwnership(groupId, newOwnerId, user.id)
+        val response = groupMemberService.transferOwnership(groupId, newOwnerId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -372,7 +374,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<org.castlekong.backend.dto.WorkspaceDto> {
         val user = getUserByEmail(authentication.name)
-        val response = groupService.getWorkspace(groupId, user.id)
+        val response = workspaceManagementService.getWorkspace(groupId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -382,7 +384,7 @@ class GroupController(
     fun getAdminStats(
         @PathVariable groupId: Long,
     ): ApiResponse<AdminStatsResponse> {
-        val stats = groupService.getAdminStats(groupId)
+        val stats = adminStatsService.getStats(groupId)
         return ApiResponse.success(stats)
     }
 

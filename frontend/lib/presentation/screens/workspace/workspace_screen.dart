@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/workspace_provider.dart';
 import '../../widgets/loading_overlay.dart';
-import '../../widgets/common_button.dart';
-import '../../theme/app_theme.dart';
 import '../../../data/models/workspace_models.dart';
 import 'channel_detail_screen.dart';
 import 'tabs/announcements_tab.dart';
@@ -14,6 +12,9 @@ import 'channel_management_screen.dart';
 import 'group_info_screen.dart';
 import 'admin_home_screen.dart';
 import '../groups/group_explorer_screen.dart';
+import 'widgets/workspace_sidebar.dart';
+import 'widgets/workspace_header.dart';
+import 'widgets/announcements_view.dart';
 
 class WorkspaceScreen extends StatefulWidget {
   final int groupId;
@@ -260,7 +261,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
                         ),
                       ],
                     ),
-                    child: _buildSidebar(context, provider, workspace),
+                    child: WorkspaceSidebar(workspace: workspace),
                   ),
                 ),
               ] else ...[
@@ -269,7 +270,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
                   left: 0,
                   top: 0,
                   bottom: 0,
-                  child: _buildSidebar(context, provider, workspace),
+                  child: WorkspaceSidebar(workspace: workspace),
                 ),
               ],
             ],
@@ -279,186 +280,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
     );
   }
 
-  Widget _buildSidebar(
-    BuildContext context,
-    WorkspaceProvider provider,
-    WorkspaceDetailModel workspace,
-  ) {
-    final selectedChannelId = provider.currentChannel?.id;
-    final channels = provider.channels;
 
-    return Container(
-      width: 280,
-      color: AppTheme.surface,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              border: Border(
-                right: BorderSide(color: AppTheme.border),
-                bottom: BorderSide(color: AppTheme.border),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    workspace.group.name,
-                    style: Theme.of(context).textTheme.titleLarge,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  onPressed: provider.toggleSidebar,
-                  icon: const Icon(Icons.close, size: 20),
-                  tooltip: '사이드바 닫기',
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                border: Border(
-                  right: BorderSide(color: AppTheme.border),
-                ),
-              ),
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 12,
-                ),
-                children: [
-                  _buildSidebarSection(
-                    context,
-                    title: 'Channels',
-                    children: [
-                      
-                      ...channels.map(
-                        (channel) => _buildSidebarItem(
-                          context,
-                          icon: _channelIconFor(channel),
-                          label: channel.name,
-                          selected: selectedChannelId == channel.id,
-                          onTap: () => provider.selectChannel(channel),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (workspace.canManageMembers || workspace.canManageChannels)
-                    _buildSidebarSection(
-                      context,
-                      title: '관리자 기능',
-                      children: [
-                        _buildSidebarItem(
-                          context,
-                          icon: Icons.admin_panel_settings,
-                          label: '관리자 홈',
-                          selected: false,
-                          onTap: () => _showAdminHome(context, workspace),
-                        ),
-                        if (workspace.canManageMembers)
-                          _buildSidebarItem(
-                            context,
-                            icon: Icons.people_outline,
-                            label: '멤버 관리',
-                            selected: false,
-                            onTap: () => _showMemberManagement(context),
-                          ),
-                        if (workspace.canManageChannels)
-                          _buildSidebarItem(
-                            context,
-                            icon: Icons.tag,
-                            label: '채널 관리',
-                            selected: false,
-                            onTap: () => _showChannelManagement(context),
-                          ),
-                        _buildSidebarItem(
-                          context,
-                          icon: Icons.info_outline,
-                          label: '그룹 정보',
-                          selected: false,
-                          onTap: () => _showGroupInfo(context),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSidebarSection(
-    BuildContext context, {
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-          ),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSidebarItem(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    final highlightColor = selected ? AppTheme.background : Colors.transparent;
-    final iconColor = selected ? AppTheme.primary : AppTheme.onTextSecondary;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Material(
-        color: highlightColor,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                Icon(icon, size: 20, color: iconColor),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                        ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildDesktopMainArea(
     BuildContext context,
@@ -468,10 +290,21 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
     final channel = provider.currentChannel;
     return Column(
       children: [
-        _buildDesktopHeader(context, workspace, channel),
+        WorkspaceHeader(
+          workspace: workspace,
+          channel: channel,
+          onBack: _navigateBack,
+          onShowMembers: () => _showMembersSheet(context, workspace),
+          onShowChannelInfo: channel != null ? () => _showChannelInfo(context, channel) : null,
+          onShowManagement: () => _showManagementMenu(context, workspace),
+        ),
         Expanded(
           child: channel == null
-              ? _buildAnnouncementsView(context, provider, workspace)
+              ? AnnouncementsView(
+                  workspace: workspace,
+                  announcements: provider.announcements,
+                  onCreateAnnouncement: workspace.canCreateAnnouncements ? () => _showCreateAnnouncementDialog(context) : null,
+                )
               : ChannelDetailView(
                   channel: channel,
                   autoLoad: false,
@@ -482,308 +315,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
     );
   }
 
-  Widget _buildDesktopHeader(
-    BuildContext context,
-    WorkspaceDetailModel workspace,
-    ChannelModel? channel,
-  ) {
-    final showingAnnouncements = channel == null;
-    final provider = context.read<WorkspaceProvider>();
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: AppTheme.background,
-        border: Border(bottom: BorderSide(color: AppTheme.divider)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 사이드바가 숨겨져 있을 때만 토글 버튼 표시
-          if (!provider.isSidebarVisible) ...[
-            IconButton(
-              onPressed: provider.toggleSidebar,
-              icon: const Icon(Icons.menu, color: AppTheme.onTextSecondary),
-              tooltip: '사이드바 보기',
-            ),
-            const SizedBox(width: 8),
-          ],
-          IconButton(
-            onPressed: _navigateBack,
-            icon: const Icon(Icons.arrow_back, color: AppTheme.onTextSecondary),
-            tooltip: '뒤로가기',
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 6,
-                  children: [
-                    _breadcrumbText(context, workspace.group.name),
-                    const Text('›', style: TextStyle(color: AppTheme.onTextSecondary)),
-                    _breadcrumbText(context, showingAnnouncements ? '공지사항' : channel!.name),
-                    if (!showingAnnouncements)
-                      Text(
-                        ' #${channel!.name}',
-                        style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
-                ),
-                if (showingAnnouncements && (workspace.workspace.description?.isNotEmpty ?? false))
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      workspace.workspace.description!,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              TextButton.icon(
-                onPressed: () => _showMembersSheet(context, workspace),
-                icon: const Icon(Icons.group_outlined, size: 18, color: AppTheme.onTextSecondary),
-                label: const Text('멤버 보기'),
-                style: _pillButtonStyle(),
-              ),
-              TextButton.icon(
-                onPressed: channel != null ? () => _showChannelInfo(context, channel) : null,
-                icon: const Icon(Icons.info_outline, size: 18, color: AppTheme.onTextSecondary),
-                label: const Text('채널 정보'),
-                style: _pillButtonStyle(),
-              ),
-              TextButton.icon(
-                onPressed: () => _showManagementMenu(context, workspace),
-                icon: const Icon(Icons.more_horiz, size: 18, color: AppTheme.onTextSecondary),
-                label: const Text('더보기'),
-                style: _pillButtonStyle(),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  ButtonStyle _pillButtonStyle() {
-    return TextButton.styleFrom(
-      backgroundColor: AppTheme.surface,
-      foregroundColor: AppTheme.onTextSecondary,
-      disabledForegroundColor: AppTheme.onTextSecondary.withOpacity(0.4),
-      disabledBackgroundColor: AppTheme.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppTheme.border),
-      ),
-    );
-  }
-
-  Widget _breadcrumbText(BuildContext context, String text) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppTheme.onTextSecondary,
-          ),
-    );
-  }
-
-  Widget _buildAnnouncementsView(
-    BuildContext context,
-    WorkspaceProvider provider,
-    WorkspaceDetailModel workspace,
-  ) {
-    final announcements = provider.announcements;
-
-    if (announcements.isEmpty) {
-      return _buildAnnouncementsEmptyState(context, workspace);
-    }
-
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      children: [
-        if (workspace.canCreateAnnouncements)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: CommonButton(
-              text: '공지사항 작성',
-              icon: Icons.add,
-              onPressed: () => _showCreateAnnouncementDialog(context),
-            ),
-          ),
-        if (workspace.canCreateAnnouncements) const SizedBox(height: 24),
-        ...announcements.map(
-          (announcement) => Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: _buildAnnouncementCard(context, announcement),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAnnouncementsEmptyState(
-    BuildContext context,
-    WorkspaceDetailModel workspace,
-  ) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.campaign_outlined, size: 64, color: AppTheme.onTextSecondary),
-            const SizedBox(height: 16),
-            Text(
-              '아직 공지사항이 없습니다',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '첫 번째 공지사항을 작성해보세요',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            if (workspace.canCreateAnnouncements) ...[
-              const SizedBox(height: 24),
-              CommonButton(
-                text: '공지사항 작성',
-                icon: Icons.add,
-                onPressed: () => _showCreateAnnouncementDialog(context),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAnnouncementCard(BuildContext context, PostModel announcement) {
-    final textTheme = Theme.of(context).textTheme;
-    final author = announcement.author;
-
-    return InkWell(
-      onTap: () => _showAnnouncementDetail(context, announcement),
-      borderRadius: AppStyles.radius16,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.background,
-          borderRadius: AppStyles.radius16,
-          border: const Border.fromBorderSide(BorderSide(color: AppTheme.border)),
-          boxShadow: AppStyles.softShadow,
-        ),
-        padding: AppStyles.cardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  child: Text(author.name.isNotEmpty ? author.name[0] : '?'),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        author.name,
-                        style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        _formatRelativeTime(announcement.createdAt),
-                        style: textTheme.labelSmall,
-                      ),
-                    ],
-                  ),
-                ),
-                if (announcement.isPinned)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: AppTheme.border),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.push_pin, size: 12, color: AppTheme.primary),
-                        SizedBox(width: 4),
-                        Text(
-                          '고정',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (announcement.title.isNotEmpty) ...[
-              Text(
-                announcement.title,
-                style: textTheme.titleLarge?.copyWith(fontSize: 17),
-              ),
-              const SizedBox(height: 8),
-            ],
-            Text(
-              announcement.content,
-              style: textTheme.bodyMedium,
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                if (announcement.likeCount > 0) ...[
-                  const Icon(Icons.favorite_border, size: 18, color: AppTheme.onTextSecondary),
-                  const SizedBox(width: 4),
-                  Text('${announcement.likeCount}', style: textTheme.labelSmall),
-                  const SizedBox(width: 12),
-                ],
-                const Icon(Icons.mode_comment_outlined, size: 18, color: AppTheme.onTextSecondary),
-                const SizedBox(width: 4),
-                Text('댓글 보기', style: textTheme.labelSmall),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatRelativeTime(DateTime time) {
-    final now = DateTime.now();
-    final diff = now.difference(time);
-    if (diff.inDays >= 7) {
-      return '${time.month}/${time.day}';
-    }
-    if (diff.inDays >= 1) {
-      return '${diff.inDays}일 전';
-    }
-    if (diff.inHours >= 1) {
-      return '${diff.inHours}시간 전';
-    }
-    if (diff.inMinutes >= 1) {
-      return '${diff.inMinutes}분 전';
-    }
-    return '방금 전';
-  }
 
   IconData _channelIconFor(ChannelModel channel) {
     switch (channel.type) {
@@ -1003,101 +535,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
     );
   }
 
-  void _showAnnouncementDetail(BuildContext context, PostModel announcement) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  if (announcement.isPinned)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.push_pin, size: 12, color: Theme.of(context).colorScheme.onPrimary),
-                          const SizedBox(width: 4),
-                          Text(
-                            '고정 공지',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  const Spacer(),
-                  Text(
-                    _formatDateTime(announcement.createdAt),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                announcement.title.isNotEmpty ? announcement.title : '공지',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    child: Text(announcement.author.name.isNotEmpty ? announcement.author.name[0] : '?'),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    announcement.author.name,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Text(
-                    announcement.content,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   void _showCreateAnnouncementDialog(BuildContext context) {
     final titleController = TextEditingController();
