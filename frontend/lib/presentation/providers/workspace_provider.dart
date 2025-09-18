@@ -97,11 +97,10 @@ class WorkspaceProvider extends ChangeNotifier {
       if (!_didAutoSelectChannel && _currentChannel == null) {
         final ws = _currentWorkspace;
         if (ws != null && ws.channels.isNotEmpty) {
-          // displayOrder 기준 정렬 후 텍스트 채널 우선 선택, 없으면 첫 채널
+          // displayOrder 기준 정렬 후 첫 번째 채널 선택
           final sorted = List<ChannelModel>.from(ws.channels)
             ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
-          ChannelModel? defaultChannel =
-              sorted.firstWhere((c) => c.type == ChannelType.text, orElse: () => sorted.first);
+          ChannelModel defaultChannel = sorted.first;
 
           _didAutoSelectChannel = true;
           // 비동기로 선택하여 게시글/권한 로드

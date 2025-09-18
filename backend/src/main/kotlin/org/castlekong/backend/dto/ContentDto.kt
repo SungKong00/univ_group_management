@@ -111,6 +111,7 @@ data class WorkspaceDto(
     val groupId: Long,
     val groupName: String,
     val myRole: String,
+    val myMembership: GroupMemberResponse,
     val notices: List<PostResponse>,
     val channels: List<ChannelResponse>,
     val members: List<GroupMemberResponse>,

@@ -87,6 +87,7 @@ class WorkspaceManagementService(
             groupId = group.id,
             groupName = group.name,
             myRole = member.role.name,
+            myMembership = groupMapper.toGroupMemberResponse(member),
             notices = notices,
             channels = channels,
             members = members,

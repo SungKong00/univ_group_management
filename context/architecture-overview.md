@@ -14,14 +14,6 @@
     - A minimal setup using **EC2 (Server) + RDS (DB) + S3 (Build Storage)**.
     - The project is deployed as a standalone JAR file, serving a RESTful API.
 
-- **CI/CD (GitHub Actions)**:
-    - **Trigger**: Merging code from the `develop` branch into the `main` branch triggers an automatic deployment to production.
-    - **Pipeline**: 
-        1. Build and test the project.
-        2. Upload the executable JAR to AWS S3.
-        3. Connect to AWS EC2, pull the new JAR from S3, and run the server.
-    - **Secrets Management**: All sensitive information (DB passwords, JWT keys) is stored in GitHub Actions Secrets and used to dynamically generate `application-prod.yml` during the CI/CD process.
-
 ---
 
 ## 2. Backend Architecture (Spring Boot)
@@ -74,6 +66,6 @@ The backend follows a strict, single-direction data flow (`Controller` → `Serv
 
 ## 3. API Endpoint Specifications
 
-API 엔드포인트 명세는 이제 각 기능별 명세서에서 관리됩니다. 최신 정보는 아래 문서들을 참고하십시오:
+API 엔드포인트에 대한 전체 최신 명세는 아래 문서를 참고하십시오:
 
-- `docs/설계 문서/기능명세서/`
+- **[API Conventions](api-conventions.md)**

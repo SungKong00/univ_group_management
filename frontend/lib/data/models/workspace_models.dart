@@ -342,6 +342,7 @@ class WorkspaceDtoModel {
   final int groupId;
   final String groupName;
   final String myRole;
+  final GroupMemberModel myMembership;
   final List<PostModel> notices;
   final List<ChannelModel> channels;
   final List<GroupMemberModel> members;
@@ -350,6 +351,7 @@ class WorkspaceDtoModel {
     required this.groupId,
     required this.groupName,
     required this.myRole,
+    required this.myMembership,
     required this.notices,
     required this.channels,
     required this.members,
@@ -360,6 +362,7 @@ class WorkspaceDtoModel {
       groupId: (json['groupId'] ?? 0) as int,
       groupName: (json['groupName'] ?? '').toString(),
       myRole: (json['myRole'] ?? 'MEMBER').toString(),
+      myMembership: GroupMemberModel.fromJson(json['myMembership'] ?? {}),
       notices: ((json['notices'] as List?) ?? [])
           .map((e) => PostModel.fromJson(e))
           .toList(),
@@ -374,18 +377,8 @@ class WorkspaceDtoModel {
 
   /// WorkspaceDetailModel로 변환
   WorkspaceDetailModel toWorkspaceDetailModel() {
-    // members 배열에서 내 멤버십을 찾아서 실제 권한 정보 가져오기
-    GroupMemberModel? actualMyMembership;
-
-    // 현재 사용자의 실제 멤버십을 members 리스트에서 찾기
-    // myRole을 기준으로 해당하는 멤버를 찾거나, 첫 번째 멤버를 내 멤버십으로 가정
-    if (members.isNotEmpty) {
-      // 역할 이름이 일치하는 멤버를 찾기
-      actualMyMembership = members.firstWhere(
-        (member) => member.role.name == myRole,
-        orElse: () => members.first, // 찾지 못하면 첫 번째 멤버 사용 (임시)
-      );
-    }
+    // 백엔드에서 직접 제공된 myMembership을 사용
+    // 백엔드에서 올바른 권한 정보를 포함하여 보내주므로 별도 매핑 불필요
 
     return WorkspaceDetailModel(
       workspace: WorkspaceModel(
@@ -408,22 +401,7 @@ class WorkspaceDtoModel {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
-      myMembership: actualMyMembership ?? GroupMemberModel(
-        id: 0,
-        groupId: groupId,
-        user: UserSummaryModel(id: 0, name: '', email: ''),
-        role: GroupRoleModel(
-          id: 0,
-          groupId: groupId,
-          name: myRole,
-          isSystemRole: true,
-          // 기본 관리자 권한을 부여 (임시)
-          permissions: myRole == 'OWNER' || myRole == '그룹장' || myRole == 'ADMIN'
-            ? ['GROUP_MANAGE', 'MEMBER_APPROVE', 'MEMBER_KICK', 'CHANNEL_MANAGE', 'ROLE_MANAGE']
-            : [],
-        ),
-        joinedAt: DateTime.now(),
-      ),
+      myMembership: myMembership, // 백엔드에서 제공된 실제 멤버십 정보 사용
       channels: channels,
       announcements: notices,
       members: members,
@@ -470,24 +448,44 @@ class WorkspaceDetailModel {
 
   /// 내가 가진 권한 확인
   bool hasPermission(String permission) {
-    return myMembership?.role.permissions.contains(permission) ?? false;
+    final perms = myMembership?.role.permissions ?? const [];
+    return perms.any((p) => p.toString().toUpperCase() == permission.toUpperCase());
   }
 
-  /// 관리 권한 여부
-  bool get canManage => hasPermission('GROUP_MANAGE');
+  /// 관리 권한 여부 (그룹 정보/삭제 등) - 관리자 통합 권한도 허용
+  bool get canManage {
+    final isOwnerByName = (myMembership?.role.name.toUpperCase() == 'OWNER' ||
+        myMembership?.role.name == '그룹장');
+    return isOwnerByName || hasPermission('GROUP_MANAGE') || hasPermission('ADMIN_MANAGE');
+  }
 
-  /// 멤버 관리 권한 여부
-  bool get canManageMembers => hasPermission('MEMBER_APPROVE') || hasPermission('MEMBER_KICK');
+  /// 멤버 관리 권한 여부 (역할/멤버 관리 통합)
+  bool get canManageMembers {
+    final isOwnerByName = (myMembership?.role.name.toUpperCase() == 'OWNER' ||
+        myMembership?.role.name == '그룹장');
+    return isOwnerByName || hasPermission('ADMIN_MANAGE');
+  }
 
   /// 채널 관리 권한 여부
-  bool get canManageChannels => hasPermission('CHANNEL_MANAGE');
+  bool get canManageChannels {
+    final isOwnerByName = (myMembership?.role.name.toUpperCase() == 'OWNER' ||
+        myMembership?.role.name == '그룹장');
+    return isOwnerByName || hasPermission('CHANNEL_MANAGE');
+  }
 
-  /// 역할 관리 권한 여부
-  bool get canManageRoles => canManageMembers; // 멤버 관리 권한이 있으면 역할도 관리 가능
+  /// 역할 관리 권한 여부 (ADMIN_MANAGE 포함)
+  bool get canManageRoles {
+    final isOwnerByName = (myMembership?.role.name.toUpperCase() == 'OWNER' ||
+        myMembership?.role.name == '그룹장');
+    return isOwnerByName || hasPermission('ADMIN_MANAGE');
+  }
 
-  /// 공지 작성 권한 여부
-  bool get canCreateAnnouncements => hasPermission('POST_CREATE') &&
-      (myMembership?.role.name == '그룹장' || myMembership?.role.name == '지도교수');
+  /// 공지 작성 권한 여부: 채널/관리 권한 보유자 허용
+  bool get canCreateAnnouncements {
+    final isOwnerByName = (myMembership?.role.name.toUpperCase() == 'OWNER' ||
+        myMembership?.role.name == '그룹장');
+    return isOwnerByName || hasPermission('ADMIN_MANAGE') || hasPermission('CHANNEL_MANAGE');
+  }
 }
 
 // Helper functions for parsing enums

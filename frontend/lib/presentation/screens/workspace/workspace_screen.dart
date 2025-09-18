@@ -36,19 +36,20 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
   @override
   void initState() {
     super.initState();
-    final provider = context.read<WorkspaceProvider>();
-    provider.reset();
     _tabController = TabController(length: 3, vsync: this);
 
-    // Provider에 탭 컨트롤러 동기화
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        provider.setTabIndex(_tabController.index);
-      }
-    });
-
-    // 워크스페이스 데이터 로드
+    // 워크스페이스 데이터 로드 및 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<WorkspaceProvider>();
+      provider.reset();
+
+      // Provider에 탭 컨트롤러 동기화
+      _tabController.addListener(() {
+        if (!_tabController.indexIsChanging) {
+          provider.setTabIndex(_tabController.index);
+        }
+      });
+
       provider.loadWorkspace(widget.groupId);
     });
   }
