@@ -47,12 +47,9 @@ class _GroupExplorerScreenState extends State<GroupExplorerScreen> {
   String _query = '';
   int? _prevTabIndex;
   
-  // New filter state
-  bool _isOfficialFilterActive = false;
-  bool _isAutonomousFilterActive = false;
-
-  // Derived state for the "All" filter
-  bool get _isAllFilterActive => !_isOfficialFilterActive && !_isAutonomousFilterActive;
+  // New filter state - 기본값으로 둘 다 활성화 (모든 그룹 표시)
+  bool _isOfficialFilterActive = true;
+  bool _isAutonomousFilterActive = true;
 
   @override
   void initState() {
@@ -125,7 +122,7 @@ class _GroupExplorerScreenState extends State<GroupExplorerScreen> {
                         ),
                         const Expanded(
                           child: Center(
-                            child: Text('내 그룹 전체보기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
+                            child: Text('교내 그룹 탐색', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
                           ),
                         ),
                         Column(
@@ -171,18 +168,12 @@ class _GroupExplorerScreenState extends State<GroupExplorerScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _buildFilterChip('전체', _isAllFilterActive, (selected) {
-                          setState(() {
-                            _isOfficialFilterActive = false;
-                            _isAutonomousFilterActive = false;
-                          });
-                        }),
-                        _buildFilterChip('공식', _isOfficialFilterActive, (selected) {
+                        _buildFilterChip('공식그룹', _isOfficialFilterActive, (selected) {
                           setState(() {
                             _isOfficialFilterActive = selected;
                           });
                         }),
-                        _buildFilterChip('자율', _isAutonomousFilterActive, (selected) {
+                        _buildFilterChip('자율그룹', _isAutonomousFilterActive, (selected) {
                           setState(() {
                             _isAutonomousFilterActive = selected;
                           });

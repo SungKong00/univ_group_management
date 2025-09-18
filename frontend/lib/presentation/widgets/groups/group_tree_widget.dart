@@ -481,17 +481,21 @@ class _SubGroupsSection extends StatelessWidget {
         allSubGroups = list.where((g) => g.name.toLowerCase().contains(q) || (g.department ?? '').toLowerCase().contains(q)).toList();
       }
       
+      // 대학그룹은 항상 표시, 공식/자율 그룹만 필터링
+      final universityGroups = allSubGroups.where((g) => [GroupType.university, GroupType.college, GroupType.department].contains((g as GroupSummaryModel).groupType)).toList();
       final officialGroups = allSubGroups.where((g) => (g as GroupSummaryModel).groupType == GroupType.official).toList();
       final autonomousGroups = allSubGroups.where((g) => (g as GroupSummaryModel).groupType == GroupType.autonomous).toList();
-
-      final showAll = !showOfficial && !showAutonomous;
 
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if ((showAll || showOfficial) && officialGroups.isNotEmpty)
+          // 대학그룹은 항상 표시
+          if (universityGroups.isNotEmpty)
+            _section(context, title: '대학 그룹', color: Colors.blue, items: universityGroups),
+          // 공식/자율 그룹은 필터에 따라 표시
+          if (showOfficial && officialGroups.isNotEmpty)
             _section(context, title: '공식 그룹', color: const Color(0xFF2563EB), items: officialGroups),
-          if ((showAll || showAutonomous) && autonomousGroups.isNotEmpty)
+          if (showAutonomous && autonomousGroups.isNotEmpty)
             _section(context, title: '자율 그룹', color: Colors.green, items: autonomousGroups),
         ],
       );
