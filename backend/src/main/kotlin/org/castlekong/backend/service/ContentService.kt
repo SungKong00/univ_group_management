@@ -19,6 +19,8 @@ class ContentService(
     private val postRepository: PostRepository,
     private val commentRepository: CommentRepository,
     private val groupMemberRepository: GroupMemberRepository,
+    private val channelRoleBindingRepository: ChannelRoleBindingRepository,
+    private val groupRoleRepository: GroupRoleRepository,
     private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> =
@@ -41,6 +43,33 @@ class ContentService(
     ) {
         val effective = getEffectivePermissions(groupId, userId)
         if (!effective.contains(required)) throw BusinessException(ErrorCode.FORBIDDEN)
+    }
+
+    private fun hasChannelPermission(
+        channelId: Long,
+        userId: Long,
+        required: ChannelPermission,
+    ): Boolean {
+        val channel = channelRepository.findById(channelId)
+            .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
+
+        val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
+            .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
+
+        // 사용자의 역할에 대한 채널 권한 바인딩 조회
+        val bindings = channelRoleBindingRepository.findByChannelIdAndGroupRoleId(channelId, member.role.id)
+
+        return bindings?.hasPermission(required) ?: false
+    }
+
+    private fun ensureChannelPermission(
+        channelId: Long,
+        userId: Long,
+        required: ChannelPermission,
+    ) {
+        if (!hasChannelPermission(channelId, userId, required)) {
+            throw BusinessException(ErrorCode.FORBIDDEN)
+        }
     }
 
     // Workspaces
@@ -173,7 +202,12 @@ class ContentService(
                 displayOrder = 0,
                 createdBy = creator,
             )
-        return toChannelResponse(channelRepository.save(channel))
+        val savedChannel = channelRepository.save(channel)
+
+        // 새 채널에 기본 권한 바인딩 설정
+        setupDefaultChannelPermissions(savedChannel)
+
+        return toChannelResponse(savedChannel)
     }
 
     @Transactional
@@ -264,6 +298,7 @@ class ContentService(
             userRepository.findById(authorId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         ensurePermission(channel.group.id, author.id, GroupPermission.WORKSPACE_ACCESS)
+        ensureChannelPermission(channelId, author.id, ChannelPermission.POST_WRITE)
         val type = request.type?.let { runCatching { PostType.valueOf(it) }.getOrDefault(PostType.GENERAL) } ?: PostType.GENERAL
         val post =
             Post(
@@ -464,6 +499,48 @@ class ContentService(
         val rolePerms = if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions
         // MVP 단순화: 오버라이드 제거, 역할 권한만 확인
         if (!rolePerms.contains(GroupPermission.CHANNEL_MANAGE)) throw BusinessException(ErrorCode.FORBIDDEN)
+    }
+
+    private fun setupDefaultChannelPermissions(channel: Channel) {
+        try {
+            // 그룹의 기본 역할들 조회
+            val ownerRole = groupRoleRepository.findByGroupIdAndName(channel.group.id, "OWNER")
+                .orElse(null) ?: return // OWNER 역할이 없으면 스킵
+            val memberRole = groupRoleRepository.findByGroupIdAndName(channel.group.id, "MEMBER")
+                .orElse(null) ?: return // MEMBER 역할이 없으면 스킵
+
+            // OWNER 역할에 대한 전체 권한 바인딩
+            val ownerBinding = ChannelRoleBinding.create(
+                channel = channel,
+                groupRole = ownerRole,
+                permissions = setOf(
+                    ChannelPermission.CHANNEL_VIEW,
+                    ChannelPermission.POST_READ,
+                    ChannelPermission.POST_WRITE,
+                    ChannelPermission.COMMENT_WRITE,
+                    ChannelPermission.FILE_UPLOAD
+                )
+            )
+
+            // MEMBER 역할에 대한 기본 권한 바인딩 (읽기/쓰기 권한)
+            val memberBinding = ChannelRoleBinding.create(
+                channel = channel,
+                groupRole = memberRole,
+                permissions = setOf(
+                    ChannelPermission.CHANNEL_VIEW,
+                    ChannelPermission.POST_READ,
+                    ChannelPermission.POST_WRITE,
+                    ChannelPermission.COMMENT_WRITE
+                )
+            )
+
+            channelRoleBindingRepository.save(ownerBinding)
+            channelRoleBindingRepository.save(memberBinding)
+        } catch (e: Exception) {
+            // 권한 바인딩 실패는 로그만 기록하고 채널 생성은 계속 진행
+            // 이렇게 하면 채널은 생성되지만 권한이 없는 상태가 됨
+            println("채널 권한 바인딩 설정 실패 - 채널 ID: ${channel.id}, 에러: ${e.message}")
+        }
     }
 
     // moved to top and expanded

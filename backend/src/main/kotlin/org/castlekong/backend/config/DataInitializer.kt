@@ -4,6 +4,7 @@ import org.castlekong.backend.dto.CreateGroupRequest
 import org.castlekong.backend.entity.*
 import org.castlekong.backend.repository.*
 import org.castlekong.backend.service.GroupService
+import org.castlekong.backend.service.GroupManagementService
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component
@@ -17,6 +18,7 @@ class DataInitializer(
     private val groupService: GroupService,
     private val groupRoleRepository: GroupRoleRepository,
     private val groupMemberRepository: GroupMemberRepository,
+    private val groupManagementService: GroupManagementService,
 ) : ApplicationRunner {
     @Transactional
     override fun run(args: ApplicationArguments?) {
@@ -32,9 +34,11 @@ class DataInitializer(
             seedDefaultGroups(owner)
         }
 
-        // data.sql에서 이미 올바른 owner_id로 설정되므로 소유권 전환 로직 불필요
         // 모든 그룹에 기본 역할만 보장
         ensureDefaultRolesForAllGroups()
+
+        // 앱 시작 시 1회: 기본 채널 백필 (defaultChannelsCreated=false 또는 채널 누락 시 보정)
+        backfillDefaultChannels()
     }
 
     private fun seedDefaultGroups(owner: User) {
@@ -146,6 +150,16 @@ class DataInitializer(
                         joinedAt = LocalDateTime.now(),
                     )
                 groupMemberRepository.save(ownerMember)
+            }
+        }
+    }
+
+    private fun backfillDefaultChannels() {
+        val groups = groupRepository.findAll()
+        groups.forEach { group ->
+            // flag가 false이거나 채널이 누락된 경우만 생성 시도
+            if (group.defaultChannelsCreated.not()) {
+                groupManagementService.ensureDefaultChannelsIfNeeded(group)
             }
         }
     }

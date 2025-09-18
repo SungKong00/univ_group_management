@@ -39,6 +39,8 @@ data class Group(
     val isRecruiting: Boolean = false,
     @Column(name = "max_members")
     val maxMembers: Int? = null,
+    @Column(name = "default_channels_created", nullable = false)
+    val defaultChannelsCreated: Boolean = false,
     @ElementCollection(targetClass = String::class, fetch = FetchType.EAGER)
     @CollectionTable(name = "group_tags", joinColumns = [JoinColumn(name = "group_id")])
     @Column(name = "tag", nullable = false, length = 50)
