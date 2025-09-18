@@ -133,12 +133,12 @@ class GroupManagementService(
     ) {
         val (ownerRole, _, memberRole) = roles
 
-        // 공지 채널: OWNER만 작성, 모든 MEMBER 읽기
+        // 공지사항 채널: OWNER는 모든 권한, MEMBER는 읽기만
         val announcement =
             Channel(
                 group = group,
-                name = "공지",
-                description = "그룹 공지 채널",
+                name = "공지사항",
+                description = "그룹 공지사항 채널",
                 type = ChannelType.ANNOUNCEMENT,
                 isPrivate = false,
                 displayOrder = 0,
@@ -146,11 +146,17 @@ class GroupManagementService(
             )
         val savedAnnouncement = channelRepository.save(announcement)
 
-        // 공지 채널 권한 바인딩
+        // 공지사항 채널 권한 바인딩
         val announcementOwnerBinding = ChannelRoleBinding.create(
             channel = savedAnnouncement,
             groupRole = ownerRole,
-            permissions = setOf(ChannelPermission.CHANNEL_VIEW, ChannelPermission.POST_WRITE)
+            permissions = setOf(
+                ChannelPermission.CHANNEL_VIEW,
+                ChannelPermission.POST_READ,
+                ChannelPermission.POST_WRITE,
+                ChannelPermission.COMMENT_WRITE,
+                ChannelPermission.FILE_UPLOAD
+            )
         )
         val announcementMemberBinding = ChannelRoleBinding.create(
             channel = savedAnnouncement,
@@ -160,11 +166,11 @@ class GroupManagementService(
         channelRoleBindingRepository.save(announcementOwnerBinding)
         channelRoleBindingRepository.save(announcementMemberBinding)
 
-        // 자유 채널: 모든 MEMBER가 읽기/쓰기
+        // 자유게시판 채널: OWNER는 모든 권한, MEMBER는 읽기/쓰기 권한
         val free =
             Channel(
                 group = group,
-                name = "자유",
+                name = "자유게시판",
                 description = "자유롭게 대화하는 채널",
                 type = ChannelType.TEXT,
                 isPrivate = false,
@@ -173,7 +179,18 @@ class GroupManagementService(
             )
         val savedFree = channelRepository.save(free)
 
-        // 자유 채널 권한 바인딩
+        // 자유게시판 채널 권한 바인딩
+        val freeOwnerBinding = ChannelRoleBinding.create(
+            channel = savedFree,
+            groupRole = ownerRole,
+            permissions = setOf(
+                ChannelPermission.CHANNEL_VIEW,
+                ChannelPermission.POST_READ,
+                ChannelPermission.POST_WRITE,
+                ChannelPermission.COMMENT_WRITE,
+                ChannelPermission.FILE_UPLOAD
+            )
+        )
         val freeMemberBinding = ChannelRoleBinding.create(
             channel = savedFree,
             groupRole = memberRole,
@@ -184,6 +201,7 @@ class GroupManagementService(
                 ChannelPermission.COMMENT_WRITE
             )
         )
+        channelRoleBindingRepository.save(freeOwnerBinding)
         channelRoleBindingRepository.save(freeMemberBinding)
     }
 

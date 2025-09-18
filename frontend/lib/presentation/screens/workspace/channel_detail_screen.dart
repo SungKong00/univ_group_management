@@ -48,6 +48,34 @@ class ChannelDetailScreen extends StatelessWidget {
               ),
           ],
         ),
+        actions: [
+          // 개발/테스트용 권한 토글 버튼
+          Consumer<WorkspaceProvider>(
+            builder: (context, provider, child) {
+              final canWrite = provider.canWriteInCurrentChannel;
+              return IconButton(
+                onPressed: () {
+                  provider.toggleChannelWritePermission(channel.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        canWrite
+                          ? '글 작성 권한이 제거되었습니다 (데모용)'
+                          : '글 작성 권한이 부여되었습니다 (데모용)',
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                icon: Icon(
+                  canWrite ? Icons.lock_open : Icons.lock,
+                  color: canWrite ? Colors.green : Colors.red,
+                ),
+                tooltip: canWrite ? '권한 제거 (테스트)' : '권한 부여 (테스트)',
+              );
+            },
+          ),
+        ],
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 1,
@@ -344,6 +372,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   }
 
   Widget _buildMessageComposer(BuildContext context, WorkspaceProvider provider) {
+    final canWrite = provider.canWriteInCurrentChannel;
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         16,
@@ -352,45 +382,181 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         16 + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: canWrite
+            ? Theme.of(context).colorScheme.surface
+            : Theme.of(context).colorScheme.surfaceVariant,
         border: Border(
           top: BorderSide(
             color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
           ),
         ),
       ),
+      child: canWrite
+          ? _buildActiveComposer(context, provider)
+          : _buildDisabledComposer(context),
+    );
+  }
+
+  Widget _buildActiveComposer(BuildContext context, WorkspaceProvider provider) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: _selectAttachment,
+          icon: const Icon(Icons.attach_file),
+          tooltip: '파일 첨부',
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: TextField(
+            controller: _messageController,
+            focusNode: _messageFocusNode,
+            decoration: InputDecoration(
+              hintText: '메시지를 입력하세요...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+            ),
+            maxLines: null,
+            textInputAction: TextInputAction.send,
+            onSubmitted: (_) => _sendMessage(provider),
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          onPressed: () => _sendMessage(provider),
+          icon: const Icon(Icons.send),
+          tooltip: '전송',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDisabledComposer(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        _showPermissionInfoDialog(context);
+      },
       child: Row(
         children: [
-          IconButton(
-            onPressed: _selectAttachment,
-            icon: const Icon(Icons.attach_file),
-            tooltip: '파일 첨부',
+          Icon(
+            Icons.lock_outline,
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+            size: 20,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Expanded(
-            child: TextField(
-              controller: _messageController,
-              focusNode: _messageFocusNode,
-              decoration: InputDecoration(
-                hintText: '메시지를 입력하세요...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
                 ),
               ),
-              maxLines: null,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _sendMessage(provider),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '이 채널에서 메시지를 작성할 권한이 없습니다',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 8),
           IconButton(
-            onPressed: () => _sendMessage(provider),
-            icon: const Icon(Icons.send),
-            tooltip: '전송',
+            onPressed: null,
+            icon: Icon(
+              Icons.send,
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
+            ),
+            tooltip: '전송 권한 없음',
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPermissionInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.lock_outline,
+              color: Theme.of(context).colorScheme.primary,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            const Text('채널 권한'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '현재 이 채널에서 다음 작업을 수행할 권한이 없습니다:',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.edit,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '메시지 작성',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.attach_file,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '파일 첨부',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '채널 관리자에게 권한 요청을 문의하세요.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('확인'),
           ),
         ],
       ),
@@ -398,6 +564,16 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   }
 
   void _sendMessage(WorkspaceProvider provider) async {
+    // 권한 확인
+    if (!provider.canWriteInCurrentChannel) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('이 채널에서 메시지를 작성할 권한이 없습니다')),
+        );
+      }
+      return;
+    }
+
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
@@ -430,6 +606,15 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   }
 
   void _selectAttachment() {
+    // 권한 확인
+    final provider = context.read<WorkspaceProvider>();
+    if (!provider.canWriteInCurrentChannel) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('이 채널에서 파일을 첨부할 권한이 없습니다')),
+      );
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('파일 첨부 기능 구현 예정')),
     );

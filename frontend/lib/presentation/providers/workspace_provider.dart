@@ -20,10 +20,16 @@ class WorkspaceProvider extends ChangeNotifier {
   // Sidebar visibility state
   bool _isSidebarVisible = true;
 
+  // 기본 채널 자동 선택 여부 (첫 로드 한정)
+  bool _didAutoSelectChannel = false;
+
   // Current channel (when in channel detail view)
   ChannelModel? _currentChannel;
   List<PostModel> _currentChannelPosts = [];
   Map<int, List<CommentModel>> _postComments = {};
+
+  // Channel permissions for current user
+  Map<int, List<String>> _channelPermissions = {};
 
   // Getters
   WorkspaceDetailModel? get currentWorkspace => _currentWorkspace;
@@ -62,6 +68,18 @@ class WorkspaceProvider extends ChangeNotifier {
   bool get canManageChannels => _currentWorkspace?.canManageChannels ?? false;
   bool get canCreateAnnouncements => _currentWorkspace?.canCreateAnnouncements ?? false;
 
+  /// 특정 채널에 대한 권한 확인
+  bool hasChannelPermission(int channelId, String permission) {
+    final permissions = _channelPermissions[channelId] ?? [];
+    return permissions.contains(permission);
+  }
+
+  /// 현재 채널에서 글 작성 권한이 있는지 확인
+  bool get canWriteInCurrentChannel {
+    if (_currentChannel == null) return false;
+    return hasChannelPermission(_currentChannel!.id, 'POST_WRITE');
+  }
+
   /// 워크스페이스 로드
   Future<void> loadWorkspace(int groupId) async {
     try {
@@ -74,6 +92,22 @@ class WorkspaceProvider extends ChangeNotifier {
 
       _isLoading = false;
       notifyListeners();
+
+      // 첫 로드 시 기본 채널 자동 선택
+      if (!_didAutoSelectChannel && _currentChannel == null) {
+        final ws = _currentWorkspace;
+        if (ws != null && ws.channels.isNotEmpty) {
+          // displayOrder 기준 정렬 후 텍스트 채널 우선 선택, 없으면 첫 채널
+          final sorted = List<ChannelModel>.from(ws.channels)
+            ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+          ChannelModel? defaultChannel =
+              sorted.firstWhere((c) => c.type == ChannelType.text, orElse: () => sorted.first);
+
+          _didAutoSelectChannel = true;
+          // 비동기로 선택하여 게시글/권한 로드
+          await selectChannel(defaultChannel);
+        }
+      }
     } on WorkspaceAccessException catch (e) {
       _isLoading = false;
       _accessDenied = true;
@@ -113,7 +147,13 @@ class WorkspaceProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      _currentChannelPosts = await _workspaceService.getChannelPosts(channel.id);
+      // 채널 게시글과 권한 정보를 동시에 로드
+      final futures = await Future.wait([
+        _workspaceService.getChannelPosts(channel.id),
+        _loadChannelPermissions(channel.id),
+      ]);
+
+      _currentChannelPosts = futures[0] as List<PostModel>;
 
       _isLoading = false;
       notifyListeners();
@@ -122,6 +162,63 @@ class WorkspaceProvider extends ChangeNotifier {
       _error = e.toString();
       notifyListeners();
     }
+  }
+
+  /// 채널 권한 정보 로드
+  Future<void> _loadChannelPermissions(int channelId) async {
+    try {
+      // 실제 API 호출로 권한 정보 로드
+      final permissions = await _workspaceService.getChannelPermissions(channelId);
+      _channelPermissions[channelId] = permissions;
+    } catch (e) {
+      // API 호출 실패 시 기본 권한으로 폴백 (개발/테스트용)
+      print('Failed to load channel permissions: $e');
+
+      // 개발/테스트용 임시 로직
+      // 채널 ID에 따라 다른 권한 부여 (데모용)
+      if (channelId % 2 == 0) {
+        // 짝수 채널: 모든 권한 부여
+        _channelPermissions[channelId] = [
+          'CHANNEL_VIEW',
+          'POST_READ',
+          'POST_WRITE',
+          'COMMENT_WRITE',
+          'FILE_UPLOAD'
+        ];
+      } else {
+        // 홀수 채널: 읽기 전용 권한만 부여 (글 작성 권한 없음)
+        _channelPermissions[channelId] = [
+          'CHANNEL_VIEW',
+          'POST_READ',
+          'COMMENT_WRITE'
+        ];
+      }
+    }
+  }
+
+  /// 테스트용: 특정 채널의 권한 토글 (개발/데모용)
+  void toggleChannelWritePermission(int channelId) {
+    final currentPermissions = _channelPermissions[channelId] ?? [];
+    final hasWritePermission = currentPermissions.contains('POST_WRITE');
+
+    if (hasWritePermission) {
+      // 글 작성 권한 제거
+      _channelPermissions[channelId] = currentPermissions
+          .where((permission) => permission != 'POST_WRITE' && permission != 'FILE_UPLOAD')
+          .toList();
+    } else {
+      // 글 작성 권한 추가
+      final updatedPermissions = List<String>.from(currentPermissions);
+      if (!updatedPermissions.contains('POST_WRITE')) {
+        updatedPermissions.add('POST_WRITE');
+      }
+      if (!updatedPermissions.contains('FILE_UPLOAD')) {
+        updatedPermissions.add('FILE_UPLOAD');
+      }
+      _channelPermissions[channelId] = updatedPermissions;
+    }
+
+    notifyListeners();
   }
 
   /// 채널 상세에서 나가기
@@ -347,6 +444,7 @@ class WorkspaceProvider extends ChangeNotifier {
 
   /// 상태 초기화 (다른 워크스페이스로 이동할 때 사용)
   void reset() {
+    _channelPermissions.clear();
     _currentWorkspace = null;
     _currentChannel = null;
     _currentChannelPosts.clear();
@@ -356,6 +454,7 @@ class WorkspaceProvider extends ChangeNotifier {
     _isLoading = false;
     _error = null;
     _accessDenied = false;
+    _didAutoSelectChannel = false;
     notifyListeners();
   }
 

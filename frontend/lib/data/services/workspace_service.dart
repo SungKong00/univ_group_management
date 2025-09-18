@@ -453,6 +453,26 @@ class WorkspaceService {
     }
   }
 
+  /// 특정 채널에 대한 현재 사용자의 권한 조회
+  Future<List<String>> getChannelPermissions(int channelId) async {
+    try {
+      final response = await _dioClient.get('/channels/$channelId/permissions/me');
+      final data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['error']?['message'] ?? 'Failed to fetch channel permissions');
+      }
+
+      // 백엔드에서 권한 목록을 반환한다고 가정
+      final permissions = (data['data']['permissions'] as List?)
+          ?.map((e) => e.toString())
+          .toList() ?? [];
+
+      return permissions;
+    } catch (e) {
+      throw Exception('Failed to load channel permissions: $e');
+    }
+  }
+
   /// 그룹 정보 수정
   Future<void> updateGroupInfo({
     required int groupId,

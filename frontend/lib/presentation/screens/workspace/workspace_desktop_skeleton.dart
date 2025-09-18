@@ -53,11 +53,6 @@ class _LeftSidebar extends StatelessWidget {
                   _SidebarSection(title: 'Calendar', items: [
                     _SidebarItem(icon: Icons.calendar_month, label: '전체 일정'),
                   ]),
-                  _SidebarSection(title: 'Channels', items: [
-                    _SidebarItem(icon: Icons.campaign, label: '공지사항'),
-                    _SidebarItem(icon: Icons.chat_bubble_outline, label: '자유톡'),
-                    _SidebarItem(icon: Icons.how_to_vote, label: '투표'),
-                  ]),
                   _SidebarSection(title: 'Projects', items: [
                     _SidebarItem(icon: Icons.folder_copy_outlined, label: '캡스톤 디자인'),
                   ]),
