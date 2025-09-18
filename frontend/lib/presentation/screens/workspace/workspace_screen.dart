@@ -336,13 +336,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
                     context,
                     title: 'Channels',
                     children: [
-                      _buildSidebarItem(
-                        context,
-                        icon: Icons.campaign_outlined,
-                        label: '공지사항',
-                        selected: selectedChannelId == null,
-                        onTap: provider.exitChannel,
-                      ),
+                      
                       ...channels.map(
                         (channel) => _buildSidebarItem(
                           context,
@@ -856,12 +850,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  buildTile(
-                    icon: Icons.campaign_outlined,
-                    label: '공지사항',
-                    selected: selectedChannelId == null,
-                    onTap: provider.exitChannel,
-                  ),
                   ...channels.map(
                     (channel) => buildTile(
                       icon: _channelIconFor(channel),
