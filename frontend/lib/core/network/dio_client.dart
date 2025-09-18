@@ -88,5 +88,25 @@ class DioClient {
       );
     }
   }
+
+  Future<ApiResponse<T>> postWithParser<T>(
+    String path,
+    dynamic data,
+    T Function(dynamic data) parser, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await dio.post(path, data: data, queryParameters: queryParameters);
+      return ApiResponse<T>(
+        success: true,
+        data: parser(response.data['data']),
+      );
+    } catch (e) {
+      return ApiResponse<T>(
+        success: false,
+        error: ApiError(code: 'NETWORK_ERROR', message: e.toString()),
+      );
+    }
+  }
 }
 

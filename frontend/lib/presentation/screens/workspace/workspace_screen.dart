@@ -13,7 +13,7 @@ import 'member_management_screen.dart';
 import 'channel_management_screen.dart';
 import 'group_info_screen.dart';
 import 'admin_home_screen.dart';
-import '../home/home_screen.dart';
+import '../groups/group_explorer_screen.dart';
 
 class WorkspaceScreen extends StatefulWidget {
   final int groupId;
@@ -60,13 +60,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
     super.dispose();
   }
 
-  void _navigateToHome() {
+  void _navigateToGroupExplorer() {
     context.read<WorkspaceProvider>().exitChannel();
-    Navigator.pushAndRemoveUntil(
+    Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-      (route) => false,
+      MaterialPageRoute(builder: (context) => const GroupExplorerScreen()),
     );
+  }
+
+  void _navigateBack() {
+    context.read<WorkspaceProvider>().exitChannel();
+    Navigator.of(context).pop();
   }
 
   @override
@@ -510,9 +514,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
             const SizedBox(width: 8),
           ],
           IconButton(
-            onPressed: _navigateToHome,
-            icon: const Icon(Icons.home, color: AppTheme.onTextSecondary),
-            tooltip: '홈으로 돌아가기',
+            onPressed: _navigateBack,
+            icon: const Icon(Icons.arrow_back, color: AppTheme.onTextSecondary),
+            tooltip: '뒤로가기',
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -1230,12 +1234,22 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
       foregroundColor: Theme.of(context).colorScheme.onSurface,
       elevation: 0,
       automaticallyImplyLeading: false,
-      leading: Builder(
-        builder: (ctx) => IconButton(
-          icon: const Icon(Icons.menu),
-          tooltip: '메뉴',
-          onPressed: () => Scaffold.of(ctx).openDrawer(),
-        ),
+      leadingWidth: 112, // 두 개의 아이콘을 위한 충분한 공간
+      leading: Row(
+        children: [
+          Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: '메뉴',
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+            ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back),
+            tooltip: '뒤로가기',
+          ),
+        ],
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1266,11 +1280,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
             icon: const Icon(Icons.settings),
             tooltip: '관리',
           ),
-        IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.close),
-          tooltip: '닫기',
-        ),
       ],
     );
   }

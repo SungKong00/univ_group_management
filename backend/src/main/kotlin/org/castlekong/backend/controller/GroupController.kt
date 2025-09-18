@@ -5,6 +5,7 @@ import org.castlekong.backend.dto.*
 import org.castlekong.backend.service.GroupRoleService
 import org.castlekong.backend.service.GroupService
 import org.castlekong.backend.service.UserService
+import org.castlekong.backend.security.SecurityExpressionHelper
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -19,6 +20,7 @@ class GroupController(
     private val groupService: GroupService,
     private val groupRoleService: GroupRoleService,
     private val userService: UserService,
+    private val securityExpressionHelper: SecurityExpressionHelper,
 ) {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
@@ -395,5 +397,28 @@ class GroupController(
     ): ApiResponse<AdminStatsResponse> {
         val stats = groupService.getAdminStats(groupId)
         return ApiResponse.success(stats)
+    }
+
+    // === 멤버십 체크 ===
+    @GetMapping("/{groupId}/membership/check")
+    @PreAuthorize("isAuthenticated()")
+    @io.swagger.v3.oas.annotations.Operation(summary = "그룹 멤버십 체크", description = "현재 사용자가 특정 그룹의 멤버인지 확인합니다.")
+    fun checkGroupMembership(
+        @PathVariable groupId: Long,
+    ): ApiResponse<Boolean> {
+        val isMember = securityExpressionHelper.isGroupMember(groupId)
+        return ApiResponse.success(isMember)
+    }
+
+    @PostMapping("/membership/check")
+    @PreAuthorize("isAuthenticated()")
+    @io.swagger.v3.oas.annotations.Operation(summary = "다중 그룹 멤버십 체크", description = "현재 사용자가 여러 그룹의 멤버인지 배치로 확인합니다.")
+    fun checkBatchGroupMembership(
+        @RequestBody groupIds: List<Long>,
+    ): ApiResponse<Map<Long, Boolean>> {
+        val membershipMap = groupIds.associateWith { groupId ->
+            securityExpressionHelper.isGroupMember(groupId)
+        }
+        return ApiResponse.success(membershipMap)
     }
 }

@@ -75,32 +75,24 @@ class GroupRepositoryImpl implements GroupRepository {
   @override
   Future<ApiResponse<bool>> checkGroupMembership(int groupId) async {
     return _client.getWithParser(
-      '/groups/$groupId/me/permissions',
-      (data) {
-        final permissions = (data as List<dynamic>).map((e) => e.toString()).toSet();
-        return permissions.contains('CHANNEL_READ') || permissions.contains('POST_READ');
-      },
+      '/groups/$groupId/membership/check',
+      (data) => data as bool,
     );
   }
 
   @override
   Future<ApiResponse<Map<int, bool>>> checkBatchGroupMembership(List<int> groupIds) async {
-    // TODO: Implement when backend supports batch membership checking
-    // For now, fall back to individual calls
-    final Map<int, bool> results = {};
-
-    for (final groupId in groupIds) {
-      try {
-        final response = await checkGroupMembership(groupId);
-        results[groupId] = response.isSuccess && (response.data ?? false);
-      } catch (_) {
-        results[groupId] = false;
-      }
-    }
-
-    return ApiResponse<Map<int, bool>>(
-      success: true,
-      data: results,
+    return _client.postWithParser(
+      '/groups/membership/check',
+      groupIds,
+      (data) {
+        final Map<String, dynamic> rawMap = data as Map<String, dynamic>;
+        final Map<int, bool> result = {};
+        rawMap.forEach((key, value) {
+          result[int.parse(key)] = value as bool;
+        });
+        return result;
+      },
     );
   }
 }
