@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*
 class ContentController(
     private val contentService: ContentService,
     private val userService: UserService,
+    // 채널 권한 조회용 서비스 주입
+    private val channelPermissionManagementService: org.castlekong.backend.service.ChannelPermissionManagementService,
 ) {
     // === Workspaces (compat: group-level single workspace) ===
     @GetMapping("/groups/{groupId}/workspaces")
@@ -216,6 +218,19 @@ class ContentController(
         val user = getUserByEmail(authentication.name)
         contentService.deleteComment(commentId, user.id)
         return ApiResponse.success()
+    }
+
+    // === Channel Permissions ===
+    @GetMapping("/channels/{channelId}/permissions/me")
+    @PreAuthorize("isAuthenticated()")
+    fun getMyChannelPermissions(
+        @PathVariable channelId: Long,
+        authentication: Authentication,
+    ): ApiResponse<Map<String, Any>> {
+        val user = getUserByEmail(authentication.name)
+        val perms = channelPermissionManagementService.getUserChannelPermissions(channelId, user.id)
+        val payload = mapOf("permissions" to perms.map { it.name })
+        return ApiResponse.success(payload)
     }
 
     private fun getUserByEmail(email: String) =

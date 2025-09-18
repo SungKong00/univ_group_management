@@ -29,9 +29,7 @@ class GroupController(
         @Valid @RequestBody request: CreateGroupRequest,
         authentication: Authentication,
     ): ApiResponse<GroupResponse> {
-        // 개발 편의: 인증된 사용자가 DB에 없으면 자동 생성
-        val email = authentication.name
-        val user = userService.findByEmail(email) ?: userService.ensureUserByEmail(email)
+        val user = getUserByEmail(authentication.name)
         val response = groupService.createGroup(request, user.id)
         return ApiResponse.success(response)
     }
@@ -365,17 +363,6 @@ class GroupController(
         userService.findByEmail(email)
             ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
 
-    // === 내 유효 권한 조회 ===
-    @GetMapping("/{groupId}/me/permissions")
-    @PreAuthorize("isAuthenticated()")
-    fun getMyPermissions(
-        @PathVariable groupId: Long,
-        authentication: Authentication,
-    ): ApiResponse<Set<String>> {
-        val user = getUserByEmail(authentication.name)
-        val perms = groupService.getMyEffectivePermissions(groupId, user.id)
-        return ApiResponse.success(perms)
-    }
 
     // === 워크스페이스 조회 (명세서 요구사항) ===
     @GetMapping("/{groupId}/workspace")

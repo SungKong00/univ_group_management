@@ -224,24 +224,4 @@ class GroupService(
         return adminStatsService.getStats(groupId)
     }
 
-    // === 권한 관리 ===
-    fun getMyEffectivePermissions(groupId: Long, userId: Long): Set<String> {
-        val member = groupMemberService.getMyMembership(groupId, userId)
-        return if (member.role.id == 0L || member.role.name in setOf("OWNER", "ADVISOR", "MEMBER")) {
-            // 시스템 역할인 경우
-            systemRolePermissions(member.role.name).map { it.name }.toSet()
-        } else {
-            // 커스텀 역할인 경우
-            member.role.permissions
-        }
-    }
-
-    private fun systemRolePermissions(roleName: String): Set<org.castlekong.backend.entity.GroupPermission> {
-        return when (roleName.uppercase()) {
-            "OWNER" -> org.castlekong.backend.entity.GroupPermission.entries.toSet()
-            "ADVISOR" -> org.castlekong.backend.entity.GroupPermission.entries.toSet()
-            "MEMBER" -> setOf(org.castlekong.backend.entity.GroupPermission.WORKSPACE_ACCESS)
-            else -> emptySet()
-        }
-    }
 }

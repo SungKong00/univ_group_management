@@ -171,28 +171,10 @@ class WorkspaceProvider extends ChangeNotifier {
       final permissions = await _workspaceService.getChannelPermissions(channelId);
       _channelPermissions[channelId] = permissions;
     } catch (e) {
-      // API 호출 실패 시 기본 권한으로 폴백 (개발/테스트용)
+      // API 호출 실패 시 폴백 제거: 서버 권한에만 의존
       print('Failed to load channel permissions: $e');
-
-      // 개발/테스트용 임시 로직
-      // 채널 ID에 따라 다른 권한 부여 (데모용)
-      if (channelId % 2 == 0) {
-        // 짝수 채널: 모든 권한 부여
-        _channelPermissions[channelId] = [
-          'CHANNEL_VIEW',
-          'POST_READ',
-          'POST_WRITE',
-          'COMMENT_WRITE',
-          'FILE_UPLOAD'
-        ];
-      } else {
-        // 홀수 채널: 읽기 전용 권한만 부여 (글 작성 권한 없음)
-        _channelPermissions[channelId] = [
-          'CHANNEL_VIEW',
-          'POST_READ',
-          'COMMENT_WRITE'
-        ];
-      }
+      _channelPermissions[channelId] = [];
+      _error = '권한 정보를 불러오지 못했습니다.';
     }
   }
 

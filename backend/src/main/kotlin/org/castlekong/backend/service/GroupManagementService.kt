@@ -136,7 +136,7 @@ class GroupManagementService(
     ) {
         val (ownerRole, _, memberRole) = roles
 
-        // 공지사항 채널: OWNER는 모든 권한, MEMBER는 읽기만
+        // 공지사항 채널: OWNER는 모든 권한, MEMBER는 읽기 + 댓글 작성
         val announcement =
             Channel(
                 group = group,
@@ -149,7 +149,6 @@ class GroupManagementService(
             )
         val savedAnnouncement = channelRepository.save(announcement)
 
-        // 공지사항 채널 권한 바인딩
         val announcementOwnerBinding = ChannelRoleBinding.create(
             channel = savedAnnouncement,
             groupRole = ownerRole,
@@ -164,12 +163,16 @@ class GroupManagementService(
         val announcementMemberBinding = ChannelRoleBinding.create(
             channel = savedAnnouncement,
             groupRole = memberRole,
-            permissions = setOf(ChannelPermission.CHANNEL_VIEW, ChannelPermission.POST_READ)
+            permissions = setOf(
+                ChannelPermission.CHANNEL_VIEW,
+                ChannelPermission.POST_READ,
+                ChannelPermission.COMMENT_WRITE
+            )
         )
         channelRoleBindingRepository.save(announcementOwnerBinding)
         channelRoleBindingRepository.save(announcementMemberBinding)
 
-        // 자유게시판 채널: OWNER는 모든 권한, MEMBER는 읽기/쓰기 권한
+        // 자유게시판 채널: OWNER는 모든 권한, MEMBER는 읽기/쓰기/댓글 작성
         val free =
             Channel(
                 group = group,
@@ -182,7 +185,6 @@ class GroupManagementService(
             )
         val savedFree = channelRepository.save(free)
 
-        // 자유게시판 채널 권한 바인딩
         val freeOwnerBinding = ChannelRoleBinding.create(
             channel = savedFree,
             groupRole = ownerRole,
@@ -213,13 +215,11 @@ class GroupManagementService(
         if (group.deletedAt != null) return
         if (group.defaultChannelsCreated) return
 
-        // 역할 확보 (OWNER, MEMBER)
         val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER")
             .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
         val memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER")
             .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
-        // 이미 존재 여부 확인 후 부족한 채널만 생성
         val hasAnnouncement = channelRepository.findByGroupIdAndType(group.id, ChannelType.ANNOUNCEMENT).isNotEmpty()
         val hasText = channelRepository.findByGroupIdAndType(group.id, ChannelType.TEXT).isNotEmpty()
 
@@ -248,7 +248,11 @@ class GroupManagementService(
             val announcementMemberBinding = ChannelRoleBinding.create(
                 channel = savedAnnouncement,
                 groupRole = memberRole,
-                permissions = setOf(ChannelPermission.CHANNEL_VIEW, ChannelPermission.POST_READ)
+                permissions = setOf(
+                    ChannelPermission.CHANNEL_VIEW,
+                    ChannelPermission.POST_READ,
+                    ChannelPermission.COMMENT_WRITE
+                )
             )
             channelRoleBindingRepository.save(announcementOwnerBinding)
             channelRoleBindingRepository.save(announcementMemberBinding)

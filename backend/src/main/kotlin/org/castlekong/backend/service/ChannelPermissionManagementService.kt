@@ -17,6 +17,8 @@ class ChannelPermissionManagementService(
     private val channelRepository: ChannelRepository,
     private val groupRoleRepository: GroupRoleRepository,
     private val channelRoleBindingRepository: ChannelRoleBindingRepository,
+    // 그룹 멤버 역할 확인을 위해 추가
+    private val groupMemberRepository: GroupMemberRepository,
 ) {
 
     // === 채널 역할 바인딩 관리 ===
@@ -95,9 +97,16 @@ class ChannelPermissionManagementService(
 
     @Transactional(readOnly = true)
     fun getUserChannelPermissions(channelId: Long, userId: Long): Set<ChannelPermission> {
-        // 간단한 구현 - 실제로는 그룹 멤버십과 역할 바인딩을 확인해야 함
-        // MVP에서는 기본적인 구조만 제공
-        return emptySet()
+        val channel = channelRepository.findByIdOrNull(channelId)
+            ?: throw IllegalArgumentException("Channel not found: $channelId")
+
+        val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
+            .orElse(null) ?: return emptySet()
+
+        val binding = channelRoleBindingRepository.findByChannelIdAndGroupRoleId(channelId, member.role.id)
+            ?: return emptySet()
+
+        return binding.permissions
     }
 
     @Transactional(readOnly = true)
