@@ -121,14 +121,7 @@ class DataInitializer(
                     group = group,
                     name = "MEMBER",
                     isSystemRole = true,
-                    permissions =
-                        setOf(
-                            GroupPermission.CHANNEL_READ,
-                            GroupPermission.POST_CREATE,
-                            GroupPermission.POST_READ,
-                            GroupPermission.COMMENT_CREATE,
-                            GroupPermission.COMMENT_READ,
-                        ),
+                    permissions = setOf(GroupPermission.WORKSPACE_ACCESS),
                     priority = 1,
                 ),
             )

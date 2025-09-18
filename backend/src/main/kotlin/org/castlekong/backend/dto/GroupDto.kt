@@ -187,17 +187,6 @@ data class ReviewGroupJoinRequestRequest(
 )
 
 
-// 멤버 개인 권한 오버라이드 요청/응답
-data class MemberPermissionOverrideRequest(
-    val allowed: Set<String> = emptySet(),
-    val denied: Set<String> = emptySet(),
-)
-
-data class MemberPermissionOverrideResponse(
-    val allowed: Set<String>,
-    val denied: Set<String>,
-    val effective: Set<String>,
-)
 
 data class AdminStatsResponse(
     val pendingCount: Int,

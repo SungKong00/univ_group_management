@@ -25,16 +25,6 @@ interface ChannelRoleBindingRepository : JpaRepository<ChannelRoleBinding, Long>
     @Query("SELECT b.groupRole.id FROM ChannelRoleBinding b WHERE b.channel.id = :channelId")
     fun findRoleIdsByChannelId(@Param("channelId") channelId: Long): List<Long>
 
-    /**
-     * 특정 템플릿을 사용하는 모든 바인딩 조회
-     */
-    fun findByTemplateId(templateId: Long): List<ChannelRoleBinding>
-
-    /**
-     * 특정 템플릿을 사용하는 바인딩들의 채널 ID 목록 조회
-     */
-    @Query("SELECT DISTINCT b.channel.id FROM ChannelRoleBinding b WHERE b.template.id = :templateId")
-    fun findChannelIdsByTemplateId(@Param("templateId") templateId: Long): List<Long>
 
     /**
      * 특정 그룹의 역할들이 바인딩된 모든 채널 ID 조회
@@ -62,8 +52,4 @@ interface ChannelRoleBindingRepository : JpaRepository<ChannelRoleBinding, Long>
      */
     fun deleteByChannelId(channelId: Long)
 
-    /**
-     * 특정 템플릿 사용 횟수 조회
-     */
-    fun countByTemplateId(templateId: Long): Int
 }

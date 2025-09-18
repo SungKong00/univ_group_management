@@ -18,7 +18,6 @@ class GroupMemberService(
     private val groupMemberRepository: GroupMemberRepository,
     private val groupRoleRepository: GroupRoleRepository,
     private val userRepository: UserRepository,
-    private val overrideRepository: GroupMemberPermissionOverrideRepository,
     private val permissionService: org.castlekong.backend.security.PermissionService,
     private val groupMapper: GroupMapper,
 ) {
@@ -109,14 +108,7 @@ class GroupMemberService(
                     group = group,
                     name = "MEMBER",
                     isSystemRole = true,
-                    permissions =
-                        setOf(
-                            GroupPermission.CHANNEL_READ,
-                            GroupPermission.POST_CREATE,
-                            GroupPermission.POST_READ,
-                            GroupPermission.COMMENT_CREATE,
-                            GroupPermission.COMMENT_READ,
-                        ),
+                    permissions = setOf(GroupPermission.WORKSPACE_ACCESS),
                     priority = 1,
                 ),
             )
@@ -245,7 +237,6 @@ class GroupMemberService(
                 groupMemberRepository.deleteAll(membersToDelete)
 
                 // 권한 캐시 배치 무효화
-                val userIds = listOf(userId)
                 chunk.forEach { groupId ->
                     permissionService.invalidate(groupId, userId)
                 }
@@ -558,68 +549,7 @@ class GroupMemberService(
         return groupMapper.toGroupMemberResponse(savedMember)
     }
 
-    // === 멤버 개인 권한 오버라이드 ===
-
-    fun getMemberPermissionOverride(
-        groupId: Long,
-        userId: Long,
-    ): MemberPermissionOverrideResponse {
-        val group = groupRepository.findById(groupId).orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
-        if (group.deletedAt != null) throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
-
-        val member =
-            groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-                .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
-
-        val role = member.role
-        val base = if (role.isSystemRole) systemRolePermissions(role.name) else role.permissions
-
-        val override = overrideRepository.findByGroupIdAndUserId(groupId, userId).orElse(null)
-        val allowed = override?.allowedPermissions ?: emptySet()
-        val denied = override?.deniedPermissions ?: emptySet()
-        val effective = base.plus(allowed).minus(denied)
-
-        return MemberPermissionOverrideResponse(
-            allowed = allowed.map { it.name }.toSet(),
-            denied = denied.map { it.name }.toSet(),
-            effective = effective.map { it.name }.toSet(),
-        )
-    }
-
-    @Transactional
-    fun setMemberPermissionOverride(
-        groupId: Long,
-        userId: Long,
-        request: MemberPermissionOverrideRequest,
-        requesterId: Long,
-    ): MemberPermissionOverrideResponse {
-        val group = groupRepository.findById(groupId).orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
-        if (group.deletedAt != null) throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
-        if (group.owner.id != requesterId) throw BusinessException(ErrorCode.FORBIDDEN)
-
-        groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
-
-        val allowed = request.allowed.mapNotNull { runCatching { GroupPermission.valueOf(it) }.getOrNull() }.toSet()
-        val denied = request.denied.mapNotNull { runCatching { GroupPermission.valueOf(it) }.getOrNull() }.toSet()
-
-        val existing = overrideRepository.findByGroupIdAndUserId(groupId, userId).orElse(null)
-        val overrideEntity =
-            if (existing != null) {
-                existing.copy(allowedPermissions = allowed, deniedPermissions = denied)
-            } else {
-                val user = userRepository.findById(userId).orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
-                GroupMemberPermissionOverride(
-                    group = group,
-                    user = user,
-                    allowedPermissions = allowed,
-                    deniedPermissions = denied,
-                )
-            }
-        overrideRepository.save(overrideEntity)
-        permissionService.invalidate(groupId, userId)
-        return getMemberPermissionOverride(groupId, userId)
-    }
+    // === 권한 조회 (MVP 단순화) ===
 
     // === 나의 유효 권한 조회 ===
     fun getMyEffectivePermissions(
@@ -633,28 +563,8 @@ class GroupMemberService(
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> =
         when (roleName.uppercase()) {
             "OWNER" -> GroupPermission.entries.toSet()
-            "ADVISOR" ->
-                GroupPermission.entries
-                    .toSet()
-                    .minus(
-                        setOf(
-                            GroupPermission.GROUP_MANAGE,
-                            GroupPermission.ROLE_MANAGE,
-                            GroupPermission.MEMBER_APPROVE,
-                            GroupPermission.MEMBER_KICK,
-                            GroupPermission.RECRUITMENT_CREATE,
-                            GroupPermission.RECRUITMENT_UPDATE,
-                            GroupPermission.RECRUITMENT_DELETE,
-                        ),
-                    )
-            "MEMBER" ->
-                setOf(
-                    GroupPermission.CHANNEL_READ,
-                    GroupPermission.POST_CREATE,
-                    GroupPermission.POST_READ,
-                    GroupPermission.COMMENT_CREATE,
-                    GroupPermission.COMMENT_READ,
-                )
+            "ADVISOR" -> GroupPermission.entries.toSet() // MVP에서는 OWNER와 동일
+            "MEMBER" -> setOf(GroupPermission.WORKSPACE_ACCESS)
             else -> emptySet()
         }
 }

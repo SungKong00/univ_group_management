@@ -34,23 +34,13 @@ data class ChannelRoleBinding(
     val groupRole: GroupRole,
 
     /**
-     * 적용할 권한 템플릿 (nullable - 커스텀 권한 사용 시)
+     * 채널에서 이 역할이 가지는 권한들 (단순한 Set 기반)
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "template_id")
-    val template: ChannelPermissionTemplate? = null,
-
-    /**
-     * 추가로 허용할 권한들 (템플릿에 추가)
-     */
-    @Column(name = "allow_permissions_mask", nullable = false)
-    val allowPermissionsMask: Long = 0L,
-
-    /**
-     * 거부할 권한들 (템플릿에서 제외)
-     */
-    @Column(name = "deny_permissions_mask", nullable = false)
-    val denyPermissionsMask: Long = 0L,
+    @ElementCollection(targetClass = ChannelPermission::class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "channel_role_binding_permissions", joinColumns = [JoinColumn(name = "binding_id")])
+    @Enumerated(EnumType.STRING)
+    @Column(name = "permission", nullable = false, length = 50)
+    val permissions: Set<ChannelPermission> = emptySet(),
 
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
@@ -58,104 +48,27 @@ data class ChannelRoleBinding(
     @Column(name = "updated_at", nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
-    init {
-        // Allow와 Deny 충돌 검증
-        require(!ChannelPermission.hasConflict(allowPermissionsMask, denyPermissionsMask)) {
-            "Allow 권한과 Deny 권한이 충돌합니다: " +
-                "allow=${allowPermissionsMask}, deny=${denyPermissionsMask}"
-        }
-    }
-
-    /**
-     * 최종 권한 비트마스크 계산
-     * = (template_mask ∪ allow_mask) - deny_mask
-     */
-    fun calculateEffectivePermissions(): Long {
-        val templateMask = template?.permissionsMask ?: 0L
-        val combinedMask = templateMask or allowPermissionsMask
-        return ChannelPermission.applyDenyPolicy(combinedMask, denyPermissionsMask)
-    }
-
     /**
      * 특정 권한 보유 여부 확인
      */
     fun hasPermission(permission: ChannelPermission): Boolean {
-        val effectiveMask = calculateEffectivePermissions()
-        return (effectiveMask and permission.mask) != 0L
+        return permission in permissions
     }
 
-    /**
-     * 최종 권한 목록 반환
-     */
-    fun getEffectivePermissions(): Set<ChannelPermission> {
-        return ChannelPermission.fromMask(calculateEffectivePermissions())
-    }
 
     companion object {
         /**
-         * 템플릿 기반 바인딩 생성
+         * 단순한 권한 바인딩 생성
          */
-        fun createWithTemplate(
+        fun create(
             channel: Channel,
             groupRole: GroupRole,
-            template: ChannelPermissionTemplate
+            permissions: Set<ChannelPermission>
         ): ChannelRoleBinding {
             return ChannelRoleBinding(
                 channel = channel,
                 groupRole = groupRole,
-                template = template
-            )
-        }
-
-        /**
-         * 커스텀 권한 바인딩 생성
-         */
-        fun createWithCustomPermissions(
-            channel: Channel,
-            groupRole: GroupRole,
-            allowPermissions: Set<ChannelPermission> = emptySet(),
-            denyPermissions: Set<ChannelPermission> = emptySet()
-        ): ChannelRoleBinding {
-            val allowMask = ChannelPermission.toMask(allowPermissions)
-            val denyMask = ChannelPermission.toMask(denyPermissions)
-
-            // 충돌 사전 검증
-            require(!ChannelPermission.hasConflict(allowMask, denyMask)) {
-                "Allow 권한과 Deny 권한이 충돌합니다"
-            }
-
-            return ChannelRoleBinding(
-                channel = channel,
-                groupRole = groupRole,
-                allowPermissionsMask = allowMask,
-                denyPermissionsMask = denyMask
-            )
-        }
-
-        /**
-         * 혼합형 바인딩 생성 (템플릿 + 오버라이드)
-         */
-        fun createWithTemplateAndOverride(
-            channel: Channel,
-            groupRole: GroupRole,
-            template: ChannelPermissionTemplate,
-            additionalAllowPermissions: Set<ChannelPermission> = emptySet(),
-            denyPermissions: Set<ChannelPermission> = emptySet()
-        ): ChannelRoleBinding {
-            val allowMask = ChannelPermission.toMask(additionalAllowPermissions)
-            val denyMask = ChannelPermission.toMask(denyPermissions)
-
-            // 충돌 사전 검증
-            require(!ChannelPermission.hasConflict(allowMask, denyMask)) {
-                "Allow 권한과 Deny 권한이 충돌합니다"
-            }
-
-            return ChannelRoleBinding(
-                channel = channel,
-                groupRole = groupRole,
-                template = template,
-                allowPermissionsMask = allowMask,
-                denyPermissionsMask = denyMask
+                permissions = permissions
             )
         }
     }

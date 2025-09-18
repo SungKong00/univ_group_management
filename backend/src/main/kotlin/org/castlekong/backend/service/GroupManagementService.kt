@@ -5,6 +5,7 @@ import org.castlekong.backend.entity.*
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.*
+import org.castlekong.backend.entity.ChannelRoleBinding
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -20,13 +21,13 @@ class GroupManagementService(
     private val groupRoleRepository: GroupRoleRepository,
     private val userRepository: UserRepository,
     private val channelRepository: ChannelRepository,
+    private val channelRoleBindingRepository: ChannelRoleBindingRepository,
     private val groupMemberRepository: GroupMemberRepository,
     private val postRepository: PostRepository,
     private val commentRepository: CommentRepository,
     private val workspaceRepository: WorkspaceRepository,
     private val groupJoinRequestRepository: GroupJoinRequestRepository,
     private val subGroupRequestRepository: SubGroupRequestRepository,
-    private val groupMemberPermissionOverrideRepository: GroupMemberPermissionOverrideRepository,
     private val groupMapper: GroupMapper,
 ) {
     companion object {
@@ -68,11 +69,11 @@ class GroupManagementService(
 
         val savedGroup = groupRepository.save(group)
 
-        // 그룹 생성자를 자동으로 OWNER 역할로 추가
-        createDefaultRolesAndAddOwner(savedGroup, owner)
+        // 그룹 생성자를 자동으로 OWNER 역할로 추가하고 역할들 반환
+        val roles = createDefaultRolesAndAddOwner(savedGroup, owner)
 
-        // 기본 채널 생성 (공지, 자유)
-        createDefaultChannels(savedGroup, owner)
+        // 기본 채널 생성 및 권한 바인딩 설정
+        createDefaultChannels(savedGroup, roles)
 
         return groupMapper.toGroupResponse(savedGroup)
     }
@@ -80,7 +81,7 @@ class GroupManagementService(
     private fun createDefaultRolesAndAddOwner(
         group: Group,
         owner: User,
-    ) {
+    ): Triple<GroupRole, GroupRole, GroupRole> {
         // 기본 역할들 생성
         val ownerRole =
             GroupRole(
@@ -105,20 +106,13 @@ class GroupManagementService(
                 group = group,
                 name = "MEMBER",
                 isSystemRole = true,
-                permissions =
-                    setOf(
-                        GroupPermission.CHANNEL_READ,
-                        GroupPermission.POST_CREATE,
-                        GroupPermission.POST_READ,
-                        GroupPermission.COMMENT_CREATE,
-                        GroupPermission.COMMENT_READ,
-                    ),
+                permissions = setOf(GroupPermission.WORKSPACE_ACCESS),
                 priority = 1,
             )
 
         val savedOwnerRole = groupRoleRepository.save(ownerRole)
-        groupRoleRepository.save(professorRole)
-        groupRoleRepository.save(memberRole)
+        val savedProfessorRole = groupRoleRepository.save(professorRole)
+        val savedMemberRole = groupRoleRepository.save(memberRole)
 
         // 그룹 생성자를 OWNER로 추가
         val groupMember =
@@ -129,12 +123,17 @@ class GroupManagementService(
                 joinedAt = LocalDateTime.now(),
             )
         groupMemberRepository.save(groupMember)
+
+        return Triple(savedOwnerRole, savedProfessorRole, savedMemberRole)
     }
 
     private fun createDefaultChannels(
         group: Group,
-        owner: User,
+        roles: Triple<GroupRole, GroupRole, GroupRole>,
     ) {
+        val (ownerRole, _, memberRole) = roles
+
+        // 공지 채널: OWNER만 작성, 모든 MEMBER 읽기
         val announcement =
             Channel(
                 group = group,
@@ -143,8 +142,25 @@ class GroupManagementService(
                 type = ChannelType.ANNOUNCEMENT,
                 isPrivate = false,
                 displayOrder = 0,
-                createdBy = owner,
+                createdBy = group.owner,
             )
+        val savedAnnouncement = channelRepository.save(announcement)
+
+        // 공지 채널 권한 바인딩
+        val announcementOwnerBinding = ChannelRoleBinding.create(
+            channel = savedAnnouncement,
+            groupRole = ownerRole,
+            permissions = setOf(ChannelPermission.CHANNEL_VIEW, ChannelPermission.POST_WRITE)
+        )
+        val announcementMemberBinding = ChannelRoleBinding.create(
+            channel = savedAnnouncement,
+            groupRole = memberRole,
+            permissions = setOf(ChannelPermission.CHANNEL_VIEW, ChannelPermission.POST_READ)
+        )
+        channelRoleBindingRepository.save(announcementOwnerBinding)
+        channelRoleBindingRepository.save(announcementMemberBinding)
+
+        // 자유 채널: 모든 MEMBER가 읽기/쓰기
         val free =
             Channel(
                 group = group,
@@ -153,10 +169,22 @@ class GroupManagementService(
                 type = ChannelType.TEXT,
                 isPrivate = false,
                 displayOrder = 1,
-                createdBy = owner,
+                createdBy = group.owner,
             )
-        channelRepository.save(announcement)
-        channelRepository.save(free)
+        val savedFree = channelRepository.save(free)
+
+        // 자유 채널 권한 바인딩
+        val freeMemberBinding = ChannelRoleBinding.create(
+            channel = savedFree,
+            groupRole = memberRole,
+            permissions = setOf(
+                ChannelPermission.CHANNEL_VIEW,
+                ChannelPermission.POST_READ,
+                ChannelPermission.POST_WRITE,
+                ChannelPermission.COMMENT_WRITE
+            )
+        )
+        channelRoleBindingRepository.save(freeMemberBinding)
     }
 
     fun getGroup(groupId: Long): GroupResponse {
@@ -309,7 +337,6 @@ class GroupManagementService(
                 workspaceRepository.deleteByGroupIds(chunk)
                 groupJoinRequestRepository.deleteByGroupIds(chunk)
                 subGroupRequestRepository.deleteByParentGroupIds(chunk)
-                groupMemberPermissionOverrideRepository.deleteByGroupIds(chunk)
                 groupMemberRepository.deleteByGroupIds(chunk)
                 groupRoleRepository.deleteByGroupIds(chunk)
             } catch (e: Exception) {

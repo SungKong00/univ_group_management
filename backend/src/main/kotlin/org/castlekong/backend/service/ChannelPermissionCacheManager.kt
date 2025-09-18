@@ -39,28 +39,6 @@ class ChannelPermissionCacheManager(
         logger.info("Invalidated cache for channel ${event.channelId}, new version: $newVersion")
     }
 
-    /**
-     * b) Template.permissions 변경 이벤트 처리
-     */
-    @EventListener
-    fun onTemplateChanged(event: TemplateChangedEvent) {
-        logger.debug("Processing TemplateChangedEvent: templateId=${event.templateId}, action=${event.action}")
-
-        // 해당 템플릿을 사용하는 모든 채널 조회
-        val affectedChannels = channelRoleBindingRepository.findChannelIdsByTemplateId(event.templateId)
-
-        if (affectedChannels.isNotEmpty()) {
-            // 영향받는 모든 채널의 버전 증가
-            val newVersions = permissionVersionService.incrementVersions(affectedChannels)
-
-            // 영향받는 모든 채널의 캐시 무효화
-            affectedChannels.forEach { channelId ->
-                evictChannelCache(channelId)
-            }
-
-            logger.info("Invalidated cache for ${affectedChannels.size} channels due to template ${event.templateId} change: $newVersions")
-        }
-    }
 
     /**
      * c) GroupRole membership(user↔role) 변경 이벤트 처리
@@ -85,21 +63,6 @@ class ChannelPermissionCacheManager(
         }
     }
 
-    /**
-     * d) Member override 변경 이벤트 처리
-     */
-    @EventListener
-    fun onMemberOverrideChanged(event: MemberOverrideChangedEvent) {
-        logger.debug("Processing MemberOverrideChangedEvent: channelId=${event.channelId}, userId=${event.userId}, action=${event.action}")
-
-        // 해당 채널의 권한 버전 증가
-        val newVersion = permissionVersionService.incrementVersion(event.channelId)
-
-        // 특정 사용자의 특정 채널 캐시만 무효화
-        evictUserChannelCache(event.channelId, event.userId)
-
-        logger.info("Invalidated cache for user ${event.userId} in channel ${event.channelId}, new version: $newVersion")
-    }
 
     /**
      * 특정 채널의 모든 사용자 캐시 무효화

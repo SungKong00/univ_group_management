@@ -4,7 +4,6 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import org.castlekong.backend.entity.GroupPermission
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
-import org.castlekong.backend.repository.GroupMemberPermissionOverrideRepository
 import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupRepository
 import org.springframework.stereotype.Service
@@ -14,7 +13,6 @@ import java.time.Duration
 class PermissionService(
     private val groupRepository: GroupRepository,
     private val groupMemberRepository: GroupMemberRepository,
-    private val overrideRepository: GroupMemberPermissionOverrideRepository,
 ) {
     private val cache =
         Caffeine.newBuilder()
@@ -55,8 +53,6 @@ class PermissionService(
         val member =
             groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
-        val base = if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions
-        val override = overrideRepository.findByGroupIdAndUserId(groupId, userId).orElse(null)
-        return if (override != null) base.plus(override.allowedPermissions).minus(override.deniedPermissions) else base
+        return if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions
     }
 }

@@ -1,7 +1,6 @@
 package org.castlekong.backend.security
 
 import org.castlekong.backend.entity.GroupPermission
-import org.castlekong.backend.repository.GroupMemberPermissionOverrideRepository
 import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.UserRepository
 import org.springframework.security.access.PermissionEvaluator
@@ -14,7 +13,6 @@ import java.io.Serializable
 class GroupPermissionEvaluator(
     private val userRepository: UserRepository,
     private val groupMemberRepository: GroupMemberRepository,
-    private val overrideRepository: GroupMemberPermissionOverrideRepository,
     private val permissionService: PermissionService,
 ) : PermissionEvaluator {
     override fun hasPermission(
@@ -43,8 +41,6 @@ class GroupPermissionEvaluator(
         // Currently only GROUP targetType is supported
         if (targetType != null && targetType != "GROUP") return false
 
-        val member = groupMemberRepository.findByGroupIdAndUserId(targetId, user.id).orElse(null) ?: return false
-
         val effective = permissionService.getEffective(targetId, user.id, ::systemRolePermissions)
         return effective.any { it.name == permission }
     }
@@ -52,31 +48,9 @@ class GroupPermissionEvaluator(
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> {
         return when (roleName.uppercase()) {
             "OWNER" -> GroupPermission.entries.toSet()
-            // ADVISOR: Full moderation and channel manage, but no group/role/member/recruitment management
-            "ADVISOR" ->
-                GroupPermission.entries
-                    .toSet()
-                    .minus(
-                        setOf(
-                            GroupPermission.GROUP_MANAGE,
-                            GroupPermission.ROLE_MANAGE,
-                            GroupPermission.MEMBER_APPROVE,
-                            GroupPermission.MEMBER_KICK,
-                            GroupPermission.RECRUITMENT_CREATE,
-                            GroupPermission.RECRUITMENT_UPDATE,
-                            GroupPermission.RECRUITMENT_DELETE,
-                        ),
-                    )
-            "MEMBER" ->
-                setOf(
-                    GroupPermission.CHANNEL_READ,
-                    GroupPermission.POST_READ,
-                    GroupPermission.POST_CREATE,
-                    GroupPermission.COMMENT_READ,
-                    GroupPermission.COMMENT_CREATE,
-                    GroupPermission.POST_UPDATE_OWN,
-                    GroupPermission.POST_DELETE_OWN,
-                )
+            // ADVISOR: 거의 모든 권한, 단 그룹장 위임 등 제한적 예외만 적용 (MVP에서는 동일)
+            "ADVISOR" -> GroupPermission.entries.toSet()
+            "MEMBER" -> setOf(GroupPermission.WORKSPACE_ACCESS)
             else -> emptySet()
         }
     }

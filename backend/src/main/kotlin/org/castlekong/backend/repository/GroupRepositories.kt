@@ -4,7 +4,6 @@ import org.castlekong.backend.entity.Group
 import org.castlekong.backend.entity.GroupJoinRequest
 import org.castlekong.backend.entity.GroupJoinRequestStatus
 import org.castlekong.backend.entity.GroupMember
-import org.castlekong.backend.entity.GroupMemberPermissionOverride
 import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.entity.GroupType
 import org.castlekong.backend.entity.GroupVisibility
@@ -251,17 +250,3 @@ interface SubGroupRequestRepository : JpaRepository<SubGroupRequest, Long> {
     ): Int
 }
 
-@Repository
-interface GroupMemberPermissionOverrideRepository : JpaRepository<GroupMemberPermissionOverride, Long> {
-    fun findByGroupIdAndUserId(
-        groupId: Long,
-        userId: Long,
-    ): Optional<GroupMemberPermissionOverride>
-
-    // 배치 삭제 메서드
-    @Modifying
-    @Query("DELETE FROM GroupMemberPermissionOverride gmpo WHERE gmpo.group.id IN :groupIds")
-    fun deleteByGroupIds(
-        @Param("groupIds") groupIds: List<Long>,
-    ): Int
-}

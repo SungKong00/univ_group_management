@@ -19,34 +19,13 @@ class ContentService(
     private val postRepository: PostRepository,
     private val commentRepository: CommentRepository,
     private val groupMemberRepository: GroupMemberRepository,
-    private val overrideRepository: GroupMemberPermissionOverrideRepository,
     private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> =
         when (roleName.uppercase()) {
             "OWNER" -> GroupPermission.entries.toSet()
-            "ADVISOR" ->
-                GroupPermission.entries
-                    .toSet()
-                    .minus(
-                        setOf(
-                            GroupPermission.GROUP_MANAGE,
-                            GroupPermission.ROLE_MANAGE,
-                            GroupPermission.MEMBER_APPROVE,
-                            GroupPermission.MEMBER_KICK,
-                            GroupPermission.RECRUITMENT_CREATE,
-                            GroupPermission.RECRUITMENT_UPDATE,
-                            GroupPermission.RECRUITMENT_DELETE,
-                        ),
-                    )
-            "MEMBER" ->
-                setOf(
-                    GroupPermission.CHANNEL_READ,
-                    GroupPermission.POST_READ,
-                    GroupPermission.POST_CREATE,
-                    GroupPermission.COMMENT_READ,
-                    GroupPermission.COMMENT_CREATE,
-                )
+            "ADVISOR" -> GroupPermission.entries.toSet() // MVP에서는 OWNER와 동일
+            "MEMBER" -> setOf(GroupPermission.WORKSPACE_ACCESS)
             else -> emptySet()
         }
 
@@ -163,7 +142,7 @@ class ContentService(
         val workspace =
             workspaceRepository.findById(workspaceId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
-        ensurePermission(workspace.group.id, requesterId, GroupPermission.CHANNEL_READ)
+        ensurePermission(workspace.group.id, requesterId, GroupPermission.WORKSPACE_ACCESS)
         return channelRepository.findByWorkspace_Id(workspaceId).map { toChannelResponse(it) }
     }
 
@@ -257,7 +236,7 @@ class ContentService(
         val channel =
             channelRepository.findById(channelId)
                 .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
-        ensurePermission(channel.group.id, requesterId, GroupPermission.POST_READ)
+        ensurePermission(channel.group.id, requesterId, GroupPermission.WORKSPACE_ACCESS)
         return postRepository.findByChannel_Id(channelId).map { toPostResponse(it) }
     }
 
@@ -268,7 +247,7 @@ class ContentService(
         val post =
             postRepository.findById(postId)
                 .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
-        ensurePermission(post.channel.group.id, requesterId, GroupPermission.POST_READ)
+        ensurePermission(post.channel.group.id, requesterId, GroupPermission.WORKSPACE_ACCESS)
         return toPostResponse(post)
     }
 
@@ -284,7 +263,7 @@ class ContentService(
         val author =
             userRepository.findById(authorId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
-        ensurePermission(channel.group.id, author.id, GroupPermission.POST_CREATE)
+        ensurePermission(channel.group.id, author.id, GroupPermission.WORKSPACE_ACCESS)
         val type = request.type?.let { runCatching { PostType.valueOf(it) }.getOrDefault(PostType.GENERAL) } ?: PostType.GENERAL
         val post =
             Post(
@@ -332,7 +311,7 @@ class ContentService(
             // allow moderators with POST_DELETE_ANY
             val groupId = post.channel.group.id
             val perms = getEffectivePermissions(groupId, requesterId)
-            if (!perms.contains(GroupPermission.POST_DELETE_ANY)) {
+            if (!perms.contains(GroupPermission.ADMIN_MANAGE)) {
                 throw BusinessException(ErrorCode.FORBIDDEN)
             }
         }
@@ -356,7 +335,7 @@ class ContentService(
         val post =
             postRepository.findById(postId)
                 .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
-        ensurePermission(post.channel.group.id, requesterId, GroupPermission.COMMENT_READ)
+        ensurePermission(post.channel.group.id, requesterId, GroupPermission.WORKSPACE_ACCESS)
         return commentRepository.findByPost_Id(postId).map { toCommentResponse(it) }
     }
 
@@ -372,7 +351,7 @@ class ContentService(
         val author =
             userRepository.findById(authorId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
-        ensurePermission(post.channel.group.id, author.id, GroupPermission.COMMENT_CREATE)
+        ensurePermission(post.channel.group.id, author.id, GroupPermission.WORKSPACE_ACCESS)
         val parent =
             request.parentCommentId?.let {
                 commentRepository.findById(it).orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }
@@ -483,9 +462,8 @@ class ContentService(
         if (group.owner.id == userId) return
         val member = groupMemberRepository.findByGroupIdAndUserId(groupId, userId).orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         val rolePerms = if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions
-        val override = overrideRepository.findByGroupIdAndUserId(groupId, userId).orElse(null)
-        val effective = if (override != null) rolePerms.plus(override.allowedPermissions).minus(override.deniedPermissions) else rolePerms
-        if (!effective.contains(GroupPermission.CHANNEL_MANAGE)) throw BusinessException(ErrorCode.FORBIDDEN)
+        // MVP 단순화: 오버라이드 제거, 역할 권한만 확인
+        if (!rolePerms.contains(GroupPermission.CHANNEL_MANAGE)) throw BusinessException(ErrorCode.FORBIDDEN)
     }
 
     // moved to top and expanded
