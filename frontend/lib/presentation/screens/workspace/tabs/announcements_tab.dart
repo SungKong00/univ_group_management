@@ -23,14 +23,7 @@ class AnnouncementsTab extends StatelessWidget {
             Expanded(
               child: announcements.isEmpty
                   ? _buildEmptyState(context)
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: announcements.length,
-                      itemBuilder: (context, index) {
-                        final announcement = announcements[index];
-                        return _buildAnnouncementCard(context, announcement);
-                      },
-                    ),
+                  : _buildAnnouncementsList(context, announcements),
             ),
 
             // 하단 입력창 (슬랙 스타일)
@@ -552,6 +545,88 @@ class AnnouncementsTab extends StatelessWidget {
     );
   }
 
+  Widget _buildAnnouncementsList(BuildContext context, List<PostModel> announcements) {
+    final groupedPosts = _groupPostsByDate(announcements);
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: groupedPosts.length,
+      itemBuilder: (context, index) {
+        final group = groupedPosts[index];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDateHeader(context, group.date),
+            ...group.posts.map((post) => _buildAnnouncementCard(context, post)),
+          ],
+        );
+      },
+    );
+  }
+
+  List<PostGroup> _groupPostsByDate(List<PostModel> posts) {
+    final Map<String, List<PostModel>> groups = {};
+
+    for (final post in posts) {
+      final dateKey = _formatDateKey(post.createdAt);
+      groups.putIfAbsent(dateKey, () => []).add(post);
+    }
+
+    return groups.entries.map((entry) =>
+      PostGroup(date: entry.key, posts: entry.value)
+    ).toList();
+  }
+
+  String _formatDateKey(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final postDate = DateTime(date.year, date.month, date.day);
+
+    if (postDate == today) {
+      return '오늘';
+    } else if (postDate == yesterday) {
+      return '어제';
+    } else {
+      return '${date.year}년 ${date.month}월 ${date.day}일';
+    }
+  }
+
+  Widget _buildDateHeader(BuildContext context, String dateLabel) {
+    return Container(
+      margin: const EdgeInsets.only(top: 16, bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Divider(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceVariant,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              dateLabel,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Divider(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
@@ -566,4 +641,11 @@ class AnnouncementsTab extends StatelessWidget {
       return '방금 전';
     }
   }
+}
+
+class PostGroup {
+  final String date;
+  final List<PostModel> posts;
+
+  PostGroup({required this.date, required this.posts});
 }

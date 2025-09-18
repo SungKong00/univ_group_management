@@ -44,7 +44,7 @@ class WorkspaceProvider extends ChangeNotifier {
   // 현재 워크스페이스의 공지사항 (정렬됨)
   List<PostModel> get announcements {
     final announcements = List<PostModel>.from(_currentWorkspace?.announcements ?? []);
-    announcements.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    announcements.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     return announcements;
   }
 
@@ -228,14 +228,14 @@ class WorkspaceProvider extends ChangeNotifier {
 
       // 현재 채널의 게시글이라면 목록에 추가
       if (_currentChannel?.id == channelId) {
-        _currentChannelPosts.insert(0, newPost);
+        _currentChannelPosts.add(newPost);
         notifyListeners();
       }
 
       // 공지사항이라면 워크스페이스 공지사항에도 추가
       if (type == PostType.announcement && _currentWorkspace != null) {
         final updatedAnnouncements = List<PostModel>.from(_currentWorkspace!.announcements);
-        updatedAnnouncements.insert(0, newPost);
+        updatedAnnouncements.add(newPost);
         _currentWorkspace = WorkspaceDetailModel(
           workspace: _currentWorkspace!.workspace,
           group: _currentWorkspace!.group,
