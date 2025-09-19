@@ -7,11 +7,19 @@ import '../../../../data/models/workspace_models.dart';
 class WorkspaceSidebar extends StatelessWidget {
   final WorkspaceDetailModel workspace;
   final double width;
+  final VoidCallback? onShowAdminHome;
+  final VoidCallback? onShowMemberManagement;
+  final VoidCallback? onShowChannelManagement;
+  final VoidCallback? onShowGroupInfo;
 
   const WorkspaceSidebar({
     super.key,
     required this.workspace,
     this.width = 280,
+    this.onShowAdminHome,
+    this.onShowMemberManagement,
+    this.onShowChannelManagement,
+    this.onShowGroupInfo,
   });
 
   @override
@@ -66,7 +74,7 @@ class WorkspaceSidebar extends StatelessWidget {
                               icon: Icons.admin_panel_settings,
                               label: '관리자 홈',
                               selected: false,
-                              onTap: () => _showAdminHome(context),
+                              onTap: onShowAdminHome ?? () {},
                             ),
                             if (workspace.canManageMembers)
                               _buildSidebarItem(
@@ -74,7 +82,7 @@ class WorkspaceSidebar extends StatelessWidget {
                                 icon: Icons.people_outline,
                                 label: '멤버 관리',
                                 selected: false,
-                                onTap: () => _showMemberManagement(context),
+                                onTap: onShowMemberManagement ?? () {},
                               ),
                             if (workspace.canManageChannels)
                               _buildSidebarItem(
@@ -82,14 +90,14 @@ class WorkspaceSidebar extends StatelessWidget {
                                 icon: Icons.tag,
                                 label: '채널 관리',
                                 selected: false,
-                                onTap: () => _showChannelManagement(context),
+                                onTap: onShowChannelManagement ?? () {},
                               ),
                             _buildSidebarItem(
                               context,
                               icon: Icons.info_outline,
                               label: '그룹 정보',
                               selected: false,
-                              onTap: () => _showGroupInfo(context),
+                              onTap: onShowGroupInfo ?? () {},
                             ),
                           ],
                         ),
@@ -212,19 +220,4 @@ class WorkspaceSidebar extends StatelessWidget {
     }
   }
 
-  void _showAdminHome(BuildContext context) {
-    // 관리자 홈으로 이동 (구현 필요)
-  }
-
-  void _showMemberManagement(BuildContext context) {
-    // 멤버 관리 화면으로 이동 (구현 필요)
-  }
-
-  void _showChannelManagement(BuildContext context) {
-    // 채널 관리 화면으로 이동 (구현 필요)
-  }
-
-  void _showGroupInfo(BuildContext context) {
-    // 그룹 정보 화면으로 이동 (구현 필요)
-  }
 }
