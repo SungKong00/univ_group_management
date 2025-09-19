@@ -195,13 +195,13 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
   }
 
   Widget _buildDesktopAppBar(BuildContext context, NavProvider nav) {
-    // 홈이 아닌 경우에만 뒤로가기 버튼 표시
-    final showBackButton = nav.index != 0;
-    // 그룹 탐색 모드 감지
+    // 뒤로가기 버튼을 숨겨야 하는 경우: 홈 탭의 기본 상태
+    final isHomeDefaultState = nav.index == 0 && !_showGroupExplorer && !_showHomeWorkspace;
+    final shouldShowBackButton = !isHomeDefaultState;
+
+    // 현재 상태 판별을 위한 조건들
     final isGroupExplorerMode = nav.index == 0 && _showGroupExplorer;
-    // 워크스페이스 모드 감지 (워크스페이스 탭 또는 홈 탭의 워크스페이스)
     final isWorkspaceMode = (nav.index == 1 && _showWorkspace) || (nav.index == 0 && _showHomeWorkspace);
-    // 홈 워크스페이스 모드 감지
     final isHomeWorkspaceMode = nav.index == 0 && _showHomeWorkspace;
 
     return Container(
@@ -214,8 +214,8 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
       ),
       child: Row(
         children: [
-          // 뒤로가기 버튼 (홈이 아니거나 그룹 탐색 모드 또는 워크스페이스 모드일 때 표시)
-          if (showBackButton || isGroupExplorerMode || isWorkspaceMode)
+          // 뒤로가기 버튼
+          if (shouldShowBackButton)
             Container(
               width: 60, // GlobalSidebar.width와 동일
               child: IconButton(
@@ -334,9 +334,40 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
   }
 
   PreferredSizeWidget _buildMobileAppBar(BuildContext context, AuthProvider auth, NavProvider nav) {
+    // 뒤로가기 버튼을 숨겨야 하는 경우: 홈 탭의 기본 상태
+    final isHomeDefaultState = nav.index == 0 && !_showGroupExplorer && !_showHomeWorkspace;
+    final shouldShowBackButton = !isHomeDefaultState;
+
+    // 현재 상태 판별을 위한 조건들
+    final isGroupExplorerMode = nav.index == 0 && _showGroupExplorer;
+    final isHomeWorkspaceMode = nav.index == 0 && _showHomeWorkspace;
+    final isWorkspaceTabMode = nav.index == 1 && _showWorkspace;
+
     return AppBar(
       toolbarHeight: 52,
       titleSpacing: 16,
+      automaticallyImplyLeading: false,
+      leading: shouldShowBackButton
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back, size: 20),
+              padding: const EdgeInsets.all(8),
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              onPressed: isGroupExplorerMode
+                  ? _navigateBackToHome
+                  : isHomeWorkspaceMode
+                      ? _navigateBackToHomeFromWorkspace
+                      : isWorkspaceTabMode
+                          ? _navigateBackToWorkspaceList
+                          : () => nav.setIndex(0),
+              tooltip: isGroupExplorerMode
+                  ? '홈으로'
+                  : isHomeWorkspaceMode
+                      ? '그룹 탐색으로'
+                      : isWorkspaceTabMode
+                          ? '워크스페이스로'
+                          : '홈으로',
+            )
+          : null,
       title: Text(
         _titles[nav.index],
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
