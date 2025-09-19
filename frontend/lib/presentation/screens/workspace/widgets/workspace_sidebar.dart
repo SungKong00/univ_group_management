@@ -11,6 +11,8 @@ class WorkspaceSidebar extends StatelessWidget {
   final VoidCallback? onShowMemberManagement;
   final VoidCallback? onShowChannelManagement;
   final VoidCallback? onShowGroupInfo;
+  final VoidCallback? onShowGroupHome;
+  final VoidCallback? onShowGroupCalendar;
 
   const WorkspaceSidebar({
     super.key,
@@ -20,6 +22,8 @@ class WorkspaceSidebar extends StatelessWidget {
     this.onShowMemberManagement,
     this.onShowChannelManagement,
     this.onShowGroupInfo,
+    this.onShowGroupHome,
+    this.onShowGroupCalendar,
   });
 
   @override
@@ -43,6 +47,26 @@ class WorkspaceSidebar extends StatelessWidget {
               horizontal: 12,
             ),
             children: [
+              _buildSection(
+                context,
+                title: '그룹 메뉴',
+                children: [
+                  _buildSidebarItem(
+                    context,
+                    icon: Icons.home_outlined,
+                    label: '그룹 홈',
+                    selected: false,
+                    onTap: onShowGroupHome ?? () => _showComingSoon(context),
+                  ),
+                  _buildSidebarItem(
+                    context,
+                    icon: Icons.calendar_today_outlined,
+                    label: '그룹 캘린더',
+                    selected: false,
+                    onTap: onShowGroupCalendar ?? () => _showComingSoon(context),
+                  ),
+                ],
+              ),
               _buildSection(
                 context,
                 title: 'Channels',
@@ -179,6 +203,15 @@ class WorkspaceSidebar extends StatelessWidget {
       case ChannelType.fileShare:
         return Icons.folder_copy_outlined;
     }
+  }
+
+  void _showComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('구현 예정입니다.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
 }
