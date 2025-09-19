@@ -212,7 +212,6 @@ class WorkspaceProvider extends ChangeNotifier {
   /// 새 게시글 생성
   Future<void> createPost({
     required int channelId,
-    required String title,
     required String content,
     PostType type = PostType.general,
     List<String> attachments = const [],
@@ -220,7 +219,6 @@ class WorkspaceProvider extends ChangeNotifier {
     try {
       final newPost = await _workspaceService.createPost(
         channelId: channelId,
-        title: title,
         content: content,
         type: type,
         attachments: attachments,
@@ -803,7 +801,6 @@ class WorkspaceProvider extends ChangeNotifier {
   /// 공지사항 작성
   Future<bool> createAnnouncement({
     required int groupId,
-    required String title,
     required String content,
   }) async {
     try {
@@ -812,7 +809,6 @@ class WorkspaceProvider extends ChangeNotifier {
 
       await _workspaceService.createAnnouncement(
         groupId: groupId,
-        title: title,
         content: content,
       );
 

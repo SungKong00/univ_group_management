@@ -531,14 +531,12 @@ class WorkspaceService {
   /// 게시글 생성
   Future<PostModel> createPost({
     required int channelId,
-    required String title,
     required String content,
     PostType type = PostType.general,
     List<String> attachments = const [],
   }) async {
     try {
       final response = await _dioClient.post('/channels/$channelId/posts', data: {
-        'title': title,
         'content': content,
         'type': type.name.toUpperCase(),
         'attachments': attachments,
@@ -680,7 +678,6 @@ class WorkspaceService {
   /// 공지사항 작성
   Future<void> createAnnouncement({
     required int groupId,
-    required String title,
     required String content,
   }) async {
     try {
@@ -705,7 +702,6 @@ class WorkspaceService {
 
       // 게시글 작성 API 호출
       final response = await _dioClient.post('/channels/$channelId/posts', data: {
-        'title': title,
         'content': content,
         'type': 'ANNOUNCEMENT',
       });

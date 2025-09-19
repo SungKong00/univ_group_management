@@ -133,7 +133,6 @@ class PostModel {
   final int id;
   final int channelId;
   final UserSummaryModel author;
-  final String title;
   final String content;
   final PostType type;
   final bool isPinned;
@@ -147,7 +146,6 @@ class PostModel {
     required this.id,
     required this.channelId,
     required this.author,
-    required this.title,
     required this.content,
     required this.type,
     required this.isPinned,
@@ -163,7 +161,6 @@ class PostModel {
       id: (json['id'] ?? 0) as int,
       channelId: (json['channelId'] ?? 0) as int,
       author: UserSummaryModel.fromJson(json['author'] ?? {}),
-      title: (json['title'] ?? '').toString(),
       content: (json['content'] ?? '').toString(),
       type: _parsePostType(json['type']?.toString()),
       isPinned: json['isPinned'] == true,
@@ -182,7 +179,6 @@ class PostModel {
       'id': id,
       'channelId': channelId,
       'author': author.toJson(),
-      'title': title,
       'content': content,
       'type': type.name.toUpperCase(),
       'isPinned': isPinned,

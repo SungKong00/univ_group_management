@@ -143,13 +143,6 @@ class AnnouncementsView extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            if (announcement.title.isNotEmpty) ...[
-              Text(
-                announcement.title,
-                style: textTheme.titleLarge?.copyWith(fontSize: 17),
-              ),
-              const SizedBox(height: 8),
-            ],
             Text(
               announcement.content,
               style: textTheme.bodyMedium,
@@ -256,7 +249,7 @@ class AnnouncementsView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                announcement.title.isNotEmpty ? announcement.title : '공지',
+                '공지사항',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),

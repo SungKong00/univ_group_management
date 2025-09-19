@@ -118,15 +118,6 @@ class AnnouncementsTab extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                announcement.title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              Text(
                 announcement.content,
                 style: Theme.of(context).textTheme.bodyMedium,
                 maxLines: 3,
@@ -254,14 +245,6 @@ class AnnouncementsTab extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Title
-              Text(
-                announcement.title,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
 
               // Author
               Row(
@@ -310,9 +293,7 @@ class AnnouncementsTab extends StatelessWidget {
 
   // 슬랙 스타일 채팅 입력창
   Widget _buildChatInputBar(BuildContext context) {
-    final titleController = TextEditingController();
     final contentController = TextEditingController();
-    bool isExpanded = false;
 
     return StatefulBuilder(
       builder: (context, setState) {
@@ -327,105 +308,34 @@ class AnnouncementsTab extends StatelessWidget {
             ),
           ),
           padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
             children: [
-              // 제목 입력 (확장 시에만 표시)
-              if (isExpanded) ...[
-                TextField(
-                  controller: titleController,
+              Expanded(
+                child: TextField(
+                  controller: contentController,
                   decoration: InputDecoration(
-                    hintText: '공지사항 제목',
+                    hintText: '공지사항을 입력하세요...',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(24),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                      horizontal: 16,
+                      vertical: 12,
                     ),
                   ),
-                  maxLength: 100,
+                  maxLines: 3,
+                  maxLength: 1000,
                 ),
-                const SizedBox(height: 8),
-              ],
-
-              // 메인 입력창
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: contentController,
-                      decoration: InputDecoration(
-                        hintText: isExpanded ? '공지사항 내용을 입력하세요...' : '공지사항을 입력하세요...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        suffixIcon: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (!isExpanded)
-                              IconButton(
-                                icon: const Icon(Icons.expand_less),
-                                onPressed: () => setState(() => isExpanded = true),
-                                tooltip: '상세 입력',
-                              ),
-                            if (isExpanded)
-                              IconButton(
-                                icon: const Icon(Icons.expand_more),
-                                onPressed: () => setState(() => isExpanded = false),
-                                tooltip: '간단 입력',
-                              ),
-                          ],
-                        ),
-                      ),
-                      maxLines: isExpanded ? 3 : 1,
-                      onTap: () {
-                        if (!isExpanded) {
-                          setState(() => isExpanded = true);
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // 전송 버튼
-                  FloatingActionButton.small(
-                    onPressed: () => _sendAnnouncement(
-                      context,
-                      titleController,
-                      contentController,
-                      isExpanded,
-                    ),
-                    child: const Icon(Icons.send),
-                  ),
-                ],
               ),
-
-              // 확장 시 추가 버튼들
-              if (isExpanded) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: () {
-                        titleController.clear();
-                        contentController.clear();
-                        setState(() => isExpanded = false);
-                      },
-                      icon: const Icon(Icons.clear),
-                      label: const Text('취소'),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${contentController.text.length}/1000',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+              const SizedBox(width: 8),
+              // 전송 버튼
+              FloatingActionButton.small(
+                onPressed: () => _sendAnnouncement(
+                  context,
+                  contentController,
                 ),
-              ],
+                child: const Icon(Icons.send),
+              ),
             ],
           ),
         );
@@ -435,9 +345,7 @@ class AnnouncementsTab extends StatelessWidget {
 
   void _sendAnnouncement(
     BuildContext context,
-    TextEditingController titleController,
     TextEditingController contentController,
-    bool isExpanded,
   ) async {
     final content = contentController.text.trim();
     if (content.isEmpty) {
@@ -447,19 +355,13 @@ class AnnouncementsTab extends StatelessWidget {
       return;
     }
 
-    final title = isExpanded && titleController.text.trim().isNotEmpty
-        ? titleController.text.trim()
-        : '공지사항'; // 기본 제목
-
     try {
       final provider = context.read<WorkspaceProvider>();
       await provider.createAnnouncement(
         groupId: workspace.group.id,
-        title: title,
         content: content,
       );
 
-      titleController.clear();
       contentController.clear();
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -532,7 +434,6 @@ class AnnouncementsTab extends StatelessWidget {
               if (announcementChannel != null) {
                 await provider.createPost(
                   channelId: announcementChannel.id,
-                  title: titleController.text.trim(),
                   content: contentController.text.trim(),
                   type: PostType.announcement,
                 );

@@ -304,7 +304,6 @@ class ContentService(
             Post(
                 channel = channel,
                 author = author,
-                title = request.title ?: "",
                 content = request.content,
                 type = type,
             )
@@ -326,7 +325,6 @@ class ContentService(
         val type = request.type?.let { runCatching { PostType.valueOf(it) }.getOrNull() } ?: post.type
         val updated =
             post.copy(
-                title = request.title ?: post.title,
                 content = request.content ?: post.content,
                 type = type,
                 updatedAt = LocalDateTime.now(),
@@ -464,7 +462,6 @@ class ContentService(
             id = post.id,
             channelId = post.channel.id,
             author = toUserSummaryResponse(post.author),
-            title = post.title,
             content = post.content,
             type = post.type.name,
             isPinned = post.isPinned,

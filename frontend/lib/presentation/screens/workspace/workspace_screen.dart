@@ -30,27 +30,15 @@ class WorkspaceScreen extends StatefulWidget {
   State<WorkspaceScreen> createState() => _WorkspaceScreenState();
 }
 
-class _WorkspaceScreenState extends State<WorkspaceScreen>
-    with TickerProviderStateMixin {
-  late TabController _tabController;
-
+class _WorkspaceScreenState extends State<WorkspaceScreen> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
 
     // 워크스페이스 데이터 로드 및 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<WorkspaceProvider>();
       provider.reset();
-
-      // Provider에 탭 컨트롤러 동기화
-      _tabController.addListener(() {
-        if (!_tabController.indexIsChanging) {
-          provider.setTabIndex(_tabController.index);
-        }
-      });
-
       provider.loadWorkspace(widget.groupId);
     });
   }
@@ -58,7 +46,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
   @override
   void dispose() {
     context.read<WorkspaceProvider>().exitChannel();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -395,6 +382,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
+                  // 공지사항 (기본)
+                  buildTile(
+                    icon: Icons.campaign,
+                    label: '공지사항',
+                    selected: selectedChannelId == null,
+                    onTap: () => provider.exitChannel(),
+                  ),
+                  const Divider(),
+                  // 채널 목록
                   ...channels.map(
                     (channel) => buildTile(
                       icon: _channelIconFor(channel),
@@ -549,7 +545,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
 
 
   void _showCreateAnnouncementDialog(BuildContext context) {
-    final titleController = TextEditingController();
     final contentController = TextEditingController();
 
     showDialog(
@@ -558,28 +553,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
         title: const Text('공지사항 작성'),
         content: SizedBox(
           width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: '제목',
-                  border: OutlineInputBorder(),
-                ),
-                maxLength: 100,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: contentController,
-                decoration: const InputDecoration(
-                  labelText: '내용',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 6,
-                maxLength: 1000,
-              ),
-            ],
+          child: TextField(
+            controller: contentController,
+            decoration: const InputDecoration(
+              labelText: '내용',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 6,
+            maxLength: 1000,
           ),
         ),
         actions: [
@@ -589,11 +570,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
           ),
           ElevatedButton(
             onPressed: () async {
-              final title = titleController.text.trim();
               final content = contentController.text.trim();
-              if (title.isEmpty || content.isEmpty) {
+              if (content.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('제목과 내용을 모두 입력해주세요')),
+                  const SnackBar(content: Text('내용을 입력해주세요')),
                 );
                 return;
               }
@@ -611,7 +591,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
 
               await provider.createPost(
                 channelId: announcementChannel.id,
-                title: title,
                 content: content,
                 type: PostType.announcement,
               );
@@ -647,23 +626,75 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
     WorkspaceProvider provider,
     WorkspaceDetailModel workspace,
   ) {
-    return NestedScrollView(
-      headerSliverBuilder: (context, innerBoxIsScrolled) => [
-        _buildAppBar(context, workspace),
-        _buildTabBar(),
-      ],
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          AnnouncementsTab(workspace: workspace),
-          ChannelsTab(workspace: workspace),
-          MembersTab(workspace: workspace),
-        ],
-      ),
+    final channel = provider.currentChannel;
+    return Scaffold(
+      appBar: _buildMobileAppBar(context, workspace),
+      drawer: _buildMobileDrawer(context, provider, workspace),
+      body: channel == null
+          ? AnnouncementsView(
+              workspace: workspace,
+              announcements: provider.announcements,
+              onCreateAnnouncement: workspace.canCreateAnnouncements ? () => _showCreateAnnouncementDialog(context) : null,
+            )
+          : ChannelDetailView(
+              channel: channel,
+              autoLoad: false,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
     );
   }
 
-  Widget _buildAppBar(BuildContext context, WorkspaceDetailModel workspace) {
+  AppBar _buildMobileAppBar(BuildContext context, WorkspaceDetailModel workspace) {
+    return AppBar(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      foregroundColor: Theme.of(context).colorScheme.onSurface,
+      elevation: 1,
+      leading: Builder(
+        builder: (ctx) => IconButton(
+          icon: const Icon(Icons.menu),
+          tooltip: '메뉴',
+          onPressed: () => Scaffold.of(ctx).openDrawer(),
+        ),
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            workspace.group.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+            ),
+          ),
+          if (workspace.myMembership != null)
+            Text(
+              _roleDisplayName(workspace.myMembership!.role.name),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+        ],
+      ),
+      actions: [
+        if (workspace.canManage)
+          IconButton(
+            onPressed: () => _showManagementMenu(context, workspace),
+            icon: const Icon(Icons.settings),
+            tooltip: '관리',
+          ),
+        IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.close),
+          tooltip: '닫기',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOldAppBar(BuildContext context, WorkspaceDetailModel workspace) {
     return SliverAppBar(
       floating: true,
       pinned: true,
@@ -722,25 +753,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
     );
   }
 
-  Widget _buildTabBar() {
-    return SliverPersistentHeader(
-      pinned: true,
-      delegate: _SliverTabBarDelegate(
-        TabBar(
-          controller: _tabController,
-          indicatorColor: Theme.of(context).colorScheme.primary,
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          indicatorWeight: 3,
-          tabs: const [
-            Tab(text: '공지'),
-            Tab(text: '채널'),
-            Tab(text: '멤버'),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showManagementMenu(
     BuildContext context,
@@ -849,30 +861,4 @@ class _WorkspaceScreenState extends State<WorkspaceScreen>
   }
 }
 
-class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
 
-  _SliverTabBarDelegate(this._tabBar);
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height;
-
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      child: _tabBar,
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      false;
-}

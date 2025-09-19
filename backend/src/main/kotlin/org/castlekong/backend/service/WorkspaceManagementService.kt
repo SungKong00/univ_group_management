@@ -46,7 +46,6 @@ class WorkspaceManagementService(
                             id = post.id,
                             channelId = post.channel.id,
                             author = groupMapper.toUserSummaryResponse(post.author),
-                            title = post.title ?: "",
                             content = post.content,
                             type = post.type.name,
                             isPinned = post.isPinned,

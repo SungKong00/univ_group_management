@@ -245,15 +245,6 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             ],
           ),
           const SizedBox(height: 8),
-          if (post.title.isNotEmpty) ...[
-            Text(
-              post.title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-          ],
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
@@ -574,7 +565,6 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     try {
       await provider.createPost(
         channelId: widget.channel.id,
-        title: '',
         content: message,
         type: PostType.general,
       );

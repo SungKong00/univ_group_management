@@ -15,8 +15,6 @@ data class Post(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     val author: User,
-    @Column(nullable = false, length = 200)
-    val title: String,
     @Column(nullable = false, columnDefinition = "TEXT")
     val content: String,
     @Enumerated(EnumType.STRING)

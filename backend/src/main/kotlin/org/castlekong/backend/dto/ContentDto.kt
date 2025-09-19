@@ -57,14 +57,12 @@ data class ChannelResponse(
 
 // Post DTOs
 data class CreatePostRequest(
-    val title: String? = null,
     @field:NotBlank(message = "내용은 필수입니다")
     val content: String,
     val type: String? = null,
 )
 
 data class UpdatePostRequest(
-    val title: String? = null,
     val content: String? = null,
     val type: String? = null,
 )
@@ -73,7 +71,6 @@ data class PostResponse(
     val id: Long,
     val channelId: Long,
     val author: UserSummaryResponse,
-    val title: String,
     val content: String,
     val type: String,
     val isPinned: Boolean,
