@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../providers/workspace_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../../data/models/workspace_models.dart';
 
@@ -11,6 +9,7 @@ class WorkspaceHeader extends StatelessWidget {
   final VoidCallback? onShowMembers;
   final VoidCallback? onShowChannelInfo;
   final VoidCallback? onShowManagement;
+  final double sidebarWidth;
 
   const WorkspaceHeader({
     super.key,
@@ -20,93 +19,73 @@ class WorkspaceHeader extends StatelessWidget {
     this.onShowMembers,
     this.onShowChannelInfo,
     this.onShowManagement,
+    this.sidebarWidth = 280,
   });
 
   @override
   Widget build(BuildContext context) {
-    final showingAnnouncements = channel == null;
-    final provider = context.read<WorkspaceProvider>();
+    const double backButtonWidth = 36;
+    const double gapBetweenBackAndDropdown = 8;
+    const double horizontalPadding = 16;
+    final double availableWidth = sidebarWidth - horizontalPadding;
+    final double dropdownWidth =
+        (availableWidth - backButtonWidth - gapBetweenBackAndDropdown)
+            .clamp(0.0, availableWidth);
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: const BoxDecoration(
         color: AppTheme.background,
         border: Border(bottom: BorderSide(color: AppTheme.divider)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 사이드바가 숨겨져 있을 때만 토글 버튼 표시
-          if (!provider.isSidebarVisible) ...[
-            IconButton(
-              onPressed: provider.toggleSidebar,
-              icon: const Icon(Icons.menu, color: AppTheme.onTextSecondary),
-              tooltip: '사이드바 보기',
-            ),
-            const SizedBox(width: 8),
-          ],
+          // 뒤로가기 버튼 (최우선 배치) - 크기 축소
           IconButton(
             onPressed: onBack,
-            icon: const Icon(Icons.arrow_back, color: AppTheme.onTextSecondary),
+            icon: const Icon(Icons.arrow_back,
+                color: AppTheme.onTextSecondary, size: 20),
             tooltip: '뒤로가기',
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
           const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 6,
-                  children: [
-                    _breadcrumbText(context, workspace.group.name),
-                    const Text('›', style: TextStyle(color: AppTheme.onTextSecondary)),
-                    _breadcrumbText(context, showingAnnouncements ? '공지사항' : channel!.name),
-                    if (!showingAnnouncements)
-                      Text(
-                        ' #${channel!.name}',
-                        style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
-                ),
-                if (showingAnnouncements && (workspace.workspace.description?.isNotEmpty ?? false))
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      workspace.workspace.description!,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-              ],
-            ),
+          // 그룹명 드롭다운 (사이드바 폭에 맞춘 너비 유지)
+          SizedBox(
+            width: dropdownWidth,
+            child: _buildGroupDropdown(context),
           ),
+          // 여백
+          const Spacer(),
+          // 우측 버튼들
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 6,
+            runSpacing: 6,
             children: [
               if (onShowMembers != null)
                 TextButton.icon(
                   onPressed: onShowMembers,
-                  icon: const Icon(Icons.group_outlined, size: 18, color: AppTheme.onTextSecondary),
+                  icon: const Icon(Icons.group_outlined,
+                      size: 16, color: AppTheme.onTextSecondary),
                   label: const Text('멤버 보기'),
-                  style: _pillButtonStyle(),
+                  style: _pillButtonStyle(context),
                 ),
               if (onShowChannelInfo != null)
                 TextButton.icon(
                   onPressed: channel != null ? onShowChannelInfo : null,
-                  icon: const Icon(Icons.info_outline, size: 18, color: AppTheme.onTextSecondary),
+                  icon: const Icon(Icons.info_outline,
+                      size: 16, color: AppTheme.onTextSecondary),
                   label: const Text('채널 정보'),
-                  style: _pillButtonStyle(),
+                  style: _pillButtonStyle(context),
                 ),
               if (onShowManagement != null)
                 TextButton.icon(
                   onPressed: onShowManagement,
-                  icon: const Icon(Icons.more_horiz, size: 18, color: AppTheme.onTextSecondary),
+                  icon: const Icon(Icons.more_horiz,
+                      size: 16, color: AppTheme.onTextSecondary),
                   label: const Text('더보기'),
-                  style: _pillButtonStyle(),
+                  style: _pillButtonStyle(context),
                 ),
             ],
           ),
@@ -115,26 +94,110 @@ class WorkspaceHeader extends StatelessWidget {
     );
   }
 
-  ButtonStyle _pillButtonStyle() {
+  Widget _buildGroupDropdown(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () {
+          _showGroupSelectionBottomSheet(context);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.border),
+          ),
+          child: Row(
+            children: [
+              // 그룹 아이콘
+              Icon(
+                Icons.groups,
+                size: 16,
+                color: AppTheme.primary,
+              ),
+              const SizedBox(width: 8),
+              // 그룹명
+              Expanded(
+                child: Text(
+                  workspace.group.name,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primary,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              // 드롭다운 화살표
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 16,
+                color: AppTheme.onTextSecondary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showGroupSelectionBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '그룹 선택',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '현재: ${workspace.group.name}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '그룹 이동 기능은 곧 추가될 예정입니다.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.onTextSecondary,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  ButtonStyle _pillButtonStyle(BuildContext context) {
     return TextButton.styleFrom(
       backgroundColor: AppTheme.surface,
       foregroundColor: AppTheme.onTextSecondary,
       disabledForegroundColor: AppTheme.onTextSecondary.withOpacity(0.4),
       disabledBackgroundColor: AppTheme.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      minimumSize: const Size(0, 30),
+      textStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         side: const BorderSide(color: AppTheme.border),
       ),
-    );
-  }
-
-  Widget _breadcrumbText(BuildContext context, String text) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppTheme.onTextSecondary,
-          ),
     );
   }
 }

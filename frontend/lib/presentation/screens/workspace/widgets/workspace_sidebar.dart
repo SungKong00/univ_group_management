@@ -31,80 +31,70 @@ class WorkspaceSidebar extends StatelessWidget {
 
         return Container(
           width: width,
-          color: AppTheme.surface,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          decoration: const BoxDecoration(
+            color: AppTheme.surface,
+            border: Border(
+              right: BorderSide(color: AppTheme.border),
+            ),
+          ),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(
+              vertical: 12,
+              horizontal: 12,
+            ),
             children: [
-              _buildHeader(context, provider),
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      right: BorderSide(color: AppTheme.border),
+              _buildSection(
+                context,
+                title: 'Channels',
+                children: [
+                  ...channels.map(
+                    (channel) => _buildSidebarItem(
+                      context,
+                      icon: _getChannelIcon(channel),
+                      label: channel.name,
+                      selected: selectedChannelId == channel.id,
+                      onTap: () => provider.selectChannel(channel),
                     ),
                   ),
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 12,
-                    ),
-                    children: [
-                      _buildSection(
-                        context,
-                        title: 'Channels',
-                        children: [
-                          ...channels.map(
-                            (channel) => _buildSidebarItem(
-                              context,
-                              icon: _getChannelIcon(channel),
-                              label: channel.name,
-                              selected: selectedChannelId == channel.id,
-                              onTap: () => provider.selectChannel(channel),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (workspace.canManageMembers || workspace.canManageChannels)
-                        _buildSection(
-                          context,
-                          title: '관리자 기능',
-                          children: [
-                            _buildSidebarItem(
-                              context,
-                              icon: Icons.admin_panel_settings,
-                              label: '관리자 홈',
-                              selected: false,
-                              onTap: onShowAdminHome ?? () {},
-                            ),
-                            if (workspace.canManageMembers)
-                              _buildSidebarItem(
-                                context,
-                                icon: Icons.people_outline,
-                                label: '멤버 관리',
-                                selected: false,
-                                onTap: onShowMemberManagement ?? () {},
-                              ),
-                            if (workspace.canManageChannels)
-                              _buildSidebarItem(
-                                context,
-                                icon: Icons.tag,
-                                label: '채널 관리',
-                                selected: false,
-                                onTap: onShowChannelManagement ?? () {},
-                              ),
-                            _buildSidebarItem(
-                              context,
-                              icon: Icons.info_outline,
-                              label: '그룹 정보',
-                              selected: false,
-                              onTap: onShowGroupInfo ?? () {},
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
+                ],
               ),
+              if (workspace.canManageMembers || workspace.canManageChannels)
+                _buildSection(
+                  context,
+                  title: '관리자 기능',
+                  children: [
+                    _buildSidebarItem(
+                      context,
+                      icon: Icons.admin_panel_settings,
+                      label: '관리자 홈',
+                      selected: false,
+                      onTap: onShowAdminHome ?? () {},
+                    ),
+                    if (workspace.canManageMembers)
+                      _buildSidebarItem(
+                        context,
+                        icon: Icons.people_outline,
+                        label: '멤버 관리',
+                        selected: false,
+                        onTap: onShowMemberManagement ?? () {},
+                      ),
+                    if (workspace.canManageChannels)
+                      _buildSidebarItem(
+                        context,
+                        icon: Icons.tag,
+                        label: '채널 관리',
+                        selected: false,
+                        onTap: onShowChannelManagement ?? () {},
+                      ),
+                    _buildSidebarItem(
+                      context,
+                      icon: Icons.info_outline,
+                      label: '그룹 정보',
+                      selected: false,
+                      onTap: onShowGroupInfo ?? () {},
+                    ),
+                  ],
+                ),
             ],
           ),
         );
@@ -112,35 +102,6 @@ class WorkspaceSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, WorkspaceProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        border: Border(
-          right: BorderSide(color: AppTheme.border),
-          bottom: BorderSide(color: AppTheme.border),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              workspace.group.name,
-              style: Theme.of(context).textTheme.titleLarge,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          IconButton(
-            onPressed: provider.toggleSidebar,
-            icon: const Icon(Icons.close, size: 20),
-            tooltip: '사이드바 닫기',
-            padding: const EdgeInsets.all(4),
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSection(
     BuildContext context, {

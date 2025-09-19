@@ -79,8 +79,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             body: workspace == null
                 ? _buildEmptyState(workspaceProvider)
                 : isDesktop
-                    ? _buildDesktopWorkspace(context, workspaceProvider, workspace)
-                    : _buildMobileWorkspace(context, workspaceProvider, workspace),
+                    ? _buildDesktopWorkspace(
+                        context, workspaceProvider, workspace)
+                    : _buildMobileWorkspace(
+                        context, workspaceProvider, workspace),
           ),
         );
       },
@@ -107,8 +109,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             Text(
               provider.error!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -207,79 +209,52 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final showSidebar = provider.isSidebarVisible;
-        final isOverlaySidebar = constraints.maxWidth < 900;
         const double sidebarWidth = 280;
+        final channel = provider.currentChannel;
 
-        return Stack(
+        return Column(
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              margin: EdgeInsets.only(
-                left: !isOverlaySidebar && showSidebar ? sidebarWidth : 0,
-              ),
-              child: _buildDesktopMainArea(context, provider, workspace),
+            // 상단바 (전체 너비 차지)
+            WorkspaceHeader(
+              workspace: workspace,
+              channel: channel,
+              onBack: _navigateBack,
+              onShowMembers: () => _showMembersSheet(context, workspace),
+              onShowChannelInfo: channel != null
+                  ? () => _showChannelInfo(context, channel)
+                  : null,
+              onShowManagement: () => _showManagementMenu(context, workspace),
+              sidebarWidth: sidebarWidth,
             ),
-            if (showSidebar) ...[
-              if (isOverlaySidebar) ...[
-                // 작은 화면: 오버레이 배경
-                GestureDetector(
-                  onTap: () => provider.setSidebarVisible(false),
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    color: Colors.black.withOpacity(0.3),
-                  ),
-                ),
-                // 작은 화면: 사이드바 본체
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
+            // 하단 영역 (사이드바 + 메인 컨텐츠)
+            Expanded(
+              child: Row(
+                children: [
+                  // 고정 사이드바
+                  SizedBox(
                     width: sidebarWidth,
-                    decoration: const BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10,
-                          offset: Offset(2, 0),
-                        ),
-                      ],
-                    ),
                     child: WorkspaceSidebar(
                       workspace: workspace,
                       onShowAdminHome: () => _showAdminHome(context, workspace),
-                      onShowMemberManagement: () => _showMemberManagement(context),
-                      onShowChannelManagement: () => _showChannelManagement(context),
+                      onShowMemberManagement: () =>
+                          _showMemberManagement(context),
+                      onShowChannelManagement: () =>
+                          _showChannelManagement(context),
                       onShowGroupInfo: () => _showGroupInfo(context),
                     ),
                   ),
-                ),
-              ] else ...[
-                // 큰 화면: 고정 사이드바
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: WorkspaceSidebar(
-                    workspace: workspace,
-                    onShowAdminHome: () => _showAdminHome(context, workspace),
-                    onShowMemberManagement: () => _showMemberManagement(context),
-                    onShowChannelManagement: () => _showChannelManagement(context),
-                    onShowGroupInfo: () => _showGroupInfo(context),
+                  // 메인 컨텐츠 영역
+                  Expanded(
+                    child: _buildDesktopMainArea(context, provider, workspace),
                   ),
-                ),
-              ],
-            ],
+                ],
+              ),
+            ),
           ],
         );
       },
     );
   }
-
-
 
   Widget _buildDesktopMainArea(
     BuildContext context,
@@ -287,34 +262,21 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     WorkspaceDetailModel workspace,
   ) {
     final channel = provider.currentChannel;
-    return Column(
-      children: [
-        WorkspaceHeader(
-          workspace: workspace,
-          channel: channel,
-          onBack: _navigateBack,
-          onShowMembers: () => _showMembersSheet(context, workspace),
-          onShowChannelInfo: channel != null ? () => _showChannelInfo(context, channel) : null,
-          onShowManagement: () => _showManagementMenu(context, workspace),
-        ),
-        Expanded(
-          child: channel == null
-              ? AnnouncementsView(
-                  workspace: workspace,
-                  announcements: provider.announcements,
-                  onCreateAnnouncement: workspace.canCreateAnnouncements ? () => _showCreateAnnouncementDialog(context) : null,
-                )
-              : ChannelDetailView(
-                  channel: channel,
-                  autoLoad: false,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                ),
-        ),
-      ],
-    );
+    return channel == null
+        ? AnnouncementsView(
+            workspace: workspace,
+            announcements: provider.announcements,
+            onCreateAnnouncement: workspace.canCreateAnnouncements
+                ? () => _showCreateAnnouncementDialog(context)
+                : null,
+          )
+        : ChannelDetailView(
+            channel: channel,
+            autoLoad: false,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          );
   }
-
-
 
   IconData _channelIconFor(ChannelModel channel) {
     switch (channel.type) {
@@ -344,7 +306,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       required VoidCallback onTap,
     }) {
       final theme = Theme.of(context);
-      final color = selected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant;
+      final color = selected
+          ? theme.colorScheme.primary
+          : theme.colorScheme.onSurfaceVariant;
       return ListTile(
         leading: Icon(icon, color: color),
         title: Text(
@@ -462,7 +426,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               const SizedBox(height: 20),
               Text(
                 '멤버 ${members.length}명',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -477,7 +444,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           return ListTile(
                             leading: CircleAvatar(
                               radius: 18,
-                              child: Text(member.user.name.isNotEmpty ? member.user.name[0] : '?'),
+                              child: Text(member.user.name.isNotEmpty
+                                  ? member.user.name[0]
+                                  : '?'),
                             ),
                             title: Text(member.user.name),
                             subtitle: Text(roleName),
@@ -521,14 +490,20 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             const SizedBox(height: 20),
             Text(
               channel.name,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
-            Text('유형: ${channel.typeDisplayName}', style: Theme.of(context).textTheme.bodySmall),
+            Text('유형: ${channel.typeDisplayName}',
+                style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 8),
-            Text('생성자: ${channel.createdBy.name}', style: Theme.of(context).textTheme.bodySmall),
+            Text('생성자: ${channel.createdBy.name}',
+                style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 8),
-            Text('생성일: ${_formatDateTime(channel.createdAt)}', style: Theme.of(context).textTheme.bodySmall),
+            Text('생성일: ${_formatDateTime(channel.createdAt)}',
+                style: Theme.of(context).textTheme.bodySmall),
             if (channel.description?.isNotEmpty ?? false) ...[
               const SizedBox(height: 16),
               Text(
@@ -542,7 +517,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       ),
     );
   }
-
 
   void _showCreateAnnouncementDialog(BuildContext context) {
     final contentController = TextEditingController();
@@ -580,7 +554,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
               Navigator.pop(context);
               final provider = context.read<WorkspaceProvider>();
-              final announcementChannel = _findAnnouncementChannel(provider.channels);
+              final announcementChannel =
+                  _findAnnouncementChannel(provider.channels);
 
               if (announcementChannel == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -617,7 +592,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   String _formatDateTime(DateTime date) {
     final datePart = _formatDate(date);
-    final timePart = '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    final timePart =
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     return '$datePart $timePart';
   }
 
@@ -634,25 +610,32 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           ? AnnouncementsView(
               workspace: workspace,
               announcements: provider.announcements,
-              onCreateAnnouncement: workspace.canCreateAnnouncements ? () => _showCreateAnnouncementDialog(context) : null,
+              onCreateAnnouncement: workspace.canCreateAnnouncements
+                  ? () => _showCreateAnnouncementDialog(context)
+                  : null,
             )
           : ChannelDetailView(
               channel: channel,
               autoLoad: false,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
     );
   }
 
-  AppBar _buildMobileAppBar(BuildContext context, WorkspaceDetailModel workspace) {
+  AppBar _buildMobileAppBar(
+      BuildContext context, WorkspaceDetailModel workspace) {
     return AppBar(
       backgroundColor: Theme.of(context).colorScheme.surface,
       foregroundColor: Theme.of(context).colorScheme.onSurface,
       elevation: 1,
+      toolbarHeight: 52,
       leading: Builder(
         builder: (ctx) => IconButton(
-          icon: const Icon(Icons.menu),
+          icon: const Icon(Icons.menu, size: 20),
           tooltip: '메뉴',
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           onPressed: () => Scaffold.of(ctx).openDrawer(),
         ),
       ),
@@ -664,7 +647,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             workspace.group.name,
             style: const TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 18,
+              fontSize: 17,
             ),
           ),
           if (workspace.myMembership != null)
@@ -682,12 +665,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         if (workspace.canManage)
           IconButton(
             onPressed: () => _showManagementMenu(context, workspace),
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings, size: 20),
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
             tooltip: '관리',
           ),
         IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.close),
+          icon: const Icon(Icons.close, size: 20),
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           tooltip: '닫기',
         ),
       ],
@@ -753,7 +740,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
   }
 
-
   void _showManagementMenu(
     BuildContext context,
     WorkspaceDetailModel workspace,
@@ -772,8 +758,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             Text(
               '그룹 관리',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 20),
             if (workspace.canManageMembers) ...[
@@ -860,5 +846,3 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     }
   }
 }
-
-

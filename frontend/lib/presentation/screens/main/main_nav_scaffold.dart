@@ -32,52 +32,74 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
         // AuthState가 unauthenticated가 되면 로그인 페이지로 이동
         if (auth.state == AuthState.unauthenticated) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/login', (route) => false);
           });
         }
 
         return Scaffold(
-      appBar: AppBar(
-        title: Text(_titles[nav.index]),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: auth.isLoading ? null : () => _showLogoutDialog(context, auth),
-            tooltip: '로그아웃',
+          appBar: AppBar(
+            toolbarHeight: 52,
+            titleSpacing: 16,
+            title: Text(
+              _titles[nav.index],
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: IconButton(
+                  icon: const Icon(Icons.logout, size: 20),
+                  padding: const EdgeInsets.all(8),
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
+                  onPressed: auth.isLoading
+                      ? null
+                      : () => _showLogoutDialog(context, auth),
+                  tooltip: '로그아웃',
+                ),
+              ),
+              const Padding(
+                padding:
+                    EdgeInsets.only(right: 14, left: 4, top: 12, bottom: 12),
+                child: Icon(Icons.notifications_none, size: 20),
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(height: 1, color: const Color(0xFFE5E7EB)),
+            ),
           ),
-          const Padding(
-            padding: EdgeInsets.only(right: 8),
-            child: Icon(Icons.notifications_none),
-          )
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: const Color(0xFFE5E7EB)),
-        ),
-      ),
-      body: Column(
-        children: [
-          const ProfessorPendingBanner(),
-          Expanded(child: IndexedStack(index: nav.index, children: pages)),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: nav.index,
-        onTap: (i) {
-          context.read<NavProvider>().setIndex(i);
-        },
-        selectedItemColor: const Color(0xFF2563EB),
-        unselectedItemColor: const Color(0xFF6B7280),
-        showUnselectedLabels: false,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: '홈'),
-          BottomNavigationBarItem(icon: Icon(Icons.workspaces_outline), label: '워크스페이스'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: '나의 활동'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: '프로필'),
-        ],
-      ),
-    );
+          body: Column(
+            children: [
+              const ProfessorPendingBanner(),
+              Expanded(child: IndexedStack(index: nav.index, children: pages)),
+            ],
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            currentIndex: nav.index,
+            onTap: (i) {
+              context.read<NavProvider>().setIndex(i);
+            },
+            selectedItemColor: const Color(0xFF2563EB),
+            unselectedItemColor: const Color(0xFF6B7280),
+            showUnselectedLabels: false,
+            items: const [
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined), label: '홈'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.workspaces_outline), label: '워크스페이스'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.history), label: '나의 활동'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline), label: '프로필'),
+            ],
+          ),
+        );
       },
     );
   }
@@ -99,7 +121,8 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
               final success = await auth.logout();
               if (success && context.mounted) {
                 // 로그아웃 성공 시 즉시 로그인 페이지로 이동
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/login', (route) => false);
               } else if (!success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -116,15 +139,3 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
