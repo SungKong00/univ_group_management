@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/workspace_provider.dart';
+import '../../providers/nav_provider.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../widgets/global_sidebar.dart';
 import '../../../data/models/workspace_models.dart';
@@ -213,29 +214,19 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         const double workspaceSidebarWidth = 200;
         final channel = provider.currentChannel;
 
-        // 전체 화면 레이아웃 (글로벌 사이드바 포함)
+        // 전체 화면 레이아웃 (Column 구조)
         return Scaffold(
-          body: Row(
+          body: Column(
             children: [
-              // 글로벌 사이드바
-              const GlobalSidebar(),
-              // 워크스페이스 영역
+              // 워크스페이스 상단바 (전체 화면 너비)
+              _buildWorkspaceAppBar(context, workspace, channel),
+              // 하단 영역: 글로벌 사이드바 + 워크스페이스 영역
               Expanded(
-                child: Column(
+                child: Row(
                   children: [
-                    // 워크스페이스 상단바 (글로벌 사이드바 제외한 너비)
-                    WorkspaceHeader(
-                      workspace: workspace,
-                      channel: channel,
-                      onBack: _navigateBack,
-                      onShowMembers: () => _showMembersSheet(context, workspace),
-                      onShowChannelInfo: channel != null
-                          ? () => _showChannelInfo(context, channel)
-                          : null,
-                      onShowManagement: () => _showManagementMenu(context, workspace),
-                      sidebarWidth: workspaceSidebarWidth,
-                    ),
-                    // 하단 영역 (워크스페이스 사이드바 + 메인 컨텐츠)
+                    // 글로벌 사이드바
+                    const GlobalSidebar(),
+                    // 워크스페이스 영역
                     Expanded(
                       child: Row(
                         children: [
@@ -845,6 +836,125 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const GroupInfoScreen(),
+      ),
+    );
+  }
+
+  Widget _buildWorkspaceAppBar(BuildContext context, WorkspaceDetailModel workspace, ChannelModel? channel) {
+    return Container(
+      height: 53, // 52 + 1px border
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+      ),
+      child: Row(
+        children: [
+          // 뒤로가기 버튼 (워크스페이스 탭으로 돌아가기)
+          Container(
+            width: 60, // GlobalSidebar.width와 동일
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, size: 20),
+              padding: const EdgeInsets.all(8),
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              onPressed: () {
+                // NavProvider를 통해 워크스페이스 탭(index 1)으로 이동
+                context.read<NavProvider>().setIndex(1);
+                Navigator.of(context).pop();
+              },
+              tooltip: '워크스페이스로',
+            ),
+          ),
+
+          // 워크스페이스 사이드바 영역 (그룹명 표시)
+          Container(
+            width: 200, // workspaceSidebarWidth와 동일
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.groups,
+                  size: 16,
+                  color: Theme.of(context).primaryColor,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    workspace.group.name,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 메인 컨텐츠 영역
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Text(
+                    channel?.name ?? '공지사항',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const Spacer(),
+                  // 워크스페이스 액션 버튼들
+                  Wrap(
+                    spacing: 6,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => _showMembersSheet(context, workspace),
+                        icon: const Icon(Icons.group_outlined, size: 16),
+                        label: const Text('멤버 보기'),
+                        style: _pillButtonStyle(context),
+                      ),
+                      if (channel != null)
+                        TextButton.icon(
+                          onPressed: () => _showChannelInfo(context, channel),
+                          icon: const Icon(Icons.info_outline, size: 16),
+                          label: const Text('채널 정보'),
+                          style: _pillButtonStyle(context),
+                        ),
+                      if (workspace.canManage)
+                        TextButton.icon(
+                          onPressed: () => _showManagementMenu(context, workspace),
+                          icon: const Icon(Icons.more_horiz, size: 16),
+                          label: const Text('더보기'),
+                          style: _pillButtonStyle(context),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ButtonStyle _pillButtonStyle(BuildContext context) {
+    return TextButton.styleFrom(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      minimumSize: const Size(0, 30),
+      textStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: Theme.of(context).dividerColor),
       ),
     );
   }

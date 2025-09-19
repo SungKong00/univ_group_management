@@ -41,24 +41,31 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
         final isDesktop = MediaQuery.of(context).size.width >= 900;
 
         if (isDesktop) {
-          // 데스크톱: 글로벌 사이드바 + 메인 컨텐츠
+          // 데스크톱: Column으로 상단바 아래에 사이드바 배치
           return Scaffold(
-            body: Row(
+            body: Column(
               children: [
-                // 글로벌 사이드바
-                const GlobalSidebar(),
-                // 메인 컨텐츠 영역
+                // 상단바 (전체 화면 너비)
+                _buildDesktopAppBar(context, nav),
+                // 하단 영역: 글로벌 사이드바 + 메인 컨텐츠
                 Expanded(
-                  child: Column(
+                  child: Row(
                     children: [
-                      // 상단바
-                      _buildDesktopAppBar(context, nav),
-                      // 페이지 컨텐츠
-                      const ProfessorPendingBanner(),
+                      // 글로벌 사이드바
+                      const GlobalSidebar(),
+                      // 메인 컨텐츠 영역
                       Expanded(
-                        child: IndexedStack(
-                          index: nav.index,
-                          children: pages,
+                        child: Column(
+                          children: [
+                            // 페이지 컨텐츠
+                            const ProfessorPendingBanner(),
+                            Expanded(
+                              child: IndexedStack(
+                                index: nav.index,
+                                children: pages,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -104,6 +111,9 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
   }
 
   Widget _buildDesktopAppBar(BuildContext context, NavProvider nav) {
+    // 홈이 아닌 경우에만 뒤로가기 버튼 표시
+    final showBackButton = nav.index != 0;
+
     return Container(
       height: 53, // 52 + 1px border
       decoration: const BoxDecoration(
@@ -112,27 +122,49 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
           bottom: BorderSide(color: Color(0xFFE5E7EB)),
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            Text(
-              _titles[nav.index],
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
+      child: Row(
+        children: [
+          // 뒤로가기 버튼 (홈이 아닐 때만 표시)
+          if (showBackButton)
+            Container(
+              width: 60, // GlobalSidebar.width와 동일
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, size: 20),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                onPressed: () => nav.setIndex(0), // 홈으로 이동
+                tooltip: '홈으로',
+              ),
+            )
+          else
+            const SizedBox(width: 60), // 공간 확보
+
+          // 메인 컨텐츠 영역
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Text(
+                    _titles[nav.index],
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none, size: 20),
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    onPressed: () {},
+                    tooltip: '알림',
+                  ),
+                ],
+              ),
             ),
-            const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.notifications_none, size: 20),
-              padding: const EdgeInsets.all(8),
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              onPressed: () {},
-              tooltip: '알림',
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

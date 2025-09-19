@@ -21,12 +21,7 @@ class GlobalSidebar extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 16),
-
-          // 로고/브랜드 영역
-          _buildLogo(context),
-
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
 
           // 메인 네비게이션 메뉴들
           Expanded(
@@ -85,21 +80,6 @@ class GlobalSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildLogo(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: AppTheme.primary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Icon(
-        Icons.groups,
-        color: Colors.white,
-        size: 24,
-      ),
-    );
-  }
 
   Widget _buildNavItem(
     BuildContext context, {
