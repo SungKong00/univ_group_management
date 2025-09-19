@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/workspace_provider.dart';
 import '../../widgets/loading_overlay.dart';
+import '../../widgets/global_sidebar.dart';
 import '../../../data/models/workspace_models.dart';
 import 'channel_detail_screen.dart';
 import 'tabs/announcements_tab.dart';
@@ -209,48 +210,61 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const double sidebarWidth = 280;
+        const double workspaceSidebarWidth = 200;
         final channel = provider.currentChannel;
 
-        return Column(
-          children: [
-            // 상단바 (전체 너비 차지)
-            WorkspaceHeader(
-              workspace: workspace,
-              channel: channel,
-              onBack: _navigateBack,
-              onShowMembers: () => _showMembersSheet(context, workspace),
-              onShowChannelInfo: channel != null
-                  ? () => _showChannelInfo(context, channel)
-                  : null,
-              onShowManagement: () => _showManagementMenu(context, workspace),
-              sidebarWidth: sidebarWidth,
-            ),
-            // 하단 영역 (사이드바 + 메인 컨텐츠)
-            Expanded(
-              child: Row(
-                children: [
-                  // 고정 사이드바
-                  SizedBox(
-                    width: sidebarWidth,
-                    child: WorkspaceSidebar(
+        // 전체 화면 레이아웃 (글로벌 사이드바 포함)
+        return Scaffold(
+          body: Row(
+            children: [
+              // 글로벌 사이드바
+              const GlobalSidebar(),
+              // 워크스페이스 영역
+              Expanded(
+                child: Column(
+                  children: [
+                    // 워크스페이스 상단바 (글로벌 사이드바 제외한 너비)
+                    WorkspaceHeader(
                       workspace: workspace,
-                      onShowAdminHome: () => _showAdminHome(context, workspace),
-                      onShowMemberManagement: () =>
-                          _showMemberManagement(context),
-                      onShowChannelManagement: () =>
-                          _showChannelManagement(context),
-                      onShowGroupInfo: () => _showGroupInfo(context),
+                      channel: channel,
+                      onBack: _navigateBack,
+                      onShowMembers: () => _showMembersSheet(context, workspace),
+                      onShowChannelInfo: channel != null
+                          ? () => _showChannelInfo(context, channel)
+                          : null,
+                      onShowManagement: () => _showManagementMenu(context, workspace),
+                      sidebarWidth: workspaceSidebarWidth,
                     ),
-                  ),
-                  // 메인 컨텐츠 영역
-                  Expanded(
-                    child: _buildDesktopMainArea(context, provider, workspace),
-                  ),
-                ],
+                    // 하단 영역 (워크스페이스 사이드바 + 메인 컨텐츠)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          // 워크스페이스 사이드바
+                          SizedBox(
+                            width: workspaceSidebarWidth,
+                            child: WorkspaceSidebar(
+                              workspace: workspace,
+                              width: workspaceSidebarWidth,
+                              onShowAdminHome: () => _showAdminHome(context, workspace),
+                              onShowMemberManagement: () =>
+                                  _showMemberManagement(context),
+                              onShowChannelManagement: () =>
+                                  _showChannelManagement(context),
+                              onShowGroupInfo: () => _showGroupInfo(context),
+                            ),
+                          ),
+                          // 메인 컨텐츠 영역
+                          Expanded(
+                            child: _buildDesktopMainArea(context, provider, workspace),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );

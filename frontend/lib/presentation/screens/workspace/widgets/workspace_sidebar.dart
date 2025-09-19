@@ -17,7 +17,7 @@ class WorkspaceSidebar extends StatelessWidget {
   const WorkspaceSidebar({
     super.key,
     required this.workspace,
-    this.width = 280,
+    this.width = 200,
     this.onShowAdminHome,
     this.onShowMemberManagement,
     this.onShowChannelManagement,
