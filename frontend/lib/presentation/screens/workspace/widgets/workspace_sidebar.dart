@@ -161,23 +161,23 @@ class WorkspaceSidebar extends StatelessWidget {
     final iconColor = selected ? AppTheme.primary : AppTheme.onTextSecondary;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Material(
         color: highlightColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: iconColor),
-                const SizedBox(width: 12),
+                Icon(icon, size: 16, color: iconColor),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     label,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                         ),
                     maxLines: 1,
