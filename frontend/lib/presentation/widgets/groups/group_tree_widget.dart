@@ -12,6 +12,8 @@ class GroupTreeWidget extends StatelessWidget {
   final String? searchQuery;
   final bool showOfficial;
   final bool showAutonomous;
+  // 내부 워크스페이스 전환을 위한 선택적 콜백
+  final void Function(int groupId, String groupName)? onNavigateToWorkspace;
 
   const GroupTreeWidget({
     super.key,
@@ -22,6 +24,7 @@ class GroupTreeWidget extends StatelessWidget {
     this.searchQuery,
     required this.showOfficial,
     required this.showAutonomous,
+    this.onNavigateToWorkspace,
   });
 
   @override
@@ -38,6 +41,7 @@ class GroupTreeWidget extends StatelessWidget {
             searchQuery: searchQuery,
             showOfficial: showOfficial,
             showAutonomous: showAutonomous,
+            onNavigateToWorkspace: onNavigateToWorkspace,
           )
       ).toList(),
     );
@@ -71,6 +75,8 @@ class GroupTreeNodeWidget extends StatelessWidget {
   final String? searchQuery;
   final bool showOfficial;
   final bool showAutonomous;
+  // 내부 워크스페이스 전환 콜백 전달
+  final void Function(int groupId, String groupName)? onNavigateToWorkspace;
 
   const GroupTreeNodeWidget({
     super.key,
@@ -82,6 +88,7 @@ class GroupTreeNodeWidget extends StatelessWidget {
     this.searchQuery,
     required this.showOfficial,
     required this.showAutonomous,
+    this.onNavigateToWorkspace,
   });
 
   @override
@@ -230,6 +237,7 @@ class GroupTreeNodeWidget extends StatelessWidget {
                                 searchQuery: searchQuery,
                                 showOfficial: showOfficial,
                                 showAutonomous: showAutonomous,
+                                onNavigateToWorkspace: onNavigateToWorkspace,
                               )),
                         if (group.groupType == GroupType.department)
                           Padding(
@@ -266,6 +274,12 @@ class GroupTreeNodeWidget extends StatelessWidget {
     final gp = context.read<GroupProvider>();
     final isMember = await gp.checkGroupMembership(group.id);
     if (isMember) {
+      // 내부 전환 콜백이 있으면 우선 사용 (상단/하단바 유지)
+      if (onNavigateToWorkspace != null) {
+        onNavigateToWorkspace!(group.id, group.name);
+        return;
+      }
+      // 폴백: 기존 네비게이션 (전체 화면 라우트)
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => WorkspaceScreen(
@@ -297,7 +311,7 @@ class GroupTreeNodeWidget extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.home_outlined),
                   title: const Text('그룹 홈으로'),
-                  onTap: () {
+                  onTap: () async {
                     Navigator.pop(context);
                     _goToGroupHome(context, group);
                   },
@@ -401,7 +415,7 @@ class GroupTreeNodeWidget extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
-      child: Icon(icon, color: color, size: 22),
+      child: Icon(icon, color: color),
     );
   }
 
@@ -409,16 +423,16 @@ class GroupTreeNodeWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.25)),
       ),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Color(0xFF6B7280),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
           fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -426,15 +440,16 @@ class GroupTreeNodeWidget extends StatelessWidget {
 
   Widget _miniBadge(BuildContext context, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(12),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Text(
         text,
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        style: const TextStyle(
+          color: Color(0xFF6B7280),
           fontSize: 10,
           fontWeight: FontWeight.w600,
         ),
@@ -448,176 +463,129 @@ class _SubGroupsSection extends StatelessWidget {
   final String? searchQuery;
   final bool showOfficial;
   final bool showAutonomous;
-  const _SubGroupsSection({required this.parent, this.searchQuery, required this.showOfficial, required this.showAutonomous});
+
+  const _SubGroupsSection({
+    required this.parent,
+    required this.searchQuery,
+    required this.showOfficial,
+    required this.showAutonomous,
+  });
 
   @override
   Widget build(BuildContext context) {
     final gp = context.watch<GroupProvider>();
-    final list = gp.getSubGroupsCached(parent.group.id);
-    final loading = gp.isSubGroupsLoading(parent.group.id);
-    final err = gp.subGroupsError(parent.group.id);
 
-    Widget body;
-    if (loading && (list == null || list.isEmpty)) {
-      body = const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    } else if (err != null) {
-      body = Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(children: [
-          const Icon(Icons.error_outline, color: Colors.red),
-          const SizedBox(height: 8),
-          Text(err, style: const TextStyle(color: Colors.grey)),
-        ]),
-      );
-    } else if (list == null || list.isEmpty) {
-      body = const SizedBox.shrink();
-    } else {
-      final q = (searchQuery ?? '').toLowerCase();
-      List<GroupSummaryModel> allSubGroups = list;
-      if (q.isNotEmpty) {
-        allSubGroups = list.where((g) => g.name.toLowerCase().contains(q) || (g.department ?? '').toLowerCase().contains(q)).toList();
-      }
-      
-      // 대학그룹은 항상 표시, 공식/자율 그룹만 필터링
-      final universityGroups = allSubGroups.where((g) => [GroupType.university, GroupType.college, GroupType.department].contains((g as GroupSummaryModel).groupType)).toList();
-      final officialGroups = allSubGroups.where((g) => (g as GroupSummaryModel).groupType == GroupType.official).toList();
-      final autonomousGroups = allSubGroups.where((g) => (g as GroupSummaryModel).groupType == GroupType.autonomous).toList();
+    // 캐시된 하위 그룹 조회
+    final cached = gp.getSubGroupsCached(parent.group.id);
+    final isLoading = gp.isSubGroupsLoading(parent.group.id);
+    final error = gp.subGroupsError(parent.group.id);
 
-      body = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 대학그룹은 항상 표시
-          if (universityGroups.isNotEmpty)
-            _section(context, title: '대학 그룹', color: Colors.blue, items: universityGroups),
-          // 공식/자율 그룹은 필터에 따라 표시
-          if (showOfficial && officialGroups.isNotEmpty)
-            _section(context, title: '공식 그룹', color: const Color(0xFF2563EB), items: officialGroups),
-          if (showAutonomous && autonomousGroups.isNotEmpty)
-            _section(context, title: '자율 그룹', color: Colors.green, items: autonomousGroups),
-        ],
+    // 아직 로드되지 않았으면 최초 로드 트리거
+    if (cached == null && !isLoading && error == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<GroupProvider>().loadSubGroups(parent.group.id);
+      });
+    }
+
+    if (isLoading && cached == null) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))),
       );
     }
 
-    return Container(
-      margin: EdgeInsets.only(left: (parent.children.isEmpty ? (parent.group.groupType == GroupType.department ? 16.0 : 0.0) : 0.0)),
-      child: body,
-    );
-  }
-
-  Widget _section(BuildContext context, {required String title, required Color color, required List<GroupSummaryModel> items}) {
-    final dot = Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(children: [
-            dot,
+    if (error != null && cached == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 16),
             const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-            const Spacer(),
+            Expanded(child: Text(error, style: const TextStyle(color: Colors.red))),
+            const SizedBox(width: 8),
             TextButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('모두 보기 (구현 예정)'))),
-              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: const Size(0, 0)),
-              child: const Text('모두 보기'),
+              onPressed: () => context.read<GroupProvider>().loadSubGroups(parent.group.id),
+              child: const Text('다시 시도'),
             ),
-          ]),
-          const SizedBox(height: 8),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemBuilder: (_, i) {
-              final g = items[i];
-              return SizedBox(
-                height: 56,
-                child: Row(
-                  children: [
-                    _subIcon(g),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(g.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 2),
-                          Text('${g.memberCount}명', style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _statusBadge(g),
-                  ],
+          ],
+        ),
+      );
+    }
+
+    final List<GroupSummaryModel> list = cached ?? const <GroupSummaryModel>[];
+
+    List<GroupSummaryModel> filtered = list;
+    final q = (searchQuery ?? '').trim().toLowerCase();
+    if (q.isNotEmpty) {
+      filtered = filtered.where((g) {
+        final name = g.name.toLowerCase();
+        final dept = (g.department ?? '').toLowerCase();
+        return name.contains(q) || dept.contains(q);
+      }).toList();
+    }
+
+    // 타입 필터링
+    filtered = filtered.where((g) {
+      if (g.groupType == GroupType.official && !showOfficial) return false;
+      if (g.groupType == GroupType.autonomous && !showAutonomous) return false;
+      return true;
+    }).toList();
+
+    if (filtered.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: const Text('표시할 하위 그룹이 없습니다', style: TextStyle(color: Color(0xFF9CA3AF))),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Divider(height: 16),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: filtered.map((g) => _SubGroupChip(group: g)).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _SubGroupChip extends StatelessWidget {
+  final GroupSummaryModel group;
+
+  const _SubGroupChip({required this.group});
+
+  @override
+  Widget build(BuildContext context) {
+    final gp = context.read<GroupProvider>();
+
+    return ActionChip(
+      avatar: const Icon(Icons.group_outlined, size: 16),
+      label: Text(group.name),
+      onPressed: () async {
+        final isMember = await gp.checkGroupMembership(group.id);
+        if (isMember) {
+          // 탐색 시트 없이 직접 이동
+          // 여기서는 트리노드와 동일한 내부 전환을 시도하고, 없으면 폴백
+          final scaffoldNode = context.findAncestorWidgetOfExactType<GroupTreeNodeWidget>();
+          if (scaffoldNode?.onNavigateToWorkspace != null) {
+            scaffoldNode!.onNavigateToWorkspace!(group.id, group.name);
+          } else {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => WorkspaceScreen(
+                  groupId: group.id,
+                  groupName: group.name,
                 ),
-              );
-            },
-            separatorBuilder: (_, __) => const Divider(height: 12, color: Color(0xFFF3F4F6)),
-            itemCount: items.length.clamp(0, 5),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _subIcon(GroupSummaryModel g) {
-    IconData icon = Icons.circle;
-    Color color = Colors.grey;
-    switch (g.groupType) {
-      case GroupType.official:
-        icon = Icons.shield_outlined;
-        color = Colors.blue;
-        break;
-      case GroupType.autonomous:
-        icon = Icons.lightbulb_outline;
-        color = Colors.green;
-        break;
-      case GroupType.lab:
-        icon = Icons.science;
-        color = Colors.purple;
-        break;
-      default:
-        icon = Icons.group_outlined;
-        color = Colors.grey;
-    }
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
-      child: Icon(icon, size: 16, color: color),
-    );
-  }
-
-  Widget _statusBadge(GroupSummaryModel g) {
-    // 상태 배지: 활성 / 진행중 / 모집중 / 비공개
-    String text;
-    Color bg;
-    Color fg;
-    if (g.visibility == GroupVisibility.private) {
-      text = '비공개';
-      bg = Colors.grey.shade200;
-      fg = Colors.grey.shade700;
-    } else if (g.isRecruiting) {
-      text = '모집중';
-      bg = Colors.orange.shade100;
-      fg = Colors.orange.shade800;
-    } else {
-      text = '활성';
-      bg = Colors.green.shade100;
-      fg = Colors.green.shade800;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(text, style: TextStyle(color: fg, fontSize: 12, fontWeight: FontWeight.w600)),
+              ),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('그룹 소개 페이지로 이동 (구현 예정)')));
+        }
+      },
     );
   }
 }

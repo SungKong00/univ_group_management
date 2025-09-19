@@ -5,10 +5,14 @@ import '../../providers/auth_provider.dart';
 import '../../providers/nav_provider.dart';
 import '../../widgets/groups/group_tree_widget.dart';
 import '../../../data/models/group_model.dart';
-import '../workspace/workspace_screen.dart';
 
 class GroupExplorerScreen extends StatefulWidget {
-  const GroupExplorerScreen({super.key});
+  final void Function(int groupId, String groupName)? onNavigateToWorkspace;
+
+  const GroupExplorerScreen({
+    super.key,
+    this.onNavigateToWorkspace,
+  });
 
   @override
   State<GroupExplorerScreen> createState() => _GroupExplorerScreenState();
@@ -43,10 +47,24 @@ class SimpleGroupExplorerScreen extends StatelessWidget {
   }
 }
 
-class _GroupExplorerScreenState extends State<GroupExplorerScreen> {
+// 홈 탭 내부에서 사용할 순수 컨텐츠 위젯
+class GroupExplorerContent extends StatefulWidget {
+  final VoidCallback? onBack;
+  final void Function(int groupId, String groupName)? onNavigateToWorkspace;
+
+  const GroupExplorerContent({
+    super.key,
+    this.onBack,
+    this.onNavigateToWorkspace,
+  });
+
+  @override
+  State<GroupExplorerContent> createState() => _GroupExplorerContentState();
+}
+
+class _GroupExplorerContentState extends State<GroupExplorerContent> {
   String _query = '';
-  int? _prevTabIndex;
-  
+
   // New filter state - 기본값으로 둘 다 활성화 (모든 그룹 표시)
   bool _isOfficialFilterActive = true;
   bool _isAutonomousFilterActive = true;
@@ -60,187 +78,141 @@ class _GroupExplorerScreenState extends State<GroupExplorerScreen> {
       final auth = context.read<AuthProvider>();
       final dept = auth.user?.department;
       final college = auth.user?.college;
-      groupProvider.loadAllGroups().then((_) {
+
+      Future<void> expandPaths() async {
         if (dept != null && dept.isNotEmpty) {
           groupProvider.expandPathToDepartment(dept);
         } else if (college != null && college.isNotEmpty) {
           groupProvider.expandPathToCollege(college);
         } else {
-          // 학과/계열 텍스트 정보가 없을 때, 내 멤버십 기준으로 자동 펼침 (계열 우선)
           groupProvider.expandToMyAffiliation(preferDepartment: false);
         }
-      });
-      // 하단 탭바에서 워크스페이스 탭 활성 표시
-      try {
-        _prevTabIndex = context.read<NavProvider>().index;
-        context.read<NavProvider>().setIndex(1);
-      } catch (_) {}
-    });
-  }
+      }
 
-  @override
-  void dispose() {
-    // 이전 탭 복구
-    if (_prevTabIndex != null) {
-      try { context.read<NavProvider>().setIndex(_prevTabIndex!); } catch (_) {}
-    }
-    super.dispose();
+      if (groupProvider.groupTree.isEmpty) {
+        groupProvider.loadAllGroups().then((_) => expandPaths());
+      } else {
+        expandPaths();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: theme.colorScheme.background,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // 상단 헤더: 뒤로가기 + 중앙 제목 + 우측 보조 카피
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        InkWell(
-                          onTap: () => Navigator.of(context).maybePop(),
-                          borderRadius: BorderRadius.circular(999),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.arrow_back_ios_new, size: 18),
-                                SizedBox(width: 4),
-                                Text('뒤로가기'),
-                              ],
-                            ),
-                          ),
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                  // 검색 인풋
+                  SizedBox(
+                    height: 48,
+                    child: TextField(
+                      onChanged: (v) => setState(() => _query = v.trim()),
+                      decoration: InputDecoration(
+                        hintText: '그룹 검색…',
+                        prefixIcon: const Icon(Icons.search),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                         ),
-                        const Expanded(
-                          child: Center(
-                            child: Text('교내 그룹 탐색', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
-                          ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: const [
-                            Text('그룹 관계를 이해하고', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-                            SizedBox(height: 2),
-                            Text('새로운 그룹을 찾아보세요', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // 검색 인풋
-                    SizedBox(
-                      height: 48,
-                      child: TextField(
-                        onChanged: (v) => setState(() => _query = v.trim()),
-                        decoration: InputDecoration(
-                          hintText: '그룹 검색…',
-                          prefixIcon: const Icon(Icons.search),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFF2563EB)),
-                          ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF2563EB)),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    // 필터 칩
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _buildFilterChip('공식그룹', _isOfficialFilterActive, (selected) {
-                          setState(() {
-                            _isOfficialFilterActive = selected;
-                          });
-                        }),
-                        _buildFilterChip('자율그룹', _isAutonomousFilterActive, (selected) {
-                          setState(() {
-                            _isAutonomousFilterActive = selected;
-                          });
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ),
-              ),
+                  ),
+                  const SizedBox(height: 8),
+                  // 필터 칩
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildFilterChip('공식그룹', _isOfficialFilterActive, (selected) {
+                        setState(() {
+                          _isOfficialFilterActive = selected;
+                        });
+                      }),
+                      _buildFilterChip('자율그룹', _isAutonomousFilterActive, (selected) {
+                        setState(() {
+                          _isAutonomousFilterActive = selected;
+                        });
+                      }),
+                    ],
+                  ),
+                const SizedBox(height: 12),
+              ],
             ),
-            // 본문: 바깥 파란 테두리, 중첩 카드는 위젯에서 처리
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Consumer<GroupProvider>(
-                  builder: (context, groupProvider, child) {
-                    if (groupProvider.isLoading) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    }
-                    if (groupProvider.error != null) {
-                      return Column(
-                        children: [
-                          const Icon(Icons.error_outline, color: Colors.red),
-                          const SizedBox(height: 8),
-                          Text(groupProvider.error!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                          const SizedBox(height: 12),
-                          OutlinedButton.icon(onPressed: () => groupProvider.loadAllGroups(), icon: const Icon(Icons.refresh), label: const Text('다시 시도')),
-                        ],
-                      );
-                    }
-                    if (groupProvider.groupTree.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.all(24.0),
-                        child: Text('등록된 그룹이 없습니다', style: TextStyle(color: Colors.grey)),
-                      );
-                    }
-                    // 루트 컨테이너: 파란 아웃라인 박스
-                    return Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFF2563EB)),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: GroupTreeWidget(
-                        nodes: groupProvider.groupTree,
-                        onNodeTap: (node) => _handleGroupTap(context, node),
-                        onToggle: (node) => groupProvider.toggleNode(node),
-                        userDepartment: context.watch<AuthProvider>().user?.department,
-                        searchQuery: _query,
-                        showOfficial: _isOfficialFilterActive,
-                        showAutonomous: _isAutonomousFilterActive,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          ],
+          ),
         ),
-      ),
+        // 본문: 바깥 파란 테두리, 중첩 카드는 위젯에서 처리
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Consumer<GroupProvider>(
+              builder: (context, groupProvider, child) {
+                if (groupProvider.isLoading) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+                if (groupProvider.error != null) {
+                  return Column(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red),
+                      const SizedBox(height: 8),
+                      Text(groupProvider.error!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(onPressed: () => groupProvider.loadAllGroups(), icon: const Icon(Icons.refresh), label: const Text('다시 시도')),
+                    ],
+                  );
+                }
+                if (groupProvider.groupTree.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Text('등록된 그룹이 없습니다', style: TextStyle(color: Colors.grey)),
+                  );
+                }
+                // 루트 컨테이너: 파란 아웃라인 박스
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0xFF2563EB)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: GroupTreeWidget(
+                    nodes: groupProvider.groupTree,
+                    onNodeTap: (node) => _handleGroupTap(context, node),
+                    onToggle: (node) => groupProvider.toggleNode(node),
+                    userDepartment: context.watch<AuthProvider>().user?.department,
+                    searchQuery: _query,
+                    showOfficial: _isOfficialFilterActive,
+                    showAutonomous: _isAutonomousFilterActive,
+                    // 내부 워크스페이스 전환 콜백 전달
+                    onNavigateToWorkspace: widget.onNavigateToWorkspace,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
+      ],
     );
   }
 
@@ -266,17 +238,60 @@ class _GroupExplorerScreenState extends State<GroupExplorerScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => GroupDetailBottomSheet(node: node),
+      builder: (context) => GroupDetailBottomSheet(
+        node: node,
+        onNavigateToWorkspace: widget.onNavigateToWorkspace,
+      ),
+    );
+  }
+}
+
+class _GroupExplorerScreenState extends State<GroupExplorerScreen> {
+  int? _prevTabIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    // 하단 탭바에서 워크스페이스 탭 활성 표시 (단독 진입 시에만 의미 있음)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        _prevTabIndex = context.read<NavProvider>().index;
+        context.read<NavProvider>().setIndex(1);
+      } catch (_) {}
+    });
+  }
+
+  @override
+  void dispose() {
+    // 이전 탭 복구
+    if (_prevTabIndex != null) {
+      try { context.read<NavProvider>().setIndex(_prevTabIndex!); } catch (_) {}
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
+      body: SafeArea(
+        child: GroupExplorerContent(
+          onBack: () => Navigator.of(context).maybePop(),
+          onNavigateToWorkspace: widget.onNavigateToWorkspace,
+        ),
+      ),
     );
   }
 }
 
 class GroupDetailBottomSheet extends StatelessWidget {
   final GroupTreeNode node;
+  final void Function(int groupId, String groupName)? onNavigateToWorkspace;
 
   const GroupDetailBottomSheet({
     super.key,
     required this.node,
+    this.onNavigateToWorkspace,
   });
 
   @override
@@ -429,7 +444,7 @@ class GroupDetailBottomSheet extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => _navigateToGroupHome(context, group.id),
+                  onPressed: () => _navigateToGroupHome(context, group.id, group.name),
                   icon: const Icon(Icons.home_outlined),
                   label: const Text('그룹 홈으로 이동'),
                   style: ElevatedButton.styleFrom(
@@ -446,19 +461,15 @@ class GroupDetailBottomSheet extends StatelessWidget {
     );
   }
 
-  void _navigateToGroupHome(BuildContext context, int groupId) async {
+  void _navigateToGroupHome(BuildContext context, int groupId, String groupName) async {
     final groupProvider = context.read<GroupProvider>();
     final isMember = await groupProvider.checkGroupMembership(groupId);
 
     Navigator.of(context).pop(); // 모달 닫기
 
     if (isMember) {
-      // 멤버라면 워크스페이스 화면으로 이동
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => WorkspaceScreen(groupId: groupId),
-        ),
-      );
+      // 멤버라면 워크스페이스로 내부 상태 이동
+      onNavigateToWorkspace?.call(groupId, groupName);
     } else {
       // 비멤버라면 그룹 소개 페이지(미구현)로 안내
       ScaffoldMessenger.of(context).showSnackBar(

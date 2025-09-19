@@ -6,7 +6,20 @@ import '../../../data/models/group_model.dart';
 import '../workspace/workspace_screen.dart';
 
 class WorkspaceTab extends StatefulWidget {
-  const WorkspaceTab({super.key});
+  final bool showWorkspace;
+  final int? workspaceGroupId;
+  final String? workspaceGroupName;
+  final void Function(int groupId, String groupName)? onNavigateToWorkspace;
+  final VoidCallback? onNavigateBackToWorkspaceList;
+
+  const WorkspaceTab({
+    super.key,
+    required this.showWorkspace,
+    this.workspaceGroupId,
+    this.workspaceGroupName,
+    this.onNavigateToWorkspace,
+    this.onNavigateBackToWorkspaceList,
+  });
 
   @override
   State<WorkspaceTab> createState() => _WorkspaceTabState();
@@ -45,6 +58,14 @@ class _WorkspaceTabState extends State<WorkspaceTab> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.showWorkspace && widget.workspaceGroupId != null) {
+      return WorkspaceContent(
+        groupId: widget.workspaceGroupId!,
+        groupName: widget.workspaceGroupName,
+        onBack: widget.onNavigateBackToWorkspaceList,
+      );
+    }
+
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -118,16 +139,8 @@ class _WorkspaceTabState extends State<WorkspaceTab> {
             ],
           ),
           onTap: () {
-            // 워크스페이스 화면으로 이동
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => WorkspaceScreen(
-                  groupId: group.id,
-                  groupName: group.name,
-                ),
-              ),
-            );
+            // 워크스페이스 내부 상태로 이동
+            widget.onNavigateToWorkspace?.call(group.id, group.name);
           },
         );
       },

@@ -8,6 +8,7 @@ import '../home/home_tab.dart';
 import '../home/workspace_tab.dart';
 import '../home/activity_tab.dart';
 import '../home/profile_tab.dart';
+import '../workspace/workspace_screen.dart';
 
 class MainNavScaffold extends StatefulWidget {
   const MainNavScaffold({super.key});
@@ -19,11 +20,91 @@ class MainNavScaffold extends StatefulWidget {
 class _MainNavScaffoldState extends State<MainNavScaffold> {
   static const _titles = ['홈', '워크스페이스', '나의 활동', '프로필'];
 
+  // 홈 탭의 그룹 탐색 상태 관리
+  bool _showGroupExplorer = false;
+
+  // 홈 탭의 워크스페이스 진입 상태 관리 (교내 그룹 탐색에서 진입)
+  bool _showHomeWorkspace = false;
+  int? _homeWorkspaceGroupId;
+  String? _homeWorkspaceGroupName;
+
+  // 워크스페이스 탭의 워크스페이스 진입 상태 관리
+  bool _showWorkspace = false;
+  int? _workspaceGroupId;
+  String? _workspaceGroupName;
+
+  void _navigateToGroupExplorer() {
+    setState(() {
+      _showGroupExplorer = true;
+    });
+  }
+
+  void _navigateBackToHome() {
+    setState(() {
+      _showGroupExplorer = false;
+      _showHomeWorkspace = false;
+      _homeWorkspaceGroupId = null;
+      _homeWorkspaceGroupName = null;
+    });
+  }
+
+  void _navigateBackToHomeFromWorkspace() {
+    setState(() {
+      _showHomeWorkspace = false;
+      _homeWorkspaceGroupId = null;
+      _homeWorkspaceGroupName = null;
+      // 그룹 탐색으로 복귀
+      _showGroupExplorer = true;
+    });
+  }
+
+  void _navigateToWorkspace(int groupId, String groupName) {
+    setState(() {
+      _showWorkspace = true;
+      _workspaceGroupId = groupId;
+      _workspaceGroupName = groupName;
+    });
+  }
+
+  void _navigateToWorkspaceFromGroupExplorer(int groupId, String groupName) {
+    setState(() {
+      // 그룹 탐색 모드 종료
+      _showGroupExplorer = false;
+      // 홈 탭 내에서 워크스페이스 모드 활성화 (탭 전환 없음)
+      _showHomeWorkspace = true;
+      _homeWorkspaceGroupId = groupId;
+      _homeWorkspaceGroupName = groupName;
+    });
+  }
+
+  void _navigateBackToWorkspaceList() {
+    setState(() {
+      _showWorkspace = false;
+      _workspaceGroupId = null;
+      _workspaceGroupName = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
-      const HomeTab(),
-      const WorkspaceTab(),
+      HomeTab(
+        showGroupExplorer: _showGroupExplorer,
+        showWorkspace: _showHomeWorkspace,
+        workspaceGroupId: _homeWorkspaceGroupId,
+        workspaceGroupName: _homeWorkspaceGroupName,
+        onNavigateToGroupExplorer: _navigateToGroupExplorer,
+        onNavigateBackToHome: _navigateBackToHome,
+        onNavigateToWorkspace: _navigateToWorkspaceFromGroupExplorer,
+        onNavigateBackFromWorkspace: _navigateBackToHomeFromWorkspace,
+      ),
+      WorkspaceTab(
+        showWorkspace: _showWorkspace,
+        workspaceGroupId: _workspaceGroupId,
+        workspaceGroupName: _workspaceGroupName,
+        onNavigateToWorkspace: _navigateToWorkspace,
+        onNavigateBackToWorkspaceList: _navigateBackToWorkspaceList,
+      ),
       const ActivityTab(),
       const ProfileTab(),
     ];
@@ -55,18 +136,21 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
                       const GlobalSidebar(),
                       // 메인 컨텐츠 영역
                       Expanded(
-                        child: Column(
-                          children: [
-                            // 페이지 컨텐츠
-                            const ProfessorPendingBanner(),
-                            Expanded(
-                              child: IndexedStack(
-                                index: nav.index,
-                                children: pages,
+                        child: (nav.index == 1 && _showWorkspace && _workspaceGroupId != null) ||
+                               (nav.index == 0 && _showHomeWorkspace && _homeWorkspaceGroupId != null)
+                            ? _buildWorkspaceLayout()
+                            : Column(
+                                children: [
+                                  // 페이지 컨텐츠
+                                  const ProfessorPendingBanner(),
+                                  Expanded(
+                                    child: IndexedStack(
+                                      index: nav.index,
+                                      children: pages,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
                       ),
                     ],
                   ),
@@ -113,6 +197,12 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
   Widget _buildDesktopAppBar(BuildContext context, NavProvider nav) {
     // 홈이 아닌 경우에만 뒤로가기 버튼 표시
     final showBackButton = nav.index != 0;
+    // 그룹 탐색 모드 감지
+    final isGroupExplorerMode = nav.index == 0 && _showGroupExplorer;
+    // 워크스페이스 모드 감지 (워크스페이스 탭 또는 홈 탭의 워크스페이스)
+    final isWorkspaceMode = (nav.index == 1 && _showWorkspace) || (nav.index == 0 && _showHomeWorkspace);
+    // 홈 워크스페이스 모드 감지
+    final isHomeWorkspaceMode = nav.index == 0 && _showHomeWorkspace;
 
     return Container(
       height: 53, // 52 + 1px border
@@ -124,16 +214,28 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
       ),
       child: Row(
         children: [
-          // 뒤로가기 버튼 (홈이 아닐 때만 표시)
-          if (showBackButton)
+          // 뒤로가기 버튼 (홈이 아니거나 그룹 탐색 모드 또는 워크스페이스 모드일 때 표시)
+          if (showBackButton || isGroupExplorerMode || isWorkspaceMode)
             Container(
               width: 60, // GlobalSidebar.width와 동일
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, size: 20),
                 padding: const EdgeInsets.all(8),
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                onPressed: () => nav.setIndex(0), // 홈으로 이동
-                tooltip: '홈으로',
+                onPressed: isGroupExplorerMode
+                    ? _navigateBackToHome
+                    : isHomeWorkspaceMode
+                        ? _navigateBackToHomeFromWorkspace
+                        : isWorkspaceMode
+                            ? _navigateBackToWorkspaceList
+                            : () => nav.setIndex(0),
+                tooltip: isGroupExplorerMode
+                    ? '홈으로'
+                    : isHomeWorkspaceMode
+                        ? '그룹 탐색으로'
+                        : isWorkspaceMode
+                            ? '워크스페이스로'
+                            : '홈으로',
               ),
             )
           else
@@ -145,13 +247,75 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  Text(
-                    _titles[nav.index],
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
+                  if (isGroupExplorerMode) ...[
+                    // 그룹 탐색 모드 제목
+                    Text(
+                      '교내 그룹 탐색',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(width: 16),
+                    // 그룹 탐색 설명
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          '그룹 관계를 이해하고',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                         ),
-                  ),
+                        Text(
+                          '새로운 그룹을 찾아보세요',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                        ),
+                      ],
+                    ),
+                  ] else if (isWorkspaceMode) ...[
+                    // 워크스페이스 사이드바 영역 (그룹명 표시)
+                    Container(
+                      width: 200, // workspaceSidebarWidth와 동일
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.groups,
+                            size: 16,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              isHomeWorkspaceMode ? (_homeWorkspaceGroupName ?? '') : (_workspaceGroupName ?? ''),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // 워크스페이스 메인 타이틀
+                    Text(
+                      '공지사항', // 기본값, 나중에 채널 선택에 따라 변경
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ] else ...[
+                    // 기본 모드 제목
+                    Text(
+                      _titles[nav.index],
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.notifications_none, size: 20),
@@ -237,6 +401,28 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildWorkspaceLayout() {
+    // 홈 워크스페이스와 워크스페이스 탭 워크스페이스를 구분하여 처리
+    final isHomeWorkspace = _showHomeWorkspace && _homeWorkspaceGroupId != null;
+    final groupId = isHomeWorkspace ? _homeWorkspaceGroupId! : _workspaceGroupId!;
+    final groupName = isHomeWorkspace ? _homeWorkspaceGroupName : _workspaceGroupName;
+    final onBack = isHomeWorkspace ? _navigateBackToHomeFromWorkspace : _navigateBackToWorkspaceList;
+
+    return Column(
+      children: [
+        // 페이지 컨텐츠
+        const ProfessorPendingBanner(),
+        Expanded(
+          child: WorkspaceContent(
+            groupId: groupId,
+            groupName: groupName,
+            onBack: onBack,
+          ),
+        ),
+      ],
     );
   }
 }

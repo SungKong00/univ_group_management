@@ -970,3 +970,601 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     }
   }
 }
+
+// 워크스페이스 콘텐츠만을 담당하는 위젯 (Scaffold 없이)
+class WorkspaceContent extends StatefulWidget {
+  final int groupId;
+  final String? groupName;
+  final VoidCallback? onBack;
+
+  const WorkspaceContent({
+    super.key,
+    required this.groupId,
+    this.groupName,
+    this.onBack,
+  });
+
+  @override
+  State<WorkspaceContent> createState() => _WorkspaceContentState();
+}
+
+class _WorkspaceContentState extends State<WorkspaceContent> {
+  @override
+  void initState() {
+    super.initState();
+
+    // 워크스페이스 데이터 로드 및 초기화
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<WorkspaceProvider>();
+      provider.reset();
+      provider.loadWorkspace(widget.groupId);
+    });
+  }
+
+  @override
+  void dispose() {
+    context.read<WorkspaceProvider>().exitChannel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<WorkspaceProvider>(
+      builder: (context, workspaceProvider, child) {
+        final workspace = workspaceProvider.currentWorkspace;
+        final isDesktop = MediaQuery.of(context).size.width >= 900;
+
+        return LoadingOverlay(
+          isLoading: workspaceProvider.isLoading,
+          child: workspace == null
+              ? _buildEmptyState(workspaceProvider)
+              : isDesktop
+                  ? _buildDesktopWorkspaceContent(
+                      context, workspaceProvider, workspace)
+                  : _buildMobileWorkspaceContent(
+                      context, workspaceProvider, workspace),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState(WorkspaceProvider provider) {
+    if (provider.isAccessDenied) {
+      return _buildAccessDeniedState(provider);
+    }
+
+    if (provider.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              '워크스페이스를 불러올 수 없습니다',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              provider.error!,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => provider.loadWorkspace(widget.groupId),
+              icon: const Icon(Icons.refresh),
+              label: const Text('다시 시도'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final ok = await provider.requestJoin(widget.groupId);
+                if (!mounted) return;
+                if (ok) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('가입 신청이 접수되었습니다')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('가입 신청에 실패했습니다')),
+                  );
+                }
+              },
+              icon: const Icon(Icons.login),
+              label: const Text('가입 신청하기'),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: widget.onBack,
+              child: const Text('돌아가기'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const Center(
+      child: Text('워크스페이스를 로드 중입니다...'),
+    );
+  }
+
+  Widget _buildAccessDeniedState(WorkspaceProvider provider) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.lock_outline, size: 72, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text(
+              '워크스페이스를 불러올 수 없습니다',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              provider.error ?? '이 그룹의 워크스페이스는 멤버만 접근할 수 있습니다.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final ok = await provider.requestJoin(widget.groupId);
+                if (!mounted) return;
+                if (ok) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('가입 신청이 접수되었습니다')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('가입 신청에 실패했습니다')),
+                  );
+                }
+              },
+              icon: const Icon(Icons.login),
+              label: const Text('가입 신청하기'),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: widget.onBack,
+              child: const Text('돌아가기'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 데스크톱용 워크스페이스 콘텐츠 (글로벌 사이드바와 워크스페이스 사이드바가 함께 표시)
+  Widget _buildDesktopWorkspaceContent(
+    BuildContext context,
+    WorkspaceProvider provider,
+    WorkspaceDetailModel workspace,
+  ) {
+    const double workspaceSidebarWidth = 200;
+    final channel = provider.currentChannel;
+
+    return Row(
+      children: [
+        // 워크스페이스 사이드바
+        SizedBox(
+          width: workspaceSidebarWidth,
+          child: WorkspaceSidebar(
+            workspace: workspace,
+            width: workspaceSidebarWidth,
+            onShowAdminHome: () => _showAdminHome(context, workspace),
+            onShowMemberManagement: () => _showMemberManagement(context),
+            onShowChannelManagement: () => _showChannelManagement(context),
+            onShowGroupInfo: () => _showGroupInfo(context),
+          ),
+        ),
+        // 메인 컨텐츠 영역
+        Expanded(
+          child: _buildWorkspaceMainArea(context, provider, workspace),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWorkspaceMainArea(
+    BuildContext context,
+    WorkspaceProvider provider,
+    WorkspaceDetailModel workspace,
+  ) {
+    final channel = provider.currentChannel;
+    return channel == null
+        ? AnnouncementsView(
+            workspace: workspace,
+            announcements: provider.announcements,
+            onCreateAnnouncement: workspace.canCreateAnnouncements
+                ? () => _showCreateAnnouncementDialog(context)
+                : null,
+          )
+        : ChannelDetailView(
+            channel: channel,
+            autoLoad: false,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          );
+  }
+
+  Widget _buildMobileWorkspaceContent(
+    BuildContext context,
+    WorkspaceProvider provider,
+    WorkspaceDetailModel workspace,
+  ) {
+    final channel = provider.currentChannel;
+    return Scaffold(
+      appBar: _buildMobileAppBar(context, workspace),
+      drawer: _buildMobileDrawer(context, provider, workspace),
+      body: channel == null
+          ? AnnouncementsView(
+              workspace: workspace,
+              announcements: provider.announcements,
+              onCreateAnnouncement: workspace.canCreateAnnouncements
+                  ? () => _showCreateAnnouncementDialog(context)
+                  : null,
+            )
+          : ChannelDetailView(
+              channel: channel,
+              autoLoad: false,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
+    );
+  }
+
+  // 나머지 헬퍼 메서드들은 기존 WorkspaceScreen에서 복사
+  void _showCreateAnnouncementDialog(BuildContext context) {
+    final contentController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('공지사항 작성'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: TextField(
+            controller: contentController,
+            decoration: const InputDecoration(
+              labelText: '내용',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 6,
+            maxLength: 1000,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final content = contentController.text.trim();
+              if (content.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('내용을 입력해주세요')),
+                );
+                return;
+              }
+
+              Navigator.pop(context);
+              final provider = context.read<WorkspaceProvider>();
+              final announcementChannel =
+                  _findAnnouncementChannel(provider.channels);
+
+              if (announcementChannel == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('공지 채널을 찾을 수 없습니다')),
+                );
+                return;
+              }
+
+              await provider.createPost(
+                channelId: announcementChannel.id,
+                content: content,
+                type: PostType.announcement,
+              );
+            },
+            child: const Text('작성'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ChannelModel? _findAnnouncementChannel(List<ChannelModel> channels) {
+    for (final channel in channels) {
+      if (channel.type == ChannelType.announcement) {
+        return channel;
+      }
+    }
+    return null;
+  }
+
+  void _showAdminHome(BuildContext context, WorkspaceDetailModel workspace) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AdminHomeScreen(workspace: workspace),
+      ),
+    );
+  }
+
+  void _showMemberManagement(BuildContext context) {
+    final workspace = context.read<WorkspaceProvider>().currentWorkspace;
+    if (workspace != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => MemberManagementScreen(workspace: workspace),
+        ),
+      );
+    }
+  }
+
+  void _showChannelManagement(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ChannelManagementScreen(),
+      ),
+    );
+  }
+
+  void _showGroupInfo(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const GroupInfoScreen(),
+      ),
+    );
+  }
+
+  AppBar _buildMobileAppBar(
+      BuildContext context, WorkspaceDetailModel workspace) {
+    return AppBar(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      foregroundColor: Theme.of(context).colorScheme.onSurface,
+      elevation: 1,
+      toolbarHeight: 52,
+      leading: Builder(
+        builder: (ctx) => IconButton(
+          icon: const Icon(Icons.menu, size: 20),
+          tooltip: '메뉴',
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          onPressed: () => Scaffold.of(ctx).openDrawer(),
+        ),
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            workspace.group.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 17,
+            ),
+          ),
+          if (workspace.myMembership != null)
+            Text(
+              _roleDisplayName(workspace.myMembership!.role.name),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+        ],
+      ),
+      actions: [
+        if (workspace.canManage)
+          IconButton(
+            onPressed: () => _showManagementMenu(context, workspace),
+            icon: const Icon(Icons.settings, size: 20),
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            tooltip: '관리',
+          ),
+        IconButton(
+          onPressed: widget.onBack,
+          icon: const Icon(Icons.close, size: 20),
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          tooltip: '닫기',
+        ),
+      ],
+    );
+  }
+
+  void _showManagementMenu(
+    BuildContext context,
+    WorkspaceDetailModel workspace,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '그룹 관리',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 20),
+            if (workspace.canManageMembers) ...[
+              ListTile(
+                leading: const Icon(Icons.people),
+                title: const Text('멤버 관리'),
+                subtitle: const Text('멤버 승인/반려, 역할 변경'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showMemberManagement(context);
+                },
+              ),
+            ],
+            if (workspace.canManageChannels) ...[
+              ListTile(
+                leading: const Icon(Icons.tag),
+                title: const Text('채널 관리'),
+                subtitle: const Text('채널 생성, 수정, 삭제'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showChannelManagement(context);
+                },
+              ),
+            ],
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('그룹 정보'),
+              subtitle: const Text('그룹 설정 및 정보 수정'),
+              onTap: () {
+                Navigator.pop(context);
+                _showGroupInfo(context);
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Drawer _buildMobileDrawer(
+    BuildContext context,
+    WorkspaceProvider provider,
+    WorkspaceDetailModel workspace,
+  ) {
+    final selectedChannelId = provider.currentChannel?.id;
+    final channels = provider.channels;
+
+    Widget buildTile({
+      required IconData icon,
+      required String label,
+      required bool selected,
+      required VoidCallback onTap,
+    }) {
+      final theme = Theme.of(context);
+      final color = selected
+          ? theme.colorScheme.primary
+          : theme.colorScheme.onSurfaceVariant;
+      return ListTile(
+        leading: Icon(icon, color: color),
+        title: Text(
+          label,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: selected ? theme.colorScheme.primary : null,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+        selected: selected,
+        selectedTileColor: theme.colorScheme.primary.withOpacity(0.08),
+        onTap: () {
+          Navigator.of(context).pop();
+          onTap();
+        },
+      );
+    }
+
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            DrawerHeader(
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.all(16),
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Text(
+                  workspace.group.name,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  // 공지사항 (기본)
+                  buildTile(
+                    icon: Icons.campaign,
+                    label: '공지사항',
+                    selected: selectedChannelId == null,
+                    onTap: () => provider.exitChannel(),
+                  ),
+                  const Divider(),
+                  // 채널 목록
+                  ...channels.map(
+                    (channel) => buildTile(
+                      icon: _channelIconFor(channel),
+                      label: channel.name,
+                      selected: selectedChannelId == channel.id,
+                      onTap: () => provider.selectChannel(channel),
+                    ),
+                  ),
+                  const Divider(),
+                  if (workspace.canManageMembers)
+                    buildTile(
+                      icon: Icons.people_outline,
+                      label: '멤버 관리',
+                      selected: false,
+                      onTap: () => _showMemberManagement(context),
+                    ),
+                  if (workspace.canManageChannels)
+                    buildTile(
+                      icon: Icons.tag,
+                      label: '채널 관리',
+                      selected: false,
+                      onTap: () => _showChannelManagement(context),
+                    ),
+                  buildTile(
+                    icon: Icons.info_outline,
+                    label: '그룹 정보',
+                    selected: false,
+                    onTap: () => _showGroupInfo(context),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _channelIconFor(ChannelModel channel) {
+    switch (channel.type) {
+      case ChannelType.text:
+        return Icons.chat_bubble_outline;
+      case ChannelType.voice:
+        return Icons.mic_none;
+      case ChannelType.announcement:
+        return Icons.campaign;
+      case ChannelType.fileShare:
+        return Icons.folder_copy_outlined;
+    }
+  }
+
+  String _roleDisplayName(String roleName) {
+    switch (roleName.toUpperCase()) {
+      case 'OWNER':
+        return '그룹장';
+      case 'ADVISOR':
+        return '지도교수';
+      default:
+        return roleName;
+    }
+  }
+}

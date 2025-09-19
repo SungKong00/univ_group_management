@@ -2,38 +2,73 @@ import 'package:flutter/material.dart';
 import '../../widgets/common/skeleton_ui.dart';
 import '../../widgets/common/section_card.dart';
 import '../groups/group_explorer_screen.dart';
+import '../workspace/workspace_screen.dart';
 
 class HomeTab extends StatelessWidget {
-  const HomeTab({super.key});
+  final bool showGroupExplorer;
+  final bool showWorkspace;
+  final int? workspaceGroupId;
+  final String? workspaceGroupName;
+  final VoidCallback? onNavigateToGroupExplorer;
+  final VoidCallback? onNavigateBackToHome;
+  final void Function(int groupId, String groupName)? onNavigateToWorkspace;
+  final VoidCallback? onNavigateBackFromWorkspace;
+
+  const HomeTab({
+    super.key,
+    required this.showGroupExplorer,
+    required this.showWorkspace,
+    this.workspaceGroupId,
+    this.workspaceGroupName,
+    this.onNavigateToGroupExplorer,
+    this.onNavigateBackToHome,
+    this.onNavigateToWorkspace,
+    this.onNavigateBackFromWorkspace,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (showGroupExplorer) {
+      return GroupExplorerContent(
+        onBack: onNavigateBackToHome,
+        onNavigateToWorkspace: onNavigateToWorkspace,
+      );
+    }
+
+    if (showWorkspace && workspaceGroupId != null) {
+      return WorkspaceContent(
+        groupId: workspaceGroupId!,
+        groupName: workspaceGroupName,
+        onBack: onNavigateBackFromWorkspace,
+      );
+    }
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: const [
-            GroupSwitcherCard(),
-            SizedBox(height: 16),
-            SectionCard(
+          children: [
+            GroupSwitcherCard(onNavigateToGroupExplorer: onNavigateToGroupExplorer),
+            const SizedBox(height: 16),
+            const SectionCard(
               title: '최근 활동',
               isLoading: true,
               skeletonCount: 3,
             ),
-            SizedBox(height: 12),
-            SectionCard(
+            const SizedBox(height: 12),
+            const SectionCard(
               title: '인기 그룹',
               isLoading: true,
               skeletonCount: 3,
             ),
-            SizedBox(height: 12),
-            SectionCard(
+            const SizedBox(height: 12),
+            const SectionCard(
               title: '내 워크스페이스',
               isLoading: true,
               skeletonCount: 3,
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -42,7 +77,9 @@ class HomeTab extends StatelessWidget {
 }
 
 class GroupSwitcherCard extends StatefulWidget {
-  const GroupSwitcherCard({super.key});
+  final VoidCallback? onNavigateToGroupExplorer;
+
+  const GroupSwitcherCard({super.key, this.onNavigateToGroupExplorer});
 
   @override
   State<GroupSwitcherCard> createState() => _GroupSwitcherCardState();
@@ -87,13 +124,7 @@ class _GroupSwitcherCardState extends State<GroupSwitcherCard> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const GroupExplorerScreen(),
-                      ),
-                    );
-                  },
+                  onPressed: widget.onNavigateToGroupExplorer,
                   style: TextButton.styleFrom(
                     foregroundColor: const Color(0xFF2563EB),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
