@@ -26,6 +26,9 @@ class WorkspaceProvider extends ChangeNotifier {
   // 모바일 전용 상태
   bool _isMobileNavigatorVisible = false;
 
+  // 반응형 전환 상태 관리
+  bool _isInitialLoad = true;
+
   // Current channel (when in channel detail view)
   ChannelModel? _currentChannel;
   List<PostModel> _currentChannelPosts = [];
@@ -73,6 +76,7 @@ class WorkspaceProvider extends ChangeNotifier {
   bool get canManageChannels => _currentWorkspace?.canManageChannels ?? false;
 
   bool get isMobileNavigatorVisible => _isMobileNavigatorVisible;
+  bool get isInitialLoad => _isInitialLoad;
 
   /// 특정 채널에 대한 권한 확인
   bool hasChannelPermission(int channelId, String permission) {
@@ -484,6 +488,7 @@ class WorkspaceProvider extends ChangeNotifier {
     _accessDenied = false;
     _didAutoSelectChannel = false;
     _isMobileNavigatorVisible = false;
+    _isInitialLoad = true;
     notifyListeners();
   }
 
@@ -903,6 +908,48 @@ class WorkspaceProvider extends ChangeNotifier {
     } else {
       hideCommentsSidebar();
     }
+  }
+
+  /// 반응형 화면 전환 처리
+  void handleResponsiveTransition(bool isNowMobile) {
+    if (_isInitialLoad) {
+      // 초기 로드 시에는 기존 로직 유지
+      _isInitialLoad = false;
+      return;
+    }
+
+    // 화면 크기 변경으로 인한 전환
+    if (isNowMobile) {
+      // 웹 → 모바일 전환 시
+      // 우선순위: 댓글 뷰 → 채널 뷰 → 네비게이터
+      if (_isCommentsSidebarVisible && _selectedPostForComments != null) {
+        // 댓글 사이드바가 열려있으면 댓글 모바일 뷰 유지
+        _isMobileNavigatorVisible = false;
+      } else if (_currentChannel != null) {
+        // 채널이 선택되어 있으면 채널 모바일 뷰 유지
+        _isMobileNavigatorVisible = false;
+      } else {
+        // 그 외의 경우 네비게이터 표시
+        _isMobileNavigatorVisible = true;
+      }
+    } else {
+      // 모바일 → 웹 전환 시
+      _isMobileNavigatorVisible = false;
+
+      // 데스크톱에서 채널이 없으면 첫 번째 채널 자동 선택
+      if (_currentChannel == null && _currentWorkspace != null && _currentWorkspace!.channels.isNotEmpty) {
+        final sorted = List<ChannelModel>.from(_currentWorkspace!.channels)
+          ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+        selectChannel(sorted.first);
+      }
+    }
+
+    notifyListeners();
+  }
+
+  /// 초기 로드 플래그 설정 (외부에서 호출용)
+  void markAsInitialLoadComplete() {
+    _isInitialLoad = false;
   }
 
   /// 권한 확인 헬퍼 메서드들

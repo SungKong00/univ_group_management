@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/workspace_provider.dart';
@@ -29,6 +30,10 @@ class WorkspaceScreen extends StatefulWidget {
 }
 
 class _WorkspaceScreenState extends State<WorkspaceScreen> {
+  bool _hasInitialized = false;
+  double? _previousWidth;
+  WorkspaceProvider? _workspaceProvider;
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +42,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final provider = context.read<WorkspaceProvider>();
+      _workspaceProvider = provider; // Provider 인스턴스 저장
       provider.reset();
 
       final isDesktop = MediaQuery.of(context).size.width >= 900;
@@ -45,64 +51,116 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         widget.groupId,
         autoSelectFirstChannel: isDesktop,
         mobileNavigatorVisible: !isDesktop,
-      );
+      ).then((_) {
+        if (mounted) {
+          provider.markAsInitialLoadComplete();
+          _hasInitialized = true;
+        }
+      });
     });
   }
 
   @override
   void dispose() {
-    context.read<WorkspaceProvider>().exitChannel();
+    // 안전한 dispose: 저장된 provider 인스턴스 사용
+    _workspaceProvider?.exitChannel();
     super.dispose();
+  }
+
+  void _handleScreenSizeChange(double currentWidth, WorkspaceProvider provider) {
+    // 초기 설정: 이전 너비가 없으면 현재 너비로 설정하고 종료
+    if (_previousWidth == null) {
+      _previousWidth = currentWidth;
+      if (kDebugMode) {
+        print('[반응형] 초기 화면 너비 설정: ${currentWidth.toInt()}px');
+      }
+      return;
+    }
+
+    final wasDesktop = _previousWidth! >= 900;
+    final isNowDesktop = currentWidth >= 900;
+    final isNowMobile = !isNowDesktop;
+
+    // 화면 크기가 실제로 변경되었고, 데스크톱 ↔ 모바일 간 전환이 일어났을 때만 처리
+    if (wasDesktop != isNowDesktop) {
+      if (kDebugMode) {
+        print('[반응형] 화면 전환 감지: ${wasDesktop ? "데스크톱" : "모바일"} → ${isNowDesktop ? "데스크톱" : "모바일"} (${currentWidth.toInt()}px)');
+      }
+
+      // 초기화가 완료된 경우에만 실제 반응형 전환 수행
+      if (_hasInitialized) {
+        provider.handleResponsiveTransition(isNowMobile);
+        if (kDebugMode) {
+          print('[반응형] handleResponsiveTransition 호출됨: isNowMobile=$isNowMobile');
+        }
+      } else {
+        if (kDebugMode) {
+          print('[반응형] 초기화 미완료로 인해 전환 스킵');
+        }
+      }
+    }
+
+    _previousWidth = currentWidth;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<WorkspaceProvider>(
-      builder: (context, provider, child) {
-        final workspace = provider.currentWorkspace;
-        final isDesktop = MediaQuery.of(context).size.width >= 900;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Consumer<WorkspaceProvider>(
+          builder: (context, provider, child) {
+            final workspace = provider.currentWorkspace;
+            final currentWidth = constraints.maxWidth;
+            final isDesktop = currentWidth >= 900;
 
-        Widget body;
-        if (workspace == null) {
-          body = _buildEmptyState(provider);
-        } else if (isDesktop) {
-          body = _buildDesktopWorkspace(context, provider, workspace);
-        } else {
-          body = _buildMobileWorkspace(context, provider, workspace);
-        }
+            // 화면 크기 변경 감지 및 처리
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _handleScreenSizeChange(currentWidth, provider);
+            });
 
-        final scaffold = Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.background,
-          drawer: !isDesktop && workspace != null
-              ? _buildMobileDrawer(context, provider, workspace)
-              : null,
-          body: LoadingOverlay(
-            isLoading: provider.isLoading,
-            child: body,
-          ),
-        );
-
-        if (isDesktop) {
-          return scaffold;
-        }
-
-        // Mobile view uses WillPopScope for custom back navigation
-        return WillPopScope(
-          onWillPop: () async {
-            // 1. If comment view is active, hide it.
-            if (provider.selectedPostForComments != null) {
-              provider.hideCommentsSidebar();
-              return false; // Prevent app from closing
+            Widget body;
+            if (workspace == null) {
+              body = _buildEmptyState(provider);
+            } else if (isDesktop) {
+              body = _buildDesktopWorkspace(context, provider, workspace);
+            } else {
+              body = _buildMobileWorkspace(context, provider, workspace);
             }
-            // 2. If in a channel, go back to the channel navigator.
-            if (!provider.isMobileNavigatorVisible) {
-              provider.showMobileNavigator();
-              return false; // Prevent app from closing
+
+            final scaffold = Scaffold(
+              backgroundColor: Theme.of(context).colorScheme.background,
+              drawer: !isDesktop && workspace != null
+                  ? _buildMobileDrawer(context, provider, workspace)
+                  : null,
+              body: LoadingOverlay(
+                isLoading: provider.isLoading,
+                child: body,
+              ),
+            );
+
+            if (isDesktop) {
+              return scaffold;
             }
-            // 3. If in channel navigator, allow app to close/pop route.
-            return true;
+
+            // Mobile view uses WillPopScope for custom back navigation
+            return WillPopScope(
+              onWillPop: () async {
+                // 1. If comment view is active, hide it.
+                if (provider.selectedPostForComments != null) {
+                  provider.hideCommentsSidebar();
+                  return false; // Prevent app from closing
+                }
+                // 2. If in a channel, go back to the channel navigator.
+                if (!provider.isMobileNavigatorVisible) {
+                  provider.showMobileNavigator();
+                  return false; // Prevent app from closing
+                }
+                // 3. If in channel navigator, allow app to close/pop route.
+                return true;
+              },
+              child: scaffold,
+            );
           },
-          child: scaffold,
         );
       },
     );
@@ -1026,6 +1084,8 @@ class WorkspaceContent extends StatefulWidget {
 }
 
 class _WorkspaceContentState extends State<WorkspaceContent> {
+  WorkspaceProvider? _workspaceProvider;
+
   @override
   void initState() {
     super.initState();
@@ -1034,6 +1094,7 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final provider = context.read<WorkspaceProvider>();
+      _workspaceProvider = provider; // Provider 인스턴스 저장
       provider.reset();
 
       final isDesktop = MediaQuery.of(context).size.width >= 900;
@@ -1047,7 +1108,8 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
 
   @override
   void dispose() {
-    context.read<WorkspaceProvider>().exitChannel();
+    // 안전한 dispose: 저장된 provider 인스턴스 사용
+    _workspaceProvider?.exitChannel();
     super.dispose();
   }
 

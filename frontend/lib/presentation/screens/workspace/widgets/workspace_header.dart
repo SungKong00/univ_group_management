@@ -43,10 +43,11 @@ class WorkspaceHeader extends StatelessWidget {
         children: [
           // 뒤로가기 버튼 (최우선 배치) - 크기 축소
           IconButton(
+            key: const Key('workspace_header_back_button'),
             onPressed: onBack,
             icon: const Icon(Icons.arrow_back,
                 color: AppTheme.onTextSecondary, size: 20),
-            tooltip: '뒤로가기',
+            tooltip: '',
             padding: const EdgeInsets.all(8),
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),

@@ -129,9 +129,10 @@ class _CommentsSidebarState extends State<CommentsSidebar>
             ),
           ),
           IconButton(
+            key: const Key('comments_sidebar_close_button'),
             onPressed: () => _closeSidebar(provider),
             icon: const Icon(Icons.close),
-            tooltip: '댓글 창 닫기',
+            tooltip: '',
           ),
         ],
       ),
@@ -310,13 +311,14 @@ class _CommentsSidebarState extends State<CommentsSidebar>
       child: Row(
         children: [
           IconButton(
+            key: const Key('comments_sidebar_attach_button'),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('파일 첨부 기능 구현 예정')),
               );
             },
             icon: const Icon(Icons.attach_file),
-            tooltip: '파일 첨부',
+            tooltip: '',
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -339,9 +341,10 @@ class _CommentsSidebarState extends State<CommentsSidebar>
           ),
           const SizedBox(width: 8),
           IconButton(
+            key: const Key('comments_sidebar_send_button'),
             onPressed: () => _sendComment(provider, post),
             icon: const Icon(Icons.send),
-            tooltip: '전송',
+            tooltip: '',
           ),
         ],
       ),

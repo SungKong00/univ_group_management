@@ -32,8 +32,9 @@ class ChannelDetailScreen extends StatelessWidget {
             // Back button logic for mobile comment view
             leading: !isDesktop && isCommentView
                 ? IconButton(
+                    key: const Key('comment_back_button'),
                     icon: const Icon(Icons.arrow_back),
-                    tooltip: '게시글 목록으로 돌아가기',
+                    tooltip: '',
                     onPressed: () => provider.hideCommentsSidebar(),
                   )
                 : null,
@@ -121,6 +122,7 @@ class ChannelDetailScreen extends StatelessWidget {
     // 개발/테스트용 권한 토글 버튼
     final canWrite = provider.canWriteInCurrentChannel;
     return IconButton(
+      key: Key('channel_permission_button_${channel.id}'),
       onPressed: () {
         provider.toggleChannelWritePermission(channel.id);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -138,7 +140,7 @@ class ChannelDetailScreen extends StatelessWidget {
         canWrite ? Icons.lock_open : Icons.lock,
         color: canWrite ? Colors.green : Colors.red,
       ),
-      tooltip: canWrite ? '권한 제거 (테스트)' : '권한 부여 (테스트)',
+      tooltip: '',
     );
   }
 }
@@ -539,9 +541,10 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     return Row(
       children: [
         IconButton(
+          key: Key('attach_file_button_${isCommentComposer ? 'comment' : 'post'}'),
           onPressed: _selectAttachment,
           icon: const Icon(Icons.attach_file),
-          tooltip: '파일 첨부',
+          tooltip: '',
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -565,9 +568,10 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         ),
         const SizedBox(width: 8),
         IconButton(
+          key: Key('send_button_${isCommentComposer ? 'comment' : 'post'}'),
           onPressed: () => isCommentComposer ? _sendComment(provider) : _sendMessage(provider),
           icon: const Icon(Icons.send),
-          tooltip: '전송',
+          tooltip: '',
         ),
       ],
     );
@@ -617,12 +621,13 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           ),
           const SizedBox(width: 8),
           IconButton(
+            key: const Key('send_button_disabled'),
             onPressed: null,
             icon: Icon(
               Icons.send,
               color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
             ),
-            tooltip: '전송 권한 없음',
+            tooltip: '',
           ),
         ],
       ),
