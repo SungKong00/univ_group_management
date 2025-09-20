@@ -211,9 +211,15 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                 defaultTargetPlatform == TargetPlatform.linux ||
                 defaultTargetPlatform == TargetPlatform.fuchsia;
 
+            // 댓글 사이드바가 열린 상태에서는 더 작은 breakpoint 사용
+            final bool isCommentsSidebarVisible = provider.isCommentsSidebarVisible;
+            final double effectiveBreakpoint = isCommentsSidebarVisible
+                ? ResponsiveBreakpoints.mobile - 200  // 568px로 더 작게 조정
+                : ResponsiveBreakpoints.mobile;       // 기본 768px
+
             final bool isDesktop = isDesktopPlatform &&
                 !widget.forceMobileLayout &&
-                constraints.maxWidth >= ResponsiveBreakpoints.mobile;
+                constraints.maxWidth >= effectiveBreakpoint;
 
             // On desktop, the sidebar logic is separate
             if (isDesktop) {
