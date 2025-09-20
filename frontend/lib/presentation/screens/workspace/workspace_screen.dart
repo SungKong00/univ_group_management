@@ -1188,7 +1188,6 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     WorkspaceDetailModel workspace,
   ) {
     const double workspaceSidebarWidth = 200;
-    final channel = provider.currentChannel;
 
     return Row(
       children: [

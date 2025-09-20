@@ -6,6 +6,7 @@ import '../../providers/workspace_provider.dart';
 import '../../../data/models/workspace_models.dart';
 import '../../widgets/loading_overlay.dart';
 import 'comments_screen.dart';
+import 'widgets/comments_sidebar.dart';
 
 class ChannelDetailScreen extends StatelessWidget {
   final ChannelModel channel;
@@ -153,6 +154,14 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           builder: (context, constraints) {
             final isDesktop = constraints.maxWidth >= ResponsiveBreakpoints.mobile;
 
+            if (!isDesktop && provider.isCommentsSidebarVisible) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  provider.hideCommentsSidebar();
+                }
+              });
+            }
+
             if (isDesktop) {
               return _buildDesktopLayout(context, provider, posts);
             } else {
@@ -165,17 +174,34 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   }
 
   Widget _buildDesktopLayout(BuildContext context, WorkspaceProvider provider, List<PostModel> posts) {
-    // 웹에서 사이드바 렌더링 문제로 인해 임시로 단순한 레이아웃 사용
-    final content = Column(
+    final isCommentsSidebarVisible = provider.isCommentsSidebarVisible;
+
+    final mainContent = Column(
       children: [
         Expanded(
           child: posts.isEmpty
               ? _buildEmptyState(context)
-              : _buildPostsList(context, posts, provider, isDesktop: true),
+              : _buildPostsList(context, posts, provider),
         ),
         _buildMessageComposer(context, provider),
       ],
     );
+
+    Widget content;
+    if (isCommentsSidebarVisible) {
+      content = Row(
+        children: [
+          Expanded(child: mainContent),
+          TapRegion(
+            onTapOutside: (_) => provider.hideCommentsSidebar(),
+            child: const CommentsSidebar(),
+          ),
+        ],
+      );
+    } else {
+      // 댓글 사이드바가 없을 때 기존 레이아웃
+      content = mainContent;
+    }
 
     if (widget.showLoadingOverlay) {
       return LoadingOverlay(
@@ -193,7 +219,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         Expanded(
           child: posts.isEmpty
               ? _buildEmptyState(context)
-              : _buildPostsList(context, posts, provider, isDesktop: false),
+              : _buildPostsList(context, posts, provider),
         ),
         _buildMessageComposer(context, provider),
       ],
@@ -241,9 +267,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   Widget _buildMessageBubble(
     BuildContext context,
     PostModel post,
-    WorkspaceProvider provider, {
-    required bool isDesktop,
-  }) {
+    WorkspaceProvider provider,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -365,7 +390,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                 const SizedBox(width: 8),
               ],
               InkWell(
-                onTap: () => _handleCommentsAction(context, post, provider, isDesktop),
+                onTap: () => _handleCommentsAction(context, post, provider),
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -648,18 +673,25 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     BuildContext context,
     PostModel post,
     WorkspaceProvider provider,
-    bool isDesktop,
   ) {
-    // 웹에서 사이드바 렌더링 문제로 인해 임시로 모든 플랫폼에서 페이지 방식 사용
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CommentsScreen(
-          postId: post.id,
-          postAuthor: post.author.name,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final useSidebar = screenWidth >= ResponsiveBreakpoints.mobile;
+
+    if (useSidebar) {
+      // 넉넉한 화면에서는 사이드바 사용
+      provider.showCommentsSidebar(post);
+    } else {
+      // 모바일/협소 화면에서는 별도 페이지 사용
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CommentsScreen(
+            postId: post.id,
+            postAuthor: post.author.name,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   String _formatTimestamp(DateTime timestamp) {
@@ -677,7 +709,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     }
   }
 
-  Widget _buildPostsList(BuildContext context, List<PostModel> posts, WorkspaceProvider provider, {required bool isDesktop}) {
+  Widget _buildPostsList(BuildContext context, List<PostModel> posts, WorkspaceProvider provider) {
     final groupedPosts = _groupPostsByDate(posts);
 
     return ListView.builder(
@@ -690,7 +722,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDateHeader(context, group.date),
-            ...group.posts.map((post) => _buildMessageBubble(context, post, provider, isDesktop: isDesktop)),
+            ...group.posts.map((post) => _buildMessageBubble(context, post, provider)),
           ],
         );
       },
