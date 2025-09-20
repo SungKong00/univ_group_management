@@ -475,31 +475,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                 ),
                 const SizedBox(width: 8),
               ],
-              InkWell(
-                onTap: () => _handleCommentsAction(context, post, provider),
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '댓글',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildCommentsToggleButton(context, post, provider),
             ],
           ),
         ],
@@ -814,7 +790,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     final now = DateTime.now();
     final diff = now.difference(timestamp);
 
-    if (diff.inDays > 0) {
+    if (diff.inDays > 30) {
+      return '${(diff.inDays / 30).floor()}개월 전';
+    } else if (diff.inDays > 0) {
       return '${diff.inDays}일 전';
     } else if (diff.inHours > 0) {
       return '${diff.inHours}시간 전';
@@ -1148,6 +1126,76 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
       ),
     );
   }
+
+  Widget _buildCommentsToggleButton(BuildContext context, PostModel post, WorkspaceProvider provider) {
+    final comments = provider.getCommentsForPost(post.id);
+    final commentCount = comments.length;
+
+    String? lastCommentTime;
+    if (comments.isNotEmpty) {
+      final latestComment = comments.last;
+      lastCommentTime = _formatTimestamp(latestComment.createdAt);
+    }
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: Builder(
+        builder: (context) {
+          bool isHovered = false;
+
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return InkWell(
+                onTap: () => _handleCommentsAction(context, post, provider),
+                onHover: (hovered) {
+                  setState(() {
+                    isHovered = hovered;
+                  });
+                },
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  width: 180, // 고정 너비로 버튼 길이 일정하게 유지
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24), // 메시지 입력창과 같은 radius
+                    border: isHovered ? Border.all(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                    ) : null, // 호버 시에만 테두리 표시
+                    color: isHovered
+                        ? Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5)
+                        : Colors.transparent,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          commentCount > 0
+                              ? '$commentCount개의 댓글${lastCommentTime != null ? (isHovered ? ' • 펼치기' : ' • $lastCommentTime') : ''}'
+                              : (isHovered ? '댓글 펼치기' : '댓글 작성하기'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
 }
 IconData _getChannelIcon(ChannelType type) {
   switch (type) {
