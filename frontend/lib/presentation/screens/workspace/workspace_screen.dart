@@ -58,25 +58,51 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   @override
   Widget build(BuildContext context) {
     return Consumer<WorkspaceProvider>(
-      builder: (context, workspaceProvider, child) {
-        final workspace = workspaceProvider.currentWorkspace;
+      builder: (context, provider, child) {
+        final workspace = provider.currentWorkspace;
         final isDesktop = MediaQuery.of(context).size.width >= 900;
 
-        return LoadingOverlay(
-          isLoading: workspaceProvider.isLoading,
-          child: Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.background,
-            drawer: !isDesktop && workspace != null
-                ? _buildMobileDrawer(context, workspaceProvider, workspace)
-                : null,
-            body: workspace == null
-                ? _buildEmptyState(workspaceProvider)
-                : isDesktop
-                    ? _buildDesktopWorkspace(
-                        context, workspaceProvider, workspace)
-                    : _buildMobileWorkspace(
-                        context, workspaceProvider, workspace),
+        Widget body;
+        if (workspace == null) {
+          body = _buildEmptyState(provider);
+        } else if (isDesktop) {
+          body = _buildDesktopWorkspace(context, provider, workspace);
+        } else {
+          body = _buildMobileWorkspace(context, provider, workspace);
+        }
+
+        final scaffold = Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.background,
+          drawer: !isDesktop && workspace != null
+              ? _buildMobileDrawer(context, provider, workspace)
+              : null,
+          body: LoadingOverlay(
+            isLoading: provider.isLoading,
+            child: body,
           ),
+        );
+
+        if (isDesktop) {
+          return scaffold;
+        }
+
+        // Mobile view uses WillPopScope for custom back navigation
+        return WillPopScope(
+          onWillPop: () async {
+            // 1. If comment view is active, hide it.
+            if (provider.selectedPostForComments != null) {
+              provider.hideCommentsSidebar();
+              return false; // Prevent app from closing
+            }
+            // 2. If in a channel, go back to the channel navigator.
+            if (!provider.isMobileNavigatorVisible) {
+              provider.showMobileNavigator();
+              return false; // Prevent app from closing
+            }
+            // 3. If in channel navigator, allow app to close/pop route.
+            return true;
+          },
+          child: scaffold,
         );
       },
     );
@@ -208,38 +234,34 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     WorkspaceProvider provider,
     WorkspaceDetailModel workspace,
   ) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const double workspaceSidebarWidth = 200;
+    const double workspaceSidebarWidth = 200;
+    final channel = provider.currentChannel;
 
-        return Scaffold(
-          body: Row(
-            children: [
-              const GlobalSidebar(),
-              Expanded(
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: workspaceSidebarWidth,
-                      child: WorkspaceSidebar(
-                        workspace: workspace,
-                        width: workspaceSidebarWidth,
-                        onShowAdminHome: () => _showAdminHome(context, workspace),
-                        onShowMemberManagement: () => _showMemberManagement(context),
-                        onShowChannelManagement: () => _showChannelManagement(context),
-                        onShowGroupInfo: () => _showGroupInfo(context),
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildDesktopMainArea(context, provider, workspace),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    return Row(
+      children: [
+        const GlobalSidebar(),
+        SizedBox(
+          width: workspaceSidebarWidth,
+          child: WorkspaceSidebar(
+            workspace: workspace,
+            width: workspaceSidebarWidth,
+            onShowAdminHome: () => _showAdminHome(context, workspace),
+            onShowMemberManagement: () => _showMemberManagement(context),
+            onShowChannelManagement: () => _showChannelManagement(context),
+            onShowGroupInfo: () => _showGroupInfo(context),
           ),
-        );
-      },
+        ),
+        Expanded(
+          child: channel == null
+              ? const Center(child: Text('채널을 선택해주세요'))
+              : ChannelDetailView(
+                  channel: channel,
+                  autoLoad: false,
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 32, vertical: 16),
+                ),
+        ),
+      ],
     );
   }
 
@@ -599,27 +621,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         ),
       );
     } else {
+      // Fallback to navigator if no channel is selected
       body = KeyedSubtree(
         key: const ValueKey('workspace-mobile-nav-fallback'),
         child: _buildMobileChannelNavigator(context, provider, workspace),
       );
     }
 
-    return WillPopScope(
-      onWillPop: () async {
-        if (!provider.isMobileNavigatorVisible) {
-          _openMobileNavigator(provider);
-          return false;
-        }
-        return true;
-      },
-      child: Scaffold(
-        drawer: _buildMobileDrawer(context, provider, workspace),
-        body: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: body,
-        ),
-      ),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      child: body,
     );
   }
 

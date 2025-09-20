@@ -153,6 +153,8 @@ class WorkspaceProvider extends ChangeNotifier {
 
   /// 채널 선택 및 상세 정보 로드
   Future<void> selectChannel(ChannelModel channel) async {
+    _selectedPostForComments = null;
+    _isCommentsSidebarVisible = false;
     try {
       _currentChannel = channel;
       _isMobileNavigatorVisible = false;

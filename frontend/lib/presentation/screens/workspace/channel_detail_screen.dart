@@ -5,7 +5,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../providers/workspace_provider.dart';
 import '../../../data/models/workspace_models.dart';
 import '../../widgets/loading_overlay.dart';
-import 'comments_screen.dart';
+
 import 'widgets/comments_sidebar.dart';
 
 class ChannelDetailScreen extends StatelessWidget {
@@ -18,77 +18,124 @@ class ChannelDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+    // The AppBar is now built with a Consumer to react to state changes
+    return Consumer<WorkspaceProvider>(
+      builder: (context, provider, child) {
+        final isCommentView = provider.selectedPostForComments != null;
+        final isDesktop = MediaQuery.of(context).size.width >= ResponsiveBreakpoints.mobile;
+
+        return Scaffold(
+          appBar: AppBar(
+            // Back button logic for mobile comment view
+            leading: !isDesktop && isCommentView
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    tooltip: '게시글 목록으로 돌아가기',
+                    onPressed: () => provider.hideCommentsSidebar(),
+                  )
+                : null,
+            title: isCommentView
+                ? _buildCommentsAppBarTitle(context, provider)
+                : _buildChannelAppBarTitle(context, provider),
+            actions: isCommentView
+                ? null // No actions in comment view for now
+                : [_buildChannelActions(context, provider)],
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+            elevation: 1,
+          ),
+          body: ChannelDetailView(
+            channel: channel,
+            autoLoad: true,
+            showLoadingOverlay: true,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildChannelAppBarTitle(BuildContext context, WorkspaceProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Icon(
-                  _getChannelIcon(channel.type),
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    channel.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ],
+            Icon(
+              _getChannelIcon(channel.type),
+              size: 18,
             ),
-            if (channel.description != null)
-              Text(
-                channel.description!,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                channel.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
                 ),
               ),
+            ),
           ],
         ),
-        actions: [
-          // 개발/테스트용 권한 토글 버튼
-          Consumer<WorkspaceProvider>(
-            builder: (context, provider, child) {
-              final canWrite = provider.canWriteInCurrentChannel;
-              return IconButton(
-                onPressed: () {
-                  provider.toggleChannelWritePermission(channel.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        canWrite
-                          ? '글 작성 권한이 제거되었습니다 (데모용)'
-                          : '글 작성 권한이 부여되었습니다 (데모용)',
-                      ),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-                icon: Icon(
-                  canWrite ? Icons.lock_open : Icons.lock,
-                  color: canWrite ? Colors.green : Colors.red,
-                ),
-                tooltip: canWrite ? '권한 제거 (테스트)' : '권한 부여 (테스트)',
-              );
-            },
+        if (channel.description != null)
+          Text(
+            channel.description!,
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
-        ],
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
-        elevation: 1,
+      ],
+    );
+  }
+
+  Widget _buildCommentsAppBarTitle(BuildContext context, WorkspaceProvider provider) {
+    final groupName = provider.currentWorkspace?.group.name ?? '그룹';
+    final channelName = provider.currentChannel?.name ?? '채널';
+    final comments = provider.getCommentsForPost(provider.selectedPostForComments!.id);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$groupName > $channelName',
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.normal,
+          ),
+        ),
+        Text(
+          '댓글 ${comments.length}개',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChannelActions(BuildContext context, WorkspaceProvider provider) {
+    // 개발/테스트용 권한 토글 버튼
+    final canWrite = provider.canWriteInCurrentChannel;
+    return IconButton(
+      onPressed: () {
+        provider.toggleChannelWritePermission(channel.id);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              canWrite
+                  ? '글 작성 권한이 제거되었습니다 (데모용)'
+                  : '글 작성 권한이 부여되었습니다 (데모용)',
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+      icon: Icon(
+        canWrite ? Icons.lock_open : Icons.lock,
+        color: canWrite ? Colors.green : Colors.red,
       ),
-      body: ChannelDetailView(
-        channel: channel,
-        autoLoad: true,
-        showLoadingOverlay: true,
-      ),
+      tooltip: canWrite ? '권한 제거 (테스트)' : '권한 부여 (테스트)',
     );
   }
 }
@@ -149,23 +196,22 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     return Consumer<WorkspaceProvider>(
       builder: (context, provider, child) {
         final posts = provider.currentChannelPosts;
+        final isCommentView = provider.selectedPostForComments != null;
 
         return LayoutBuilder(
           builder: (context, constraints) {
             final isDesktop = constraints.maxWidth >= ResponsiveBreakpoints.mobile;
 
-            if (!isDesktop && provider.isCommentsSidebarVisible) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  provider.hideCommentsSidebar();
-                }
-              });
-            }
-
+            // On desktop, the sidebar logic is separate
             if (isDesktop) {
               return _buildDesktopLayout(context, provider, posts);
+            }
+
+            // On mobile, the main view switches
+            if (isCommentView) {
+              return _buildMobileCommentLayout(context, provider);
             } else {
-              return _buildMobileLayout(context, provider, posts);
+              return _buildMobilePostLayout(context, provider, posts);
             }
           },
         );
@@ -183,7 +229,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
               ? _buildEmptyState(context)
               : _buildPostsList(context, posts, provider),
         ),
-        _buildMessageComposer(context, provider),
+        _buildMessageComposer(context, provider, isCommentComposer: false),
       ],
     );
 
@@ -199,7 +245,6 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         ],
       );
     } else {
-      // 댓글 사이드바가 없을 때 기존 레이아웃
       content = mainContent;
     }
 
@@ -209,11 +254,10 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         child: content,
       );
     }
-
     return content;
   }
 
-  Widget _buildMobileLayout(BuildContext context, WorkspaceProvider provider, List<PostModel> posts) {
+  Widget _buildMobilePostLayout(BuildContext context, WorkspaceProvider provider, List<PostModel> posts) {
     final content = Column(
       children: [
         Expanded(
@@ -221,7 +265,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
               ? _buildEmptyState(context)
               : _buildPostsList(context, posts, provider),
         ),
-        _buildMessageComposer(context, provider),
+        _buildMessageComposer(context, provider, isCommentComposer: false),
       ],
     );
 
@@ -231,8 +275,50 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         child: content,
       );
     }
-
     return content;
+  }
+
+  Widget _buildMobileCommentLayout(BuildContext context, WorkspaceProvider provider) {
+    final content = Column(
+      children: [
+        Expanded(
+          child: _buildCommentsView(context, provider),
+        ),
+        _buildMessageComposer(context, provider, isCommentComposer: true),
+      ],
+    );
+
+    if (widget.showLoadingOverlay) {
+      return LoadingOverlay(
+        isLoading: provider.isLoading,
+        child: content,
+      );
+    }
+    return content;
+  }
+
+  Widget _buildCommentsView(BuildContext context, WorkspaceProvider provider) {
+    final post = provider.selectedPostForComments!;
+    final comments = provider.getCommentsForPost(post.id);
+
+    // Ensure comments are loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (comments.isEmpty) {
+        provider.loadPostComments(post.id);
+      }
+    });
+
+    return CustomScrollView(
+      controller: _scrollController,
+      slivers: [
+        SliverToBoxAdapter(child: _buildPostPreview(context, post)),
+        const SliverToBoxAdapter(child: Divider(height: 1)),
+        if (comments.isEmpty)
+          SliverFillRemaining(child: _buildEmptyCommentsState(context))
+        else
+          _buildSliverCommentsList(context, comments, provider),
+      ],
+    );
   }
 
   Widget _buildEmptyState(BuildContext context) {
@@ -249,15 +335,15 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           Text(
             '아직 메시지가 없습니다',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             '첫 번째 메시지를 남겨보세요',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
         ],
       ),
@@ -292,15 +378,15 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
               Text(
                 post.author.name,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
               const SizedBox(width: 8),
               Text(
                 _formatTimestamp(post.createdAt),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               ),
               const Spacer(),
               if (post.isPinned)
@@ -421,8 +507,12 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     );
   }
 
-  Widget _buildMessageComposer(BuildContext context, WorkspaceProvider provider) {
+  Widget _buildMessageComposer(BuildContext context, WorkspaceProvider provider, {required bool isCommentComposer}) {
     final canWrite = provider.canWriteInCurrentChannel;
+
+    // For comments, we assume if you can see the post, you can comment.
+    // A more granular permission could be added later.
+    final isEnabled = isCommentComposer || canWrite;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -432,7 +522,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         16 + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-        color: canWrite
+        color: isEnabled
             ? Theme.of(context).colorScheme.surface
             : Theme.of(context).colorScheme.surfaceVariant,
         border: Border(
@@ -441,13 +531,16 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           ),
         ),
       ),
-      child: canWrite
-          ? _buildActiveComposer(context, provider)
-          : _buildDisabledComposer(context),
+      child: SafeArea(
+        top: false,
+        child: isEnabled
+            ? _buildActiveComposer(context, provider, isCommentComposer: isCommentComposer)
+            : _buildDisabledComposer(context),
+      ),
     );
   }
 
-  Widget _buildActiveComposer(BuildContext context, WorkspaceProvider provider) {
+  Widget _buildActiveComposer(BuildContext context, WorkspaceProvider provider, {required bool isCommentComposer}) {
     return Row(
       children: [
         IconButton(
@@ -461,7 +554,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             controller: _messageController,
             focusNode: _messageFocusNode,
             decoration: InputDecoration(
-              hintText: '메시지를 입력하세요...',
+              hintText: isCommentComposer ? '댓글을 입력하세요...' : '메시지를 입력하세요...',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -472,12 +565,12 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             ),
             maxLines: null,
             textInputAction: TextInputAction.send,
-            onSubmitted: (_) => _sendMessage(provider),
+            onSubmitted: (_) => isCommentComposer ? _sendComment(provider) : _sendMessage(provider),
           ),
         ),
         const SizedBox(width: 8),
         IconButton(
-          onPressed: () => _sendMessage(provider),
+          onPressed: () => isCommentComposer ? _sendComment(provider) : _sendMessage(provider),
           icon: const Icon(Icons.send),
           tooltip: '전송',
         ),
@@ -514,8 +607,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                     child: Text(
                       '이 채널에서 메시지를 작성할 권한이 없습니다',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
-                      ),
+                            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                          ),
                     ),
                   ),
                   Icon(
@@ -598,8 +691,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             Text(
               '채널 관리자에게 권한 요청을 문의하세요.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
           ],
         ),
@@ -614,7 +707,6 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   }
 
   void _sendMessage(WorkspaceProvider provider) async {
-    // 권한 확인
     if (!provider.canWriteInCurrentChannel) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -654,10 +746,43 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     }
   }
 
+  void _sendComment(WorkspaceProvider provider) async {
+    final content = _messageController.text.trim();
+    if (content.isEmpty) return;
+
+    final postId = provider.selectedPostForComments?.id;
+    if (postId == null) return;
+
+    _messageController.clear();
+
+    try {
+      await provider.createComment(
+        postId: postId,
+        content: content,
+      );
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('댓글 작성 실패: $e')),
+        );
+      }
+    }
+  }
+
   void _selectAttachment() {
-    // 권한 확인
     final provider = context.read<WorkspaceProvider>();
-    if (!provider.canWriteInCurrentChannel) {
+    final isCommentComposer = provider.selectedPostForComments != null;
+    if (!isCommentComposer && !provider.canWriteInCurrentChannel) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('이 채널에서 파일을 첨부할 권한이 없습니다')),
       );
@@ -678,19 +803,10 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     final useSidebar = screenWidth >= ResponsiveBreakpoints.mobile;
 
     if (useSidebar) {
-      // 넉넉한 화면에서는 사이드바 사용
       provider.showCommentsSidebar(post);
     } else {
-      // 모바일/협소 화면에서는 별도 페이지 사용
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CommentsScreen(
-            postId: post.id,
-            postAuthor: post.author.name,
-          ),
-        ),
-      );
+      // On mobile, just update the state
+      provider.showCommentsSidebar(post);
     }
   }
 
@@ -791,8 +907,248 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
       ),
     );
   }
-}
 
+  // --- Widgets for Comment View (ported from comments_screen.dart) ---
+
+  Widget _buildPostPreview(BuildContext context, PostModel post) {
+    return Container(
+      padding: const EdgeInsets.all(UIConstants.defaultPadding),
+      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Text(
+                  post.author.name.isNotEmpty ? post.author.name[0] : '?',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                post.author.name,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _formatTimestamp(post.createdAt),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            post.content,
+            style: Theme.of(context).textTheme.bodyMedium,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSliverCommentsList(BuildContext context, List<CommentModel> comments, WorkspaceProvider provider) {
+    return SliverPadding(
+      padding: const EdgeInsets.all(UIConstants.defaultPadding),
+      sliver: SliverList( 
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final comment = comments[index];
+            return _buildCommentTile(context, comment, provider);
+          },
+          childCount: comments.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyCommentsState(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.chat_bubble_outline,
+            size: 64,
+            color: Colors.grey,
+          ),
+          SizedBox(height: 16),
+          Text(
+            '아직 댓글이 없습니다',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            '첫 번째 댓글을 작성해보세요!',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommentTile(
+    BuildContext context,
+    CommentModel comment,
+    WorkspaceProvider provider,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: UIConstants.commentSpacing),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: ResponsiveBreakpoints.commentAvatarSize / 2,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Text(
+                  comment.author.name.isNotEmpty ? comment.author.name[0] : '?',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      comment.author.name,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    Text(
+                      _formatTimestamp(comment.createdAt),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.more_vert,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit),
+                        SizedBox(width: 8),
+                        Text('수정'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete),
+                        SizedBox(width: 8),
+                        Text('삭제'),
+                      ],
+                    ),
+                  ),
+                ],
+                onSelected: (value) {
+                  if (value == 'delete') {
+                    _deleteComment(context, provider, comment);
+                  } else if (value == 'edit') {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('댓글 수정 기능은 준비 중입니다')),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(UIConstants.commentBorderRadius),
+            ),
+            child: Text(
+              comment.content,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteComment(
+    BuildContext context,
+    WorkspaceProvider provider,
+    CommentModel comment,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('댓글 삭제'),
+        content: const Text('정말로 이 댓글을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final postId = provider.selectedPostForComments?.id;
+              if (postId == null) return;
+              try {
+                await provider.deleteComment(comment.id, postId);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('댓글이 삭제되었습니다')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('댓글 삭제 실패: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+  }
+}
 IconData _getChannelIcon(ChannelType type) {
   switch (type) {
     case ChannelType.text:

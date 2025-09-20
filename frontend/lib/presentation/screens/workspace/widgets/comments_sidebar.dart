@@ -293,55 +293,55 @@ class _CommentsSidebarState extends State<CommentsSidebar>
 
   Widget _buildCommentInput(BuildContext context, WorkspaceProvider provider, PostModel post) {
     return Container(
-      padding: EdgeInsets.only(
-        left: ResponsiveBreakpoints.commentPadding,
-        right: ResponsiveBreakpoints.commentPadding,
-        top: ResponsiveBreakpoints.commentPadding,
-        bottom: ResponsiveBreakpoints.commentPadding + MediaQuery.of(context).viewInsets.bottom,
+      padding: EdgeInsets.fromLTRB(
+        16,
+        8,
+        16,
+        16 + MediaQuery.of(context).padding.bottom,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+        ),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          IconButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('파일 첨부 기능 구현 예정')),
+              );
+            },
+            icon: const Icon(Icons.attach_file),
+            tooltip: '파일 첨부',
+          ),
+          const SizedBox(width: 8),
           Expanded(
-            child: Container(
-              constraints: const BoxConstraints(
-                minHeight: ResponsiveBreakpoints.commentInputHeight,
-                maxHeight: ResponsiveBreakpoints.commentMaxInputHeight,
-              ),
-              child: TextField(
-                controller: _commentController,
-                decoration: InputDecoration(
-                  hintText: '댓글을 입력하세요...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.commentBorderRadius),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+            child: TextField(
+              controller: _commentController,
+              decoration: InputDecoration(
+                hintText: '댓글을 입력하세요...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                maxLines: null,
-                textInputAction: TextInputAction.newline,
-                onSubmitted: (_) => _sendComment(provider, post),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
               ),
+              maxLines: null,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _sendComment(provider, post),
             ),
           ),
           const SizedBox(width: 8),
-          Container(
-            height: ResponsiveBreakpoints.commentInputHeight,
-            child: IconButton(
-              onPressed: () => _sendComment(provider, post),
-              icon: Icon(
-                Icons.send,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(UIConstants.commentBorderRadius),
-                ),
-              ),
-            ),
+          IconButton(
+            onPressed: () => _sendComment(provider, post),
+            icon: const Icon(Icons.send),
+            tooltip: '전송',
           ),
         ],
       ),
