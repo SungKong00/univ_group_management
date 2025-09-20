@@ -618,6 +618,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           autoLoad: false,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          forceMobileLayout: true,
         ),
       );
     } else {
@@ -1262,6 +1263,7 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
           autoLoad: false,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          forceMobileLayout: true,
         ),
       );
     } else {

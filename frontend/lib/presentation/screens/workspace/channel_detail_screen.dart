@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -145,6 +148,7 @@ class ChannelDetailView extends StatefulWidget {
   final bool autoLoad;
   final EdgeInsets contentPadding;
   final bool showLoadingOverlay;
+  final bool forceMobileLayout;
 
   const ChannelDetailView({
     super.key,
@@ -152,6 +156,7 @@ class ChannelDetailView extends StatefulWidget {
     this.autoLoad = false,
     this.contentPadding = const EdgeInsets.all(16),
     this.showLoadingOverlay = false,
+    this.forceMobileLayout = false,
   });
 
   @override
@@ -200,7 +205,15 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth >= ResponsiveBreakpoints.mobile;
+            final bool isDesktopPlatform = kIsWeb ||
+                defaultTargetPlatform == TargetPlatform.macOS ||
+                defaultTargetPlatform == TargetPlatform.windows ||
+                defaultTargetPlatform == TargetPlatform.linux ||
+                defaultTargetPlatform == TargetPlatform.fuchsia;
+
+            final bool isDesktop = isDesktopPlatform &&
+                !widget.forceMobileLayout &&
+                constraints.maxWidth >= ResponsiveBreakpoints.mobile;
 
             // On desktop, the sidebar logic is separate
             if (isDesktop) {
@@ -1138,59 +1151,137 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
       lastCommentTime = _formatTimestamp(post.lastCommentedAt!);
     }
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: Builder(
-        builder: (context) {
+    return Flexible(
+      fit: FlexFit.loose,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final mediaQuery = MediaQuery.of(context);
+          final screenWidth = mediaQuery.size.width;
+          final bool isMobile = screenWidth < ResponsiveBreakpoints.mobile;
+          final bool isSidebarVisible = provider.isCommentsSidebarVisible;
+
+          double sidebarWidth = ResponsiveBreakpoints.commentsSidebarWidth;
+          if (kIsWeb) {
+            sidebarWidth = math.min(
+              ResponsiveBreakpoints.commentsSidebarWidth,
+              screenWidth * 0.4,
+            );
+          }
+
+          double availableWidth = constraints.maxWidth;
+          if (!availableWidth.isFinite) {
+            availableWidth = screenWidth;
+          }
+
+          // Leave breathing room so the button never hugs the right edge.
+          const double edgePadding = UIConstants.defaultPadding;
+          if (availableWidth > edgePadding * 2) {
+            availableWidth -= edgePadding;
+          }
+
+          final double desktopMinWidth = 200;
+          final double mobileMinWidth = 160;
+          final double mobileFixedWidth = 230;
+          final double desktopMaxWidth = sidebarWidth + 200; // allow slightly wider than the sidebar
+
+          double targetWidth;
+
+          if (isMobile) {
+            targetWidth = math.min(availableWidth, mobileFixedWidth);
+            if (targetWidth < mobileMinWidth && availableWidth >= mobileMinWidth) {
+              targetWidth = mobileMinWidth;
+            }
+          } else {
+            targetWidth = math.min(availableWidth, desktopMaxWidth);
+            if (targetWidth < desktopMinWidth && availableWidth >= desktopMinWidth) {
+              targetWidth = desktopMinWidth;
+            }
+
+            if (availableWidth < desktopMinWidth) {
+              targetWidth = availableWidth;
+            }
+
+            // Ensure the button still fits when the sidebar slides in, with extra gutter.
+            final double comfortableWidth = screenWidth - sidebarWidth - (edgePadding * 2);
+            if (comfortableWidth.isFinite && comfortableWidth > 0) {
+              targetWidth = math.min(targetWidth, comfortableWidth);
+            }
+
+            // If the sidebar is already visible, we tighten further to keep some gap.
+            if (isSidebarVisible) {
+              final double sidebarAdjustedWidth = constraints.maxWidth - edgePadding;
+              if (sidebarAdjustedWidth.isFinite && sidebarAdjustedWidth > 0) {
+                targetWidth = math.min(targetWidth, sidebarAdjustedWidth);
+              }
+            }
+          }
+
+          // Fallback to avoid negative sizes.
+          if (targetWidth <= 0) {
+            targetWidth = isMobile ? mobileMinWidth : desktopMinWidth;
+          }
+
           bool isHovered = false;
 
-          return StatefulBuilder(
-            builder: (context, setState) {
-              return InkWell(
-                onTap: () => _handleCommentsAction(context, post, provider),
-                onHover: (hovered) {
-                  setState(() {
-                    isHovered = hovered;
-                  });
-                },
-                borderRadius: BorderRadius.circular(24),
-                child: Container(
-                  width: 180, // 고정 너비로 버튼 길이 일정하게 유지
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24), // 메시지 입력창과 같은 radius
-                    border: isHovered ? Border.all(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                    ) : null, // 호버 시에만 테두리 표시
-                    color: isHovered
-                        ? Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5)
-                        : Colors.transparent,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          commentCount > 0
-                              ? '$commentCount개의 댓글${lastCommentTime != null ? (isHovered ? ' • 펼치기' : ' • $lastCommentTime') : ''}'
-                              : (isHovered ? '댓글 펼치기' : '댓글 작성하기'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+          return MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return Align(
+                  alignment: Alignment.centerLeft,
+                  child: SizedBox(
+                    width: targetWidth,
+                    child: InkWell(
+                      onTap: () => _handleCommentsAction(context, post, provider),
+                      onHover: (hovered) {
+                        setState(() {
+                          isHovered = hovered;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(24),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          border: isHovered
+                              ? Border.all(
+                                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                                )
+                              : null,
+                          color: isHovered
+                              ? Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5)
+                              : Colors.transparent,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                commentCount > 0
+                                    ? '$commentCount개의 댓글${lastCommentTime != null ? (isHovered ? ' • 펼치기' : ' • $lastCommentTime') : ''}'
+                                    : (isHovered ? '댓글 펼치기' : '댓글 작성하기'),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.chevron_right,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ],
                         ),
                       ),
-                      Icon(
-                        Icons.chevron_right,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),
