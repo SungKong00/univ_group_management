@@ -530,8 +530,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 Expanded(
                   child: _buildStatItem(
                     context,
-                    '공지',
-                    '${workspace.announcements.length}개',
+                    '공지 채널',
+                    '${workspace.channels.where((c) => c.type == ChannelType.announcement).length}개',
                     Icons.campaign,
                   ),
                 ),

@@ -399,7 +399,6 @@ class WorkspaceDtoModel {
       ),
       myMembership: myMembership, // 백엔드에서 제공된 실제 멤버십 정보 사용
       channels: channels,
-      announcements: notices,
       members: members,
     );
   }
@@ -411,7 +410,6 @@ class WorkspaceDetailModel {
   final GroupModel group;
   final GroupMemberModel? myMembership;
   final List<ChannelModel> channels;
-  final List<PostModel> announcements;
   final List<GroupMemberModel> members;
 
   const WorkspaceDetailModel({
@@ -419,7 +417,6 @@ class WorkspaceDetailModel {
     required this.group,
     this.myMembership,
     required this.channels,
-    required this.announcements,
     required this.members,
   });
 
@@ -432,9 +429,6 @@ class WorkspaceDetailModel {
           : null,
       channels: ((json['channels'] as List?) ?? [])
           .map((e) => ChannelModel.fromJson(e))
-          .toList(),
-      announcements: ((json['announcements'] as List?) ?? [])
-          .map((e) => PostModel.fromJson(e))
           .toList(),
       members: ((json['members'] as List?) ?? [])
           .map((e) => GroupMemberModel.fromJson(e))
@@ -476,12 +470,6 @@ class WorkspaceDetailModel {
     return isOwnerByName || hasPermission('ADMIN_MANAGE');
   }
 
-  /// 공지 작성 권한 여부: 채널/관리 권한 보유자 허용
-  bool get canCreateAnnouncements {
-    final isOwnerByName = (myMembership?.role.name.toUpperCase() == 'OWNER' ||
-        myMembership?.role.name == '그룹장');
-    return isOwnerByName || hasPermission('ADMIN_MANAGE') || hasPermission('CHANNEL_MANAGE');
-  }
 }
 
 // Helper functions for parsing enums

@@ -25,7 +25,6 @@ class WorkspaceProvider extends ChangeNotifier {
 
   // 모바일 전용 상태
   bool _isMobileNavigatorVisible = false;
-  bool _isViewingAnnouncements = false;
 
   // Current channel (when in channel detail view)
   ChannelModel? _currentChannel;
@@ -45,12 +44,6 @@ class WorkspaceProvider extends ChangeNotifier {
   ChannelModel? get currentChannel => _currentChannel;
   List<PostModel> get currentChannelPosts => _currentChannelPosts;
 
-  // 현재 워크스페이스의 공지사항 (정렬됨)
-  List<PostModel> get announcements {
-    final announcements = List<PostModel>.from(_currentWorkspace?.announcements ?? []);
-    announcements.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    return announcements;
-  }
 
   // 현재 워크스페이스의 채널 (정렬됨)
   List<ChannelModel> get channels {
@@ -70,10 +63,8 @@ class WorkspaceProvider extends ChangeNotifier {
   bool get canManage => _currentWorkspace?.canManage ?? false;
   bool get canManageMembers => _currentWorkspace?.canManageMembers ?? false;
   bool get canManageChannels => _currentWorkspace?.canManageChannels ?? false;
-  bool get canCreateAnnouncements => _currentWorkspace?.canCreateAnnouncements ?? false;
 
   bool get isMobileNavigatorVisible => _isMobileNavigatorVisible;
-  bool get isViewingAnnouncements => _isViewingAnnouncements;
 
   /// 특정 채널에 대한 권한 확인
   bool hasChannelPermission(int channelId, String permission) {
@@ -102,7 +93,6 @@ class WorkspaceProvider extends ChangeNotifier {
       _currentWorkspace = await _workspaceService.getWorkspaceByGroup(groupId);
 
       _isMobileNavigatorVisible = mobileNavigatorVisible;
-      _isViewingAnnouncements = false;
       _isLoading = false;
       notifyListeners();
 
@@ -117,7 +107,6 @@ class WorkspaceProvider extends ChangeNotifier {
 
           _didAutoSelectChannel = true;
           _isMobileNavigatorVisible = false;
-          _isViewingAnnouncements = false;
           // 비동기로 선택하여 게시글/권한 로드
           await selectChannel(defaultChannel);
         }
@@ -159,7 +148,6 @@ class WorkspaceProvider extends ChangeNotifier {
     try {
       _currentChannel = channel;
       _isMobileNavigatorVisible = false;
-      _isViewingAnnouncements = false;
       _isLoading = true;
       notifyListeners();
 
@@ -223,27 +211,18 @@ class WorkspaceProvider extends ChangeNotifier {
   void exitChannel() {
     _currentChannel = null;
     _currentChannelPosts.clear();
-    _isViewingAnnouncements = false;
     notifyListeners();
   }
 
   void showMobileNavigator() {
-    if (!_isMobileNavigatorVisible || _currentChannel != null || _isViewingAnnouncements) {
+    if (!_isMobileNavigatorVisible || _currentChannel != null) {
       _currentChannel = null;
       _currentChannelPosts.clear();
       _isMobileNavigatorVisible = true;
-      _isViewingAnnouncements = false;
       notifyListeners();
     }
   }
 
-  void showMobileAnnouncements() {
-    _currentChannel = null;
-    _currentChannelPosts.clear();
-    _isMobileNavigatorVisible = false;
-    _isViewingAnnouncements = true;
-    notifyListeners();
-  }
 
   void setMobileNavigatorVisible(bool visible) {
     if (_isMobileNavigatorVisible != visible) {
@@ -251,23 +230,11 @@ class WorkspaceProvider extends ChangeNotifier {
       if (visible) {
         _currentChannel = null;
         _currentChannelPosts.clear();
-        _isViewingAnnouncements = false;
       }
       notifyListeners();
     }
   }
 
-  void setViewingAnnouncements(bool viewing) {
-    if (_isViewingAnnouncements != viewing) {
-      _isViewingAnnouncements = viewing;
-      if (viewing) {
-        _currentChannel = null;
-        _currentChannelPosts.clear();
-        _isMobileNavigatorVisible = false;
-      }
-      notifyListeners();
-    }
-  }
 
   /// 새 게시글 생성
   Future<void> createPost({
@@ -290,20 +257,6 @@ class WorkspaceProvider extends ChangeNotifier {
         notifyListeners();
       }
 
-      // 공지사항이라면 워크스페이스 공지사항에도 추가
-      if (type == PostType.announcement && _currentWorkspace != null) {
-        final updatedAnnouncements = List<PostModel>.from(_currentWorkspace!.announcements);
-        updatedAnnouncements.add(newPost);
-        _currentWorkspace = WorkspaceDetailModel(
-          workspace: _currentWorkspace!.workspace,
-          group: _currentWorkspace!.group,
-          myMembership: _currentWorkspace!.myMembership,
-          channels: _currentWorkspace!.channels,
-          announcements: updatedAnnouncements,
-          members: _currentWorkspace!.members,
-        );
-        notifyListeners();
-      }
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -318,20 +271,6 @@ class WorkspaceProvider extends ChangeNotifier {
       // 현재 채널 게시글 목록에서 제거
       _currentChannelPosts.removeWhere((post) => post.id == postId);
 
-      // 공지사항 목록에서도 제거
-      if (_currentWorkspace != null) {
-        final updatedAnnouncements = _currentWorkspace!.announcements
-            .where((post) => post.id != postId)
-            .toList();
-        _currentWorkspace = WorkspaceDetailModel(
-          workspace: _currentWorkspace!.workspace,
-          group: _currentWorkspace!.group,
-          myMembership: _currentWorkspace!.myMembership,
-          channels: _currentWorkspace!.channels,
-          announcements: updatedAnnouncements,
-          members: _currentWorkspace!.members,
-        );
-      }
 
       notifyListeners();
     } catch (e) {
@@ -427,7 +366,6 @@ class WorkspaceProvider extends ChangeNotifier {
         group: _currentWorkspace!.group,
         myMembership: _currentWorkspace!.myMembership,
         channels: updatedChannels,
-        announcements: _currentWorkspace!.announcements,
         members: _currentWorkspace!.members,
       );
 
@@ -456,7 +394,6 @@ class WorkspaceProvider extends ChangeNotifier {
           group: _currentWorkspace!.group,
           myMembership: _currentWorkspace!.myMembership,
           channels: updatedChannels,
-          announcements: _currentWorkspace!.announcements,
           members: _currentWorkspace!.members,
         );
 
@@ -495,7 +432,6 @@ class WorkspaceProvider extends ChangeNotifier {
     _accessDenied = false;
     _didAutoSelectChannel = false;
     _isMobileNavigatorVisible = false;
-    _isViewingAnnouncements = false;
     notifyListeners();
   }
 
@@ -566,7 +502,6 @@ class WorkspaceProvider extends ChangeNotifier {
           group: _currentWorkspace!.group,
           myMembership: _currentWorkspace!.myMembership,
           channels: _currentWorkspace!.channels,
-          announcements: _currentWorkspace!.announcements,
           members: updatedMembers,
         );
       }
@@ -604,7 +539,6 @@ class WorkspaceProvider extends ChangeNotifier {
           group: _currentWorkspace!.group,
           myMembership: _currentWorkspace!.myMembership,
           channels: _currentWorkspace!.channels,
-          announcements: _currentWorkspace!.announcements,
           members: updatedMembers,
         );
       }
@@ -866,36 +800,6 @@ class WorkspaceProvider extends ChangeNotifier {
     }
   }
 
-  /// 공지사항 작성
-  Future<bool> createAnnouncement({
-    required int groupId,
-    required String content,
-  }) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      await _workspaceService.createAnnouncement(
-        groupId: groupId,
-        content: content,
-      );
-
-      // 워크스페이스를 다시 로드하여 최신 공지사항 반영
-      await loadWorkspace(
-        groupId,
-        mobileNavigatorVisible: _isMobileNavigatorVisible,
-      );
-
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      notifyListeners();
-      return false;
-    }
-  }
 
   /// 권한 확인 헬퍼 메서드들
   bool get canManageRoles => canManageMembers; // 멤버 관리 권한이 있으면 역할도 관리 가능

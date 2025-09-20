@@ -355,8 +355,8 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
         if (workspace.isMobileNavigatorVisible) {
           return safeGroupName;
         }
-        if (workspace.isViewingAnnouncements || workspace.currentChannel == null) {
-          return safeGroupName.isEmpty ? '공지사항' : '$safeGroupName > 공지사항';
+        if (workspace.currentChannel == null) {
+          return safeGroupName;
         }
         return safeGroupName.isEmpty
             ? workspace.currentChannel!.name

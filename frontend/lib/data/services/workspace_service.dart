@@ -163,7 +163,6 @@ class WorkspaceService {
         group: group,
         myMembership: myMembership,
         channels: channels,
-        announcements: announcements,
         members: members,
       );
     } on DioException catch (e) {
@@ -675,45 +674,6 @@ class WorkspaceService {
     }
   }
 
-  /// 공지사항 작성
-  Future<void> createAnnouncement({
-    required int groupId,
-    required String content,
-  }) async {
-    try {
-      // 워크스페이스 정보를 먼저 가져와서 기본 채널 ID 확보
-      final workspaceResponse = await _dioClient.get('/groups/$groupId/workspace');
-      if (workspaceResponse.data['success'] != true) {
-        throw Exception('워크스페이스 정보를 가져올 수 없습니다');
-      }
-
-      final channels = workspaceResponse.data['data']['channels'] as List;
-      if (channels.isEmpty) {
-        throw Exception('공지사항을 작성할 채널이 없습니다');
-      }
-
-      // 첫 번째 채널을 공지 채널로 사용 (또는 announcement 타입 채널 찾기)
-      final announcementChannel = channels.firstWhere(
-        (channel) => channel['type'] == 'ANNOUNCEMENT',
-        orElse: () => channels.first,
-      );
-
-      final channelId = announcementChannel['id'];
-
-      // 게시글 작성 API 호출
-      final response = await _dioClient.post('/channels/$channelId/posts', data: {
-        'content': content,
-        'type': 'ANNOUNCEMENT',
-      });
-
-      final data = response.data;
-      if (data['success'] != true) {
-        throw Exception(data['error']?['message'] ?? 'Failed to create announcement');
-      }
-    } catch (e) {
-      throw Exception('공지사항 작성에 실패했습니다: $e');
-    }
-  }
 
 }
 

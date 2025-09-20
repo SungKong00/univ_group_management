@@ -6,7 +6,6 @@ import '../../widgets/global_sidebar.dart';
 import '../../theme/app_theme.dart';
 import '../../../data/models/workspace_models.dart';
 import 'channel_detail_screen.dart';
-import 'tabs/announcements_tab.dart';
 import 'tabs/channels_tab.dart';
 import 'tabs/members_tab.dart';
 import 'member_management_screen.dart';
@@ -14,7 +13,6 @@ import 'channel_management_screen.dart';
 import 'group_info_screen.dart';
 import 'admin_home_screen.dart';
 import 'widgets/workspace_sidebar.dart';
-import 'widgets/announcements_view.dart';
 
 class WorkspaceScreen extends StatefulWidget {
   final int groupId;
@@ -251,20 +249,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     WorkspaceDetailModel workspace,
   ) {
     final channel = provider.currentChannel;
-    return channel == null
-        ? AnnouncementsView(
-            workspace: workspace,
-            announcements: provider.announcements,
-            onCreateAnnouncement: workspace.canCreateAnnouncements
-                ? () => _showCreateAnnouncementDialog(context)
-                : null,
-          )
-        : ChannelDetailView(
-            channel: channel,
-            autoLoad: false,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          );
+    if (channel == null) {
+      return const Center(
+        child: Text('채널을 선택해주세요'),
+      );
+    }
+
+    return ChannelDetailView(
+      channel: channel,
+      autoLoad: false,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+    );
   }
 
   IconData _channelIconFor(ChannelModel channel) {
@@ -335,14 +331,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  // 공지사항 (기본)
-                  buildTile(
-                    icon: Icons.campaign,
-                    label: '공지사항',
-                    selected: selectedChannelId == null,
-                    onTap: () => provider.exitChannel(),
-                  ),
-                  const Divider(),
                   // 채널 목록
                   ...channels.map(
                     (channel) => buildTile(
@@ -593,24 +581,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   ) {
     final channel = provider.currentChannel;
     final showNavigator = provider.isMobileNavigatorVisible;
-    final showAnnouncements = provider.isViewingAnnouncements;
 
     Widget body;
     if (showNavigator) {
       body = KeyedSubtree(
         key: const ValueKey('workspace-mobile-nav'),
         child: _buildMobileChannelNavigator(context, provider, workspace),
-      );
-    } else if (showAnnouncements) {
-      body = KeyedSubtree(
-        key: const ValueKey('workspace-mobile-announcements'),
-        child: AnnouncementsView(
-          workspace: workspace,
-          announcements: provider.announcements,
-          onCreateAnnouncement: workspace.canCreateAnnouncements
-              ? () => _showCreateAnnouncementDialog(context)
-              : null,
-        ),
       );
     } else if (channel != null) {
       body = KeyedSubtree(
@@ -651,9 +627,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     provider.showMobileNavigator();
   }
 
-  void _openMobileAnnouncements(WorkspaceProvider provider) {
-    provider.showMobileAnnouncements();
-  }
 
   Future<void> _openMobileChannel(
     WorkspaceProvider provider,
@@ -670,7 +643,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     final channels = provider.channels;
     final theme = Theme.of(context);
     final showNavigator = provider.isMobileNavigatorVisible;
-    final viewingAnnouncements = provider.isViewingAnnouncements;
 
     return SafeArea(
       bottom: false,
@@ -727,13 +699,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               context,
               title: 'Channels',
               children: [
-                _buildMobileNavigatorItem(
-                  context,
-                  icon: Icons.campaign_outlined,
-                  label: '공지사항',
-                  selected: !showNavigator && viewingAnnouncements,
-                  onTap: () => _openMobileAnnouncements(provider),
-                ),
                 ...channels.map(
                   (channel) => _buildMobileNavigatorItem(
                     context,
@@ -1254,12 +1219,8 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
   ) {
     final channel = provider.currentChannel;
     return channel == null
-        ? AnnouncementsView(
-            workspace: workspace,
-            announcements: provider.announcements,
-            onCreateAnnouncement: workspace.canCreateAnnouncements
-                ? () => _showCreateAnnouncementDialog(context)
-                : null,
+? const Center(
+            child: Text('채널을 선택해주세요'),
           )
         : ChannelDetailView(
             channel: channel,
@@ -1276,24 +1237,12 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
   ) {
     final channel = provider.currentChannel;
     final showNavigator = provider.isMobileNavigatorVisible;
-    final showAnnouncements = provider.isViewingAnnouncements;
 
     Widget body;
     if (showNavigator) {
       body = KeyedSubtree(
         key: const ValueKey('workspace-mobile-nav'),
         child: _buildMobileChannelNavigator(context, provider, workspace),
-      );
-    } else if (showAnnouncements) {
-      body = KeyedSubtree(
-        key: const ValueKey('workspace-mobile-announcements'),
-        child: AnnouncementsView(
-          workspace: workspace,
-          announcements: provider.announcements,
-          onCreateAnnouncement: workspace.canCreateAnnouncements
-              ? () => _showCreateAnnouncementDialog(context)
-              : null,
-        ),
       );
     } else if (channel != null) {
       body = KeyedSubtree(
@@ -1442,9 +1391,6 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     provider.showMobileNavigator();
   }
 
-  void _openMobileAnnouncements(WorkspaceProvider provider) {
-    provider.showMobileAnnouncements();
-  }
 
   Future<void> _openMobileChannel(
     WorkspaceProvider provider,
@@ -1461,7 +1407,6 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     final channels = provider.channels;
     final theme = Theme.of(context);
     final showNavigator = provider.isMobileNavigatorVisible;
-    final viewingAnnouncements = provider.isViewingAnnouncements;
 
     return SafeArea(
       bottom: false,
@@ -1518,13 +1463,6 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
               context,
               title: 'Channels',
               children: [
-                _buildMobileNavigatorItem(
-                  context,
-                  icon: Icons.campaign_outlined,
-                  label: '공지사항',
-                  selected: !showNavigator && viewingAnnouncements,
-                  onTap: () => _openMobileAnnouncements(provider),
-                ),
                 ...channels.map(
                   (channel) => _buildMobileNavigatorItem(
                     context,
@@ -1771,14 +1709,6 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  // 공지사항 (기본)
-                  buildTile(
-                    icon: Icons.campaign,
-                    label: '공지사항',
-                    selected: selectedChannelId == null,
-                    onTap: () => provider.exitChannel(),
-                  ),
-                  const Divider(),
                   // 채널 목록
                   ...channels.map(
                     (channel) => buildTile(
