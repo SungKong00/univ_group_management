@@ -10,11 +10,10 @@
 ### 권한 관리 (업데이트)
 - Spring Security의 Method-level 보안 활용 (@PreAuthorize)
 - GlobalRole과 GroupRole을 통한 역할 기반 접근 제어 (RBAC)
-- Custom PermissionEvaluator(`GroupPermissionEvaluator`)로 세밀 권한 검증
+- Custom PermissionEvaluator(`GroupPermissionEvaluator`)로 그룹 및 채널 권한 검증
   - 전역 관리자(`ROLE_ADMIN`)는 즉시 통과
-  - 그룹 멤버의 역할 권한을 가져와 시스템 역할이면 내장 권한 집합을 사용
-  - 개인 오버라이드가 존재할 경우: `effective = rolePermissions ∪ allowed − denied`
-  - `@security.hasGroupPerm(#groupId, 'PERMISSION')` 표현식으로 사용
+  - 그룹 멤버의 역할을 확인하고, 역할에 부여된 권한 세트에 기반하여 인가 결정
+  - `@PreAuthorize("hasPermission(#groupId, 'GROUP', 'PERMISSION_NAME')")` 표현식으로 사용
 
 ## 2. 패스워드 보안
 
@@ -81,7 +80,7 @@ fun passwordEncoder(): PasswordEncoder {
 - Post: `POST_CREATE`, `POST_UPDATE_OWN`, `POST_DELETE_OWN`, `POST_DELETE_ANY`
 - Comment: `COMMENT_CREATE`, `COMMENT_UPDATE_OWN`, `COMMENT_DELETE_OWN`, `COMMENT_DELETE_ANY`
 
-핀 기능은 사용하지 않음. 채널/게시글 권한은 역할 및 개인 오버라이드로 최종 결정됩니다.
+핀 기능은 사용하지 않음. 채널/게시글 권한은 채널별 역할 바인딩으로 최종 결정됩니다.
 
 ### 이메일 인증 도메인 정책
 - 허용 도메인(서버 설정): `app.school-email.allowed-domains: hs.ac.kr`
