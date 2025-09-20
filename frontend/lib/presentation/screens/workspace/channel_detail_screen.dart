@@ -5,7 +5,6 @@ import '../../../core/constants/app_constants.dart';
 import '../../providers/workspace_provider.dart';
 import '../../../data/models/workspace_models.dart';
 import '../../widgets/loading_overlay.dart';
-import 'widgets/comments_sidebar.dart';
 import 'comments_screen.dart';
 
 class ChannelDetailScreen extends StatelessWidget {
@@ -166,24 +165,15 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   }
 
   Widget _buildDesktopLayout(BuildContext context, WorkspaceProvider provider, List<PostModel> posts) {
-    final content = Row(
+    // 웹에서 사이드바 렌더링 문제로 인해 임시로 단순한 레이아웃 사용
+    final content = Column(
       children: [
-        // 메인 콘텐츠 영역
         Expanded(
-          child: Column(
-            children: [
-              Expanded(
-                child: posts.isEmpty
-                    ? _buildEmptyState(context)
-                    : _buildPostsList(context, posts, provider, isDesktop: true),
-              ),
-              _buildMessageComposer(context, provider),
-            ],
-          ),
+          child: posts.isEmpty
+              ? _buildEmptyState(context)
+              : _buildPostsList(context, posts, provider, isDesktop: true),
         ),
-        // 댓글 사이드바
-        if (provider.isCommentsSidebarVisible)
-          const CommentsSidebar(),
+        _buildMessageComposer(context, provider),
       ],
     );
 
@@ -660,21 +650,16 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     WorkspaceProvider provider,
     bool isDesktop,
   ) {
-    if (isDesktop) {
-      // 데스크톱: 사이드바 토글
-      provider.toggleCommentsSidebar(post);
-    } else {
-      // 모바일: 댓글 페이지로 이동
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CommentsScreen(
-            postId: post.id,
-            postAuthor: post.author.name,
-          ),
+    // 웹에서 사이드바 렌더링 문제로 인해 임시로 모든 플랫폼에서 페이지 방식 사용
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommentsScreen(
+          postId: post.id,
+          postAuthor: post.author.name,
         ),
-      );
-    }
+      ),
+    );
   }
 
   String _formatTimestamp(DateTime timestamp) {

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -55,58 +57,40 @@ class _CommentsSidebarState extends State<CommentsSidebar>
         final post = provider.selectedPostForComments;
         if (post == null) return const SizedBox.shrink();
 
-        return Stack(
-          children: [
-            // 배경 오버레이
-            GestureDetector(
-              onTap: () => _closeSidebar(provider),
-              child: Container(
-                width: double.infinity,
-                height: double.infinity,
-                color: Colors.black.withOpacity(0.3),
+        // 웹에서 안전한 사이드바 구현
+        final screenSize = MediaQuery.of(context).size;
+        final maxSidebarWidth = kIsWeb
+            ? math.min(ResponsiveBreakpoints.commentsSidebarWidth, screenSize.width * 0.4)
+            : ResponsiveBreakpoints.commentsSidebarWidth;
+
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(1.0, 0.0),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOut,
+          )),
+          child: SizedBox(
+            width: maxSidebarWidth,
+            child: Material(
+              elevation: UIConstants.sidebarElevation,
+              color: Theme.of(context).colorScheme.surface,
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    _buildHeader(context, post, provider),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: _buildCommentsList(context, provider, post),
+                    ),
+                    const Divider(height: 1),
+                    _buildCommentInput(context, provider, post),
+                  ],
+                ),
               ),
             ),
-            // 사이드바
-            AnimatedBuilder(
-              animation: _slideAnimation,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(
-                    _slideAnimation.value * ResponsiveBreakpoints.commentsSidebarWidth,
-                    0,
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Container(
-                      width: ResponsiveBreakpoints.commentsSidebarWidth,
-                      height: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: UIConstants.sidebarElevation,
-                            offset: const Offset(-2, 0),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _buildHeader(context, post, provider),
-                          const Divider(height: 1),
-                          Expanded(
-                            child: _buildCommentsList(context, provider, post),
-                          ),
-                          const Divider(height: 1),
-                          _buildCommentInput(context, provider, post),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
+          ),
         );
       },
     );
