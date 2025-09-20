@@ -351,8 +351,16 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
         return '교내 그룹 탐색';
       } else if (isWorkspaceMode) {
         final groupName = isHomeWorkspaceMode ? _homeWorkspaceGroupName : _workspaceGroupName;
-        final channelName = workspace.currentChannel?.name ?? '공지사항';
-        return '$groupName > $channelName';
+        final safeGroupName = groupName ?? '';
+        if (workspace.isMobileNavigatorVisible) {
+          return safeGroupName;
+        }
+        if (workspace.isViewingAnnouncements || workspace.currentChannel == null) {
+          return safeGroupName.isEmpty ? '공지사항' : '$safeGroupName > 공지사항';
+        }
+        return safeGroupName.isEmpty
+            ? workspace.currentChannel!.name
+            : '$safeGroupName > ${workspace.currentChannel!.name}';
       } else {
         return _titles[nav.index];
       }
@@ -367,13 +375,24 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
               icon: const Icon(Icons.arrow_back, size: 20),
               padding: const EdgeInsets.all(8),
               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              onPressed: isGroupExplorerMode
-                  ? _navigateBackToHome
-                  : isHomeWorkspaceMode
-                      ? _navigateBackToHomeFromWorkspace
-                      : isWorkspaceTabMode
-                          ? _navigateBackToWorkspaceList
-                          : () => nav.setIndex(0),
+              onPressed: () {
+                if (isWorkspaceMode &&
+                    workspace.currentWorkspace != null &&
+                    !workspace.isMobileNavigatorVisible) {
+                  workspace.showMobileNavigator();
+                  return;
+                }
+
+                if (isGroupExplorerMode) {
+                  _navigateBackToHome();
+                } else if (isHomeWorkspaceMode) {
+                  _navigateBackToHomeFromWorkspace();
+                } else if (isWorkspaceTabMode) {
+                  _navigateBackToWorkspaceList();
+                } else {
+                  nav.setIndex(0);
+                }
+              },
               tooltip: isGroupExplorerMode
                   ? '홈으로'
                   : isHomeWorkspaceMode

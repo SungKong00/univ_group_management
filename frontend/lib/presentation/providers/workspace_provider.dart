@@ -23,6 +23,10 @@ class WorkspaceProvider extends ChangeNotifier {
   // 기본 채널 자동 선택 여부 (첫 로드 한정)
   bool _didAutoSelectChannel = false;
 
+  // 모바일 전용 상태
+  bool _isMobileNavigatorVisible = false;
+  bool _isViewingAnnouncements = false;
+
   // Current channel (when in channel detail view)
   ChannelModel? _currentChannel;
   List<PostModel> _currentChannelPosts = [];
@@ -68,6 +72,9 @@ class WorkspaceProvider extends ChangeNotifier {
   bool get canManageChannels => _currentWorkspace?.canManageChannels ?? false;
   bool get canCreateAnnouncements => _currentWorkspace?.canCreateAnnouncements ?? false;
 
+  bool get isMobileNavigatorVisible => _isMobileNavigatorVisible;
+  bool get isViewingAnnouncements => _isViewingAnnouncements;
+
   /// 특정 채널에 대한 권한 확인
   bool hasChannelPermission(int channelId, String permission) {
     final permissions = _channelPermissions[channelId] ?? [];
@@ -84,6 +91,7 @@ class WorkspaceProvider extends ChangeNotifier {
   Future<void> loadWorkspace(
     int groupId, {
     bool autoSelectFirstChannel = true,
+    bool mobileNavigatorVisible = false,
   }) async {
     try {
       _isLoading = true;
@@ -93,6 +101,8 @@ class WorkspaceProvider extends ChangeNotifier {
 
       _currentWorkspace = await _workspaceService.getWorkspaceByGroup(groupId);
 
+      _isMobileNavigatorVisible = mobileNavigatorVisible;
+      _isViewingAnnouncements = false;
       _isLoading = false;
       notifyListeners();
 
@@ -106,6 +116,8 @@ class WorkspaceProvider extends ChangeNotifier {
           ChannelModel defaultChannel = sorted.first;
 
           _didAutoSelectChannel = true;
+          _isMobileNavigatorVisible = false;
+          _isViewingAnnouncements = false;
           // 비동기로 선택하여 게시글/권한 로드
           await selectChannel(defaultChannel);
         }
@@ -146,6 +158,8 @@ class WorkspaceProvider extends ChangeNotifier {
   Future<void> selectChannel(ChannelModel channel) async {
     try {
       _currentChannel = channel;
+      _isMobileNavigatorVisible = false;
+      _isViewingAnnouncements = false;
       _isLoading = true;
       notifyListeners();
 
@@ -209,7 +223,50 @@ class WorkspaceProvider extends ChangeNotifier {
   void exitChannel() {
     _currentChannel = null;
     _currentChannelPosts.clear();
+    _isViewingAnnouncements = false;
     notifyListeners();
+  }
+
+  void showMobileNavigator() {
+    if (!_isMobileNavigatorVisible || _currentChannel != null || _isViewingAnnouncements) {
+      _currentChannel = null;
+      _currentChannelPosts.clear();
+      _isMobileNavigatorVisible = true;
+      _isViewingAnnouncements = false;
+      notifyListeners();
+    }
+  }
+
+  void showMobileAnnouncements() {
+    _currentChannel = null;
+    _currentChannelPosts.clear();
+    _isMobileNavigatorVisible = false;
+    _isViewingAnnouncements = true;
+    notifyListeners();
+  }
+
+  void setMobileNavigatorVisible(bool visible) {
+    if (_isMobileNavigatorVisible != visible) {
+      _isMobileNavigatorVisible = visible;
+      if (visible) {
+        _currentChannel = null;
+        _currentChannelPosts.clear();
+        _isViewingAnnouncements = false;
+      }
+      notifyListeners();
+    }
+  }
+
+  void setViewingAnnouncements(bool viewing) {
+    if (_isViewingAnnouncements != viewing) {
+      _isViewingAnnouncements = viewing;
+      if (viewing) {
+        _currentChannel = null;
+        _currentChannelPosts.clear();
+        _isMobileNavigatorVisible = false;
+      }
+      notifyListeners();
+    }
   }
 
   /// 새 게시글 생성
@@ -437,6 +494,8 @@ class WorkspaceProvider extends ChangeNotifier {
     _error = null;
     _accessDenied = false;
     _didAutoSelectChannel = false;
+    _isMobileNavigatorVisible = false;
+    _isViewingAnnouncements = false;
     notifyListeners();
   }
 
@@ -576,7 +635,10 @@ class WorkspaceProvider extends ChangeNotifier {
       );
 
       // 워크스페이스를 다시 로드하여 최신 상태 반영
-      await loadWorkspace(groupId);
+      await loadWorkspace(
+        groupId,
+        mobileNavigatorVisible: _isMobileNavigatorVisible,
+      );
 
       _isLoading = false;
       notifyListeners();
@@ -788,7 +850,10 @@ class WorkspaceProvider extends ChangeNotifier {
       );
 
       // 워크스페이스를 다시 로드하여 최신 상태 반영
-      await loadWorkspace(groupId);
+      await loadWorkspace(
+        groupId,
+        mobileNavigatorVisible: _isMobileNavigatorVisible,
+      );
 
       _isLoading = false;
       notifyListeners();
@@ -816,7 +881,10 @@ class WorkspaceProvider extends ChangeNotifier {
       );
 
       // 워크스페이스를 다시 로드하여 최신 공지사항 반영
-      await loadWorkspace(groupId);
+      await loadWorkspace(
+        groupId,
+        mobileNavigatorVisible: _isMobileNavigatorVisible,
+      );
 
       _isLoading = false;
       notifyListeners();

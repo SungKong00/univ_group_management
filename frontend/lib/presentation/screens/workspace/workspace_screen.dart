@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/workspace_provider.dart';
-import '../../providers/nav_provider.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../widgets/global_sidebar.dart';
 import '../../theme/app_theme.dart';
@@ -14,9 +13,7 @@ import 'member_management_screen.dart';
 import 'channel_management_screen.dart';
 import 'group_info_screen.dart';
 import 'admin_home_screen.dart';
-import '../groups/group_explorer_screen.dart';
 import 'widgets/workspace_sidebar.dart';
-import 'widgets/workspace_header.dart';
 import 'widgets/announcements_view.dart';
 
 class WorkspaceScreen extends StatefulWidget {
@@ -34,9 +31,6 @@ class WorkspaceScreen extends StatefulWidget {
 }
 
 class _WorkspaceScreenState extends State<WorkspaceScreen> {
-  bool _isMobileNavigatorVisible = false;
-  bool _isViewingAnnouncements = false;
-
   @override
   void initState() {
     super.initState();
@@ -48,14 +42,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       provider.reset();
 
       final isDesktop = MediaQuery.of(context).size.width >= 900;
-      setState(() {
-        _isMobileNavigatorVisible = !isDesktop;
-        _isViewingAnnouncements = false;
-      });
 
       provider.loadWorkspace(
         widget.groupId,
         autoSelectFirstChannel: isDesktop,
+        mobileNavigatorVisible: !isDesktop,
       );
     });
   }
@@ -64,19 +55,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   void dispose() {
     context.read<WorkspaceProvider>().exitChannel();
     super.dispose();
-  }
-
-  void _navigateToGroupExplorer() {
-    context.read<WorkspaceProvider>().exitChannel();
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const GroupExplorerScreen()),
-    );
-  }
-
-  void _navigateBack() {
-    context.read<WorkspaceProvider>().exitChannel();
-    Navigator.of(context).pop();
   }
 
   @override
@@ -138,6 +116,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 provider.loadWorkspace(
                   widget.groupId,
                   autoSelectFirstChannel: isDesktop,
+                  mobileNavigatorVisible: !isDesktop,
                 );
               },
               icon: const Icon(Icons.refresh),
@@ -234,44 +213,27 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         const double workspaceSidebarWidth = 200;
-        final channel = provider.currentChannel;
 
-        // 전체 화면 레이아웃 (Column 구조)
         return Scaffold(
-          body: Column(
+          body: Row(
             children: [
-              // 워크스페이스 상단바 (전체 화면 너비)
-              _buildWorkspaceAppBar(context, workspace, channel),
-              // 하단 영역: 글로벌 사이드바 + 워크스페이스 영역
+              const GlobalSidebar(),
               Expanded(
                 child: Row(
                   children: [
-                    // 글로벌 사이드바
-                    const GlobalSidebar(),
-                    // 워크스페이스 영역
-                    Expanded(
-                      child: Row(
-                        children: [
-                          // 워크스페이스 사이드바
-                          SizedBox(
-                            width: workspaceSidebarWidth,
-                            child: WorkspaceSidebar(
-                              workspace: workspace,
-                              width: workspaceSidebarWidth,
-                              onShowAdminHome: () => _showAdminHome(context, workspace),
-                              onShowMemberManagement: () =>
-                                  _showMemberManagement(context),
-                              onShowChannelManagement: () =>
-                                  _showChannelManagement(context),
-                              onShowGroupInfo: () => _showGroupInfo(context),
-                            ),
-                          ),
-                          // 메인 컨텐츠 영역
-                          Expanded(
-                            child: _buildDesktopMainArea(context, provider, workspace),
-                          ),
-                        ],
+                    SizedBox(
+                      width: workspaceSidebarWidth,
+                      child: WorkspaceSidebar(
+                        workspace: workspace,
+                        width: workspaceSidebarWidth,
+                        onShowAdminHome: () => _showAdminHome(context, workspace),
+                        onShowMemberManagement: () => _showMemberManagement(context),
+                        onShowChannelManagement: () => _showChannelManagement(context),
+                        onShowGroupInfo: () => _showGroupInfo(context),
                       ),
+                    ),
+                    Expanded(
+                      child: _buildDesktopMainArea(context, provider, workspace),
                     ),
                   ],
                 ),
@@ -630,42 +592,38 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     WorkspaceDetailModel workspace,
   ) {
     final channel = provider.currentChannel;
+    final showNavigator = provider.isMobileNavigatorVisible;
+    final showAnnouncements = provider.isViewingAnnouncements;
 
-    Widget _buildBodyChild() {
-      if (_isMobileNavigatorVisible) {
-        return KeyedSubtree(
-          key: const ValueKey('workspace-mobile-nav'),
-          child: _buildMobileChannelNavigator(context, provider, workspace),
-        );
-      }
-
-      if (_isViewingAnnouncements) {
-        return KeyedSubtree(
-          key: const ValueKey('workspace-mobile-announcements'),
-          child: AnnouncementsView(
-            workspace: workspace,
-            announcements: provider.announcements,
-            onCreateAnnouncement: workspace.canCreateAnnouncements
-                ? () => _showCreateAnnouncementDialog(context)
-                : null,
-          ),
-        );
-      }
-
-      if (channel != null) {
-        return KeyedSubtree(
-          key: ValueKey('workspace-mobile-channel-${channel.id}'),
-          child: ChannelDetailView(
-            channel: channel,
-            autoLoad: false,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
-        );
-      }
-
-      // Channel detail이 없고 공지사항도 선택되지 않은 경우 네비게이션으로 복귀
-      return KeyedSubtree(
+    Widget body;
+    if (showNavigator) {
+      body = KeyedSubtree(
+        key: const ValueKey('workspace-mobile-nav'),
+        child: _buildMobileChannelNavigator(context, provider, workspace),
+      );
+    } else if (showAnnouncements) {
+      body = KeyedSubtree(
+        key: const ValueKey('workspace-mobile-announcements'),
+        child: AnnouncementsView(
+          workspace: workspace,
+          announcements: provider.announcements,
+          onCreateAnnouncement: workspace.canCreateAnnouncements
+              ? () => _showCreateAnnouncementDialog(context)
+              : null,
+        ),
+      );
+    } else if (channel != null) {
+      body = KeyedSubtree(
+        key: ValueKey('workspace-mobile-channel-${channel.id}'),
+        child: ChannelDetailView(
+          channel: channel,
+          autoLoad: false,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+      );
+    } else {
+      body = KeyedSubtree(
         key: const ValueKey('workspace-mobile-nav-fallback'),
         child: _buildMobileChannelNavigator(context, provider, workspace),
       );
@@ -673,7 +631,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
     return WillPopScope(
       onWillPop: () async {
-        if (!_isMobileNavigatorVisible) {
+        if (!provider.isMobileNavigatorVisible) {
           _openMobileNavigator(provider);
           return false;
         }
@@ -681,160 +639,26 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       },
       child: Scaffold(
         drawer: _buildMobileDrawer(context, provider, workspace),
-        appBar: _buildMobileAppBar(context, workspace, provider),
         body: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
-          child: _buildBodyChild(),
+          child: body,
         ),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildMobileAppBar(
-    BuildContext context,
-    WorkspaceDetailModel workspace,
-    WorkspaceProvider provider,
-  ) {
-    final currentChannel = provider.currentChannel;
-    final isNavigatorVisible = _isMobileNavigatorVisible;
-    final isViewingAnnouncements = _isViewingAnnouncements && !isNavigatorVisible;
-
-    final String titleText;
-    if (isNavigatorVisible) {
-      titleText = workspace.group.name;
-    } else if (currentChannel != null) {
-      titleText = '${workspace.group.name} > ${currentChannel.name}';
-    } else {
-      titleText = '${workspace.group.name} > 공지사항';
-    }
-
-    final String? subtitleText;
-    if (isNavigatorVisible) {
-      subtitleText = '채널 탐색';
-    } else if (isViewingAnnouncements) {
-      subtitleText = '공지사항';
-    } else if (workspace.myMembership != null) {
-      subtitleText = _roleDisplayName(workspace.myMembership!.role.name);
-    } else {
-      subtitleText = null;
-    }
-
-    final theme = Theme.of(context);
-    final showBackButton = !isNavigatorVisible;
-
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(52),
-      child: AppBar(
-        backgroundColor: theme.colorScheme.surface,
-        foregroundColor: theme.colorScheme.onSurface,
-        elevation: 1,
-        toolbarHeight: 52,
-        leading: showBackButton
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back, size: 20),
-                tooltip: '뒤로',
-                padding: const EdgeInsets.all(8),
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                onPressed: () => _openMobileNavigator(provider),
-              )
-            : Builder(
-                builder: (ctx) => IconButton(
-                  icon: const Icon(Icons.menu, size: 20),
-                  tooltip: '메뉴',
-                  padding: const EdgeInsets.all(8),
-                  constraints:
-                      const BoxConstraints(minWidth: 36, minHeight: 36),
-                  onPressed: () => Scaffold.of(ctx).openDrawer(),
-                ),
-              ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              titleText,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (subtitleText != null)
-              Text(
-                subtitleText,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-          ],
-        ),
-        actions: [
-          if (showBackButton)
-            Builder(
-              builder: (ctx) => IconButton(
-                icon: const Icon(Icons.menu, size: 20),
-                tooltip: '메뉴',
-                padding: const EdgeInsets.all(8),
-                constraints:
-                    const BoxConstraints(minWidth: 36, minHeight: 36),
-                onPressed: () => Scaffold.of(ctx).openDrawer(),
-              ),
-            ),
-          if (workspace.canManage)
-            IconButton(
-              onPressed: () => _showManagementMenu(context, workspace),
-              icon: const Icon(Icons.settings, size: 20),
-              padding: const EdgeInsets.all(8),
-              constraints:
-                  const BoxConstraints(minWidth: 36, minHeight: 36),
-              tooltip: '관리',
-            ),
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close, size: 20),
-            padding: const EdgeInsets.all(8),
-            constraints:
-                const BoxConstraints(minWidth: 36, minHeight: 36),
-            tooltip: '닫기',
-          ),
-        ],
       ),
     );
   }
 
   void _openMobileNavigator(WorkspaceProvider provider) {
-    if (provider.currentChannel != null) {
-      provider.exitChannel();
-    }
-    setState(() {
-      _isMobileNavigatorVisible = true;
-      _isViewingAnnouncements = false;
-    });
+    provider.showMobileNavigator();
   }
 
   void _openMobileAnnouncements(WorkspaceProvider provider) {
-    if (provider.currentChannel != null) {
-      provider.exitChannel();
-    }
-    setState(() {
-      _isMobileNavigatorVisible = false;
-      _isViewingAnnouncements = true;
-    });
+    provider.showMobileAnnouncements();
   }
 
   Future<void> _openMobileChannel(
     WorkspaceProvider provider,
     ChannelModel channel,
   ) async {
-    setState(() {
-      _isMobileNavigatorVisible = false;
-      _isViewingAnnouncements = false;
-    });
     await provider.selectChannel(channel);
   }
 
@@ -845,6 +669,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   ) {
     final channels = provider.channels;
     final theme = Theme.of(context);
+    final showNavigator = provider.isMobileNavigatorVisible;
+    final viewingAnnouncements = provider.isViewingAnnouncements;
 
     return SafeArea(
       bottom: false,
@@ -905,8 +731,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   context,
                   icon: Icons.campaign_outlined,
                   label: '공지사항',
-                  selected:
-                      !_isMobileNavigatorVisible && _isViewingAnnouncements,
+                  selected: !showNavigator && viewingAnnouncements,
                   onTap: () => _openMobileAnnouncements(provider),
                 ),
                 ...channels.map(
@@ -914,7 +739,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     context,
                     icon: _channelIconFor(channel),
                     label: channel.name,
-                    selected: !_isMobileNavigatorVisible &&
+                    selected: !showNavigator &&
                         provider.currentChannel?.id == channel.id,
                     onTap: () => _openMobileChannel(provider, channel),
                   ),
@@ -1194,125 +1019,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
   }
 
-  Widget _buildWorkspaceAppBar(BuildContext context, WorkspaceDetailModel workspace, ChannelModel? channel) {
-    return Container(
-      height: 53, // 52 + 1px border
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE5E7EB)),
-        ),
-      ),
-      child: Row(
-        children: [
-          // 뒤로가기 버튼 (워크스페이스 탭으로 돌아가기)
-          Container(
-            width: 60, // GlobalSidebar.width와 동일
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, size: 20),
-              padding: const EdgeInsets.all(8),
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              onPressed: () {
-                // NavProvider를 통해 워크스페이스 탭(index 1)으로 이동
-                context.read<NavProvider>().setIndex(1);
-                Navigator.of(context).pop();
-              },
-              tooltip: '워크스페이스로',
-            ),
-          ),
-
-          // 워크스페이스 사이드바 영역 (그룹명 표시)
-          Container(
-            width: 200, // workspaceSidebarWidth와 동일
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.groups,
-                  size: 16,
-                  color: Theme.of(context).primaryColor,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    workspace.group.name,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 메인 컨텐츠 영역
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Text(
-                    channel?.name ?? '공지사항',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const Spacer(),
-                  // 워크스페이스 액션 버튼들
-                  Wrap(
-                    spacing: 6,
-                    children: [
-                      TextButton.icon(
-                        onPressed: () => _showMembersSheet(context, workspace),
-                        icon: const Icon(Icons.group_outlined, size: 16),
-                        label: const Text('멤버 보기'),
-                        style: _pillButtonStyle(context),
-                      ),
-                      if (channel != null)
-                        TextButton.icon(
-                          onPressed: () => _showChannelInfo(context, channel),
-                          icon: const Icon(Icons.info_outline, size: 16),
-                          label: const Text('채널 정보'),
-                          style: _pillButtonStyle(context),
-                        ),
-                      if (workspace.canManage)
-                        TextButton.icon(
-                          onPressed: () => _showManagementMenu(context, workspace),
-                          icon: const Icon(Icons.more_horiz, size: 16),
-                          label: const Text('더보기'),
-                          style: _pillButtonStyle(context),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  ButtonStyle _pillButtonStyle(BuildContext context) {
-    return TextButton.styleFrom(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      minimumSize: const Size(0, 30),
-      textStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Theme.of(context).dividerColor),
-      ),
-    );
-  }
-
   String _roleDisplayName(String roleName) {
     switch (roleName.toUpperCase()) {
       case 'OWNER':
@@ -1343,9 +1049,6 @@ class WorkspaceContent extends StatefulWidget {
 }
 
 class _WorkspaceContentState extends State<WorkspaceContent> {
-  bool _isMobileNavigatorVisible = false;
-  bool _isViewingAnnouncements = false;
-
   @override
   void initState() {
     super.initState();
@@ -1357,14 +1060,10 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
       provider.reset();
 
       final isDesktop = MediaQuery.of(context).size.width >= 900;
-      setState(() {
-        _isMobileNavigatorVisible = !isDesktop;
-        _isViewingAnnouncements = false;
-      });
-
       provider.loadWorkspace(
         widget.groupId,
         autoSelectFirstChannel: isDesktop,
+        mobileNavigatorVisible: !isDesktop,
       );
     });
   }
@@ -1428,6 +1127,7 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
                 provider.loadWorkspace(
                   widget.groupId,
                   autoSelectFirstChannel: isDesktop,
+                  mobileNavigatorVisible: !isDesktop,
                 );
               },
               icon: const Icon(Icons.refresh),
@@ -1575,41 +1275,38 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     WorkspaceDetailModel workspace,
   ) {
     final channel = provider.currentChannel;
+    final showNavigator = provider.isMobileNavigatorVisible;
+    final showAnnouncements = provider.isViewingAnnouncements;
 
-    Widget _buildBodyChild() {
-      if (_isMobileNavigatorVisible) {
-        return KeyedSubtree(
-          key: const ValueKey('workspace-mobile-nav'),
-          child: _buildMobileChannelNavigator(context, provider, workspace),
-        );
-      }
-
-      if (_isViewingAnnouncements) {
-        return KeyedSubtree(
-          key: const ValueKey('workspace-mobile-announcements'),
-          child: AnnouncementsView(
-            workspace: workspace,
-            announcements: provider.announcements,
-            onCreateAnnouncement: workspace.canCreateAnnouncements
-                ? () => _showCreateAnnouncementDialog(context)
-                : null,
-          ),
-        );
-      }
-
-      if (channel != null) {
-        return KeyedSubtree(
-          key: ValueKey('workspace-mobile-channel-${channel.id}'),
-          child: ChannelDetailView(
-            channel: channel,
-            autoLoad: false,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
-        );
-      }
-
-      return KeyedSubtree(
+    Widget body;
+    if (showNavigator) {
+      body = KeyedSubtree(
+        key: const ValueKey('workspace-mobile-nav'),
+        child: _buildMobileChannelNavigator(context, provider, workspace),
+      );
+    } else if (showAnnouncements) {
+      body = KeyedSubtree(
+        key: const ValueKey('workspace-mobile-announcements'),
+        child: AnnouncementsView(
+          workspace: workspace,
+          announcements: provider.announcements,
+          onCreateAnnouncement: workspace.canCreateAnnouncements
+              ? () => _showCreateAnnouncementDialog(context)
+              : null,
+        ),
+      );
+    } else if (channel != null) {
+      body = KeyedSubtree(
+        key: ValueKey('workspace-mobile-channel-${channel.id}'),
+        child: ChannelDetailView(
+          channel: channel,
+          autoLoad: false,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+      );
+    } else {
+      body = KeyedSubtree(
         key: const ValueKey('workspace-mobile-nav-fallback'),
         child: _buildMobileChannelNavigator(context, provider, workspace),
       );
@@ -1617,18 +1314,21 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
 
     return WillPopScope(
       onWillPop: () async {
-        if (!_isMobileNavigatorVisible) {
+        if (!provider.isMobileNavigatorVisible) {
           _openMobileNavigator(provider);
+          return false;
+        }
+        if (widget.onBack != null) {
+          widget.onBack!();
           return false;
         }
         return true;
       },
       child: Scaffold(
         drawer: _buildMobileDrawer(context, provider, workspace),
-        appBar: _buildMobileAppBar(context, workspace, provider),
         body: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
-          child: _buildBodyChild(),
+          child: body,
         ),
       ),
     );
@@ -1738,157 +1438,18 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     );
   }
 
-  PreferredSizeWidget _buildMobileAppBar(
-    BuildContext context,
-    WorkspaceDetailModel workspace,
-    WorkspaceProvider provider,
-  ) {
-    final currentChannel = provider.currentChannel;
-    final isNavigatorVisible = _isMobileNavigatorVisible;
-    final isViewingAnnouncements = _isViewingAnnouncements && !isNavigatorVisible;
-
-    final String titleText;
-    if (isNavigatorVisible) {
-      titleText = workspace.group.name;
-    } else if (currentChannel != null) {
-      titleText = '${workspace.group.name} > ${currentChannel.name}';
-    } else {
-      titleText = '${workspace.group.name} > 공지사항';
-    }
-
-    final String? subtitleText;
-    if (isNavigatorVisible) {
-      subtitleText = '채널 탐색';
-    } else if (isViewingAnnouncements) {
-      subtitleText = '공지사항';
-    } else if (workspace.myMembership != null) {
-      subtitleText = _roleDisplayName(workspace.myMembership!.role.name);
-    } else {
-      subtitleText = null;
-    }
-
-    final theme = Theme.of(context);
-    final showBackButton = !isNavigatorVisible;
-
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(52),
-      child: AppBar(
-        backgroundColor: theme.colorScheme.surface,
-        foregroundColor: theme.colorScheme.onSurface,
-        elevation: 1,
-        toolbarHeight: 52,
-        leading: showBackButton
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back, size: 20),
-                tooltip: '뒤로',
-                padding: const EdgeInsets.all(8),
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                onPressed: () => _openMobileNavigator(provider),
-              )
-            : Builder(
-                builder: (ctx) => IconButton(
-                  icon: const Icon(Icons.menu, size: 20),
-                  tooltip: '메뉴',
-                  padding: const EdgeInsets.all(8),
-                  constraints:
-                      const BoxConstraints(minWidth: 36, minHeight: 36),
-                  onPressed: () => Scaffold.of(ctx).openDrawer(),
-                ),
-              ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              titleText,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (subtitleText != null)
-              Text(
-                subtitleText,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-          ],
-        ),
-        actions: [
-          if (showBackButton)
-            Builder(
-              builder: (ctx) => IconButton(
-                icon: const Icon(Icons.menu, size: 20),
-                tooltip: '메뉴',
-                padding: const EdgeInsets.all(8),
-                constraints:
-                    const BoxConstraints(minWidth: 36, minHeight: 36),
-                onPressed: () => Scaffold.of(ctx).openDrawer(),
-              ),
-            ),
-          if (workspace.canManage)
-            IconButton(
-              onPressed: () => _showManagementMenu(context, workspace),
-              icon: const Icon(Icons.settings, size: 20),
-              padding: const EdgeInsets.all(8),
-              constraints:
-                  const BoxConstraints(minWidth: 36, minHeight: 36),
-              tooltip: '관리',
-            ),
-          IconButton(
-            onPressed: () {
-              if (widget.onBack != null) {
-                widget.onBack!();
-              } else if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
-              }
-            },
-            icon: const Icon(Icons.close, size: 20),
-            padding: const EdgeInsets.all(8),
-            constraints:
-                const BoxConstraints(minWidth: 36, minHeight: 36),
-            tooltip: '닫기',
-          ),
-        ],
-      ),
-    );
-  }
-
   void _openMobileNavigator(WorkspaceProvider provider) {
-    if (provider.currentChannel != null) {
-      provider.exitChannel();
-    }
-    setState(() {
-      _isMobileNavigatorVisible = true;
-      _isViewingAnnouncements = false;
-    });
+    provider.showMobileNavigator();
   }
 
   void _openMobileAnnouncements(WorkspaceProvider provider) {
-    if (provider.currentChannel != null) {
-      provider.exitChannel();
-    }
-    setState(() {
-      _isMobileNavigatorVisible = false;
-      _isViewingAnnouncements = true;
-    });
+    provider.showMobileAnnouncements();
   }
 
   Future<void> _openMobileChannel(
     WorkspaceProvider provider,
     ChannelModel channel,
   ) async {
-    setState(() {
-      _isMobileNavigatorVisible = false;
-      _isViewingAnnouncements = false;
-    });
     await provider.selectChannel(channel);
   }
 
@@ -1899,6 +1460,8 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
   ) {
     final channels = provider.channels;
     final theme = Theme.of(context);
+    final showNavigator = provider.isMobileNavigatorVisible;
+    final viewingAnnouncements = provider.isViewingAnnouncements;
 
     return SafeArea(
       bottom: false,
@@ -1959,8 +1522,7 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
                   context,
                   icon: Icons.campaign_outlined,
                   label: '공지사항',
-                  selected:
-                      !_isMobileNavigatorVisible && _isViewingAnnouncements,
+                  selected: !showNavigator && viewingAnnouncements,
                   onTap: () => _openMobileAnnouncements(provider),
                 ),
                 ...channels.map(
@@ -1968,7 +1530,7 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
                     context,
                     icon: _channelIconFor(channel),
                     label: channel.name,
-                    selected: !_isMobileNavigatorVisible &&
+                    selected: !showNavigator &&
                         provider.currentChannel?.id == channel.id,
                     onTap: () => _openMobileChannel(provider, channel),
                   ),
