@@ -81,7 +81,10 @@ class WorkspaceProvider extends ChangeNotifier {
   }
 
   /// 워크스페이스 로드
-  Future<void> loadWorkspace(int groupId) async {
+  Future<void> loadWorkspace(
+    int groupId, {
+    bool autoSelectFirstChannel = true,
+  }) async {
     try {
       _isLoading = true;
       _error = null;
@@ -94,7 +97,7 @@ class WorkspaceProvider extends ChangeNotifier {
       notifyListeners();
 
       // 첫 로드 시 기본 채널 자동 선택
-      if (!_didAutoSelectChannel && _currentChannel == null) {
+      if (autoSelectFirstChannel && !_didAutoSelectChannel && _currentChannel == null) {
         final ws = _currentWorkspace;
         if (ws != null && ws.channels.isNotEmpty) {
           // displayOrder 기준 정렬 후 첫 번째 채널 선택
