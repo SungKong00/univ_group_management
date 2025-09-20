@@ -26,6 +26,10 @@ data class Post(
     val viewCount: Long = 0,
     @Column(name = "like_count", nullable = false)
     val likeCount: Long = 0,
+    @Column(name = "comment_count", nullable = false)
+    val commentCount: Long = 0,
+    @Column(name = "last_commented_at")
+    val lastCommentedAt: LocalDateTime? = null,
     @ElementCollection(targetClass = String::class, fetch = FetchType.LAZY)
     @CollectionTable(name = "post_attachments", joinColumns = [JoinColumn(name = "post_id")])
     @Column(name = "file_url", nullable = false, length = 500)

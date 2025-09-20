@@ -51,6 +51,8 @@ class WorkspaceManagementService(
                             isPinned = post.isPinned,
                             viewCount = post.viewCount,
                             likeCount = post.likeCount,
+                            commentCount = post.commentCount,
+                            lastCommentedAt = post.lastCommentedAt,
                             attachments = post.attachments,
                             createdAt = post.createdAt,
                             updatedAt = post.updatedAt,

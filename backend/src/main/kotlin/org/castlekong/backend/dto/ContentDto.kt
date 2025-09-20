@@ -76,6 +76,8 @@ data class PostResponse(
     val isPinned: Boolean,
     val viewCount: Long,
     val likeCount: Long,
+    val commentCount: Long,
+    val lastCommentedAt: LocalDateTime?,
     val attachments: Set<String>,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,

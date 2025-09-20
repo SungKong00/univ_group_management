@@ -1129,12 +1129,13 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
 
   Widget _buildCommentsToggleButton(BuildContext context, PostModel post, WorkspaceProvider provider) {
     final comments = provider.getCommentsForPost(post.id);
-    final commentCount = comments.length;
+    final commentCount = comments.isNotEmpty ? comments.length : post.commentCount;
 
     String? lastCommentTime;
     if (comments.isNotEmpty) {
-      final latestComment = comments.last;
-      lastCommentTime = _formatTimestamp(latestComment.createdAt);
+      lastCommentTime = _formatTimestamp(comments.last.createdAt);
+    } else if (post.lastCommentedAt != null) {
+      lastCommentTime = _formatTimestamp(post.lastCommentedAt!);
     }
 
     return MouseRegion(

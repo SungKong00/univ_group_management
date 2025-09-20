@@ -5,6 +5,7 @@ import org.castlekong.backend.entity.ChannelType
 import org.castlekong.backend.entity.Comment
 import org.castlekong.backend.entity.Post
 import org.castlekong.backend.entity.Workspace
+import java.time.LocalDateTime
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -49,6 +50,16 @@ interface PostRepository : JpaRepository<Post, Long> {
         @Param("channelIds") channelIds: List<Long>,
     ): List<Post>
 
+    @Modifying
+    @Query(
+        "UPDATE Post p SET p.commentCount = CASE WHEN :delta < 0 AND p.commentCount + :delta < 0 THEN 0 ELSE p.commentCount + :delta END, p.lastCommentedAt = :lastCommentedAt WHERE p.id = :postId"
+    )
+    fun updateCommentStats(
+        @Param("postId") postId: Long,
+        @Param("delta") delta: Long,
+        @Param("lastCommentedAt") lastCommentedAt: LocalDateTime?,
+    ): Int
+
     // 배치 삭제 메서드
     @Modifying
     @Query("DELETE FROM Post p WHERE p.channel.id IN :channelIds")
@@ -65,6 +76,8 @@ interface PostRepository : JpaRepository<Post, Long> {
 @Repository
 interface CommentRepository : JpaRepository<Comment, Long> {
     fun findByPost_Id(postId: Long): List<Comment>
+
+    fun findTop1ByPost_IdOrderByCreatedAtDesc(postId: Long): Comment?
 
     // 배치 삭제 메서드
     @Modifying

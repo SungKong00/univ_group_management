@@ -396,7 +396,9 @@ class ContentService(
                 content = request.content,
                 parentComment = parent,
             )
-        return toCommentResponse(commentRepository.save(comment))
+        val savedComment = commentRepository.save(comment)
+        postRepository.updateCommentStats(post.id, 1, savedComment.createdAt)
+        return toCommentResponse(savedComment)
     }
 
     @Transactional
@@ -430,7 +432,10 @@ class ContentService(
         if (comment.author.id != requesterId) {
             throw BusinessException(ErrorCode.FORBIDDEN)
         }
+        val postId = comment.post.id
         commentRepository.delete(comment)
+        val latestComment = commentRepository.findTop1ByPost_IdOrderByCreatedAtDesc(postId)
+        postRepository.updateCommentStats(postId, -1, latestComment?.createdAt)
     }
 
     // DTOs
@@ -467,6 +472,8 @@ class ContentService(
             isPinned = post.isPinned,
             viewCount = post.viewCount,
             likeCount = post.likeCount,
+            commentCount = post.commentCount,
+            lastCommentedAt = post.lastCommentedAt,
             attachments = post.attachments,
             createdAt = post.createdAt,
             updatedAt = post.updatedAt,

@@ -294,6 +294,13 @@ class WorkspaceProvider extends ChangeNotifier {
     try {
       final comments = await _workspaceService.getPostComments(postId);
       _postComments[postId] = comments;
+      final latest = comments.isNotEmpty ? comments.last.createdAt : null;
+      _updatePostCommentMetadata(
+        postId,
+        commentCount: comments.length,
+        lastCommentedAt: latest,
+        updateLastCommentedAt: true,
+      );
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -326,6 +333,14 @@ class WorkspaceProvider extends ChangeNotifier {
         _postComments[postId] = [newComment];
       }
 
+      final currentCount = _findPostById(postId)?.commentCount ?? 0;
+      _updatePostCommentMetadata(
+        postId,
+        commentCount: currentCount + 1,
+        lastCommentedAt: newComment.createdAt,
+        updateLastCommentedAt: true,
+      );
+
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -341,12 +356,39 @@ class WorkspaceProvider extends ChangeNotifier {
       // 해당 게시글의 댓글 목록에서 제거
       if (_postComments.containsKey(postId)) {
         _postComments[postId]!.removeWhere((comment) => comment.id == commentId);
-        notifyListeners();
       }
+
+      final currentCount = _findPostById(postId)?.commentCount ?? 0;
+      DateTime? latest;
+      bool shouldUpdateLast = false;
+      if (_postComments.containsKey(postId)) {
+        final commentsForPost = _postComments[postId]!;
+        if (commentsForPost.isNotEmpty) {
+          latest = commentsForPost.last.createdAt;
+        }
+        shouldUpdateLast = true;
+      }
+      _updatePostCommentMetadata(
+        postId,
+        commentCount: currentCount - 1,
+        lastCommentedAt: latest,
+        updateLastCommentedAt: shouldUpdateLast,
+      );
+
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
     }
+  }
+
+  PostModel? _findPostById(int postId) {
+    for (final post in _currentChannelPosts) {
+      if (post.id == postId) {
+        return post;
+      }
+    }
+    return null;
   }
 
   /// 새 채널 생성
@@ -443,6 +485,27 @@ class WorkspaceProvider extends ChangeNotifier {
     _didAutoSelectChannel = false;
     _isMobileNavigatorVisible = false;
     notifyListeners();
+  }
+
+  void _updatePostCommentMetadata(
+    int postId, {
+    int? commentCount,
+    DateTime? lastCommentedAt,
+    bool updateLastCommentedAt = false,
+  }) {
+    final sanitizedCount = commentCount != null && commentCount < 0 ? 0 : commentCount;
+    final index = _currentChannelPosts.indexWhere((post) => post.id == postId);
+    if (index != -1) {
+      final updatedPost = _currentChannelPosts[index].copyWith(
+        commentCount: sanitizedCount,
+        lastCommentedAt: lastCommentedAt,
+        updateLastCommentedAt: updateLastCommentedAt,
+      );
+      _currentChannelPosts[index] = updatedPost;
+      if (_selectedPostForComments?.id == postId) {
+        _selectedPostForComments = updatedPost;
+      }
+    }
   }
 
   /// 그룹 가입 신청

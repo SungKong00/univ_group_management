@@ -138,6 +138,8 @@ class PostModel {
   final bool isPinned;
   final int viewCount;
   final int likeCount;
+  final int commentCount;
+  final DateTime? lastCommentedAt;
   final List<String> attachments;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -151,6 +153,8 @@ class PostModel {
     required this.isPinned,
     required this.viewCount,
     required this.likeCount,
+    required this.commentCount,
+    this.lastCommentedAt,
     required this.attachments,
     required this.createdAt,
     required this.updatedAt,
@@ -166,6 +170,10 @@ class PostModel {
       isPinned: json['isPinned'] == true,
       viewCount: (json['viewCount'] ?? 0) as int,
       likeCount: (json['likeCount'] ?? 0) as int,
+      commentCount: (json['commentCount'] ?? 0) as int,
+      lastCommentedAt: json['lastCommentedAt'] != null
+          ? DateTime.parse(json['lastCommentedAt'].toString())
+          : null,
       attachments: ((json['attachments'] as List?) ?? [])
           .map((e) => e.toString())
           .toList(),
@@ -184,10 +192,34 @@ class PostModel {
       'isPinned': isPinned,
       'viewCount': viewCount,
       'likeCount': likeCount,
+      'commentCount': commentCount,
+      'lastCommentedAt': lastCommentedAt?.toIso8601String(),
       'attachments': attachments,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
+  }
+
+  PostModel copyWith({
+    int? commentCount,
+    DateTime? lastCommentedAt,
+    bool updateLastCommentedAt = false,
+  }) {
+    return PostModel(
+      id: id,
+      channelId: channelId,
+      author: author,
+      content: content,
+      type: type,
+      isPinned: isPinned,
+      viewCount: viewCount,
+      likeCount: likeCount,
+      commentCount: commentCount ?? this.commentCount,
+      lastCommentedAt: updateLastCommentedAt ? lastCommentedAt : this.lastCommentedAt,
+      attachments: attachments,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
   }
 
   String get typeDisplayName {
