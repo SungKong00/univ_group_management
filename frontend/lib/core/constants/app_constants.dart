@@ -37,3 +37,39 @@ class ApiEndpoints {
   static const String emailSend = '/email/verification/send';
   static const String emailVerify = '/email/verification/verify';
 }
+
+class ResponsiveBreakpoints {
+  // 반응형 브레이크포인트
+  static const double mobile = 768.0;
+  static const double tablet = 1024.0;
+  static const double desktop = 1440.0;
+
+  // 댓글 사이드바 관련 상수
+  static const double commentsSidebarWidth = 400.0;
+  static const double commentsSidebarMinWidth = 300.0;
+  static const double commentsSidebarMaxWidth = 500.0;
+
+  // 애니메이션 지속시간
+  static const Duration sidebarAnimationDuration = Duration(milliseconds: 300);
+
+  // 댓글 UI 관련 상수
+  static const double commentAvatarSize = 32.0;
+  static const double commentPadding = 16.0;
+  static const double commentInputHeight = 56.0;
+  static const double commentMaxInputHeight = 120.0;
+}
+
+class UIConstants {
+  // 일반적인 UI 상수
+  static const double defaultPadding = 16.0;
+  static const double smallPadding = 8.0;
+  static const double largePadding = 24.0;
+
+  // 댓글 관련 UI 상수
+  static const double commentBorderRadius = 12.0;
+  static const double commentSpacing = 12.0;
+
+  // 그림자 및 elevation
+  static const double defaultElevation = 2.0;
+  static const double sidebarElevation = 8.0;
+}

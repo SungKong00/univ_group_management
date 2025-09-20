@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../../core/constants/app_constants.dart';
 import '../../providers/workspace_provider.dart';
 import '../../../data/models/workspace_models.dart';
 import '../../widgets/loading_overlay.dart';
+import 'widgets/comments_sidebar.dart';
+import 'comments_screen.dart';
 
 class ChannelDetailScreen extends StatelessWidget {
   final ChannelModel channel;
@@ -145,27 +149,74 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     return Consumer<WorkspaceProvider>(
       builder: (context, provider, child) {
         final posts = provider.currentChannelPosts;
-        final content = Column(
-          children: [
-            Expanded(
-              child: posts.isEmpty
-                  ? _buildEmptyState(context)
-                  : _buildPostsList(context, posts, provider),
-            ),
-            _buildMessageComposer(context, provider),
-          ],
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= ResponsiveBreakpoints.mobile;
+
+            if (isDesktop) {
+              return _buildDesktopLayout(context, provider, posts);
+            } else {
+              return _buildMobileLayout(context, provider, posts);
+            }
+          },
         );
-
-        if (widget.showLoadingOverlay) {
-          return LoadingOverlay(
-            isLoading: provider.isLoading,
-            child: content,
-          );
-        }
-
-        return content;
       },
     );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context, WorkspaceProvider provider, List<PostModel> posts) {
+    final content = Row(
+      children: [
+        // 메인 콘텐츠 영역
+        Expanded(
+          child: Column(
+            children: [
+              Expanded(
+                child: posts.isEmpty
+                    ? _buildEmptyState(context)
+                    : _buildPostsList(context, posts, provider, isDesktop: true),
+              ),
+              _buildMessageComposer(context, provider),
+            ],
+          ),
+        ),
+        // 댓글 사이드바
+        if (provider.isCommentsSidebarVisible)
+          const CommentsSidebar(),
+      ],
+    );
+
+    if (widget.showLoadingOverlay) {
+      return LoadingOverlay(
+        isLoading: provider.isLoading,
+        child: content,
+      );
+    }
+
+    return content;
+  }
+
+  Widget _buildMobileLayout(BuildContext context, WorkspaceProvider provider, List<PostModel> posts) {
+    final content = Column(
+      children: [
+        Expanded(
+          child: posts.isEmpty
+              ? _buildEmptyState(context)
+              : _buildPostsList(context, posts, provider, isDesktop: false),
+        ),
+        _buildMessageComposer(context, provider),
+      ],
+    );
+
+    if (widget.showLoadingOverlay) {
+      return LoadingOverlay(
+        isLoading: provider.isLoading,
+        child: content,
+      );
+    }
+
+    return content;
   }
 
   Widget _buildEmptyState(BuildContext context) {
@@ -200,8 +251,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   Widget _buildMessageBubble(
     BuildContext context,
     PostModel post,
-    WorkspaceProvider provider,
-  ) {
+    WorkspaceProvider provider, {
+    required bool isDesktop,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -323,7 +375,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                 const SizedBox(width: 8),
               ],
               InkWell(
-                onTap: () => _showCommentsSheet(context, post, provider),
+                onTap: () => _handleCommentsAction(context, post, provider, isDesktop),
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -602,29 +654,27 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     );
   }
 
-  void _showCommentsSheet(
+  void _handleCommentsAction(
     BuildContext context,
     PostModel post,
     WorkspaceProvider provider,
+    bool isDesktop,
   ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => _CommentsSheet(
-          post: post,
-          provider: provider,
-          scrollController: scrollController,
+    if (isDesktop) {
+      // 데스크톱: 사이드바 토글
+      provider.toggleCommentsSidebar(post);
+    } else {
+      // 모바일: 댓글 페이지로 이동
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CommentsScreen(
+            postId: post.id,
+            postAuthor: post.author.name,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   String _formatTimestamp(DateTime timestamp) {
@@ -642,7 +692,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     }
   }
 
-  Widget _buildPostsList(BuildContext context, List<PostModel> posts, WorkspaceProvider provider) {
+  Widget _buildPostsList(BuildContext context, List<PostModel> posts, WorkspaceProvider provider, {required bool isDesktop}) {
     final groupedPosts = _groupPostsByDate(posts);
 
     return ListView.builder(
@@ -655,7 +705,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDateHeader(context, group.date),
-            ...group.posts.map((post) => _buildMessageBubble(context, post, provider)),
+            ...group.posts.map((post) => _buildMessageBubble(context, post, provider, isDesktop: isDesktop)),
           ],
         );
       },
@@ -736,198 +786,6 @@ IconData _getChannelIcon(ChannelType type) {
       return Icons.campaign;
     case ChannelType.fileShare:
       return Icons.folder_shared;
-  }
-}
-
-class _CommentsSheet extends StatefulWidget {
-  final PostModel post;
-  final WorkspaceProvider provider;
-  final ScrollController scrollController;
-
-  const _CommentsSheet({
-    required this.post,
-    required this.provider,
-    required this.scrollController,
-  });
-
-  @override
-  State<_CommentsSheet> createState() => _CommentsSheetState();
-}
-
-class _CommentsSheetState extends State<_CommentsSheet> {
-  final TextEditingController _commentController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    // 댓글 로드
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.provider.loadPostComments(widget.post.id);
-    });
-  }
-
-  @override
-  void dispose() {
-    _commentController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final comments = widget.provider.getCommentsForPost(widget.post.id);
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Header
-          Text(
-            '댓글 ${comments.length}개',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Comments list
-          Expanded(
-            child: comments.isEmpty
-                ? const Center(
-                    child: Text('아직 댓글이 없습니다'),
-                  )
-                : ListView.builder(
-                    controller: widget.scrollController,
-                    itemCount: comments.length,
-                    itemBuilder: (context, index) {
-                      final comment = comments[index];
-                      return _buildCommentTile(context, comment);
-                    },
-                  ),
-          ),
-
-          // Comment composer
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _commentController,
-                  decoration: const InputDecoration(
-                    hintText: '댓글을 입력하세요...',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: null,
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: _sendComment,
-                icon: const Icon(Icons.send),
-              ),
-            ],
-          ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCommentTile(BuildContext context, CommentModel comment) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 12,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Text(
-                  comment.author.name.isNotEmpty ? comment.author.name[0] : '?',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                comment.author.name,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                _formatTimestamp(comment.createdAt),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 32),
-            child: Text(
-              comment.content,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _sendComment() async {
-    final content = _commentController.text.trim();
-    if (content.isEmpty) return;
-
-    _commentController.clear();
-
-    try {
-      await widget.provider.createComment(
-        postId: widget.post.id,
-        content: content,
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('댓글 작성 실패: $e')),
-        );
-      }
-    }
-  }
-
-  String _formatTimestamp(DateTime timestamp) {
-    final now = DateTime.now();
-    final diff = now.difference(timestamp);
-
-    if (diff.inDays > 0) {
-      return '${diff.inDays}일 전';
-    } else if (diff.inHours > 0) {
-      return '${diff.inHours}시간 전';
-    } else if (diff.inMinutes > 0) {
-      return '${diff.inMinutes}분 전';
-    } else {
-      return '방금 전';
-    }
   }
 }
 

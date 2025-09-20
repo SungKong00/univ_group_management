@@ -34,6 +34,10 @@ class WorkspaceProvider extends ChangeNotifier {
   // Channel permissions for current user
   Map<int, List<String>> _channelPermissions = {};
 
+  // Comments sidebar state
+  PostModel? _selectedPostForComments;
+  bool _isCommentsSidebarVisible = false;
+
   // Getters
   WorkspaceDetailModel? get currentWorkspace => _currentWorkspace;
   bool get isLoading => _isLoading;
@@ -43,6 +47,10 @@ class WorkspaceProvider extends ChangeNotifier {
   bool get isSidebarVisible => _isSidebarVisible;
   ChannelModel? get currentChannel => _currentChannel;
   List<PostModel> get currentChannelPosts => _currentChannelPosts;
+
+  // Comments sidebar getters
+  PostModel? get selectedPostForComments => _selectedPostForComments;
+  bool get isCommentsSidebarVisible => _isCommentsSidebarVisible;
 
 
   // 현재 워크스페이스의 채널 (정렬됨)
@@ -800,6 +808,37 @@ class WorkspaceProvider extends ChangeNotifier {
     }
   }
 
+
+  // === 댓글 사이드바 관리 메서드 ===
+
+  /// 댓글 사이드바 열기
+  void showCommentsSidebar(PostModel post) {
+    _selectedPostForComments = post;
+    _isCommentsSidebarVisible = true;
+
+    // 해당 게시글의 댓글을 로드
+    loadPostComments(post.id);
+
+    notifyListeners();
+  }
+
+  /// 댓글 사이드바 닫기
+  void hideCommentsSidebar() {
+    _selectedPostForComments = null;
+    _isCommentsSidebarVisible = false;
+    notifyListeners();
+  }
+
+  /// 댓글 사이드바 토글
+  void toggleCommentsSidebar(PostModel? post) {
+    if (_isCommentsSidebarVisible && _selectedPostForComments?.id == post?.id) {
+      hideCommentsSidebar();
+    } else if (post != null) {
+      showCommentsSidebar(post);
+    } else {
+      hideCommentsSidebar();
+    }
+  }
 
   /// 권한 확인 헬퍼 메서드들
   bool get canManageRoles => canManageMembers; // 멤버 관리 권한이 있으면 역할도 관리 가능
