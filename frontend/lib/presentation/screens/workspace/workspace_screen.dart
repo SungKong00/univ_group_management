@@ -609,7 +609,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   ) {
     final channel = provider.currentChannel;
     return Scaffold(
-      appBar: _buildMobileAppBar(context, workspace),
+      // appBar 제거 - 글로벌 상단바만 사용
       drawer: _buildMobileDrawer(context, provider, workspace),
       body: channel == null
           ? AnnouncementsView(
@@ -628,61 +628,76 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
   }
 
-  AppBar _buildMobileAppBar(
+  PreferredSizeWidget _buildMobileAppBar(
       BuildContext context, WorkspaceDetailModel workspace) {
-    return AppBar(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      foregroundColor: Theme.of(context).colorScheme.onSurface,
-      elevation: 1,
-      toolbarHeight: 52,
-      leading: Builder(
-        builder: (ctx) => IconButton(
-          icon: const Icon(Icons.menu, size: 20),
-          tooltip: '메뉴',
-          padding: const EdgeInsets.all(8),
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          onPressed: () => Scaffold.of(ctx).openDrawer(),
-        ),
-      ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            workspace.group.name,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 17,
-            ),
-          ),
-          if (workspace.myMembership != null)
-            Text(
-              _roleDisplayName(workspace.myMembership!.role.name),
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w500,
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(52),
+      child: Consumer<WorkspaceProvider>(
+        builder: (context, workspaceProvider, child) {
+          final currentChannel = workspaceProvider.currentChannel;
+          final isInChannel = currentChannel != null;
+
+          return AppBar(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+            elevation: 1,
+            toolbarHeight: 52,
+            leading: Builder(
+              builder: (ctx) => IconButton(
+                icon: const Icon(Icons.menu, size: 20),
+                tooltip: '메뉴',
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                onPressed: () => Scaffold.of(ctx).openDrawer(),
               ),
             ),
-        ],
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 메인 제목: 채널이 선택되면 "그룹명 > 채널명", 아니면 그룹명만
+                Text(
+                  isInChannel
+                      ? '${workspace.group.name} > ${currentChannel.name}'
+                      : '${workspace.group.name} > 공지사항',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (workspace.myMembership != null)
+                  Text(
+                    _roleDisplayName(workspace.myMembership!.role.name),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+              ],
+            ),
+            actions: [
+              if (workspace.canManage)
+                IconButton(
+                  onPressed: () => _showManagementMenu(context, workspace),
+                  icon: const Icon(Icons.settings, size: 20),
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  tooltip: '관리',
+                ),
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close, size: 20),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                tooltip: '닫기',
+              ),
+            ],
+          );
+        },
       ),
-      actions: [
-        if (workspace.canManage)
-          IconButton(
-            onPressed: () => _showManagementMenu(context, workspace),
-            icon: const Icon(Icons.settings, size: 20),
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            tooltip: '관리',
-          ),
-        IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.close, size: 20),
-          padding: const EdgeInsets.all(8),
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          tooltip: '닫기',
-        ),
-      ],
     );
   }
 
@@ -1201,7 +1216,7 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
   ) {
     final channel = provider.currentChannel;
     return Scaffold(
-      appBar: _buildMobileAppBar(context, workspace),
+      // appBar 제거 - 글로벌 상단바만 사용
       drawer: _buildMobileDrawer(context, provider, workspace),
       body: channel == null
           ? AnnouncementsView(
@@ -1324,61 +1339,76 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     );
   }
 
-  AppBar _buildMobileAppBar(
+  PreferredSizeWidget _buildMobileAppBar(
       BuildContext context, WorkspaceDetailModel workspace) {
-    return AppBar(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      foregroundColor: Theme.of(context).colorScheme.onSurface,
-      elevation: 1,
-      toolbarHeight: 52,
-      leading: Builder(
-        builder: (ctx) => IconButton(
-          icon: const Icon(Icons.menu, size: 20),
-          tooltip: '메뉴',
-          padding: const EdgeInsets.all(8),
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          onPressed: () => Scaffold.of(ctx).openDrawer(),
-        ),
-      ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            workspace.group.name,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 17,
-            ),
-          ),
-          if (workspace.myMembership != null)
-            Text(
-              _roleDisplayName(workspace.myMembership!.role.name),
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w500,
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(52),
+      child: Consumer<WorkspaceProvider>(
+        builder: (context, workspaceProvider, child) {
+          final currentChannel = workspaceProvider.currentChannel;
+          final isInChannel = currentChannel != null;
+
+          return AppBar(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+            elevation: 1,
+            toolbarHeight: 52,
+            leading: Builder(
+              builder: (ctx) => IconButton(
+                icon: const Icon(Icons.menu, size: 20),
+                tooltip: '메뉴',
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                onPressed: () => Scaffold.of(ctx).openDrawer(),
               ),
             ),
-        ],
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 메인 제목: 채널이 선택되면 "그룹명 > 채널명", 아니면 그룹명만
+                Text(
+                  isInChannel
+                      ? '${workspace.group.name} > ${currentChannel.name}'
+                      : '${workspace.group.name} > 공지사항',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (workspace.myMembership != null)
+                  Text(
+                    _roleDisplayName(workspace.myMembership!.role.name),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+              ],
+            ),
+            actions: [
+              if (workspace.canManage)
+                IconButton(
+                  onPressed: () => _showManagementMenu(context, workspace),
+                  icon: const Icon(Icons.settings, size: 20),
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  tooltip: '관리',
+                ),
+              IconButton(
+                onPressed: widget.onBack,
+                icon: const Icon(Icons.close, size: 20),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                tooltip: '닫기',
+              ),
+            ],
+          );
+        },
       ),
-      actions: [
-        if (workspace.canManage)
-          IconButton(
-            onPressed: () => _showManagementMenu(context, workspace),
-            icon: const Icon(Icons.settings, size: 20),
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            tooltip: '관리',
-          ),
-        IconButton(
-          onPressed: widget.onBack,
-          icon: const Icon(Icons.close, size: 20),
-          padding: const EdgeInsets.all(8),
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          tooltip: '닫기',
-        ),
-      ],
     );
   }
 

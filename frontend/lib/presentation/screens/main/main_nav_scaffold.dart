@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/nav_provider.dart';
+import '../../providers/workspace_provider.dart';
 import '../../widgets/professor_pending_banner.dart';
 import '../../widgets/global_sidebar.dart';
 import '../home/home_tab.dart';
@@ -109,8 +110,8 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
       const ProfileTab(),
     ];
 
-    return Consumer2<AuthProvider, NavProvider>(
-      builder: (context, auth, nav, _) {
+    return Consumer3<AuthProvider, NavProvider, WorkspaceProvider>(
+      builder: (context, auth, nav, workspace, _) {
         // AuthState가 unauthenticated가 되면 로그인 페이지로 이동
         if (auth.state == AuthState.unauthenticated) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -127,7 +128,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
             body: Column(
               children: [
                 // 상단바 (전체 화면 너비)
-                _buildDesktopAppBar(context, nav),
+                _buildDesktopAppBar(context, nav, workspace),
                 // 하단 영역: 글로벌 사이드바 + 메인 컨텐츠
                 Expanded(
                   child: Row(
@@ -161,7 +162,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
         } else {
           // 모바일: 기존 하단 네비게이션바 방식
           return Scaffold(
-            appBar: _buildMobileAppBar(context, auth, nav),
+            appBar: _buildMobileAppBar(context, auth, nav, workspace),
             body: Column(
               children: [
                 const ProfessorPendingBanner(),
@@ -194,7 +195,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
     );
   }
 
-  Widget _buildDesktopAppBar(BuildContext context, NavProvider nav) {
+  Widget _buildDesktopAppBar(BuildContext context, NavProvider nav, WorkspaceProvider workspace) {
     // 뒤로가기 버튼을 숨겨야 하는 경우: 홈 탭의 기본 상태
     final isHomeDefaultState = nav.index == 0 && !_showGroupExplorer && !_showHomeWorkspace;
     final shouldShowBackButton = !isHomeDefaultState;
@@ -298,9 +299,9 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
                         ],
                       ),
                     ),
-                    // 워크스페이스 메인 타이틀
+                    // 워크스페이스 메인 타이틀 (현재 채널에 따라 동적 변경)
                     Text(
-                      '공지사항', // 기본값, 나중에 채널 선택에 따라 변경
+                      workspace.currentChannel?.name ?? '공지사항',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
@@ -333,7 +334,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
     );
   }
 
-  PreferredSizeWidget _buildMobileAppBar(BuildContext context, AuthProvider auth, NavProvider nav) {
+  PreferredSizeWidget _buildMobileAppBar(BuildContext context, AuthProvider auth, NavProvider nav, WorkspaceProvider workspace) {
     // 뒤로가기 버튼을 숨겨야 하는 경우: 홈 탭의 기본 상태
     final isHomeDefaultState = nav.index == 0 && !_showGroupExplorer && !_showHomeWorkspace;
     final shouldShowBackButton = !isHomeDefaultState;
@@ -342,6 +343,20 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
     final isGroupExplorerMode = nav.index == 0 && _showGroupExplorer;
     final isHomeWorkspaceMode = nav.index == 0 && _showHomeWorkspace;
     final isWorkspaceTabMode = nav.index == 1 && _showWorkspace;
+    final isWorkspaceMode = isHomeWorkspaceMode || isWorkspaceTabMode;
+
+    // 워크스페이스 모드일 때 제목 결정
+    String getTitle() {
+      if (isGroupExplorerMode) {
+        return '교내 그룹 탐색';
+      } else if (isWorkspaceMode) {
+        final groupName = isHomeWorkspaceMode ? _homeWorkspaceGroupName : _workspaceGroupName;
+        final channelName = workspace.currentChannel?.name ?? '공지사항';
+        return '$groupName > $channelName';
+      } else {
+        return _titles[nav.index];
+      }
+    }
 
     return AppBar(
       toolbarHeight: 52,
@@ -369,11 +384,13 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
             )
           : null,
       title: Text(
-        _titles[nav.index],
+        getTitle(),
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontSize: 17,
               fontWeight: FontWeight.w600,
             ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
       actions: [
         Padding(
