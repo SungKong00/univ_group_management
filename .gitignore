@@ -131,3 +131,41 @@ $RECYCLE.BIN/
 # Context system artifacts
 ####################################
 context/_meta/backup_*
+
+####################################
+# Flutter 기타 플랫폼(생성 산출물/임시 파일)
+####################################
+# macOS (CocoaPods/Flutter 생성물)
+/frontend/macos/**/Pods/
+/frontend/macos/**/.symlinks/
+/frontend/macos/**/profile
+/frontend/macos/**/xcuserdata
+/frontend/macos/**/DerivedData/
+/frontend/macos/Flutter/ephemeral/
+/frontend/macos/Flutter/.last_build_id
+/frontend/macos/Flutter/Generated.xcconfig
+/frontend/macos/Flutter/Flutter.podspec
+/frontend/macos/Flutter/flutter_export_environment.sh
+/frontend/macos/ServiceDefinitions.json
+/frontend/macos/Runner/GeneratedPluginRegistrant.*
+
+# Linux (CMake/Flutter 생성물)
+/frontend/linux/flutter/ephemeral/
+/frontend/linux/**/CMakeFiles/
+/frontend/linux/**/cmake-build-*/
+/frontend/linux/**/build/
+
+# Windows (CMake/Flutter 생성물)
+/frontend/windows/flutter/ephemeral/
+/frontend/windows/**/CMakeFiles/
+/frontend/windows/**/cmake-build-*/
+/frontend/windows/**/build/
+
+# Android NDK/외부 빌드 캐시
+/frontend/android/.cxx/
+/frontend/android/.externalNativeBuild/
+
+####################################
+# 백업/임시 폴더
+####################################
+/frontend_backup/

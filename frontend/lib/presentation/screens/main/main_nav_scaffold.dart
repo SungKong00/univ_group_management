@@ -33,6 +33,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
   bool _showWorkspace = false;
   int? _workspaceGroupId;
   String? _workspaceGroupName;
+  String _workspaceEntryPoint = 'workspace_list'; // 'workspace_list' or 'home_explorer'
 
   void _navigateToGroupExplorer() {
     setState(() {
@@ -59,22 +60,35 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
     });
   }
 
-  void _navigateToWorkspace(int groupId, String groupName) {
+  void _navigateToWorkspace(int groupId, String groupName, {String entryPoint = 'workspace_list'}) {
     setState(() {
       _showWorkspace = true;
       _workspaceGroupId = groupId;
       _workspaceGroupName = groupName;
+      _workspaceEntryPoint = entryPoint;
     });
   }
 
   void _navigateToWorkspaceFromGroupExplorer(int groupId, String groupName) {
+    // 1. 네비게이션 탭을 '워크스페이스' (인덱스 1)로 변경합니다.
+    context.read<NavProvider>().setIndex(1);
+
+    // 2. 워크스페이스 탭 내에서 특정 그룹의 워크스페이스를 표시하고, 진입점을 기록합니다.
+    _navigateToWorkspace(groupId, groupName, entryPoint: 'home_explorer');
+  }
+
+  void _navigateBackFromWorkspace() {
+    // 진입점에 따라 분기
+    if (_workspaceEntryPoint == 'home_explorer') {
+      // 홈 탭(인덱스 0)으로 돌아감
+      context.read<NavProvider>().setIndex(0);
+    }
+    
+    // 공통적으로 워크스페이스 뷰를 닫고 상태를 초기화
     setState(() {
-      // 그룹 탐색 모드 종료
-      _showGroupExplorer = false;
-      // 홈 탭 내에서 워크스페이스 모드 활성화 (탭 전환 없음)
-      _showHomeWorkspace = true;
-      _homeWorkspaceGroupId = groupId;
-      _homeWorkspaceGroupName = groupName;
+      _showWorkspace = false;
+      _workspaceGroupId = null;
+      _workspaceGroupName = null;
     });
   }
 
@@ -104,7 +118,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
         workspaceGroupId: _workspaceGroupId,
         workspaceGroupName: _workspaceGroupName,
         onNavigateToWorkspace: _navigateToWorkspace,
-        onNavigateBackToWorkspaceList: _navigateBackToWorkspaceList,
+        onNavigateBackToWorkspaceList: _navigateBackFromWorkspace, // 변경
       ),
       const ActivityTab(),
       const ProfileTab(),
@@ -202,8 +216,9 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
 
     // 현재 상태 판별을 위한 조건들
     final isGroupExplorerMode = nav.index == 0 && _showGroupExplorer;
-    final isWorkspaceMode = (nav.index == 1 && _showWorkspace) || (nav.index == 0 && _showHomeWorkspace);
-    final isHomeWorkspaceMode = nav.index == 0 && _showHomeWorkspace;
+    final isWorkspaceInHomeTab = nav.index == 0 && _showHomeWorkspace; // 홈 탭 내 워크스페이스 (레거시)
+    final isWorkspaceInWorkspaceTab = nav.index == 1 && _showWorkspace; // 워크스페이스 탭 내 워크스페이스
+    final isWorkspaceMode = isWorkspaceInWorkspaceTab || isWorkspaceInHomeTab;
 
     return Container(
       height: 53, // 52 + 1px border
@@ -223,20 +238,22 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
                 icon: const Icon(Icons.arrow_back, size: 20),
                 padding: const EdgeInsets.all(8),
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                onPressed: isGroupExplorerMode
-                    ? _navigateBackToHome
-                    : isHomeWorkspaceMode
-                        ? _navigateBackToHomeFromWorkspace
-                        : isWorkspaceMode
-                            ? _navigateBackToWorkspaceList
-                            : () => nav.setIndex(0),
+                onPressed: () {
+                  if (isGroupExplorerMode) {
+                    _navigateBackToHome();
+                  } else if (isWorkspaceInWorkspaceTab) {
+                    _navigateBackFromWorkspace();
+                  } else if (isWorkspaceInHomeTab) {
+                    _navigateBackToHomeFromWorkspace();
+                  } else {
+                    nav.setIndex(0);
+                  }
+                },
                 tooltip: isGroupExplorerMode
                     ? '홈으로'
-                    : isHomeWorkspaceMode
-                        ? '그룹 탐색으로'
-                        : isWorkspaceMode
-                            ? '워크스페이스로'
-                            : '홈으로',
+                    : isWorkspaceInWorkspaceTab
+                        ? (_workspaceEntryPoint == 'home_explorer' ? '그룹 탐색으로' : '워크스페이스 목록으로')
+                        : '뒤로가기',
               ),
             )
           else
@@ -287,7 +304,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              isHomeWorkspaceMode ? (_homeWorkspaceGroupName ?? '') : (_workspaceGroupName ?? ''),
+                              isWorkspaceInHomeTab ? (_homeWorkspaceGroupName ?? '') : (_workspaceGroupName ?? ''),
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: Theme.of(context).primaryColor,
@@ -341,16 +358,16 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
 
     // 현재 상태 판별을 위한 조건들
     final isGroupExplorerMode = nav.index == 0 && _showGroupExplorer;
-    final isHomeWorkspaceMode = nav.index == 0 && _showHomeWorkspace;
-    final isWorkspaceTabMode = nav.index == 1 && _showWorkspace;
-    final isWorkspaceMode = isHomeWorkspaceMode || isWorkspaceTabMode;
+    final isWorkspaceInHomeTab = nav.index == 0 && _showHomeWorkspace; // 홈 탭 내 워크스페이스 (레거시)
+    final isWorkspaceInWorkspaceTab = nav.index == 1 && _showWorkspace; // 워크스페이스 탭 내 워크스페이스
+    final isWorkspaceMode = isWorkspaceInHomeTab || isWorkspaceInWorkspaceTab;
 
     // 워크스페이스 모드일 때 제목 결정
     String getTitle() {
       if (isGroupExplorerMode) {
         return '교내 그룹 탐색';
       } else if (isWorkspaceMode) {
-        final groupName = isHomeWorkspaceMode ? _homeWorkspaceGroupName : _workspaceGroupName;
+        final groupName = isWorkspaceInHomeTab ? _homeWorkspaceGroupName : _workspaceGroupName;
         final safeGroupName = groupName ?? '';
         if (workspace.isMobileNavigatorVisible) {
           return safeGroupName;
@@ -385,21 +402,19 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
 
                 if (isGroupExplorerMode) {
                   _navigateBackToHome();
-                } else if (isHomeWorkspaceMode) {
+                } else if (isWorkspaceInWorkspaceTab) {
+                  _navigateBackFromWorkspace();
+                } else if (isWorkspaceInHomeTab) {
                   _navigateBackToHomeFromWorkspace();
-                } else if (isWorkspaceTabMode) {
-                  _navigateBackToWorkspaceList();
                 } else {
                   nav.setIndex(0);
                 }
               },
               tooltip: isGroupExplorerMode
                   ? '홈으로'
-                  : isHomeWorkspaceMode
-                      ? '그룹 탐색으로'
-                      : isWorkspaceTabMode
-                          ? '워크스페이스로'
-                          : '홈으로',
+                  : isWorkspaceInWorkspaceTab
+                      ? (_workspaceEntryPoint == 'home_explorer' ? '그룹 탐색으로' : '워크스페이스 목록으로')
+                      : '뒤로가기',
             )
           : null,
       title: Text(
@@ -476,7 +491,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
     final isHomeWorkspace = _showHomeWorkspace && _homeWorkspaceGroupId != null;
     final groupId = isHomeWorkspace ? _homeWorkspaceGroupId! : _workspaceGroupId!;
     final groupName = isHomeWorkspace ? _homeWorkspaceGroupName : _workspaceGroupName;
-    final onBack = isHomeWorkspace ? _navigateBackToHomeFromWorkspace : _navigateBackToWorkspaceList;
+    final onBack = isHomeWorkspace ? _navigateBackToHomeFromWorkspace : _navigateBackFromWorkspace;
 
     return Column(
       children: [
