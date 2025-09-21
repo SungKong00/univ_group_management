@@ -28,6 +28,7 @@ class WorkspaceProvider extends ChangeNotifier {
 
   // 반응형 전환 상태 관리
   bool _isInitialLoad = true;
+  bool _isHandlingResponsiveTransition = false;
 
   // Current channel (when in channel detail view)
   ChannelModel? _currentChannel;
@@ -489,6 +490,7 @@ class WorkspaceProvider extends ChangeNotifier {
     _didAutoSelectChannel = false;
     _isMobileNavigatorVisible = false;
     _isInitialLoad = true;
+    _isHandlingResponsiveTransition = false;
     notifyListeners();
   }
 
@@ -912,39 +914,77 @@ class WorkspaceProvider extends ChangeNotifier {
 
   /// 반응형 화면 전환 처리
   void handleResponsiveTransition(bool isNowMobile) {
+    // 이미 처리 중이면 건너뛰기 (순환 호출 방지)
+    if (_isHandlingResponsiveTransition) return;
+
     if (_isInitialLoad) {
       // 초기 로드 시에는 기존 로직 유지
       _isInitialLoad = false;
       return;
     }
 
-    // 화면 크기 변경으로 인한 전환
-    if (isNowMobile) {
-      // 웹 → 모바일 전환 시
-      // 우선순위: 댓글 뷰 → 채널 뷰 → 네비게이터
-      if (_isCommentsSidebarVisible && _selectedPostForComments != null) {
-        // 댓글 사이드바가 열려있으면 댓글 모바일 뷰 유지
-        _isMobileNavigatorVisible = false;
-      } else if (_currentChannel != null) {
-        // 채널이 선택되어 있으면 채널 모바일 뷰 유지
-        _isMobileNavigatorVisible = false;
+    _isHandlingResponsiveTransition = true;
+
+    try {
+      // 화면 크기 변경으로 인한 전환
+      if (isNowMobile) {
+        // 웹 → 모바일 전환 시
+        // 우선순위: 댓글 뷰 → 채널 뷰 → 네비게이터
+        if (_isCommentsSidebarVisible && _selectedPostForComments != null) {
+          // 댓글 사이드바가 열려있으면 댓글 모바일 뷰 유지
+          _isMobileNavigatorVisible = false;
+        } else if (_currentChannel != null) {
+          // 채널이 선택되어 있으면 채널 모바일 뷰 유지
+          _isMobileNavigatorVisible = false;
+        } else {
+          // 그 외의 경우 네비게이터 표시
+          _isMobileNavigatorVisible = true;
+        }
       } else {
-        // 그 외의 경우 네비게이터 표시
-        _isMobileNavigatorVisible = true;
-      }
-    } else {
-      // 모바일 → 웹 전환 시
-      _isMobileNavigatorVisible = false;
+        // 모바일 → 웹 전환 시
+        _isMobileNavigatorVisible = false;
 
-      // 데스크톱에서 채널이 없으면 첫 번째 채널 자동 선택
-      if (_currentChannel == null && _currentWorkspace != null && _currentWorkspace!.channels.isNotEmpty) {
-        final sorted = List<ChannelModel>.from(_currentWorkspace!.channels)
-          ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
-        selectChannel(sorted.first);
+        // 데스크톱에서 채널이 없으면 첫 번째 채널 자동 선택
+        if (_currentChannel == null && _currentWorkspace != null && _currentWorkspace!.channels.isNotEmpty) {
+          final sorted = List<ChannelModel>.from(_currentWorkspace!.channels)
+            ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+
+          // selectChannel을 직접 호출하지 않고 상태만 변경
+          _currentChannel = sorted.first;
+          // 채널 데이터는 나중에 비동기로 로드
+          Future.microtask(() => _loadChannelDataSafely(sorted.first));
+        }
       }
+
+      notifyListeners();
+    } finally {
+      _isHandlingResponsiveTransition = false;
     }
+  }
 
-    notifyListeners();
+  /// 안전한 채널 데이터 로드 (순환 호출 방지)
+  Future<void> _loadChannelDataSafely(ChannelModel channel) async {
+    if (_isHandlingResponsiveTransition) return;
+
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      // 채널 게시글과 권한 정보를 동시에 로드
+      final futures = await Future.wait([
+        _workspaceService.getChannelPosts(channel.id),
+        _loadChannelPermissions(channel.id),
+      ]);
+
+      _currentChannelPosts = futures[0] as List<PostModel>;
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+    }
   }
 
   /// 초기 로드 플래그 설정 (외부에서 호출용)

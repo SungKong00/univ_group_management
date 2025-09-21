@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,8 +8,6 @@ import '../../widgets/global_sidebar.dart';
 import '../../theme/app_theme.dart';
 import '../../../data/models/workspace_models.dart';
 import 'channel_detail_screen.dart';
-import 'tabs/channels_tab.dart';
-import 'tabs/members_tab.dart';
 import 'member_management_screen.dart';
 import 'channel_management_screen.dart';
 import 'group_info_screen.dart';
@@ -33,6 +32,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   bool _hasInitialized = false;
   double? _previousWidth;
   WorkspaceProvider? _workspaceProvider;
+  bool _isHandlingResize = false;
+  Timer? _resizeDebounceTimer;
 
   @override
   void initState() {
@@ -64,10 +65,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   void dispose() {
     // 안전한 dispose: 저장된 provider 인스턴스 사용
     _workspaceProvider?.exitChannel();
+    _resizeDebounceTimer?.cancel();
     super.dispose();
   }
 
   void _handleScreenSizeChange(double currentWidth, WorkspaceProvider provider) {
+    // 이미 처리 중이면 건너뛰기 (순환 호출 방지)
+    if (_isHandlingResize) return;
+
     // 초기 설정: 이전 너비가 없으면 현재 너비로 설정하고 종료
     if (_previousWidth == null) {
       _previousWidth = currentWidth;
@@ -87,17 +92,31 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         print('[반응형] 화면 전환 감지: ${wasDesktop ? "데스크톱" : "모바일"} → ${isNowDesktop ? "데스크톱" : "모바일"} (${currentWidth.toInt()}px)');
       }
 
-      // 초기화가 완료된 경우에만 실제 반응형 전환 수행
-      if (_hasInitialized) {
-        provider.handleResponsiveTransition(isNowMobile);
-        if (kDebugMode) {
-          print('[반응형] handleResponsiveTransition 호출됨: isNowMobile=$isNowMobile');
+      // 기존 타이머 취소
+      _resizeDebounceTimer?.cancel();
+
+      // 디바운싱: 250ms 후에 실행
+      _resizeDebounceTimer = Timer(const Duration(milliseconds: 250), () {
+        if (!mounted) return;
+
+        // 초기화가 완료된 경우에만 실제 반응형 전환 수행
+        if (_hasInitialized) {
+          _isHandlingResize = true;
+
+          try {
+            provider.handleResponsiveTransition(isNowMobile);
+            if (kDebugMode) {
+              print('[반응형] handleResponsiveTransition 호출됨 (디바운싱 후): isNowMobile=$isNowMobile');
+            }
+          } finally {
+            _isHandlingResize = false;
+          }
+        } else {
+          if (kDebugMode) {
+            print('[반응형] 초기화 미완료로 인해 전환 스킵');
+          }
         }
-      } else {
-        if (kDebugMode) {
-          print('[반응형] 초기화 미완료로 인해 전환 스킵');
-        }
-      }
+      });
     }
 
     _previousWidth = currentWidth;
@@ -113,10 +132,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             final currentWidth = constraints.maxWidth;
             final isDesktop = currentWidth >= 900;
 
-            // 화면 크기 변경 감지 및 처리
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _handleScreenSizeChange(currentWidth, provider);
-            });
+            // 화면 크기 변경 감지 및 처리 (안전하게)
+            _handleScreenSizeChange(currentWidth, provider);
 
             Widget body;
             if (workspace == null) {
@@ -451,8 +468,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   }
 
   void _showMembersSheet(BuildContext context, WorkspaceDetailModel workspace) {
-    final provider = context.read<WorkspaceProvider>();
-    final members = provider.members;
+    if (!mounted) return;
+    try {
+      final provider = context.read<WorkspaceProvider>();
+      final members = provider.members;
 
     showModalBottomSheet(
       context: context,
@@ -520,6 +539,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         ),
       ),
     );
+    } catch (e) {
+      // 안전하게 에러 처리
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('멤버 목록을 불러올 수 없습니다.')),
+        );
+      }
+    }
   }
 
   void _showChannelInfo(BuildContext context, ChannelModel channel) {
