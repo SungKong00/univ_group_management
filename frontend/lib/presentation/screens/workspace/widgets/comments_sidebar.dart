@@ -59,9 +59,7 @@ class _CommentsSidebarState extends State<CommentsSidebar>
   // Enter 전송 후 남는 한 줄짜리 줄바꿈을 정리
   void _handleComposerChanged(String value) {
     if (_pendingEnterSend) {
-      if (value == '\n' || value == '\r' || value == '\r\n') {
-        _commentController.clear();
-      }
+      _commentController.clear();
       _pendingEnterSend = false;
     }
   }

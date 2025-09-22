@@ -207,9 +207,7 @@ class _MessageComposerState extends State<MessageComposer> {
 
   void _handleComposerChanged(String value) {
     if (_pendingEnterSend) {
-      if (value == '\n' || value == '\r' || value == '\r\n') {
-        _messageController.clear();
-      }
+      _messageController.clear();
       _pendingEnterSend = false;
     }
   }
