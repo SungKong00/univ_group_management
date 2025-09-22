@@ -1075,9 +1075,18 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            post.content,
-            style: Theme.of(context).textTheme.bodyMedium,
+          // 게시글 내용에 최소/최대 높이 제한 추가
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: 60.0,  // 최소 높이: 약 3줄 정도
+              maxHeight: 200.0, // 최대 높이: 약 10줄 정도
+            ),
+            child: SingleChildScrollView(
+              child: Text(
+                post.content,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
           ),
         ],
       ),
@@ -1450,8 +1459,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                         ),
                       ),
                     ),
-                  ),
-                );
+                  );
+                },
               },
             ),
           );
