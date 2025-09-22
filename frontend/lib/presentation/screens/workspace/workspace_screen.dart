@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/workspace_provider.dart';
+import '../../providers/channel_provider.dart';
+import '../../providers/ui_state_provider.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../widgets/global_sidebar.dart';
 import '../../theme/app_theme.dart';
@@ -42,21 +44,44 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     // 워크스페이스 데이터 로드 및 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final provider = context.read<WorkspaceProvider>();
-      _workspaceProvider = provider; // Provider 인스턴스 저장
-      provider.reset();
+      final workspaceProvider = context.read<WorkspaceProvider>();
+      final channelProvider = context.read<ChannelProvider>();
+      final uiStateProvider = context.read<UIStateProvider>();
+
+      _workspaceProvider = workspaceProvider; // Provider 인스턴스 저장
+      workspaceProvider.reset();
+      channelProvider.reset();
+      uiStateProvider.reset();
 
       final isDesktop = MediaQuery.of(context).size.width >= 900;
 
-      provider.loadWorkspace(
+      workspaceProvider
+          .loadWorkspace(
         widget.groupId,
         autoSelectFirstChannel: isDesktop,
         mobileNavigatorVisible: !isDesktop,
-      ).then((_) {
-        if (mounted) {
-          provider.markAsInitialLoadComplete();
-          _hasInitialized = true;
+      )
+          .then((_) async {
+        if (!mounted) return;
+
+        uiStateProvider.markAsInitialLoadComplete();
+
+        final channels = workspaceProvider.channels;
+        final currentChannel = channelProvider.currentChannel;
+        final hasCurrentChannel = currentChannel != null &&
+            channels.any((channel) => channel.id == currentChannel.id);
+
+        if (isDesktop) {
+          if (!hasCurrentChannel && channels.isNotEmpty) {
+            await channelProvider.selectChannel(channels.first);
+          }
+          if (!mounted) return;
+          uiStateProvider.setMobileNavigatorVisible(false);
+        } else {
+          uiStateProvider.showMobileNavigator();
         }
+
+        _hasInitialized = true;
       });
     });
   }
@@ -64,12 +89,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   @override
   void dispose() {
     // 안전한 dispose: 저장된 provider 인스턴스 사용
-    _workspaceProvider?.exitChannel();
+    // Safe dispose is handled by provider lifecycle
     _resizeDebounceTimer?.cancel();
     super.dispose();
   }
 
-  void _handleScreenSizeChange(double currentWidth, WorkspaceProvider provider) {
+  void _handleScreenSizeChange(double currentWidth,
+      WorkspaceProvider workspaceProvider, UIStateProvider uiStateProvider) {
     // 이미 처리 중이면 건너뛰기 (순환 호출 방지)
     if (_isHandlingResize) return;
 
@@ -89,7 +115,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     // 화면 크기가 실제로 변경되었고, 데스크톱 ↔ 모바일 간 전환이 일어났을 때만 처리
     if (wasDesktop != isNowDesktop) {
       if (kDebugMode) {
-        print('[반응형] 화면 전환 감지: ${wasDesktop ? "데스크톱" : "모바일"} → ${isNowDesktop ? "데스크톱" : "모바일"} (${currentWidth.toInt()}px)');
+        print(
+            '[반응형] 화면 전환 감지: ${wasDesktop ? "데스크톱" : "모바일"} → ${isNowDesktop ? "데스크톱" : "모바일"} (${currentWidth.toInt()}px)');
       }
 
       // 기존 타이머 취소
@@ -104,9 +131,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           _isHandlingResize = true;
 
           try {
-            provider.handleResponsiveTransition(isNowMobile);
+            uiStateProvider.handleResponsiveTransition(isNowMobile);
             if (kDebugMode) {
-              print('[반응형] handleResponsiveTransition 호출됨 (디바운싱 후): isNowMobile=$isNowMobile');
+              print(
+                  '[반응형] handleResponsiveTransition 호출됨 (디바운싱 후): isNowMobile=$isNowMobile');
             }
           } finally {
             _isHandlingResize = false;
@@ -126,31 +154,36 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Consumer<WorkspaceProvider>(
-          builder: (context, provider, child) {
-            final workspace = provider.currentWorkspace;
+        return Consumer3<WorkspaceProvider, ChannelProvider, UIStateProvider>(
+          builder: (context, workspaceProvider, channelProvider,
+              uiStateProvider, child) {
+            final workspace = workspaceProvider.currentWorkspace;
             final currentWidth = constraints.maxWidth;
             final isDesktop = currentWidth >= 900;
 
             // 화면 크기 변경 감지 및 처리 (안전하게)
-            _handleScreenSizeChange(currentWidth, provider);
+            _handleScreenSizeChange(
+                currentWidth, workspaceProvider, uiStateProvider);
 
             Widget body;
             if (workspace == null) {
-              body = _buildEmptyState(provider);
+              body = _buildEmptyState(workspaceProvider);
             } else if (isDesktop) {
-              body = _buildDesktopWorkspace(context, provider, workspace);
+              body = _buildDesktopWorkspace(context, workspaceProvider,
+                  channelProvider, uiStateProvider, workspace);
             } else {
-              body = _buildMobileWorkspace(context, provider, workspace);
+              body = _buildMobileWorkspace(context, workspaceProvider,
+                  channelProvider, uiStateProvider, workspace);
             }
 
             final scaffold = Scaffold(
               backgroundColor: Theme.of(context).colorScheme.background,
               drawer: !isDesktop && workspace != null
-                  ? _buildMobileDrawer(context, provider, workspace)
+                  ? _buildMobileDrawer(
+                      context, workspaceProvider, channelProvider, workspace)
                   : null,
               body: LoadingOverlay(
-                isLoading: provider.isLoading,
+                isLoading: workspaceProvider.isLoading,
                 child: body,
               ),
             );
@@ -163,13 +196,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             return WillPopScope(
               onWillPop: () async {
                 // 1. If comment view is active, hide it.
-                if (provider.selectedPostForComments != null) {
-                  provider.hideCommentsSidebar();
+                if (uiStateProvider.selectedPostForComments != null) {
+                  uiStateProvider.hideCommentsSidebar();
                   return false; // Prevent app from closing
                 }
                 // 2. If in a channel, go back to the channel navigator.
-                if (!provider.isMobileNavigatorVisible) {
-                  provider.showMobileNavigator();
+                if (!uiStateProvider.isMobileNavigatorVisible) {
+                  uiStateProvider.showMobileNavigator();
                   return false; // Prevent app from closing
                 }
                 // 3. If in channel navigator, allow app to close/pop route.
@@ -210,8 +243,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () {
-                final isDesktop =
-                    MediaQuery.of(context).size.width >= 900;
+                final isDesktop = MediaQuery.of(context).size.width >= 900;
                 provider.loadWorkspace(
                   widget.groupId,
                   autoSelectFirstChannel: isDesktop,
@@ -306,11 +338,23 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Widget _buildDesktopWorkspace(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
     WorkspaceDetailModel workspace,
   ) {
     const double workspaceSidebarWidth = 200;
-    final channel = provider.currentChannel;
+
+    // 데스크탑 진입 시 채널 미선택 상태라면 첫 채널을 자동 선택하여 ChannelProvider와 동기화
+    if (channelProvider.currentChannel == null &&
+        workspaceProvider.channels.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        channelProvider.selectChannel(workspaceProvider.channels.first);
+      });
+    }
+
+    final channel = channelProvider.currentChannel;
 
     return Row(
       children: [
@@ -332,8 +376,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               : ChannelDetailView(
                   channel: channel,
                   autoLoad: false,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 32, vertical: 16),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
         ),
       ],
@@ -342,10 +386,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Widget _buildDesktopMainArea(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
     WorkspaceDetailModel workspace,
   ) {
-    final channel = provider.currentChannel;
+    final channel = channelProvider.currentChannel;
     if (channel == null) {
       return const Center(
         child: Text('채널을 선택해주세요'),
@@ -355,8 +401,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     return ChannelDetailView(
       channel: channel,
       autoLoad: false,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
     );
   }
 
@@ -375,11 +420,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Drawer _buildMobileDrawer(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
     WorkspaceDetailModel workspace,
   ) {
-    final selectedChannelId = provider.currentChannel?.id;
-    final channels = provider.channels;
+    final selectedChannelId = channelProvider.currentChannel?.id;
+    final channels = workspaceProvider.channels;
 
     Widget buildTile({
       required IconData icon,
@@ -434,7 +480,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       icon: _channelIconFor(channel),
                       label: channel.name,
                       selected: selectedChannelId == channel.id,
-                      onTap: () => provider.selectChannel(channel),
+                      onTap: () => channelProvider.selectChannel(channel),
                     ),
                   ),
                   const Divider(),
@@ -473,72 +519,72 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       final provider = context.read<WorkspaceProvider>();
       final members = provider.members;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) => Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                '멤버 ${members.length}명',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: members.isEmpty
-                    ? const Center(child: Text('등록된 멤버가 없습니다'))
-                    : ListView.builder(
-                        controller: scrollController,
-                        itemCount: members.length,
-                        itemBuilder: (context, index) {
-                          final member = members[index];
-                          final roleName = member.role.name;
-                          return ListTile(
-                            leading: CircleAvatar(
-                              radius: 18,
-                              child: Text(member.user.name.isNotEmpty
-                                  ? member.user.name[0]
-                                  : '?'),
-                            ),
-                            title: Text(member.user.name),
-                            subtitle: Text(roleName),
-                            trailing: Text(
-                              _formatDate(member.joinedAt),
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                Text(
+                  '멤버 ${members.length}명',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: members.isEmpty
+                      ? const Center(child: Text('등록된 멤버가 없습니다'))
+                      : ListView.builder(
+                          controller: scrollController,
+                          itemCount: members.length,
+                          itemBuilder: (context, index) {
+                            final member = members[index];
+                            final roleName = member.role.name;
+                            return ListTile(
+                              leading: CircleAvatar(
+                                radius: 18,
+                                child: Text(member.user.name.isNotEmpty
+                                    ? member.user.name[0]
+                                    : '?'),
+                              ),
+                              title: Text(member.user.name),
+                              subtitle: Text(roleName),
+                              trailing: Text(
+                                _formatDate(member.joinedAt),
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
     } catch (e) {
       // 안전하게 에러 처리
       if (mounted) {
@@ -637,9 +683,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               }
 
               Navigator.pop(context);
-              final provider = context.read<WorkspaceProvider>();
+              final workspaceProvider = context.read<WorkspaceProvider>();
+              final channelProvider = context.read<ChannelProvider>();
               final announcementChannel =
-                  _findAnnouncementChannel(provider.channels);
+                  _findAnnouncementChannel(workspaceProvider.channels);
 
               if (announcementChannel == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -648,7 +695,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 return;
               }
 
-              await provider.createPost(
+              await channelProvider.createPost(
                 channelId: announcementChannel.id,
                 content: content,
                 type: PostType.announcement,
@@ -683,17 +730,20 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Widget _buildMobileWorkspace(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
     WorkspaceDetailModel workspace,
   ) {
-    final channel = provider.currentChannel;
-    final showNavigator = provider.isMobileNavigatorVisible;
+    final channel = channelProvider.currentChannel;
+    final showNavigator = uiStateProvider.isMobileNavigatorVisible;
 
     Widget body;
     if (showNavigator) {
       body = KeyedSubtree(
         key: const ValueKey('workspace-mobile-nav'),
-        child: _buildMobileChannelNavigator(context, provider, workspace),
+        child: _buildMobileChannelNavigator(context, workspaceProvider,
+            channelProvider, uiStateProvider, workspace),
       );
     } else if (channel != null) {
       body = KeyedSubtree(
@@ -710,7 +760,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       // Fallback to navigator if no channel is selected
       body = KeyedSubtree(
         key: const ValueKey('workspace-mobile-nav-fallback'),
-        child: _buildMobileChannelNavigator(context, provider, workspace),
+        child: _buildMobileChannelNavigator(context, workspaceProvider,
+            channelProvider, uiStateProvider, workspace),
       );
     }
 
@@ -720,26 +771,29 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
   }
 
-  void _openMobileNavigator(WorkspaceProvider provider) {
-    provider.showMobileNavigator();
+  void _openMobileNavigator(UIStateProvider uiStateProvider) {
+    uiStateProvider.showMobileNavigator();
   }
 
-
   Future<void> _openMobileChannel(
-    WorkspaceProvider provider,
+    ChannelProvider channelProvider,
     ChannelModel channel,
   ) async {
-    await provider.selectChannel(channel);
+    await channelProvider.selectChannel(channel);
+    if (!mounted) return;
+    context.read<UIStateProvider>().setMobileNavigatorVisible(false);
   }
 
   Widget _buildMobileChannelNavigator(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
     WorkspaceDetailModel workspace,
   ) {
-    final channels = provider.channels;
+    final channels = workspaceProvider.channels;
     final theme = Theme.of(context);
-    final showNavigator = provider.isMobileNavigatorVisible;
+    final showNavigator = uiStateProvider.isMobileNavigatorVisible;
 
     return SafeArea(
       bottom: false,
@@ -802,8 +856,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     icon: _channelIconFor(channel),
                     label: channel.name,
                     selected: !showNavigator &&
-                        provider.currentChannel?.id == channel.id,
-                    onTap: () => _openMobileChannel(provider, channel),
+                        channelProvider.currentChannel?.id == channel.id,
+                    onTap: () => _openMobileChannel(channelProvider, channel),
                   ),
                 ),
               ],
@@ -881,8 +935,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    final highlightColor =
-        selected ? AppTheme.background : Colors.transparent;
+    final highlightColor = selected ? AppTheme.background : Colors.transparent;
     final iconColor = selected ? AppTheme.primary : AppTheme.onTextSecondary;
 
     return Padding(
@@ -924,65 +977,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   void _showComingSoon(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('준비 중인 기능입니다.')),
-    );
-  }
-
-  Widget _buildOldAppBar(BuildContext context, WorkspaceDetailModel workspace) {
-    return SliverAppBar(
-      floating: true,
-      pinned: true,
-      snap: false,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      foregroundColor: Theme.of(context).colorScheme.onSurface,
-      elevation: 0,
-      automaticallyImplyLeading: false,
-      leadingWidth: 112, // 두 개의 아이콘을 위한 충분한 공간
-      leading: Row(
-        children: [
-          Builder(
-            builder: (ctx) => IconButton(
-              icon: const Icon(Icons.menu),
-              tooltip: '메뉴',
-              onPressed: () => Scaffold.of(ctx).openDrawer(),
-            ),
-          ),
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back),
-            tooltip: '뒤로가기',
-          ),
-        ],
-      ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            workspace.group.name,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-            ),
-          ),
-          if (workspace.myMembership != null)
-            Text(
-              _roleDisplayName(workspace.myMembership!.role.name),
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-        ],
-      ),
-      actions: [
-        if (workspace.canManage)
-          IconButton(
-            onPressed: () => _showManagementMenu(context, workspace),
-            icon: const Icon(Icons.settings),
-            tooltip: '관리',
-          ),
-      ],
     );
   }
 
@@ -1120,30 +1114,57 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     // 워크스페이스 데이터 로드 및 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final provider = context.read<WorkspaceProvider>();
-      _workspaceProvider = provider; // Provider 인스턴스 저장
-      provider.reset();
+      final workspaceProvider = context.read<WorkspaceProvider>();
+      final channelProvider = context.read<ChannelProvider>();
+      final uiStateProvider = context.read<UIStateProvider>();
+
+      _workspaceProvider = workspaceProvider; // Provider 인스턴스 저장
+      workspaceProvider.reset();
+      channelProvider.reset();
+      uiStateProvider.reset();
 
       final isDesktop = MediaQuery.of(context).size.width >= 900;
-      provider.loadWorkspace(
+      workspaceProvider
+          .loadWorkspace(
         widget.groupId,
         autoSelectFirstChannel: isDesktop,
         mobileNavigatorVisible: !isDesktop,
-      );
+      )
+          .then((_) async {
+        if (!mounted) return;
+
+        uiStateProvider.markAsInitialLoadComplete();
+
+        final channels = workspaceProvider.channels;
+        final currentChannel = channelProvider.currentChannel;
+        final hasCurrentChannel = currentChannel != null &&
+            channels.any((channel) => channel.id == currentChannel.id);
+
+        if (isDesktop) {
+          if (!hasCurrentChannel && channels.isNotEmpty) {
+            await channelProvider.selectChannel(channels.first);
+          }
+          if (!mounted) return;
+          uiStateProvider.setMobileNavigatorVisible(false);
+        } else {
+          uiStateProvider.showMobileNavigator();
+        }
+      });
     });
   }
 
   @override
   void dispose() {
     // 안전한 dispose: 저장된 provider 인스턴스 사용
-    _workspaceProvider?.exitChannel();
+    // Safe dispose is handled by provider lifecycle
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<WorkspaceProvider>(
-      builder: (context, workspaceProvider, child) {
+    return Consumer3<WorkspaceProvider, ChannelProvider, UIStateProvider>(
+      builder: (context, workspaceProvider, channelProvider, uiStateProvider,
+          child) {
         final workspace = workspaceProvider.currentWorkspace;
         final isDesktop = MediaQuery.of(context).size.width >= 900;
 
@@ -1152,10 +1173,10 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
           child: workspace == null
               ? _buildEmptyState(workspaceProvider)
               : isDesktop
-                  ? _buildDesktopWorkspaceContent(
-                      context, workspaceProvider, workspace)
-                  : _buildMobileWorkspaceContent(
-                      context, workspaceProvider, workspace),
+                  ? _buildDesktopWorkspaceContent(context, workspaceProvider,
+                      channelProvider, uiStateProvider, workspace)
+                  : _buildMobileWorkspaceContent(context, workspaceProvider,
+                      channelProvider, uiStateProvider, workspace),
         );
       },
     );
@@ -1188,8 +1209,7 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () {
-                final isDesktop =
-                    MediaQuery.of(context).size.width >= 900;
+                final isDesktop = MediaQuery.of(context).size.width >= 900;
                 provider.loadWorkspace(
                   widget.groupId,
                   autoSelectFirstChannel: isDesktop,
@@ -1285,7 +1305,9 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
   // 데스크톱용 워크스페이스 콘텐츠 (글로벌 사이드바와 워크스페이스 사이드바가 함께 표시)
   Widget _buildDesktopWorkspaceContent(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
     WorkspaceDetailModel workspace,
   ) {
     const double workspaceSidebarWidth = 200;
@@ -1306,7 +1328,8 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
         ),
         // 메인 컨텐츠 영역
         Expanded(
-          child: _buildWorkspaceMainArea(context, provider, workspace),
+          child: _buildWorkspaceMainArea(context, workspaceProvider,
+              channelProvider, uiStateProvider, workspace),
         ),
       ],
     );
@@ -1314,12 +1337,14 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
 
   Widget _buildWorkspaceMainArea(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
     WorkspaceDetailModel workspace,
   ) {
-    final channel = provider.currentChannel;
+    final channel = channelProvider.currentChannel;
     return channel == null
-? const Center(
+        ? const Center(
             child: Text('채널을 선택해주세요'),
           )
         : ChannelDetailView(
@@ -1332,17 +1357,20 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
 
   Widget _buildMobileWorkspaceContent(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
     WorkspaceDetailModel workspace,
   ) {
-    final channel = provider.currentChannel;
-    final showNavigator = provider.isMobileNavigatorVisible;
+    final channel = channelProvider.currentChannel;
+    final showNavigator = uiStateProvider.isMobileNavigatorVisible;
 
     Widget body;
     if (showNavigator) {
       body = KeyedSubtree(
         key: const ValueKey('workspace-mobile-nav'),
-        child: _buildMobileChannelNavigator(context, provider, workspace),
+        child: _buildMobileChannelNavigator(context, workspaceProvider,
+            channelProvider, uiStateProvider, workspace),
       );
     } else if (channel != null) {
       body = KeyedSubtree(
@@ -1358,14 +1386,15 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     } else {
       body = KeyedSubtree(
         key: const ValueKey('workspace-mobile-nav-fallback'),
-        child: _buildMobileChannelNavigator(context, provider, workspace),
+        child: _buildMobileChannelNavigator(context, workspaceProvider,
+            channelProvider, uiStateProvider, workspace),
       );
     }
 
     return WillPopScope(
       onWillPop: () async {
-        if (!provider.isMobileNavigatorVisible) {
-          _openMobileNavigator(provider);
+        if (!uiStateProvider.isMobileNavigatorVisible) {
+          _openMobileNavigator(uiStateProvider);
           return false;
         }
         if (widget.onBack != null) {
@@ -1375,7 +1404,8 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
         return true;
       },
       child: Scaffold(
-        drawer: _buildMobileDrawer(context, provider, workspace),
+        drawer: _buildMobileDrawer(
+            context, workspaceProvider, channelProvider, workspace),
         body: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           child: body,
@@ -1420,9 +1450,10 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
               }
 
               Navigator.pop(context);
-              final provider = context.read<WorkspaceProvider>();
+              final workspaceProvider = context.read<WorkspaceProvider>();
+              final channelProvider = context.read<ChannelProvider>();
               final announcementChannel =
-                  _findAnnouncementChannel(provider.channels);
+                  _findAnnouncementChannel(workspaceProvider.channels);
 
               if (announcementChannel == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -1431,7 +1462,7 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
                 return;
               }
 
-              await provider.createPost(
+              await channelProvider.createPost(
                 channelId: announcementChannel.id,
                 content: content,
                 type: PostType.announcement,
@@ -1488,26 +1519,29 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     );
   }
 
-  void _openMobileNavigator(WorkspaceProvider provider) {
-    provider.showMobileNavigator();
+  void _openMobileNavigator(UIStateProvider uiStateProvider) {
+    uiStateProvider.showMobileNavigator();
   }
 
-
   Future<void> _openMobileChannel(
-    WorkspaceProvider provider,
+    ChannelProvider channelProvider,
     ChannelModel channel,
   ) async {
-    await provider.selectChannel(channel);
+    await channelProvider.selectChannel(channel);
+    if (!mounted) return;
+    context.read<UIStateProvider>().setMobileNavigatorVisible(false);
   }
 
   Widget _buildMobileChannelNavigator(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
     WorkspaceDetailModel workspace,
   ) {
-    final channels = provider.channels;
+    final channels = workspaceProvider.channels;
     final theme = Theme.of(context);
-    final showNavigator = provider.isMobileNavigatorVisible;
+    final showNavigator = uiStateProvider.isMobileNavigatorVisible;
 
     return SafeArea(
       bottom: false,
@@ -1570,8 +1604,8 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
                     icon: _channelIconFor(channel),
                     label: channel.name,
                     selected: !showNavigator &&
-                        provider.currentChannel?.id == channel.id,
-                    onTap: () => _openMobileChannel(provider, channel),
+                        channelProvider.currentChannel?.id == channel.id,
+                    onTap: () => _openMobileChannel(channelProvider, channel),
                   ),
                 ),
               ],
@@ -1649,8 +1683,7 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    final highlightColor =
-        selected ? AppTheme.background : Colors.transparent;
+    final highlightColor = selected ? AppTheme.background : Colors.transparent;
     final iconColor = selected ? AppTheme.primary : AppTheme.onTextSecondary;
 
     return Padding(
@@ -1757,11 +1790,12 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
 
   Drawer _buildMobileDrawer(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
     WorkspaceDetailModel workspace,
   ) {
-    final selectedChannelId = provider.currentChannel?.id;
-    final channels = provider.channels;
+    final selectedChannelId = channelProvider.currentChannel?.id;
+    final channels = workspaceProvider.channels;
 
     Widget buildTile({
       required IconData icon,
@@ -1816,7 +1850,7 @@ class _WorkspaceContentState extends State<WorkspaceContent> {
                       icon: _channelIconFor(channel),
                       label: channel.name,
                       selected: selectedChannelId == channel.id,
-                      onTap: () => provider.selectChannel(channel),
+                      onTap: () => channelProvider.selectChannel(channel),
                     ),
                   ),
                   const Divider(),

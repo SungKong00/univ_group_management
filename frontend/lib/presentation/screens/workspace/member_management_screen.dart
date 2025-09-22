@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/workspace_provider.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../../data/models/workspace_models.dart';
+import '../../../data/models/admin_models.dart';
 import 'member_permission_screen.dart';
 
 /// 멤버 관리 화면 (UI/UX 명세서 G-3 구현)

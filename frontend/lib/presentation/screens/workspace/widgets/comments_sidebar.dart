@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../data/models/workspace_models.dart';
 import '../../../providers/workspace_provider.dart';
+import '../../../providers/ui_state_provider.dart';
+import '../../../providers/channel_provider.dart';
 
 class CommentsSidebar extends StatefulWidget {
   const CommentsSidebar({super.key});
@@ -52,9 +54,9 @@ class _CommentsSidebarState extends State<CommentsSidebar>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<WorkspaceProvider>(
-      builder: (context, provider, child) {
-        final post = provider.selectedPostForComments;
+    return Consumer2<UIStateProvider, ChannelProvider>(
+      builder: (context, uiState, channelProvider, child) {
+        final post = uiState.selectedPostForComments;
         if (post == null) return const SizedBox.shrink();
 
         // 웹에서 안전한 사이드바 구현
@@ -79,13 +81,13 @@ class _CommentsSidebarState extends State<CommentsSidebar>
               child: SafeArea(
                 child: Column(
                   children: [
-                    _buildHeader(context, post, provider),
+                    _buildHeader(context, post, channelProvider),
                     const Divider(height: 1),
                     Expanded(
-                      child: _buildCommentsList(context, provider, post),
+                      child: _buildCommentsList(context, channelProvider, post),
                     ),
                     const Divider(height: 1),
-                    _buildCommentInput(context, provider, post),
+                    _buildCommentInput(context, uiState, channelProvider, post),
                   ],
                 ),
               ),
@@ -96,8 +98,8 @@ class _CommentsSidebarState extends State<CommentsSidebar>
     );
   }
 
-  Widget _buildHeader(BuildContext context, PostModel post, WorkspaceProvider provider) {
-    final comments = provider.getCommentsForPost(post.id);
+  Widget _buildHeader(BuildContext context, PostModel post, ChannelProvider channelProvider) {
+    final comments = channelProvider.getCommentsForPost(post.id);
 
     return Container(
       padding: const EdgeInsets.all(ResponsiveBreakpoints.commentPadding),
@@ -130,7 +132,7 @@ class _CommentsSidebarState extends State<CommentsSidebar>
           ),
           IconButton(
             key: const Key('comments_sidebar_close_button'),
-            onPressed: () => _closeSidebar(provider),
+            onPressed: () => _closeSidebar(context),
             icon: const Icon(Icons.close),
             tooltip: '',
           ),
@@ -139,8 +141,15 @@ class _CommentsSidebarState extends State<CommentsSidebar>
     );
   }
 
-  Widget _buildCommentsList(BuildContext context, WorkspaceProvider provider, PostModel post) {
-    final comments = provider.getCommentsForPost(post.id);
+  Widget _buildCommentsList(BuildContext context, ChannelProvider channelProvider, PostModel post) {
+    final comments = channelProvider.getCommentsForPost(post.id);
+
+    if (comments.isEmpty) {
+      // 비어 있으면 로드 시도
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        channelProvider.loadPostComments(post.id);
+      });
+    }
 
     if (comments.isEmpty) {
       return const Center(
@@ -179,7 +188,7 @@ class _CommentsSidebarState extends State<CommentsSidebar>
       itemCount: comments.length,
       itemBuilder: (context, index) {
         final comment = comments[index];
-        return _buildCommentTile(context, comment, provider, post);
+        return _buildCommentTile(context, comment);
       },
     );
   }
@@ -187,8 +196,6 @@ class _CommentsSidebarState extends State<CommentsSidebar>
   Widget _buildCommentTile(
     BuildContext context,
     CommentModel comment,
-    WorkspaceProvider provider,
-    PostModel post,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: UIConstants.commentSpacing),
@@ -238,8 +245,8 @@ class _CommentsSidebarState extends State<CommentsSidebar>
                   size: 16,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
                     value: 'edit',
                     child: Row(
                       children: [
@@ -249,7 +256,7 @@ class _CommentsSidebarState extends State<CommentsSidebar>
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
@@ -262,9 +269,8 @@ class _CommentsSidebarState extends State<CommentsSidebar>
                 ],
                 onSelected: (value) {
                   if (value == 'delete') {
-                    _deleteComment(context, provider, comment, post);
+                    _deleteComment(context, comment);
                   } else if (value == 'edit') {
-                    // TODO: 댓글 수정 기능 구현
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('댓글 수정 기능은 준비 중입니다')),
                     );
@@ -292,7 +298,7 @@ class _CommentsSidebarState extends State<CommentsSidebar>
     );
   }
 
-  Widget _buildCommentInput(BuildContext context, WorkspaceProvider provider, PostModel post) {
+  Widget _buildCommentInput(BuildContext context, UIStateProvider uiState, ChannelProvider channelProvider, PostModel post) {
     return Container(
       padding: EdgeInsets.fromLTRB(
         16,
@@ -336,13 +342,13 @@ class _CommentsSidebarState extends State<CommentsSidebar>
               ),
               maxLines: null,
               textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _sendComment(provider, post),
+              onSubmitted: (_) => _sendComment(context, uiState, channelProvider, post),
             ),
           ),
           const SizedBox(width: 8),
           IconButton(
             key: const Key('comments_sidebar_send_button'),
-            onPressed: () => _sendComment(provider, post),
+            onPressed: () => _sendComment(context, uiState, channelProvider, post),
             icon: const Icon(Icons.send),
             tooltip: '',
           ),
@@ -351,24 +357,24 @@ class _CommentsSidebarState extends State<CommentsSidebar>
     );
   }
 
-  void _closeSidebar(WorkspaceProvider provider) async {
+  void _closeSidebar(BuildContext context) async {
     await _animationController.reverse();
-    provider.hideCommentsSidebar();
+    if (!context.mounted) return;
+    context.read<UIStateProvider>().hideCommentsSidebar();
   }
 
-  void _sendComment(WorkspaceProvider provider, PostModel post) async {
+  void _sendComment(BuildContext context, UIStateProvider uiState, ChannelProvider channelProvider, PostModel post) async {
     final content = _commentController.text.trim();
     if (content.isEmpty) return;
 
     _commentController.clear();
 
     try {
-      await provider.createComment(
+      await channelProvider.createComment(
         postId: post.id,
         content: content,
       );
 
-      // 댓글 작성 후 스크롤을 맨 아래로
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
@@ -389,9 +395,7 @@ class _CommentsSidebarState extends State<CommentsSidebar>
 
   void _deleteComment(
     BuildContext context,
-    WorkspaceProvider provider,
     CommentModel comment,
-    PostModel post,
   ) {
     showDialog(
       context: context,
@@ -407,7 +411,10 @@ class _CommentsSidebarState extends State<CommentsSidebar>
             onPressed: () async {
               Navigator.of(context).pop();
               try {
-                await provider.deleteComment(comment.id, post.id);
+                final uiState = context.read<UIStateProvider>();
+                final postId = uiState.selectedPostForComments?.id;
+                if (postId == null) return;
+                await context.read<ChannelProvider>().deleteComment(comment.id, postId);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('댓글이 삭제되었습니다')),

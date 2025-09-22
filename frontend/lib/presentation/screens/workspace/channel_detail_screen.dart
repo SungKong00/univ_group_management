@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../providers/workspace_provider.dart';
+import '../../providers/channel_provider.dart';
+import '../../providers/ui_state_provider.dart';
 import '../../../data/models/workspace_models.dart';
 import '../../widgets/loading_overlay.dart';
 
@@ -22,10 +24,12 @@ class ChannelDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // The AppBar is now built with a Consumer to react to state changes
-    return Consumer<WorkspaceProvider>(
-      builder: (context, provider, child) {
-        final isCommentView = provider.selectedPostForComments != null;
-        final isDesktop = MediaQuery.of(context).size.width >= ResponsiveBreakpoints.mobile;
+    return Consumer3<WorkspaceProvider, ChannelProvider, UIStateProvider>(
+      builder: (context, workspaceProvider, channelProvider, uiStateProvider,
+          child) {
+        final isCommentView = uiStateProvider.selectedPostForComments != null;
+        final isDesktop =
+            MediaQuery.of(context).size.width >= ResponsiveBreakpoints.mobile;
 
         return Scaffold(
           appBar: AppBar(
@@ -35,15 +39,20 @@ class ChannelDetailScreen extends StatelessWidget {
                     key: const Key('comment_back_button'),
                     icon: const Icon(Icons.arrow_back),
                     tooltip: '',
-                    onPressed: () => provider.hideCommentsSidebar(),
+                    onPressed: () => uiStateProvider.hideCommentsSidebar(),
                   )
                 : null,
             title: isCommentView
-                ? _buildCommentsAppBarTitle(context, provider)
-                : _buildChannelAppBarTitle(context, provider),
+                ? _buildCommentsAppBarTitle(context, workspaceProvider,
+                    channelProvider, uiStateProvider)
+                : _buildChannelAppBarTitle(context, workspaceProvider,
+                    channelProvider, uiStateProvider),
             actions: isCommentView
                 ? null // No actions in comment view for now
-                : [_buildChannelActions(context, provider)],
+                : [
+                    _buildChannelActions(context, workspaceProvider,
+                        channelProvider, uiStateProvider)
+                  ],
             backgroundColor: Theme.of(context).colorScheme.surface,
             foregroundColor: Theme.of(context).colorScheme.onSurface,
             elevation: 1,
@@ -58,7 +67,11 @@ class ChannelDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildChannelAppBarTitle(BuildContext context, WorkspaceProvider provider) {
+  Widget _buildChannelAppBarTitle(
+      BuildContext context,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -93,10 +106,15 @@ class ChannelDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCommentsAppBarTitle(BuildContext context, WorkspaceProvider provider) {
-    final groupName = provider.currentWorkspace?.group.name ?? '그룹';
-    final channelName = provider.currentChannel?.name ?? '채널';
-    final comments = provider.getCommentsForPost(provider.selectedPostForComments!.id);
+  Widget _buildCommentsAppBarTitle(
+      BuildContext context,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider) {
+    final groupName = workspaceProvider.currentWorkspace?.group.name ?? '그룹';
+    final channelName = channelProvider.currentChannel?.name ?? '채널';
+    final comments = channelProvider
+        .getCommentsForPost(uiStateProvider.selectedPostForComments!.id);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,19 +136,21 @@ class ChannelDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildChannelActions(BuildContext context, WorkspaceProvider provider) {
+  Widget _buildChannelActions(
+      BuildContext context,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider) {
     // 개발/테스트용 권한 토글 버튼
-    final canWrite = provider.canWriteInCurrentChannel;
+    final canWrite = channelProvider.canWriteInCurrentChannel;
     return IconButton(
       key: Key('channel_permission_button_${channel.id}'),
       onPressed: () {
-        provider.toggleChannelWritePermission(channel.id);
+        channelProvider.toggleChannelWritePermission(channel.id);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              canWrite
-                  ? '글 작성 권한이 제거되었습니다 (데모용)'
-                  : '글 작성 권한이 부여되었습니다 (데모용)',
+              canWrite ? '글 작성 권한이 제거되었습니다 (데모용)' : '글 작성 권한이 부여되었습니다 (데모용)',
             ),
             duration: const Duration(seconds: 2),
           ),
@@ -175,7 +195,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     super.initState();
     if (widget.autoLoad) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<WorkspaceProvider>().selectChannel(widget.channel);
+        context.read<ChannelProvider>().selectChannel(widget.channel);
       });
     }
   }
@@ -185,7 +205,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     super.didUpdateWidget(oldWidget);
     if (widget.autoLoad && widget.channel.id != oldWidget.channel.id) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<WorkspaceProvider>().selectChannel(widget.channel);
+        context.read<ChannelProvider>().selectChannel(widget.channel);
       });
     }
   }
@@ -200,10 +220,11 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<WorkspaceProvider>(
-      builder: (context, provider, child) {
-        final posts = provider.currentChannelPosts;
-        final isCommentView = provider.selectedPostForComments != null;
+    return Consumer3<WorkspaceProvider, ChannelProvider, UIStateProvider>(
+      builder: (context, workspaceProvider, channelProvider, uiStateProvider,
+          child) {
+        final posts = channelProvider.currentChannelPosts;
+        final isCommentView = uiStateProvider.selectedPostForComments != null;
 
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -214,10 +235,11 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                 defaultTargetPlatform == TargetPlatform.fuchsia;
 
             // 댓글 사이드바가 열린 상태에서는 더 작은 breakpoint 사용
-            final bool isCommentsSidebarVisible = provider.isCommentsSidebarVisible;
+            final bool isCommentsSidebarVisible =
+                uiStateProvider.isCommentsSidebarVisible;
             final double effectiveBreakpoint = isCommentsSidebarVisible
-                ? ResponsiveBreakpoints.mobile - 200  // 568px로 더 작게 조정
-                : ResponsiveBreakpoints.mobile;       // 기본 768px
+                ? ResponsiveBreakpoints.mobile - 200 // 568px로 더 작게 조정
+                : ResponsiveBreakpoints.mobile; // 기본 768px
 
             final bool isDesktop = isDesktopPlatform &&
                 !widget.forceMobileLayout &&
@@ -225,14 +247,17 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
 
             // On desktop, the sidebar logic is separate
             if (isDesktop) {
-              return _buildDesktopLayout(context, provider, posts);
+              return _buildDesktopLayout(context, workspaceProvider,
+                  channelProvider, uiStateProvider, posts);
             }
 
             // On mobile, the main view switches
             if (isCommentView) {
-              return _buildMobileCommentLayout(context, provider);
+              return _buildMobileCommentLayout(
+                  context, workspaceProvider, channelProvider, uiStateProvider);
             } else {
-              return _buildMobilePostLayout(context, provider, posts);
+              return _buildMobilePostLayout(context, workspaceProvider,
+                  channelProvider, uiStateProvider, posts);
             }
           },
         );
@@ -240,17 +265,25 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     );
   }
 
-  Widget _buildDesktopLayout(BuildContext context, WorkspaceProvider provider, List<PostModel> posts) {
-    final isCommentsSidebarVisible = provider.isCommentsSidebarVisible;
+  Widget _buildDesktopLayout(
+      BuildContext context,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider,
+      List<PostModel> posts) {
+    final isCommentsSidebarVisible = uiStateProvider.isCommentsSidebarVisible;
 
     final mainContent = Column(
       children: [
         Expanded(
           child: posts.isEmpty
               ? _buildEmptyState(context)
-              : _buildPostsList(context, posts, provider),
+              : _buildPostsList(context, posts, workspaceProvider,
+                  channelProvider, uiStateProvider),
         ),
-        _buildMessageComposer(context, provider, isCommentComposer: false),
+        _buildMessageComposer(
+            context, workspaceProvider, channelProvider, uiStateProvider,
+            isCommentComposer: false),
       ],
     );
 
@@ -260,7 +293,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         children: [
           Expanded(child: mainContent),
           TapRegion(
-            onTapOutside: (_) => provider.hideCommentsSidebar(),
+            onTapOutside: (_) => uiStateProvider.hideCommentsSidebar(),
             child: const CommentsSidebar(),
           ),
         ],
@@ -271,65 +304,84 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
 
     if (widget.showLoadingOverlay) {
       return LoadingOverlay(
-        isLoading: provider.isLoading,
+        isLoading: workspaceProvider.isLoading,
         child: content,
       );
     }
     return content;
   }
 
-  Widget _buildMobilePostLayout(BuildContext context, WorkspaceProvider provider, List<PostModel> posts) {
+  Widget _buildMobilePostLayout(
+      BuildContext context,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider,
+      List<PostModel> posts) {
     final content = Column(
       children: [
         Expanded(
           child: posts.isEmpty
               ? _buildEmptyState(context)
-              : _buildPostsList(context, posts, provider),
+              : _buildPostsList(context, posts, workspaceProvider,
+                  channelProvider, uiStateProvider),
         ),
-        _buildMessageComposer(context, provider, isCommentComposer: false),
+        _buildMessageComposer(
+            context, workspaceProvider, channelProvider, uiStateProvider,
+            isCommentComposer: false),
       ],
     );
 
     if (widget.showLoadingOverlay) {
       return LoadingOverlay(
-        isLoading: provider.isLoading,
+        isLoading: workspaceProvider.isLoading,
         child: content,
       );
     }
     return content;
   }
 
-  Widget _buildMobileCommentLayout(BuildContext context, WorkspaceProvider provider) {
+  Widget _buildMobileCommentLayout(
+      BuildContext context,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider) {
     final content = Column(
       children: [
         Expanded(
-          child: _buildCommentsView(context, provider),
+          child: _buildCommentsView(
+              context, workspaceProvider, channelProvider, uiStateProvider),
         ),
-        _buildMessageComposer(context, provider, isCommentComposer: true),
+        _buildMessageComposer(
+            context, workspaceProvider, channelProvider, uiStateProvider,
+            isCommentComposer: true),
       ],
     );
 
     if (widget.showLoadingOverlay) {
       return LoadingOverlay(
-        isLoading: provider.isLoading,
+        isLoading: workspaceProvider.isLoading,
         child: content,
       );
     }
     return content;
   }
 
-  Widget _buildCommentsView(BuildContext context, WorkspaceProvider provider) {
-    final post = provider.selectedPostForComments!;
-    final comments = provider.getCommentsForPost(post.id);
+  Widget _buildCommentsView(
+      BuildContext context,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider) {
+    final post = uiStateProvider.selectedPostForComments!;
+    final comments = channelProvider.getCommentsForPost(post.id);
 
     // Ensure comments are loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (comments.isEmpty) {
-        provider.loadPostComments(post.id);
+        channelProvider.loadPostComments(post.id);
       }
     });
 
-    return CustomScrollView(
+    final scrollView = CustomScrollView(
       controller: _scrollController,
       slivers: [
         SliverToBoxAdapter(child: _buildPostPreview(context, post)),
@@ -337,8 +389,31 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         if (comments.isEmpty)
           SliverFillRemaining(child: _buildEmptyCommentsState(context))
         else
-          _buildSliverCommentsList(context, comments, provider),
+          _buildSliverCommentsList(context, comments, workspaceProvider,
+              channelProvider, uiStateProvider),
       ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const double minContentWidth = 320;
+        const double maxContentWidth = 640;
+        final double effectiveMaxWidth =
+            math.min(constraints.maxWidth, maxContentWidth);
+        final double effectiveMinWidth =
+            math.min(constraints.maxWidth, minContentWidth);
+
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: effectiveMinWidth,
+              maxWidth: effectiveMaxWidth,
+            ),
+            child: scrollView,
+          ),
+        );
+      },
     );
   }
 
@@ -374,7 +449,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   Widget _buildMessageBubble(
     BuildContext context,
     PostModel post,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -423,7 +500,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              color:
+                  Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -438,7 +516,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
               runSpacing: 8,
               children: post.attachments.map((attachment) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(8),
@@ -456,7 +535,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                         'File',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       ),
                     ],
@@ -473,7 +553,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                   onTap: () {},
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -496,7 +577,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                 ),
                 const SizedBox(width: 8),
               ],
-              _buildCommentsToggleButton(context, post, provider),
+              _buildCommentsToggleButton(context, post, workspaceProvider,
+                  channelProvider, uiStateProvider),
             ],
           ),
         ],
@@ -504,8 +586,13 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     );
   }
 
-  Widget _buildMessageComposer(BuildContext context, WorkspaceProvider provider, {required bool isCommentComposer}) {
-    final canWrite = provider.canWriteInCurrentChannel;
+  Widget _buildMessageComposer(
+      BuildContext context,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider,
+      {required bool isCommentComposer}) {
+    final canWrite = channelProvider.canWriteInCurrentChannel;
 
     // For comments, we assume if you can see the post, you can comment.
     // A more granular permission could be added later.
@@ -531,17 +618,25 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
       child: SafeArea(
         top: false,
         child: isEnabled
-            ? _buildActiveComposer(context, provider, isCommentComposer: isCommentComposer)
+            ? _buildActiveComposer(
+                context, workspaceProvider, channelProvider, uiStateProvider,
+                isCommentComposer: isCommentComposer)
             : _buildDisabledComposer(context),
       ),
     );
   }
 
-  Widget _buildActiveComposer(BuildContext context, WorkspaceProvider provider, {required bool isCommentComposer}) {
+  Widget _buildActiveComposer(
+      BuildContext context,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider,
+      {required bool isCommentComposer}) {
     return Row(
       children: [
         IconButton(
-          key: Key('attach_file_button_${isCommentComposer ? 'comment' : 'post'}'),
+          key: Key(
+              'attach_file_button_${isCommentComposer ? 'comment' : 'post'}'),
           onPressed: _selectAttachment,
           icon: const Icon(Icons.attach_file),
           tooltip: '',
@@ -563,13 +658,21 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             ),
             maxLines: null,
             textInputAction: TextInputAction.send,
-            onSubmitted: (_) => isCommentComposer ? _sendComment(provider) : _sendMessage(provider),
+            onSubmitted: (_) => isCommentComposer
+                ? _sendComment(
+                    workspaceProvider, channelProvider, uiStateProvider)
+                : _sendMessage(
+                    workspaceProvider, channelProvider, uiStateProvider),
           ),
         ),
         const SizedBox(width: 8),
         IconButton(
           key: Key('send_button_${isCommentComposer ? 'comment' : 'post'}'),
-          onPressed: () => isCommentComposer ? _sendComment(provider) : _sendMessage(provider),
+          onPressed: () => isCommentComposer
+              ? _sendComment(
+                  workspaceProvider, channelProvider, uiStateProvider)
+              : _sendMessage(
+                  workspaceProvider, channelProvider, uiStateProvider),
           icon: const Icon(Icons.send),
           tooltip: '',
         ),
@@ -586,7 +689,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         children: [
           Icon(
             Icons.lock_outline,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+            color:
+                Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -594,7 +698,10 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceVariant
+                    .withOpacity(0.5),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
@@ -606,14 +713,18 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                     child: Text(
                       '이 채널에서 메시지를 작성할 권한이 없습니다',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withOpacity(0.7),
                           ),
                     ),
                   ),
                   Icon(
                     Icons.info_outline,
                     size: 16,
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.7),
                   ),
                 ],
               ),
@@ -625,7 +736,10 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             onPressed: null,
             icon: Icon(
               Icons.send,
-              color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant
+                  .withOpacity(0.4),
             ),
             tooltip: '',
           ),
@@ -706,8 +820,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     );
   }
 
-  void _sendMessage(WorkspaceProvider provider) async {
-    if (!provider.canWriteInCurrentChannel) {
+  void _sendMessage(WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider, UIStateProvider uiStateProvider) async {
+    if (!channelProvider.canWriteInCurrentChannel) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('이 채널에서 메시지를 작성할 권한이 없습니다')),
@@ -722,7 +837,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     _messageController.clear();
 
     try {
-      await provider.createPost(
+      await channelProvider.createPost(
         channelId: widget.channel.id,
         content: message,
         type: PostType.general,
@@ -746,17 +861,18 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     }
   }
 
-  void _sendComment(WorkspaceProvider provider) async {
+  void _sendComment(WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider, UIStateProvider uiStateProvider) async {
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
-    final postId = provider.selectedPostForComments?.id;
+    final postId = uiStateProvider.selectedPostForComments?.id;
     if (postId == null) return;
 
     _messageController.clear();
 
     try {
-      await provider.createComment(
+      await channelProvider.createComment(
         postId: postId,
         content: content,
       );
@@ -780,9 +896,10 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   }
 
   void _selectAttachment() {
-    final provider = context.read<WorkspaceProvider>();
-    final isCommentComposer = provider.selectedPostForComments != null;
-    if (!isCommentComposer && !provider.canWriteInCurrentChannel) {
+    final channelProvider = context.read<ChannelProvider>();
+    final uiStateProvider = context.read<UIStateProvider>();
+    final isCommentComposer = uiStateProvider.selectedPostForComments != null;
+    if (!isCommentComposer && !channelProvider.canWriteInCurrentChannel) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('이 채널에서 파일을 첨부할 권한이 없습니다')),
       );
@@ -797,16 +914,18 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   void _handleCommentsAction(
     BuildContext context,
     PostModel post,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
   ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final useSidebar = screenWidth >= ResponsiveBreakpoints.mobile;
 
     if (useSidebar) {
-      provider.showCommentsSidebar(post);
+      uiStateProvider.showCommentsSidebar(post);
     } else {
       // On mobile, just update the state
-      provider.showCommentsSidebar(post);
+      uiStateProvider.showCommentsSidebar(post);
     }
   }
 
@@ -827,7 +946,12 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     }
   }
 
-  Widget _buildPostsList(BuildContext context, List<PostModel> posts, WorkspaceProvider provider) {
+  Widget _buildPostsList(
+      BuildContext context,
+      List<PostModel> posts,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider) {
     final groupedPosts = _groupPostsByDate(posts);
 
     return ListView.builder(
@@ -840,7 +964,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDateHeader(context, group.date),
-            ...group.posts.map((post) => _buildMessageBubble(context, post, provider)),
+            ...group.posts.map((post) => _buildMessageBubble(context, post,
+                workspaceProvider, channelProvider, uiStateProvider)),
           ],
         );
       },
@@ -855,9 +980,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
       groups.putIfAbsent(dateKey, () => []).add(post);
     }
 
-    return groups.entries.map((entry) =>
-      PostGroup(date: entry.key, posts: entry.value)
-    ).toList();
+    return groups.entries
+        .map((entry) => PostGroup(date: entry.key, posts: entry.value))
+        .toList();
   }
 
   String _formatDateKey(DateTime date) {
@@ -895,9 +1020,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             child: Text(
               dateLabel,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
           ),
           Expanded(
@@ -953,22 +1078,26 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           Text(
             post.content,
             style: Theme.of(context).textTheme.bodyMedium,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSliverCommentsList(BuildContext context, List<CommentModel> comments, WorkspaceProvider provider) {
+  Widget _buildSliverCommentsList(
+      BuildContext context,
+      List<CommentModel> comments,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider) {
     return SliverPadding(
       padding: const EdgeInsets.all(UIConstants.defaultPadding),
-      sliver: SliverList( 
+      sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final comment = comments[index];
-            return _buildCommentTile(context, comment, provider);
+            return _buildCommentTile(context, comment, workspaceProvider,
+                channelProvider, uiStateProvider);
           },
           childCount: comments.length,
         ),
@@ -1011,7 +1140,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   Widget _buildCommentTile(
     BuildContext context,
     CommentModel comment,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: UIConstants.commentSpacing),
@@ -1046,7 +1177,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                     Text(
                       _formatTimestamp(comment.createdAt),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
                   ],
@@ -1081,7 +1213,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                 ],
                 onSelected: (value) {
                   if (value == 'delete') {
-                    _deleteComment(context, provider, comment);
+                    _deleteComment(context, workspaceProvider, channelProvider,
+                        uiStateProvider, comment);
                   } else if (value == 'edit') {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('댓글 수정 기능은 준비 중입니다')),
@@ -1096,8 +1229,10 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(UIConstants.commentBorderRadius),
+              color:
+                  Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              borderRadius:
+                  BorderRadius.circular(UIConstants.commentBorderRadius),
             ),
             child: Text(
               comment.content,
@@ -1111,7 +1246,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
 
   void _deleteComment(
     BuildContext context,
-    WorkspaceProvider provider,
+    WorkspaceProvider workspaceProvider,
+    ChannelProvider channelProvider,
+    UIStateProvider uiStateProvider,
     CommentModel comment,
   ) {
     showDialog(
@@ -1127,10 +1264,10 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              final postId = provider.selectedPostForComments?.id;
+              final postId = uiStateProvider.selectedPostForComments?.id;
               if (postId == null) return;
               try {
-                await provider.deleteComment(comment.id, postId);
+                await channelProvider.deleteComment(comment.id, postId);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('댓글이 삭제되었습니다')),
@@ -1151,9 +1288,15 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
     );
   }
 
-  Widget _buildCommentsToggleButton(BuildContext context, PostModel post, WorkspaceProvider provider) {
-    final comments = provider.getCommentsForPost(post.id);
-    final commentCount = comments.isNotEmpty ? comments.length : post.commentCount;
+  Widget _buildCommentsToggleButton(
+      BuildContext context,
+      PostModel post,
+      WorkspaceProvider workspaceProvider,
+      ChannelProvider channelProvider,
+      UIStateProvider uiStateProvider) {
+    final comments = channelProvider.getCommentsForPost(post.id);
+    final commentCount =
+        comments.isNotEmpty ? comments.length : post.commentCount;
 
     String? lastCommentTime;
     if (comments.isNotEmpty) {
@@ -1169,7 +1312,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           final mediaQuery = MediaQuery.of(context);
           final screenWidth = mediaQuery.size.width;
           final bool isMobile = screenWidth < ResponsiveBreakpoints.mobile;
-          final bool isSidebarVisible = provider.isCommentsSidebarVisible;
+          final bool isSidebarVisible =
+              uiStateProvider.isCommentsSidebarVisible;
 
           double sidebarWidth = ResponsiveBreakpoints.commentsSidebarWidth;
           if (kIsWeb) {
@@ -1193,18 +1337,21 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
           final double desktopMinWidth = 200;
           final double mobileMinWidth = 160;
           final double mobileFixedWidth = 230;
-          final double desktopMaxWidth = sidebarWidth + 200; // allow slightly wider than the sidebar
+          final double desktopMaxWidth =
+              sidebarWidth + 200; // allow slightly wider than the sidebar
 
           double targetWidth;
 
           if (isMobile) {
             targetWidth = math.min(availableWidth, mobileFixedWidth);
-            if (targetWidth < mobileMinWidth && availableWidth >= mobileMinWidth) {
+            if (targetWidth < mobileMinWidth &&
+                availableWidth >= mobileMinWidth) {
               targetWidth = mobileMinWidth;
             }
           } else {
             targetWidth = math.min(availableWidth, desktopMaxWidth);
-            if (targetWidth < desktopMinWidth && availableWidth >= desktopMinWidth) {
+            if (targetWidth < desktopMinWidth &&
+                availableWidth >= desktopMinWidth) {
               targetWidth = desktopMinWidth;
             }
 
@@ -1213,14 +1360,16 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
             }
 
             // Ensure the button still fits when the sidebar slides in, with extra gutter.
-            final double comfortableWidth = screenWidth - sidebarWidth - (edgePadding * 2);
+            final double comfortableWidth =
+                screenWidth - sidebarWidth - (edgePadding * 2);
             if (comfortableWidth.isFinite && comfortableWidth > 0) {
               targetWidth = math.min(targetWidth, comfortableWidth);
             }
 
             // If the sidebar is already visible, we tighten further to keep some gap.
             if (isSidebarVisible) {
-              final double sidebarAdjustedWidth = constraints.maxWidth - edgePadding;
+              final double sidebarAdjustedWidth =
+                  constraints.maxWidth - edgePadding;
               if (sidebarAdjustedWidth.isFinite && sidebarAdjustedWidth > 0) {
                 targetWidth = math.min(targetWidth, sidebarAdjustedWidth);
               }
@@ -1243,7 +1392,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                   child: SizedBox(
                     width: targetWidth,
                     child: InkWell(
-                      onTap: () => _handleCommentsAction(context, post, provider),
+                      onTap: () => _handleCommentsAction(context, post,
+                          workspaceProvider, channelProvider, uiStateProvider),
                       onHover: (hovered) {
                         setState(() {
                           isHovered = hovered;
@@ -1251,16 +1401,23 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                       },
                       borderRadius: BorderRadius.circular(24),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
                           border: isHovered
                               ? Border.all(
-                                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .outline
+                                      .withOpacity(0.3),
                                 )
                               : null,
                           color: isHovered
-                              ? Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5)
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .surfaceVariant
+                                  .withOpacity(0.5)
                               : Colors.transparent,
                         ),
                         child: Row(
@@ -1274,7 +1431,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                                     : (isHovered ? '댓글 펼치기' : '댓글 작성하기'),
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -1283,7 +1442,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                             Icon(
                               Icons.chevron_right,
                               size: 16,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ],
                         ),
@@ -1298,8 +1459,8 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
       ),
     );
   }
-
 }
+
 IconData _getChannelIcon(ChannelType type) {
   switch (type) {
     case ChannelType.text:

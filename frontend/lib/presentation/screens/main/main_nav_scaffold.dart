@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/nav_provider.dart';
 import '../../providers/workspace_provider.dart';
+import '../../providers/ui_state_provider.dart';
+import '../../providers/channel_provider.dart';
 import '../../widgets/professor_pending_banner.dart';
 import '../../widgets/global_sidebar.dart';
 import '../home/home_tab.dart';
@@ -33,7 +35,8 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
   bool _showWorkspace = false;
   int? _workspaceGroupId;
   String? _workspaceGroupName;
-  String _workspaceEntryPoint = 'workspace_list'; // 'workspace_list' or 'home_explorer'
+  String _workspaceEntryPoint =
+      'workspace_list'; // 'workspace_list' or 'home_explorer'
 
   void _navigateToGroupExplorer() {
     setState(() {
@@ -60,7 +63,8 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
     });
   }
 
-  void _navigateToWorkspace(int groupId, String groupName, {String entryPoint = 'workspace_list'}) {
+  void _navigateToWorkspace(int groupId, String groupName,
+      {String entryPoint = 'workspace_list'}) {
     setState(() {
       _showWorkspace = true;
       _workspaceGroupId = groupId;
@@ -83,7 +87,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
       // 홈 탭(인덱스 0)으로 돌아감
       context.read<NavProvider>().setIndex(0);
     }
-    
+
     // 공통적으로 워크스페이스 뷰를 닫고 상태를 초기화
     setState(() {
       _showWorkspace = false;
@@ -124,8 +128,9 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
       const ProfileTab(),
     ];
 
-    return Consumer3<AuthProvider, NavProvider, WorkspaceProvider>(
-      builder: (context, auth, nav, workspace, _) {
+    return Consumer5<AuthProvider, NavProvider, WorkspaceProvider,
+        ChannelProvider, UIStateProvider>(
+      builder: (context, auth, nav, workspace, channel, uiState, _) {
         // AuthState가 unauthenticated가 되면 로그인 페이지로 이동
         if (auth.state == AuthState.unauthenticated) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -142,7 +147,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
             body: Column(
               children: [
                 // 상단바 (전체 화면 너비)
-                _buildDesktopAppBar(context, nav, workspace),
+                _buildDesktopAppBar(context, nav, workspace, channel, uiState),
                 // 하단 영역: 글로벌 사이드바 + 메인 컨텐츠
                 Expanded(
                   child: Row(
@@ -151,8 +156,12 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
                       const GlobalSidebar(),
                       // 메인 컨텐츠 영역
                       Expanded(
-                        child: (nav.index == 1 && _showWorkspace && _workspaceGroupId != null) ||
-                               (nav.index == 0 && _showHomeWorkspace && _homeWorkspaceGroupId != null)
+                        child: (nav.index == 1 &&
+                                    _showWorkspace &&
+                                    _workspaceGroupId != null) ||
+                                (nav.index == 0 &&
+                                    _showHomeWorkspace &&
+                                    _homeWorkspaceGroupId != null)
                             ? _buildWorkspaceLayout()
                             : Column(
                                 children: [
@@ -176,11 +185,13 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
         } else {
           // 모바일: 기존 하단 네비게이션바 방식
           return Scaffold(
-            appBar: _buildMobileAppBar(context, auth, nav, workspace),
+            appBar: _buildMobileAppBar(
+                context, auth, nav, workspace, channel, uiState),
             body: Column(
               children: [
                 const ProfessorPendingBanner(),
-                Expanded(child: IndexedStack(index: nav.index, children: pages)),
+                Expanded(
+                    child: IndexedStack(index: nav.index, children: pages)),
               ],
             ),
             bottomNavigationBar: BottomNavigationBar(
@@ -209,15 +220,23 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
     );
   }
 
-  Widget _buildDesktopAppBar(BuildContext context, NavProvider nav, WorkspaceProvider workspace) {
+  Widget _buildDesktopAppBar(
+      BuildContext context,
+      NavProvider nav,
+      WorkspaceProvider workspace,
+      ChannelProvider channel,
+      UIStateProvider uiState) {
     // 뒤로가기 버튼을 숨겨야 하는 경우: 홈 탭의 기본 상태
-    final isHomeDefaultState = nav.index == 0 && !_showGroupExplorer && !_showHomeWorkspace;
+    final isHomeDefaultState =
+        nav.index == 0 && !_showGroupExplorer && !_showHomeWorkspace;
     final shouldShowBackButton = !isHomeDefaultState;
 
     // 현재 상태 판별을 위한 조건들
     final isGroupExplorerMode = nav.index == 0 && _showGroupExplorer;
-    final isWorkspaceInHomeTab = nav.index == 0 && _showHomeWorkspace; // 홈 탭 내 워크스페이스 (레거시)
-    final isWorkspaceInWorkspaceTab = nav.index == 1 && _showWorkspace; // 워크스페이스 탭 내 워크스페이스
+    final isWorkspaceInHomeTab =
+        nav.index == 0 && _showHomeWorkspace; // 홈 탭 내 워크스페이스 (레거시)
+    final isWorkspaceInWorkspaceTab =
+        nav.index == 1 && _showWorkspace; // 워크스페이스 탭 내 워크스페이스
     final isWorkspaceMode = isWorkspaceInWorkspaceTab || isWorkspaceInHomeTab;
 
     return Container(
@@ -252,7 +271,9 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
                 tooltip: isGroupExplorerMode
                     ? '홈으로'
                     : isWorkspaceInWorkspaceTab
-                        ? (_workspaceEntryPoint == 'home_explorer' ? '그룹 탐색으로' : '워크스페이스 목록으로')
+                        ? (_workspaceEntryPoint == 'home_explorer'
+                            ? '그룹 탐색으로'
+                            : '워크스페이스 목록으로')
                         : '뒤로가기',
               ),
             )
@@ -282,11 +303,13 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
                       children: const [
                         Text(
                           '그룹 관계를 이해하고',
-                          style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                          style:
+                              TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                         ),
                         Text(
                           '새로운 그룹을 찾아보세요',
-                          style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                          style:
+                              TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                         ),
                       ],
                     ),
@@ -304,8 +327,13 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              isWorkspaceInHomeTab ? (_homeWorkspaceGroupName ?? '') : (_workspaceGroupName ?? ''),
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              isWorkspaceInHomeTab
+                                  ? (_homeWorkspaceGroupName ?? '')
+                                  : (_workspaceGroupName ?? ''),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: Theme.of(context).primaryColor,
                                   ),
@@ -318,7 +346,7 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
                     ),
                     // 워크스페이스 메인 타이틀 (현재 채널에 따라 동적 변경)
                     Text(
-                      workspace.currentChannel?.name ?? '공지사항',
+                      channel.currentChannel?.name ?? '공지사항',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
@@ -338,7 +366,8 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
                   IconButton(
                     icon: const Icon(Icons.notifications_none, size: 20),
                     padding: const EdgeInsets.all(8),
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    constraints:
+                        const BoxConstraints(minWidth: 36, minHeight: 36),
                     onPressed: () {},
                     tooltip: '알림',
                   ),
@@ -351,15 +380,24 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
     );
   }
 
-  PreferredSizeWidget _buildMobileAppBar(BuildContext context, AuthProvider auth, NavProvider nav, WorkspaceProvider workspace) {
+  PreferredSizeWidget _buildMobileAppBar(
+      BuildContext context,
+      AuthProvider auth,
+      NavProvider nav,
+      WorkspaceProvider workspace,
+      ChannelProvider channel,
+      UIStateProvider uiState) {
     // 뒤로가기 버튼을 숨겨야 하는 경우: 홈 탭의 기본 상태
-    final isHomeDefaultState = nav.index == 0 && !_showGroupExplorer && !_showHomeWorkspace;
+    final isHomeDefaultState =
+        nav.index == 0 && !_showGroupExplorer && !_showHomeWorkspace;
     final shouldShowBackButton = !isHomeDefaultState;
 
     // 현재 상태 판별을 위한 조건들
     final isGroupExplorerMode = nav.index == 0 && _showGroupExplorer;
-    final isWorkspaceInHomeTab = nav.index == 0 && _showHomeWorkspace; // 홈 탭 내 워크스페이스 (레거시)
-    final isWorkspaceInWorkspaceTab = nav.index == 1 && _showWorkspace; // 워크스페이스 탭 내 워크스페이스
+    final isWorkspaceInHomeTab =
+        nav.index == 0 && _showHomeWorkspace; // 홈 탭 내 워크스페이스 (레거시)
+    final isWorkspaceInWorkspaceTab =
+        nav.index == 1 && _showWorkspace; // 워크스페이스 탭 내 워크스페이스
     final isWorkspaceMode = isWorkspaceInHomeTab || isWorkspaceInWorkspaceTab;
 
     // 워크스페이스 모드일 때 제목 결정
@@ -367,17 +405,19 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
       if (isGroupExplorerMode) {
         return '교내 그룹 탐색';
       } else if (isWorkspaceMode) {
-        final groupName = isWorkspaceInHomeTab ? _homeWorkspaceGroupName : _workspaceGroupName;
+        final groupName = isWorkspaceInHomeTab
+            ? _homeWorkspaceGroupName
+            : _workspaceGroupName;
         final safeGroupName = groupName ?? '';
-        if (workspace.isMobileNavigatorVisible) {
+        if (uiState.isMobileNavigatorVisible) {
           return safeGroupName;
         }
-        if (workspace.currentChannel == null) {
+        if (channel.currentChannel == null) {
           return safeGroupName;
         }
         return safeGroupName.isEmpty
-            ? workspace.currentChannel!.name
-            : '$safeGroupName > ${workspace.currentChannel!.name}';
+            ? channel.currentChannel!.name
+            : '$safeGroupName > ${channel.currentChannel!.name}';
       } else {
         return _titles[nav.index];
       }
@@ -393,11 +433,16 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
               padding: const EdgeInsets.all(8),
               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
               onPressed: () {
-                if (isWorkspaceMode &&
-                    workspace.currentWorkspace != null &&
-                    !workspace.isMobileNavigatorVisible) {
-                  workspace.showMobileNavigator();
-                  return;
+                if (isWorkspaceMode && workspace.currentWorkspace != null) {
+                  if (uiState.selectedPostForComments != null) {
+                    uiState.hideCommentsSidebar();
+                    return;
+                  }
+
+                  if (!uiState.isMobileNavigatorVisible) {
+                    uiState.showMobileNavigator();
+                    return;
+                  }
                 }
 
                 if (isGroupExplorerMode) {
@@ -413,7 +458,9 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
               tooltip: isGroupExplorerMode
                   ? '홈으로'
                   : isWorkspaceInWorkspaceTab
-                      ? (_workspaceEntryPoint == 'home_explorer' ? '그룹 탐색으로' : '워크스페이스 목록으로')
+                      ? (_workspaceEntryPoint == 'home_explorer'
+                          ? '그룹 탐색으로'
+                          : '워크스페이스 목록으로')
                       : '뒤로가기',
             )
           : null,
@@ -433,9 +480,8 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
             icon: const Icon(Icons.logout, size: 20),
             padding: const EdgeInsets.all(8),
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            onPressed: auth.isLoading
-                ? null
-                : () => _showLogoutDialog(context, auth),
+            onPressed:
+                auth.isLoading ? null : () => _showLogoutDialog(context, auth),
             tooltip: '로그아웃',
           ),
         ),
@@ -489,9 +535,13 @@ class _MainNavScaffoldState extends State<MainNavScaffold> {
   Widget _buildWorkspaceLayout() {
     // 홈 워크스페이스와 워크스페이스 탭 워크스페이스를 구분하여 처리
     final isHomeWorkspace = _showHomeWorkspace && _homeWorkspaceGroupId != null;
-    final groupId = isHomeWorkspace ? _homeWorkspaceGroupId! : _workspaceGroupId!;
-    final groupName = isHomeWorkspace ? _homeWorkspaceGroupName : _workspaceGroupName;
-    final onBack = isHomeWorkspace ? _navigateBackToHomeFromWorkspace : _navigateBackFromWorkspace;
+    final groupId =
+        isHomeWorkspace ? _homeWorkspaceGroupId! : _workspaceGroupId!;
+    final groupName =
+        isHomeWorkspace ? _homeWorkspaceGroupName : _workspaceGroupName;
+    final onBack = isHomeWorkspace
+        ? _navigateBackToHomeFromWorkspace
+        : _navigateBackFromWorkspace;
 
     return Column(
       children: [

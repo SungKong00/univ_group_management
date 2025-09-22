@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../data/models/workspace_models.dart';
-import '../../data/models/auth_models.dart';
+import '../../data/models/admin_models.dart';
 import '../../data/services/workspace_service.dart';
 
 class WorkspaceProvider extends ChangeNotifier {
@@ -14,48 +14,21 @@ class WorkspaceProvider extends ChangeNotifier {
   String? _error;
   bool _accessDenied = false;
 
-  // Current tab index (0: 공지, 1: 채널, 2: 멤버)
-  int _currentTabIndex = 0;
-
-  // Sidebar visibility state
-  bool _isSidebarVisible = true;
-
-  // 기본 채널 자동 선택 여부 (첫 로드 한정)
-  bool _didAutoSelectChannel = false;
-
-  // 모바일 전용 상태
-  bool _isMobileNavigatorVisible = false;
-
-  // 반응형 전환 상태 관리
-  bool _isInitialLoad = true;
-  bool _isHandlingResponsiveTransition = false;
-
-  // Current channel (when in channel detail view)
+  // Channel and Comments State
   ChannelModel? _currentChannel;
-  List<PostModel> _currentChannelPosts = [];
-  Map<int, List<CommentModel>> _postComments = {};
-
-  // Channel permissions for current user
-  Map<int, List<String>> _channelPermissions = {};
-
-  // Comments sidebar state
   PostModel? _selectedPostForComments;
-  bool _isCommentsSidebarVisible = false;
+  Map<int, List<CommentModel>> _commentsCache = {};
 
   // Getters
   WorkspaceDetailModel? get currentWorkspace => _currentWorkspace;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAccessDenied => _accessDenied;
-  int get currentTabIndex => _currentTabIndex;
-  bool get isSidebarVisible => _isSidebarVisible;
+
+  // Channel and Comments Getters
   ChannelModel? get currentChannel => _currentChannel;
-  List<PostModel> get currentChannelPosts => _currentChannelPosts;
-
-  // Comments sidebar getters
   PostModel? get selectedPostForComments => _selectedPostForComments;
-  bool get isCommentsSidebarVisible => _isCommentsSidebarVisible;
-
+  bool get canWriteInCurrentChannel => _currentChannel != null;
 
   // 현재 워크스페이스의 채널 (정렬됨)
   List<ChannelModel> get channels {
@@ -66,7 +39,8 @@ class WorkspaceProvider extends ChangeNotifier {
 
   // 현재 워크스페이스의 멤버 (정렬됨)
   List<GroupMemberModel> get members {
-    final members = List<GroupMemberModel>.from(_currentWorkspace?.members ?? []);
+    final members =
+        List<GroupMemberModel>.from(_currentWorkspace?.members ?? []);
     members.sort((a, b) => a.joinedAt.compareTo(b.joinedAt));
     return members;
   }
@@ -75,21 +49,6 @@ class WorkspaceProvider extends ChangeNotifier {
   bool get canManage => _currentWorkspace?.canManage ?? false;
   bool get canManageMembers => _currentWorkspace?.canManageMembers ?? false;
   bool get canManageChannels => _currentWorkspace?.canManageChannels ?? false;
-
-  bool get isMobileNavigatorVisible => _isMobileNavigatorVisible;
-  bool get isInitialLoad => _isInitialLoad;
-
-  /// 특정 채널에 대한 권한 확인
-  bool hasChannelPermission(int channelId, String permission) {
-    final permissions = _channelPermissions[channelId] ?? [];
-    return permissions.contains(permission);
-  }
-
-  /// 현재 채널에서 글 작성 권한이 있는지 확인
-  bool get canWriteInCurrentChannel {
-    if (_currentChannel == null) return false;
-    return hasChannelPermission(_currentChannel!.id, 'POST_WRITE');
-  }
 
   /// 워크스페이스 로드
   Future<void> loadWorkspace(
@@ -101,29 +60,20 @@ class WorkspaceProvider extends ChangeNotifier {
       _isLoading = true;
       _error = null;
       _accessDenied = false;
+      _currentChannel = null;
+      _selectedPostForComments = null;
+      _commentsCache.clear();
       notifyListeners();
 
       _currentWorkspace = await _workspaceService.getWorkspaceByGroup(groupId);
 
-      _isMobileNavigatorVisible = mobileNavigatorVisible;
+      // 첫 번째 채널 자동 선택
+      if (autoSelectFirstChannel && channels.isNotEmpty) {
+        selectChannel(channels.first);
+      }
+
       _isLoading = false;
       notifyListeners();
-
-      // 첫 로드 시 기본 채널 자동 선택
-      if (autoSelectFirstChannel && !_didAutoSelectChannel && _currentChannel == null) {
-        final ws = _currentWorkspace;
-        if (ws != null && ws.channels.isNotEmpty) {
-          // displayOrder 기준 정렬 후 첫 번째 채널 선택
-          final sorted = List<ChannelModel>.from(ws.channels)
-            ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
-          ChannelModel defaultChannel = sorted.first;
-
-          _didAutoSelectChannel = true;
-          _isMobileNavigatorVisible = false;
-          // 비동기로 선택하여 게시글/권한 로드
-          await selectChannel(defaultChannel);
-        }
-      }
     } on WorkspaceAccessException catch (e) {
       _isLoading = false;
       _accessDenied = true;
@@ -136,339 +86,6 @@ class WorkspaceProvider extends ChangeNotifier {
     }
   }
 
-  /// 탭 변경
-  void setTabIndex(int index) {
-    _currentTabIndex = index;
-    notifyListeners();
-  }
-
-  /// 사이드바 토글
-  void toggleSidebar() {
-    _isSidebarVisible = !_isSidebarVisible;
-    notifyListeners();
-  }
-
-  /// 사이드바 표시/숨김 설정
-  void setSidebarVisible(bool visible) {
-    if (_isSidebarVisible != visible) {
-      _isSidebarVisible = visible;
-      notifyListeners();
-    }
-  }
-
-  /// 채널 선택 및 상세 정보 로드
-  Future<void> selectChannel(ChannelModel channel) async {
-    _selectedPostForComments = null;
-    _isCommentsSidebarVisible = false;
-    try {
-      _currentChannel = channel;
-      _isMobileNavigatorVisible = false;
-      _isLoading = true;
-      notifyListeners();
-
-      // 채널 게시글과 권한 정보를 동시에 로드
-      final futures = await Future.wait([
-        _workspaceService.getChannelPosts(channel.id),
-        _loadChannelPermissions(channel.id),
-      ]);
-
-      _currentChannelPosts = futures[0] as List<PostModel>;
-
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  /// 채널 권한 정보 로드
-  Future<void> _loadChannelPermissions(int channelId) async {
-    try {
-      // 실제 API 호출로 권한 정보 로드
-      final permissions = await _workspaceService.getChannelPermissions(channelId);
-      _channelPermissions[channelId] = permissions;
-    } catch (e) {
-      // API 호출 실패 시 폴백 제거: 서버 권한에만 의존
-      print('Failed to load channel permissions: $e');
-      _channelPermissions[channelId] = [];
-      _error = '권한 정보를 불러오지 못했습니다.';
-    }
-  }
-
-  /// 테스트용: 특정 채널의 권한 토글 (개발/데모용)
-  void toggleChannelWritePermission(int channelId) {
-    final currentPermissions = _channelPermissions[channelId] ?? [];
-    final hasWritePermission = currentPermissions.contains('POST_WRITE');
-
-    if (hasWritePermission) {
-      // 글 작성 권한 제거
-      _channelPermissions[channelId] = currentPermissions
-          .where((permission) => permission != 'POST_WRITE' && permission != 'FILE_UPLOAD')
-          .toList();
-    } else {
-      // 글 작성 권한 추가
-      final updatedPermissions = List<String>.from(currentPermissions);
-      if (!updatedPermissions.contains('POST_WRITE')) {
-        updatedPermissions.add('POST_WRITE');
-      }
-      if (!updatedPermissions.contains('FILE_UPLOAD')) {
-        updatedPermissions.add('FILE_UPLOAD');
-      }
-      _channelPermissions[channelId] = updatedPermissions;
-    }
-
-    notifyListeners();
-  }
-
-  /// 채널 상세에서 나가기
-  void exitChannel() {
-    _currentChannel = null;
-    _currentChannelPosts.clear();
-    notifyListeners();
-  }
-
-  void showMobileNavigator() {
-    if (!_isMobileNavigatorVisible || _currentChannel != null) {
-      _currentChannel = null;
-      _currentChannelPosts.clear();
-      _isMobileNavigatorVisible = true;
-      notifyListeners();
-    }
-  }
-
-
-  void setMobileNavigatorVisible(bool visible) {
-    if (_isMobileNavigatorVisible != visible) {
-      _isMobileNavigatorVisible = visible;
-      if (visible) {
-        _currentChannel = null;
-        _currentChannelPosts.clear();
-      }
-      notifyListeners();
-    }
-  }
-
-
-  /// 새 게시글 생성
-  Future<void> createPost({
-    required int channelId,
-    required String content,
-    PostType type = PostType.general,
-    List<String> attachments = const [],
-  }) async {
-    try {
-      final newPost = await _workspaceService.createPost(
-        channelId: channelId,
-        content: content,
-        type: type,
-        attachments: attachments,
-      );
-
-      // 현재 채널의 게시글이라면 목록에 추가
-      if (_currentChannel?.id == channelId) {
-        _currentChannelPosts.add(newPost);
-        notifyListeners();
-      }
-
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  /// 게시글 삭제
-  Future<void> deletePost(int postId) async {
-    try {
-      await _workspaceService.deletePost(postId);
-
-      // 현재 채널 게시글 목록에서 제거
-      _currentChannelPosts.removeWhere((post) => post.id == postId);
-
-
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  /// 특정 게시글의 댓글 로드
-  Future<void> loadPostComments(int postId) async {
-    try {
-      final comments = await _workspaceService.getPostComments(postId);
-      _postComments[postId] = comments;
-      final latest = comments.isNotEmpty ? comments.last.createdAt : null;
-      _updatePostCommentMetadata(
-        postId,
-        commentCount: comments.length,
-        lastCommentedAt: latest,
-        updateLastCommentedAt: true,
-      );
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  /// 댓글 가져오기
-  List<CommentModel> getCommentsForPost(int postId) {
-    return _postComments[postId] ?? [];
-  }
-
-  /// 새 댓글 생성
-  Future<void> createComment({
-    required int postId,
-    required String content,
-    int? parentCommentId,
-  }) async {
-    try {
-      final newComment = await _workspaceService.createComment(
-        postId: postId,
-        content: content,
-        parentCommentId: parentCommentId,
-      );
-
-      // 해당 게시글의 댓글 목록에 추가
-      if (_postComments.containsKey(postId)) {
-        _postComments[postId]!.add(newComment);
-      } else {
-        _postComments[postId] = [newComment];
-      }
-
-      final currentCount = _findPostById(postId)?.commentCount ?? 0;
-      _updatePostCommentMetadata(
-        postId,
-        commentCount: currentCount + 1,
-        lastCommentedAt: newComment.createdAt,
-        updateLastCommentedAt: true,
-      );
-
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  /// 댓글 삭제
-  Future<void> deleteComment(int commentId, int postId) async {
-    try {
-      await _workspaceService.deleteComment(commentId);
-
-      // 해당 게시글의 댓글 목록에서 제거
-      if (_postComments.containsKey(postId)) {
-        _postComments[postId]!.removeWhere((comment) => comment.id == commentId);
-      }
-
-      final currentCount = _findPostById(postId)?.commentCount ?? 0;
-      DateTime? latest;
-      bool shouldUpdateLast = false;
-      if (_postComments.containsKey(postId)) {
-        final commentsForPost = _postComments[postId]!;
-        if (commentsForPost.isNotEmpty) {
-          latest = commentsForPost.last.createdAt;
-        }
-        shouldUpdateLast = true;
-      }
-      _updatePostCommentMetadata(
-        postId,
-        commentCount: currentCount - 1,
-        lastCommentedAt: latest,
-        updateLastCommentedAt: shouldUpdateLast,
-      );
-
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  PostModel? _findPostById(int postId) {
-    for (final post in _currentChannelPosts) {
-      if (post.id == postId) {
-        return post;
-      }
-    }
-    return null;
-  }
-
-  /// 새 채널 생성
-  Future<bool> createChannel({
-    required String name,
-    String? description,
-    ChannelType type = ChannelType.text,
-    bool isPrivate = false,
-  }) async {
-    try {
-      if (_currentWorkspace == null) return false;
-
-      final newChannel = await _workspaceService.createChannel(
-        workspaceId: _currentWorkspace!.workspace.id,
-        name: name,
-        description: description,
-        type: type,
-        isPrivate: isPrivate,
-      );
-
-      // 워크스페이스의 채널 목록에 추가
-      final updatedChannels = List<ChannelModel>.from(_currentWorkspace!.channels);
-      updatedChannels.add(newChannel);
-
-      _currentWorkspace = WorkspaceDetailModel(
-        workspace: _currentWorkspace!.workspace,
-        group: _currentWorkspace!.group,
-        myMembership: _currentWorkspace!.myMembership,
-        channels: updatedChannels,
-        members: _currentWorkspace!.members,
-      );
-
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      return false;
-    }
-  }
-
-  /// 채널 삭제
-  Future<bool> deleteChannel(int channelId) async {
-    try {
-      await _workspaceService.deleteChannel(channelId);
-
-      if (_currentWorkspace != null) {
-        // 워크스페이스의 채널 목록에서 제거
-        final updatedChannels = _currentWorkspace!.channels
-            .where((channel) => channel.id != channelId)
-            .toList();
-
-        _currentWorkspace = WorkspaceDetailModel(
-          workspace: _currentWorkspace!.workspace,
-          group: _currentWorkspace!.group,
-          myMembership: _currentWorkspace!.myMembership,
-          channels: updatedChannels,
-          members: _currentWorkspace!.members,
-        );
-
-        // 현재 선택된 채널이라면 나가기
-        if (_currentChannel?.id == channelId) {
-          exitChannel();
-        }
-
-        notifyListeners();
-      }
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      return false;
-    }
-  }
-
   /// 에러 초기화
   void clearError() {
     _error = null;
@@ -477,48 +94,21 @@ class WorkspaceProvider extends ChangeNotifier {
 
   /// 상태 초기화 (다른 워크스페이스로 이동할 때 사용)
   void reset() {
-    _channelPermissions.clear();
     _currentWorkspace = null;
-    _currentChannel = null;
-    _currentChannelPosts.clear();
-    _postComments.clear();
-    _currentTabIndex = 0;
-    _isSidebarVisible = true;
     _isLoading = false;
     _error = null;
     _accessDenied = false;
-    _didAutoSelectChannel = false;
-    _isMobileNavigatorVisible = false;
-    _isInitialLoad = true;
-    _isHandlingResponsiveTransition = false;
+    _currentChannel = null;
+    _selectedPostForComments = null;
+    _commentsCache.clear();
     notifyListeners();
-  }
-
-  void _updatePostCommentMetadata(
-    int postId, {
-    int? commentCount,
-    DateTime? lastCommentedAt,
-    bool updateLastCommentedAt = false,
-  }) {
-    final sanitizedCount = commentCount != null && commentCount < 0 ? 0 : commentCount;
-    final index = _currentChannelPosts.indexWhere((post) => post.id == postId);
-    if (index != -1) {
-      final updatedPost = _currentChannelPosts[index].copyWith(
-        commentCount: sanitizedCount,
-        lastCommentedAt: lastCommentedAt,
-        updateLastCommentedAt: updateLastCommentedAt,
-      );
-      _currentChannelPosts[index] = updatedPost;
-      if (_selectedPostForComments?.id == postId) {
-        _selectedPostForComments = updatedPost;
-      }
-    }
   }
 
   /// 그룹 가입 신청
   Future<bool> requestJoin(int groupId, {String? message}) async {
     try {
-      await _workspaceService.requestJoinGroup(groupId: groupId, message: message);
+      await _workspaceService.requestJoinGroup(
+          groupId: groupId, message: message);
       return true;
     } catch (e) {
       _error = e.toString();
@@ -651,7 +241,7 @@ class WorkspaceProvider extends ChangeNotifier {
       // 워크스페이스를 다시 로드하여 최신 상태 반영
       await loadWorkspace(
         groupId,
-        mobileNavigatorVisible: _isMobileNavigatorVisible,
+        mobileNavigatorVisible: false,
       );
 
       _isLoading = false;
@@ -764,7 +354,9 @@ class WorkspaceProvider extends ChangeNotifier {
   Future<List<PendingMemberModel>> getPendingMembers(int groupId) async {
     try {
       final pendingMembers = await _workspaceService.getPendingMembers(groupId);
-      return pendingMembers.map((json) => PendingMemberModel.fromJson(json)).toList();
+      return pendingMembers
+          .map((json) => PendingMemberModel.fromJson(json))
+          .toList();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -866,7 +458,7 @@ class WorkspaceProvider extends ChangeNotifier {
       // 워크스페이스를 다시 로드하여 최신 상태 반영
       await loadWorkspace(
         groupId,
-        mobileNavigatorVisible: _isMobileNavigatorVisible,
+        mobileNavigatorVisible: false,
       );
 
       _isLoading = false;
@@ -880,164 +472,91 @@ class WorkspaceProvider extends ChangeNotifier {
     }
   }
 
-
-  // === 댓글 사이드바 관리 메서드 ===
-
-  /// 댓글 사이드바 열기
-  void showCommentsSidebar(PostModel post) {
-    _selectedPostForComments = post;
-    _isCommentsSidebarVisible = true;
-
-    // 해당 게시글의 댓글을 로드
-    loadPostComments(post.id);
-
-    notifyListeners();
-  }
-
-  /// 댓글 사이드바 닫기
-  void hideCommentsSidebar() {
-    _selectedPostForComments = null;
-    _isCommentsSidebarVisible = false;
-    notifyListeners();
-  }
-
-  /// 댓글 사이드바 토글
-  void toggleCommentsSidebar(PostModel? post) {
-    if (_isCommentsSidebarVisible && _selectedPostForComments?.id == post?.id) {
-      hideCommentsSidebar();
-    } else if (post != null) {
-      showCommentsSidebar(post);
-    } else {
-      hideCommentsSidebar();
-    }
-  }
-
-  /// 반응형 화면 전환 처리
-  void handleResponsiveTransition(bool isNowMobile) {
-    // 이미 처리 중이면 건너뛰기 (순환 호출 방지)
-    if (_isHandlingResponsiveTransition) return;
-
-    if (_isInitialLoad) {
-      // 초기 로드 시에는 기존 로직 유지
-      _isInitialLoad = false;
-      return;
-    }
-
-    _isHandlingResponsiveTransition = true;
-
-    try {
-      // 화면 크기 변경으로 인한 전환
-      if (isNowMobile) {
-        // 웹 → 모바일 전환 시
-        // 우선순위: 댓글 뷰 → 채널 뷰 → 네비게이터
-        if (_isCommentsSidebarVisible && _selectedPostForComments != null) {
-          // 댓글 사이드바가 열려있으면 댓글 모바일 뷰 유지
-          _isMobileNavigatorVisible = false;
-        } else if (_currentChannel != null) {
-          // 채널이 선택되어 있으면 채널 모바일 뷰 유지
-          _isMobileNavigatorVisible = false;
-        } else {
-          // 그 외의 경우 네비게이터 표시
-          _isMobileNavigatorVisible = true;
-        }
-      } else {
-        // 모바일 → 웹 전환 시
-        _isMobileNavigatorVisible = false;
-
-        // 데스크톱에서 채널이 없으면 첫 번째 채널 자동 선택
-        if (_currentChannel == null && _currentWorkspace != null && _currentWorkspace!.channels.isNotEmpty) {
-          final sorted = List<ChannelModel>.from(_currentWorkspace!.channels)
-            ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
-
-          // selectChannel을 직접 호출하지 않고 상태만 변경
-          _currentChannel = sorted.first;
-          // 채널 데이터는 나중에 비동기로 로드
-          Future.microtask(() => _loadChannelDataSafely(sorted.first));
-        }
-      }
-
-      notifyListeners();
-    } finally {
-      _isHandlingResponsiveTransition = false;
-    }
-  }
-
-  /// 안전한 채널 데이터 로드 (순환 호출 방지)
-  Future<void> _loadChannelDataSafely(ChannelModel channel) async {
-    if (_isHandlingResponsiveTransition) return;
-
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      // 채널 게시글과 권한 정보를 동시에 로드
-      final futures = await Future.wait([
-        _workspaceService.getChannelPosts(channel.id),
-        _loadChannelPermissions(channel.id),
-      ]);
-
-      _currentChannelPosts = futures[0] as List<PostModel>;
-
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  /// 초기 로드 플래그 설정 (외부에서 호출용)
-  void markAsInitialLoadComplete() {
-    _isInitialLoad = false;
-  }
-
   /// 권한 확인 헬퍼 메서드들
   bool get canManageRoles => canManageMembers; // 멤버 관리 권한이 있으면 역할도 관리 가능
-  bool get canViewAdminPages => canManageMembers || canManageChannels || canManage;
-}
+  bool get canViewAdminPages =>
+      canManageMembers || canManageChannels || canManage;
 
-// 관리자 통계 모델 추가
-class AdminStatsModel {
-  final int pendingCount;
-  final int memberCount;
-  final int roleCount;
-  final int channelCount;
+  // === Channel Management Methods ===
 
-  AdminStatsModel({
-    required this.pendingCount,
-    required this.memberCount,
-    required this.roleCount,
-    required this.channelCount,
-  });
-
-  factory AdminStatsModel.fromJson(Map<String, dynamic> json) {
-    return AdminStatsModel(
-      pendingCount: json['pendingCount'] ?? 0,
-      memberCount: json['memberCount'] ?? 0,
-      roleCount: json['roleCount'] ?? 0,
-      channelCount: json['channelCount'] ?? 0,
-    );
+  /// 채널 선택
+  void selectChannel(ChannelModel channel) {
+    _currentChannel = channel;
+    notifyListeners();
   }
-}
 
-// 가입 대기 멤버 모델 추가
-class PendingMemberModel {
-  final UserModel user;
-  final DateTime appliedAt;
-  final String? message;
+  /// 채널 생성
+  Future<bool> createChannel({
+    required String name,
+    String? description,
+    type,
+    bool isPrivate = false,
+  }) async {
+    try {
+      // TODO: Implement channel creation API call
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 
-  PendingMemberModel({
-    required this.user,
-    required this.appliedAt,
-    this.message,
-  });
+  /// 채널 삭제
+  Future<bool> deleteChannel(int channelId) async {
+    try {
+      // TODO: Implement channel deletion API call
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 
-  factory PendingMemberModel.fromJson(Map<String, dynamic> json) {
-    return PendingMemberModel(
-      user: UserModel.fromJson(json['user']),
-      appliedAt: DateTime.parse(json['appliedAt']),
-      message: json['message'],
-    );
+  /// 채널 쓰기 권한 토글
+  void toggleChannelWritePermission(int channelId) {
+    // TODO: Implement channel write permission toggle
+    notifyListeners();
+  }
+
+  // === Comments Management Methods ===
+
+  /// 게시글의 댓글 조회
+  List<CommentModel> getCommentsForPost(int postId) {
+    return _commentsCache[postId] ?? [];
+  }
+
+  /// 댓글 사이드바 숨기기
+  void hideCommentsSidebar() {
+    _selectedPostForComments = null;
+    notifyListeners();
+  }
+
+  /// 댓글 생성
+  Future<bool> createComment({
+    required int postId,
+    required String content,
+  }) async {
+    try {
+      // TODO: Implement comment creation API call
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 댓글 삭제
+  Future<bool> deleteComment(int commentId, int postId) async {
+    try {
+      // TODO: Implement comment deletion API call
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
   }
 }

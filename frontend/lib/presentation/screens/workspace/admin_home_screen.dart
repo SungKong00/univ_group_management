@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/workspace_provider.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../../data/models/workspace_models.dart';
+import '../../../data/models/admin_models.dart';
 
 /// 관리자 홈 화면 (UI/UX 명세서 적용)
 /// Toss 디자인 철학: 한 화면 = 한 목표, 가치 먼저, 가드레일

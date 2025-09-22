@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/workspace_provider.dart';
+import '../../../providers/channel_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../../data/models/workspace_models.dart';
 
@@ -28,10 +29,10 @@ class WorkspaceSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<WorkspaceProvider>(
-      builder: (context, provider, child) {
-        final selectedChannelId = provider.currentChannel?.id;
-        final channels = provider.channels;
+    return Consumer2<WorkspaceProvider, ChannelProvider>(
+      builder: (context, workspaceProvider, channelProvider, child) {
+        final selectedChannelId = channelProvider.currentChannel?.id;
+        final channels = workspaceProvider.channels;
 
         return Container(
           width: width,
@@ -77,7 +78,7 @@ class WorkspaceSidebar extends StatelessWidget {
                       icon: _getChannelIcon(channel),
                       label: channel.name,
                       selected: selectedChannelId == channel.id,
-                      onTap: () => provider.selectChannel(channel),
+                      onTap: () => channelProvider.selectChannel(channel),
                     ),
                   ),
                 ],
@@ -125,7 +126,6 @@ class WorkspaceSidebar extends StatelessWidget {
       },
     );
   }
-
 
   Widget _buildSection(
     BuildContext context, {

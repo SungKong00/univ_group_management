@@ -10,6 +10,8 @@ import 'presentation/providers/group_membership_provider.dart';
 import 'presentation/providers/group_subgroups_provider.dart';
 import 'presentation/providers/nav_provider.dart';
 import 'presentation/providers/workspace_provider.dart';
+import 'presentation/providers/channel_provider.dart';
+import 'presentation/providers/ui_state_provider.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/register_screen.dart';
 import 'presentation/screens/main/main_nav_scaffold.dart';
@@ -39,6 +41,8 @@ class MyApp extends StatelessWidget {
         )),
         ChangeNotifierProvider(create: (_) => NavProvider()),
         ChangeNotifierProvider(create: (_) => WorkspaceProvider(locator<WorkspaceService>())),
+        ChangeNotifierProvider(create: (_) => ChannelProvider(locator<WorkspaceService>())),
+        ChangeNotifierProvider(create: (_) => UIStateProvider()),
       ],
       child: MaterialApp(
         title: '대학 그룹 관리',
