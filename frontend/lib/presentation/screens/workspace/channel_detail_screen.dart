@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_constants.dart';
@@ -189,6 +190,9 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _messageController = TextEditingController();
   final FocusNode _messageFocusNode = FocusNode();
+
+  // Enter 전송 시 TextField에 남는 줄바꿈 잔여값을 제거하기 위한 플래그
+  bool _pendingEnterSend = false;
 
   @override
   void initState() {
@@ -643,26 +647,51 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: TextField(
-            controller: _messageController,
-            focusNode: _messageFocusNode,
-            decoration: InputDecoration(
-              hintText: isCommentComposer ? '댓글을 입력하세요...' : '메시지를 입력하세요...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(24),
+          child: KeyboardListener(
+            focusNode: FocusNode(),
+            onKeyEvent: (KeyEvent event) {
+              if (event is KeyDownEvent) {
+                // Shift + Enter: 줄 바꿈
+                if (event.logicalKey == LogicalKeyboardKey.enter &&
+                    event.physicalKey == PhysicalKeyboardKey.enter &&
+                    HardwareKeyboard.instance.isShiftPressed) {
+                  // 줄 바꿈을 허용 (기본 동작)
+                  return;
+                }
+                // Enter만 누른 경우: 메시지 전송
+                else if (event.logicalKey == LogicalKeyboardKey.enter &&
+                         event.physicalKey == PhysicalKeyboardKey.enter &&
+                         !HardwareKeyboard.instance.isShiftPressed) {
+                  // Enter 전송: 잔여 줄바꿈 제거 플래그 설정 후 전송
+                  _pendingEnterSend = true;
+                  isCommentComposer
+                      ? _sendComment(workspaceProvider, channelProvider, uiStateProvider)
+                      : _sendMessage(workspaceProvider, channelProvider, uiStateProvider);
+                  return;
+                }
+              }
+            },
+            child: TextField(
+              controller: _messageController,
+              focusNode: _messageFocusNode,
+              // 전송 직후 생길 수 있는 잔여 줄바꿈을 정리
+              onChanged: _handleComposerChanged,
+              decoration: InputDecoration(
+                hintText: isCommentComposer
+                    ? '댓글을 입력하세요... (Shift+Enter로 줄바꿈)'
+                    : '메시지를 입력하세요... (Shift+Enter로 줄바꿈)',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              textInputAction: TextInputAction.newline,
             ),
-            maxLines: null,
-            textInputAction: TextInputAction.send,
-            onSubmitted: (_) => isCommentComposer
-                ? _sendComment(
-                    workspaceProvider, channelProvider, uiStateProvider)
-                : _sendMessage(
-                    workspaceProvider, channelProvider, uiStateProvider),
           ),
         ),
         const SizedBox(width: 8),
@@ -678,6 +707,16 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
         ),
       ],
     );
+  }
+
+  // Enter 전송 후 남는 한 줄짜리 줄바꿈을 정리
+  void _handleComposerChanged(String value) {
+    if (_pendingEnterSend) {
+      if (value == '\n' || value == '\r' || value == '\r\n') {
+        _messageController.clear();
+      }
+      _pendingEnterSend = false;
+    }
   }
 
   Widget _buildDisabledComposer(BuildContext context) {
@@ -1392,6 +1431,7 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
 
           bool isHovered = false;
 
+          // 괄호 정리된 반환 블록
           return MouseRegion(
             cursor: SystemMouseCursors.click,
             child: StatefulBuilder(
@@ -1401,17 +1441,20 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                   child: SizedBox(
                     width: targetWidth,
                     child: InkWell(
-                      onTap: () => _handleCommentsAction(context, post,
-                          workspaceProvider, channelProvider, uiStateProvider),
-                      onHover: (hovered) {
-                        setState(() {
-                          isHovered = hovered;
-                        });
-                      },
+                      onTap: () => _handleCommentsAction(
+                        context,
+                        post,
+                        workspaceProvider,
+                        channelProvider,
+                        uiStateProvider,
+                      ),
+                      onHover: (hovered) => setState(() => isHovered = hovered),
                       borderRadius: BorderRadius.circular(24),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
                           border: isHovered
@@ -1458,12 +1501,12 @@ class _ChannelDetailViewState extends State<ChannelDetailView> {
                           ],
                         ),
                       ),
-                    ),
-                  );
-                },
-              },
-            ),
-          );
+                    ), // InkWell
+                  ), // SizedBox
+                ); // Align
+              }, // builder
+            ), // StatefulBuilder
+          ); // MouseRegion
         },
       ),
     );

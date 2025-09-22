@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -22,6 +23,8 @@ class _CommentsSidebarState extends State<CommentsSidebar>
   late Animation<double> _slideAnimation;
   final TextEditingController _commentController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _commentFocusNode = FocusNode();
+  bool _pendingEnterSend = false;
 
   @override
   void initState() {
@@ -49,7 +52,18 @@ class _CommentsSidebarState extends State<CommentsSidebar>
     _animationController.dispose();
     _commentController.dispose();
     _scrollController.dispose();
+    _commentFocusNode.dispose();
     super.dispose();
+  }
+
+  // Enter 전송 후 남는 한 줄짜리 줄바꿈을 정리
+  void _handleComposerChanged(String value) {
+    if (_pendingEnterSend) {
+      if (value == '\n' || value == '\r' || value == '\r\n') {
+        _commentController.clear();
+      }
+      _pendingEnterSend = false;
+    }
   }
 
   @override
@@ -328,21 +342,43 @@ class _CommentsSidebarState extends State<CommentsSidebar>
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: TextField(
-              controller: _commentController,
-              decoration: InputDecoration(
-                hintText: '댓글을 입력하세요...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
+            child: KeyboardListener(
+              focusNode: FocusNode(),
+              onKeyEvent: (KeyEvent event) {
+                if (event is KeyDownEvent) {
+                  if (event.logicalKey == LogicalKeyboardKey.enter &&
+                      event.physicalKey == PhysicalKeyboardKey.enter &&
+                      HardwareKeyboard.instance.isShiftPressed) {
+                    // Shift+Enter: 줄바꿈 허용
+                    return;
+                  } else if (event.logicalKey == LogicalKeyboardKey.enter &&
+                      event.physicalKey == PhysicalKeyboardKey.enter &&
+                      !HardwareKeyboard.instance.isShiftPressed) {
+                    // Enter 전송: 잔여 줄바꿈 제거 플래그 설정 후 전송
+                    _pendingEnterSend = true;
+                    _sendComment(context, uiState, channelProvider, post);
+                    return;
+                  }
+                }
+              },
+              child: TextField(
+                controller: _commentController,
+                focusNode: _commentFocusNode,
+                onChanged: _handleComposerChanged,
+                decoration: InputDecoration(
+                  hintText: '댓글을 입력하세요...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
               ),
-              maxLines: null,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _sendComment(context, uiState, channelProvider, post),
             ),
           ),
           const SizedBox(width: 8),
