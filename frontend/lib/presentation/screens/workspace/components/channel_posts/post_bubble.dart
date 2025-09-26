@@ -11,6 +11,7 @@ class PostBubble extends StatelessWidget {
   final WorkspaceProvider workspaceProvider;
   final ChannelProvider channelProvider;
   final UIStateProvider uiStateProvider;
+  final void Function(PostModel post)? onCommentsTap;
 
   const PostBubble({
     super.key,
@@ -18,6 +19,7 @@ class PostBubble extends StatelessWidget {
     required this.workspaceProvider,
     required this.channelProvider,
     required this.uiStateProvider,
+    this.onCommentsTap,
   });
 
   @override
@@ -142,6 +144,8 @@ class PostBubble extends StatelessWidget {
           workspaceProvider: workspaceProvider,
           channelProvider: channelProvider,
           uiStateProvider: uiStateProvider,
+          onTapOverride:
+              onCommentsTap != null ? () => onCommentsTap!(post) : null,
         ),
       ],
     );

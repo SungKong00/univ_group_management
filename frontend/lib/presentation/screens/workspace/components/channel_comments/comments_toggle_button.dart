@@ -14,6 +14,7 @@ class CommentsToggleButton extends StatelessWidget {
   final WorkspaceProvider workspaceProvider;
   final ChannelProvider channelProvider;
   final UIStateProvider uiStateProvider;
+  final VoidCallback? onTapOverride;
 
   const CommentsToggleButton({
     super.key,
@@ -21,6 +22,7 @@ class CommentsToggleButton extends StatelessWidget {
     required this.workspaceProvider,
     required this.channelProvider,
     required this.uiStateProvider,
+    this.onTapOverride,
   });
 
   @override
@@ -119,7 +121,8 @@ class CommentsToggleButton extends StatelessWidget {
                   child: SizedBox(
                     width: targetWidth,
                     child: InkWell(
-                      onTap: () => _handleCommentsAction(context),
+                      onTap:
+                          onTapOverride ?? () => _handleCommentsAction(context),
                       onHover: (hovered) => setState(() => isHovered = hovered),
                       borderRadius: BorderRadius.circular(24),
                       child: Container(

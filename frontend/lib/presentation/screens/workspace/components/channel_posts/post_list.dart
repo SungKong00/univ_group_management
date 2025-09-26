@@ -13,6 +13,7 @@ class PostList extends StatelessWidget {
   final UIStateProvider uiStateProvider;
   final ScrollController scrollController;
   final EdgeInsets contentPadding;
+  final void Function(PostModel post)? onCommentsTap;
 
   const PostList({
     super.key,
@@ -22,6 +23,7 @@ class PostList extends StatelessWidget {
     required this.uiStateProvider,
     required this.scrollController,
     this.contentPadding = const EdgeInsets.all(16),
+    this.onCommentsTap,
   });
 
   @override
@@ -39,11 +41,12 @@ class PostList extends StatelessWidget {
           children: [
             DateHeader(date: group.date),
             ...group.posts.map((post) => PostBubble(
-              post: post,
-              workspaceProvider: workspaceProvider,
-              channelProvider: channelProvider,
-              uiStateProvider: uiStateProvider,
-            )),
+                  post: post,
+                  workspaceProvider: workspaceProvider,
+                  channelProvider: channelProvider,
+                  uiStateProvider: uiStateProvider,
+                  onCommentsTap: onCommentsTap,
+                )),
           ],
         );
       },
