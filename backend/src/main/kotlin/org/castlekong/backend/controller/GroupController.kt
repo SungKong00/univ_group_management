@@ -21,9 +21,9 @@ class GroupController(
     private val workspaceManagementService: WorkspaceManagementService,
     private val adminStatsService: AdminStatsService,
     private val groupRoleService: GroupRoleService,
-    private val userService: UserService,
+    userService: UserService,
     private val securityExpressionHelper: SecurityExpressionHelper,
-) {
+) : BaseController(userService) {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
@@ -37,9 +37,10 @@ class GroupController(
     }
 
     @GetMapping
-    fun getGroups(pageable: Pageable): ApiResponse<Page<GroupSummaryResponse>> {
+    fun getGroups(pageable: Pageable): PagedApiResponse<GroupSummaryResponse> {
         val response = groupManagementService.getGroups(pageable)
-        return ApiResponse.success(response)
+        val pagination = PaginationInfo.fromSpringPage(response)
+        return PagedApiResponse.success(response.content, pagination)
     }
 
     @GetMapping("/all")
@@ -61,10 +62,11 @@ class GroupController(
         @RequestParam(required = false) department: String?,
         @RequestParam(required = false) q: String?,
         @RequestParam(required = false) tags: String?, // comma-separated
-    ): ApiResponse<Page<GroupSummaryResponse>> {
+    ): PagedApiResponse<GroupSummaryResponse> {
         val tagSet = tags?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet() ?: emptySet()
         val response = groupManagementService.searchGroups(pageable, recruiting, visibility, groupType, university, college, department, q, tagSet)
-        return ApiResponse.success(response)
+        val pagination = PaginationInfo.fromSpringPage(response)
+        return PagedApiResponse.success(response.content, pagination)
     }
 
     @GetMapping("/hierarchy")
@@ -108,6 +110,7 @@ class GroupController(
 
     @PostMapping("/{groupId}/join")
     @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.CREATED)
     fun createJoinRequest(
         @PathVariable groupId: Long,
         @RequestBody request: JoinGroupRequest,
@@ -135,9 +138,10 @@ class GroupController(
     fun getGroupMembers(
         @PathVariable groupId: Long,
         pageable: Pageable,
-    ): ApiResponse<Page<GroupMemberResponse>> {
+    ): PagedApiResponse<GroupMemberResponse> {
         val response = groupMemberService.getGroupMembers(groupId, pageable)
-        return ApiResponse.success(response)
+        val pagination = PaginationInfo.fromSpringPage(response)
+        return PagedApiResponse.success(response.content, pagination)
     }
 
     // 내 멤버십 조회 (멤버 여부 판별용)
@@ -361,9 +365,6 @@ class GroupController(
         return ApiResponse.success(response)
     }
 
-    private fun getUserByEmail(email: String) =
-        userService.findByEmail(email)
-            ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
 
 
     // === 워크스페이스 조회 (명세서 요구사항) ===

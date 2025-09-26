@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api")
 class ContentController(
     private val contentService: ContentService,
-    private val userService: UserService,
+    userService: UserService,
     // 채널 권한 조회용 서비스 주입
     private val channelPermissionManagementService: org.castlekong.backend.service.ChannelPermissionManagementService,
-) {
+) : BaseController(userService) {
     // === Workspaces (compat: group-level single workspace) ===
     @GetMapping("/groups/{groupId}/workspaces")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'CHANNEL_READ')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'CHANNEL_READ')")
     fun getWorkspaces(
         @PathVariable groupId: Long,
     ): ApiResponse<List<WorkspaceResponse>> {
@@ -28,7 +28,7 @@ class ContentController(
     }
 
     @PostMapping("/groups/{groupId}/workspaces")
-    @PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'GROUP_MANAGE')")
     @ResponseStatus(HttpStatus.CREATED)
     fun createWorkspace(
         @PathVariable groupId: Long,
@@ -113,7 +113,7 @@ class ContentController(
 
     // === Posts ===
     @GetMapping("/channels/{channelId}/posts")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasPermission(#channelId, 'CHANNEL', 'POST_READ')")
     fun getChannelPosts(
         @PathVariable channelId: Long,
         authentication: Authentication,
@@ -124,7 +124,7 @@ class ContentController(
     }
 
     @PostMapping("/channels/{channelId}/posts")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasPermission(#channelId, 'CHANNEL', 'POST_WRITE')")
     @ResponseStatus(HttpStatus.CREATED)
     fun createPost(
         @PathVariable channelId: Long,
@@ -137,7 +137,7 @@ class ContentController(
     }
 
     @GetMapping("/posts/{postId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasPermission(#postId, 'POST', 'POST_READ')")
     fun getPost(
         @PathVariable postId: Long,
         authentication: Authentication,
@@ -233,7 +233,4 @@ class ContentController(
         return ApiResponse.success(payload)
     }
 
-    private fun getUserByEmail(email: String) =
-        userService.findByEmail(email)
-            ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
 }

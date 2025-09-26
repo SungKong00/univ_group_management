@@ -62,6 +62,20 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
     }
 
+    @ExceptionHandler(ValidationException::class)
+    fun handleCustomValidationException(e: ValidationException): ResponseEntity<ApiResponse<Unit>> {
+        logger.warn("Custom validation failed: {}", e.message)
+        val response = ApiResponse.error<Unit>("VALIDATION_ERROR", e.message ?: "잘못된 요청")
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
+    }
+
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleIllegalArgumentException(e: IllegalArgumentException): ResponseEntity<ApiResponse<Unit>> {
+        logger.warn("Illegal argument: {}", e.message)
+        val response = ApiResponse.error<Unit>("INVALID_ARGUMENT", e.message ?: "잘못된 인수")
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
+    }
+
     @ExceptionHandler(Exception::class)
     fun handleGenericException(e: Exception): ResponseEntity<ApiResponse<Unit>> {
         logger.error("Unexpected error occurred", e)
