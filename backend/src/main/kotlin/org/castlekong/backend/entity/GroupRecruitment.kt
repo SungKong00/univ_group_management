@@ -40,6 +40,9 @@ data class GroupRecruitment(
     @Column(name = "auto_approve", nullable = false)
     val autoApprove: Boolean = false,
 
+    @Column(name = "show_applicant_count", nullable = false)
+    val showApplicantCount: Boolean = true,
+
     @ElementCollection(targetClass = String::class, fetch = FetchType.EAGER)
     @CollectionTable(name = "recruitment_questions", joinColumns = [JoinColumn(name = "recruitment_id")])
     @Column(name = "question", nullable = false, length = 500)

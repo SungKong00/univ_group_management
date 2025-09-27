@@ -39,4 +39,22 @@ enum class ErrorCode(val message: String) {
 
     // Comment
     COMMENT_NOT_FOUND("댓글을 찾을 수 없습니다."),
+
+    // Recruitment
+    RECRUITMENT_NOT_FOUND("모집 게시글을 찾을 수 없습니다."),
+    RECRUITMENT_ALREADY_EXISTS("이미 활성화된 모집 게시글이 있습니다."),
+    RECRUITMENT_NOT_ACTIVE("활성화된 모집 게시글이 아닙니다."),
+    RECRUITMENT_EXPIRED("모집 기간이 마감되었습니다."),
+    RECRUITMENT_FULL("모집 정원이 가득 찼습니다."),
+    RECRUITMENT_HAS_APPLICATIONS("지원서가 있어 삭제할 수 없습니다."),
+
+    // Application
+    APPLICATION_NOT_FOUND("지원서를 찾을 수 없습니다."),
+    APPLICATION_ALREADY_EXISTS("이미 지원서를 제출했습니다."),
+    APPLICATION_ALREADY_REVIEWED("이미 심사된 지원서입니다."),
+    APPLICATION_CANNOT_WITHDRAW("철회할 수 없는 지원서입니다."),
+
+    // Action
+    INVALID_ACTION("유효하지 않은 액션입니다."),
+    ACCESS_DENIED("접근이 거부되었습니다."),
 }
