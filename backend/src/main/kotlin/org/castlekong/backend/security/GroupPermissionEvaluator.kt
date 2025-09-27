@@ -50,7 +50,7 @@ class GroupPermissionEvaluator(
             "OWNER" -> GroupPermission.entries.toSet()
             // ADVISOR: 거의 모든 권한, 단 그룹장 위임 등 제한적 예외만 적용 (MVP에서는 동일)
             "ADVISOR" -> GroupPermission.entries.toSet()
-            "MEMBER" -> setOf(GroupPermission.WORKSPACE_ACCESS)
+            "MEMBER" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
             else -> emptySet()
         }
     }

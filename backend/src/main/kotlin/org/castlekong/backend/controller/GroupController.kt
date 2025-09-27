@@ -369,7 +369,7 @@ class GroupController(
 
     // === 워크스페이스 조회 (명세서 요구사항) ===
     @GetMapping("/{groupId}/workspace")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'WORKSPACE_ACCESS')")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
     fun getWorkspace(
         @PathVariable groupId: Long,
         authentication: Authentication,
@@ -381,7 +381,7 @@ class GroupController(
 
     // === 관리자 통계 ===
     @GetMapping("/{groupId}/admin/stats")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'WORKSPACE_ACCESS')")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
     fun getAdminStats(
         @PathVariable groupId: Long,
     ): ApiResponse<AdminStatsResponse> {

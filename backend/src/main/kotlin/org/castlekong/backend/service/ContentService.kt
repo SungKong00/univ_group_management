@@ -29,7 +29,7 @@ class ContentService(
         when (roleName.uppercase()) {
             "OWNER" -> GroupPermission.entries.toSet()
             "ADVISOR" -> GroupPermission.entries.toSet() // MVP에서는 OWNER와 동일
-            "MEMBER" -> setOf(GroupPermission.WORKSPACE_ACCESS)
+            "MEMBER" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
             else -> emptySet()
         }
 
@@ -173,7 +173,9 @@ class ContentService(
         val workspace =
             workspaceRepository.findById(workspaceId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
-        ensurePermission(workspace.group.id, requesterId, GroupPermission.WORKSPACE_ACCESS)
+        // 워크스페이스 접근은 그룹 멤버십으로 확인
+        val member = groupMemberRepository.findByGroupIdAndUserId(workspace.group.id, requesterId)
+            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return channelRepository.findByWorkspace_Id(workspaceId).map { toChannelResponse(it) }
     }
 
@@ -271,7 +273,9 @@ class ContentService(
         val channel =
             channelRepository.findById(channelId)
                 .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
-        ensurePermission(channel.group.id, requesterId, GroupPermission.WORKSPACE_ACCESS)
+        // 워크스페이스 접근은 그룹 멤버십으로 확인
+        val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, requesterId)
+            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return postRepository.findByChannel_Id(channelId).map { toPostResponse(it) }
     }
 
@@ -282,7 +286,9 @@ class ContentService(
         val post =
             postRepository.findById(postId)
                 .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
-        ensurePermission(post.channel.group.id, requesterId, GroupPermission.WORKSPACE_ACCESS)
+        // 워크스페이스 접근은 그룹 멤버십으로 확인
+        val member = groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, requesterId)
+            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return toPostResponse(post)
     }
 
@@ -298,7 +304,9 @@ class ContentService(
         val author =
             userRepository.findById(authorId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
-        ensurePermission(channel.group.id, author.id, GroupPermission.WORKSPACE_ACCESS)
+        // 워크스페이스 접근은 그룹 멤버십으로 확인
+        val authorMember = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, author.id)
+            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         ensureChannelPermission(channelId, author.id, ChannelPermission.POST_WRITE)
         val type = request.type?.let { runCatching { PostType.valueOf(it) }.getOrDefault(PostType.GENERAL) } ?: PostType.GENERAL
         val post =
@@ -369,7 +377,9 @@ class ContentService(
         val post =
             postRepository.findById(postId)
                 .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
-        ensurePermission(post.channel.group.id, requesterId, GroupPermission.WORKSPACE_ACCESS)
+        // 워크스페이스 접근은 그룹 멤버십으로 확인
+        val member = groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, requesterId)
+            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return commentRepository.findByPost_Id(postId).map { toCommentResponse(it) }
     }
 
@@ -385,7 +395,9 @@ class ContentService(
         val author =
             userRepository.findById(authorId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
-        ensurePermission(post.channel.group.id, author.id, GroupPermission.WORKSPACE_ACCESS)
+        // 워크스페이스 접근은 그룹 멤버십으로 확인
+        val authorMember = groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, author.id)
+            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         val parent =
             request.parentCommentId?.let {
                 commentRepository.findById(it).orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }

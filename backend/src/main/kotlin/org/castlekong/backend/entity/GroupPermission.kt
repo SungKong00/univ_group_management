@@ -35,10 +35,4 @@ enum class GroupPermission {
      */
     RECRUITMENT_MANAGE,
 
-    /**
-     * 워크스페이스 접근 권한
-     * - 그룹 워크스페이스 기본 접근
-     * - 멤버 기본 권한
-     */
-    WORKSPACE_ACCESS,
 }
