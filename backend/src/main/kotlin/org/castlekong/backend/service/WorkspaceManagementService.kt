@@ -72,7 +72,7 @@ class WorkspaceManagementService(
                         name = channel.name,
                         description = channel.description,
                         type = channel.type.name,
-                        isPrivate = channel.isPrivate,
+                        isPrivate = false, // 권한은 ChannelRoleBinding으로 관리
                         displayOrder = channel.displayOrder,
                         createdAt = channel.createdAt,
                         updatedAt = channel.updatedAt,

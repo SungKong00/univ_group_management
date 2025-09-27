@@ -45,5 +45,4 @@ enum class PostType {
     ANNOUNCEMENT,
     QUESTION,
     POLL,
-    FILE_SHARE,
 }

@@ -48,7 +48,6 @@ class ChannelInitializationService(
             name = "공지사항",
             description = "그룹 공지사항 채널",
             type = ChannelType.ANNOUNCEMENT,
-            isPrivate = false,
             displayOrder = 0,
             createdBy = group.owner,
         )
@@ -61,7 +60,6 @@ class ChannelInitializationService(
             name = "자유게시판",
             description = "자유롭게 대화하는 채널",
             type = ChannelType.TEXT,
-            isPrivate = false,
             displayOrder = 1,
             createdBy = group.owner,
         )

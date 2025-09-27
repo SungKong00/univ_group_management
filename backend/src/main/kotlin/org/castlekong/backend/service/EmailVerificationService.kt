@@ -4,6 +4,7 @@ import org.castlekong.backend.dto.EmailSendRequest
 import org.castlekong.backend.dto.EmailVerifyRequest
 import org.castlekong.backend.entity.EmailVerification
 import org.castlekong.backend.repository.EmailVerificationRepository
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -17,6 +18,7 @@ class EmailVerificationService(
     private val userService: UserService,
     @Value("\${app.school-email.allowed-domains:hs.ac.kr}") private val allowedDomains: String,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val random = SecureRandom()
 
     private fun isAllowedDomain(email: String): Boolean {
@@ -48,7 +50,7 @@ class EmailVerificationService(
         emailVerificationRepository.save(entity)
 
         // 실제 메일 전송은 생략 (개발용 로그)
-        println("[EmailVerification] Sent code $code to ${req.email}")
+        logger.info("[EmailVerification] Sent code {} to {}", code, req.email)
     }
 
     @Transactional

@@ -8,6 +8,7 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import org.castlekong.backend.dto.LoginResponse
 import org.castlekong.backend.security.JwtTokenProvider
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
@@ -22,6 +23,7 @@ class AuthService(
     private val jwtTokenProvider: JwtTokenProvider,
     @Value("\${app.google.client-id:}") private val googleClientId: String,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
     fun authenticateWithGoogle(googleAuthToken: String): LoginResponse {
         // Google 토큰 검증
         val googleUser =
@@ -139,7 +141,7 @@ class AuthService(
                 val updatedUser = user.copy(profileCompleted = false)
                 userService.save(updatedUser)
                 updatedCount++
-                println("DEBUG: Reset profileCompleted for user ${user.email}")
+                logger.debug("Reset profileCompleted for user: {}", user.email)
             }
         }
 

@@ -5,6 +5,7 @@ import org.castlekong.backend.entity.*
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.*
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -23,6 +24,7 @@ class ContentService(
     private val groupRoleRepository: GroupRoleRepository,
     private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> =
         when (roleName.uppercase()) {
             "OWNER" -> GroupPermission.entries.toSet()
@@ -198,7 +200,6 @@ class ContentService(
                 name = request.name,
                 description = request.description,
                 type = type,
-                isPrivate = false,
                 displayOrder = 0,
                 createdBy = creator,
             )
@@ -446,7 +447,7 @@ class ContentService(
             name = channel.name,
             description = channel.description,
             type = channel.type.name,
-            isPrivate = channel.isPrivate,
+            isPrivate = false, // 권한은 ChannelRoleBinding으로 관리
             displayOrder = channel.displayOrder,
             createdAt = channel.createdAt,
             updatedAt = channel.updatedAt,
@@ -543,7 +544,7 @@ class ContentService(
         } catch (e: Exception) {
             // 권한 바인딩 실패는 로그만 기록하고 채널 생성은 계속 진행
             // 이렇게 하면 채널은 생성되지만 권한이 없는 상태가 됨
-            println("채널 권한 바인딩 설정 실패 - 채널 ID: ${channel.id}, 에러: ${e.message}")
+            logger.error("채널 권한 바인딩 설정 실패 - 채널 ID: {}, 에러: {}", channel.id, e.message)
         }
     }
 

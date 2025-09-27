@@ -94,42 +94,42 @@ INSERT INTO group_members (id, group_id, user_id, role_id, joined_at)
 VALUES (6, 13, 1, 16, NOW());
 
 -- 7) 기본 채널 (Channel) - 각 그룹별로 공지사항, 자유게시판 채널 생성
--- Channel 엔티티 스키마: id, group_id, workspace_id?, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at
+-- Channel 엔티티 스키마: id, group_id, workspace_id?, name, description, type, display_order, created_by, created_at, updated_at
 -- 그룹 1 (한신대학교)
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (1, 1, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', false, false, 0, 1, NOW(), NOW());
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (2, 1, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', false, false, 1, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (1, 1, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', 0, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (2, 1, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', 1, 1, NOW(), NOW());
 
 -- 그룹 2 (AI/SW계열)
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (3, 2, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', false, false, 0, 1, NOW(), NOW());
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (4, 2, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', false, false, 1, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (3, 2, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', 0, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (4, 2, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', 1, 1, NOW(), NOW());
 
 -- 그룹 3 (경영/미디어계열)
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (5, 3, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', false, false, 0, 1, NOW(), NOW());
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (6, 3, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', false, false, 1, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (5, 3, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', 0, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (6, 3, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', 1, 1, NOW(), NOW());
 
 -- 그룹 11 (AI시스템반도체학과)
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (7, 11, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', false, false, 0, 1, NOW(), NOW());
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (8, 11, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', false, false, 1, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (7, 11, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', 0, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (8, 11, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', 1, 1, NOW(), NOW());
 
 -- 그룹 12 (미디어영상광고홍보학과)
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (9, 12, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', false, false, 0, 1, NOW(), NOW());
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (10, 12, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', false, false, 1, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (9, 12, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', 0, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (10, 12, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', 1, 1, NOW(), NOW());
 
 -- 그룹 13 (AI/SW학과)
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (11, 13, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', false, false, 0, 1, NOW(), NOW());
-INSERT INTO channels (id, group_id, name, description, type, is_private, is_public, display_order, created_by, created_at, updated_at)
-VALUES (12, 13, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', false, false, 1, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (11, 13, '공지사항', '그룹 공지사항 채널', 'ANNOUNCEMENT', 0, 1, NOW(), NOW());
+INSERT INTO channels (id, group_id, name, description, type, display_order, created_by, created_at, updated_at)
+VALUES (12, 13, '자유게시판', '자유롭게 대화하는 채널', 'TEXT', 1, 1, NOW(), NOW());
 
 -- 8) 채널 권한 바인딩 (ChannelRoleBinding)
 -- ChannelRoleBinding 엔티티 스키마: id, channel_id, group_role_id, created_at, updated_at (+ 별도 permissions 컬렉션 테이블)

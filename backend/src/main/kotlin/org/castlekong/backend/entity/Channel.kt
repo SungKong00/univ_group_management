@@ -27,10 +27,6 @@ data class Channel(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     val type: ChannelType = ChannelType.TEXT,
-    @Column(name = "is_private", nullable = false)
-    val isPrivate: Boolean = false,
-    @Column(name = "is_public", nullable = false)
-    val isPublic: Boolean = false,
     @Column(name = "display_order", nullable = false)
     val displayOrder: Int = 0,
     @ManyToOne(fetch = FetchType.LAZY)
@@ -46,5 +42,4 @@ enum class ChannelType {
     TEXT,
     VOICE,
     ANNOUNCEMENT,
-    FILE_SHARE,
 }

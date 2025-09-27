@@ -11,6 +11,7 @@ import org.castlekong.backend.entity.GlobalRole
 import org.castlekong.backend.entity.ProfessorStatus
 import org.castlekong.backend.entity.User
 import org.castlekong.backend.repository.UserRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -24,6 +25,7 @@ class UserService(
     private val subGroupRequestRepository: org.castlekong.backend.repository.SubGroupRequestRepository,
     private val groupMemberRepository: org.castlekong.backend.repository.GroupMemberRepository,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
     fun findByEmail(email: String): User? {
         return userRepository.findByEmail(email).orElse(null)
     }
@@ -59,7 +61,7 @@ class UserService(
 
         return if (existingUser != null) {
             // 기존 사용자 반환
-            println("DEBUG: Found existing user - email: ${existingUser.email}, profileCompleted: ${existingUser.profileCompleted}")
+            logger.debug("Found existing user - email: {}, profileCompleted: {}", existingUser.email, existingUser.profileCompleted)
             existingUser
         } else {
             // 새 사용자 생성
@@ -72,7 +74,7 @@ class UserService(
                     profileCompleted = false, // 명시적으로 false 설정
                 )
             val savedUser = userRepository.save(user)
-            println("DEBUG: Created new user - email: ${savedUser.email}, profileCompleted: ${savedUser.profileCompleted}")
+            logger.debug("Created new user - email: {}, profileCompleted: {}", savedUser.email, savedUser.profileCompleted)
             savedUser
         }
     }
@@ -172,11 +174,11 @@ class UserService(
 
             if (targetGroup != null) {
                 runCatching { groupMemberService.joinGroup(targetGroup.id, saved.id) }
-                    .onFailure { e -> println("DEBUG: Auto-join failed for user ${saved.id} to group ${targetGroup.id}: ${e.message}") }
+                    .onFailure { e -> logger.warn("Auto-join failed for user {} to group {}: {}", saved.id, targetGroup.id, e.message) }
             }
         } catch (e: Exception) {
             // 개발 중 자동 가입 실패는 에러를 발생시키지 않음
-            println("DEBUG: Auto-join process failed with an exception: ${e.message}")
+            logger.warn("Auto-join process failed with an exception: {}", e.message)
         }
 
         return saved
