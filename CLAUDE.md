@@ -1,118 +1,110 @@
-# CLAUDE.md - AI Agent 협업 워크플로우 설정
+# 대학 그룹 관리 시스템 (University Group Management)
 
-## 1. Gemini CLI 통합 및 작업 패키지 시스템
+## 🎯 빠른 네비게이션 (Quick Navigation)
 
-### 기본 원칙
-- 모든 개발 작업은 `tasks/` 폴더 내 독립적인 작업 패키지에서 수행
-- Gemini CLI가 생성한 `SYNTHESIZED_CONTEXT.MD`를 기반으로 개발 수행
-- `TASK.MD`에 모든 작업 과정을 실시간으로 기록
+### 핵심 개념 이해하기
+- **전체 개념도**: [docs/concepts/domain-overview.md](docs/concepts/domain-overview.md)
+- **그룹 계층**: [docs/concepts/group-hierarchy.md](docs/concepts/group-hierarchy.md)
+- **권한 시스템**: [docs/concepts/permission-system.md](docs/concepts/permission-system.md)
+- **워크스페이스**: [docs/concepts/workspace-channel.md](docs/concepts/workspace-channel.md)
 
-## 2. 작업 시작 전 필수 확인 사항
+### 개발 가이드
+- **백엔드 개발**: [docs/implementation/backend-guide.md](docs/implementation/backend-guide.md)
+- **프론트엔드 개발**: [docs/implementation/frontend-guide.md](docs/implementation/frontend-guide.md)
+- **API 참조**: [docs/implementation/api-reference.md](docs/implementation/api-reference.md)
+- **데이터베이스**: [docs/implementation/database-reference.md](docs/implementation/database-reference.md)
 
-1. **작업 패키지 존재 확인**: `TASK.MD` 파일 존재 여부 확인
-2. **컨텍스트 파일 확인**: `SYNTHESIZED_CONTEXT.MD` 파일 존재 여부 확인
-3. **미완료 시 안내**: 
-   ```
-   작업을 시작하기 전에 다음 명령어를 실행해주세요:
-   - 새 작업: bash -c './bin/gemini task new "작업 제목"'
-   - 컨텍스트 생성: bash -c './bin/gemini task run-context'
-   ```
+### UI/UX 설계
+- **디자인 시스템**: [docs/ui-ux/design-system.md](docs/ui-ux/design-system.md)
+- **레이아웃 가이드**: [docs/ui-ux/layout-guide.md](docs/ui-ux/layout-guide.md)
+- **컴포넌트 가이드**: [docs/ui-ux/component-guide.md](docs/ui-ux/component-guide.md)
 
-## 3. 개발 워크플로우
+### 개발 워크플로우
+- **개발 프로세스**: [docs/workflows/development-flow.md](docs/workflows/development-flow.md)
+- **테스트 전략**: [docs/workflows/testing-strategy.md](docs/workflows/testing-strategy.md)
 
-### A. 개발
-- `SYNTHESIZED_CONTEXT.MD`를 분석하여 구현 계획을 수립하고, 사용자 동의 하에 개발을 진행합니다.
-- 모든 주요 활동(파일 생성/수정, 테스트, 에러)은 `TASK.MD`의 "작업 로그"에 기록합니다.
- - `./bin/gemini task run-context` 실행 후에는 디렉터리를 읽지 말고, 출력 메시지의 절대 경로에 있는 `synthesis_input/COMBINED.md` 파일을 우선적으로 읽습니다.
+### 문제 해결
+- **권한 에러**: [docs/troubleshooting/permission-errors.md](docs/troubleshooting/permission-errors.md)
+- **일반적 에러**: [docs/troubleshooting/common-errors.md](docs/troubleshooting/common-errors.md)
 
-### B. 작업 완료
-- 개발 완료 후, `TASK.MD`의 "변경 사항 요약"과 "컨텍스트 업데이트 요청" 섹션을 작성합니다.
-- 사용자의 최종 승인을 받으면, 다음 섹션의 '작업 완료 및 컨텍스트 업데이트 핸드오프' 절차를 따릅니다.
+## 📋 프로젝트 개요
 
-## 4. 작업 완료 및 컨텍스트 업데이트 핸드오프
+**목적**: 대학 내 그룹(학과, 동아리, 학회) 관리 및 소통 플랫폼
+**기술 스택**: Spring Boot + Kotlin / Flutter → React
+**아키텍처**: 3레이어 + JWT 인증 + RBAC 권한
 
-개발 작업이 완료되면, Claude는 다음 절차를 통해 작업을 아카이빙하고, 필요시 후속 조치를 Gemini에게 자동으로 위임합니다.
+## 🏗️ 시스템 아키텍처 맵
 
-### 1단계: 작업 아카이빙 실행
-Claude는 `TASK.MD` 정리가 완료되면 다음 명령어를 실행합니다.
+```
+사용자 → Google OAuth → JWT 토큰
+  ↓
+대학 → 학과 → 그룹 (계층 구조)
+  ↓
+워크스페이스 → 채널 → 게시글/댓글
+  ↓
+역할기반 권한 + 개인 권한 오버라이드
+```
+
+## 🚀 현재 구현 상태
+
+### ✅ 완료된 기능
+- **인증/회원가입**: Google OAuth + 프로필 설정
+- **그룹 관리**: CRUD + 계층 구조 + 멤버십
+- **권한 시스템**: RBAC + 개인 오버라이드
+- **백엔드 API**: 모든 핵심 엔드포인트
+
+### 🚧 진행 중
+- **프론트엔드 UI**: 워크스페이스 화면 개발 중
+- **컨텐츠 시스템**: 게시글/댓글 프론트엔드
+
+### ❌ 미구현
+- **모집 시스템**: 그룹 모집 게시판
+- **알림 시스템**: 실시간 알림
+- **관리자 대시보드**: 그룹 관리 UI
+
+## 🔧 개발 환경 설정
+
+### 필수 설정
+- **Flutter 포트**: 반드시 5173 사용
+- **실행 명령**: `flutter run -d chrome --web-hostname localhost --web-port 5173`
+- **백엔드**: Spring Boot + H2 (dev) / RDS (prod)
+
+### 자주 사용하는 명령어
 ```bash
-bash -c './bin/gemini task complete'
+# Flutter 개발 서버 실행
+flutter run -d chrome --web-hostname localhost --web-port 5173
+
+# 백엔드 실행
+./gradlew bootRun
+
+# 테스트 실행
+./gradlew test
 ```
 
-### 2단계: 컨텍스트 업데이트 요청 감지 및 자동 위임
-`complete_task` 명령어 실행 결과, 터미널에 **"Pending Context Updates Detected!"** 경고가 출력될 경우, Claude는 **사용자 승인을 기다리지 않고 즉시 다음 단계를 수행합니다.**
+## 📚 컨텍스트 가이드
 
-1.  **요청 내용 추출**: 터미널에 출력된 경고 메시지에서 '컨텍스트 업데이트 요청'의 전체 내용을 정확히 복사합니다.
-2.  **Gemini에게 작업 지시**: 다음과 같은 표준 형식의 프롬프트를 생성하여, Gemini 에이전트에게 후속 컨텍스트 수정을 자동으로 지시합니다.
+### 개발 시작 전 필독
+1. [domain-overview.md](docs/concepts/domain-overview.md) - 전체 시스템 이해
+2. [group-hierarchy.md](docs/concepts/group-hierarchy.md) - 그룹 구조 이해
+3. [permission-system.md](docs/concepts/permission-system.md) - 권한 시스템 이해
 
-    ```
-    Gemini, 다음 컨텍스트 업데이트를 수행해 주세요.
+### 백엔드 개발 시
+1. [backend-guide.md](docs/implementation/backend-guide.md) - 아키텍처 패턴
+2. [api-reference.md](docs/implementation/api-reference.md) - API 규칙
+3. [database-reference.md](docs/implementation/database-reference.md) - 데이터 모델
 
-    **업데이트 요청 내용:**
-    """
-    [복사한 업데이트 요청 내용]
-    """
-    ```
+### 프론트엔드 개발 시
+1. [frontend-guide.md](docs/implementation/frontend-guide.md) - 아키텍처 가이드
+2. [design-system.md](docs/ui-ux/design-system.md) - UI/UX 가이드
+3. [component-guide.md](docs/ui-ux/component-guide.md) - 컴포넌트 패턴
 
-이 자동화된 핸드오프(Handoff)를 통해, 개발 지식은 누락 없이 에이전트 간의 협업으로 시스템에 반영됩니다.
+## 📝 문서 관리 규칙
 
-## 5. 에러 해결 기록 프로토콜 (Frontend/Web 포함)
+컨텍스트 문서 작성 및 관리 규칙: [markdown-guidelines.md](markdown-guidelines.md)
 
-에러를 해결했다면, Claude는 아래 기록 단계를 반드시 수행하여 컨텍스트를 최신 상태로 유지합니다.
+## 🔗 참조 체계
 
-- 아카이브 문서 추가: `context/`에 에러 해결 아카이브 Markdown 생성 또는 갱신
-  - 파일명 예: `context/frontend-auth-web-error-archive.md`
-  - 포함 항목: 문제 요약, 증상, 원인 분석, 해결 사항(코드/파일 경로 포함), 변경 파일 목록, 검증 체크리스트, 회귀/부작용 고려, 향후 개선 제안
-- 변경 이력 업데이트: `context/CHANGELOG.md`에 항목 추가(요약, 링크, 관련 변경 요약)
-- 메타데이터 갱신: `.gemini/metadata.json`
-  - `last_updated` 갱신
-  - `recent_tasks`에 항목 추가(날짜, 제목, 태그, 상태, 비고/노트)
-- 필요 시 참조 추가: `context/troubleshooting.md`에 관련 섹션/링크 보강
-
-복잡한 에러가 발생했을 때는, 우선 기존 아카이브에서 유사 사례를 조회하도록 Gemini에게 다음과 같이 지시합니다.
-
-```
-Gemini, 에러 아카이브에서 관련 항목을 찾아 요약하고, 현재 증상과의 차이를 정리한 뒤 권장 진단/수정 절차를 제안해 주세요.
-```
-
-그 후 진단/수정이 완료되면 위 기록 단계를 수행하여 아카이브를 최신화합니다.
-
-## 5. Gemini CLI 사용 가이드 (For Claude Code)
-
-- **새 작업 시작**: `bash -c './bin/gemini task new "작업 제목"'`
-  - 비ASCII(한글 등) 제목은 자동으로 `-task` 슬러그로 대체됩니다.
-- **컨텍스트 종합**:
-  - 작업 폴더 내부에서: `bash -c './bin/gemini task run-context'`
-  - 리포지토리 루트에서 단일 작업만 존재하면 `cd` 없이 바로 실행 가능
-- **작업 완료**: `bash -c './bin/gemini task complete'`
-  - 완료 시 "컨텍스트 업데이트 요청"이 콘솔에 표시되며, 이를 Gemini에 전달하여 반영 작업을 위임합니다.
-
-## 6. Flutter 개발 환경 설정
-
-### 포트 설정 (중요!)
-- **Flutter 웹 실행 포트**: 반드시 **5173번 포트**를 사용해야 함
-- **올바른 실행 명령어**: `flutter run -d chrome --web-hostname localhost --web-port 5173`
-- **잘못된 명령어**: ~~`--web-port 3000`~~ (작동하지 않음)
-
-## 7. 트러블슈팅
-
-- **EISDIR (디렉터리 읽기 오류)**
-  - 원인: `Read(synthesis_input)`처럼 디렉터리를 직접 읽으려 할 때 발생
-  - 해결: 콘솔에 표시된 절대 경로의 `synthesis_input/COMBINED.md` 파일을 읽으세요.
-
-- **tasks 경로를 찾지 못함**
-  - 원인: 현재 작업 디렉터리와 리포지토리 루트가 다를 수 있음
-  - 해결: `pwd`로 현재 위치를 확인하고, 스크립트가 출력한 절대 경로로 `cd` 한 뒤 작업을 진행하세요.
-
-## 6. 사용자 상호작용 가이드
-
-- **작업 시작 시**: 작업 패키지 준비 상태를 확인하고, 필요시 사용자에게 생성을 요청합니다.
-- **개발 진행 중**: 주요 단계 완료 시 간단히 보고하고, 문제 발생 시 상황을 공유합니다.
-- **작업 완료 시**: 다음과 같이 사용자에게 최종 보고를 합니다.
-
-  ```
-  작업이 완료되어 아카이빙을 실행했습니다.
-
-  [만약 경고가 발생했다면 다음 메시지 추가]
-  컨텍스트 업데이트 요청이 감지되어, 후속 조치를 Gemini 에이전트에게 자동으로 지시했습니다.
-  ```
+- **개념 문서** → 구현 가이드로 링크
+- **구현 가이드** → 개념 설명으로 역링크
+- **에러 문서** → 관련 개념/구현으로 링크
+- **UI/UX 문서** → 구현 예시로 링크
