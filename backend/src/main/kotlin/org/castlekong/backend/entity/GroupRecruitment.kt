@@ -24,12 +24,6 @@ data class GroupRecruitment(
     @Column(columnDefinition = "TEXT")
     val content: String? = null,
 
-    @Column(name = "required_skills", columnDefinition = "TEXT")
-    val requiredSkills: String? = null,
-
-    @Column(name = "preferred_skills", columnDefinition = "TEXT")
-    val preferredSkills: String? = null,
-
     @Column(name = "max_applicants")
     val maxApplicants: Int? = null,
 
