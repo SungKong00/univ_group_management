@@ -1,30 +1,139 @@
 ####################################
-# Flutter (frontend 전용)
+# 환경 / 시크릿
 ####################################
-/frontend/**/doc/api/
+.env
+.env.*
+!.env.example
+*.log
+/coverage/
+
+####################################
+# OS (macOS / Windows)
+####################################
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+.apdisk
+*.icloud
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+####################################
+# IDE / 툴링
+####################################
+.idea/*
+!.idea/codeStyles
+!.idea/runConfigurations
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+####################################
+# 공통 빌드/패키징 산출물
+####################################
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+####################################
+# Backend (Spring Boot / Gradle)
+####################################
+/backend/target/
+/backend/build/
+/backend/.gradle/
+/backend/out/
+/backend/*.log
+/backend/.classpath
+/backend/.project
+/backend/.settings/
+/backend/.idea/**/libraries
+/backend/.idea/*
+!/backend/.idea/codeStyles
+!/backend/.idea/runConfigurations
+
+####################################
+# Frontend (Flutter)
+####################################
+# Core tooling
 /frontend/.dart_tool/
 /frontend/.flutter-plugins
 /frontend/.flutter-plugins-dependencies
+/frontend/.fvm/
 /frontend/.fvm/flutter_sdk
 /frontend/.packages
+/frontend/.metadata
 /frontend/.pub-cache/
 /frontend/.pub/
 /frontend/build/
 /frontend/coverage/
-/frontend/lib/generated_plugin_registrant.dart
-# /frontend/pubspec.lock  # 라이브러리 패키지일 경우 무시
+# pubspec.lock: Flutter 앱은 커밋 유지 -> ignore 제거
+#/frontend/pubspec.lock
+# Misc (frontend 전용 - 이전 frontend/.gitignore 포함 항목)
+/frontend/.atom/
+/frontend/.build/
+/frontend/.buildlog/
+/frontend/.history
+/frontend/.svn/
+/frontend/.swiftpm/
+/frontend/migrate_working_dir/
 
-# Android 관련
-/frontend/android/**/gradle-wrapper.jar
-/frontend/android/.gradle
+# Generated registrants
+/frontend/lib/generated_plugin_registrant.dart
+/frontend/**/generated_plugin_registrant.*
+/frontend/**/GeneratedPluginRegistrant.*
+
+# Symbolication
+/frontend/app.*.symbols
+# Obfuscation
+/frontend/app.*.map.json
+
+# Android
+/frontend/android/.gradle/
+/frontend/android/.externalNativeBuild/
+/frontend/android/.cxx/
 /frontend/android/captures/
 /frontend/android/gradlew
 /frontend/android/gradlew.bat
-/frontend/android/key.properties
 /frontend/android/local.properties
-/frontend/android/**/GeneratedPluginRegistrant.java
+/frontend/android/GeneratedPluginRegistrant.java
+/frontend/android/**/gradle-wrapper.jar
+/frontend/android/**/*.keystore
+/frontend/android/**/*.jks
+/frontend/android/key.properties
+# Android build variants
+/frontend/android/app/debug
+/frontend/android/app/profile
+/frontend/android/app/release
 
-# iOS/XCode 관련
+# iOS
 /frontend/ios/**/*.mode1v3
 /frontend/ios/**/*.mode2v3
 /frontend/ios/**/*.moved-aside
@@ -46,96 +155,20 @@
 /frontend/ios/Flutter/Flutter.framework
 /frontend/ios/Flutter/Flutter.podspec
 /frontend/ios/Flutter/Generated.xcconfig
+/frontend/ios/Flutter/Debug.xcconfig
+/frontend/ios/Flutter/Release.xcconfig
 /frontend/ios/Flutter/app.flx
 /frontend/ios/Flutter/app.zip
 /frontend/ios/Flutter/flutter_assets/
 /frontend/ios/Flutter/flutter_export_environment.sh
 /frontend/ios/ServiceDefinitions.json
 /frontend/ios/Runner/GeneratedPluginRegistrant.*
-
-# 예외
 !/frontend/ios/**/default.mode1v3
 !/frontend/ios/**/default.mode2v3
 !/frontend/ios/**/default.pbxuser
 !/frontend/ios/**/default.perspectivev3
-!/frontend/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 
-####################################
-# Spring Boot (backend 전용)
-####################################
-/backend/target/
-/backend/build/
-/backend/.gradle
-/backend/out/
-/backend/*.log
-/backend/*.iml
-/backend/.classpath
-/backend/.project
-/backend/.settings/
-/backend/.idea/**/libraries
-/backend/.idea/*
-!/backend/.idea/codeStyles
-!/backend/.idea/runConfigurations
-
-####################################
-# IntelliJ / 공통
-####################################
-.idea/*
-!.idea/codeStyles
-!.idea/runConfigurations
-
-*.class
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-####################################
-# macOS / Windows OS
-####################################
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-.apdisk
-*.icloud
-
-Thumbs.db
-ehthumbs.db
-ehthumbs_vista.db
-*.stackdump
-[Dd]esktop.ini
-$RECYCLE.BIN/
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.lnk
-
-####################################
-# Context system artifacts
-####################################
-context/_meta/backup_*
-
-####################################
-# Flutter 기타 플랫폼(생성 산출물/임시 파일)
-####################################
-# macOS (CocoaPods/Flutter 생성물)
+# macOS
 /frontend/macos/**/Pods/
 /frontend/macos/**/.symlinks/
 /frontend/macos/**/profile
@@ -145,27 +178,46 @@ context/_meta/backup_*
 /frontend/macos/Flutter/.last_build_id
 /frontend/macos/Flutter/Generated.xcconfig
 /frontend/macos/Flutter/Flutter.podspec
+/frontend/macos/Flutter/Flutter-Debug.xcconfig
+/frontend/macos/Flutter/Flutter-Release.xcconfig
 /frontend/macos/Flutter/flutter_export_environment.sh
 /frontend/macos/ServiceDefinitions.json
 /frontend/macos/Runner/GeneratedPluginRegistrant.*
 
-# Linux (CMake/Flutter 생성물)
+# Linux
 /frontend/linux/flutter/ephemeral/
 /frontend/linux/**/CMakeFiles/
 /frontend/linux/**/cmake-build-*/
 /frontend/linux/**/build/
+/frontend/linux/flutter/generated_plugin_registrant.*
+/frontend/linux/flutter/generated_plugins.cmake
 
-# Windows (CMake/Flutter 생성물)
+# Windows
 /frontend/windows/flutter/ephemeral/
 /frontend/windows/**/CMakeFiles/
 /frontend/windows/**/cmake-build-*/
 /frontend/windows/**/build/
 
-# Android NDK/외부 빌드 캐시
-/frontend/android/.cxx/
-/frontend/android/.externalNativeBuild/
+# Cross-platform Flutter ephemeral
+/frontend/**/Flutter/ephemeral/
+/frontend/**/Flutter/app.flx
+/frontend/**/Flutter/app.zip
+/frontend/**/Flutter/flutter_assets/
+/frontend/**/Flutter/flutter_export_environment.sh
 
 ####################################
-# 백업/임시 폴더
+# Android NDK 캐시 (중복 방지 단일 정의)
 ####################################
+# (상단 Frontend 섹션에 이미 정의됨) 제거
+# /frontend/android/.cxx/
+# /frontend/android/.externalNativeBuild/
+
+####################################
+# 프로젝트 메타 / 임시
+####################################
+context/_meta/backup_*
 /frontend_backup/
+
+####################################
+# 끝
+####################################
