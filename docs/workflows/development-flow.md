@@ -80,64 +80,74 @@ class NewEntityController(
 
 ## 프론트엔드 개발 워크플로우
 
-### 1. 컴포넌트 개발 프로세스
+### 1. 개발 전 문서 리뷰 단계
 ```
-UI/UX 설계 → 컴포넌트 구조 → 상태 관리 → API 연동 → 스타일링 → 테스트
+요구사항 분석 → 디자인 시스템 확인 → 아키텍처 검토 → 개발 계획 수립
 ```
 
-#### Step 1: 디자인 시스템 확인
+#### Step 1: 컨텍스트 문서 검토
 ```markdown
-1. [ui-ux/design-system.md](../ui-ux/design-system.md) 컬러/타이포그래피 확인
-2. [ui-ux/component-guide.md](../ui-ux/component-guide.md) 기존 컴포넌트 재사용
-3. [ui-ux/layout-guide.md](../ui-ux/layout-guide.md) 레이아웃 패턴 확인
+1. CLAUDE.md에서 관련 컨텍스트 링크 확인
+2. [ui-ux/concepts/design-system.md](../ui-ux/concepts/design-system.md) 디자인 원칙 숙지
+3. [ui-ux/concepts/color-guide.md](../ui-ux/concepts/color-guide.md) 컬러 시스템 확인
+4. [ui-ux/concepts/form-and-interaction-components.md](../ui-ux/concepts/form-and-interaction-components.md) 컴포넌트 요구사항 파악
+5. [implementation/frontend-guide.md](../implementation/frontend-guide.md) 현재 아키텍처 패턴 확인
 ```
 
-#### Step 2: 상태 관리 설계
-```dart
-// Flutter Provider 패턴
-class NewFeatureProvider extends ChangeNotifier {
-  // 상태 정의
-  // 비즈니스 로직
-  // API 호출
-}
-
-// React Zustand 패턴
-const useNewFeatureStore = create((set) => ({
-  // 상태 정의
-  // 액션 함수
-}));
+#### Step 2: 개발 범위 및 우선순위 결정
+```markdown
+원칙: 한 번에 많은 기능보다 집중 가능한 범위로 분할
+1. 기본 디자인 시스템 컴포넌트 (버튼, 입력, 카드, 모달)
+2. 권한 기반 UI 컴포넌트 (조건부 렌더링)
+3. 핵심 화면 레이아웃 (워크스페이스, 채널 등)
+4. 상호작용 컴포넌트 (좋아요, 멘션, 파일업로드)
 ```
 
-#### Step 3: 권한 기반 UI
-```jsx
-// React 예시
-function ProtectedComponent({ groupId, children }) {
-  const hasPermission = usePermission(groupId, 'REQUIRED_PERMISSION');
-
-  if (!hasPermission) return null;
-  return children;
-}
-
-// Flutter 예시
-PermissionBuilder(
-  permission: 'REQUIRED_PERMISSION',
-  groupId: groupId,
-  child: ProtectedWidget(),
-)
+### 2. 컴포넌트 개발 프로세스
+```
+아키텍처 설계 → 컴포넌트 구조 → 상태 관리 → API 연동 → 스타일링 → 품질 검증
 ```
 
-### 2. 반응형 개발
-```css
-/* 모바일 우선 개발 */
-.component {
-  /* 모바일 스타일 */
-}
+#### Step 1: 파일 구조 설계
+```markdown
+프레임워크와 관계없이 다음 구조를 권장:
+- components/common/    # 디자인 시스템 기본 컴포넌트
+- components/forms/     # 폼 관련 컴포넌트
+- components/workspace/ # 도메인별 컴포넌트
+- providers/           # 상태 관리
+- services/            # API 통신
+- utils/               # 유틸리티 함수
+```
 
-@media (min-width: 900px) {
-  .component {
-    /* 데스크톱 스타일 */
-  }
-}
+#### Step 2: 상태 관리 패턴 적용
+```markdown
+현재 기술 스택에 맞는 상태 관리 패턴 사용:
+- 전역 상태: 인증, 사용자 정보, 권한
+- 지역 상태: 폼 입력, UI 상태
+- 서버 상태: API 데이터, 캐싱
+```
+
+#### Step 3: 권한 기반 UI 패턴 구현
+```markdown
+모든 보호된 컴포넌트는 권한 체크 로직 포함:
+- 권한 확인 후 조건부 렌더링
+- 권한 없음 시 대체 UI 또는 숨김 처리
+- 로딩 상태 및 에러 처리
+```
+
+### 3. 반응형 및 접근성 고려사항
+```markdown
+모바일 우선 설계:
+- 기본: 모바일 레이아웃
+- 확장: 태블릿/데스크톱 적응
+- 터치 친화적 인터페이스
+- 키보드 네비게이션 지원
+
+접근성 기준:
+- WCAG 2.1 AA 준수
+- 색상 대비 4.5:1 이상
+- 스크린 리더 지원
+- 키보드 접근성
 ```
 
 ## 통합 테스트 워크플로우

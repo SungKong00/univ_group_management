@@ -23,6 +23,22 @@
 - **개발 프로세스**: [docs/workflows/development-flow.md](docs/workflows/development-flow.md)
 - **테스트 전략**: [docs/workflows/testing-strategy.md](docs/workflows/testing-strategy.md)
 
+### 개발 컨벤션 (신규)
+- **Git 전략**: [docs/conventions/git-strategy.md](docs/conventions/git-strategy.md) - GitHub Flow 가이드
+- **커밋 규칙**: [docs/conventions/commit-conventions.md](docs/conventions/commit-conventions.md) - Conventional Commits
+- **PR 가이드**: [docs/conventions/pr-guidelines.md](docs/conventions/pr-guidelines.md) - Pull Request 규칙
+- **코드 리뷰**: [docs/conventions/code-review-standards.md](docs/conventions/code-review-standards.md) - 리뷰 기준
+
+### 컨텍스트 추적 시스템 (신규)
+- **업데이트 로그**: [docs/context-tracking/context-update-log.md](docs/context-tracking/context-update-log.md)
+- **대기 목록**: [docs/context-tracking/pending-updates.md](docs/context-tracking/pending-updates.md)
+- **동기화 상태**: [docs/context-tracking/sync-status.md](docs/context-tracking/sync-status.md)
+
+### 서브 에이전트
+- **커밋 관리**: [docs/agents/commit-management-agent.md](docs/agents/commit-management-agent.md)
+- **컨텍스트 동기화**: [docs/agents/context-sync-agent.md](docs/agents/context-sync-agent.md)
+- **프론트엔드 개발**: [docs/agents/frontend-development-agent.md](docs/agents/frontend-development-agent.md)
+
 ### 문제 해결
 - **권한 에러**: [docs/troubleshooting/permission-errors.md](docs/troubleshooting/permission-errors.md)
 - **일반적 에러**: [docs/troubleshooting/common-errors.md](docs/troubleshooting/common-errors.md)
@@ -52,13 +68,16 @@
 - **그룹 관리**: CRUD + 계층 구조 + 멤버십
 - **권한 시스템**: RBAC + 개인 오버라이드
 - **백엔드 API**: 모든 핵심 엔드포인트
+- **그룹 모집 시스템**: API 구현 완료
+- **개발 컨벤션**: Git 전략, 커밋 규칙, PR/리뷰 가이드
+- **컨텍스트 추적**: 문서 동기화 시스템 구축
 
 ### 🚧 진행 중
 - **프론트엔드 UI**: 워크스페이스 화면 개발 중
 - **컨텐츠 시스템**: 게시글/댓글 프론트엔드
 
 ### ❌ 미구현
-- **모집 시스템**: 그룹 모집 게시판
+- **모집 시스템 프론트엔드**: 그룹 모집 게시판 UI
 - **알림 시스템**: 실시간 알림
 - **관리자 대시보드**: 그룹 관리 UI
 
@@ -87,6 +106,7 @@ flutter run -d chrome --web-hostname localhost --web-port 5173
 1. [domain-overview.md](docs/concepts/domain-overview.md) - 전체 시스템 이해
 2. [group-hierarchy.md](docs/concepts/group-hierarchy.md) - 그룹 구조 이해
 3. [permission-system.md](docs/concepts/permission-system.md) - 권한 시스템 이해
+4. [git-strategy.md](docs/conventions/git-strategy.md) - Git 전략 및 브랜치 규칙
 
 ### 백엔드 개발 시
 1. [backend-guide.md](docs/implementation/backend-guide.md) - 아키텍처 패턴
