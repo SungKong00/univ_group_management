@@ -8,9 +8,12 @@ import '../../presentation/pages/activity/activity_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
 import '../../presentation/pages/main/main_layout.dart';
 import '../constants/app_constants.dart';
+import '../services/auth_service.dart';
+
+final _authService = AuthService();
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: AppConstants.homeRoute,
+  initialLocation: AppConstants.loginRoute,
   routes: [
     GoRoute(
       path: AppConstants.loginRoute,
@@ -73,11 +76,20 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
   redirect: (context, state) {
-    // TODO: Add authentication check
-    // final isLoggedIn = AuthService.isLoggedIn;
-    // if (!isLoggedIn && state.location != AppConstants.loginRoute) {
-    //   return AppConstants.loginRoute;
-    // }
+    final isLoggedIn = _authService.isLoggedIn;
+    final currentPath = state.uri.toString();
+    final isLoginRoute = currentPath == AppConstants.loginRoute;
+
+    // 로그인하지 않은 경우 로그인 페이지로
+    if (!isLoggedIn && !isLoginRoute) {
+      return AppConstants.loginRoute;
+    }
+
+    // 이미 로그인한 경우 로그인 페이지 접근시 홈으로
+    if (isLoggedIn && isLoginRoute) {
+      return AppConstants.homeRoute;
+    }
+
     return null;
   },
 );

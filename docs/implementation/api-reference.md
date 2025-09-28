@@ -2,6 +2,22 @@
 
 본 문서는 백엔드 API의 명세를 코드 기준으로 정리한 최신 문서입니다.
 
+## API 응답 구조
+
+모든 API 응답은 다음과 같은 `ApiResponse<T>` 구조를 따릅니다:
+
+```json
+{
+  "success": true,           // 성공 여부
+  "data": { ... },          // 실제 데이터 (T 타입)
+  "message": "메시지",       // 성공/실패 메시지 (선택적)
+  "errorCode": "ERROR_CODE" // 에러 코드 (선택적)
+}
+```
+
+- **성공 시**: `success: true`, `data`에 실제 응답 데이터
+- **실패 시**: `success: false`, `message`에 에러 메시지, `errorCode`에 에러 코드
+
 ## 1. Auth API (`/api/auth`)
 
 Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
@@ -9,12 +25,51 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
 -   `POST /google`
     -   **설명**: Google 인증 토큰(ID Token 또는 Access Token)으로 로그인/회원가입을 처리합니다.
     -   **요청**: `GoogleLoginRequest`
-    -   **응답**: `LoginResponse` (JWT 토큰 및 사용자 정보 포함)
+        ```json
+        {
+          "googleAuthToken": "ID_TOKEN_STRING",  // ID Token (권장)
+          "googleAccessToken": "ACCESS_TOKEN_STRING"  // Access Token (대안)
+        }
+        ```
+    -   **응답**: `ApiResponse<LoginResponse>` (JWT 토큰 및 사용자 정보 포함)
+    -   **응답 구조**:
+        ```json
+        {
+          "success": true,
+          "data": {
+            "accessToken": "eyJ...",
+            "tokenType": "Bearer",
+            "expiresIn": 86400000,
+            "user": {
+              "id": 1,
+              "name": "사용자명",
+              "email": "user@example.com",
+              "globalRole": "STUDENT",
+              "isActive": true,
+              "nickname": "닉네임",
+              "profileImageUrl": null,
+              "bio": null,
+              "profileCompleted": true,
+              "emailVerified": true,
+              "professorStatus": null,
+              "department": "AI/SW계열",
+              "studentNo": "20250001",
+              "schoolEmail": null,
+              "createdAt": "2025-09-29T03:22:41.234567",
+              "updatedAt": "2025-09-29T03:22:41.234567"
+            },
+            "firstLogin": false
+          },
+          "message": null,
+          "errorCode": null
+        }
+        ```
 
 -   `POST /google/callback`
     -   **설명**: Google ID Token으로 로그인/회원가입을 처리하는 콜백 엔드포인트입니다.
     -   **요청**: `{"id_token": "..."}`
-    -   **응답**: `LoginResponse`
+    -   **응답**: `ApiResponse<LoginResponse>` (위와 동일한 구조)
+    -   **테스트**: 개발용 토큰 `mock_google_token_for_castlekong1019`를 사용하면 테스트 계정으로 로그인
 
 -   `POST /logout`
     -   **설명**: 사용자를 로그아웃 처리합니다. (현재는 토큰 무효화 로직 없음)
@@ -31,13 +86,35 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
     -   **설명**: 온보딩 과정에서 사용자의 초기 프로필 정보(닉네임, 학과, 학번, 역할 등)를 제출받아 저장합니다.
     -   **권한**: `isAuthenticated()`
     -   **요청**: `SignupProfileRequest`
-    -   **응답**: `UserResponse`
+        ```json
+        {
+          "name": "실명",
+          "nickname": "닉네임",
+          "college": "AI/SW계열",
+          "dept": "AI/SW학과",
+          "studentNo": "20250001",
+          "schoolEmail": "student@hanshin.ac.kr",
+          "role": "STUDENT"
+        }
+        ```
+    -   **응답**: `ApiResponse<UserResponse>`
 
 -   `GET /nickname-check`
     -   **설명**: 닉네임 중복 여부를 확인하고, 중복 시 추천 닉네임을 제공합니다.
     -   **권한**: `isAuthenticated()`
     -   **파라미터**: `nickname` (String)
-    -   **응답**: `NicknameCheckResponse`
+    -   **응답**: `ApiResponse<NicknameCheckResponse>`
+        ```json
+        {
+          "success": true,
+          "data": {
+            "available": false,
+            "suggestions": ["닉네임1", "닉네임2", "닉네임3"]
+          },
+          "message": null,
+          "errorCode": null
+        }
+        ```
 
 -   `PUT /profile`
     -   **설명**: 사용자 프로필 정보(닉네임, 프로필 이미지, 자기소개 등)를 업데이트합니다.

@@ -83,6 +83,16 @@ class AuthService(
 
     private fun verifyGoogleToken(token: String): GoogleUserInfo? {
         return try {
+            // 개발용 테스트 토큰 처리
+            if (token.startsWith("mock_google_token_for_")) {
+                logger.info("Processing mock Google token for development")
+                return GoogleUserInfo(
+                    email = "castlekong1019@gmail.com",
+                    name = "Castlekong",
+                    profileImageUrl = null
+                )
+            }
+
             val verifier =
                 GoogleIdTokenVerifier.Builder(NetHttpTransport(), GsonFactory())
                     .setAudience(listOf(googleClientId))
