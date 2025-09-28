@@ -1,186 +1,59 @@
-# 채널 권한 시스템 (Channel Permission System)
+# 채널 권한 관리 (Channel Permissions)
 
-## 권한 체계 개요
+## 핵심 컨셉: 역할 기반 접근 제어
 
-채널 권한은 **ChannelRoleBinding**을 통해 그룹 역할(GroupRole)과 채널별 권한(ChannelPermission)을 연결하는 방식으로 동작합니다.
+우리 시스템의 채널은 단순한 대화 공간이 아닙니다. 각 채널은 그룹 내에서 정보의 흐름을 제어하고 협업을 체계화하는 도구입니다. 이를 위해 강력하고 유연한 **역할 기반 권한 시스템**을 제공합니다.
 
-```
-GroupRole + Channel → ChannelRoleBinding → Set<ChannelPermission>
-```
+채널 관리자는 그룹 내에 이미 정의된 '역할'(예: 운영진, 정회원, 신입회원)에 따라 각 채널의 접근 및 사용 권한을 다르게 설정할 수 있습니다. 이를 통해 정보의 공개 범위를 설정하고, 특정 그룹원들만 참여하는 비공개 채널을 만드는 등 다양한 소통 구조를 설계할 수 있습니다.
 
-## 채널 권한 종류
+## 채널 관리 주체
 
-```kotlin
-enum class ChannelPermission {
-    CHANNEL_VIEW,   // 채널 보기 권한 (가시성 제어)
-    POST_READ,      // 게시글 읽기 권한
-    POST_WRITE,     // 게시글 작성 권한
-    COMMENT_WRITE,  // 댓글 작성 권한
-    FILE_UPLOAD,    // 파일 업로드 권한
-}
-```
+그룹 내에서 '채널 관리' 권한을 가진 사용자는 채널을 생성, 수정, 삭제할 수 있는 모든 권한을 가집니다. 이들은 채널의 관리자로서, 해당 채널의 목적에 맞게 참여자와 권한을 설정할 책임이 있습니다.
 
-### 권한별 상세 설명
+## 설정 가능한 권한 종류
 
-#### CHANNEL_VIEW
-- **목적**: 채널 존재 확인 및 기본 정보 조회
-- **중요성**: 모든 채널 활동의 기본 전제 조건
-- **효과**: 이 권한이 없으면 채널이 네비게이션에서 숨겨짐
+채널 관리자는 역할별로 다음과 같은 권한을 조합하여 부여할 수 있습니다.
 
-#### POST_READ
-- **목적**: 채널 내 게시글 조회
-- **의존성**: CHANNEL_VIEW 권한 필요
-- **범위**: 게시글 목록, 게시글 상세 내용
+*   **채널 보기 (View Channel):** 채널 목록에서 채널의 존재를 확인하고 입장할 수 있는 기본 권한입니다. 이 권한이 없으면 사용자는 채널이 존재하는지조차 알 수 없습니다. 그룹장, 채널 관리자는 모든 채널에 채널보기 권한을 갖습니다. 보통의 경우에는 게시글 읽기 권한이 있으면 채널 보기 권한을 가집니다.
+*   **게시글 읽기 (Read Posts):** 채널 내의 게시글과 대화 내용을 읽을 수 있는 권한입니다.
+*   **게시글 쓰기 (Write Posts):** 채널에 새로운 게시글이나 메시지를 작성할 수 있는 권한입니다.
+*   **댓글 쓰기 (Write Comments):** 다른 사람의 게시글에 댓글을 달 수 있는 권한입니다.
+*   **파일 업로드 (Upload Files):** 게시글이나 댓글에 파일을 첨부할 수 있는 권한입니다.
 
-#### POST_WRITE
-- **목적**: 채널 내 새 게시글 작성
-- **제한**: 채널 타입에 따라 제한될 수 있음 (예: ANNOUNCEMENT 채널)
+## 권한 설정 시나리오 예시
 
-#### COMMENT_WRITE
-- **목적**: 게시글에 댓글 작성
-- **특징**: POST_WRITE 권한이 없어도 댓글은 작성 가능
+채널 관리자는 위 권한들을 조합하여 다양한 목적의 채널을 만들 수 있습니다.
 
-#### FILE_UPLOAD
-- **목적**: 게시글 및 댓글에 파일 첨부
-- **제한**: 파일 크기, 확장자 제한 적용
+### 예시 1: 운영진 전용 비공개 채널
 
-## 채널 역할 바인딩
+운영진만 내부 논의를 하기 위한 채널을 만들고 싶을 때, 다음과 같이 권한을 설정할 수 있습니다.
 
-### ChannelRoleBinding 엔티티
+*   **운영진 역할:** 채널 보기, 게시글 읽기, 게시글 쓰기, 댓글 쓰기, 파일 업로드 (모든 권한 부여)
+*   **정회원 역할:** (모든 권한 해제)
+*   **신입회원 역할:** (모든 권한 해제)
 
-```kotlin
-@Entity
-data class ChannelRoleBinding(
-    val channel: Channel,
-    val groupRole: GroupRole,
-    val permissions: Set<ChannelPermission>
-)
-```
+**결과:** 오직 '운영진' 역할을 가진 멤버만 이 채널을 보고, 글을 읽고 쓸 수 있습니다. 다른 멤버들에게는 이 채널이 보이지 않습니다.
 
-### 기본 권한 구성
+### 예시 2: 전체 공지 채널
 
-#### ANNOUNCEMENT 채널 (공지사항)
-```kotlin
-// OWNER 역할
-permissions = setOf(
-    ChannelPermission.CHANNEL_VIEW,
-    ChannelPermission.POST_READ,
-    ChannelPermission.POST_WRITE,
-    ChannelPermission.COMMENT_WRITE,
-    ChannelPermission.FILE_UPLOAD
-)
+그룹의 모든 멤버에게 공지사항을 전달하지만, 운영진만 글을 쓸 수 있도록 설정하고 싶을 때 사용합니다.
 
-// MEMBER 역할
-permissions = setOf(
-    ChannelPermission.CHANNEL_VIEW,
-    ChannelPermission.POST_READ,
-    ChannelPermission.COMMENT_WRITE
-)
-```
+*   **운영진 역할:** 채널 보기, 게시글 읽기, 게시글 쓰기 (공지 작성 권한)
+*   **정회원 역할:** 채널 보기, 게시글 읽기 (공지 확인만 가능)
+*   **신입회원 역할:** 채널 보기, 게시글 읽기 (공지 확인만 가능)
 
-#### TEXT 채널 (일반 대화)
-```kotlin
-// OWNER 역할
-permissions = setOf(
-    ChannelPermission.CHANNEL_VIEW,
-    ChannelPermission.POST_READ,
-    ChannelPermission.POST_WRITE,
-    ChannelPermission.COMMENT_WRITE,
-    ChannelPermission.FILE_UPLOAD
-)
+**결과:** 모든 멤버가 채널에 들어와 공지를 읽을 수 있지만, 글 작성은 '운영진'만 가능하여 질서 있는 정보 전달이 이루어집니다. 멤버들은 댓글 작성 권한이 있다면 공지에 대한 질문을 댓글로 남길 수 있습니다.
 
-// MEMBER 역할
-permissions = setOf(
-    ChannelPermission.CHANNEL_VIEW,
-    ChannelPermission.POST_READ,
-    ChannelPermission.POST_WRITE,
-    ChannelPermission.COMMENT_WRITE
-)
-```
+### 예시 3: 자유로운 소통 채널
 
-## 권한 확인 프로세스
+모든 멤버가 자유롭게 대화하고 정보를 공유하는 채널입니다.
 
-### 1. 사용자 권한 조회
-```kotlin
-fun getUserChannelPermissions(userId: Long, channelId: Long): Set<ChannelPermission> {
-    val userGroupRole = getUserGroupRole(userId, channelId)
-    val channelBinding = getChannelRoleBinding(channelId, userGroupRole)
-    return channelBinding?.permissions ?: emptySet()
-}
-```
+*   **운영진 역할:** 모든 권한 부여
+*   **정회원 역할:** 채널 보기, 게시글 읽기, 게시글 쓰기, 댓글 쓰기, 파일 업로드
+*   **신입회원 역할:** 채널 보기, 게시글 읽기, 댓글 쓰기 (글 작성은 제한, 댓글로만 참여)
 
-### 2. 가시성 제어
-```kotlin
-fun isChannelVisible(userId: Long, channelId: Long): Boolean {
-    val permissions = getUserChannelPermissions(userId, channelId)
-    return ChannelPermission.CHANNEL_VIEW in permissions
-}
-```
+**결과:** 정회원 이상은 자유롭게 글을 쓰고 정보를 공유할 수 있으며, 신입회원은 글을 읽고 댓글로 대화에 참여하며 그룹에 적응해나갈 수 있습니다.
 
-### 3. 작업별 권한 확인
-```kotlin
-fun canWritePost(userId: Long, channelId: Long): Boolean {
-    val permissions = getUserChannelPermissions(userId, channelId)
-    return ChannelPermission.POST_WRITE in permissions
-}
-```
+## 요약
 
-## 권한 관리 서비스
-
-### ChannelPermissionManagementService
-
-- **역할**: 채널별 권한 설정 및 관리
-- **기능**:
-  - 채널 생성 시 기본 권한 설정
-  - 역할별 권한 수정
-  - 권한 조회 및 캐싱
-
-### ChannelPermissionCacheManager
-
-- **역할**: 권한 조회 성능 최적화
-- **기능**:
-  - 사용자별 채널 권한 캐싱
-  - 권한 변경 시 캐시 무효화
-
-## 실제 사용 예시
-
-### 채널 목록 필터링
-```kotlin
-fun getVisibleChannels(userId: Long, workspaceId: Long): List<Channel> {
-    val allChannels = channelRepository.findByWorkspaceId(workspaceId)
-    return allChannels.filter { channel ->
-        isChannelVisible(userId, channel.id)
-    }
-}
-```
-
-### 게시글 작성 권한 확인
-```kotlin
-@PreAuthorize("@channelPermissionService.hasPermission(#userId, #channelId, 'POST_WRITE')")
-fun createPost(userId: Long, channelId: Long, content: String): Post {
-    // 게시글 작성 로직
-}
-```
-
-## 현재 구현 상태
-
-### 완료된 기능
-- ✅ ChannelPermission enum 정의
-- ✅ ChannelRoleBinding 엔티티
-- ✅ 기본 채널 권한 설정
-- ✅ 권한 캐싱 시스템
-
-### 개선 예정
-- 🔄 isPrivate/isPublic 필드 → 권한 기반 시스템으로 마이그레이션
-- 🔄 FILE_SHARE 채널 타입 제거 (사용되지 않음)
-- 🔄 세밀한 권한 제어 (게시글별, 댓글별)
-
-## 관련 문서
-
-### 구현 참조
-- **백엔드 가이드**: [../implementation/backend-guide.md](../implementation/backend-guide.md)
-- **데이터베이스 참조**: [../implementation/database-reference.md](../implementation/database-reference.md)
-
-### 관련 개념
-- **그룹 권한**: [permission-system.md](permission-system.md)
-- **워크스페이스 구조**: [workspace-channel.md](workspace-channel.md)
+채널 권한 관리는 그룹 내 정보 유통을 체계적으로 관리하고, 목적에 맞는 다양한 소통 공간을 만들기 위한 핵심 기능입니다. 채널 관리자는 역할별로 권한을 세밀하게 조정하여, 그룹의 규모와 성격에 맞는 최적의 협업 환경을 구축할 수 있습니다.

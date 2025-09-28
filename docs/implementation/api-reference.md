@@ -421,6 +421,163 @@ Response:
 }
 ```
 
+## 모집 시스템
+
+### 모집 게시글 작성
+```http
+POST /api/groups/{groupId}/recruitments
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+
+{
+  "title": "2024년 신입 멤버 모집",
+  "content": "프로그래밍에 관심있는 신입생을 모집합니다.",
+  "maxApplicants": 20,
+  "recruitmentEndDate": "2024-03-15T23:59:59",
+  "autoApprove": false,
+  "showApplicantCount": true,
+  "applicationQuestions": [
+    "프로그래밍 경험을 간단히 작성해주세요.",
+    "동아리 활동에 대한 기대를 적어주세요."
+  ]
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "group": {
+      "id": 5,
+      "name": "프로그래밍 동아리"
+    },
+    "title": "2024년 신입 멤버 모집",
+    "content": "프로그래밍에 관심있는 신입생을 모집합니다.",
+    "maxApplicants": 20,
+    "currentApplicantCount": 0,
+    "recruitmentEndDate": "2024-03-15T23:59:59",
+    "status": "OPEN",
+    "autoApprove": false,
+    "showApplicantCount": true,
+    "applicationQuestions": [
+      "프로그래밍 경험을 간단히 작성해주세요.",
+      "동아리 활동에 대한 기대를 적어주세요."
+    ],
+    "createdAt": "2024-02-01T10:00:00",
+    "updatedAt": "2024-02-01T10:00:00"
+  }
+}
+```
+
+### 활성 모집 게시글 조회
+```http
+GET /api/groups/{groupId}/recruitments
+Authorization: Bearer {jwt_token}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "2024년 신입 멤버 모집",
+    "currentApplicantCount": 15,
+    "status": "OPEN"
+  }
+}
+```
+
+### 그룹 가입 지원
+```http
+POST /api/recruitments/{recruitmentId}/applications
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+
+{
+  "motivation": "프로그래밍을 체계적으로 배우고 싶어서 지원합니다.",
+  "questionAnswers": {
+    "0": "Python과 JavaScript 기초 문법을 알고 있습니다.",
+    "1": "다양한 프로젝트를 통해 실력을 향상시키고 싶습니다."
+  }
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "id": 101,
+    "recruitment": {
+      "id": 1,
+      "title": "2024년 신입 멤버 모집"
+    },
+    "applicant": {
+      "id": 10,
+      "name": "김신입",
+      "nickname": "신입이"
+    },
+    "motivation": "프로그래밍을 체계적으로 배우고 싶어서 지원합니다.",
+    "status": "PENDING",
+    "appliedAt": "2024-02-15T14:30:00"
+  }
+}
+```
+
+### 지원서 심사
+```http
+PATCH /api/applications/{applicationId}/review
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+
+{
+  "action": "APPROVE",
+  "reviewComment": "적극적인 자세가 좋습니다. 환영합니다!"
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "id": 101,
+    "status": "APPROVED",
+    "reviewedBy": {
+      "id": 5,
+      "name": "김회장",
+      "nickname": "회장님"
+    },
+    "reviewedAt": "2024-02-20T10:00:00",
+    "reviewComment": "적극적인 자세가 좋습니다. 환영합니다!"
+  }
+}
+```
+
+### 공개 모집 검색
+```http
+GET /api/recruitments/public?keyword=프로그래밍&page=0&size=20
+
+Response:
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "groupId": 5,
+      "groupName": "프로그래밍 동아리",
+      "title": "2024년 신입 멤버 모집",
+      "maxApplicants": 20,
+      "currentApplicantCount": 15,
+      "recruitmentEndDate": "2024-03-15T23:59:59",
+      "status": "OPEN",
+      "createdAt": "2024-02-01T10:00:00"
+    }
+  ],
+  "pagination": {
+    "page": 0,
+    "size": 20,
+    "totalElements": 3,
+    "totalPages": 1
+  }
+}
+```
+
 ## 에러 응답 형식
 
 ### 권한 부족
@@ -502,6 +659,8 @@ GET /api/groups/explore?search=AI&category=STUDY
 - **권한 시스템**: [../concepts/permission-system.md](../concepts/permission-system.md)
 - **그룹 계층**: [../concepts/group-hierarchy.md](../concepts/group-hierarchy.md)
 - **워크스페이스**: [../concepts/workspace-channel.md](../concepts/workspace-channel.md)
+- **모집 시스템**: [../concepts/recruitment-system.md](../concepts/recruitment-system.md)
+- **사용자 여정**: [../concepts/user-lifecycle.md](../concepts/user-lifecycle.md)
 
 ### 문제 해결
 - **권한 에러**: [../troubleshooting/permission-errors.md](../troubleshooting/permission-errors.md)

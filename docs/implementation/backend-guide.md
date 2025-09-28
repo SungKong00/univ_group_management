@@ -308,9 +308,12 @@ fun updateGroup(groupId: Long, request: UpdateGroupRequest): GroupDto {
 ## 관련 개념
 
 ### 도메인 모델
+- **도메인 개요**: [../concepts/domain-overview.md](../concepts/domain-overview.md)
 - **그룹 계층**: [../concepts/group-hierarchy.md](../concepts/group-hierarchy.md)
 - **권한 시스템**: [../concepts/permission-system.md](../concepts/permission-system.md)
-- **사용자 라이프사이클**: [../concepts/user-lifecycle.md](../concepts/user-lifecycle.md)
+- **워크스페이스**: [../concepts/workspace-channel.md](../concepts/workspace-channel.md)
+- **사용자 여정**: [../concepts/user-lifecycle.md](../concepts/user-lifecycle.md)
+- **모집 시스템**: [../concepts/recruitment-system.md](../concepts/recruitment-system.md)
 
 ### 구현 참조
 - **API 상세**: [api-reference.md](api-reference.md)

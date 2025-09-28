@@ -1,194 +1,155 @@
 # 권한 시스템 (Permission System)
 
-## RBAC (역할 기반 접근 제어) 모델
+## 역할에 따른 차별화된 기능
 
-본 시스템의 권한은 역할 기반 접근 제어(RBAC) 모델을 따릅니다. 각 사용자는 그룹 내에서 특정 역할을 부여받으며, 해당 역할에 할당된 권한들을 갖게 됩니다.
+그룹 내에서 사용자는 각자의 역할에 따라 다른 기능을 사용할 수 있습니다. 이는 실제 조직에서 직책에 따라 권한이 다른 것과 같은 원리입니다.
 
-`사용자` → `역할(Role)` → `권한들(Permissions)`
+**기본 원리**: `사용자` → `역할 부여` → `역할별 기능 사용`
 
-## 2레벨 권한 구조
+## 권한의 두 가지 범위
 
-권한 시스템은 **그룹 레벨**과 **채널 레벨**의 2단계 구조로 구성됩니다.
+### 그룹 전체 권한
+그룹 운영과 관련된 전반적인 권한들입니다.
 
-### 그룹 레벨 권한 (GroupPermission)
+- **그룹 관리**: 그룹 정보 수정, 삭제 권한
+- **멤버 관리**: 멤버 초대, 강제 탈퇴, 역할 변경 권한
+- **채널 관리**: 새 채널 생성, 삭제, 채널 설정 변경 권한
+- **모집 관리**: 신규 멤버 모집 게시글 작성 및 지원자 심사 권한
 
-*   **참고**: `GroupPermission` Enum으로 코드에 정의되어 있습니다.
+### 채널별 권한
+각 채널에서의 활동과 관련된 세부 권한들입니다.
 
-- `GROUP_MANAGE`: 그룹 정보 수정, 삭제
-- `ADMIN_MANAGE`: 멤버 관리 + 역할 관리 통합 (멤버 역할 변경, 강제 탈퇴, 커스텀 역할 생성/수정/삭제, 가입 신청 승인/반려)
-- `CHANNEL_MANAGE`: 채널 생성, 삭제, 설정 수정, 채널별 역할 바인딩 설정
-- `RECRUITMENT_MANAGE`: 모집 공고 작성/수정/마감, 모집 관련 설정 관리
+- **채널 보기**: 채널 존재 확인 및 입장 권한
+- **글 읽기**: 채널 내 게시글과 댓글 읽기 권한
+- **글 쓰기**: 새로운 게시글 작성 권한
+- **댓글 쓰기**: 다른 사람 글에 댓글 달기 권한
+- **파일 업로드**: 게시글이나 댓글에 파일 첨부 권한
 
-### 채널 레벨 권한 (ChannelPermission)
+## 기본 역할
 
-*   **참고**: `ChannelPermission` Enum으로 코드에 정의되어 있습니다.
-
-- `CHANNEL_VIEW`: 채널 존재 확인 및 기본 정보 조회
-- `POST_READ`: 채널 내 게시글 조회
-- `POST_WRITE`: 채널 내 새 게시글 작성
-- `COMMENT_WRITE`: 게시글에 댓글 작성
-- `FILE_UPLOAD`: 게시글 및 댓글에 파일 첨부
-
-## 시스템 역할 (수정 불가)
+모든 그룹에는 다음 두 가지 기본 역할이 자동으로 생성됩니다.
 
 ### Owner (그룹 오너)
-```kotlin
-permissions = GroupPermission.values().toSet() // 모든 그룹 권한
-isSystemRole = true
-transferable = true // 소유권 양도 가능
-```
+그룹의 최고 관리자로서 모든 권한을 가집니다.
+
+- **모든 권한 보유**: 그룹 내에서 할 수 있는 모든 일을 처리
+- **소유권 양도**: 필요시 다른 멤버에게 오너 권한 이양 가능
+- **삭제 불가**: 시스템에서 자동 생성되므로 삭제할 수 없음
 
 ### Member (기본 멤버)
-```kotlin
-permissions = emptySet() // 그룹 멤버십만으로 워크스페이스 접근 가능
-isSystemRole = true
-// 채널별 권한은 별도 바인딩으로 관리
-```
+그룹에 가입한 모든 사용자의 기본 역할입니다.
 
-## 커스텀 역할 예시
+- **기본 참여**: 그룹 워크스페이스 접근 가능
+- **채널별 권한**: 각 채널에서의 구체적 권한은 별도 설정
+- **확장 가능**: 필요시 추가 권한을 가진 역할로 변경 가능
 
-### Staff (운영진)
-```kotlin
-permissions = setOf(
-    CHANNEL_MANAGE,
-    ADMIN_MANAGE
-)
-description = "채널 관리 및 멤버 관리"
-```
+## 맞춤형 역할 만들기
 
-### Recruitment Manager (모집 담당자)
-```kotlin
-permissions = setOf(
-    RECRUITMENT_MANAGE,
-    ADMIN_MANAGE
-)
-description = "가입 승인 및 모집 관리"
-```
+그룹의 특성에 맞게 필요한 역할을 직접 만들 수 있습니다.
 
-### Content Manager (컨텐츠 관리자)
-```kotlin
-permissions = setOf(
-    CHANNEL_MANAGE
-)
-description = "채널 및 컨텐츠 관리"
-```
+### 운영진 (Staff)
+동아리나 학회의 중간 관리자 역할입니다.
 
-## 권한 체크 로직
+- **담당 업무**: 채널 관리, 멤버 관리
+- **활용 예시**: 동아리 부회장, 학회 운영진
+- **권한 범위**: 일상적인 그룹 관리 업무 담당
 
-### 백엔드 구현
-실제 권한 계산은 `PermissionService`에서 수행되며, 역할 기반으로만 이루어집니다.
+### 모집 담당자 (Recruitment Manager)
+신규 멤버 모집을 전담하는 역할입니다.
 
-```kotlin
-// GroupPermissionEvaluator
-@PreAuthorize("@security.hasGroupPerm(#groupId, 'GROUP_MANAGE')")
-fun updateGroup(groupId: Long, request: UpdateGroupRequest): GroupDto
+- **담당 업무**: 모집 게시글 작성, 지원자 심사, 가입 승인
+- **활용 예시**: 신입 모집 시즌의 전담 팀
+- **권한 범위**: 모집 관련 모든 업무 + 멤버 관리
 
-// PermissionService의 실제 로직 요약
-private fun computeEffective(groupId: Long, userId: Long): Set<GroupPermission> {
-    // 1. 사용자의 그룹 멤버십 정보 조회
-    val member = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+### 컨텐츠 관리자 (Content Manager)
+채널과 컨텐츠 관리를 담당하는 역할입니다.
 
-    // 2. 멤버십에 할당된 역할(Role)의 권한을 그대로 반환
-    return member.role.permissions
-}
+- **담당 업무**: 채널 생성/삭제, 채널 설정 관리
+- **활용 예시**: 대형 그룹의 채널 전담 관리자
+- **권한 범위**: 채널 관리에 특화된 권한
 
-// 채널 권한은 별도 바인딩으로 관리
-private fun getChannelPermissions(channelId: Long, userId: Long): Set<ChannelPermission> {
-    // 채널별 역할 바인딩을 통한 권한 계산
-    return channelPermissionService.getEffectivePermissions(channelId, userId)
-}
-```
+## 권한 확인 방식
 
-### 프론트엔드 구현
-```dart
-// Flutter - 권한 기반 UI 렌더링
-Widget buildActionButton() {
-  return FutureBuilder<bool>(
-    future: permissionProvider.hasPermission(groupId, 'MEMBER_KICK'),
-    builder: (context, snapshot) {
-      if (snapshot.data == true) {
-        return KickMemberButton();
-      }
-      return SizedBox.shrink();
-    },
-  );
-}
-```
+### 역할 기반 권한 체크
+시스템은 사용자의 역할을 확인하여 특정 기능 사용 권한을 판단합니다.
 
-## 권한 상속 규칙
+**확인 과정**:
+1. **사용자 역할 조회**: 해당 그룹에서 사용자가 가진 역할 확인
+2. **역할 권한 조회**: 그 역할에 할당된 권한 목록 확인
+3. **기능 허용/거부**: 요청한 기능에 필요한 권한이 있는지 판단
 
-### 그룹 계층 상속
-```
-대학교 (ADMIN 권한)
-├── 학과 (학과 관련 관리 권한)
-│   └── 동아리 (동아리 내부 권한만)
-```
+### 사용자 인터페이스 반영
+권한이 없는 기능은 사용자에게 보이지 않거나 비활성화됩니다.
 
-### 상속 우선순위
-1. **글로벌 역할**: ADMIN > PROFESSOR > STUDENT
-2. **그룹 계층**: 상위 그룹 권한 우선
-3. **역할 권한**: 그룹 내 역할별 권한
+**예시 상황들**:
+- 멤버 관리 권한이 없으면 "멤버 강제 탈퇴" 버튼이 보이지 않음
+- 채널 관리 권한이 없으면 "새 채널 생성" 메뉴가 비활성화됨
+- 모집 관리 권한이 없으면 "모집 게시글 작성" 기능에 접근 불가
 
-## 일반적인 권한 시나리오
+## 그룹 간의 관계와 권한
 
-### 시나리오 1: 동아리 임원 임명
-1. 동아리 오너가 활발한 멤버를 부회장으로 임명
-2. "Staff" 커스텀 역할 생성 (ADMIN_MANAGE + CHANNEL_MANAGE)
-3. 해당 멤버에게 역할 할당
-4. 멤버 관리 및 채널 관리 권한 획득
+### 원칙: 그룹 권한의 독립성
+각 그룹의 권한은 완전히 독립적으로 운영됩니다. 한 그룹의 역할(예: 운영진)은 다른 그룹(상위, 하위, 또는 형제 그룹)에 아무런 영향을 미치지 않습니다. 'A 동아리'의 회장이 'B 동아리'에서는 일반 멤버일 뿐인 것처럼, 모든 권한은 해당 그룹 내에서만 유효합니다.
 
-### 시나리오 2: 모집 담당자 지정
-1. 신입 모집 시즌 도래
-2. "Recruitment Manager" 역할 생성 (RECRUITMENT_MANAGE + ADMIN_MANAGE)
-3. 모집 업무 담당자들에게 할당
-4. 가입 승인 및 모집 게시글 관리 가능
+### 예외: 상위 그룹의 제한된 역할
+현재 시스템에서 상위 그룹이 하위 그룹에 대해 갖는 유일한 권한은 다음과 같이 매우 제한적입니다.
 
-### 시나리오 3: 채널별 세부 권한 설정
-1. 특정 채널에 대한 세부 권한 필요
-2. 채널별 역할 바인딩 생성
-3. 특정 역할에 대해 채널 권한 조합 설정
-4. 해당 역할 멤버들이 채널별 차별화된 권한 획득
+1.  **하위 공식 그룹 생성 승인**: 하위 공식 그룹이 처음 만들어질 때, 상위 그룹의 관리자가 이 생성 요청을 '승인'하거나 '거부'할 수 있습니다. 이는 그룹의 무분별한 생성을 방지하고 조직 구조를 유지하기 위한 유-일한 통제 장치입니다.
 
-## API 사용 예시
+2.  **캘린더 정보의 제한적 참조 (예정)**: 향후 캘린더 기능이 구현될 때, 상위 그룹에서 전체 일정을 계획할 목적으로 하위 그룹의 캘린더 정보를 '참조'할 수 있는 기능이 추가될 예정입니다. 이는 읽기 전용의 제한된 접근이며, 하위 그룹의 일정을 수정하거나 관리하는 권한을 의미하지 않습니다.
 
-### 역할 생성
-```typescript
-POST /api/groups/{groupId}/roles
-{
-  "name": "Content Manager",
-  "permissions": ["CHANNEL_MANAGE"],
-  "description": "컨텐츠 관리 담당"
-}
-```
+위 두 가지 경우를 제외하고, 상위 그룹 관리자가 하위 그룹의 멤버, 역할, 채널, 설정 등을 직접 수정하거나 관리할 수 있는 '감독 권한'이나 '상속 권한'은 **존재하지 않습니다.**
 
-### 멤버 역할 변경
-```typescript
-PUT /api/groups/{groupId}/members/{userId}/role
-{
-  "roleId": 123
-}
-```
+## 실제 활용 사례
 
-### 가입 신청 처리
-```typescript
-PATCH /api/groups/{groupId}/join-requests/{requestId}
-{
-  "action": "APPROVE"
-}
-```
+### 동아리 임원 임명하기
+**상황**: 동아리에서 활발한 멤버를 부회장으로 임명하고 싶음
 
-## 관련 구현
+1. **역할 생성**: "부회장" 또는 "운영진" 역할 생성
+2. **권한 설정**: 멤버 관리, 채널 관리 권한 부여
+3. **역할 할당**: 해당 멤버에게 새 역할 부여
+4. **기능 사용**: 부회장이 멤버 관리와 채널 관리 업무 수행
 
-### API 참조
-- **권한 체크**: [../implementation/api-reference.md#권한체크](../implementation/api-reference.md#권한체크)
-- **역할 관리**: [../implementation/api-reference.md#역할관리](../implementation/api-reference.md#역할관리)
+### 모집 시즌 전담팀 구성
+**상황**: 신입 모집 시즌에 전담 팀을 구성하고 싶음
 
-### 데이터베이스 설계
-- **GroupRole 테이블**: [../implementation/database-reference.md#GroupRole](../implementation/database-reference.md#GroupRole)
+1. **전담 역할 생성**: "모집 담당자" 역할 생성
+2. **모집 권한 부여**: 모집 게시글 작성, 지원자 심사 권한 부여
+3. **팀원 지정**: 모집 업무 담당자들에게 역할 할당
+4. **모집 진행**: 전담팀이 모집 업무 전담 수행
 
-### 관련 개념
-- **그룹 계층**: [group-hierarchy.md](group-hierarchy.md)
-- **사용자 라이프사이클**: [user-lifecycle.md](user-lifecycle.md)
+### 채널별 접근 제어
+**상황**: 특정 채널은 특정 멤버들만 접근하게 하고 싶음
 
-### 문제 해결
-- **권한 에러**: [../troubleshooting/permission-errors.md](../troubleshooting/permission-errors.md)
+1. **접근 제한**: 해당 채널의 "채널 보기" 권한을 제한된 역할에만 부여
+2. **차별화된 권한**: 역할별로 읽기만 가능, 쓰기 가능 등 세분화
+3. **자동 적용**: 권한이 없는 멤버에게는 채널이 보이지 않음
+4. **유연한 관리**: 필요시 권한을 쉽게 추가하거나 제거
+
+## 권한 관리 작업 흐름
+
+### 새로운 역할 만들기
+1. **역할 이름 설정**: "부회장", "모집담당자" 등 의미있는 이름 지정
+2. **권한 선택**: 해당 역할이 필요한 권한들 체크박스로 선택
+3. **설명 추가**: 역할의 목적과 담당 업무 간단히 설명
+4. **역할 생성**: 저장하면 즉시 그룹 내에서 사용 가능
+
+### 멤버에게 역할 부여하기
+1. **멤버 선택**: 역할을 부여할 멤버 선택
+2. **역할 변경**: 기존 역할에서 새로운 역할로 변경
+3. **즉시 적용**: 변경 즉시 해당 멤버의 권한이 업데이트됨
+4. **권한 확인**: 멤버가 새로운 기능에 접근 가능해짐
+
+### 가입 신청 처리하기
+1. **신청서 검토**: 지원자의 지원서 내용 확인
+2. **승인/거부 결정**: 그룹 정책에 따라 가입 여부 결정
+3. **자동 처리**: 승인 시 자동으로 그룹 멤버로 등록
+4. **역할 부여**: 필요시 기본 멤버 외 다른 역할 부여
+
+## 더 자세히 알아보기
+
+권한 시스템과 관련된 다른 기능들을 더 알고 싶다면:
+
+- **그룹 구조**: [group-hierarchy.md](group-hierarchy.md) - 그룹 계층과 권한 상속
+- **사용자 여정**: [user-lifecycle.md](user-lifecycle.md) - 사용자 역할 변화 과정
+- **채널 권한**: [channel-permissions.md](channel-permissions.md) - 채널별 세부 권한 설정

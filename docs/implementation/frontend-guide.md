@@ -456,5 +456,9 @@ function GroupList({ groups }: { groups: Group[] }) {
 - **백엔드 가이드**: [backend-guide.md](backend-guide.md)
 
 ### 개념 참조
+- **도메인 개요**: [../concepts/domain-overview.md](../concepts/domain-overview.md)
+- **그룹 계층**: [../concepts/group-hierarchy.md](../concepts/group-hierarchy.md)
 - **권한 시스템**: [../concepts/permission-system.md](../concepts/permission-system.md)
 - **워크스페이스**: [../concepts/workspace-channel.md](../concepts/workspace-channel.md)
+- **사용자 여정**: [../concepts/user-lifecycle.md](../concepts/user-lifecycle.md)
+- **모집 시스템**: [../concepts/recruitment-system.md](../concepts/recruitment-system.md)
