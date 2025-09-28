@@ -197,6 +197,14 @@ $RECYCLE.BIN/
 /frontend/windows/**/CMakeFiles/
 /frontend/windows/**/cmake-build-*/
 /frontend/windows/**/build/
+/frontend/windows/*.suo
+/frontend/windows/*.user
+/frontend/windows/*.userosscache
+/frontend/windows/*.sln.docstates
+/frontend/windows/x64/
+/frontend/windows/x86/
+/frontend/windows/*.[Cc]ache
+!/frontend/windows/*.[Cc]ache/
 
 # Cross-platform Flutter ephemeral
 /frontend/**/Flutter/ephemeral/
@@ -217,6 +225,32 @@ $RECYCLE.BIN/
 ####################################
 context/_meta/backup_*
 /frontend_backup/
+
+####################################
+# 끝 (통합 추가 규칙 위로 이동)
+####################################
+
+# ---------------- 추가 통합 (기존 frontend/.gitignore, windows/.gitignore 누락분) ----------------
+# Flutter 문서 산출물
+/frontend/**/doc/api/
+# iOS/macOS dgph 심볼 파일
+/frontend/**/dgph
+# Windows 개발 환경 산출물 (Visual Studio 등)
+/frontend/windows/*.suo
+/frontend/windows/*.user
+/frontend/windows/*.userosscache
+/frontend/windows/*.sln.docstates
+/frontend/windows/x64/
+/frontend/windows/x86/
+# Windows 캐시: 파일은 무시, 동일 확장자의 디렉터리는 유지
+/frontend/windows/*.[Cc]ache
+!/frontend/windows/*.[Cc]ache/
+# -------------------------------------------------------------------------------------------------
+# 추가: frontend 기존 .gitignore 잔여 패턴 통합
+/frontend/**/*.pyc
+/frontend/**/*.swp
+/frontend/.gradle/
+# -------------------------------------------------------------------------------------------------
 
 ####################################
 # 끝

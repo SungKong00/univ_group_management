@@ -1,112 +1,86 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/app_constants.dart';
-import '../storage/token_storage.dart';
-import 'api_response.dart';
 
 class DioClient {
-  final Dio dio;
+  static final DioClient _instance = DioClient._internal();
+  factory DioClient() => _instance;
+  DioClient._internal();
 
-  DioClient(TokenStorage tokenStorage)
-      : dio = Dio(BaseOptions(
-          baseUrl: AppConstants.baseUrl,
-          connectTimeout: const Duration(milliseconds: 30000),
-          receiveTimeout: const Duration(milliseconds: 30000),
-          sendTimeout: const Duration(milliseconds: 30000),
-          headers: const {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        )) {
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final token = await tokenStorage.getAccessToken();
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          handler.next(options);
-        },
-      ),
-    );
+  late Dio _dio;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
+  Dio get dio => _dio;
+
+  void init() {
+    _dio = Dio(BaseOptions(
+      baseUrl: AppConstants.baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    ));
+
+    _dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+      logPrint: (object) => print(object),
+    ));
+
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final token = await _storage.read(key: AppConstants.accessTokenKey);
+        if (token != null) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        handler.next(options);
+      },
+      onError: (error, handler) async {
+        if (error.response?.statusCode == 401) {
+          await _handleTokenRefresh();
+          handler.next(error);
+        } else {
+          handler.next(error);
+        }
+      },
+    ));
   }
 
-  Future<Response> get(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    return await dio.get(path, queryParameters: queryParameters);
-  }
-
-  Future<Response> post(
-    String path, {
-    Map<String, dynamic>? data,
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    return await dio.post(path, data: data, queryParameters: queryParameters);
-  }
-
-  Future<Response> put(
-    String path, {
-    Map<String, dynamic>? data,
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    return await dio.put(path, data: data, queryParameters: queryParameters);
-  }
-
-  Future<Response> delete(
-    String path, {
-    Map<String, dynamic>? data,
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    return await dio.delete(path, data: data, queryParameters: queryParameters);
-  }
-
-  Future<Response> patch(
-    String path, {
-    Map<String, dynamic>? data,
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    return await dio.patch(path, data: data, queryParameters: queryParameters);
-  }
-
-  // Legacy API for backwards compatibility
-  Future<ApiResponse<T>> getWithParser<T>(
-    String path,
-    T Function(dynamic data) parser, {
-    Map<String, dynamic>? queryParameters,
-  }) async {
+  Future<void> _handleTokenRefresh() async {
     try {
-      final response = await dio.get(path, queryParameters: queryParameters);
-      return ApiResponse<T>(
-        success: true,
-        data: parser(response.data['data']),
-      );
+      final refreshToken = await _storage.read(key: AppConstants.refreshTokenKey);
+      if (refreshToken != null) {
+        final response = await _dio.post('/auth/refresh', data: {
+          'refreshToken': refreshToken,
+        });
+
+        if (response.statusCode == 200) {
+          final newAccessToken = response.data['accessToken'];
+          final newRefreshToken = response.data['refreshToken'];
+
+          await _storage.write(key: AppConstants.accessTokenKey, value: newAccessToken);
+          await _storage.write(key: AppConstants.refreshTokenKey, value: newRefreshToken);
+        }
+      }
     } catch (e) {
-      return ApiResponse<T>(
-        success: false,
-        error: ApiError(code: 'NETWORK_ERROR', message: e.toString()),
-      );
+      await clearTokens();
     }
   }
 
-  Future<ApiResponse<T>> postWithParser<T>(
-    String path,
-    dynamic data,
-    T Function(dynamic data) parser, {
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    try {
-      final response = await dio.post(path, data: data, queryParameters: queryParameters);
-      return ApiResponse<T>(
-        success: true,
-        data: parser(response.data['data']),
-      );
-    } catch (e) {
-      return ApiResponse<T>(
-        success: false,
-        error: ApiError(code: 'NETWORK_ERROR', message: e.toString()),
-      );
-    }
+  Future<void> saveTokens(String accessToken, String refreshToken) async {
+    await _storage.write(key: AppConstants.accessTokenKey, value: accessToken);
+    await _storage.write(key: AppConstants.refreshTokenKey, value: refreshToken);
+  }
+
+  Future<void> clearTokens() async {
+    await _storage.delete(key: AppConstants.accessTokenKey);
+    await _storage.delete(key: AppConstants.refreshTokenKey);
+    await _storage.delete(key: AppConstants.userDataKey);
+  }
+
+  Future<String?> getAccessToken() async {
+    return await _storage.read(key: AppConstants.accessTokenKey);
   }
 }
-
