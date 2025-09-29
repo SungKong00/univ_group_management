@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/workspace_state_provider.dart';
-import '../../providers/navigation_state_provider.dart';
-import '../../services/navigation_history_service.dart';
+import '../../../core/navigation/navigation_controller.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
@@ -35,7 +34,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   void _initializeWorkspace() {
     final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
-    final navigationNotifier = ref.read(navigationStateProvider.notifier);
+    final navigationController = ref.read(navigationControllerProvider.notifier);
 
     // 워크스페이스 상태 설정
     workspaceNotifier.enterWorkspace(
@@ -43,18 +42,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       channelId: widget.channelId,
     );
 
-    // 네비게이션 히스토리 업데이트
-    final route = widget.channelId != null
-        ? '/workspace/${widget.groupId}/channel/${widget.channelId}'
-        : '/workspace/${widget.groupId}';
-
-    NavigationHistoryService.pushRoute(route, {
-      'groupId': widget.groupId,
-      if (widget.channelId != null) 'channelId': widget.channelId,
-    });
-
-    // 사이드바 축소
-    navigationNotifier.enterWorkspace();
+    // 워크스페이스 진입 시 사이드바를 즉시 축소
+    navigationController.enterWorkspace();
   }
 
   @override

@@ -3,17 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../providers/navigation_state_provider.dart';
-import '../../services/navigation_history_service.dart';
+import '../../../core/navigation/navigation_controller.dart';
 
 class TopNavigation extends ConsumerWidget {
   const TopNavigation({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final navigationState = ref.watch(navigationStateProvider);
+    final navigationState = ref.watch(navigationControllerProvider);
     final currentRoute = GoRouterState.of(context);
     final pageTitle = _getPageTitle(currentRoute.name ?? '');
+    final canGoBack = navigationState.canGoBackInCurrentTab ||
+        navigationState.currentTab != NavigationTab.home;
 
     return Container(
       height: AppConstants.topNavigationHeight,
@@ -30,7 +31,7 @@ class TopNavigation extends ConsumerWidget {
             width: navigationState.isWorkspaceCollapsed
                 ? AppConstants.sidebarCollapsedWidth
                 : AppConstants.backButtonWidth,
-            child: navigationState.canGoBack
+            child: canGoBack
                 ? IconButton(
                     onPressed: () => _handleBackNavigation(context, ref),
                     icon: const Icon(Icons.arrow_back),
@@ -56,16 +57,10 @@ class TopNavigation extends ConsumerWidget {
   }
 
   void _handleBackNavigation(BuildContext context, WidgetRef ref) {
-    final navigationNotifier = ref.read(navigationStateProvider.notifier);
-    final previousRoute = navigationNotifier.goBack();
+    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final previousRoute = navigationController.goBack();
 
     if (previousRoute != null) {
-      // 워크스페이스를 벗어나는 경우 사이드바 확장
-      if (NavigationHistoryService.isInWorkspace &&
-          !previousRoute.startsWith(AppConstants.workspaceRoute)) {
-        navigationNotifier.exitWorkspace();
-      }
-
       context.go(previousRoute);
     }
   }

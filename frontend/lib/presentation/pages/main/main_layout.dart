@@ -4,7 +4,9 @@ import 'package:responsive_framework/responsive_framework.dart';
 import '../../widgets/navigation/sidebar_navigation.dart';
 import '../../widgets/navigation/bottom_navigation.dart';
 import '../../widgets/navigation/top_navigation.dart';
-import '../../providers/navigation_state_provider.dart';
+import '../../../core/navigation/navigation_controller.dart';
+import '../../../core/navigation/router_listener.dart';
+import '../../../core/navigation/back_button_handler.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -19,26 +21,33 @@ class MainLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
-    final navigationState = ref.watch(navigationStateProvider);
+    final navigationState = ref.watch(navigationControllerProvider);
+
+    // 라우트 리스너 활성화
+    ref.watch(routeListenerProvider);
 
     // 반응형 전환 감지 및 상태 동기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _handleResponsiveTransition(ref, isDesktop, navigationState);
     });
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Column(
-        children: [
-          const TopNavigation(),
-          Expanded(
-            child: isDesktop
-                ? _buildDesktopLayout(navigationState)
-                : _buildMobileLayout(),
+    return RouterListener(
+      child: BackButtonHandler(
+        child: Scaffold(
+          backgroundColor: AppTheme.background,
+          body: Column(
+            children: [
+              const TopNavigation(),
+              Expanded(
+                child: isDesktop
+                    ? _buildDesktopLayout(navigationState)
+                    : _buildMobileLayout(),
+              ),
+            ],
           ),
-        ],
+          bottomNavigationBar: isDesktop ? null : const BottomNavigation(),
+        ),
       ),
-      bottomNavigationBar: isDesktop ? null : const BottomNavigation(),
     );
   }
 
@@ -47,12 +56,12 @@ class MainLayout extends ConsumerWidget {
     bool isDesktop,
     NavigationState navigationState,
   ) {
-    final navigationNotifier = ref.read(navigationStateProvider.notifier);
+    final navigationController = ref.read(navigationControllerProvider.notifier);
 
     // 모바일 → 웹 전환 시: 워크스페이스에 있으면 사이드바 축소 유지
     if (isDesktop && navigationState.currentRoute.startsWith(AppConstants.workspaceRoute)) {
       if (!navigationState.isWorkspaceCollapsed) {
-        navigationNotifier.enterWorkspace();
+        navigationController.enterWorkspace();
       }
     }
 

@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../providers/navigation_state_provider.dart';
-import '../../services/navigation_history_service.dart';
+import '../../../core/navigation/navigation_controller.dart';
+import '../../../core/navigation/back_button_handler.dart';
 
 class SidebarNavigation extends ConsumerWidget {
   const SidebarNavigation({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final navigationState = ref.watch(navigationStateProvider);
+    final navigationState = ref.watch(navigationControllerProvider);
     final isCollapsed = navigationState.isWorkspaceCollapsed;
 
     return AnimatedContainer(
@@ -121,21 +121,19 @@ class SidebarNavigation extends ConsumerWidget {
   }
 
   void _handleItemTap(BuildContext context, WidgetRef ref, NavigationItem item) {
-    final navigationNotifier = ref.read(navigationStateProvider.notifier);
+    final navigationController = ref.read(navigationControllerProvider.notifier);
 
-    // 네비게이션 히스토리에 추가
-    navigationNotifier.setCurrentRoute(item.route);
-    NavigationHistoryService.pushRoute(item.route);
-
-    // 워크스페이스 진입 시 사이드바 축소
     if (item.route == AppConstants.workspaceRoute) {
-      navigationNotifier.enterWorkspace();
+      navigationController.enterWorkspace();
     } else {
-      // 워크스페이스 벗어날 시 사이드바 확장
-      navigationNotifier.exitWorkspace();
+      navigationController.exitWorkspace();
     }
 
-    context.go(item.route);
+    NavigationHelper.navigateWithSync(
+      context,
+      ref,
+      item.route,
+    );
   }
 
   bool _isRouteSelected(String currentPath, String itemRoute) {
