@@ -55,19 +55,31 @@ class _LoginPageState extends State<LoginPage> {
       // 이전 로그인 세션이 남아 있으면 초기화
       await googleSignIn.signOut();
 
+      print('🚀 Google Sign-In 시작...');
       final account = await googleSignIn.signIn();
       if (account == null) {
+        print('❌ Google Sign-In 취소됨');
         return;
       }
 
+      print('✅ Google 계정 로그인 성공: ${account.email}');
       final auth = await account.authentication;
       final idToken = auth.idToken;
+      final accessToken = auth.accessToken;
 
-      if (idToken == null || idToken.isEmpty) {
-        throw Exception('Google ID 토큰을 가져오지 못했습니다. 클라이언트 ID 설정을 확인해주세요.');
+      print('🔑 ID Token 길이: ${idToken?.length ?? 0}');
+      print('🔑 Access Token 길이: ${accessToken?.length ?? 0}');
+
+      if ((idToken == null || idToken.isEmpty) && (accessToken == null || accessToken.isEmpty)) {
+        throw Exception(
+          'Google에서 인증 토큰을 반환하지 않았습니다. OAuth 클라이언트 설정을 다시 확인해주세요.',
+        );
       }
 
-      final loginResponse = await _authService.loginWithGoogleToken(idToken);
+      final loginResponse = await _authService.loginWithGoogle(
+        idToken: (idToken != null && idToken.isNotEmpty) ? idToken : null,
+        accessToken: (accessToken != null && accessToken.isNotEmpty) ? accessToken : null,
+      );
 
       if (!mounted) {
         return;
@@ -131,13 +143,27 @@ class _LoginPageState extends State<LoginPage> {
   GoogleSignIn _createGoogleSignIn() {
     final platformClientId = _clientIdForPlatform();
 
-    return GoogleSignIn(
-      scopes: const <String>['email', 'profile'],
-      clientId: platformClientId,
-      serverClientId: AppConstants.googleServerClientId.isNotEmpty
-          ? AppConstants.googleServerClientId
-          : null,
-    );
+    // 디버깅을 위한 로그
+    print('🔧 Platform Client ID: $platformClientId');
+    print('🔧 Google Web Client ID from env: ${AppConstants.googleWebClientId}');
+    print('🔧 Is Web Platform: $kIsWeb');
+
+    if (kIsWeb) {
+      // 웹에서는 serverClientId 제외 (지원되지 않음)
+      return GoogleSignIn(
+        scopes: const <String>['email', 'profile'],
+        clientId: platformClientId,
+      );
+    } else {
+      // 모바일에서는 serverClientId 포함
+      return GoogleSignIn(
+        scopes: const <String>['email', 'profile'],
+        clientId: platformClientId,
+        serverClientId: AppConstants.googleServerClientId.isNotEmpty
+            ? AppConstants.googleServerClientId
+            : null,
+      );
+    }
   }
 
   String? _clientIdForPlatform() {

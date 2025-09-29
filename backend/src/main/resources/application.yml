@@ -59,6 +59,7 @@ jwt:
 app:
   google:
     client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+    additional-client-ids: "${GOOGLE_SERVER_CLIENT_ID:},${GOOGLE_WEB_CLIENT_ID:},${GOOGLE_IOS_CLIENT_ID:},${GOOGLE_ANDROID_CLIENT_ID:},${GOOGLE_ADDITIONAL_CLIENT_IDS:}"
   school-email:
     # 콤마로 구분된 허용 도메인 목록 (하위 도메인 허용)
     allowed-domains: hs.ac.kr

@@ -23,7 +23,13 @@ class AuthServiceTest {
     fun setUp() {
         userService = mockk()
         jwtTokenProvider = mockk()
-        authService = AuthService(userService, jwtTokenProvider, "test-google-client-id")
+        authService =
+            AuthService(
+                userService,
+                jwtTokenProvider,
+                "test-google-client-id",
+                "test-google-client-id",
+            )
     }
 
     @Nested

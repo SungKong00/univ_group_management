@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AppConstants {
   static const String appName = 'University Group Management';
   static const String baseUrl = 'http://localhost:8080/api';
@@ -16,18 +18,15 @@ class AppConstants {
   static const String activityRoute = '/activity';
   static const String profileRoute = '/profile';
 
-  // Google Sign-In configuration (set via --dart-define at build time)
-  static const String googleServerClientId =
-      String.fromEnvironment(
-    'GOOGLE_SERVER_CLIENT_ID',
-    defaultValue: '264783921782-imbndkfntp44qurjvjdlrk0r342ojp83.apps.googleusercontent.com',
-  );
-  static const String googleWebClientId =
-      String.fromEnvironment('GOOGLE_WEB_CLIENT_ID', defaultValue: '');
-  static const String googleIosClientId =
-      String.fromEnvironment('GOOGLE_IOS_CLIENT_ID', defaultValue: '');
-  static const String googleAndroidClientId =
-      String.fromEnvironment('GOOGLE_ANDROID_CLIENT_ID', defaultValue: '');
+  // Google Sign-In configuration (loaded from .env file)
+  static String get googleServerClientId =>
+      dotenv.env['GOOGLE_SERVER_CLIENT_ID'] ?? '';
+  static String get googleWebClientId =>
+      dotenv.env['GOOGLE_WEB_CLIENT_ID'] ?? '';
+  static String get googleIosClientId =>
+      dotenv.env['GOOGLE_IOS_CLIENT_ID'] ?? '';
+  static String get googleAndroidClientId =>
+      dotenv.env['GOOGLE_ANDROID_CLIENT_ID'] ?? '';
 
   // UI Constants
   static const double mobileBreakpoint = 768;

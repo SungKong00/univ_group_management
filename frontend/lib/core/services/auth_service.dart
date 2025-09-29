@@ -66,19 +66,29 @@ class AuthService {
     }
   }
 
-  /// Google ID Token으로 로그인
-  Future<LoginResponse> loginWithGoogleToken(String idToken) async {
+  /// Google OAuth 토큰으로 로그인 (ID Token 또는 Access Token)
+  Future<LoginResponse> loginWithGoogle({String? idToken, String? accessToken}) async {
     // DioClient가 초기화되지 않은 경우 자동 초기화
     if (_dioClient == null) {
       initialize();
     }
 
+    if ((idToken == null || idToken.isEmpty) && (accessToken == null || accessToken.isEmpty)) {
+      throw Exception('ID 토큰 또는 Access 토큰이 필요합니다.');
+    }
+
+    final payload = <String, String>{};
+    if (idToken != null && idToken.isNotEmpty) {
+      payload['googleAuthToken'] = idToken;
+    }
+    if (accessToken != null && accessToken.isNotEmpty) {
+      payload['googleAccessToken'] = accessToken;
+    }
+
     try {
       final response = await _dioClient!.post<Map<String, dynamic>>(
-        '/auth/google/callback',
-        data: {
-          'id_token': idToken,
-        },
+        '/auth/google',
+        data: payload,
       );
 
       if (response.data != null) {
@@ -102,6 +112,11 @@ class AuthService {
     } catch (e) {
       throw Exception('Google login failed: $e');
     }
+  }
+
+  /// Google ID Token으로 로그인 (하위 호환용)
+  Future<LoginResponse> loginWithGoogleToken(String idToken) {
+    return loginWithGoogle(idToken: idToken);
   }
 
   /// 저장된 토큰으로 자동 로그인 시도

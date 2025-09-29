@@ -22,8 +22,16 @@ class AuthService(
     private val userService: UserService,
     private val jwtTokenProvider: JwtTokenProvider,
     @Value("\${app.google.client-id:}") private val googleClientId: String,
+    @Value("\${app.google.additional-client-ids:}") private val googleAdditionalClientIds: String,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
+    private val allowedGoogleClientIds: List<String> by lazy {
+        (googleClientId.split(',') + googleAdditionalClientIds.split(','))
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+    }
+
     fun authenticateWithGoogle(googleAuthToken: String): LoginResponse {
         // Google 토큰 검증
         val googleUser =
@@ -93,9 +101,13 @@ class AuthService(
                 )
             }
 
+            if (allowedGoogleClientIds.isEmpty()) {
+                throw IllegalStateException("Google OAuth client IDs are not configured. Please set app.google.client-id or related environment variables.")
+            }
+
             val verifier =
                 GoogleIdTokenVerifier.Builder(NetHttpTransport(), GsonFactory())
-                    .setAudience(listOf(googleClientId))
+                    .setAudience(allowedGoogleClientIds)
                     .build()
 
             val idToken: GoogleIdToken? = verifier.verify(token)

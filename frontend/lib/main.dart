@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
@@ -9,6 +10,9 @@ import 'core/constants/app_constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await dotenv.load(fileName: '.env');
 
   // Initialize LocalStorage with eager loading (부트 타임 최적화)
   // access token만 즉시 로드하고 나머지는 백그라운드에서 프리로드
