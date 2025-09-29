@@ -20,13 +20,15 @@ class BackButtonHandler extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return PopScope(
       canPop: false, // 기본 뒤로가기 동작을 비활성화
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
 
         final handled = await _handleBackButton(context, ref);
         if (!handled) {
           // 앱 종료 확인 다이얼로그 표시
-          _showExitConfirmDialog(context);
+          if (context.mounted) {
+            _showExitConfirmDialog(context);
+          }
         }
       },
       child: child,

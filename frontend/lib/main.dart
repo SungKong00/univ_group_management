@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -25,10 +27,11 @@ void main() async {
 
     // Try auto login (non-blocking, 실패해도 앱은 계속 실행)
     authService.tryAutoLogin().catchError((error) {
-      print('Auto login failed, continuing with manual login: $error');
+      developer.log('Auto login failed, continuing with manual login: $error', name: 'main');
+      return false; // Return false to indicate auto login failed
     });
   } catch (error) {
-    print('Initialization error: $error');
+    developer.log('Initialization error: $error', name: 'main');
     // 초기화 실패해도 앱은 실행
   }
 

@@ -50,7 +50,7 @@ class SidebarNavigation extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Material(
-        color: isSelected ? AppTheme.brandPrimary.withOpacity(0.1) : Colors.transparent,
+        color: isSelected ? AppTheme.brandPrimary.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: () => _handleItemTap(context, ref, item),
@@ -101,7 +101,7 @@ class SidebarNavigation extends ConsumerWidget {
               Text(
                 item.description,
                 style: AppTheme.bodySmall.copyWith(
-                  color: isSelected ? AppTheme.brandPrimary.withOpacity(0.8) : AppTheme.gray600,
+                  color: isSelected ? AppTheme.brandPrimary.withValues(alpha: 0.8) : AppTheme.gray600,
                 ),
               ),
             ],

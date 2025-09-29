@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -55,20 +57,28 @@ class _LoginPageState extends State<LoginPage> {
       // 이전 로그인 세션이 남아 있으면 초기화
       await googleSignIn.signOut();
 
-      print('🚀 Google Sign-In 시작...');
+      if (kDebugMode) {
+        developer.log('🚀 Google Sign-In 시작...', name: 'GoogleSignIn');
+      }
       final account = await googleSignIn.signIn();
       if (account == null) {
-        print('❌ Google Sign-In 취소됨');
+        if (kDebugMode) {
+          developer.log('❌ Google Sign-In 취소됨', name: 'GoogleSignIn');
+        }
         return;
       }
 
-      print('✅ Google 계정 로그인 성공: ${account.email}');
+      if (kDebugMode) {
+        developer.log('✅ Google 계정 로그인 성공: ${account.email}', name: 'GoogleSignIn');
+      }
       final auth = await account.authentication;
       final idToken = auth.idToken;
       final accessToken = auth.accessToken;
 
-      print('🔑 ID Token 길이: ${idToken?.length ?? 0}');
-      print('🔑 Access Token 길이: ${accessToken?.length ?? 0}');
+      if (kDebugMode) {
+        developer.log('🔑 ID Token 길이: ${idToken?.length ?? 0}', name: 'GoogleSignIn');
+        developer.log('🔑 Access Token 길이: ${accessToken?.length ?? 0}', name: 'GoogleSignIn');
+      }
 
       if ((idToken == null || idToken.isEmpty) && (accessToken == null || accessToken.isEmpty)) {
         throw Exception(
@@ -144,9 +154,11 @@ class _LoginPageState extends State<LoginPage> {
     final platformClientId = _clientIdForPlatform();
 
     // 디버깅을 위한 로그
-    print('🔧 Platform Client ID: $platformClientId');
-    print('🔧 Google Web Client ID from env: ${AppConstants.googleWebClientId}');
-    print('🔧 Is Web Platform: $kIsWeb');
+    if (kDebugMode) {
+      developer.log('🔧 Platform Client ID: $platformClientId', name: 'GoogleSignIn');
+      developer.log('🔧 Google Web Client ID from env: ${AppConstants.googleWebClientId}', name: 'GoogleSignIn');
+      developer.log('🔧 Is Web Platform: $kIsWeb', name: 'GoogleSignIn');
+    }
 
     if (kIsWeb) {
       // 웹에서는 serverClientId 제외 (지원되지 않음)

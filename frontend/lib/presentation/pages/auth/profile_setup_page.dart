@@ -183,21 +183,6 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     }
   }
 
-  int? _findNodeIdByName(String name, GroupNodeType type, {int? parentId}) {
-    for (final entry in _nodesById.entries) {
-      final node = entry.value;
-      if (node.type != type) {
-        continue;
-      }
-      if (parentId != null && node.parentId != parentId) {
-        continue;
-      }
-      if (node.name == name) {
-        return entry.key;
-      }
-    }
-    return null;
-  }
 
   void _onNicknameChanged(String value) {
     _nicknameDebounce?.cancel();
@@ -552,9 +537,9 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
-              color: AppTheme.error.withOpacity(0.08),
+              color: AppTheme.error.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppTheme.radiusInput),
-              border: Border.all(color: AppTheme.error.withOpacity(0.5)),
+              border: Border.all(color: AppTheme.error.withValues(alpha: 0.5)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -759,7 +744,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      value: _selectedCollegeId,
+                      initialValue: _selectedCollegeId,
                       items: _colleges
                           .map(
                             (node) => DropdownMenuItem<int>(
@@ -788,7 +773,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   const SizedBox(width: AppTheme.spacing16),
                   Expanded(
                     child: DropdownButtonFormField<int?>(
-                      value: departmentOptions.any((node) => node.id == _selectedDepartmentId)
+                      initialValue: departmentOptions.any((node) => node.id == _selectedDepartmentId)
                           ? _selectedDepartmentId
                           : null,
                       items: [
@@ -802,8 +787,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                                 value: node.id,
                                 child: Text(node.name),
                               ),
-                            )
-                            .toList(),
+                            ),
                       ],
                       decoration: const InputDecoration(
                         hintText: '학과 선택 (선택사항)',
@@ -820,7 +804,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             : Column(
                 children: [
                   DropdownButtonFormField<int>(
-                    value: _selectedCollegeId,
+                    initialValue: _selectedCollegeId,
                     items: _colleges
                         .map(
                           (node) => DropdownMenuItem<int>(
@@ -847,7 +831,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   ),
                   const SizedBox(height: AppTheme.spacing16),
                   DropdownButtonFormField<int?>(
-                    value: departmentOptions.any((node) => node.id == _selectedDepartmentId)
+                    initialValue: departmentOptions.any((node) => node.id == _selectedDepartmentId)
                         ? _selectedDepartmentId
                         : null,
                     items: [
@@ -861,8 +845,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                               value: node.id,
                               child: Text(node.name),
                             ),
-                          )
-                          .toList(),
+                          ),
                     ],
                     decoration: const InputDecoration(
                       hintText: '학과 선택 (선택사항)',

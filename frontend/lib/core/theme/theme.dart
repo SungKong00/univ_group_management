@@ -164,22 +164,22 @@ class AppButtonStyles {
         borderRadius: BorderRadius.circular(AppRadius.button),
       ),
     ).copyWith(
-      elevation: const MaterialStatePropertyAll<double>(2),
-      shadowColor: MaterialStatePropertyAll<Color>(
-        colorScheme.primary.withOpacity(0.25),
+      elevation: const WidgetStatePropertyAll<double>(2),
+      shadowColor: WidgetStatePropertyAll<Color>(
+        colorScheme.primary.withValues(alpha: 0.25),
       ),
       animationDuration: const Duration(milliseconds: 160),
-      overlayColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.pressed)) {
-          return colorScheme.onPrimary.withOpacity(0.12);
+      overlayColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return colorScheme.onPrimary.withValues(alpha: 0.12);
         }
-        if (states.contains(MaterialState.hovered)) {
-          return colorScheme.onPrimary.withOpacity(0.08);
+        if (states.contains(WidgetState.hovered)) {
+          return colorScheme.onPrimary.withValues(alpha: 0.08);
         }
         return null;
       }),
-      side: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.focused)) {
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.focused)) {
           return const BorderSide(color: AppColors.focusRing, width: 2);
         }
         return null;
@@ -205,17 +205,17 @@ class AppButtonStyles {
         borderRadius: BorderRadius.circular(AppRadius.button),
       ),
     ).copyWith(
-      overlayColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.pressed)) {
-          return colorScheme.primary.withOpacity(0.12);
+      overlayColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return colorScheme.primary.withValues(alpha: 0.12);
         }
-        if (states.contains(MaterialState.hovered)) {
-          return colorScheme.primary.withOpacity(0.08);
+        if (states.contains(WidgetState.hovered)) {
+          return colorScheme.primary.withValues(alpha: 0.08);
         }
         return null;
       }),
-      side: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.focused)) {
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.focused)) {
           return const BorderSide(color: AppColors.focusRing, width: 2);
         }
         return null;
@@ -241,20 +241,20 @@ class AppButtonStyles {
         borderRadius: BorderRadius.circular(AppRadius.button),
       ),
     ).copyWith(
-      overlayColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.pressed)) {
-          return colorScheme.primary.withOpacity(0.12);
+      overlayColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return colorScheme.primary.withValues(alpha: 0.12);
         }
-        if (states.contains(MaterialState.hovered)) {
-          return colorScheme.primary.withOpacity(0.08);
+        if (states.contains(WidgetState.hovered)) {
+          return colorScheme.primary.withValues(alpha: 0.08);
         }
         return null;
       }),
-      side: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.focused)) {
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.focused)) {
           return const BorderSide(color: AppColors.focusRing, width: 2);
         }
-        if (states.contains(MaterialState.hovered)) {
+        if (states.contains(WidgetState.hovered)) {
           return const BorderSide(color: AppColors.brandStrong, width: 1);
         }
         return const BorderSide(color: AppColors.primary, width: 1);
@@ -282,20 +282,20 @@ class AppButtonStyles {
         borderRadius: BorderRadius.circular(AppRadius.button),
       ),
     ).copyWith(
-      overlayColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.pressed)) {
-          return AppColors.neutral200.withOpacity(0.8);
+      overlayColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return AppColors.neutral200.withValues(alpha: 0.8);
         }
-        if (states.contains(MaterialState.hovered)) {
-          return AppColors.neutral100.withOpacity(0.6);
+        if (states.contains(WidgetState.hovered)) {
+          return AppColors.neutral100.withValues(alpha: 0.6);
         }
         return null;
       }),
-      side: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.focused)) {
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.focused)) {
           return const BorderSide(color: AppColors.focusRing, width: 2);
         }
-        if (states.contains(MaterialState.hovered)) {
+        if (states.contains(WidgetState.hovered)) {
           return const BorderSide(color: AppColors.neutral400, width: 1);
         }
         return const BorderSide(color: AppColors.outline, width: 1);
@@ -326,7 +326,6 @@ class AppTheme {
       primaryContainer: AppColors.primaryContainer,
       secondary: AppColors.brandLight,
       surface: AppColors.surface,
-      background: AppColors.surface,
       onSurface: AppColors.onSurface,
       outline: AppColors.outline,
       error: AppColors.error,
@@ -344,7 +343,7 @@ class AppTheme {
       canvasColor: AppColors.surface,
       cardTheme: CardThemeData(
         elevation: AppElevation.card,
-        shadowColor: AppColors.neutral900.withOpacity(0.08),
+        shadowColor: AppColors.neutral900.withValues(alpha: 0.08),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(AppRadius.card)),
         ),
