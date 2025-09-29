@@ -11,19 +11,26 @@ import 'core/constants/app_constants.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: '.env');
+  try {
+    // Load environment variables
+    await dotenv.load(fileName: '.env');
 
-  // Initialize LocalStorage with eager loading (부트 타임 최적화)
-  // access token만 즉시 로드하고 나머지는 백그라운드에서 프리로드
-  await LocalStorage.instance.initEagerData();
+    // Initialize LocalStorage with eager loading (부트 타임 최적화)
+    // access token만 즉시 로드하고 나머지는 백그라운드에서 프리로드
+    await LocalStorage.instance.initEagerData();
 
-  // Initialize services
-  final authService = AuthService();
-  authService.initialize();
+    // Initialize services
+    final authService = AuthService();
+    authService.initialize();
 
-  // Try auto login
-  await authService.tryAutoLogin();
+    // Try auto login (non-blocking, 실패해도 앱은 계속 실행)
+    authService.tryAutoLogin().catchError((error) {
+      print('Auto login failed, continuing with manual login: $error');
+    });
+  } catch (error) {
+    print('Initialization error: $error');
+    // 초기화 실패해도 앱은 실행
+  }
 
   runApp(
     const ProviderScope(
