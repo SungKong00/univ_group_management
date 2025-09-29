@@ -1,9 +1,7 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dio/dio.dart';
 import '../models/auth_models.dart';
 import '../network/dio_client.dart';
-import '../constants/app_constants.dart';
+import 'local_storage.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -12,6 +10,7 @@ class AuthService {
 
   DioClient? _dioClient;
   UserInfo? _currentUser;
+  final LocalStorage _storage = LocalStorage.instance;
 
   void initialize() {
     _dioClient ??= DioClient();
@@ -92,13 +91,14 @@ class AuthService {
   /// 저장된 토큰으로 자동 로그인 시도
   Future<bool> tryAutoLogin() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final accessToken = prefs.getString(AppConstants.accessTokenKey);
-      final userDataJson = prefs.getString(AppConstants.userDataKey);
+      final accessToken = await _storage.getAccessToken();
+      final userDataJson = await _storage.getUserData();
 
       if (accessToken != null && userDataJson != null) {
         final userData = json.decode(userDataJson) as Map<String, dynamic>;
         _currentUser = UserInfo.fromJson(userData);
+        // 토큰 캐시 동기화
+        await _storage.getRefreshToken();
 
         // TODO: 토큰 유효성 검증 API 호출
         // 현재는 저장된 정보만으로 자동 로그인 처리
@@ -129,34 +129,22 @@ class AuthService {
 
   /// 토큰 저장
   Future<void> _saveTokens(String accessToken, String refreshToken) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.accessTokenKey, accessToken);
-    await prefs.setString(AppConstants.refreshTokenKey, refreshToken);
+    await _storage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
   }
 
   /// 사용자 정보 저장
   Future<void> _saveUserInfo(UserInfo userInfo) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.userDataKey, json.encode(userInfo.toJson()));
+    await _storage.saveUserData(json.encode(userInfo.toJson()));
   }
 
   /// 토큰 및 사용자 정보 삭제
   Future<void> _clearTokens() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(AppConstants.accessTokenKey);
-    await prefs.remove(AppConstants.refreshTokenKey);
-    await prefs.remove(AppConstants.userDataKey);
+    await _storage.clearAuthData();
   }
 
   /// 저장된 액세스 토큰 반환
-  Future<String?> getAccessToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(AppConstants.accessTokenKey);
-  }
+  Future<String?> getAccessToken() => _storage.getAccessToken();
 
   /// 저장된 리프레시 토큰 반환
-  Future<String?> getRefreshToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(AppConstants.refreshTokenKey);
-  }
+  Future<String?> getRefreshToken() => _storage.getRefreshToken();
 }

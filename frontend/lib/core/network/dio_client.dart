@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import '../constants/app_constants.dart';
+import '../services/local_storage.dart';
 
 class DioClient {
   static final DioClient _instance = DioClient._internal();
@@ -16,15 +17,17 @@ class DioClient {
       },
     ));
 
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      logPrint: (object) => print(object),
-    ));
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        logPrint: (object) => print(object),
+      ));
+    }
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final token = await _getAccessToken();
+        final token = await _storage.getAccessToken();
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
@@ -42,12 +45,13 @@ class DioClient {
   }
 
   late final Dio _dio;
+  final LocalStorage _storage = LocalStorage.instance;
 
   Dio get dio => _dio;
 
   Future<void> _handleTokenRefresh() async {
     try {
-      final refreshToken = await _getRefreshToken();
+      final refreshToken = await _storage.getRefreshToken();
       if (refreshToken != null) {
         final response = await _dio.post('/auth/refresh', data: {
           'refreshToken': refreshToken,
@@ -57,7 +61,10 @@ class DioClient {
           final newAccessToken = response.data['accessToken'];
           final newRefreshToken = response.data['refreshToken'];
 
-          await _saveTokens(newAccessToken, newRefreshToken);
+          await _storage.saveTokens(
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+          );
         }
       }
     } catch (e) {
@@ -65,27 +72,8 @@ class DioClient {
     }
   }
 
-  Future<void> _saveTokens(String accessToken, String refreshToken) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.accessTokenKey, accessToken);
-    await prefs.setString(AppConstants.refreshTokenKey, refreshToken);
-  }
-
   Future<void> clearTokens() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(AppConstants.accessTokenKey);
-    await prefs.remove(AppConstants.refreshTokenKey);
-    await prefs.remove(AppConstants.userDataKey);
-  }
-
-  Future<String?> _getAccessToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(AppConstants.accessTokenKey);
-  }
-
-  Future<String?> _getRefreshToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(AppConstants.refreshTokenKey);
+    await _storage.clearAuthData();
   }
 
   // HTTP methods with proper typing
