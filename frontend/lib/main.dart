@@ -5,10 +5,15 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/network/dio_client.dart';
 import 'core/services/auth_service.dart';
+import 'core/services/local_storage.dart';
 import 'core/constants/app_constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize LocalStorage with eager loading (부트 타임 최적화)
+  // access token만 즉시 로드하고 나머지는 백그라운드에서 프리로드
+  await LocalStorage.instance.initEagerData();
 
   // Initialize services
   final authService = AuthService();

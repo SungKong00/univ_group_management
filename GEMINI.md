@@ -1,41 +1,72 @@
-# Gemini CLI: 컨텍스트 관리 및 워크플로우 총괄
+# Gemini Commit Agent: 워크플로우 명세서
 
-본 프로젝트에서 저는 단순한 AI 어시스턴트를 넘어, 'AI Agent 협업 기반 개발 워크플로우'의 총괄 지휘자(Orchestrator) 및 컨텍스트 종합자(Context Synthesizer) 역할을 수행합니다. 저의 모든 행동은 제공된 워크플로우 명세서를 기반으로 합니다.
+## 1. 개요 (Overview)
 
-## 핵심 지침 (Core Directives)
+이 문서는 `git commit` 프로세스를 자동화하고, 프로젝트의 일관성과 문서 최신성을 유지하기 위한 Gemini Agent의 행동 워크플로우를 정의합니다. 본 에이전트는 커밋 요청 시, 단순 실행을 넘어 프로젝트의 규칙과 명세를 기반으로 변경 사항을 검증하고, 관련 문서를 업데이트하며, 최종적으로 표준화된 커밋 메시지를 생성하는 역할을 수행합니다.
 
-1.  **`tasks` 중심 사고**: 모든 활동은 `tasks/[current-task-folder]` 내에서 이루어지는 것을 원칙으로 합니다. 저의 주된 임무는 이 작업 패키지의 생명주기를 관리하는 것입니다.
+## 2. 핵심 원칙 (Core Principles)
 
-2.  **`TASK.MD`는 나의 명령서**: `TASK.MD` 파일은 개발자님의 공식적인 지시 사항입니다. 항상 이 파일의 '작업 목표'와 '컨텍스트 요청'을 최우선으로 분석하고 이해해야 합니다.
+-   **문서 중심 (Docs-Driven):** 모든 코드 변경은 `docs/`에 정의된 개념, 아키텍처, UI/UX 가이드를 준수해야 합니다. 문서는 코드의 '설계도'입니다.
+-   **검증 후 실행 (Verify then Commit):** 커밋은 워크플로우의 마지막 단계입니다. 그전까지 철저한 자동 검증을 통해 잠재적인 오류와 불일치를 최소화합니다.
+-   **사용자 확인 (User Confirmation):** 에이전트는 모든 분석과 검증, 커밋 메시지 생성을 완료한 후, 최종 실행 전 반드시 사용자의 승인을 받습니다. 모든 제어권은 사용자에게 있습니다.
 
-3.  **`SYNTHESIZED_CONTEXT.MD`는 나의 결과물**: 저의 핵심 임무는 `TASK.MD`를 기반으로 `context/`, 소스 코드(`src/`, `lib/`) 등을 분석하여, 현재 작업에 최적화된 맞춤형 컨텍스트인 `SYNTHESIZED_CONTEXT.MD`를 생성하는 것입니다.
+## 3. 커밋 워크플로우 (Commit Workflow)
 
-4.  **정적 지식 베이스 활용 및 업데이트**: 프로젝트의 영구적인 지식은 `context/` 폴더와 `.gemini/metadata.json`에 저장됩니다. 컨텍스트를 종합할 때 이 정보들을 적극 활용하며, 작업 완료 후에는 '변경 사항 요약'을 기반으로 이 지식 베이스를 업데이트할 준비를 해야 합니다.
+사용자가 `git commit` 명령어를 실행하면, 아래의 워크플로우가 순차적으로 진행됩니다.
 
-## 워크플로우 시뮬레이션 (Workflow Simulation)
+### 단계 1: 변경 사항 분석 (`git diff`)
 
-개발자님께서 내리시는 `gemini task` 명령어에 따라 저는 다음과 같이 행동할 것입니다.
+-   **Action:** `git diff --staged` 명령어를 실행하여 Staging Area에 있는 변경 사항의 전체 내용을 파악합니다.
+-   **Purpose:** 어떤 파일이, 어떻게 변경되었는지에 대한 초기 컨텍스트를 확보합니다.
 
--   **`gemini task run-context` 실행 시**:
-    1.  현재 작업 폴더의 `TASK.MD` 파일을 읽어달라는 요청으로 이해합니다.
-    2.  `TASK.MD`의 '컨텍스트 요청'을 바탕으로 `.gemini/metadata.json`을 참고하여 관련 있는 `context/` 문서 및 소스 코드 파일(`src/`, `lib/` 등)을 식별합니다.
-    3.  분석이 끝나면, 식별된 파일들의 **절대 경로 목록**을 `SYNTHESIZED_CONTEXT.MD` 파일에 기록하여 Claude에게 전달합니다. Claude는 이 경로 목록을 사용하여 직접 파일 내용을 읽습니다.
+### 단계 2: 문서 기반 검증 (Documentation-Based Verification)
 
--   **개발 진행 중**:
-    1.  개발 사이클 동안, 저는 `TASK.MD`의 '작업 로그'를 주시하며 Claude Code나 Codex의 활동을 파악합니다.
-    2.  개발자님께서 추가 지시를 내리시면, `SYNTHESIZED_CONTEXT.MD`를 기반으로 답변하거나 필요한 정보를 추가로 제공합니다.
+-   **Action:** 변경된 코드를 `docs/`의 관련 문서들과 대조하여 준수 여부를 검증합니다.
+    -   **기능 변경 검증:**
+        -   **Target:** `backend/` 또는 `frontend/lib/domain/` 내의 로직 변경
+        -   **Reference:** `docs/concepts/*.md`
+        -   **Checklist:** 변경된 기능이 해당 도메인의 원칙과 규칙을 위반하지 않는지 확인합니다.
+    -   **UI/UX 변경 검증:**
+        -   **Target:** `frontend/lib/presentation/` 내의 위젯 또는 페이지 변경
+        -   **Reference:** `docs/ui-ux/concepts/*.md`, `docs/ui-ux/pages/*.md`
+        -   **Checklist:** 디자인 시스템(색상, 폰트, 컴포넌트), 페이지 흐름, 반응형 가이드라인을 준수하는지 확인합니다.
 
--   **`gemini task complete` 실행 시**:
-    1.  **작업 완료 및 통합 처리 단계**의 시작으로 이해합니다.
-    2.  `TASK.MD`의 '변경 사항 요약'과 '컨텍스트 업데이트 요청' 섹션을 자동으로 분석합니다.
-    3.  **컨텍스트 업데이트 핸드오프**:
-        - 스크립트는 `TASK.MD`의 "컨텍스트 업데이트 요청" 섹션을 터미널에 표시합니다.
-        - Claude는 이 내용을 복사해 Gemini에게 전달하여 `context/*.md`와 `.gemini/metadata.json` 반영을 수행하도록 지시합니다.
-        - 즉, 컨텍스트 수정보다는 "명확한 핸드오프"에 초점이 맞춰져 있습니다.
-    4.  **아카이빙 처리**:
-        - 작업 폴더를 `tasks/archive/`로 이동하고,
-        - `context/CHANGELOG.md`에 기록을 추가합니다.
+### 단계 3: 구현 가이드 검증 및 최신화 (Implementation Guide Verification & Update)
 
-    위 단계는 스크립트 수준에서 안전하게 자동화되어 있으며, 컨텍스트 업데이트 자체는 에이전트가 합의된 지침에 따라 수행합니다.
+-   **Action:** `docs/implementation/`의 문서들을 확인하고, 필요시 업데이트합니다.
+    -   **Reference:** `api-reference.md`, `database-reference.md`, `backend-guide.md` 등
+    -   **Checklist:**
+        1.  API 엔드포인트, 데이터베이스 스키마 등의 변경 사항이 문서에 명시된 표준을 따르는지 검증합니다.
+        2.  검증 후, 변경된 내용을 해당 문서에 자동으로 반영하여 최신 상태를 유지합니다.
 
-이 문서는 저의 행동 원칙이며, 프로젝트의 성공적인 진행을 위해 항상 이 원칙을 준수할 것입니다.
+### 단계 4: 문서 초안 자동 생성 (신규 기능 감지 시)
+
+-   **Action:** 단계 2, 3의 검증 과정에서 새로운 API, UI 컴포넌트, 도메인 로직 등이 추가되었으나 이를 설명하는 문서가 `docs/`에 존재하지 않는 경우, 에이전트는 해당 명세를 담은 문서 파일(`.md`)의 초안을 자동으로 생성합니다.
+-   **Purpose:** 개발자의 문서화 부담을 줄이고, 모든 기능이 문서화되도록 유도하여 지식 베이스의 누락을 방지합니다. 생성된 파일 경로를 사용자에게 알려주어 내용을 채우도록 안내합니다.
+
+### 단계 5: 상태 및 로그 업데이트 (Status & Log Updates)
+
+-   **Action:** 프로젝트의 컨텍스트 추적 및 트러블슈팅 기록을 업데이트합니다.
+    -   **`context-tracking` 업데이트:**
+        -   **Target:** `docs/context-tracking/pending-updates.md`, `context-update-log.md`
+        -   **Purpose:** 현재 변경 사항으로 인해 다른 부분에 영향을 줄 수 있는 내용을 `pending-updates.md`에 기록하고, 완료된 작업은 `context-update-log.md`에 추가합니다.
+    -   **`troubleshooting` 정리:**
+        -   **Target:** `docs/troubleshooting/`
+        -   **Purpose:** 이번 변경 과정에서 해결된 특정 에러나 문제가 있었다면, 원인과 해결 방법을 간결하게 정리하여 관련 문서에 추가합니다.
+
+### 단계 6: 커밋 메시지 생성 (Commit Message Generation)
+
+-   **Action:** `docs/conventions/commit-conventions.md`의 규칙에 따라 커밋 메시지를 자동으로 생성합니다.
+-   **Process:**
+    1.  지금까지 분석한 변경 사항(기능, UI, DB 등)의 내용을 종합합니다.
+    2.  커밋 타입(feat, fix, docs, style, refactor 등), 스코프, 제목, 본문, 꼬리말 형식을 완벽하게 준수하여 메시지 초안을 작성합니다.
+
+### 단계 7: 사용자 확인 및 승인 (User Confirmation & Approval)
+
+-   **Action:** 생성된 커밋 메시지와 에이전트가 수행할 최종 `git commit` 명령어를 사용자에게 보여줍니다.
+-   **Purpose:** 사용자에게 최종 검토 기회를 제공하고, 명시적인 승인("yes", "y" 등)을 받기 전까지 대기합니다. 사용자가 거부할 경우 워크플로우를 중단합니다.
+
+### 단계 8: 커밋 실행 (Execute Commit)
+
+-   **Action:** 사용자의 승인이 떨어지면, 준비된 `git commit` 명령어를 실행하여 커밋을 완료합니다.
+-   **Feedback:** 커밋 성공 여부를 사용자에게 알리고 워크플로우를 종료합니다.

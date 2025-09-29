@@ -21,6 +21,11 @@ class AuthService {
 
   /// 테스트 계정으로 로그인 (개발용)
   Future<LoginResponse> loginWithTestAccount() async {
+    // DioClient가 초기화되지 않은 경우 자동 초기화
+    if (_dioClient == null) {
+      initialize();
+    }
+
     try {
       // 실제 백엔드 API 호출을 위한 더미 토큰 생성
       // 백엔드에서는 test 토큰을 받으면 castlekong1019@gmail.com 계정으로 로그인 처리
@@ -57,6 +62,11 @@ class AuthService {
 
   /// Google ID Token으로 로그인
   Future<LoginResponse> loginWithGoogleToken(String idToken) async {
+    // DioClient가 초기화되지 않은 경우 자동 초기화
+    if (_dioClient == null) {
+      initialize();
+    }
+
     try {
       final response = await _dioClient!.post<Map<String, dynamic>>(
         '/auth/google/callback',
@@ -115,6 +125,11 @@ class AuthService {
   /// 로그아웃
   Future<void> logout() async {
     try {
+      // DioClient가 초기화되지 않은 경우 자동 초기화
+      if (_dioClient == null) {
+        initialize();
+      }
+
       // 서버에 로그아웃 요청
       await _dioClient!.post('/auth/logout');
     } catch (e) {
