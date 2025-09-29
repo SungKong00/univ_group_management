@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:equatable/equatable.dart';
 import '../../core/constants/app_constants.dart';
 
@@ -81,11 +83,11 @@ class NavigationHistoryService {
 
   /// 디버그용: 현재 히스토리 출력
   static void printHistory() {
-    print('Navigation History:');
+    developer.log('Navigation History:', name: 'NavigationHistory');
     for (int i = 0; i < _history.length; i++) {
       final entry = _history[i];
       final marker = i == _history.length - 1 ? '-> ' : '   ';
-      print('$marker$i: ${entry.route}');
+      developer.log('$marker$i: ${entry.route}', name: 'NavigationHistory');
     }
   }
 

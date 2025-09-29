@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/app_constants.dart';
@@ -39,7 +41,7 @@ class LocalStorage {
       _cachedUserData ??= prefs.getString(AppConstants.userDataKey);
     } catch (e) {
       // 프리로드 실패는 치명적이지 않음 - 필요시 lazy load로 폴백
-      print('Background prefetch failed: $e');
+      developer.log('Background prefetch failed: $e', name: 'LocalStorage', level: 800);
     }
   }
 

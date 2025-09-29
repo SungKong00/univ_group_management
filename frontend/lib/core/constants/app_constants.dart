@@ -9,11 +9,25 @@ class AppConstants {
 
   // Routes
   static const String loginRoute = '/login';
+  static const String onboardingRoute = '/onboarding';
   static const String homeRoute = '/home';
   static const String workspaceRoute = '/workspace';
   static const String calendarRoute = '/calendar';
   static const String activityRoute = '/activity';
   static const String profileRoute = '/profile';
+
+  // Google Sign-In configuration (set via --dart-define at build time)
+  static const String googleServerClientId =
+      String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue: '264783921782-imbndkfntp44qurjvjdlrk0r342ojp83.apps.googleusercontent.com',
+  );
+  static const String googleWebClientId =
+      String.fromEnvironment('GOOGLE_WEB_CLIENT_ID', defaultValue: '');
+  static const String googleIosClientId =
+      String.fromEnvironment('GOOGLE_IOS_CLIENT_ID', defaultValue: '');
+  static const String googleAndroidClientId =
+      String.fromEnvironment('GOOGLE_ANDROID_CLIENT_ID', defaultValue: '');
 
   // UI Constants
   static const double mobileBreakpoint = 768;

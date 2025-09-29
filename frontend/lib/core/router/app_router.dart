@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/pages/auth/login_page.dart';
+import '../../presentation/pages/auth/profile_setup_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/workspace/workspace_page.dart';
 import '../../presentation/pages/calendar/calendar_page.dart';
@@ -19,6 +19,11 @@ final GoRouter appRouter = GoRouter(
       path: AppConstants.loginRoute,
       name: 'login',
       builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      path: AppConstants.onboardingRoute,
+      name: 'profile-setup',
+      builder: (context, state) => const ProfileSetupPage(),
     ),
     ShellRoute(
       builder: (context, state, child) => MainLayout(child: child),
@@ -77,16 +82,20 @@ final GoRouter appRouter = GoRouter(
   ],
   redirect: (context, state) {
     final isLoggedIn = _authService.isLoggedIn;
-    final currentPath = state.uri.toString();
+    final currentPath = state.uri.path;
     final isLoginRoute = currentPath == AppConstants.loginRoute;
+    final isOnboardingRoute = currentPath == AppConstants.onboardingRoute;
+    final isProfileCompleted = _authService.currentUser?.profileCompleted ?? false;
 
-    // 로그인하지 않은 경우 로그인 페이지로
-    if (!isLoggedIn && !isLoginRoute) {
-      return AppConstants.loginRoute;
+    if (!isLoggedIn) {
+      return isLoginRoute ? null : AppConstants.loginRoute;
     }
 
-    // 이미 로그인한 경우 로그인 페이지 접근시 홈으로
-    if (isLoggedIn && isLoginRoute) {
+    if (!isProfileCompleted) {
+      return isOnboardingRoute ? null : AppConstants.onboardingRoute;
+    }
+
+    if (isLoginRoute || isOnboardingRoute) {
       return AppConstants.homeRoute;
     }
 

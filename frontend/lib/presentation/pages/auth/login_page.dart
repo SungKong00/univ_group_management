@@ -1,7 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/models/auth_models.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../widgets/buttons/outlined_link_button.dart';
@@ -18,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   final AuthService _authService = AuthService();
   bool _isLoading = false;
   bool _showEntryAnimation = false;
+  GoogleSignIn? _googleSignIn;
 
   @override
   void initState() {
@@ -33,22 +38,58 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
+      if (AppConstants.googleServerClientId.isEmpty) {
+        throw Exception(
+          'GOOGLE_SERVER_CLIENT_ID가 설정되지 않았습니다. Google OAuth 클라이언트 정보를 입력해주세요.',
+        );
+      }
+
+      if (kIsWeb && AppConstants.googleWebClientId.isEmpty) {
+        throw Exception(
+          '웹 환경에서는 GOOGLE_WEB_CLIENT_ID 값을 설정해야 Google 로그인을 사용할 수 있어요.',
+        );
+      }
+
+      final googleSignIn = _googleSignIn ??= _createGoogleSignIn();
+
+      // 이전 로그인 세션이 남아 있으면 초기화
+      await googleSignIn.signOut();
+
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        return;
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception('Google ID 토큰을 가져오지 못했습니다. 클라이언트 ID 설정을 확인해주세요.');
+      }
+
+      final loginResponse = await _authService.loginWithGoogleToken(idToken);
+
       if (!mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Google 로그인 기능은 아직 구현 중입니다. 테스트 계정을 사용해주세요.'),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    } catch (e) {
+      await _handlePostLogin(loginResponse);
+    } on PlatformException catch (error) {
       if (mounted) {
+        final message = error.message ?? 'Google 로그인 초기화 중 오류가 발생했습니다.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('로그인 실패: $e'),
+            content: Text('로그인 실패: $message'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        final message = e.toString().replaceFirst('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('로그인 실패: $message'),
             backgroundColor: AppTheme.error,
           ),
         );
@@ -70,11 +111,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      if (loginResponse.user.profileCompleted) {
-        context.go(AppConstants.homeRoute);
-      } else {
-        context.go(AppConstants.homeRoute);
-      }
+      await _handlePostLogin(loginResponse);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -89,6 +126,54 @@ class _LoginPageState extends State<LoginPage> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  GoogleSignIn _createGoogleSignIn() {
+    final platformClientId = _clientIdForPlatform();
+
+    return GoogleSignIn(
+      scopes: const <String>['email', 'profile'],
+      clientId: platformClientId,
+      serverClientId: AppConstants.googleServerClientId.isNotEmpty
+          ? AppConstants.googleServerClientId
+          : null,
+    );
+  }
+
+  String? _clientIdForPlatform() {
+    if (kIsWeb) {
+      return AppConstants.googleWebClientId.isNotEmpty
+          ? AppConstants.googleWebClientId
+          : null;
+    }
+
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.iOS:
+        return AppConstants.googleIosClientId.isNotEmpty
+            ? AppConstants.googleIosClientId
+            : null;
+      case TargetPlatform.android:
+        return AppConstants.googleAndroidClientId.isNotEmpty
+            ? AppConstants.googleAndroidClientId
+            : null;
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _handlePostLogin(LoginResponse loginResponse) async {
+    final shouldCompleteProfile =
+        !loginResponse.user.profileCompleted || loginResponse.firstLogin;
+
+    final targetRoute = shouldCompleteProfile
+        ? AppConstants.onboardingRoute
+        : AppConstants.homeRoute;
+
+    if (!mounted) {
+      return;
+    }
+
+    context.go(targetRoute);
   }
 
   @override

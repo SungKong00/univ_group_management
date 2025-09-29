@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import '../models/auth_models.dart';
 import '../network/dio_client.dart';
 import 'local_storage.dart';
@@ -18,6 +19,11 @@ class AuthService {
 
   UserInfo? get currentUser => _currentUser;
   bool get isLoggedIn => _currentUser != null;
+
+  Future<void> updateCurrentUser(UserInfo userInfo) async {
+    _currentUser = userInfo;
+    await _saveUserInfo(userInfo);
+  }
 
   /// 테스트 계정으로 로그인 (개발용)
   Future<LoginResponse> loginWithTestAccount() async {
@@ -55,7 +61,7 @@ class AuthService {
         throw Exception('No response data');
       }
     } catch (e) {
-      print('Test login error details: $e');
+      developer.log('Test login error details: $e', name: 'AuthService', level: 900);
       throw Exception('테스트 로그인 실패: ${e.toString()}');
     }
   }
@@ -117,7 +123,7 @@ class AuthService {
 
       return false;
     } catch (e) {
-      print('Auto login failed: $e');
+      developer.log('Auto login failed: $e', name: 'AuthService', level: 900);
       return false;
     }
   }
@@ -133,7 +139,7 @@ class AuthService {
       // 서버에 로그아웃 요청
       await _dioClient!.post('/auth/logout');
     } catch (e) {
-      print('Server logout failed: $e');
+      developer.log('Server logout failed: $e', name: 'AuthService', level: 900);
       // 서버 로그아웃 실패해도 로컬 토큰은 삭제
     }
 

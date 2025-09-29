@@ -86,6 +86,8 @@ class TopNavigation extends ConsumerWidget {
         return '프로필';
       case 'login':
         return '로그인';
+      case 'profile-setup':
+        return '프로필 설정';
       default:
         return '대학 그룹 관리';
     }

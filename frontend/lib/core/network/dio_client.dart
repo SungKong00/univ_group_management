@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../constants/app_constants.dart';
@@ -21,7 +23,7 @@ class DioClient {
       _dio.interceptors.add(LogInterceptor(
         requestBody: true,
         responseBody: true,
-        logPrint: (object) => print(object),
+        logPrint: (object) => developer.log(object.toString(), name: 'Dio'),
       ));
     }
 
@@ -68,6 +70,7 @@ class DioClient {
         }
       }
     } catch (e) {
+      developer.log('Token refresh failed: $e', name: 'Dio', level: 900);
       await clearTokens();
     }
   }
