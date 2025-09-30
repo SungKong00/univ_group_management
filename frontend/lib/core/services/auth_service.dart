@@ -134,20 +134,56 @@ class AuthService {
       final accessToken = await _storage.getAccessToken();
       final userDataJson = await _storage.getUserData();
 
-      if (accessToken != null && userDataJson != null) {
-        final userData = json.decode(userDataJson) as Map<String, dynamic>;
-        _currentUser = UserInfo.fromJson(userData);
-        // 토큰 캐시 동기화
-        await _storage.getRefreshToken();
-
-        // TODO: 토큰 유효성 검증 API 호출
-        // 현재는 저장된 정보만으로 자동 로그인 처리
-        return true;
+      if (accessToken == null || userDataJson == null) {
+        developer.log('No stored token or user data found', name: 'AuthService');
+        return false;
       }
 
-      return false;
+      // DioClient가 초기화되지 않은 경우 자동 초기화
+      if (_dioClient == null) {
+        initialize();
+      }
+
+      developer.log('Attempting auto login with stored token', name: 'AuthService');
+
+      // 토큰 유효성 검증 API 호출
+      try {
+        final response = await _dioClient!.get<Map<String, dynamic>>('/auth/verify');
+
+        if (response.statusCode == 200 && response.data != null) {
+          // API 응답에서 사용자 정보 파싱
+          final apiResponse = ApiResponse.fromJson(
+            response.data!,
+            (json) => UserInfo.fromJson(json as Map<String, dynamic>),
+          );
+
+          if (apiResponse.success && apiResponse.data != null) {
+            _currentUser = apiResponse.data!;
+            // 최신 사용자 정보로 로컬 스토리지 업데이트
+            await _saveUserInfo(_currentUser!);
+
+            developer.log('Auto login successful: ${_currentUser!.email}', name: 'AuthService');
+            return true;
+          } else {
+            throw Exception('Token verification failed: ${apiResponse.message}');
+          }
+        } else {
+          throw Exception('Invalid response from verification endpoint');
+        }
+      } catch (e) {
+        developer.log('Token verification failed: $e', name: 'AuthService', level: 900);
+
+        // 토큰 검증 실패 시 로컬 데이터 삭제 (만료된 토큰)
+        await _clearTokens();
+        _currentUser = null;
+
+        return false;
+      }
     } catch (e) {
       developer.log('Auto login failed: $e', name: 'AuthService', level: 900);
+      // 예외 발생 시 로컬 데이터 정리
+      await _clearTokens();
+      _currentUser = null;
       return false;
     }
   }
