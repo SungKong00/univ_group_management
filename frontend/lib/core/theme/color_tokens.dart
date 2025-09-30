@@ -66,4 +66,22 @@ class ColorTokens {
 
   /// Disabled 텍스트 (Dark Mode)
   static const Color darkDisabledText = Color(0xFF6C757D);
+
+  // ========== Google Button Colors (Brand Guidelines) ==========
+  /// Google 버튼 텍스트 (Light Mode) - Google 공식 가이드라인
+  static const Color googleTextLight = Color(0xFF1F1F1F);
+
+  /// Google 버튼 경계선 (Light Mode) - Material Design 3 스타일
+  /// 부드럽고 자연스러운 경계선으로 시각적 계층 개선
+  static const Color googleBorderLight = Color(0xFFDADCE0);
+
+  /// Google 버튼 배경 (Dark Mode) - Google 공식 가이드라인
+  static const Color googleBgDark = Color(0xFF131314);
+
+  /// Google 버튼 경계선 (Dark Mode) - Material Design 3 스타일
+  /// 다크 모드에서 자연스러운 경계선
+  static const Color googleBorderDark = Color(0xFF5F6368);
+
+  /// Google 버튼 텍스트 (Dark Mode) - Google 공식 가이드라인
+  static const Color googleTextDark = Color(0xFFE3E3E3);
 }
