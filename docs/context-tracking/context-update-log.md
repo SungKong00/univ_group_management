@@ -2,6 +2,25 @@
 
 이 파일은 프로젝트의 컨텍스트 문서들이 언제, 어떤 커밋에서 업데이트되었는지 추적합니다.
 
+## 2025년 10월
+
+### 2025-10-01 (rev1~rev3)
+**업데이트된 문서:**
+- ✅ `docs/implementation/database-reference.md` - GroupRole data class 제거, 시스템 역할 불변성 명시, ChannelRoleBinding 스키마/JPA 섹션 추가
+- ✅ `docs/concepts/permission-system.md` - 시스템 역할 불변성 / 채널 자동 바인딩 제거 / Permission-Centric 모델 (rev1~rev3)
+- ✅ `docs/concepts/channel-permissions.md` - 채널 권한 Permission-Centric 매트릭스 및 초기 0바인딩 정책 명시
+- ✅ `docs/concepts/workspace-channel.md` - 채널 삭제 벌크 순서 및 자동 바인딩 제거 언급 동기화 (확인 필요 시 재검토)
+- ✅ `docs/implementation/backend-guide.md` - 채널 CRUD 및 삭제 시 Bulk 순서(간접 참조) 반영
+- ✅ `docs/troubleshooting/permission-errors.md` - 디버깅 절차에서 "기본 바인딩" 표현 제거, 수동 바인딩 점검으로 변경
+- ✅ `docs/implementation/api-reference.md` - 타임스탬프 최신화 (권한 관련 엔드포인트 영향 검토 완료)
+
+**영향받는 문서 (검토 필요):**
+- 🔄 `docs/ui-ux/pages/*` - 채널 생성 후 권한 매트릭스 설정 UI 흐름 반영 여부 확인
+- 🔄 `CLAUDE.md` - 변경된 권한 모델 요약 섹션 추가 필요
+
+**업데이트 필요한 문서:**
+- ❌ `docs/concepts/recruitment-system.md` - 모집 API 최신 구현 상태 반영 (기존 pending 항목 유지)
+
 ## 2024년 9월
 
 ### 2024-09-29

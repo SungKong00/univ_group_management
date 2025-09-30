@@ -142,27 +142,21 @@ class ContentService(
     @Transactional
     fun deleteWorkspaceContentsBatch(workspaceId: Long) {
         val channels = channelRepository.findByWorkspace_Id(workspaceId)
+        if (channels.isEmpty()) return
         val channelIds = channels.map { it.id }
-
-        if (channelIds.isNotEmpty()) {
-            // 배치 크기로 청크 단위 처리
-            val batchSize = 50
-            channelIds.chunked(batchSize).forEach { chunk ->
-                // 게시물 ID들을 한 번에 조회
-                val postIds = postRepository.findPostIdsByChannelIds(chunk)
-
-                if (postIds.isNotEmpty()) {
-                    // 댓글들을 배치로 삭제
-                    postIds.chunked(batchSize).forEach { postChunk ->
-                        commentRepository.deleteByPostIds(postChunk)
-                    }
-                    // 게시물들을 배치로 삭제
-                    postRepository.deleteByChannelIds(chunk)
-                }
-            }
-            // 채널들을 배치로 삭제
-            channelRepository.deleteAll(channels)
+        // 1) 채널-역할 바인딩 제거
+        channelRoleBindingRepository.deleteByChannelIds(channelIds)
+        // 2) 포스트 ID 수집 후 댓글/포스트 벌크 삭제
+        val postIds = postRepository.findPostIdsByChannelIds(channelIds)
+        if (postIds.isNotEmpty()) {
+            // 댓글 먼저
+            commentRepository.deleteByPostIds(postIds)
+            // 포스트 삭제
+            postRepository.deleteByChannelIds(channelIds)
         }
+        // 3) 채널 삭제 (개별 select 없이 일괄) - 현재 deleteAll(channels) 사용
+        channelRepository.deleteAll(channels)
+        logger.debug("Workspace {} contents deleted: channels={}, posts={}, comments deleted in bulk", workspaceId, channelIds.size, postIds.size)
     }
 
     // Channels
@@ -251,18 +245,14 @@ class ContentService(
 
     @Transactional
     fun deleteChannelContentsBatch(channelId: Long) {
+        // 단일 채널용 벌크 삭제
+        channelRoleBindingRepository.deleteByChannelIds(listOf(channelId))
         val postIds = postRepository.findPostIdsByChannelIds(listOf(channelId))
-
         if (postIds.isNotEmpty()) {
-            // 배치 크기로 청크 단위 처리
-            val batchSize = 50
-            postIds.chunked(batchSize).forEach { chunk ->
-                // 댓글들을 배치로 삭제
-                commentRepository.deleteByPostIds(chunk)
-            }
-            // 게시물들을 배치로 삭제
+            commentRepository.deleteByPostIds(postIds)
             postRepository.deleteByChannelIds(listOf(channelId))
         }
+        logger.debug("Channel {} contents deleted: posts={}, comments deleted in bulk", channelId, postIds.size)
     }
 
     // Posts

@@ -115,4 +115,130 @@ object TestDataFactory {
             googleAccessToken = "invalid.google.access.token",
         )
     }
+
+    // === Group & Role Test Data ===
+
+    fun createTestGroup(
+        id: Long = 0L,
+        name: String = "테스트 그룹",
+        description: String? = "테스트 그룹입니다",
+        owner: org.castlekong.backend.entity.User,
+        parent: org.castlekong.backend.entity.Group? = null,
+        university: String? = null,
+        college: String? = null,
+        department: String? = null,
+        visibility: org.castlekong.backend.entity.GroupVisibility = org.castlekong.backend.entity.GroupVisibility.PUBLIC,
+        groupType: org.castlekong.backend.entity.GroupType = org.castlekong.backend.entity.GroupType.AUTONOMOUS,
+        isRecruiting: Boolean = false,
+        maxMembers: Int? = null,
+        tags: Set<String> = emptySet(),
+    ): org.castlekong.backend.entity.Group {
+        return org.castlekong.backend.entity.Group(
+            id = id,
+            name = name,
+            description = description,
+            owner = owner,
+            parent = parent,
+            university = university,
+            college = college,
+            department = department,
+            visibility = visibility,
+            groupType = groupType,
+            isRecruiting = isRecruiting,
+            maxMembers = maxMembers,
+            tags = tags,
+        )
+    }
+
+    fun createTestGroupRole(
+        id: Long = 0L,
+        group: org.castlekong.backend.entity.Group,
+        name: String = "MEMBER",
+        isSystemRole: Boolean = true,
+        permissions: Set<org.castlekong.backend.entity.GroupPermission> = emptySet(),
+        priority: Int = 1,
+    ): org.castlekong.backend.entity.GroupRole {
+        return org.castlekong.backend.entity.GroupRole(
+            id = id,
+            group = group,
+            name = name,
+            isSystemRole = isSystemRole,
+            permissions = permissions.toMutableSet(),
+            priority = priority,
+        )
+    }
+
+    fun createTestGroupMember(
+        id: Long = 0L,
+        group: org.castlekong.backend.entity.Group,
+        user: org.castlekong.backend.entity.User,
+        role: org.castlekong.backend.entity.GroupRole,
+        joinedAt: java.time.LocalDateTime = java.time.LocalDateTime.now(),
+    ): org.castlekong.backend.entity.GroupMember {
+        return org.castlekong.backend.entity.GroupMember(
+            id = id,
+            group = group,
+            user = user,
+            role = role,
+            joinedAt = joinedAt,
+        )
+    }
+
+    fun createOwnerRole(group: org.castlekong.backend.entity.Group): org.castlekong.backend.entity.GroupRole {
+        return createTestGroupRole(
+            group = group,
+            name = "OWNER",
+            isSystemRole = true,
+            permissions = org.castlekong.backend.entity.GroupPermission.values().toSet(),
+            priority = 100,
+        )
+    }
+
+    fun createAdvisorRole(group: org.castlekong.backend.entity.Group): org.castlekong.backend.entity.GroupRole {
+        return createTestGroupRole(
+            group = group,
+            name = "ADVISOR",
+            isSystemRole = true,
+            permissions = org.castlekong.backend.entity.GroupPermission.values().toSet(),
+            priority = 99,
+        )
+    }
+
+    fun createMemberRole(group: org.castlekong.backend.entity.Group): org.castlekong.backend.entity.GroupRole {
+        return createTestGroupRole(
+            group = group,
+            name = "MEMBER",
+            isSystemRole = true,
+            permissions = emptySet(),
+            priority = 1,
+        )
+    }
+
+    fun createProfessorUser(
+        id: Long = 0L,
+        name: String = "교수님",
+        email: String = "professor@example.com",
+    ): org.castlekong.backend.entity.User {
+        return createTestUser(
+            id = id,
+            name = name,
+            email = email,
+            globalRole = GlobalRole.PROFESSOR,
+        )
+    }
+
+    fun createStudentUser(
+        id: Long = 0L,
+        name: String = "학생",
+        email: String = "student@example.com",
+    ): org.castlekong.backend.entity.User {
+        return createTestUser(
+            id = id,
+            name = name,
+            email = email,
+            globalRole = GlobalRole.STUDENT,
+        )
+    }
+
+    fun uniqueEmail(prefix: String): String = "$prefix-${System.nanoTime()}@test.local"
 }

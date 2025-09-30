@@ -125,200 +125,85 @@ class GroupPermissionEvaluator(
 }
 ```
 
-## 표준 응답 형식
-
-### ApiResponse 클래스
+## 표준 응답 형식 (갱신)
 ```kotlin
 data class ApiResponse<T>(
     val success: Boolean,
     val data: T? = null,
-    val error: ErrorResponse? = null
-) {
-    companion object {
-        fun <T> success(data: T) = ApiResponse(success = true, data = data)
-        fun <T> error(code: String, message: String) =
-            ApiResponse<T>(success = false, error = ErrorResponse(code, message))
-    }
-}
+    val error: ErrorResponse? = null,
+    val timestamp: LocalDateTime = LocalDateTime.now()
+)
 
 data class ErrorResponse(
     val code: String,
-    val message: String
+    val message: String,
 )
 ```
+- 이전 `message` / `errorCode` 분리 필드 → `error.code`, `error.message` 로 통합
+- 모든 실패 응답은 `success=false` + `error` 객체 포함
 
-### 전역 예외 처리
-```kotlin
-@RestControllerAdvice
-class GlobalExceptionHandler {
+### 전역 예외 매핑 (발췌)
+| ErrorCode | HTTP | 비고 |
+|-----------|------|------|
+| INVALID_TOKEN / EXPIRED_TOKEN / UNAUTHORIZED | 401 | 인증/토큰 문제 |
+| FORBIDDEN | 403 | 권한 부족 |
+| SYSTEM_ROLE_IMMUTABLE | 403 | 시스템 역할 수정/삭제 금지 |
+| GROUP_ROLE_NAME_ALREADY_EXISTS | 409 | 역할명 충돌 |
 
-    @ExceptionHandler(IllegalArgumentException::class)
-    fun handleIllegalArgument(e: IllegalArgumentException): ResponseEntity<ApiResponse<Any>> {
-        return ResponseEntity.badRequest()
-            .body(ApiResponse.error("INVALID_REQUEST", e.message ?: "잘못된 요청"))
-    }
+## 역할 & 권한 (System Role 불변성)
+- 시스템 역할: OWNER / ADVISOR / MEMBER
+- 이름/우선순위/권한 수정 및 삭제 시도 → `SYSTEM_ROLE_IMMUTABLE`
+- 커스텀 역할만 CRUD 허용
+- GroupRole 엔티티: data class 제거, id 기반 equals/hashCode
 
-    @ExceptionHandler(AccessDeniedException::class)
-    fun handleAccessDenied(e: AccessDeniedException): ResponseEntity<ApiResponse<Any>> {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-            .body(ApiResponse.error("INSUFFICIENT_PERMISSION", "권한이 없습니다"))
-    }
-}
+## 채널 권한 (Permission-Centric 모델)
+- 새 채널 생성 시 ChannelRoleBinding 0개
+- 권한 단위(ChannelPermission) 별 허용 역할 리스트 지정
+- CHANNEL_VIEW 없으면 채널 네비게이션 미표시
+- Owner 도 매핑 없으면 읽기/쓰기 불가 (자동 상속 제거)
+
+### 권한 매트릭스 예시
+```
+CHANNEL_VIEW: OWNER, MEMBER
+POST_READ:    OWNER, MEMBER
+POST_WRITE:   OWNER
+COMMENT_WRITE:OWNER
+FILE_UPLOAD:  OWNER(optional)
 ```
 
-## 데이터 변환 패턴
-
-### DTO 변환
+## 권한 캐시 무효화 패턴
 ```kotlin
-// Entity -> DTO
-fun Group.toDto(): GroupDto = GroupDto(
-    id = this.id!!,
-    name = this.name,
-    visibility = this.visibility,
-    memberCount = this.members.size,
-    createdAt = this.createdAt
-)
-
-// DTO -> Entity
-fun CreateGroupRequest.toEntity(ownerId: Long): Group = Group(
-    name = this.name,
-    ownerId = ownerId,
-    visibility = this.visibility,
-    description = this.description
-)
+permissionService.invalidateGroup(groupId)      // 역할/바인딩 구조 변경 후
+authorityCache.invalidate(userId)              // (사용자 단위 캐시가 별도로 있을 경우)
 ```
+무효화 트리거:
+- 역할 생성/수정/삭제
+- 멤버 역할 변경
+- 채널 권한 바인딩 추가/갱신/삭제
 
-### 페이징 응답
-```kotlin
-@GetMapping
-fun getGroups(
-    @PageableDefault(size = 20) pageable: Pageable,
-    @RequestParam(required = false) search: String?
-): ResponseEntity<ApiResponse<Page<GroupDto>>> {
-
-    val groups = groupService.findGroups(search, pageable)
-    return ResponseEntity.ok(ApiResponse.success(groups))
-}
+## 컨텐츠 삭제 벌크 순서 (Workspace/Channel)
 ```
-
-## 비즈니스 로직 패턴
-
-### 도메인 검증
-```kotlin
-class GroupService {
-
-    fun validateGroupCreation(request: CreateGroupRequest, ownerId: Long) {
-        // 1. 그룹명 중복 검사
-        if (groupRepository.existsByName(request.name)) {
-            throw IllegalArgumentException("이미 존재하는 그룹명입니다")
-        }
-
-        // 2. 부모 그룹 권한 검사
-        if (request.parentGroupId != null) {
-            val hasPermission = permissionEvaluator.hasGroupPerm(
-                request.parentGroupId, "SUB_GROUP_CREATE"
-            )
-            if (!hasPermission) {
-                throw AccessDeniedException("하위 그룹 생성 권한이 없습니다")
-            }
-        }
-    }
-}
+ChannelRoleBinding → Comments → Posts → Channels
 ```
+- N+1 및 TransientObjectException 방지
+- Post/Comment 삭제는 ID 집합 기반 bulk query 활용
 
-### 트랜잭션 관리
-```kotlin
-@Transactional
-fun createGroupWithWorkspace(request: CreateGroupRequest, ownerId: Long): GroupDto {
-    try {
-        // 1. 그룹 생성
-        val group = createGroup(request, ownerId)
+## 구현 주의사항 업데이트
+| 항목 | 이전 | 현재 |
+|------|------|------|
+| 채널 기본 권한 | Owner/Member 자동 부여 | 자동 없음 (수동 매핑 필요) |
+| 시스템 역할 수정 | 일부 허용 | 전면 금지 (SYSTEM_ROLE_IMMUTABLE) |
+| ApiResponse 실패 | message/errorCode 혼용 | error.code / error.message 고정 |
+| 삭제 로직 | 엔티티 순회 다중 delete | 벌크 순서 기반 배치 |
 
-        // 2. 워크스페이스 생성
-        workspaceService.createDefaultWorkspace(group.id)
+## 테스트 가이드 보완
+- 시스템 역할 수정/삭제 테스트: 기대 ErrorCode = SYSTEM_ROLE_IMMUTABLE
+- 새 채널 생성 직후 읽기 실패 테스트: CHANNEL_VIEW / POST_READ 미매핑 시 FORBIDDEN
+- 캐시 무효화 검증: 역할 권한 변경 → 이전 권한으로 접근 실패하는지 확인
 
-        // 3. 기본 채널 생성
-        channelService.createDefaultChannels(group.id)
-
-        return group
-    } catch (e: Exception) {
-        // 롤백 자동 처리
-        throw e
-    }
-}
-```
-
-## 테스트 패턴
-
-### 통합 테스트
-```kotlin
-@SpringBootTest
-@Transactional
-class GroupServiceIntegrationTest : DatabaseCleanup() {
-
-    @Test
-    fun `그룹 생성 시 워크스페이스와 기본 채널이 함께 생성된다`() {
-        // given
-        val owner = createTestUser()
-        val request = CreateGroupRequest(
-            name = "테스트 그룹",
-            visibility = GroupVisibility.PUBLIC
-        )
-
-        // when
-        val group = groupService.createGroup(request, owner.id!!)
-
-        // then
-        assertThat(group.name).isEqualTo("테스트 그룹")
-
-        val workspaces = workspaceRepository.findByGroupId(group.id)
-        assertThat(workspaces).hasSize(1)
-
-        val channels = channelRepository.findByWorkspaceId(workspaces[0].id!!)
-        assertThat(channels).hasSize(2) // 일반대화, 공지사항
-    }
-}
-```
-
-## 성능 최적화
-
-### N+1 문제 해결
-```kotlin
-@Query("SELECT g FROM Group g JOIN FETCH g.members m JOIN FETCH m.user WHERE g.id = :groupId")
-fun findWithMembersAndUsers(groupId: Long): Group?
-
-// 사용 시
-val group = groupRepository.findWithMembersAndUsers(groupId)
-val memberDtos = group.members.map { it.toDto() } // 추가 쿼리 없음
-```
-
-### 캐싱 적용
-```kotlin
-@Cacheable(value = ["groups"], key = "#groupId")
-fun findGroup(groupId: Long): GroupDto? {
-    return groupRepository.findById(groupId)?.toDto()
-}
-
-@CacheEvict(value = ["groups"], key = "#groupId")
-fun updateGroup(groupId: Long, request: UpdateGroupRequest): GroupDto {
-    // 업데이트 로직
-}
-```
-
-## 관련 개념
-
-### 도메인 모델
-- **도메인 개요**: [../concepts/domain-overview.md](../concepts/domain-overview.md)
-- **그룹 계층**: [../concepts/group-hierarchy.md](../concepts/group-hierarchy.md)
-- **권한 시스템**: [../concepts/permission-system.md](../concepts/permission-system.md)
-- **워크스페이스**: [../concepts/workspace-channel.md](../concepts/workspace-channel.md)
-- **사용자 여정**: [../concepts/user-lifecycle.md](../concepts/user-lifecycle.md)
-- **모집 시스템**: [../concepts/recruitment-system.md](../concepts/recruitment-system.md)
-
-### 구현 참조
-- **API 상세**: [api-reference.md](api-reference.md)
-- **데이터베이스**: [database-reference.md](database-reference.md)
-
-### 문제 해결
-- **권한 에러**: [../troubleshooting/permission-errors.md](../troubleshooting/permission-errors.md)
-- **일반적 에러**: [../troubleshooting/common-errors.md](../troubleshooting/common-errors.md)
+## 관련 문서
+- [권한 시스템](../concepts/permission-system.md)
+- [채널 권한](../concepts/channel-permissions.md)
+- [워크스페이스 & 채널](../concepts/workspace-channel.md)
+- [API 레퍼런스](api-reference.md)
+- [트러블슈팅](../troubleshooting/permission-errors.md)

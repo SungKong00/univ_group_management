@@ -2,13 +2,11 @@ package org.castlekong.backend.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
-import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.json.gson.GsonFactory
 import org.castlekong.backend.dto.LoginResponse
 import org.castlekong.backend.dto.RefreshTokenResponse
 import org.castlekong.backend.dto.UserResponse
+import org.castlekong.backend.exception.BusinessException
+import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.security.JwtTokenProvider
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -24,48 +22,25 @@ import org.springframework.transaction.annotation.Transactional
 class AuthService(
     private val userService: UserService,
     private val jwtTokenProvider: JwtTokenProvider,
-    @Value("\${app.google.client-id:}") private val googleClientId: String,
-    @Value("\${app.google.additional-client-ids:}") private val googleAdditionalClientIds: String,
+    private val googleIdTokenVerifierPort: GoogleIdTokenVerifierPort, // 신규 포트 주입
+    private val googleUserInfoFetcherPort: GoogleUserInfoFetcherPort, // AccessToken 사용자 정보 조회 포트 추가
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val allowedGoogleClientIds: List<String> by lazy {
-        (googleClientId.split(',') + googleAdditionalClientIds.split(','))
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .distinct()
-    }
 
     fun authenticateWithGoogle(googleAuthToken: String): LoginResponse {
-        // Google 토큰 검증
         val googleUser =
-            verifyGoogleToken(googleAuthToken)
-                ?: throw IllegalArgumentException("Invalid Google token")
-
-        // 사용자 조회 또는 생성
+            googleIdTokenVerifierPort.verify(googleAuthToken)
+                ?: throw BusinessException(ErrorCode.INVALID_TOKEN)
         val user = userService.findOrCreateUser(googleUser)
-
-        // 사용자가 활성 상태인지 확인
-        if (!user.isActive) {
-            throw IllegalArgumentException("비활성화된 사용자입니다")
-        }
-
-        // Authentication 객체 생성
+        if (!user.isActive) throw BusinessException(ErrorCode.UNAUTHORIZED)
         val authorities = listOf(SimpleGrantedAuthority("ROLE_${user.globalRole.name}"))
-        val authentication: Authentication =
-            UsernamePasswordAuthenticationToken(
-                user.email,
-                null,
-                authorities,
-            )
-
-        // JWT 토큰 생성
+        val authentication: Authentication = UsernamePasswordAuthenticationToken(user.email, null, authorities)
         val accessToken = jwtTokenProvider.generateAccessToken(authentication)
         val refreshToken = jwtTokenProvider.generateRefreshToken(authentication)
-
         return LoginResponse(
             accessToken = accessToken,
-            tokenType = refreshToken,  // tokenType 필드를 refreshToken으로 재활용
-            expiresIn = 86400000L, // 24시간 (밀리초)
+            tokenType = "Bearer",
+            expiresIn = 86400000L,
             user = userService.convertToUserResponse(user),
             firstLogin = !user.profileCompleted,
         )
@@ -73,12 +48,12 @@ class AuthService(
 
     fun authenticateWithGoogleAccessToken(accessToken: String): LoginResponse {
         val googleUser =
-            fetchUserInfoByAccessToken(accessToken)
-                ?: throw IllegalArgumentException("Invalid Google access token")
+            googleUserInfoFetcherPort.fetch(accessToken)
+                ?: throw BusinessException(ErrorCode.INVALID_TOKEN)
 
         val user = userService.findOrCreateUser(googleUser)
         if (!user.isActive) {
-            throw IllegalArgumentException("비활성화된 사용자입니다")
+            throw BusinessException(ErrorCode.UNAUTHORIZED)
         }
 
         val authorities = listOf(SimpleGrantedAuthority("ROLE_${user.globalRole.name}"))
@@ -89,74 +64,11 @@ class AuthService(
 
         return LoginResponse(
             accessToken = accessJwt,
-            tokenType = refreshJwt,  // tokenType 필드를 refreshToken으로 재활용
+            tokenType = "Bearer",  // tokenType은 Bearer 문자열 유지
             expiresIn = 86400000L,
             user = userService.convertToUserResponse(user),
             firstLogin = !user.profileCompleted,
         )
-    }
-
-    private fun verifyGoogleToken(token: String): GoogleUserInfo? {
-        return try {
-            // 개발용 테스트 토큰 처리
-            if (token.startsWith("mock_google_token_for_")) {
-                logger.info("Processing mock Google token for development")
-                return GoogleUserInfo(
-                    email = "castlekong1019@gmail.com",
-                    name = "Castlekong",
-                    profileImageUrl = null
-                )
-            }
-
-            if (allowedGoogleClientIds.isEmpty()) {
-                throw IllegalStateException("Google OAuth client IDs are not configured. Please set app.google.client-id or related environment variables.")
-            }
-
-            val verifier =
-                GoogleIdTokenVerifier.Builder(NetHttpTransport(), GsonFactory())
-                    .setAudience(allowedGoogleClientIds)
-                    .build()
-
-            val idToken: GoogleIdToken? = verifier.verify(token)
-            if (idToken != null) {
-                val payload = idToken.payload
-                GoogleUserInfo(
-                    email = payload.email,
-                    name = payload["name"] as String? ?: "",
-                    profileImageUrl = payload["picture"] as String?,
-                )
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            throw IllegalArgumentException("Google token verification failed: ${e.message}")
-        }
-    }
-
-    private fun fetchUserInfoByAccessToken(accessToken: String): GoogleUserInfo? {
-        return try {
-            val url = java.net.URL("https://www.googleapis.com/oauth2/v3/userinfo")
-            val conn = url.openConnection() as java.net.HttpURLConnection
-            conn.requestMethod = "GET"
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
-            conn.connectTimeout = 5000
-            conn.readTimeout = 5000
-
-            val code = conn.responseCode
-            if (code in 200..299) {
-                val body = conn.inputStream.bufferedReader().use { it.readText() }
-                val mapper = jacksonObjectMapper()
-                val node: JsonNode = mapper.readTree(body)
-                val email = node.get("email")?.asText() ?: ""
-                val name = node.get("name")?.asText() ?: ""
-                val picture = node.get("picture")?.asText()
-                if (email.isNotBlank()) GoogleUserInfo(email, name, picture) else null
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            throw IllegalArgumentException("Google userinfo fetch failed: ${'$'}{e.message}")
-        }
     }
 
     /**
@@ -165,17 +77,15 @@ class AuthService(
      */
     fun verifyToken(): UserResponse {
         val authentication = SecurityContextHolder.getContext().authentication
-            ?: throw IllegalStateException("No authentication found in security context")
+            ?: throw BusinessException(ErrorCode.UNAUTHORIZED)
 
         val email = authentication.name
         logger.debug("Verifying token for user: {}", email)
 
         val user = userService.findByEmail(email)
-            ?: throw IllegalArgumentException("User not found: $email")
+            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
 
-        if (!user.isActive) {
-            throw IllegalArgumentException("비활성화된 사용자입니다")
-        }
+        if (!user.isActive) throw BusinessException(ErrorCode.UNAUTHORIZED)
 
         return userService.convertToUserResponse(user)
     }
@@ -185,9 +95,8 @@ class AuthService(
      * 현재는 단순 구현 (리프레시 토큰 저장소 없음)
      */
     fun refreshAccessToken(refreshToken: String): RefreshTokenResponse {
-        // 리프레시 토큰 검증
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw IllegalArgumentException("Invalid or expired refresh token")
+            throw BusinessException(ErrorCode.INVALID_TOKEN)
         }
 
         // 리프레시 토큰에서 사용자 정보 추출
@@ -198,11 +107,9 @@ class AuthService(
 
         // 사용자 존재 및 활성 상태 확인
         val user = userService.findByEmail(email)
-            ?: throw IllegalArgumentException("User not found: $email")
+            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
 
-        if (!user.isActive) {
-            throw IllegalArgumentException("비활성화된 사용자입니다")
-        }
+        if (!user.isActive) throw BusinessException(ErrorCode.UNAUTHORIZED)
 
         // 새로운 액세스 토큰 생성
         val newAccessToken = jwtTokenProvider.generateAccessToken(authentication)

@@ -2,6 +2,7 @@ package org.castlekong.backend.repository
 
 import org.castlekong.backend.entity.ChannelRoleBinding
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
@@ -52,4 +53,10 @@ interface ChannelRoleBindingRepository : JpaRepository<ChannelRoleBinding, Long>
      */
     fun deleteByChannelId(channelId: Long)
 
+    /**
+     * 채널 ID 다건에 대한 바인딩 일괄 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM ChannelRoleBinding b WHERE b.channel.id IN :channelIds")
+    fun deleteByChannelIds(@Param("channelIds") channelIds: List<Long>): Int
 }

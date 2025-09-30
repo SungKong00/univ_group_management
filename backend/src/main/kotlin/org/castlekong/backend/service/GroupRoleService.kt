@@ -45,10 +45,9 @@ class GroupRoleService(
                 try {
                     GroupPermission.valueOf(permString)
                 } catch (e: IllegalArgumentException) {
-                    null // 잘못된 권한은 무시
+                    null
                 }
-            }.toSet()
-
+            }.toMutableSet()
         val groupRole =
             GroupRole(
                 group = group,
@@ -95,50 +94,21 @@ class GroupRoleService(
         request: UpdateGroupRoleRequest,
         userId: Long,
     ): GroupRoleResponse {
-        val role =
-            groupRoleRepository.findById(roleId)
-                .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
-
-        // 역할이 해당 그룹에 속하는지 확인
-        if (role.group.id != groupId) {
-            throw BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND)
-        }
-
-        // 권한 확인 (그룹 소유자만 역할 수정 가능)
-        if (role.group.owner.id != userId) {
-            throw BusinessException(ErrorCode.FORBIDDEN)
-        }
-
-        // 기본 역할(OWNER, MEMBER)은 수정할 수 없음
-        if (role.name in listOf("OWNER", "MEMBER")) {
-            throw BusinessException(ErrorCode.FORBIDDEN)
-        }
-
-        // 이름 변경 시 중복 확인
+        val role = groupRoleRepository.findById(roleId).orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+        if (role.group.id != groupId) throw BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND)
+        if (role.group.owner.id != userId) throw BusinessException(ErrorCode.FORBIDDEN)
+        if (role.isSystemRole) throw BusinessException(ErrorCode.SYSTEM_ROLE_IMMUTABLE)
         if (request.name != null && request.name != role.name) {
             if (groupRoleRepository.findByGroupIdAndName(groupId, request.name).isPresent) {
                 throw BusinessException(ErrorCode.GROUP_ROLE_NAME_ALREADY_EXISTS)
             }
         }
-
-        // 권한 문자열을 GroupPermission enum으로 변환
-        val permissions =
-            request.permissions?.mapNotNull { permString ->
-                try {
-                    GroupPermission.valueOf(permString)
-                } catch (e: IllegalArgumentException) {
-                    null
-                }
-            }?.toSet()
-
-        val updatedRole =
-            role.copy(
-                name = request.name ?: role.name,
-                permissions = permissions ?: role.permissions,
-                priority = request.priority ?: role.priority,
-            )
-
-        val savedRole = groupRoleRepository.save(updatedRole)
+        request.permissions?.let { incoming ->
+            val parsed = incoming.mapNotNull { p -> runCatching { GroupPermission.valueOf(p) }.getOrNull() }
+            role.replacePermissions(parsed)
+        }
+        role.update(name = request.name, priority = request.priority)
+        val savedRole = groupRoleRepository.save(role)
         permissionService.invalidateGroup(groupId)
         return toGroupRoleResponse(savedRole)
     }
@@ -149,25 +119,10 @@ class GroupRoleService(
         roleId: Long,
         userId: Long,
     ) {
-        val role =
-            groupRoleRepository.findById(roleId)
-                .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
-
-        // 역할이 해당 그룹에 속하는지 확인
-        if (role.group.id != groupId) {
-            throw BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND)
-        }
-
-        // 권한 확인 (그룹 소유자만 역할 삭제 가능)
-        if (role.group.owner.id != userId) {
-            throw BusinessException(ErrorCode.FORBIDDEN)
-        }
-
-        // 기본 역할(OWNER, MEMBER)은 삭제할 수 없음
-        if (role.name in listOf("OWNER", "MEMBER")) {
-            throw BusinessException(ErrorCode.FORBIDDEN)
-        }
-
+        val role = groupRoleRepository.findById(roleId).orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+        if (role.group.id != groupId) throw BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND)
+        if (role.group.owner.id != userId) throw BusinessException(ErrorCode.FORBIDDEN)
+        if (role.isSystemRole) throw BusinessException(ErrorCode.SYSTEM_ROLE_IMMUTABLE)
         groupRoleRepository.delete(role)
         permissionService.invalidateGroup(groupId)
     }

@@ -86,7 +86,7 @@ class GroupMemberService(
                     group = group,
                     name = "OWNER",
                     isSystemRole = true,
-                    permissions = GroupPermission.values().toSet(),
+                    permissions = GroupPermission.values().toMutableSet(),
                     priority = 100,
                 ),
             )
@@ -97,7 +97,7 @@ class GroupMemberService(
                     group = group,
                     name = "ADVISOR",
                     isSystemRole = true,
-                    permissions = GroupPermission.values().toSet(),
+                    permissions = GroupPermission.values().toMutableSet(),
                     priority = 99,
                 ),
             )
@@ -108,7 +108,7 @@ class GroupMemberService(
                     group = group,
                     name = "MEMBER",
                     isSystemRole = true,
-                    permissions = emptySet(), // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
+                    permissions = mutableSetOf(),
                     priority = 1,
                 ),
             )

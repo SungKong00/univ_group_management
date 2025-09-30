@@ -19,14 +19,18 @@
 
 ### 1. API 개발 프로세스
 ```
-계획 → 엔티티 설계 → 서비스 로직 → 컨트롤러 → 테스트 → 문서화
+계획 → 엔티티 설계 → 서비스 로직 → 컨트롤러 → 테스트 → 문서화 → PR/리뷰 → 병합
 ```
 
 #### Step 1: 요구사항 분석
 ```markdown
 1. [concepts/domain-overview.md](../concepts/domain-overview.md) 확인
 2. [concepts/permission-system.md](../concepts/permission-system.md) 권한 요구사항 확인
-3. API 명세 초안 작성
+3. [concepts/recruitment-system.md](../concepts/recruitment-system.md) (모집 기능 포함 시)
+4. Git 전략/브랜치: [../conventions/git-strategy.md](../conventions/git-strategy.md)
+5. 커밋 컨벤션: [../conventions/commit-conventions.md](../conventions/commit-conventions.md)
+6. PR 가이드: [../conventions/pr-guidelines.md](../conventions/pr-guidelines.md)
+7. 코드 리뷰 기준: [../conventions/code-review-standards.md](../conventions/code-review-standards.md)
 ```
 
 #### Step 2: 데이터 모델 설계
@@ -71,7 +75,8 @@ class NewEntityController(
 
 ### 2. 권한 시스템 통합
 ```kotlin
-// 모든 보호된 엔드포인트에 권한 체크 필수
+// Permission-Centric 채널 권한: 채널 생성 후 바인딩 0개 → 권한 매트릭스 설정 필요
+// UI/UX 참조: channel-pages.md, channel-permissions.md
 @PreAuthorize("@security.hasGroupPerm(#groupId, 'REQUIRED_PERMISSION')")
 
 // 권한 체크 실패 시 403 Forbidden 자동 반환
@@ -273,18 +278,19 @@ class ServiceClass {
 
 ### 1. 구현 완료 후 문서 업데이트
 ```markdown
-1. API 변경 시: [api-reference.md](../implementation/api-reference.md) 업데이트
-2. DB 스키마 변경 시: [database-reference.md](../implementation/database-reference.md) 업데이트
-3. 새 개념 추가 시: concepts/ 폴더에 문서 추가
-4. UI 변경 시: ui-ux/ 폴더 문서 업데이트
+1. API 변경 시: [api-reference.md](../implementation/api-reference.md)
+2. DB 스키마 변경 시: [database-reference.md](../implementation/database-reference.md)
+3. 새 개념 추가/확장 시: concepts/ (예: recruitment-system.md 확장)
+4. UI 변경 시: ui-ux/pages/ (예: channel-pages.md Permission-Centric 반영)
+5. 권한 모델 영향 시: permission-system.md / channel-permissions.md
+6. 최상위 요약: CLAUDE.md 개정 요약 반영
 ```
 
 ### 2. 문서 일관성 확인
 ```markdown
-□ 모든 링크가 올바르게 작동함
-□ 코드 예시가 실제 구현과 일치함
-□ 새 기능이 CLAUDE.md에 반영됨
-□ 관련 troubleshooting 섹션 업데이트
+□ Git / Commit / PR / 리뷰 문서 링크 포함
+□ 채널 권한 플로우(매트릭스)가 channel-pages.md 와 api-reference.md 정합
+□ 모집 API 스펙이 recruitment-system.md 와 api-reference.md 정합
 ```
 
 ## 브랜치 전략 (Git)

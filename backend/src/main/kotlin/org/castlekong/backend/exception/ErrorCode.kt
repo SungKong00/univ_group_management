@@ -6,6 +6,7 @@ enum class ErrorCode(val message: String) {
     INVALID_REQUEST("잘못된 요청입니다."),
     FORBIDDEN("접근 권한이 없습니다."),
     UNAUTHORIZED("인증이 필요합니다."),
+    SYSTEM_ROLE_IMMUTABLE("시스템 역할은 변경하거나 삭제할 수 없습니다."),
 
     // User
     USER_NOT_FOUND("사용자를 찾을 수 없습니다."),

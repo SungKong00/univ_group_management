@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -92,7 +93,7 @@ class GroupManagementService(
                 group = group,
                 name = "OWNER",
                 isSystemRole = true,
-                permissions = GroupPermission.values().toSet(),
+                permissions = GroupPermission.values().toSet().toMutableSet(),
                 priority = 100,
             )
 
@@ -101,7 +102,7 @@ class GroupManagementService(
                 group = group,
                 name = "ADVISOR",
                 isSystemRole = true,
-                permissions = GroupPermission.values().toSet(), // preset refined in evaluator
+                permissions = GroupPermission.values().toSet().toMutableSet(), // preset refined in evaluator
                 priority = 99,
             )
 
@@ -110,7 +111,7 @@ class GroupManagementService(
                 group = group,
                 name = "MEMBER",
                 isSystemRole = true,
-                permissions = emptySet(), // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
+                permissions = emptySet<GroupPermission>().toMutableSet(), // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
                 priority = 1,
             )
 
@@ -159,7 +160,8 @@ class GroupManagementService(
     }
 
     fun getGroups(pageable: Pageable): Page<GroupSummaryResponse> {
-        return groupRepository.findByDeletedAtIsNull(pageable)
+        val sortedPageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, Sort.by(Sort.Direction.DESC, "createdAt", "id"))
+        return groupRepository.findByDeletedAtIsNull(sortedPageable)
             .map { group ->
                 val memberCount = getGroupMemberCountWithHierarchy(group)
                 groupMapper.toGroupSummaryResponse(group, memberCount.toInt())

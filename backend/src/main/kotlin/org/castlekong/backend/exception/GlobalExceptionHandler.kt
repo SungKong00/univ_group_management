@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.HttpRequestMethodNotSupportedException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -20,8 +21,11 @@ class GlobalExceptionHandler {
 
         val status =
             when (e.errorCode) {
-                ErrorCode.UNAUTHORIZED -> HttpStatus.UNAUTHORIZED
-                ErrorCode.FORBIDDEN -> HttpStatus.FORBIDDEN
+                ErrorCode.UNAUTHORIZED,
+                ErrorCode.INVALID_TOKEN,
+                ErrorCode.EXPIRED_TOKEN, -> HttpStatus.UNAUTHORIZED
+                ErrorCode.FORBIDDEN,
+                ErrorCode.SYSTEM_ROLE_IMMUTABLE -> HttpStatus.FORBIDDEN
                 ErrorCode.USER_NOT_FOUND,
                 ErrorCode.GROUP_NOT_FOUND,
                 ErrorCode.GROUP_ROLE_NOT_FOUND,
@@ -74,6 +78,13 @@ class GlobalExceptionHandler {
         logger.warn("Illegal argument: {}", e.message)
         val response = ApiResponse.error<Unit>("INVALID_ARGUMENT", e.message ?: "잘못된 인수")
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
+    fun handleMethodNotSupported(e: HttpRequestMethodNotSupportedException): ResponseEntity<ApiResponse<Unit>> {
+        logger.warn("Method not allowed: {}", e.message)
+        val response = ApiResponse.error<Unit>("METHOD_NOT_ALLOWED", "허용되지 않은 HTTP 메서드입니다.")
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response)
     }
 
     @ExceptionHandler(Exception::class)

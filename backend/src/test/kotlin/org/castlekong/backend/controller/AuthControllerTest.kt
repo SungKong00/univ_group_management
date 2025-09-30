@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.castlekong.backend.dto.LoginResponse
+import org.castlekong.backend.dto.RefreshTokenResponse
 import org.castlekong.backend.dto.UserResponse
+import org.castlekong.backend.exception.BusinessException
+import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.fixture.TestDataFactory
 import org.castlekong.backend.security.JwtTokenProvider
 import org.castlekong.backend.service.AuthService
@@ -96,7 +99,7 @@ class AuthControllerTest {
             // Given
             val invalidGoogleLoginRequest = TestDataFactory.createInvalidGoogleTokenRequest()
 
-            every { authService.authenticateWithGoogle(any()) } throws IllegalArgumentException("Invalid token.")
+            every { authService.authenticateWithGoogle(any()) } throws BusinessException(ErrorCode.INVALID_TOKEN)
 
             // When & Then
             mockMvc.perform(
@@ -108,8 +111,8 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.error.code").value("AUTH_ERROR"))
-                .andExpect(jsonPath("$.error.message").value("Invalid token."))
+                .andExpect(jsonPath("$.error.code").value("INVALID_TOKEN"))
+                .andExpect(jsonPath("$.error.message").value(ErrorCode.INVALID_TOKEN.message))
         }
 
         @Test
@@ -174,7 +177,7 @@ class AuthControllerTest {
                     googleAccessToken = "invalid.google.access.token",
                 )
 
-            every { authService.authenticateWithGoogleAccessToken(any()) } throws IllegalArgumentException("Invalid Google access token")
+            every { authService.authenticateWithGoogleAccessToken(any()) } throws BusinessException(ErrorCode.INVALID_TOKEN)
 
             // When & Then
             mockMvc.perform(
@@ -186,8 +189,8 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.error.code").value("AUTH_ERROR"))
-                .andExpect(jsonPath("$.error.message").value("Invalid Google access token"))
+                .andExpect(jsonPath("$.error.code").value("INVALID_TOKEN"))
+                .andExpect(jsonPath("$.error.message").value(ErrorCode.INVALID_TOKEN.message))
         }
 
         @Test
@@ -203,6 +206,74 @@ class AuthControllerTest {
             )
                 .andDo(print())
                 .andExpect(status().isBadRequest)
+        }
+    }
+
+    @Nested
+    @DisplayName("토큰 갱신 및 검증 테스트")
+    inner class TokenRefreshAndVerifyTest {
+        @Test
+        fun `should return new access token when refresh token valid`() {
+            val requestBody = mapOf("refreshToken" to "valid.refresh.token")
+            every { authService.refreshAccessToken("valid.refresh.token") } returns RefreshTokenResponse(
+                accessToken = "new.access.token",
+                tokenType = "Bearer",
+                expiresIn = 86400000L,
+            )
+
+            mockMvc.perform(
+                post("/api/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestBody))
+            )
+                .andDo(print())
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").value("new.access.token"))
+        }
+
+        @Test
+        fun `should return 400 when refresh token missing`() {
+            val requestBody = mapOf("otherKey" to "value")
+            mockMvc.perform(
+                post("/api/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestBody))
+            )
+                .andDo(print())
+                .andExpect(status().isBadRequest)
+        }
+
+        @Test
+        fun `should return user info when access token valid for verify`() {
+            val userResponse =
+                UserResponse(
+                    id = 10L,
+                    name = "검증 사용자",
+                    email = "verify@example.com",
+                    globalRole = "STUDENT",
+                    isActive = true,
+                    nickname = "verifyUser",
+                    profileImageUrl = null,
+                    bio = null,
+                    profileCompleted = true,
+                    emailVerified = true,
+                    createdAt = java.time.LocalDateTime.now(),
+                    updatedAt = java.time.LocalDateTime.now(),
+                )
+            every { authService.verifyToken() } returns userResponse
+
+            mockMvc.perform(
+                post("/api/auth/verify") // verify는 GET이지만 간혹 클라이언트 실수 방지: POST 호출 시 405 기대 가능
+            ).andExpect(status().isMethodNotAllowed)
+
+            mockMvc.perform(
+                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/auth/verify")
+            )
+                .andDo(print())
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.email").value("verify@example.com"))
         }
     }
 }

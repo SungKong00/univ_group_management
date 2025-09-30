@@ -226,52 +226,43 @@ data class GroupMember(
 
 ### GroupRole 엔티티 (JPA) {#GroupRole}
 *   **파일 위치**: `backend/src/main/kotlin/org/castlekong/backend/entity/GroupRole.kt`
-*   **설명**: 그룹 내에서 사용될 역할을 정의. 권한(Permission)의 집합입니다.
+*   **설명**: 그룹 내 역할. 시스템 역할(OWNER / ADVISOR / MEMBER)은 불변(이름/우선순위/권한 수정 및 삭제 금지, ErrorCode.SYSTEM_ROLE_IMMUTABLE).
+*   **변경 요약(2025-10-01)**: data class → 일반 class, id 기반 equals/hashCode, permissions: MutableSet.
 
 ```kotlin
 @Entity
 @Table(
     name = "group_roles",
-    uniqueConstraints = [
-        UniqueConstraint(columnNames = ["group_id", "name"]),
-    ],
+    uniqueConstraints = [UniqueConstraint(columnNames = ["group_id", "name")] ]
 )
-data class GroupRole(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
-    val group: Group, // 역할이 속한 그룹
-
+class GroupRole(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "group_id", nullable = false)
+    var group: Group,
     @Column(nullable = false, length = 50)
-    val name: String, // 역할 이름 (예: 운영진, 신입생)
-
+    var name: String,
     @Column(name = "is_system_role", nullable = false)
-    val isSystemRole: Boolean = false, // 시스템 기본 역할 여부 (Owner, Member 등)
-
+    var isSystemRole: Boolean = false,
     @Enumerated(EnumType.STRING)
     @Column(name = "role_type", nullable = false, length = 20)
-    val roleType: RoleType = RoleType.OPERATIONAL, // 역할 유형
-
+    var roleType: RoleType = RoleType.OPERATIONAL,
     @Column(nullable = false)
-    val priority: Int = 0, // 역할의 우선순위 (숫자가 높을수록 높은 권한)
-
-    // `@ElementCollection`을 통해 `group_role_permissions` 테이블에 권한 목록을 저장
+    var priority: Int = 0,
     @ElementCollection(targetClass = GroupPermission::class, fetch = FetchType.EAGER)
     @CollectionTable(name = "group_role_permissions", joinColumns = [JoinColumn(name = "group_role_id")])
     @Enumerated(EnumType.STRING)
     @Column(name = "permission", nullable = false, length = 50)
-    val permissions: Set<GroupPermission> = emptySet(),
-)
-
-// 역할 유형 Enum
-enum class RoleType {
-    OPERATIONAL, // 운영 역할 (그룹장, 부그룹장 등)
-    SEGMENT // 분류 역할 (1학년, 2학년, 고학년 등)
+    var permissions: MutableSet<GroupPermission> = mutableSetOf(),
+) {
+    fun update(name: String? = null, priority: Int? = null) { name?.let { this.name = it }; priority?.let { this.priority = it } }
+    fun replacePermissions(newPerms: Collection<GroupPermission>) { permissions.clear(); permissions.addAll(newPerms) }
+    override fun equals(other: Any?) = other is GroupRole && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
 }
 ```
+
+> 시스템 역할은 서비스 계층에서 수정/삭제 시 BusinessException(ErrorCode.SYSTEM_ROLE_IMMUTABLE)
 
 ## 워크스페이스 & 채널
 
@@ -312,10 +303,61 @@ CREATE TABLE channels (
 -- 인덱스
 CREATE INDEX idx_channel_workspace ON channels(workspace_id);
 CREATE INDEX idx_channel_order ON channels(workspace_id, display_order);
-
--- 참고: 실제 코드에서는 isPrivate/isPublic 필드가 아직 존재함
--- 향후 권한 기반 가시성으로 마이그레이션 예정
 ```
+
+### ChannelRoleBinding 테이블 (채널 권한 매핑) {#ChannelRoleBinding}
+* 목적: 그룹 역할(GroupRole) ↔ 채널(Channel) 사이의 가시성/읽기/쓰기 권한 결합
+* 자동 생성 정책(변경됨 2025-10-01): 새 채널 생성 시 어떠한 바인딩도 자동 생성되지 않음 (초기 상태 0개)
+* 권한 평가: (1) 그룹 역할의 그룹 수준 권한 (2) 채널 바인딩 권한(override 성격) 결합
+
+```sql
+CREATE TABLE channel_role_bindings (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    channel_id BIGINT NOT NULL,
+    group_role_id BIGINT NOT NULL,
+    can_view BOOLEAN NOT NULL DEFAULT false,
+    can_post BOOLEAN NOT NULL DEFAULT false,
+    can_manage BOOLEAN NOT NULL DEFAULT false, -- 채널 설정/순서 관리
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_channel_role (channel_id, group_role_id),
+    FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_role_id) REFERENCES group_roles(id) ON DELETE CASCADE
+);
+
+-- 조회 최적화 인덱스
+CREATE INDEX idx_crb_role ON channel_role_bindings(group_role_id, channel_id);
+CREATE INDEX idx_crb_channel ON channel_role_bindings(channel_id, group_role_id);
+```
+
+#### JPA 개요 (요약)
+```kotlin
+@Entity
+@Table(
+    name = "channel_role_bindings",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["channel_id", "group_role_id"])]
+)
+class ChannelRoleBinding(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "channel_id", nullable = false)
+    var channel: Channel,
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "group_role_id", nullable = false)
+    var role: GroupRole,
+    @Column(name = "can_view", nullable = false) var canView: Boolean = false,
+    @Column(name = "can_post", nullable = false) var canPost: Boolean = false,
+    @Column(name = "can_manage", nullable = false) var canManage: Boolean = false,
+) {
+    fun update(view: Boolean? = null, post: Boolean? = null, manage: Boolean? = null) {
+        view?.let { canView = it }; post?.let { canPost = it }; manage?.let { canManage = it }
+    }
+    override fun equals(other: Any?) = other is ChannelRoleBinding && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
+}
+```
+
+> 생성 규칙: 서비스 계층은 필요 시 명시적으로 생성. 기본 가시성은 그룹 역할의 채널 접근 암묵 권한이 아닌, 존재하는 바인딩 기준으로만 판단 (미존재 → 접근 불가). 향후 캐시 계층(e.g. Redis) 적용 시 channel_id + role_id 키로 압축 저장 예정.
 
 ## 컨텐츠 테이블
 
@@ -490,6 +532,11 @@ VALUES
     (1, 'Owner', '["GROUP_MANAGE","MEMBER_READ","MEMBER_APPROVE","MEMBER_KICK","ROLE_MANAGE","CHANNEL_READ","CHANNEL_WRITE","POST_CREATE","POST_UPDATE_OWN","POST_DELETE_OWN","POST_DELETE_ANY","RECRUITMENT_CREATE","RECRUITMENT_UPDATE","RECRUITMENT_DELETE"]', true),
     (1, 'Member', '["CHANNEL_READ","POST_CREATE","POST_UPDATE_OWN","POST_DELETE_OWN"]', true);
 ```
+
+## 변경 이력 (발췌)
+| 날짜 | 변경 사항 |
+|------|-----------|
+| 2025-10-01 | GroupRole 비불변화(data class 제거), 시스템 역할 불변성 명시, ChannelRoleBinding 자동 생성 제거, ChannelRoleBinding 스키마/엔티티 추가, 삭제 Bulk 순서 추가 |
 
 ## 관련 문서
 

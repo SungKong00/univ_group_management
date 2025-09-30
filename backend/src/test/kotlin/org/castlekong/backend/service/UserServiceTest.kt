@@ -19,7 +19,8 @@ class UserServiceTest {
     private lateinit var userService: UserService
     private lateinit var userRepository: UserRepository
     private lateinit var groupRepository: org.castlekong.backend.repository.GroupRepository
-    private lateinit var groupService: GroupService
+    private lateinit var groupManagementService: GroupManagementService
+    private lateinit var groupMemberService: GroupMemberService
     private lateinit var groupJoinRequestRepository: org.castlekong.backend.repository.GroupJoinRequestRepository
     private lateinit var subGroupRequestRepository: org.castlekong.backend.repository.SubGroupRequestRepository
     private lateinit var groupMemberRepository: org.castlekong.backend.repository.GroupMemberRepository
@@ -28,7 +29,8 @@ class UserServiceTest {
     fun setUp() {
         userRepository = mockk()
         groupRepository = mockk()
-        groupService = mockk()
+        groupManagementService = mockk()
+        groupMemberService = mockk()
         groupJoinRequestRepository = mockk()
         subGroupRequestRepository = mockk()
         groupMemberRepository = mockk()
@@ -37,7 +39,7 @@ class UserServiceTest {
             UserService(
                 userRepository,
                 groupRepository,
-                groupService,
+                groupMemberService,
                 groupJoinRequestRepository,
                 subGroupRequestRepository,
                 groupMemberRepository,

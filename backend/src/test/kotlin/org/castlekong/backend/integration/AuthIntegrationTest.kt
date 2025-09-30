@@ -44,7 +44,7 @@ class AuthIntegrationTest {
                 .andExpect(status().isUnauthorized)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.error.code").value("AUTH_ERROR"))
+                .andExpect(jsonPath("$.error.code").value("INVALID_TOKEN"))
         }
 
         @Test

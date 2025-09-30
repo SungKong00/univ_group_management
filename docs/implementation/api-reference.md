@@ -4,19 +4,29 @@
 
 ## API 응답 구조
 
-모든 API 응답은 다음과 같은 `ApiResponse<T>` 구조를 따릅니다:
-
 ```json
 {
-  "success": true,           // 성공 여부
-  "data": { ... },          // 실제 데이터 (T 타입)
-  "message": "메시지",       // 성공/실패 메시지 (선택적)
-  "errorCode": "ERROR_CODE" // 에러 코드 (선택적)
+  "success": true,
+  "data": { },
+  "error": { "code": "...", "message": "..." },
+  "timestamp": "2025-10-01T12:00:00"
 }
 ```
+- 기존 message / errorCode 필드 표기는 폐기됨 (error.code / error.message 사용)
 
-- **성공 시**: `success: true`, `data`에 실제 응답 데이터
-- **실패 시**: `success: false`, `message`에 에러 메시지, `errorCode`에 에러 코드
+### 표준 에러 코드 (발췌)
+| 코드 | HTTP | 의미 |
+|------|------|------|
+| INVALID_TOKEN | 401 | 위변조/형식 오류 |
+| EXPIRED_TOKEN | 401 | 만료된 토큰 |
+| UNAUTHORIZED | 401 | 인증 정보 없음 |
+| FORBIDDEN | 403 | 권한 부족 |
+| SYSTEM_ROLE_IMMUTABLE | 403 | 시스템 역할 수정/삭제 시도 |
+| GROUP_ROLE_NAME_ALREADY_EXISTS | 409 | 역할명 중복 |
+| RECRUITMENT_ALREADY_OPEN | 409 | 그룹에 이미 활성 모집 존재 |
+| RECRUITMENT_CLOSED | 400 | 마감/취소된 모집 접근 |
+| APPLICATION_DUPLICATE | 409 | 동일 모집 중복 지원 |
+| APPLICATION_NOT_PENDING | 409 | PENDING 아님 (심사/철회 불가) |
 
 ## 1. Auth API (`/api/auth`)
 
@@ -60,8 +70,7 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
             },
             "firstLogin": false
           },
-          "message": null,
-          "errorCode": null
+          "error": null
         }
         ```
 
@@ -111,8 +120,7 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
             "available": false,
             "suggestions": ["닉네임1", "닉네임2", "닉네임3"]
           },
-          "message": null,
-          "errorCode": null
+          "error": null
         }
         ```
 
@@ -202,13 +210,178 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
 -   `PATCH /recruitments/{recruitmentId}/close`: 모집 공고 마감 (`RECRUITMENT_MANAGE` 권한 필요)
 -   `DELETE /recruitments/{recruitmentId}`: 모집 공고 삭제 (`RECRUITMENT_MANAGE` 권한 필요)
 -   `GET /groups/{groupId}/recruitments/archive`: 특정 그룹의 지난 모집 공고 목록 조회 (`RECRUITMENT_MANAGE` 권한 필요)
--   `GET /recruitments/public`: 공개된 전체 모집 공고 검색
+-   `GET /recruitments/public`: 공개된 전체 모집 공고 검색 (필터: q, status, groupType 등 확장 가능)
 -   `POST /recruitments/{recruitmentId}/applications`: 모집에 지원서 제출
 -   `GET /recruitments/{recruitmentId}/applications`: 특정 모집의 지원서 목록 조회 (`RECRUITMENT_MANAGE` 권한 필요)
 -   `GET /applications/{applicationId}`: 지원서 상세 조회 (모집 관리자 또는 지원자 본인만 가능)
 -   `PATCH /applications/{applicationId}/review`: 지원서 심사 (승인/거절) (`RECRUITMENT_MANAGE` 권한 필요)
 -   `DELETE /applications/{applicationId}`: 지원서 제출 철회 (지원자 본인만 가능)
--   `GET /recruitments/{recruitmentId}/stats`: 모집 관련 통계 조회 (`RECRUITMENT_MANAGE` 권한 필요)
+-   `GET /recruitments/{recruitmentId}/stats`: 모집 관련 통계 조회 (`RECRUITMENT_MANAGE` 권한 필요, 구현 예정)
+
+### 4.1 모집 공고 생성
+```
+POST /api/groups/{groupId}/recruitments
+Content-Type: application/json
+Authorization: Bearer <token>
+```
+요청(JSON):
+```json
+{
+  "title": "2025 1학기 신입 기수 모집",
+  "content": "활동 소개 및 일정...",
+  "maxApplicants": 30,
+  "recruitmentEndDate": "2025-11-15T23:59:59",
+  "autoApprove": false,
+  "showApplicantCount": true,
+  "applicationQuestions": ["지원 동기?", "관련 경험?"]
+}
+```
+응답(성공):
+```json
+{
+  "success": true,
+  "data": {
+    "id": 12,
+    "groupId": 7,
+    "title": "2025 1학기 신입 기수 모집",
+    "status": "OPEN",
+    "maxApplicants": 30,
+    "currentApplicants": 0,
+    "recruitmentStartDate": "2025-10-01T10:11:12",
+    "recruitmentEndDate": "2025-11-15T23:59:59",
+    "showApplicantCount": true,
+    "applicationQuestions": ["지원 동기?", "관련 경험?"],
+    "createdAt": "2025-10-01T10:11:12",
+    "updatedAt": "2025-10-01T10:11:12"
+  },
+  "error": null,
+  "timestamp": "2025-10-01T10:11:12"
+}
+```
+에러 사례:
+| code | 조건 |
+|------|------|
+| RECRUITMENT_ALREADY_OPEN | 동일 그룹에 OPEN 상태 존재 |
+| FORBIDDEN | 권한 없음 |
+
+### 4.2 활성 모집 조회
+```
+GET /api/groups/{groupId}/recruitments
+```
+응답: 단일 활성 모집 (없으면 404 처리 or success:true, data:null 정책 중 하나 — 현재 success:true & data:null)
+
+### 4.3 모집 수정
+```
+PUT /api/recruitments/{id}
+```
+- title/content/maxApplicants/recruitmentEndDate/showApplicantCount 변경
+- status 가 CLOSED/CANCELLED 면 RECRUITMENT_CLOSED
+
+### 4.4 조기 마감
+```
+PATCH /api/recruitments/{id}/close
+```
+- 상태 OPEN -> CLOSED 전환
+- 이미 CLOSED 인 경우 RECRUITMENT_CLOSED
+
+### 4.5 모집 삭제
+```
+DELETE /api/recruitments/{id}
+```
+- DRAFT 또는 OPEN 상태에서만 허용 (CLOSED 는 정책에 따라 보존) → CLOSED 삭제 시 RECRUITMENT_CLOSED
+
+### 4.6 아카이브 조회
+```
+GET /api/groups/{groupId}/recruitments/archive?page=0&size=20
+```
+응답 예시:
+```json
+{
+  "success": true,
+  "data": {
+    "content": [
+      {"id":11,"title":"2024 2학기 모집","status":"CLOSED","closedAt":"2024-12-01T12:00:00"}
+    ],
+    "page": 0,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1
+  },
+  "error": null
+}
+```
+
+### 4.7 공개 모집 검색
+```
+GET /api/recruitments/public?q=AI&status=OPEN&page=0&size=20
+```
+필터 파라미터:
+- q: 제목/내용 검색
+- status: OPEN/CLOSED (기본 OPEN)
+- groupType (선택)
+
+### 4.8 지원서 제출
+```
+POST /api/recruitments/{id}/applications
+```
+요청:
+```json
+{
+  "motivation": "서비스 기획 역량 성장",
+  "questionAnswers": {"0":"학교 프로젝트 경험","1":"AI 경진대회 수상"}
+}
+```
+에러:
+| code | 조건 |
+|------|------|
+| APPLICATION_DUPLICATE | 이미 PENDING/APPROVED 존재 |
+| RECRUITMENT_CLOSED | 모집이 OPEN 아님 |
+
+### 4.9 지원서 목록 / 상세
+- 목록: `GET /api/recruitments/{id}/applications?page=0&size=20` (RECRUITMENT_MANAGE)
+- 상세: `GET /api/applications/{appId}` (권한자 또는 본인)
+
+### 4.10 지원서 심사
+```
+PATCH /api/applications/{appId}/review
+{
+  "decision": "APPROVE", // or REJECT
+  "comment": "활동 기대합니다"
+}
+```
+에러:
+| code | 조건 |
+|------|------|
+| APPLICATION_NOT_PENDING | 이미 처리된 상태 |
+| RECRUITMENT_CLOSED | 모집 CLOSED/CANCELLED |
+
+### 4.11 지원서 철회
+```
+DELETE /api/applications/{appId}
+```
+- 본인 & 상태 PENDING
+- APPLICATION_NOT_PENDING 위반 시 409
+
+### 4.12 통계 (예정)
+```
+GET /api/recruitments/{id}/stats
+```
+예시(미구현):
+```json
+{
+  "success": true,
+  "data": {
+    "recruitmentId": 12,
+    "total": 20,
+    "approved": 8,
+    "rejected": 5,
+    "pending": 7,
+    "averageReviewTimeSeconds": 86400
+  },
+  "error": null
+}
+```
+> 통계 계산은 별도 비동기 집계/캐시 후 제공 예정.
 
 ## 5. Content API (`/api`)
 

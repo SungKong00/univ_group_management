@@ -46,6 +46,38 @@ RECRUITMENT_MANAGE 권한자:
 └── 공개된 지원자 수 조회 (설정에 따라)
 ```
 
+## 구현 상태 (2025-10-01)
+| 항목 | 구현 여부 | 비고 |
+|------|-----------|------|
+| 단일 활성 모집 제한 | ✅ | 그룹당 OPEN 1개 검사 로직 존재 |
+| 모집 CRUD | ✅ | DRAFT → OPEN → CLOSED 전환 지원 |
+| 조기 마감 | ✅ | PATCH /close 엔드포인트 |
+| 지원서 제출/조회 | ✅ | 중복 제출 방지 검사 |
+| 지원서 심사(승인/거절) | ✅ | 승인 시 그룹 자동 가입 처리 |
+| 지원서 철회 | ✅ | 지원자 본인만 삭제(철회) |
+| 아카이브 조회 | ✅ | CLOSED 상태 포함 목록 (`/archive`) |
+| 통계 엔드포인트 | ⏳ | `/stats` 설계만 존재 (집계 로직 미구현) |
+| 자동 마감 배치 | ⏳ | 예약 작업 설계 예정 (Quartz/스케줄러) |
+| 알림 시스템 연동 | ❌ | Notification 모듈 미구현 |
+| 자동 승인(autoApprove) | ⏳ | 필드 존재 / 로직 단순화(미사용) |
+
+## 향후 계획
+- 통계: 지원자 수, 승인율, 평균 처리 시간 계산 캐시 (Redis 예정)
+- 자동 마감: 마감일 도달 시 상태 전환 + 통계 스냅샷
+- 알림: 생성/지원/심사/마감 이벤트 기반 푸시
+- 질문 템플릿: 그룹별 자주 쓰는 질문 Preset 저장/재사용
+
+## 권한 체계 요약 (정리)
+| 기능 | 필요 권한 | 추가 조건 |
+|------|-----------|-----------|
+| 모집 생성/수정/삭제 | RECRUITMENT_MANAGE | 그룹 멤버여야 함 |
+| 모집 조회(활성) | (없음) | 공개 그룹/비공개 그룹 멤버 제한 가능(추후) |
+| 지원서 제출 | (없음) | 이미 멤버면 불가 |
+| 지원서 목록/심사 | RECRUITMENT_MANAGE | 해당 그룹 소속 |
+| 지원서 상세 | RECRUITMENT_MANAGE 또는 본인 |  |
+| 지원서 철회 | 본인 | 상태 PENDING 일 때 |
+| 아카이브 조회 | RECRUITMENT_MANAGE |  |
+
 ## 데이터 모델
 
 ### GroupRecruitment (모집 게시글)
@@ -169,6 +201,107 @@ DELETE /api/applications/{applicationId}                 # 지원서 철회
 - **지원서 제출**: 모집 권한자에게 알림
 - **지원서 심사 결과**: 지원자에게 알림
 - **모집 마감 임박**: 모집 권한자에게 알림
+
+## DTO 예시 (요약)
+```jsonc
+// 모집 생성 요청 (CreateRecruitmentRequest)
+{
+  "title": "2025 1학기 신입 기수 모집",
+  "content": "활동 소개 ...",
+  "maxApplicants": 30,
+  "recruitmentEndDate": "2025-11-15T23:59:59",
+  "autoApprove": false,
+  "showApplicantCount": true,
+  "applicationQuestions": ["지원 동기?", "관련 경험?"]
+}
+
+// 모집 응답 (RecruitmentResponse)
+{
+  "id": 12,
+  "groupId": 7,
+  "title": "2025 1학기 신입 기수 모집",
+  "status": "OPEN",
+  "maxApplicants": 30,
+  "currentApplicants": 5,
+  "recruitmentStartDate": "2025-10-01T10:11:12",
+  "recruitmentEndDate": "2025-11-15T23:59:59",
+  "showApplicantCount": true,
+  "applicationQuestions": ["지원 동기?", "관련 경험?"],
+  "createdAt": "2025-10-01T10:11:12",
+  "updatedAt": "2025-10-01T10:11:12"
+}
+
+// 지원서 제출 (ApplicationCreateRequest)
+{
+  "motivation": "서비스 기획 역량 성장",
+  "questionAnswers": {
+    "0": "학교 프로젝트 경험",
+    "1": "AI 경진대회 수상"
+  }
+}
+
+// 지원서 응답 (ApplicationResponse)
+{
+  "id": 55,
+  "recruitmentId": 12,
+  "applicant": {"id": 21, "nickname": "학생A"},
+  "status": "PENDING",
+  "motivation": "서비스 기획 역량 성장",
+  "questionAnswers": {"0": "학교 프로젝트 경험", "1": "AI 경진대회 수상"},
+  "reviewedBy": null,
+  "reviewComment": null,
+  "appliedAt": "2025-10-01T11:22:33"
+}
+```
+
+## 상태 전이 다이어그램 (개요)
+```
+DRAFT --(OPEN 요청)--> OPEN --(마감일/조기마감)--> CLOSED
+                         └--(삭제)--> (제거)
+```
+
+## 주요 검증 로직
+- 단일 활성 모집: `SELECT COUNT(*) WHERE group_id=? AND status='OPEN'` > 0 이면 생성/OPEN 전환 차단
+- 중복 지원: `applicationRepository.existsByRecruitmentIdAndApplicantIdAndStatusNotWithdrawn`
+- 승인 시 그룹 멤버십: 멤버가 아니면 GroupMember 생성 + 기본 역할(Member) 부여
+- 철회: 상태가 PENDING 아니면 409 반환
+
+## 에러 코드 (추가 제안)
+| 코드 | 상황 | HTTP |
+|------|------|------|
+| RECRUITMENT_ALREADY_OPEN | 이미 OPEN 존재 | 409 |
+| RECRUITMENT_CLOSED | 마감된 모집 접근 | 400 |
+| APPLICATION_DUPLICATE | 중복 지원 | 409 |
+| APPLICATION_NOT_PENDING | PENDING 아님 | 409 |
+
+## API 매핑 표
+| 엔드포인트 | 메서드 | 설명 | 요청 DTO | 응답 DTO | 권한 |
+|-----------|--------|------|----------|----------|------|
+| /groups/{groupId}/recruitments | POST | 모집 생성 | CreateRecruitmentRequest | RecruitmentResponse | RECRUITMENT_MANAGE |
+| /groups/{groupId}/recruitments | GET | 활성 모집 조회 | - | RecruitmentResponse | - |
+| /recruitments/{id} | PUT | 모집 수정 | UpdateRecruitmentRequest | RecruitmentResponse | RECRUITMENT_MANAGE |
+| /recruitments/{id}/close | PATCH | 조기 마감 | - | RecruitmentResponse | RECRUITMENT_MANAGE |
+| /recruitments/{id} | DELETE | 모집 삭제 | - | - | RECRUITMENT_MANAGE |
+| /groups/{groupId}/recruitments/archive | GET | 아카이브 목록 | paging | List<RecruitmentSummary> | RECRUITMENT_MANAGE |
+| /recruitments/public | GET | 공개 모집 검색 | 필터(q,status) | Page<RecruitmentSummary> | - |
+| /recruitments/{id}/applications | POST | 지원서 제출 | ApplicationCreateRequest | ApplicationResponse | - |
+| /recruitments/{id}/applications | GET | 지원서 목록 | paging | Page<ApplicationResponse> | RECRUITMENT_MANAGE |
+| /applications/{id} | GET | 지원서 상세 | - | ApplicationResponse | 권한자/본인 |
+| /applications/{id}/review | PATCH | 지원서 심사 | ApplicationReviewRequest | ApplicationResponse | RECRUITMENT_MANAGE |
+| /applications/{id} | DELETE | 지원서 철회 | - | - | 본인 |
+| /recruitments/{id}/stats | GET | 통계 조회 | - | RecruitmentStatsResponse | RECRUITMENT_MANAGE |
+
+## 통계 응답(예시, 예정)
+```json
+{
+  "recruitmentId": 12,
+  "total": 20,
+  "approved": 8,
+  "rejected": 5,
+  "pending": 7,
+  "averageReviewTimeSeconds": 86400
+}
+```
 
 ## 관련 문서
 
