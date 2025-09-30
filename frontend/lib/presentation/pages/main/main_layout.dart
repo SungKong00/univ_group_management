@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 import '../../widgets/navigation/sidebar_navigation.dart';
 import '../../widgets/navigation/bottom_navigation.dart';
 import '../../widgets/navigation/top_navigation.dart';
@@ -8,7 +7,6 @@ import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/router_listener.dart';
 import '../../../core/navigation/back_button_handler.dart';
 import '../../../core/navigation/layout_mode.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/models/auth_models.dart';
 import '../../providers/auth_provider.dart';
