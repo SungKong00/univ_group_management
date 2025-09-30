@@ -11,18 +11,24 @@ import '../../../core/navigation/back_button_handler.dart';
 import '../../providers/auth_provider.dart';
 import '../user/user_info_card.dart';
 
-class SidebarNavigation extends ConsumerWidget {
+// 기존 ConsumerWidget -> 애니메이션(AnimatedSize 등) 제어 위해 Stateful 로 변경
+class SidebarNavigation extends ConsumerStatefulWidget {
   const SidebarNavigation({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SidebarNavigation> createState() => _SidebarNavigationState();
+}
+
+class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with TickerProviderStateMixin {
+  @override
+  Widget build(BuildContext context) {
     final navigationState = ref.watch(navigationControllerProvider);
-    // 레이아웃 모드와 워크스페이스 상태를 모두 고려한 축소 여부
     final isCollapsed = navigationState.shouldCollapseSidebar;
     final currentUser = ref.watch(currentUserProvider);
 
     return AnimatedContainer(
       duration: AppConstants.animationDuration,
+      curve: Curves.easeInOutCubic,
       width: isCollapsed ? AppConstants.sidebarCollapsedWidth : AppConstants.sidebarWidth,
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -33,6 +39,7 @@ class SidebarNavigation extends ConsumerWidget {
       child: Column(
         children: [
           const SizedBox(height: 24),
+          // 네비게이션 아이템들
           ...NavigationConfig.items.map((config) => _buildNavigationItem(
                 context,
                 ref,
@@ -67,21 +74,96 @@ class SidebarNavigation extends ConsumerWidget {
         child: InkWell(
           onTap: () => _handleItemTap(context, ref, config),
           borderRadius: BorderRadius.circular(8),
-          child: Container(
+          child: AnimatedContainer(
+            duration: AppConstants.animationDuration,
+            curve: Curves.easeInOutCubic,
             padding: EdgeInsets.symmetric(
               horizontal: isCollapsed ? 8 : 16,
               vertical: 12,
             ),
-            child: isCollapsed
-                ? _buildCollapsedItem(config, isSelected)
-                : _buildExpandedItem(config, isSelected),
+            child: _buildItemContent(config, isSelected, isCollapsed),
           ),
         ),
       ),
     );
   }
 
+  Widget _buildItemContent(NavigationConfig config, bool isSelected, bool isCollapsed) {
+    final icon = Icon(
+      config.icon,
+      size: 24,
+      color: isSelected ? AppColors.action : AppColors.lightSecondary,
+    );
+
+    // collapsed 상태에서도 Row 구조 유지 -> 높이/레이아웃 점프 감소
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        icon,
+        // 아이콘과 텍스트 사이 간격 애니메이션 (폭 0 -> 16)
+        AnimatedContainer(
+          duration: AppConstants.animationDuration,
+            curve: Curves.easeInOutCubic,
+          width: isCollapsed ? 0 : 16,
+        ),
+        // 텍스트 영역 (collapsed 시 width=0 으로 clip, opacity 페이드)
+        Expanded(
+          child: ClipRect(
+            child: AnimatedSize(
+              duration: AppConstants.animationDuration,
+              curve: Curves.easeInOutCubic,
+              alignment: Alignment.topLeft,
+              child: isCollapsed
+                  ? const SizedBox.shrink()
+                  : AnimatedOpacity(
+                      duration: AppConstants.animationDuration,
+                      curve: Curves.easeInOutCubic,
+                      opacity: 1,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            config.title,
+                            style: AppTheme.titleMedium.copyWith(
+                              color: isSelected ? AppColors.action : AppColors.lightOnSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            config.description,
+                            style: AppTheme.bodySmall.copyWith(
+                              color: isSelected ? AppColors.action.withValues(alpha: 0.8) : AppColors.lightSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+        ),
+        if (isSelected && !isCollapsed)
+          AnimatedOpacity(
+            duration: AppConstants.animationDuration,
+            opacity: 1,
+            child: Container(
+              width: 4,
+              height: 20,
+              decoration: BoxDecoration(
+                color: AppColors.action,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildCollapsedItem(NavigationConfig config, bool isSelected) {
+    // 기존 메서드는 호출되지 않음 (구조 단순화). 유지 혹은 추후 제거 가능.
     return Center(
       child: Icon(
         config.icon,
@@ -92,7 +174,9 @@ class SidebarNavigation extends ConsumerWidget {
   }
 
   Widget _buildExpandedItem(NavigationConfig config, bool isSelected) {
+    // 기존 메서드는 호출되지 않음 (구조 단순화). 유지 혹은 추후 제거 가능.
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(
           config.icon,
@@ -102,6 +186,7 @@ class SidebarNavigation extends ConsumerWidget {
         const SizedBox(width: 16),
         Expanded(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -109,12 +194,16 @@ class SidebarNavigation extends ConsumerWidget {
                 style: AppTheme.titleMedium.copyWith(
                   color: isSelected ? AppColors.action : AppColors.lightOnSurface,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               Text(
                 config.description,
                 style: AppTheme.bodySmall.copyWith(
                   color: isSelected ? AppColors.action.withValues(alpha: 0.8) : AppColors.lightSecondary,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
