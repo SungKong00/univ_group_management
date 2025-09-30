@@ -5,6 +5,7 @@
 
 ## 관련 문서
 - [프론트엔드 가이드](../implementation/frontend-guide.md) - 구현 방법
+- [컴포넌트 재사용성 가이드](../implementation/component-reusability-guide.md) - 재사용 패턴
 - [컴포넌트 가이드](component-guide.md) - 사용 예시
 - [레이아웃 가이드](layout-guide.md) - 화면 구성
 

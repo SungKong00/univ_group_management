@@ -5,6 +5,7 @@ Flutter 기반 대학 그룹 관리 시스템의 프론트엔드 아키텍처와
 
 ## 관련 문서
 - [디자인 시스템](../ui-ux/design-system.md) - Toss 기반 디자인 토큰
+- [컴포넌트 재사용성 가이드](component-reusability-guide.md) - 재사용 가능한 코드 작성 패턴
 - [API 참조](api-reference.md) - 백엔드 연동 가이드
 - [도메인 개요](../concepts/domain-overview.md) - 시스템 전체 구조
 
@@ -52,6 +53,21 @@ lib/
 - **Presentation**: UI 컴포넌트, 상태 관리
 - **Core/Services**: 비즈니스 로직, API 통신
 - **Core/Models**: 데이터 구조 정의
+
+## 재사용성 원칙
+
+### DRY (Don't Repeat Yourself)
+동일한 UI 패턴을 반복하지 말고 재사용 가능한 컴포넌트로 분리하세요.
+
+**4단계 재사용 전략:**
+1. **하드코딩** (85줄) - 모든 코드를 한 곳에 작성
+2. **디자인 토큰화** (60줄) - 스타일을 theme.dart로 분리
+3. **컴포넌트화** (35줄) - 위젯으로 분리
+4. **완전한 재사용** (3줄) - 헬퍼 함수 + 독립 위젯
+
+**실전 예시:** 로그아웃 다이얼로그 85줄 → 3줄 감소 (96% 코드 감소)
+
+상세 가이드: [컴포넌트 재사용성 가이드](component-reusability-guide.md)
 
 ## 완성된 구현 현황
 

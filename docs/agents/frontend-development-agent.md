@@ -204,6 +204,23 @@ src/ (또는 lib/)
 
 ### Phase 3: 단계별 구현
 
+#### 3.0 재사용 가능한 컴포넌트 설계 (필수)
+```markdown
+⚠️ 모든 구현 전 재사용성 가이드 검토 필수
+
+재사용성 체크리스트:
+□ [컴포넌트 재사용성 가이드](../implementation/component-reusability-guide.md) 숙지
+□ 동일한 UI 패턴이 3곳 이상에서 사용되는지 확인
+□ 디자인 토큰(AppColors, AppSpacing 등) 활용 계획
+□ 컴포넌트 분리 전략 수립 (하드코딩 → 토큰화 → 컴포넌트화 → 완전한 재사용)
+
+재사용 가능한 컴포넌트 우선순위:
+1. **디자인 토큰 정의**: theme.dart에 스타일 추가
+2. **기본 위젯 생성**: presentation/widgets/buttons/, dialogs/
+3. **헬퍼 함수 작성**: core/utils/에 유틸리티 추가
+4. **문서화**: component-reusability-guide.md에 패턴 추가
+```
+
 #### 3.1 기본 디자인 시스템 구현
 ```markdown
 1단계 컴포넌트:
@@ -212,6 +229,11 @@ src/ (또는 lib/)
 □ Card (기본 컨테이너)
 □ Modal (확인, 정보, 액션시트)
 □ Toast (성공, 에러, 정보, 경고)
+
+재사용성 검증:
+□ AppButtonStyles에 스타일 토큰 정의
+□ 각 버튼을 독립 위젯으로 분리
+□ 헬퍼 함수로 사용 간소화
 ```
 
 #### 3.2 권한 시스템 통합
@@ -254,7 +276,27 @@ src/ (또는 lib/)
 □ 컴포넌트 상태 정의 (default, hover, active, disabled, focus)
 ```
 
-#### 4.2 접근성 검증
+#### 4.2 재사용성 검증 (필수)
+```markdown
+⚠️ 코드 리뷰 전 재사용성 체크 필수
+
+중복 코드 검출:
+□ 동일한 스타일이 3곳 이상 반복되는가?
+□ 하드코딩된 색상/간격/폰트가 있는가?
+□ 동일한 구조의 UI가 여러 곳에 있는가?
+
+컴포넌트 분리 기회 식별:
+□ 버튼, 입력, 카드 등 기본 컴포넌트 재사용 가능한가?
+□ 다이얼로그, 모달 등을 독립 위젯으로 분리할 수 있는가?
+□ 헬퍼 함수로 호출 로직을 단순화할 수 있는가?
+
+재사용성 점수:
+- 85줄 이상 → 3줄 이하: ⭐⭐⭐ (목표)
+- 50줄 이상 → 10줄 이하: ⭐⭐
+- 30줄 이상 → 15줄 이하: ⭐
+```
+
+#### 4.3 접근성 검증
 ```markdown
 WCAG 2.1 AA 기준:
 □ 색상 대비 4.5:1 이상
@@ -274,7 +316,17 @@ WCAG 2.1 AA 기준:
 □ 적절한 터치 타겟 크기 (44px 이상)
 ```
 
-#### 4.4 성능 최적화
+#### 4.4 반응형 디자인 확인
+```markdown
+반응형 체크:
+□ 모바일 우선 설계 (320px~)
+□ 태블릿 대응 (768px~)
+□ 데스크톱 대응 (1024px~)
+□ 터치 친화적 인터페이스
+□ 적절한 터치 타겟 크기 (44px 이상)
+```
+
+#### 4.5 성능 최적화
 ```markdown
 성능 최적화 항목:
 □ 컴포넌트 메모이제이션
@@ -372,21 +424,33 @@ WCAG 2.1 AA 기준:
 □ 반응형 디자인 구현됨
 □ 에러 처리 및 로딩 상태 구현됨
 □ 권한 체크 로직 포함됨 (필요한 경우)
+□ 재사용성 검증 통과함 (중복 코드 최소화)
 □ 코드 리뷰 가능한 상태임
 
-문서 업데이트 완료:
+문서 업데이트 완료 (⚠️ 필수):
 □ 새로 구현된 컴포넌트나 패턴을 관련 문서에 추가
 □ 개발 중 발견된 새로운 요구사항이나 제약사항 문서화
 □ 디자인 시스템 업데이트 (새로운 컴포넌트 추가 시)
+  - theme.dart에 토큰 추가 → design-system.md 업데이트
+□ 재사용 패턴 문서화 (component-reusability-guide.md)
+  - 새 버튼/다이얼로그/위젯 → 패턴 카탈로그에 추가
+  - 헬퍼 함수 추가 → 사용 예시 문서화
 □ API 연동 방식 문서 업데이트 (해당하는 경우)
 □ 에러 처리 패턴 문서 업데이트
 □ 접근성 가이드라인 구체화 (새로운 사례 발견 시)
 □ 성능 최적화 방법 문서화 (해당하는 경우)
 
+재사용성 문서 업데이트 체크:
+□ component-reusability-guide.md의 "패턴 카탈로그"에 새 패턴 추가
+□ 코드 감소 성과 기록 (예: 85줄 → 3줄)
+□ 사용 예시 및 주석 작성
+□ 관련 디자인 토큰 링크 추가
+
 품질 보증:
 □ 다른 개발자가 같은 방식으로 구현할 수 있도록 문서가 충분히 상세함
 □ 향후 유지보수 시 참고할 수 있는 수준의 문서 품질
 □ 문서와 실제 구현이 일치함
+□ 재사용 가능한 컴포넌트가 다른 곳에서도 활용 가능함
 ```
 
 ### 전체 개발 프로젝트 완료 기준
@@ -403,9 +467,8 @@ WCAG 2.1 AA 기준:
 항상 최신 문서를 참조하여 개발하세요:
 
 - **프로젝트 컨텍스트**: [CLAUDE.md](../../CLAUDE.md)
-- **디자인 시스템**: [docs/ui-ux/concepts/design-system.md](../ui-ux/concepts/design-system.md)
-- **컬러 가이드**: [docs/ui-ux/concepts/color-guide.md](../ui-ux/concepts/color-guide.md)
-- **컴포넌트 요구사항**: [docs/ui-ux/concepts/form-and-interaction-components.md](../ui-ux/concepts/form-and-interaction-components.md)
+- **재사용성 가이드**: [docs/implementation/component-reusability-guide.md](../implementation/component-reusability-guide.md) ⭐ 필수
+- **디자인 시스템**: [docs/ui-ux/design-system.md](../ui-ux/design-system.md)
 - **개발 워크플로우**: [docs/workflows/development-flow.md](../workflows/development-flow.md)
 - **프론트엔드 가이드**: [docs/implementation/frontend-guide.md](../implementation/frontend-guide.md)
 
