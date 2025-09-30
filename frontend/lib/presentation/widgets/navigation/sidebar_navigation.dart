@@ -38,7 +38,12 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
       ),
       child: Column(
         children: [
-          const SizedBox(height: 24),
+          // 상단 여백도 축소/확장 애니메이션
+          AnimatedContainer(
+            duration: AppConstants.animationDuration,
+            curve: Curves.easeInOutCubic,
+            height: isCollapsed ? 16 : 24,
+          ),
           // 네비게이션 아이템들
           ...NavigationConfig.items.map((config) => _buildNavigationItem(
                 context,
@@ -66,8 +71,14 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
     final currentLocation = GoRouterState.of(context).uri.path;
     final isSelected = NavigationUtils.isRouteSelected(currentLocation, config.route);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    return AnimatedContainer(
+      duration: AppConstants.animationDuration,
+      curve: Curves.easeInOutCubic,
+      margin: EdgeInsets.symmetric(
+        horizontal: 12,
+        // 접힐 때 아이템 사이 간격 압축, 펼칠 때 여유 있게
+        vertical: isCollapsed ? 2 : 8,
+      ),
       child: Material(
         color: isSelected ? AppColors.action.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
@@ -77,6 +88,7 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
           child: AnimatedContainer(
             duration: AppConstants.animationDuration,
             curve: Curves.easeInOutCubic,
+            // 내부 패딩은 탭 영역 확보를 위해 크게 유지
             padding: EdgeInsets.symmetric(
               horizontal: isCollapsed ? 8 : 16,
               vertical: 12,
@@ -89,76 +101,95 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
   }
 
   Widget _buildItemContent(NavigationConfig config, bool isSelected, bool isCollapsed) {
-    final icon = Icon(
-      config.icon,
-      size: 24,
-      color: isSelected ? AppColors.action : AppColors.lightSecondary,
-    );
+    const double iconSize = 24;
+    const double gapWidthExpanded = 16;
 
-    // collapsed 상태에서도 Row 구조 유지 -> 높이/레이아웃 점프 감소
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        icon,
-        // 아이콘과 텍스트 사이 간격 애니메이션 (폭 0 -> 16)
-        AnimatedContainer(
-          duration: AppConstants.animationDuration,
-            curve: Curves.easeInOutCubic,
-          width: isCollapsed ? 0 : 16,
-        ),
-        // 텍스트 영역 (collapsed 시 width=0 으로 clip, opacity 페이드)
-        Expanded(
-          child: ClipRect(
-            child: AnimatedSize(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double maxW = constraints.maxWidth; // 패딩 적용 이후 콘텐츠 영역 폭
+        // collapsed 시 아이콘을 가운데 두기 위한 leading spacer 계산
+        final double targetLeading = isCollapsed ? (maxW - iconSize) / 2 : 0;
+        final double leading = targetLeading.clamp(0, maxW).toDouble();
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 아이콘 앞 공간 (좌->중앙 이동 경로) 최소화된 애니메이션
+            AnimatedContainer(
               duration: AppConstants.animationDuration,
               curve: Curves.easeInOutCubic,
-              alignment: Alignment.topLeft,
-              child: isCollapsed
-                  ? const SizedBox.shrink()
-                  : AnimatedOpacity(
+              width: leading,
+            ),
+            Icon(
+              config.icon,
+              size: iconSize,
+              color: isSelected ? AppColors.action : AppColors.lightSecondary,
+            ),
+            // 아이콘-텍스트 간 간격
+            AnimatedContainer(
+              duration: AppConstants.animationDuration,
+              curve: Curves.easeInOutCubic,
+              width: isCollapsed ? 0 : gapWidthExpanded,
+            ),
+            // 텍스트 블록 (폭 + 투명도 애니메이션)
+            Expanded(
+              child: ClipRect(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: isCollapsed ? 0 : 1,
+                  child: AnimatedOpacity(
+                    duration: AppConstants.animationDuration,
+                    curve: Curves.easeInOutCubic,
+                    opacity: isCollapsed ? 0 : 1,
+                    child: AnimatedSize(
                       duration: AppConstants.animationDuration,
                       curve: Curves.easeInOutCubic,
-                      opacity: 1,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            config.title,
-                            style: AppTheme.titleMedium.copyWith(
-                              color: isSelected ? AppColors.action : AppColors.lightOnSurface,
+                      alignment: Alignment.topLeft,
+                      child: isCollapsed
+                          ? const SizedBox.shrink()
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  config.title,
+                                  style: AppTheme.titleMedium.copyWith(
+                                    color: isSelected ? AppColors.action : AppColors.lightOnSurface,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  config.description,
+                                  style: AppTheme.bodySmall.copyWith(
+                                    color: isSelected ? AppColors.action.withValues(alpha: 0.8) : AppColors.lightSecondary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            config.description,
-                            style: AppTheme.bodySmall.copyWith(
-                              color: isSelected ? AppColors.action.withValues(alpha: 0.8) : AppColors.lightSecondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
                     ),
-            ),
-          ),
-        ),
-        if (isSelected && !isCollapsed)
-          AnimatedOpacity(
-            duration: AppConstants.animationDuration,
-            opacity: 1,
-            child: Container(
-              width: 4,
-              height: 20,
-              decoration: BoxDecoration(
-                color: AppColors.action,
-                borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
             ),
-          ),
-      ],
+            if (isSelected && !isCollapsed)
+              AnimatedOpacity(
+                duration: AppConstants.animationDuration,
+                opacity: 1,
+                child: Container(
+                  width: 4,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: AppColors.action,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
