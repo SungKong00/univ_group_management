@@ -41,10 +41,12 @@ class AppRadius {
   static const double card = 20.0;
   static const double button = 12.0;
   static const double input = 12.0;
+  static const double dialog = 16.0;
 }
 
 class AppElevation {
   static const double card = 8.0;
+  static const double dialog = 6.0;
 }
 
 class AppMotion {
@@ -302,11 +304,99 @@ class AppButtonStyles {
       }),
     );
   }
+
+  static ButtonStyle neutralOutlined(ColorScheme colorScheme) {
+    return OutlinedButton.styleFrom(
+      backgroundColor: AppColors.surface,
+      foregroundColor: AppColors.neutral700,
+      minimumSize: const Size(88, 44),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      textStyle: GoogleFonts.notoSansKr(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        height: 1.4,
+      ),
+      side: const BorderSide(color: AppColors.outline, width: 1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.button),
+      ),
+    ).copyWith(
+      overlayColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return AppColors.neutral300.withValues(alpha: 0.3);
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return AppColors.neutral200.withValues(alpha: 0.3);
+        }
+        return null;
+      }),
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.focused)) {
+          return const BorderSide(color: AppColors.focusRing, width: 2);
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return const BorderSide(color: AppColors.neutral500, width: 1);
+        }
+        return const BorderSide(color: AppColors.outline, width: 1);
+      }),
+    );
+  }
+
+  static ButtonStyle error(ColorScheme colorScheme) {
+    return FilledButton.styleFrom(
+      backgroundColor: AppColors.error,
+      foregroundColor: AppColors.onPrimary,
+      minimumSize: const Size(88, 44),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      textStyle: GoogleFonts.notoSansKr(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        height: 1.4,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.button),
+      ),
+    ).copyWith(
+      elevation: const WidgetStatePropertyAll<double>(0),
+      animationDuration: const Duration(milliseconds: 120),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return const Color(0xFFDC2626); // Darker red
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return const Color(0xFFDC2626);
+        }
+        return AppColors.error;
+      }),
+      overlayColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return AppColors.onPrimary.withValues(alpha: 0.12);
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return AppColors.onPrimary.withValues(alpha: 0.08);
+        }
+        return null;
+      }),
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.focused)) {
+          return const BorderSide(color: AppColors.focusRing, width: 2);
+        }
+        return null;
+      }),
+    );
+  }
 }
 
 class AppComponents {
   static const double buttonHeight = 52.0;
   static const double loginCardMaxWidth = 420.0;
+  static const double dialogMaxWidth = 360.0;
   static const double logoSize = 56.0;
   static const double logoRadius = 16.0;
   static const double logoIconSize = 28.0;

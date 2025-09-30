@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/auth_models.dart';
 import '../../../core/theme/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../dialogs/logout_dialog.dart';
 
 class UserInfoCard extends ConsumerStatefulWidget {
   final UserInfo user;
@@ -307,90 +308,9 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
     }
   }
 
-  /// 로그아웃 확인 다이얼로그 표시
+  /// 로그아웃 확인 다이얼로그 표시 (리디자인된 토스 스타일 다이얼로그 사용)
   Future<bool> _showLogoutConfirmDialog() async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: AppColors.surface,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          title: Text(
-            '로그아웃',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.neutral900,
-              height: 1.3,
-            ),
-          ),
-          content: Text(
-            '정말 로그아웃하시겠습니까?\n현재 작업 중인 내용이 저장되지 않을 수 있습니다.',
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: AppColors.neutral700,
-              height: 1.5,
-            ),
-          ),
-          actions: [
-            // 취소 버튼
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.neutral600,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                '취소',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // 로그아웃 버튼
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                '로그아웃',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    return result ?? false;
+    return await showLogoutDialog(context);
   }
 
   String _getInitials(String name) {
