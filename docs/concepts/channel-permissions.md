@@ -2,63 +2,79 @@
 
 ## 개념 설명
 
-채널 접근/활동 통제는 **권한별 허용 역할 목록(Permission-Centric)** 으로 구성한다. 새 채널 생성 시 자동 바인딩 없음 → 어떤 역할도 보기/읽기/쓰기 불가.
+채널 접근/활동 통제는 **권한별 허용 역할 목록(Permission-Centric)**. 
+- 기본 초기 2채널(공지사항, 자유게시판)은 그룹 생성 시 템플릿 권한 바인딩(OWNER/ADVISOR/MEMBER) 자동 부여.
+- 그 이후 생성되는 모든 **사용자 정의 채널은 권한 바인딩 0개** 로 시작하고, 운영자가 설정 화면에서 매트릭스를 수동 구성.
 
 ## 권한 목록 (ChannelPermission)
 
-| 권한            | 의미                   |
-|-----------------|------------------------|
-| CHANNEL_VIEW    | 채널 목록/존재 확인   |
-| POST_READ       | 게시글/댓글 읽기      |
-| POST_WRITE      | 게시글 작성            |
-| COMMENT_WRITE   | 댓글 작성              |
-| FILE_UPLOAD     | 파일 첨부              |
+| 권한 | 의미 |
+|------|------|
+| CHANNEL_VIEW | 채널 목록/존재 확인 |
+| POST_READ | 게시글/댓글 읽기 |
+| POST_WRITE | 게시글 작성 |
+| COMMENT_WRITE | 댓글 작성 |
+| FILE_UPLOAD | 파일 첨부 |
 
-## 초기 상태
+## 기본 초기 채널 템플릿
+| 채널 | 역할 | 권한 |
+|------|------|------|
+| 공지(ANNOUNCEMENT) | OWNER/ADVISOR | VIEW, READ, WRITE, COMMENT, FILE |
+| 공지(ANNOUNCEMENT) | MEMBER | VIEW, READ, COMMENT |
+| 자유(TEXT) | OWNER/ADVISOR | VIEW, READ, WRITE, COMMENT, FILE |
+| 자유(TEXT) | MEMBER | VIEW, READ, WRITE, COMMENT |
 
-| 항목               | 값                     |
-|--------------------|------------------------|
-| 생성 직후 바인딩    | 0개                    |
-| Owner 가시성       | CHANNEL_VIEW 매핑 전 없음 |
-| Member 읽기        | POST_READ 매핑 전 없음    |
-| 네비게이션 노출    | CHANNEL_VIEW 매핑 후      |
+> 초기 2채널 템플릿은 운영 정책상 최소 커뮤니케이션 기능을 즉시 제공하기 위한 것. 삭제 후 재생성하면 사용자 정의 채널 규칙(0개 시작) 적용.
 
-## 설정 절차 예시
+## 사용자 정의 채널 초기 상태
+| 항목 | 값 |
+|------|----|
+| 초기 바인딩 수 | 0개 |
+| 채널 목록 노출 | CHANNEL_VIEW 권한 부여 후 |
+| 읽기 가능 | POST_READ 부여 후 |
+| 쓰기 가능 | POST_WRITE 부여 후 |
+| 댓글 가능 | COMMENT_WRITE 부여 후 |
+| 파일 업로드 | FILE_UPLOAD 부여 후 |
 
-1. CHANNEL_VIEW → OWNER, MEMBER
-2. POST_READ → OWNER, MEMBER
-3. POST_WRITE / COMMENT_WRITE → OWNER (필요 시 MODERATOR 등 추가)
-4. FILE_UPLOAD → OWNER (선택)
-5. 저장 시 (channel, role) 바인딩 생성/갱신
+## 권한 편집 매트릭스 (Permission-Centric)
+| 권한 ↓ / 역할 → | OWNER | ADVISOR | MEMBER | (예: MODERATOR) |
+|-----------------|-------|---------|--------|----------------|
+| CHANNEL_VIEW | ✔ | ✔ | (선택) | (옵션) |
+| POST_READ | ✔ | ✔ | (선택) | (옵션) |
+| POST_WRITE | ✔ | ✔ | (선택) | (옵션) |
+| COMMENT_WRITE | ✔ | ✔ | (선택) | (옵션) |
+| FILE_UPLOAD | ✔ | ✔ | (옵션) | (옵션) |
 
-## 매트릭스 예시
+> 사용자 정의 채널은 모든 행이 비어있는 상태로 시작. UI는 ‘필수: CHANNEL_VIEW 최소 1개 역할’ 검증.
 
-| 권한 ↓ / 역할 →    | OWNER | MEMBER | MODERATOR |
-|-----------------|-------|--------|-----------|
-| CHANNEL_VIEW    | ✔     | ✔      | ✔ (옵션)   |
-| POST_READ       | ✔     | ✔      | ✔         |
-| POST_WRITE      | ✔     |        | ✔ (옵션)   |
-| COMMENT_WRITE   | ✔     |        | ✔ (옵션)   |
-| FILE_UPLOAD     | ✔     |        | ✔ (옵션)   |
+## 검증 권장 규칙
+- POST_WRITE ⊆ POST_READ ⊆ CHANNEL_VIEW
+- COMMENT_WRITE ⊆ POST_READ
+- FILE_UPLOAD ⊆ POST_WRITE (정책, 완화 가능)
 
-> UI 사고방식: "역할별 권한 나열" 이 아니라 "각 권한에 허용할 역할을 체크".
-
-## 비즈니스 규칙
-
-*   자동 기본 권한 부여 없음
-*   Owner 도 명시적 매핑 없으면 읽기 불가
-*   권한 해제 시 해당 역할 즉시 접근 상실 (캐시 무효화 필수)
+## 운영 절차 (사용자 정의 채널)
+1. 채널 생성 직후 → 권한 매트릭스 진입 안내 (배너)
+2. CHANNEL_VIEW → OWNER/ADVISOR 선택
+3. POST_READ → MEMBER 포함 여부 결정
+4. POST_WRITE / COMMENT_WRITE → 필요 역할 선택
+5. FILE_UPLOAD → 최소화 (대역폭/보안)
+6. 저장 → ChannelRoleBinding 생성/갱신
 
 ## 캐시 연관
+권한 변경 시 PermissionService.invalidateGroup(groupId) 호출 (캐시 적용 시).
 
-권한 매핑 변경 → PermissionService.invalidateGroup(groupId) 호출 필요 (권한 캐시 갱신).
-
-## 사용 예시
-
-*   공지 채널: VIEW/READ → 전원, WRITE → OWNER
-*   전용 운영 채널: 모든 권한 → OWNER, MODERATOR
+## 정책 변경 이력
+| 날짜 | 내용 |
+|------|------|
+| 2025-10-01 rev1~3 | 모든 신규 채널 0바인딩 실험 문서화 (템플릿 고려 전) |
+| 2025-10-01 rev4 | 모든 신규 채널 자동 템플릿 (폐기됨) |
+| 2025-10-01 rev5 | 하이브리드 확정: 초기 2채널 템플릿 + 사용자 정의 채널 0바인딩 |
 
 ## 관련 구현
+- ChannelInitializationService (초기 2채널 템플릿 생성)
+- ContentService.createChannel (0바인딩 생성 정책)
 
-*   [권한 시스템](permission-system.md#채널-권한-바인딩-기본값)
-*   [트러블슈팅](../troubleshooting/permission-errors.md)
+## 관련 문서
+- permission-system.md
+- ui-ux/pages/channel-pages.md
+- troubleshooting/permission-errors.md

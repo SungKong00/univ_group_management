@@ -66,7 +66,7 @@
 ### ✅ 완료된 기능
 - **인증/회원가입**: Google OAuth + 프로필 설정 + 자동 로그인
 - **그룹 관리**: CRUD + 계층 구조 + 멤버십
-- **권한 시스템**: RBAC (시스템/커스텀 역할) + 채널 권한 Permission-Centric 모델 (채널 생성 시 기본 바인딩 0개, 명시적 설정 필요)
+- **권한 시스템**: RBAC (시스템/커스텀 역할) + 채널 권한 Permission-Centric 모델 (**하이브리드**: 기본 2채널 템플릿 자동 / 사용자 정의 채널 0바인딩 시작)
 - **백엔드 API**: 모든 핵심 엔드포인트
 - **그룹 모집 시스템**: API 구현 완료
 - **프론트엔드 로그인**: 완성된 Toss 디자인 기반 로그인 페이지
@@ -88,12 +88,12 @@
 ## 🆕 2025-10-01 권한 모델 개정 요약
 - 시스템 역할(OWNER / ADVISOR / MEMBER) 불변성 명시 (이름/우선순위/권한 수정 및 삭제 금지)
 - GroupRole: data class → 일반 class, id 기반 equals/hashCode, MutableSet permissions
-- ChannelRoleBinding: 채널 생성 시 자동 기본 바인딩 제거 (초기 0개)
-- 권한 문서화 관점: 역할→권한 나열 방식에서 권한별 허용 역할( Permission-Centric ) 매트릭스로 정리
-- Troubleshooting 문서: "기본 바인딩" 가정 제거, 수동 바인딩 점검 절차 추가
-- Database Reference: ChannelRoleBinding 스키마 & JPA 엔티티 추가
+- ChannelRoleBinding: (rev1~3) 모든 채널 0바인딩 모델 → (rev5) **하이브리드** 전환 (기본 2채널 템플릿 + 사용자 정의 채널 0바인딩)
+- 권한 문서화 관점: 역할→권한 나열 방식에서 권한별 허용 역할 Permission-Centric 매트릭스
+- Troubleshooting 문서: 채널 유형(템플릿/0) 판별 단계 추가
+- Database Reference: ChannelRoleBinding 스키마 & JPA 엔티티 + 초기화/사용자 정의 차이 주석 필요(반영 완료)
 
-> 영향: 채널 생성 직후 어떤 사용자도 채널 보기/읽기/쓰기 불가. UI 는 채널 생성 후 즉시 권한 매트릭스 설정 플로우를 유도해야 함.
+> 영향: 사용자 정의 채널은 생성 직후 어떤 사용자도 접근 불가(바인딩 0) → UI 가 권한 매트릭스 설정 유도. 기본 2채널은 즉시 사용 가능하되 재구성 가능.
 
 ## 🔧 개발 환경 설정
 

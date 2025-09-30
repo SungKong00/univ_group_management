@@ -75,7 +75,7 @@ class GroupManagementService(
         val roles = createDefaultRolesAndAddOwner(savedGroup, owner)
 
         // 기본 채널 생성 및 권한 바인딩 설정
-        channelInitializationService.createDefaultChannels(savedGroup, roles.first, roles.third)
+        channelInitializationService.createDefaultChannels(savedGroup, roles.first, roles.second, roles.third)
 
         // 기본 채널 생성 완료 플래그 설정
         groupRepository.save(savedGroup.copy(defaultChannelsCreated = true))
@@ -140,13 +140,13 @@ class GroupManagementService(
 
         val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER")
             .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+        val advisorRole = groupRoleRepository.findByGroupIdAndName(group.id, "ADVISOR").orElse(null)
         val memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER")
             .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
-        val wasCreated = channelInitializationService.ensureDefaultChannelsExist(group, ownerRole, memberRole)
+        val wasCreated = channelInitializationService.ensureDefaultChannelsExist(group, ownerRole, advisorRole, memberRole)
 
         if (wasCreated) {
-            // 채널이 생성되었으면 플래그 갱신
             groupRepository.save(group.copy(defaultChannelsCreated = true))
         }
     }

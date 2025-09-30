@@ -307,7 +307,7 @@ CREATE INDEX idx_channel_order ON channels(workspace_id, display_order);
 
 ### ChannelRoleBinding 테이블 (채널 권한 매핑) {#ChannelRoleBinding}
 * 목적: 그룹 역할(GroupRole) ↔ 채널(Channel) 사이의 가시성/읽기/쓰기 권한 결합
-* 자동 생성 정책(변경됨 2025-10-01): 새 채널 생성 시 어떠한 바인딩도 자동 생성되지 않음 (초기 상태 0개)
+* 자동 생성 정책(변경됨 2025-10-01 rev5): **그룹 생성 시 초기 2개 채널(공지/자유)만 템플릿 바인딩 자동 생성**, 이후 사용자 정의 채널은 0개 바인딩에서 시작 (UI 권한 매트릭스에서 수동 구성 필요)
 * 권한 평가: (1) 그룹 역할의 그룹 수준 권한 (2) 채널 바인딩 권한(override 성격) 결합
 
 ```sql

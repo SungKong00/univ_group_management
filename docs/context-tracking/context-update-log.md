@@ -21,6 +21,20 @@
 **업데이트 필요한 문서:**
 - ❌ `docs/concepts/recruitment-system.md` - 모집 API 최신 구현 상태 반영 (기존 pending 항목 유지)
 
+### 2025-10-01 (rev5)
+**업데이트된 문서:**
+- ✅ `docs/concepts/permission-system.md` - 기본 2채널 템플릿 + 사용자 정의 채널 0바인딩 혼합 전략 추가
+- ✅ `docs/concepts/channel-permissions.md` - 하이브리드 정책(초기 템플릿 vs 0바인딩) 구분 표 및 이력 정리
+- ✅ `docs/ui-ux/pages/channel-pages.md` - 사용자 정의 채널 생성 후 권한 매트릭스 진입 배너/플로우 명시
+- ✅ `docs/troubleshooting/permission-errors.md` - 디버깅 절차에 채널 유형(템플릿/0바인딩) 판별 단계 추가
+
+**영향받는 문서 (검토 필요):**
+- 🔄 `docs/implementation/backend-guide.md` - 채널 생성 후 권한 구성 흐름 간단 주석 추가 가능성
+- 🔄 `CLAUDE.md` - 권한 모델 개정 요약 rev5 반영 필요
+
+**업데이트 필요한 문서:**
+- ❌ `docs/implementation/api-reference.md` - (선택) 채널 권한 관련 엔드포인트 설명에 초기 상태 주석 추가 검토
+
 ## 2024년 9월
 
 ### 2024-09-29

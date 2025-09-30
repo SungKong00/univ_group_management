@@ -5,33 +5,26 @@
 ## 🚨 우선순위 높음 (High Priority)
 
 ### 모집 시스템 문서 & API 문서 동기화
-**상태**: 미완료
-**변경 이유**: 모집 API 구현됨 (`0245646`) / 문서 세부 스펙 미반영
-**예상 작업 시간**: 1~2시간
-**업데이트 필요 파일:**
-- `docs/implementation/api-reference.md` (모집 엔드포인트 상세: 경로, DTO, 권한 요구조건)
-- `docs/concepts/recruitment-system.md` (현재 구현 범위 / 향후 계획 구분)
+**상태**: 완료 (2025-10-01 rev5)
+**적용 내용**: recruitment-system.md 구현 상태 표/권한/에러/DTO/API 매핑 반영, api-reference.md 상세 예시/에러 코드 확장.
+**후속**: 통계 구현 시 stats 응답 확정 필요 (보류)
 
 ### 채널 권한 설정 UI/UX 문서화
-**상태**: 신규
-**변경 이유**: Permission-Centric 채널 권한 모델 적용 → UI 흐름 필요
-**예상 작업 시간**: 1시간
-**업데이트 필요 파일:**
-- `docs/ui-ux/pages/` 내 채널 생성 & 설정 흐름 신규 페이지 (예: `channel-create.md`, `channel-permission-matrix.md`)
-- 매트릭스 편집 패턴 / 저장 트랜잭션 / 에러(불완전 설정) 처리 UX
+**상태**: 완료 (rev5 하이브리드 정책 반영)
+**적용 문서**: channel-pages.md, channel-permissions.md, permission-system.md, troubleshooting/permission-errors.md
+**후속**: UI 컴포넌트 설계 세부 인터랙션(드래그 정렬, 배치 저장) 추가 (선택)
 
 ### CLAUDE.md 후속 점검
-**상태**: 일부 완료 (개정 요약 추가됨)
-**추가 필요**: 채널 권한 설정 UI 완료 후 레퍼런스 링크 추가 예정
+**상태**: 완료 (rev5 요약 반영)
+**후속**: 권한 UI 실제 구현 후 스크린샷/워크플로 넣기 (예정)
 
 ---
 
 ## ⚠️ 우선순위 중간 (Medium Priority)
 
 ### 개발 워크플로우 문서 Git 전략 연동 검증
-**상태**: 진행 필요
-**파일:** `docs/workflows/development-flow.md`
-**내용:** Git Flow 섹션에 PR 가이드/코드 리뷰 표준 상호 링크 추가
+**상태**: 완료 (링크 삽입) / 재검토 예정
+**추가 고려**: 문서 자동 검증 파이프라인 섹션 (추후)
 
 ### UI/UX 전체 정합성 1차 패스
 **상태**: 보류
@@ -43,10 +36,13 @@
 ## 📋 우선순위 낮음 (Low Priority)
 
 ### Permission 캐시 무효화 UX 힌트 추가
-**파일:** `docs/ui-ux/pages/* (설정 관련)` (채널 권한 저장 후 토스트/재로딩 전략)
+**파일:** `docs/ui-ux/pages/*` (권한 저장 후 피드백/리프레시 전략) – 보류
 
 ### 관리자 대시보드 개념 초안
-**파일:** 신규 작성 예정 `docs/concepts/admin-dashboard.md`
+**파일:** 신규 예정 `docs/concepts/admin-dashboard.md` – 보류
+
+### 채널 권한 매트릭스 접근성 확장
+**내용:** 키보드 내비/스크린리더 라벨 구체 예시 – 보류
 
 ---
 
@@ -54,33 +50,37 @@
 - (완료) 권한 시스템 문서 검토 / 채널 자동 바인딩 제거 반영 (`2025-10-01` rev1~3)
 - (완료) Database Reference: ChannelRoleBinding 스키마/JPA 추가
 - (완료) Troubleshooting: 기본 바인딩 가정 제거
+- (완료) Hybrid Policy 문서화 (rev5 기본 2채널 템플릿 + 사용자 정의 0바인딩)
+- (완료) Recruitment 문서/API 상세 확장
+- (완료) Development Flow 상호 링크 삽입
 
 ---
 
 ## 🔄 진행 중인 작업 (In Progress)
 - 컨텍스트 추적 자동화 스크립트 (서브 에이전트) - 초기 버전
+- 통계(Recruitment Stats) 설계 대기
 
 ---
 
-## 📊 통계 및 메트릭 (갱신 2025-10-01)
-- **총 대기 항목**: 6개 (High 3 / Medium 2 / Low 1)
-- **완료 처리(이번 개정)**: 3개
-- **예상 총 작업 시간 잔여**: 5~8시간
+## 📊 통계 및 메트릭 (갱신 2025-10-01 rev5)
+- **총 대기 항목**: 5개 (High 0 / Medium 1 / Low 4)
+- **이번 라운드 완료**: 6개
+- **예상 잔여 작업 시간**: 6~9시간 (선택 포함)
 
 ---
 
 ## 🎯 다음 액션 아이템
 ### 오늘
-1. 모집 API 스펙 섹션 초안 작성(api-reference)
-2. 채널 권한 설정 UI 페이지 구조 초안 생성
+1. 통계(stats) 설계 초안 여부 결정
+2. 채널 권한 UI 접근성 세부 요구 정의 (초안)
 
 ### 이번 주
-1. recruitment-system 개념 문서 최신화
-2. development-flow Git 전략 상호 링크 보강
+1. UI/UX 정합성 1차 패스
+2. 관리자 대시보드 요구사항 초안 작성
 
 ### 이번 달
-1. UI/UX 전체 정합성 패스
-2. 관리자 대시보드 개념 초안
+1. Recruitment stats 구현 & 문서화
+2. 권한 캐시 UX 개선안 문서화
 
 ---
 

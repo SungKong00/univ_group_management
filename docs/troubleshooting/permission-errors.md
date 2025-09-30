@@ -86,9 +86,17 @@ HTTP/1.1 403 Forbidden
 1. 그룹 멤버십 재확인
 2. 역할이 시스템 역할인지 구분 (불변 처리)
 3. PermissionService 캐시 무효화 호출 여부(역할/바인딩 갱신 후)
-4. (변경됨 2025-10-01) 채널 접근 불가 시: 해당 채널에 필요한 ChannelRoleBinding 이 정의되어 있는지 확인 (자동 기본 바인딩 없음 → 존재하지 않으면 View/Read/Write 모두 불가)
-   - 기대: 최소 1개 이상 (예: Owner 역할 can_view=true) 
-   - 없을 경우: UI 권한 매트릭스 저장 누락 또는 권한 초기화 로직 미호출
+4. 채널 유형 판별 (rev5): 기본 초기 채널(공지/자유)인가, 사용자 정의 채널인가?
+   - 기본 초기 채널 → 템플릿 바인딩 3개(OWNER/ADVISOR/ MEMBER) 존재 기대
+   - 사용자 정의 채널 → 생성 직후 바인딩 0개 정상 (구성 전 접근 불가)
+5. 접근 불가(403/빈 목록) 시 ChannelRoleBinding 존재/권한 교차점 확인
+   - 사용자 정의 채널: 아직 설정 전이면 CHANNEL_VIEW 미부여 → 정상 → UI 권한 매트릭스 안내
+   - 기본 채널: 예상 바인딩 누락이면 초기화/삭제 이력 확인 필요
+6. 최소 권한 검증: CHANNEL_VIEW → POST_READ → (선택) POST_WRITE / COMMENT_WRITE / FILE_UPLOAD 순 충족 여부
+7. 캐시 재검증: 최근 변경 후 invalidateGroup(groupId) 호출 여부
+8. 여전히 문제면 DB 직접 조회 (SELECT * FROM channel_role_bindings WHERE channel_id=?) 로 실제 저장 상태 확인
+
+> rev5 혼합 정책: “기본 2채널 템플릿 + 사용자 정의 채널 0바인딩 시작” 으로 인한 오인(‘권한 누락’ 착시) 방지.
 
 ## 4. 빠른 JPA/캐시 점검 코드 스니펫
 ```kotlin
@@ -112,7 +120,8 @@ if (error.code == 'EXPIRED_TOKEN') {
 |------|------|------|
 | 시스템 역할 편집 UI 노출 | 403 SYSTEM_ROLE_IMMUTABLE | 시스템 역할 필터링 후 UI 숨김 |
 | 캐시 무효화 누락 | 권한 변경 즉시 반영 안 됨 | 역할/바인딩 변경 후 invalidateGroup 호출 |
-| ChannelRoleBinding 미설정 | 채널 목록/게시글 전부 미노출 | 권한 매트릭스 저장 후 최소 VIEW 권한 부여 |
+| ChannelRoleBinding 미설정 (사용자 정의 채널) | 채널 목록/게시글 전부 미노출 | 권한 매트릭스 저장 후 최소 VIEW 권한 부여 |
+| 기본 채널 템플릿 손상 | 기본 공지/자유 접근 불가 | 템플릿 재적용(수동 재설정) 또는 재생성 + 재구성 |
 | Bearer 접두사 누락 | INVALID_TOKEN | 헤더 형식 강제 (`Bearer `) |
 | 만료 토큰 반복 호출 | 연속 401 → 무한 요청 | 1회 refresh 후 실패 시 로그아웃 |
 
@@ -120,3 +129,11 @@ if (error.code == 'EXPIRED_TOKEN') {
 - 개념: `../concepts/permission-system.md`
 - 채널 권한: `../concepts/channel-permissions.md`
 - 워크스페이스/채널: `../concepts/workspace-channel.md`
+
+## 8. 채널 권한 초기화 정책 (rev5 요약)
+| 구분 | 기본 2채널 (공지/자유) | 사용자 정의 채널 |
+|------|-----------------------|--------------------|
+| 생성 시 바인딩 | 템플릿 3개 자동 | 0개 (수동 구성 필요) |
+| 즉시 가시성 | 예 (CHANNEL_VIEW 포함) | 아니오 (CHANNEL_VIEW 부여 후) |
+| 일반 오해 | “왜 바로 안 보이지?” | “자동 권한인데 왜 없지?” |
+| 진단 포인트 | 기대 3개 중 누락 여부 | 0개면 정상(구성 전) / 일부만 있으면 UI 저장 누락 |

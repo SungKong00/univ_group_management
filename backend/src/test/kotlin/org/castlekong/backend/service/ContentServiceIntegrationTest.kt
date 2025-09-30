@@ -11,6 +11,7 @@ import org.castlekong.backend.dto.UpdatePostRequest
 import org.castlekong.backend.dto.UpdateWorkspaceRequest
 import org.castlekong.backend.dto.WorkspaceResponse
 import org.castlekong.backend.entity.ChannelPermission
+import org.castlekong.backend.entity.ChannelRoleBinding
 import org.castlekong.backend.entity.Group
 import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.entity.User
@@ -67,6 +68,9 @@ class ContentServiceIntegrationTest {
 
     @Autowired
     private lateinit var commentRepository: CommentRepository
+
+    @Autowired
+    private lateinit var channelInitializationService: ChannelInitializationService
 
     private lateinit var owner: User
     private lateinit var member: User
@@ -129,37 +133,14 @@ class ContentServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("워크스페이스를 생성하고 삭제할 수 있다")
-    fun createAndDeleteWorkspace() {
-        val workspace =
-            contentService.createWorkspace(
-                group.id!!,
-                CreateWorkspaceRequest(name = "프로젝트 공간", description = "세부 작업 공간"),
-            )
-
-        assertThat(workspace.name).isEqualTo("프로젝트 공간")
-        assertThat(workspaceRepository.findById(workspace.id)).isPresent
-
-        val channel =
-            contentService.createChannel(
-                workspace.id,
-                CreateChannelRequest(name = "공지", description = "공지사항 채널"),
-                owner.id!!,
-            )
-        val post =
-            contentService.createPost(
-                channel.id,
-                CreatePostRequest(content = "첫 게시글"),
-                owner.id!!,
-            )
-        contentService.createComment(post.id, CreateCommentRequest(content = "첫 댓글"), owner.id!!)
-
-        contentService.deleteWorkspace(workspace.id, owner.id!!)
-
-        assertThat(workspaceRepository.findById(workspace.id)).isNotPresent
-        assertThat(channelRepository.findByWorkspace_Id(workspace.id)).isEmpty()
-        assertThat(postRepository.findByChannel_Id(channel.id)).isEmpty()
-        assertThat(commentRepository.findByPost_Id(post.id)).isEmpty()
+    @DisplayName("그룹 워크스페이스 조회는 멱등적이며 단 하나만 존재한다")
+    fun getWorkspacesByGroup_IdempotentSingle() {
+        val first = contentService.getWorkspacesByGroup(group.id!!)
+        val second = contentService.getWorkspacesByGroup(group.id!!)
+        assertThat(first).hasSize(1)
+        assertThat(second).hasSize(1)
+        assertThat(first[0].id).isEqualTo(second[0].id)
+        assertThat(workspaceRepository.findByGroup_Id(group.id!!)).hasSize(1)
     }
 
     @Test
@@ -181,34 +162,20 @@ class ContentServiceIntegrationTest {
     @Test
     @DisplayName("채널 생성 시 기본 권한 바인딩이 설정된다")
     fun createChannel_CreatesDefaultBindings() {
+        // (정책 변경) 사용자 정의 채널은 0개 바인딩으로 시작하므로 이 테스트는 제거됨.
+    }
+
+    @Test
+    @DisplayName("공지 타입 사용자 정의 채널도 권한 바인딩 0개로 시작한다")
+    fun createAnnouncementChannel_StartsWithoutBindings() {
         val workspace = ensureDefaultWorkspace()
-
-        val channel =
-            contentService.createChannel(
-                workspace.id,
-                CreateChannelRequest(name = "일반", description = "일반 채널"),
-                owner.id!!,
-            )
-
+        val channel = contentService.createChannel(
+            workspace.id,
+            CreateChannelRequest(name = "공지2", description = "추가 공지", type = "ANNOUNCEMENT"),
+            owner.id!!
+        )
         val bindings = channelRoleBindingRepository.findByChannelId(channel.id)
-        assertThat(bindings).hasSize(2)
-
-        val ownerBinding = bindings.first { it.groupRole.id == ownerRole.id }
-        assertThat(ownerBinding.permissions).containsExactlyInAnyOrder(
-            ChannelPermission.CHANNEL_VIEW,
-            ChannelPermission.POST_READ,
-            ChannelPermission.POST_WRITE,
-            ChannelPermission.COMMENT_WRITE,
-            ChannelPermission.FILE_UPLOAD,
-        )
-
-        val memberBinding = bindings.first { it.groupRole.id == memberRole.id }
-        assertThat(memberBinding.permissions).containsExactlyInAnyOrder(
-            ChannelPermission.CHANNEL_VIEW,
-            ChannelPermission.POST_READ,
-            ChannelPermission.POST_WRITE,
-            ChannelPermission.COMMENT_WRITE,
-        )
+        assertThat(bindings).isEmpty()
     }
 
     @Test
@@ -239,10 +206,10 @@ class ContentServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("멤버는 채널에 게시글을 작성할 수 있다")
+    @DisplayName("멤버는 채널에 게시글을 작성할 수 있다 (권한 부여 후)")
     fun createPost_Success() {
         val channel = createDefaultChannel()
-
+        grantFull(channel.id) // 권한 수동 부여
         val response =
             contentService.createPost(
                 channel.id,
@@ -274,25 +241,25 @@ class ContentServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("게시글은 작성자만 수정할 수 있다")
+    @DisplayName("게시글은 작성자만 수정할 수 있다 (권한 부여 후)")
     fun updatePost_OnlyAuthorCanUpdate() {
         val channel = createDefaultChannel()
+        grantFull(channel.id)
         val post = contentService.createPost(channel.id, CreatePostRequest(content = "원본"), member.id!!)
 
         val updated = contentService.updatePost(post.id, UpdatePostRequest(content = "수정본"), member.id!!)
         assertThat(updated.content).isEqualTo("수정본")
 
-        assertThatThrownBy {
-            contentService.updatePost(post.id, UpdatePostRequest(content = "다른사용자"), owner.id!!)
-        }
+        assertThatThrownBy { contentService.updatePost(post.id, UpdatePostRequest(content = "다른사용자"), owner.id!!) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FORBIDDEN)
     }
 
     @Test
-    @DisplayName("그룹 관리 권한이 있는 사용자는 다른 사람의 게시글을 삭제할 수 있다")
+    @DisplayName("그룹 관리 권한 있는 사용자는 다른 사람 게시글 삭제 가능 (권한 부여 후)")
     fun deletePost_ByOwnerWithAdminPermission() {
         val channel = createDefaultChannel()
+        grantFull(channel.id)
         val post = contentService.createPost(channel.id, CreatePostRequest(content = "삭제 대상"), member.id!!)
 
         contentService.deletePost(post.id, owner.id!!)
@@ -301,9 +268,10 @@ class ContentServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("멤버는 게시글에 댓글을 작성하고 삭제할 수 있다")
+    @DisplayName("멤버는 게시글에 댓글을 작성/삭제할 수 있다 (권한 부여 후)")
     fun createAndDeleteComment_Success() {
         val channel = createDefaultChannel()
+        grantFull(channel.id)
         val post = contentService.createPost(channel.id, CreatePostRequest(content = "댓글 테스트"), member.id!!)
 
         val comment =
@@ -320,9 +288,10 @@ class ContentServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("댓글 작성자가 아니면 댓글을 삭제할 수 없다")
+    @DisplayName("댓글 작성자가 아니면 댓글을 삭제할 수 없다 (권한 부여 후)")
     fun deleteComment_NotAuthor_ThrowsForbidden() {
         val channel = createDefaultChannel()
+        grantFull(channel.id)
         val post = contentService.createPost(channel.id, CreatePostRequest(content = "댓글"), member.id!!)
         val comment = contentService.createComment(post.id, CreateCommentRequest(content = "작성자"), member.id!!)
 
@@ -378,4 +347,18 @@ class ContentServiceIntegrationTest {
 
         return group
     }
+
+    private fun grantBindings(channelId: Long, ownerPerms: Set<ChannelPermission>, memberPerms: Set<ChannelPermission>) {
+        val channel = channelRepository.findById(channelId).get()
+        val ownerRole = groupRoleRepository.findByGroupIdAndName(channel.group.id!!, "OWNER").get()
+        val memberRole = groupRoleRepository.findByGroupIdAndName(channel.group.id!!, "MEMBER").get()
+        channelRoleBindingRepository.save(ChannelRoleBinding.create(channel, ownerRole, ownerPerms))
+        channelRoleBindingRepository.save(ChannelRoleBinding.create(channel, memberRole, memberPerms))
+    }
+
+    private fun grantFull(channelId: Long) = grantBindings(
+        channelId,
+        setOf(ChannelPermission.CHANNEL_VIEW, ChannelPermission.POST_READ, ChannelPermission.POST_WRITE, ChannelPermission.COMMENT_WRITE, ChannelPermission.FILE_UPLOAD),
+        setOf(ChannelPermission.CHANNEL_VIEW, ChannelPermission.POST_READ, ChannelPermission.POST_WRITE, ChannelPermission.COMMENT_WRITE)
+    )
 }

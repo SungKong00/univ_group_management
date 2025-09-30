@@ -201,8 +201,10 @@ class ContentService(
             )
         val savedChannel = channelRepository.save(channel)
 
-        // 새 채널에 기본 권한 바인딩 설정
-        setupDefaultChannelPermissions(savedChannel)
+        // 정책(2025-10-01 rev5): 새로 생성된 사용자 정의 채널은 권한 바인딩 0개 상태로 시작.
+        // 기본 2개 초기 채널(공지/자유)만 ChannelInitializationService 에서 템플릿 부여.
+        // UI 는 채널 생성 직후 권한 매트릭스 편집 화면으로 유도.
+        // setupDefaultChannelPermissions(savedChannel)  // 자동 템플릿 부여 제거
 
         return toChannelResponse(savedChannel)
     }
@@ -506,48 +508,6 @@ class ContentService(
         val rolePerms = if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions
         // MVP 단순화: 오버라이드 제거, 역할 권한만 확인
         if (!rolePerms.contains(GroupPermission.CHANNEL_MANAGE)) throw BusinessException(ErrorCode.FORBIDDEN)
-    }
-
-    private fun setupDefaultChannelPermissions(channel: Channel) {
-        try {
-            // 그룹의 기본 역할들 조회
-            val ownerRole = groupRoleRepository.findByGroupIdAndName(channel.group.id, "OWNER")
-                .orElse(null) ?: return // OWNER 역할이 없으면 스킵
-            val memberRole = groupRoleRepository.findByGroupIdAndName(channel.group.id, "MEMBER")
-                .orElse(null) ?: return // MEMBER 역할이 없으면 스킵
-
-            // OWNER 역할에 대한 전체 권한 바인딩
-            val ownerBinding = ChannelRoleBinding.create(
-                channel = channel,
-                groupRole = ownerRole,
-                permissions = setOf(
-                    ChannelPermission.CHANNEL_VIEW,
-                    ChannelPermission.POST_READ,
-                    ChannelPermission.POST_WRITE,
-                    ChannelPermission.COMMENT_WRITE,
-                    ChannelPermission.FILE_UPLOAD
-                )
-            )
-
-            // MEMBER 역할에 대한 기본 권한 바인딩 (읽기/쓰기 권한)
-            val memberBinding = ChannelRoleBinding.create(
-                channel = channel,
-                groupRole = memberRole,
-                permissions = setOf(
-                    ChannelPermission.CHANNEL_VIEW,
-                    ChannelPermission.POST_READ,
-                    ChannelPermission.POST_WRITE,
-                    ChannelPermission.COMMENT_WRITE
-                )
-            )
-
-            channelRoleBindingRepository.save(ownerBinding)
-            channelRoleBindingRepository.save(memberBinding)
-        } catch (e: Exception) {
-            // 권한 바인딩 실패는 로그만 기록하고 채널 생성은 계속 진행
-            // 이렇게 하면 채널은 생성되지만 권한이 없는 상태가 됨
-            logger.error("채널 권한 바인딩 설정 실패 - 채널 ID: {}, 에러: {}", channel.id, e.message)
-        }
     }
 
     // moved to top and expanded

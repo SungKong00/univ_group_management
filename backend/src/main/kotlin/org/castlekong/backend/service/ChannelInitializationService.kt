@@ -11,17 +11,17 @@ class ChannelInitializationService(
     private val channelRoleBindingRepository: ChannelRoleBindingRepository,
 ) {
 
-    fun createDefaultChannels(group: Group, ownerRole: GroupRole, memberRole: GroupRole) {
+    fun createDefaultChannels(group: Group, ownerRole: GroupRole, advisorRole: GroupRole?, memberRole: GroupRole) {
         // 공지사항 채널 생성
         val announcementChannel = createAnnouncementChannel(group)
-        createAnnouncementChannelBindings(announcementChannel, ownerRole, memberRole)
+        createAnnouncementChannelBindings(announcementChannel, ownerRole, advisorRole, memberRole)
 
         // 자유게시판 채널 생성
         val textChannel = createTextChannel(group)
-        createTextChannelBindings(textChannel, ownerRole, memberRole)
+        createTextChannelBindings(textChannel, ownerRole, advisorRole, memberRole)
     }
 
-    fun ensureDefaultChannelsExist(group: Group, ownerRole: GroupRole, memberRole: GroupRole): Boolean {
+    fun ensureDefaultChannelsExist(group: Group, ownerRole: GroupRole, advisorRole: GroupRole?, memberRole: GroupRole): Boolean {
         val hasAnnouncement = channelRepository.findByGroupIdAndType(group.id, ChannelType.ANNOUNCEMENT).isNotEmpty()
         val hasText = channelRepository.findByGroupIdAndType(group.id, ChannelType.TEXT).isNotEmpty()
 
@@ -29,13 +29,13 @@ class ChannelInitializationService(
 
         if (!hasAnnouncement) {
             val announcementChannel = createAnnouncementChannel(group)
-            createAnnouncementChannelBindings(announcementChannel, ownerRole, memberRole)
+            createAnnouncementChannelBindings(announcementChannel, ownerRole, advisorRole, memberRole)
             created = true
         }
 
         if (!hasText) {
             val textChannel = createTextChannel(group)
-            createTextChannelBindings(textChannel, ownerRole, memberRole)
+            createTextChannelBindings(textChannel, ownerRole, advisorRole, memberRole)
             created = true
         }
 
@@ -66,21 +66,19 @@ class ChannelInitializationService(
         return channelRepository.save(channel)
     }
 
-    private fun createAnnouncementChannelBindings(channel: Channel, ownerRole: GroupRole, memberRole: GroupRole) {
-        // OWNER: 모든 권한
-        val ownerBinding = ChannelRoleBinding.create(
-            channel = channel,
-            groupRole = ownerRole,
-            permissions = setOf(
-                ChannelPermission.CHANNEL_VIEW,
-                ChannelPermission.POST_READ,
-                ChannelPermission.POST_WRITE,
-                ChannelPermission.COMMENT_WRITE,
-                ChannelPermission.FILE_UPLOAD
-            )
+    private fun createAnnouncementChannelBindings(channel: Channel, ownerRole: GroupRole, advisorRole: GroupRole?, memberRole: GroupRole) {
+        val fullPerms = setOf(
+            ChannelPermission.CHANNEL_VIEW,
+            ChannelPermission.POST_READ,
+            ChannelPermission.POST_WRITE,
+            ChannelPermission.COMMENT_WRITE,
+            ChannelPermission.FILE_UPLOAD
         )
-
-        // MEMBER: 읽기 + 댓글 작성
+        val ownerBinding = ChannelRoleBinding.create(channel = channel, groupRole = ownerRole, permissions = fullPerms)
+        advisorRole?.let { ar ->
+            val advisorBinding = ChannelRoleBinding.create(channel = channel, groupRole = ar, permissions = fullPerms)
+            channelRoleBindingRepository.save(advisorBinding)
+        }
         val memberBinding = ChannelRoleBinding.create(
             channel = channel,
             groupRole = memberRole,
@@ -90,26 +88,23 @@ class ChannelInitializationService(
                 ChannelPermission.COMMENT_WRITE
             )
         )
-
         channelRoleBindingRepository.save(ownerBinding)
         channelRoleBindingRepository.save(memberBinding)
     }
 
-    private fun createTextChannelBindings(channel: Channel, ownerRole: GroupRole, memberRole: GroupRole) {
-        // OWNER: 모든 권한
-        val ownerBinding = ChannelRoleBinding.create(
-            channel = channel,
-            groupRole = ownerRole,
-            permissions = setOf(
-                ChannelPermission.CHANNEL_VIEW,
-                ChannelPermission.POST_READ,
-                ChannelPermission.POST_WRITE,
-                ChannelPermission.COMMENT_WRITE,
-                ChannelPermission.FILE_UPLOAD
-            )
+    private fun createTextChannelBindings(channel: Channel, ownerRole: GroupRole, advisorRole: GroupRole?, memberRole: GroupRole) {
+        val fullPerms = setOf(
+            ChannelPermission.CHANNEL_VIEW,
+            ChannelPermission.POST_READ,
+            ChannelPermission.POST_WRITE,
+            ChannelPermission.COMMENT_WRITE,
+            ChannelPermission.FILE_UPLOAD
         )
-
-        // MEMBER: 읽기/쓰기/댓글 작성
+        val ownerBinding = ChannelRoleBinding.create(channel = channel, groupRole = ownerRole, permissions = fullPerms)
+        advisorRole?.let { ar ->
+            val advisorBinding = ChannelRoleBinding.create(channel = channel, groupRole = ar, permissions = fullPerms)
+            channelRoleBindingRepository.save(advisorBinding)
+        }
         val memberBinding = ChannelRoleBinding.create(
             channel = channel,
             groupRole = memberRole,
