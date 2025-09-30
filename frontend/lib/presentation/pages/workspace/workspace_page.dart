@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
 
@@ -52,7 +53,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
 
     return Container(
-      color: AppTheme.background,
+      color: AppColors.lightBackground,
       child: isDesktop
           ? _buildDesktopWorkspace(workspaceState)
           : _buildMobileWorkspace(workspaceState),
@@ -95,7 +96,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
-          right: BorderSide(color: AppTheme.gray200, width: 1),
+          right: BorderSide(color: AppColors.lightOutline, width: 1),
         ),
       ),
       child: Column(
@@ -121,7 +122,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           Text(
             'Group ID: ${widget.groupId}',
             style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.gray600,
+              color: AppColors.neutral600,
             ),
           ),
         ],
@@ -180,7 +181,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
               child: Text(
                 '게시글 목록이 여기에 표시됩니다',
                 style: AppTheme.bodyLarge.copyWith(
-                  color: AppTheme.gray600,
+                  color: AppColors.neutral600,
                 ),
               ),
             ),
@@ -195,7 +196,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border.all(color: AppTheme.gray300),
+        border: Border.all(color: AppColors.neutral300),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -224,7 +225,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
-          left: BorderSide(color: AppTheme.gray200, width: 1),
+          left: BorderSide(color: AppColors.lightOutline, width: 1),
         ),
       ),
       child: _buildCommentsView(workspaceState),
@@ -257,7 +258,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             child: Text(
               '댓글이 여기에 표시됩니다',
               style: AppTheme.bodyLarge.copyWith(
-                color: AppTheme.gray600,
+                color: AppColors.neutral600,
               ),
             ),
           ),
@@ -274,7 +275,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           const Icon(
             Icons.workspaces_outlined,
             size: 64,
-            color: AppTheme.brandPrimary,
+            color: AppColors.brand,
           ),
           const SizedBox(height: 16),
           Text(
@@ -285,7 +286,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           Text(
             '그룹을 선택하여 워크스페이스에 참여하세요',
             style: AppTheme.bodyLarge.copyWith(
-              color: AppTheme.gray600,
+              color: AppColors.neutral600,
             ),
           ),
         ],
@@ -301,7 +302,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           const Icon(
             Icons.tag,
             size: 48,
-            color: AppTheme.brandPrimary,
+            color: AppColors.brand,
           ),
           const SizedBox(height: 16),
           Text(
@@ -312,7 +313,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           Text(
             '좌측에서 참여할 채널을 선택해주세요',
             style: AppTheme.bodyLarge.copyWith(
-              color: AppTheme.gray600,
+              color: AppColors.neutral600,
             ),
           ),
         ],

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_button_styles.dart';
+import '../../../core/theme/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -84,10 +86,10 @@ class GoogleSignInButton extends StatelessWidget {
             icon: const _GoogleLogoIcon(),
             isLoading: isLoading,
             textStyle: AppTheme.bodyLargeTheme(context).copyWith(
-              color: AppTheme.gray700,
+              color: AppColors.neutral700,
               fontWeight: FontWeight.w500,
             ),
-            indicatorColor: AppTheme.brandPrimary,
+            indicatorColor: AppColors.brand,
           ),
         ),
       ),

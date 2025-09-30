@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_button_styles.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// 중립적인 회색 톤의 아웃라인 버튼 (주로 취소 액션에 사용)
 ///

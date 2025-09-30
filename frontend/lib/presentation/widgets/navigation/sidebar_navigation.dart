@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/navigation_config.dart';
@@ -25,7 +26,7 @@ class SidebarNavigation extends ConsumerWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
-          right: BorderSide(color: AppTheme.gray200, width: 1),
+          right: BorderSide(color: AppColors.lightOutline, width: 1),
         ),
       ),
       child: Column(
@@ -60,7 +61,7 @@ class SidebarNavigation extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Material(
-        color: isSelected ? AppTheme.brandPrimary.withValues(alpha: 0.1) : Colors.transparent,
+        color: isSelected ? AppColors.action.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: () => _handleItemTap(context, ref, config),
@@ -84,7 +85,7 @@ class SidebarNavigation extends ConsumerWidget {
       child: Icon(
         config.icon,
         size: 24,
-        color: isSelected ? AppTheme.brandPrimary : AppTheme.gray600,
+        color: isSelected ? AppColors.action : AppColors.lightSecondary,
       ),
     );
   }
@@ -95,7 +96,7 @@ class SidebarNavigation extends ConsumerWidget {
         Icon(
           config.icon,
           size: 24,
-          color: isSelected ? AppTheme.brandPrimary : AppTheme.gray600,
+          color: isSelected ? AppColors.action : AppColors.lightSecondary,
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -105,13 +106,13 @@ class SidebarNavigation extends ConsumerWidget {
               Text(
                 config.title,
                 style: AppTheme.titleMedium.copyWith(
-                  color: isSelected ? AppTheme.brandPrimary : AppTheme.gray900,
+                  color: isSelected ? AppColors.action : AppColors.lightOnSurface,
                 ),
               ),
               Text(
                 config.description,
                 style: AppTheme.bodySmall.copyWith(
-                  color: isSelected ? AppTheme.brandPrimary.withValues(alpha: 0.8) : AppTheme.gray600,
+                  color: isSelected ? AppColors.action.withValues(alpha: 0.8) : AppColors.lightSecondary,
                 ),
               ),
             ],
@@ -122,7 +123,7 @@ class SidebarNavigation extends ConsumerWidget {
             width: 4,
             height: 20,
             decoration: BoxDecoration(
-              color: AppTheme.brandPrimary,
+              color: AppColors.action,
               borderRadius: BorderRadius.circular(2),
             ),
           ),

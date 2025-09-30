@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/navigation_utils.dart';
@@ -22,7 +23,7 @@ class TopNavigation extends ConsumerWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
-          bottom: BorderSide(color: AppTheme.gray200, width: 1),
+          bottom: BorderSide(color: AppColors.lightOutline, width: 1),
         ),
       ),
       child: Row(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/auth_models.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../dialogs/logout_dialog.dart';
 
@@ -127,10 +128,10 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
       width: widget.isCompact ? 32 : 40,
       height: widget.isCompact ? 32 : 40,
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: AppColors.brandContainerLight,
         borderRadius: BorderRadius.circular(widget.isCompact ? 16 : 20),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
+          color: AppColors.brand.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -156,7 +157,7 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
         style: TextStyle(
           fontSize: widget.isCompact ? 12 : 14,
           fontWeight: FontWeight.w600,
-          color: AppColors.primary,
+          color: AppColors.brand,
           height: 1.0,
         ),
       ),
@@ -295,7 +296,7 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
           _isLoggingOut = false;
         });
 
-        // 에러 스낵바 표시
+        // 에러 스낵바 표시 (컬러 가이드의 에너제틱 레드 사용)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('로그아웃 중 오류가 발생했습니다: ${e.toString()}'),

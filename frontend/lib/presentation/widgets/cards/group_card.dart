@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// 그룹 정보를 보여주는 가로 스크롤 카드 위젯
 ///
@@ -58,11 +59,11 @@ class GroupCard extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: AppComponents.avatarSmall,
-                        backgroundColor: AppTheme.brandPrimary,
+                        backgroundColor: AppColors.brand,
                         child: Text(
                           avatarText,
                           style: TextStyle(
-                            color: AppTheme.onPrimary,
+                            color: AppColors.onPrimary,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -82,7 +83,7 @@ class GroupCard extends StatelessWidget {
                   Text(
                     '멤버 $memberCount명',
                     style: AppTheme.bodySmallTheme(context).copyWith(
-                      color: AppTheme.gray600,
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const Spacer(),
@@ -93,14 +94,14 @@ class GroupCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isActive
-                          ? AppTheme.brandPrimary.withValues(alpha: 0.1)
-                          : AppTheme.gray200,
+                          ? AppColors.brand.withValues(alpha: 0.1)
+                          : AppColors.lightOutline,
                       borderRadius: BorderRadius.circular(AppComponents.badgeRadius),
                     ),
                     child: Text(
                       isActive ? '활성' : '비활성',
                       style: AppTheme.labelSmallTheme(context).copyWith(
-                        color: isActive ? AppTheme.brandPrimary : AppTheme.gray600,
+                        color: isActive ? AppColors.brand : AppColors.neutral600,
                       ),
                     ),
                   ),

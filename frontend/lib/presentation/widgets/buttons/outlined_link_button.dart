@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_button_styles.dart';
+import '../../../core/theme/app_colors.dart';
 
 class OutlinedLinkButton extends StatelessWidget {
   final String text;
@@ -36,7 +38,7 @@ class OutlinedLinkButton extends StatelessWidget {
             icon: icon,
             isLoading: isLoading,
             textStyle: AppTheme.bodyMediumTheme(context).copyWith(
-              color: AppTheme.brandPrimary,
+              color: AppColors.brand,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -49,7 +51,7 @@ class OutlinedLinkButton extends StatelessWidget {
             icon: icon,
             isLoading: isLoading,
             textStyle: AppTheme.bodyMediumTheme(context).copyWith(
-              color: AppTheme.brandPrimary,
+              color: AppColors.brand,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -86,7 +88,7 @@ class _OutlinedChild extends StatelessWidget {
         height: AppComponents.progressIndicatorSize,
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.brandPrimary),
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.brand),
         ),
       );
     }
@@ -150,7 +152,7 @@ class AdminLoginButton extends StatelessWidget {
           : const Icon(
               Icons.admin_panel_settings_outlined,
               size: AppComponents.googleIconSize,
-              color: AppTheme.brandPrimary,
+              color: AppColors.brand,
             ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 
 class CalendarPage extends StatelessWidget {
   const CalendarPage({super.key});
@@ -7,7 +8,7 @@ class CalendarPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppColors.lightBackground,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -15,7 +16,7 @@ class CalendarPage extends StatelessWidget {
             const Icon(
               Icons.calendar_today_outlined,
               size: 64,
-              color: AppTheme.brandPrimary,
+              color: AppColors.brand,
             ),
             const SizedBox(height: 16),
             Text(
@@ -26,7 +27,7 @@ class CalendarPage extends StatelessWidget {
             Text(
               '일정 관리 기능을 개발 예정입니다',
               style: AppTheme.bodyLarge.copyWith(
-                color: AppTheme.gray600,
+                color: AppColors.neutral600,
               ),
             ),
           ],

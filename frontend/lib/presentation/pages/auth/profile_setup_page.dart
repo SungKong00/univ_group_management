@@ -10,6 +10,7 @@ import '../../../core/models/user_models.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/onboarding_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../widgets/buttons/primary_button.dart';
 
 class ProfileSetupPage extends StatefulWidget {
@@ -260,7 +261,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(emailError),
-          backgroundColor: AppTheme.error,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -288,7 +289,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_cleanMessage(e)),
-            backgroundColor: AppTheme.error,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -309,7 +310,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('6자리 인증 코드를 정확히 입력해주세요.'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -341,7 +342,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_cleanMessage(e)),
-            backgroundColor: AppTheme.error,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -397,7 +398,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('사용 가능한 닉네임을 확인해주세요.'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -408,7 +409,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     //   ScaffoldMessenger.of(context).showSnackBar(
     //     const SnackBar(
     //       content: Text('학교 이메일 인증을 완료해주세요.'),
-    //       backgroundColor: AppTheme.error,
+    //       backgroundColor: AppColors.error,
     //     ),
     //   );
     //   return;
@@ -456,7 +457,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_cleanMessage(e)),
-            backgroundColor: AppTheme.error,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -488,7 +489,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             : AppTheme.spacing96;
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -537,21 +538,21 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
-              color: AppTheme.error.withValues(alpha: 0.08),
+              color: AppColors.error.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppTheme.radiusInput),
-              border: Border.all(color: AppTheme.error.withValues(alpha: 0.5)),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.5)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '계열/학과 정보를 불러오지 못했어요.',
-                  style: AppTheme.headlineSmall.copyWith(color: AppTheme.error),
+                  style: AppTheme.headlineSmall.copyWith(color: AppColors.error),
                 ),
                 const SizedBox(height: AppTheme.spacing12),
                 Text(
                   _initializationError!,
-                  style: AppTheme.bodyMedium.copyWith(color: AppTheme.gray700),
+                  style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral700),
                 ),
                 const SizedBox(height: AppTheme.spacing16),
                 PrimaryButton(
@@ -607,7 +608,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   Widget _buildIntroCopy() {
     return Text(
       '몇 가지 정보만 입력하면 바로 학과 워크스페이스를 이용할 수 있어요.',
-      style: AppTheme.bodyLarge.copyWith(color: AppTheme.gray600),
+      style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
     );
   }
 
@@ -636,11 +637,11 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
 
   Widget _buildNicknameField() {
     final helperColor = switch (_nicknameStatus) {
-      NicknameStatus.available => AppTheme.success,
-      NicknameStatus.unavailable => AppTheme.error,
-      NicknameStatus.invalid => AppTheme.error,
-      NicknameStatus.checking => AppTheme.gray600,
-      NicknameStatus.initial => AppTheme.gray500,
+      NicknameStatus.available => AppColors.success,
+      NicknameStatus.unavailable => AppColors.error,
+      NicknameStatus.invalid => AppColors.error,
+      NicknameStatus.checking => AppColors.neutral600,
+      NicknameStatus.initial => AppColors.neutral500,
     };
 
     final helperText = switch (_nicknameStatus) {
@@ -927,7 +928,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             child: Container(
               padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
-                color: AppTheme.primaryContainer,
+                color: AppColors.brandContainerLight,
                 borderRadius: BorderRadius.circular(AppTheme.radiusInput),
               ),
               child: Row(
@@ -936,13 +937,13 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   const Icon(
                     Icons.info_outline,
                     size: 20,
-                    color: AppTheme.brandPrimary,
+                    color: AppColors.brand,
                   ),
                   const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Text(
                       '교수 권한은 관리자 승인 후 활성화돼요.',
-                      style: AppTheme.bodySmall.copyWith(color: AppTheme.gray700),
+                      style: AppTheme.bodySmall.copyWith(color: AppColors.neutral700),
                     ),
                   ),
                 ],
@@ -1039,12 +1040,12 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                 const Icon(
                   Icons.check_circle,
                   size: 20,
-                  color: AppTheme.success,
+                  color: AppColors.success,
                 ),
                 const SizedBox(width: AppTheme.spacing8),
                 Text(
                   '인증이 완료되었어요.',
-                  style: AppTheme.bodySmall.copyWith(color: AppTheme.success),
+                  style: AppTheme.bodySmall.copyWith(color: AppColors.success),
                 ),
               ],
             ),
@@ -1127,12 +1128,12 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
           if (_otpRemaining != null && _otpRemaining != Duration.zero)
             Text(
               '남은 시간 ${_formatDuration(_otpRemaining!)}',
-              style: AppTheme.bodySmall.copyWith(color: AppTheme.gray600),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             )
           else
             Text(
               '인증 코드가 도착하지 않았다면 재전송을 눌러주세요.',
-              style: AppTheme.bodySmall.copyWith(color: AppTheme.gray600),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             ),
         ],
       ],

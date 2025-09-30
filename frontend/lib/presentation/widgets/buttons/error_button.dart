@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_button_styles.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// 위험한 액션을 위한 에러 톤 버튼 (주로 삭제, 로그아웃 등)
 ///

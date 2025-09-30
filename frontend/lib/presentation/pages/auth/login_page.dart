@@ -9,7 +9,8 @@ import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/auth_models.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../widgets/buttons/outlined_link_button.dart';
 import '../../widgets/buttons/primary_button.dart';
 import '../../providers/auth_provider.dart';
@@ -102,7 +103,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('로그인 실패: $message'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -112,7 +113,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('로그인 실패: $message'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -139,7 +140,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('테스트 로그인 실패: $e'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -227,7 +228,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: FocusTraversalGroup(
           policy: OrderedTraversalPolicy(),
@@ -299,13 +300,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       width: AppComponents.logoSize,
       height: AppComponents.logoSize,
       decoration: BoxDecoration(
-        color: AppTheme.brandPrimary,
+        color: AppColors.brand, // 학교 공식 퍼플 #5C068C
         borderRadius: BorderRadius.circular(AppComponents.logoRadius),
       ),
       child: const Icon(
         Icons.school_rounded,
         size: AppComponents.logoIconSize,
-        color: AppTheme.onPrimary,
+        color: Colors.white,
       ),
     );
   }
@@ -315,7 +316,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       '대학 그룹 관리',
       style: AppTheme.displaySmallTheme(context).copyWith(
         fontWeight: FontWeight.w700,
-        color: AppTheme.gray900,
+        color: AppColors.neutral900,
       ),
       textAlign: TextAlign.center,
     );
@@ -326,7 +327,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       '우리 학과 학생들을 위한 똑똑한 협업 공간',
       style: AppTheme.bodyMediumTheme(context).copyWith(
         fontWeight: FontWeight.w500,
-        color: AppTheme.gray600,
+        color: AppColors.neutral600,
         height: 1.6,
       ),
       textAlign: TextAlign.center,
@@ -340,9 +341,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         width: double.infinity,
         padding: const EdgeInsets.all(AppTheme.spacing12),
         decoration: BoxDecoration(
-          color: AppTheme.gray100,
+          color: AppColors.neutral100,
           borderRadius: BorderRadius.circular(AppTheme.radiusInput),
-          border: Border.all(color: AppTheme.outline),
+          border: Border.all(color: AppColors.outline),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,14 +351,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             Icon(
               Icons.info_outline,
               size: AppComponents.infoIconSize,
-              color: AppTheme.brandPrimary,
+              color: AppColors.brand,
             ),
             const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Text(
                 '개발 단계에서는 관리자 계정으로 테스트해보세요.',
                 style: AppTheme.bodySmallTheme(context).copyWith(
-                  color: AppTheme.gray600,
+                  color: AppColors.neutral600,
                   height: 1.5,
                 ),
               ),

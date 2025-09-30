@@ -8,7 +8,7 @@ import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/router_listener.dart';
 import '../../../core/navigation/back_button_handler.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/models/auth_models.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/user/user_info_card.dart';
@@ -38,7 +38,7 @@ class MainLayout extends ConsumerWidget {
     return RouterListener(
       child: BackButtonHandler(
         child: Scaffold(
-          backgroundColor: AppTheme.background,
+          backgroundColor: AppColors.lightBackground,
           body: Column(
             children: [
               const TopNavigation(),
@@ -81,11 +81,11 @@ class MainLayout extends ConsumerWidget {
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              color: AppTheme.background,
+              color: AppColors.lightBackground,
               border: navigationState.isWorkspaceCollapsed
                   ? null
                   : const Border(
-                      left: BorderSide(color: AppTheme.gray200, width: 1),
+                      left: BorderSide(color: AppColors.lightOutline, width: 1),
                     ),
             ),
             child: ClipRect(child: child),
@@ -97,7 +97,7 @@ class MainLayout extends ConsumerWidget {
 
   Widget _buildMobileLayout() {
     return Container(
-      color: AppTheme.background,
+      color: AppColors.lightBackground,
       child: child,
     );
   }

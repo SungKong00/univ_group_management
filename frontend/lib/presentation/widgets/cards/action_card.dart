@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// 빠른 실행 기능을 위한 액션 카드 위젯
 ///
@@ -51,7 +52,7 @@ class ActionCard extends StatelessWidget {
                 Icon(
                   icon,
                   size: AppComponents.actionCardIconSize,
-                  color: AppTheme.brandPrimary,
+                  color: AppColors.action, // 하이라이트 블루 #1E6FFF
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
@@ -62,7 +63,7 @@ class ActionCard extends StatelessWidget {
                 Text(
                   description,
                   style: AppTheme.bodySmallTheme(context).copyWith(
-                    color: AppTheme.gray600,
+                    color: AppColors.neutral600,
                   ),
                 ),
               ],

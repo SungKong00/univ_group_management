@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../widgets/cards/action_card.dart';
 import '../../widgets/cards/group_card.dart';
 
@@ -12,7 +13,7 @@ class HomePage extends StatelessWidget {
     final isWide = mediaQuery.size.width >= 768;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppColors.lightBackground,
       body: SafeArea(
         child: FocusTraversalGroup(
           policy: OrderedTraversalPolicy(),
@@ -29,7 +30,7 @@ class HomePage extends StatelessWidget {
                 Text(
                   '오늘도 활발한 그룹 활동을 시작해보세요',
                   style: AppTheme.bodyLargeTheme(context).copyWith(
-                    color: AppTheme.gray600,
+                    color: AppColors.neutral600,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -176,10 +177,10 @@ class HomePage extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: AppComponents.avatarMedium,
-              backgroundColor: AppTheme.gray200,
+              backgroundColor: AppColors.lightOutline,
               child: Icon(
                 Icons.message_outlined,
-                color: AppTheme.gray600,
+                color: AppColors.neutral600,
                 size: AppComponents.activityIconSize,
               ),
             ),
@@ -195,7 +196,7 @@ class HomePage extends StatelessWidget {
                   Text(
                     '${index + 1}시간 전',
                     style: AppTheme.bodySmallTheme(context).copyWith(
-                      color: AppTheme.gray600,
+                      color: AppColors.neutral600,
                     ),
                   ),
                 ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/navigation/navigation_config.dart';
 import '../../../core/navigation/navigation_utils.dart';
 
@@ -15,14 +15,14 @@ class BottomNavigation extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         border: Border(
-          top: BorderSide(color: AppTheme.gray200, width: 1),
+          top: BorderSide(color: AppColors.lightOutline, width: 1),
         ),
       ),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppTheme.brandPrimary,
-        unselectedItemColor: AppTheme.gray600,
+        selectedItemColor: AppColors.brand,
+        unselectedItemColor: AppColors.neutral600,
         backgroundColor: Colors.white,
         elevation: 0,
         onTap: (index) => _onTap(context, index),
