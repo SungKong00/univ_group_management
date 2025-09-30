@@ -63,7 +63,7 @@ class AppComponents {
 
   // Icon
   static const double infoIconSize = 16.0;
-  static const double googleIconSize = 20.0;
+  static const double googleIconSize = 24.0;
   static const double activityIconSize = 20.0;
 
   // Avatar

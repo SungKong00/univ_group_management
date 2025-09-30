@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import 'app_theme.dart';
+import 'color_tokens.dart';
 
 /// 버튼 스타일 헬퍼 클래스
 ///
@@ -219,27 +220,31 @@ class AppButtonStyles {
   }
 
   /// Google 로그인 버튼 스타일
-  /// Google 브랜드 가이드라인 준수
+  /// Google 공식 브랜드 가이드라인 100% 준수
+  /// - Light: 배경 #FFFFFF, 경계선 #747775, 텍스트 #1F1F1F
+  /// - Dark: 배경 #131314, 경계선 #8E918F, 텍스트 #E3E3E3
+  /// - 로고 패딩: 12px (왼쪽), 10px (오른쪽)
   static ButtonStyle google(ColorScheme colorScheme) {
     final isDark = colorScheme.brightness == Brightness.dark;
 
     return OutlinedButton.styleFrom(
-      foregroundColor: isDark ? Colors.white : const Color(0xFF3C4043),
-      backgroundColor: isDark ? const Color(0xFF1F1F1F) : Colors.white,
+      foregroundColor: isDark ? ColorTokens.googleTextDark : ColorTokens.googleTextLight,
+      backgroundColor: isDark ? ColorTokens.googleBgDark : Colors.white,
       minimumSize: const Size.fromHeight(AppComponents.buttonHeight),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
+      padding: const EdgeInsets.only(
+        left: AppSpacing.xs,   // 12px (Google 가이드라인)
+        right: AppSpacing.xs,  // 12px
+        top: AppSpacing.xs,
+        bottom: AppSpacing.xs,
       ),
-      textStyle: GoogleFonts.notoSansKr(
+      textStyle: GoogleFonts.roboto(
         fontSize: 16,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w500,  // Medium
         height: 1.4,
+        letterSpacing: 0.25,
       ),
       side: BorderSide(
-        color: isDark
-            ? const Color(0xFF8E918F)
-            : const Color(0xFFDADCE0),
+        color: isDark ? ColorTokens.googleBorderDark : ColorTokens.googleBorderLight,
         width: 1,
       ),
       shape: RoundedRectangleBorder(
@@ -264,9 +269,7 @@ class AppButtonStyles {
           return const BorderSide(color: AppColors.focusRing, width: 2);
         }
         return BorderSide(
-          color: isDark
-              ? const Color(0xFF8E918F)
-              : const Color(0xFFDADCE0),
+          color: isDark ? ColorTokens.googleBorderDark : ColorTokens.googleBorderLight,
           width: 1,
         );
       }),

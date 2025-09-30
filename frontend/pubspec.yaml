@@ -68,6 +68,7 @@ flutter:
 
   assets:
     - assets/icons/google_logo.svg
+    - assets/icons/google_logo_optimized.svg
     - .env
 
   # To add assets to your application, add an assets section, like this:

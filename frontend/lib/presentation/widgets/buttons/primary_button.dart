@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../../../core/theme/app_colors.dart';
+import '../icons/google_logo.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -83,10 +83,12 @@ class GoogleSignInButton extends StatelessWidget {
           onPressed: isEnabled ? onPressed : null,
           child: _PrimaryButtonChild(
             text: 'Google로 계속하기',
-            icon: const _GoogleLogoIcon(),
+            icon: const GoogleLogo(size: AppComponents.googleIconSize),
             isLoading: isLoading,
-            textStyle: AppTheme.bodyLargeTheme(context).copyWith(
-              color: AppColors.neutral700,
+            textStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
+              color: colorScheme.brightness == Brightness.dark
+                  ? const Color(0xFFE3E3E3)
+                  : const Color(0xFF1F1F1F),
               fontWeight: FontWeight.w500,
             ),
             indicatorColor: AppColors.brand,
@@ -154,16 +156,3 @@ class _PrimaryButtonChild extends StatelessWidget {
   }
 }
 
-class _GoogleLogoIcon extends StatelessWidget {
-  const _GoogleLogoIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return SvgPicture.asset(
-      'assets/icons/google_logo.svg',
-      width: AppComponents.googleIconSize,
-      height: AppComponents.googleIconSize,
-      excludeFromSemantics: true,
-    );
-  }
-}
