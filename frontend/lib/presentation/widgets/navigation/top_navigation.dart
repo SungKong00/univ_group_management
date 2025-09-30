@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/navigation/navigation_controller.dart';
+import '../../../core/navigation/navigation_utils.dart';
 
 class TopNavigation extends ConsumerWidget {
   const TopNavigation({super.key});
@@ -12,7 +13,7 @@ class TopNavigation extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final navigationState = ref.watch(navigationControllerProvider);
     final currentRoute = GoRouterState.of(context);
-    final pageTitle = _getPageTitle(currentRoute.name ?? '');
+    final pageTitle = NavigationUtils.getPageTitle(routeName: currentRoute.name ?? '');
     final canGoBack = navigationState.canGoBackInCurrentTab ||
         navigationState.currentTab != NavigationTab.home;
 
@@ -62,29 +63,6 @@ class TopNavigation extends ConsumerWidget {
 
     if (previousRoute != null) {
       context.go(previousRoute);
-    }
-  }
-
-  String _getPageTitle(String routeName) {
-    switch (routeName) {
-      case 'home':
-        return '홈';
-      case 'workspace':
-      case 'group-workspace':
-      case 'channel':
-        return '워크스페이스';
-      case 'calendar':
-        return '캘린더';
-      case 'activity':
-        return '나의 활동';
-      case 'profile':
-        return '프로필';
-      case 'login':
-        return '로그인';
-      case 'profile-setup':
-        return '프로필 설정';
-      default:
-        return '대학 그룹 관리';
     }
   }
 }

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/navigation/navigation_controller.dart';
+import '../../../core/navigation/navigation_config.dart';
+import '../../../core/navigation/navigation_utils.dart';
 import '../../../core/navigation/back_button_handler.dart';
 import '../../providers/auth_provider.dart';
 import '../user/user_info_card.dart';
@@ -29,10 +31,10 @@ class SidebarNavigation extends ConsumerWidget {
       child: Column(
         children: [
           const SizedBox(height: 24),
-          ...NavigationItem.values.map((item) => _buildNavigationItem(
+          ...NavigationConfig.items.map((config) => _buildNavigationItem(
                 context,
                 ref,
-                item,
+                config,
                 isCollapsed,
               )),
           const Spacer(),
@@ -49,11 +51,11 @@ class SidebarNavigation extends ConsumerWidget {
   Widget _buildNavigationItem(
     BuildContext context,
     WidgetRef ref,
-    NavigationItem item,
+    NavigationConfig config,
     bool isCollapsed,
   ) {
     final currentLocation = GoRouterState.of(context).uri.path;
-    final isSelected = _isRouteSelected(currentLocation, item.route);
+    final isSelected = NavigationUtils.isRouteSelected(currentLocation, config.route);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -61,7 +63,7 @@ class SidebarNavigation extends ConsumerWidget {
         color: isSelected ? AppTheme.brandPrimary.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
-          onTap: () => _handleItemTap(context, ref, item),
+          onTap: () => _handleItemTap(context, ref, config),
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: EdgeInsets.symmetric(
@@ -69,29 +71,29 @@ class SidebarNavigation extends ConsumerWidget {
               vertical: 12,
             ),
             child: isCollapsed
-                ? _buildCollapsedItem(item, isSelected)
-                : _buildExpandedItem(item, isSelected),
+                ? _buildCollapsedItem(config, isSelected)
+                : _buildExpandedItem(config, isSelected),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCollapsedItem(NavigationItem item, bool isSelected) {
+  Widget _buildCollapsedItem(NavigationConfig config, bool isSelected) {
     return Center(
       child: Icon(
-        item.icon,
+        config.icon,
         size: 24,
         color: isSelected ? AppTheme.brandPrimary : AppTheme.gray600,
       ),
     );
   }
 
-  Widget _buildExpandedItem(NavigationItem item, bool isSelected) {
+  Widget _buildExpandedItem(NavigationConfig config, bool isSelected) {
     return Row(
       children: [
         Icon(
-          item.icon,
+          config.icon,
           size: 24,
           color: isSelected ? AppTheme.brandPrimary : AppTheme.gray600,
         ),
@@ -101,13 +103,13 @@ class SidebarNavigation extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                item.title,
+                config.title,
                 style: AppTheme.titleMedium.copyWith(
                   color: isSelected ? AppTheme.brandPrimary : AppTheme.gray900,
                 ),
               ),
               Text(
-                item.description,
+                config.description,
                 style: AppTheme.bodySmall.copyWith(
                   color: isSelected ? AppTheme.brandPrimary.withValues(alpha: 0.8) : AppTheme.gray600,
                 ),
@@ -128,10 +130,10 @@ class SidebarNavigation extends ConsumerWidget {
     );
   }
 
-  void _handleItemTap(BuildContext context, WidgetRef ref, NavigationItem item) {
+  void _handleItemTap(BuildContext context, WidgetRef ref, NavigationConfig config) {
     final navigationController = ref.read(navigationControllerProvider.notifier);
 
-    if (item.route == AppConstants.workspaceRoute) {
+    if (config.route == AppConstants.workspaceRoute) {
       navigationController.enterWorkspace();
     } else {
       navigationController.exitWorkspace();
@@ -140,59 +142,7 @@ class SidebarNavigation extends ConsumerWidget {
     NavigationHelper.navigateWithSync(
       context,
       ref,
-      item.route,
+      config.route,
     );
   }
-
-  bool _isRouteSelected(String currentPath, String itemRoute) {
-    if (itemRoute == AppConstants.homeRoute) {
-      return currentPath == AppConstants.homeRoute;
-    }
-    return currentPath.startsWith(itemRoute);
-  }
-}
-
-enum NavigationItem {
-  home(
-    title: '홈',
-    description: '그룹 탐색 및 활동',
-    icon: Icons.home_outlined,
-    route: AppConstants.homeRoute,
-  ),
-  workspace(
-    title: '워크스페이스',
-    description: '그룹 소통 공간',
-    icon: Icons.workspaces_outlined,
-    route: AppConstants.workspaceRoute,
-  ),
-  calendar(
-    title: '캘린더',
-    description: '일정 관리',
-    icon: Icons.calendar_today_outlined,
-    route: AppConstants.calendarRoute,
-  ),
-  activity(
-    title: '나의 활동',
-    description: '내 참여 기록',
-    icon: Icons.history_outlined,
-    route: AppConstants.activityRoute,
-  ),
-  profile(
-    title: '프로필',
-    description: '계정 설정',
-    icon: Icons.person_outline,
-    route: AppConstants.profileRoute,
-  );
-
-  const NavigationItem({
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.route,
-  });
-
-  final String title;
-  final String description;
-  final IconData icon;
-  final String route;
 }

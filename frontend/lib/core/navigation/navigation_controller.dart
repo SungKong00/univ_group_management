@@ -5,8 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/app_constants.dart';
+import 'navigation_config.dart';
 
-/// 네비게이션 항목 정의
+/// 네비게이션 탭 정의
+///
+/// NavigationConfig와 함께 사용되는 간소화된 탭 식별자
 enum NavigationTab {
   home(AppConstants.homeRoute, 'home'),
   workspace(AppConstants.workspaceRoute, 'workspace'),
@@ -21,32 +24,22 @@ enum NavigationTab {
 
   /// 라우트로부터 네비게이션 탭 결정
   static NavigationTab fromRoute(String route) {
-    if (route.startsWith(AppConstants.workspaceRoute)) {
-      return NavigationTab.workspace;
-    } else if (route.startsWith(AppConstants.calendarRoute)) {
-      return NavigationTab.calendar;
-    } else if (route.startsWith(AppConstants.activityRoute)) {
-      return NavigationTab.activity;
-    } else if (route.startsWith(AppConstants.profileRoute)) {
-      return NavigationTab.profile;
+    final config = NavigationConfig.fromRoute(route);
+    if (config == null) return NavigationTab.home;
+
+    // NavigationConfig의 route와 매칭되는 NavigationTab 반환
+    for (final tab in NavigationTab.values) {
+      if (tab.route == config.route) {
+        return tab;
+      }
     }
     return NavigationTab.home;
   }
 
   /// 각 탭의 루트 라우트인지 확인
   bool isRootRoute(String route) {
-    switch (this) {
-      case NavigationTab.home:
-        return route == AppConstants.homeRoute;
-      case NavigationTab.workspace:
-        return route == AppConstants.workspaceRoute;
-      case NavigationTab.calendar:
-        return route == AppConstants.calendarRoute;
-      case NavigationTab.activity:
-        return route == AppConstants.activityRoute;
-      case NavigationTab.profile:
-        return route == AppConstants.profileRoute;
-    }
+    final config = NavigationConfig.fromRoute(this.route);
+    return config?.isRootRoute(route) ?? false;
   }
 }
 
