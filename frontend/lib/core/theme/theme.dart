@@ -394,15 +394,34 @@ class AppButtonStyles {
 }
 
 class AppComponents {
+  // Button
   static const double buttonHeight = 52.0;
+
+  // Card
   static const double loginCardMaxWidth = 420.0;
   static const double dialogMaxWidth = 360.0;
+  static const double actionCardIconSize = 32.0;
+  static const double groupCardWidth = 200.0;
+
+  // Logo
   static const double logoSize = 56.0;
   static const double logoRadius = 16.0;
   static const double logoIconSize = 28.0;
+
+  // Icon
   static const double infoIconSize = 16.0;
   static const double googleIconSize = 20.0;
+  static const double activityIconSize = 20.0;
+
+  // Avatar
+  static const double avatarSmall = 16.0;
+  static const double avatarMedium = 20.0;
+
+  // Indicator
   static const double progressIndicatorSize = 20.0;
+
+  // Badge
+  static const double badgeRadius = 12.0;
 }
 
 class AppTheme {
