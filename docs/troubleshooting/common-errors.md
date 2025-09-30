@@ -1,0 +1,445 @@
+# 일반적 에러 해결 가이드 (Common Error Troubleshooting)
+
+## 백엔드 에러
+
+### 1. 데이터베이스 연결 에러
+
+#### 증상 {#데이터베이스연결}
+```
+org.springframework.jdbc.CannotGetJdbcConnectionException: Failed to obtain JDBC Connection
+```
+
+#### 원인 및 해결
+```yaml
+# application.yml 확인
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb  # 개발환경
+    # url: jdbc:mysql://localhost:3306/univgroup  # 프로덕션
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+```
+
+#### H2 콘솔 접근
+```
+URL: http://localhost:8080/h2-console
+JDBC URL: jdbc:h2:mem:testdb
+User: sa
+Password: (빈 값)
+```
+
+### 2. JWT 토큰 관련 에러
+
+#### 만료된 토큰
+```
+io.jsonwebtoken.ExpiredJwtException: JWT expired at 2024-09-27T10:00:00Z
+```
+
+해결: 클라이언트에서 토큰 갱신 또는 재로그인 처리
+
+#### 잘못된 토큰 형식
+```
+io.jsonwebtoken.MalformedJwtException: Unable to read JSON value
+```
+
+해결: Authorization 헤더 형식 확인 (`Bearer {token}`)
+
+### 3. 유효성 검증 에러
+
+#### Request Body 검증 실패
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "입력값이 올바르지 않습니다",
+    "details": {
+      "nickname": "닉네임은 2-20자 사이여야 합니다",
+      "studentNo": "학번 형식이 올바르지 않습니다"
+    }
+  }
+}
+```
+
+#### DTO 검증 어노테이션 확인
+```kotlin
+data class CreateGroupRequest(
+    @field:Size(min = 2, max = 50, message = "그룹명은 2-50자 사이여야 합니다")
+    val name: String,
+
+    @field:NotNull(message = "공개 설정은 필수입니다")
+    val visibility: GroupVisibility,
+
+    @field:Size(max = 500, message = "설명은 500자를 초과할 수 없습니다")
+    val description: String? = null
+)
+```
+
+### 4. JPA 연관관계 에러
+
+#### LazyInitializationException
+```
+org.hibernate.LazyInitializationException: could not initialize proxy - no Session
+```
+
+해결: `@Transactional` 추가 또는 Fetch Join 사용
+```kotlin
+@Query("SELECT g FROM Group g JOIN FETCH g.members WHERE g.id = :id")
+fun findWithMembers(id: Long): Group?
+```
+
+#### 순환 참조 문제
+```
+com.fasterxml.jackson.databind.JsonMappingException: Infinite recursion
+```
+
+해결: `@JsonIgnore` 또는 DTO 변환 사용
+```kotlin
+@Entity
+data class Group(
+    @OneToMany(mappedBy = "group")
+    @JsonIgnore  // JSON 직렬화에서 제외
+    val members: List<GroupMember> = emptyList()
+)
+```
+
+## 프론트엔드 에러
+
+### 5. Flutter Web 포트 관련 에러
+
+#### 포트 충돌 문제 {#포트충돌}
+```
+Error: Port 3000 is already in use
+```
+
+해결: **반드시 5173 포트 사용**
+```bash
+# ❌ 잘못된 명령어
+flutter run -d chrome --web-port 3000
+
+# ✅ 올바른 명령어
+flutter run -d chrome --web-hostname localhost --web-port 5173
+```
+
+### 6. CORS 에러
+
+#### 증상
+```
+Access to XMLHttpRequest at 'http://localhost:8080/api/groups'
+from origin 'http://localhost:5173' has been blocked by CORS policy
+```
+
+#### 백엔드 CORS 설정 확인
+```kotlin
+@Configuration
+class WebConfig : WebMvcConfigurer {
+    override fun addCorsMappings(registry: CorsRegistry) {
+        registry.addMapping("/api/**")
+            .allowedOrigins("http://localhost:5173")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
+            .allowedHeaders("*")
+            .allowCredentials(true)
+    }
+}
+```
+
+### 7. 상태 관리 에러
+
+#### Provider 에러 (Flutter)
+```
+ProviderNotFoundException: No provider found for type AuthProvider
+```
+
+해결: Provider 계층 구조 확인
+```dart
+void main() {
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => GroupProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
+}
+```
+
+#### 무한 리빌드 문제
+```dart
+// ❌ 잘못된 사용
+Widget build(BuildContext context) {
+  context.read<AuthProvider>().checkAuth(); // 무한 호출!
+  return Text('Hello');
+}
+
+// ✅ 올바른 사용
+Widget build(BuildContext context) {
+  return Consumer<AuthProvider>(
+    builder: (context, auth, child) {
+      if (!auth.isInitialized) {
+        auth.checkAuth();
+      }
+      return Text('Hello');
+    },
+  );
+}
+```
+
+## API 통신 에러
+
+### 8. 네트워크 연결 에러
+
+#### 타임아웃 에러
+```
+DioException: The request connection timeout
+```
+
+해결: 타임아웃 설정 조정
+```dart
+final dio = Dio(BaseOptions(
+  connectTimeout: Duration(seconds: 10),
+  receiveTimeout: Duration(seconds: 10),
+  sendTimeout: Duration(seconds: 10),
+));
+```
+
+#### 연결 거부
+```
+SocketException: Connection refused
+```
+
+체크리스트:
+- [ ] 백엔드 서버가 실행 중인가?
+- [ ] 포트 번호가 올바른가? (8080)
+- [ ] 방화벽이 차단하고 있는가?
+
+### 9. JSON 파싱 에러
+
+#### 예상치 못한 응답 형식
+```
+FormatException: Unexpected character (at character 1)
+<html>...
+```
+
+원인: HTML 에러 페이지를 JSON으로 파싱하려 할 때 발생
+
+해결: HTTP 상태 코드 먼저 확인
+```dart
+if (response.statusCode == 200) {
+  return ApiResponse.fromJson(response.data);
+} else {
+  throw ApiException.fromResponse(response);
+}
+```
+
+## 인증 관련 에러
+
+### 10. Google OAuth 설정 에러 {#인증}
+
+#### Invalid client error
+```
+Error 400: invalid_client
+```
+
+해결: Google Console에서 설정 확인
+```
+1. OAuth 2.0 클라이언트 ID 생성
+2. 승인된 JavaScript 출처: http://localhost:5173
+3. 승인된 리디렉션 URI 설정
+```
+
+#### 프로필 미완성 루프
+```
+사용자가 프로필 설정 후에도 계속 프로필 페이지로 리다이렉트됨
+```
+
+해결: 프로필 완료 상태 업데이트 확인
+```kotlin
+fun completeProfile(userId: Long, request: ProfileRequest) {
+    // 프로필 정보 업데이트
+    userService.updateProfile(userId, request)
+
+    // ⭐ 중요: profileCompleted 플래그 설정
+    userService.markProfileCompleted(userId)
+}
+```
+
+## 성능 관련 문제
+
+### 11. N+1 쿼리 문제
+
+#### 증상
+```sql
+-- 그룹 목록 조회 시 각 그룹마다 멤버 수 조회
+SELECT * FROM groups;
+SELECT COUNT(*) FROM group_members WHERE group_id = 1;
+SELECT COUNT(*) FROM group_members WHERE group_id = 2;
+...
+```
+
+#### 해결: Batch 쿼리 또는 Join 사용
+```kotlin
+@Query("""
+    SELECT g.id, g.name, COUNT(gm.id) as memberCount
+    FROM Group g LEFT JOIN g.members gm
+    GROUP BY g.id, g.name
+""")
+fun findGroupsWithMemberCount(): List<GroupWithMemberCount>
+```
+
+### 12. 메모리 누수 (Flutter)
+
+#### 증상
+앱 사용 중 메모리 사용량이 계속 증가
+
+#### 해결: Dispose 패턴 적용
+```dart
+class _MyWidgetState extends State<MyWidget> {
+  late StreamSubscription _subscription;
+  late Timer _timer;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    _timer.cancel();
+    super.dispose();
+  }
+}
+```
+
+## 개발 환경 문제
+
+### 13. Gradle 빌드 에러
+
+#### Out of memory error
+```
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileKotlin'
+java.lang.OutOfMemoryError: Java heap space
+```
+
+해결: `gradle.properties` 설정
+```properties
+org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
+org.gradle.parallel=true
+org.gradle.caching=true
+```
+
+#### Dependency conflict
+```
+Could not resolve dependencies for configuration ':runtimeClasspath'
+```
+
+해결: `./gradlew dependencies` 로 의존성 트리 확인 후 버전 통일
+
+### 14. IDE 관련 문제
+
+#### IntelliJ 인덱싱 문제
+증상: 자동완성이 안 되고 빨간 줄이 표시됨
+
+해결:
+1. File → Invalidate Caches and Restart
+2. Reimport Gradle Project
+3. Build → Rebuild Project
+
+#### VSCode Flutter 확장 문제
+증상: Hot reload가 안 됨
+
+해결:
+1. Flutter 확장 재시작
+2. 개발자 도구에서 페이지 새로고침 (Ctrl+R)
+3. `flutter clean && flutter run`
+
+## 배포 관련 에러
+
+### 15. 빌드 에러
+
+#### Flutter Web 빌드 실패
+```
+Error: Could not resolve the package 'path' in 'package:path/path.dart'
+```
+
+해결:
+```bash
+flutter clean
+flutter pub get
+flutter build web
+```
+
+#### 환경변수 문제
+증상: 프로덕션에서 API 호출이 localhost로 가는 문제
+
+해결: 환경별 설정 분리
+```dart
+class ApiConfig {
+  static const String baseUrl = kDebugMode
+    ? 'http://localhost:8080'
+    : 'https://api.univgroup.com';
+}
+```
+
+## 로깅 및 모니터링
+
+### 디버깅을 위한 로깅 설정
+```yaml
+# application-dev.yml
+logging:
+  level:
+    com.univgroup: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+```
+
+### 프론트엔드 에러 트래킹
+```dart
+// Flutter - Global error handler
+void main() {
+  FlutterError.onError = (FlutterErrorDetails details) {
+    print('Flutter Error: ${details.exception}');
+    // 로그 수집 서비스에 전송
+  };
+
+  runZonedGuarded(() {
+    runApp(MyApp());
+  }, (error, stack) {
+    print('Dart Error: $error');
+    // 로그 수집 서비스에 전송
+  });
+}
+```
+
+## 응급 복구 가이드
+
+### 데이터베이스 초기화
+```bash
+# H2 데이터베이스 재시작 (개발환경)
+./gradlew bootRun
+
+# 또는 스키마 재생성
+./gradlew flywayClean flywayMigrate
+```
+
+### 캐시 초기화
+```bash
+# Gradle 캐시
+./gradlew clean
+
+# Flutter 캐시
+flutter clean
+flutter pub get
+```
+
+## 관련 문서
+
+### 권한 관련 문제
+- **권한 에러**: [permission-errors.md](permission-errors.md)
+
+### 구현 참조
+- **백엔드 가이드**: [../implementation/backend-guide.md](../implementation/backend-guide.md)
+- **프론트엔드 가이드**: [../implementation/frontend-guide.md](../implementation/frontend-guide.md)
+- **API 참조**: [../implementation/api-reference.md](../implementation/api-reference.md)
+
+### 개발 프로세스
+- **개발 워크플로우**: [../workflows/development-flow.md](../workflows/development-flow.md)
+- **테스트 전략**: [../workflows/testing-strategy.md](../workflows/testing-strategy.md)

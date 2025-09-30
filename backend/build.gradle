@@ -35,6 +35,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
 
     // Kotlin & Jackson
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -42,6 +43,9 @@ dependencies {
 
     // Springdoc OpenAPI (Swagger UI)
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+
+    // Caching (Caffeine)
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
     // JWT
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
@@ -84,6 +88,11 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.named("test").configure {
     useJUnitPlatform()
+}
+
+// bootRun 메모리 설정 (개발환경 최적화)
+tasks.named("bootRun").configure {
+    jvmArgs = ['-Xmx1g', '-Xms512m', '-XX:MaxMetaspaceSize=256m']
 }
 
 // detekt {

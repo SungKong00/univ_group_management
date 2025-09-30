@@ -23,7 +23,13 @@ class AuthServiceTest {
     fun setUp() {
         userService = mockk()
         jwtTokenProvider = mockk()
-        authService = AuthService(userService, jwtTokenProvider, "test-google-client-id")
+        authService =
+            AuthService(
+                userService,
+                jwtTokenProvider,
+                "test-google-client-id",
+                "test-google-client-id",
+            )
     }
 
     @Nested
@@ -51,11 +57,12 @@ class AuthServiceTest {
                     updatedAt = user.updatedAt,
                 )
 
-            val googleUserInfo = GoogleUserInfo(
-                email = user.email,
-                name = user.name,
-                profileImageUrl = null
-            )
+            val googleUserInfo =
+                GoogleUserInfo(
+                    email = user.email,
+                    name = user.name,
+                    profileImageUrl = null,
+                )
 
             every { userService.findOrCreateUser(any()) } returns user
             every { jwtTokenProvider.generateAccessToken(any<Authentication>()) } returns expectedAccessToken
@@ -99,11 +106,12 @@ class AuthServiceTest {
             // Given
             val googleToken = "valid.google.token"
             val inactiveUser = TestDataFactory.createInactiveUser()
-            val googleUserInfo = GoogleUserInfo(
-                email = inactiveUser.email,
-                name = inactiveUser.name,
-                profileImageUrl = null
-            )
+            val googleUserInfo =
+                GoogleUserInfo(
+                    email = inactiveUser.email,
+                    name = inactiveUser.name,
+                    profileImageUrl = null,
+                )
 
             every { userService.findOrCreateUser(any()) } returns inactiveUser
             val authServiceSpy = spyk(authService, recordPrivateCalls = true)
@@ -140,11 +148,12 @@ class AuthServiceTest {
                     updatedAt = user.updatedAt,
                 )
 
-            val googleUserInfo = GoogleUserInfo(
-                email = user.email,
-                name = user.name,
-                profileImageUrl = null
-            )
+            val googleUserInfo =
+                GoogleUserInfo(
+                    email = user.email,
+                    name = user.name,
+                    profileImageUrl = null,
+                )
 
             every { userService.findOrCreateUser(any()) } returns user
             every { userService.convertToUserResponse(user) } returns userResponse
@@ -191,11 +200,12 @@ class AuthServiceTest {
                     updatedAt = user.updatedAt,
                 )
 
-            val googleUserInfo = GoogleUserInfo(
-                email = user.email,
-                name = user.name,
-                profileImageUrl = null
-            )
+            val googleUserInfo =
+                GoogleUserInfo(
+                    email = user.email,
+                    name = user.name,
+                    profileImageUrl = null,
+                )
 
             every { userService.findOrCreateUser(any()) } returns user
             every { jwtTokenProvider.generateAccessToken(any<Authentication>()) } returns expectedAccessToken
@@ -239,11 +249,12 @@ class AuthServiceTest {
             // Given
             val googleAccessToken = "valid.google.access.token"
             val inactiveUser = TestDataFactory.createInactiveUser()
-            val googleUserInfo = GoogleUserInfo(
-                email = inactiveUser.email,
-                name = inactiveUser.name,
-                profileImageUrl = null
-            )
+            val googleUserInfo =
+                GoogleUserInfo(
+                    email = inactiveUser.email,
+                    name = inactiveUser.name,
+                    profileImageUrl = null,
+                )
 
             every { userService.findOrCreateUser(any()) } returns inactiveUser
             val authServiceSpy = spyk(authService, recordPrivateCalls = true)
@@ -280,11 +291,12 @@ class AuthServiceTest {
                     updatedAt = user.updatedAt,
                 )
 
-            val googleUserInfo = GoogleUserInfo(
-                email = user.email,
-                name = user.name,
-                profileImageUrl = null
-            )
+            val googleUserInfo =
+                GoogleUserInfo(
+                    email = user.email,
+                    name = user.name,
+                    profileImageUrl = null,
+                )
 
             every { userService.findOrCreateUser(any()) } returns user
             every { userService.convertToUserResponse(user) } returns userResponse

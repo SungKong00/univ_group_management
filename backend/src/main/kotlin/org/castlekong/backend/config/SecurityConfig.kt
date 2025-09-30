@@ -48,10 +48,11 @@ class SecurityConfig(
     fun corsConfigurationSource(): CorsConfigurationSource {
         val config = CorsConfiguration()
         // 개발 편의를 위해 패턴으로 허용 (localhost의 다양한 포트 허용)
-        config.allowedOriginPatterns = listOf(
-            "http://localhost:*",
-            "http://127.0.0.1:*"
-        )
+        config.allowedOriginPatterns =
+            listOf(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+            )
         // 모든 기본 메서드 허용 (개발용)
         config.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         // 모든 헤더 허용 (개발용)

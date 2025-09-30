@@ -8,4 +8,3 @@ import org.springframework.stereotype.Repository
 interface EmailVerificationRepository : JpaRepository<EmailVerification, Long> {
     fun findTopByEmailOrderByCreatedAtDesc(email: String): EmailVerification?
 }
-

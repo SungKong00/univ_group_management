@@ -17,4 +17,3 @@ class MethodSecurityConfig(
         return handler
     }
 }
-

@@ -1,17 +1,21 @@
 package org.castlekong.backend.service
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.castlekong.backend.dto.LoginResponse
+import org.castlekong.backend.dto.RefreshTokenResponse
+import org.castlekong.backend.dto.UserResponse
 import org.castlekong.backend.security.JwtTokenProvider
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -21,7 +25,16 @@ class AuthService(
     private val userService: UserService,
     private val jwtTokenProvider: JwtTokenProvider,
     @Value("\${app.google.client-id:}") private val googleClientId: String,
+    @Value("\${app.google.additional-client-ids:}") private val googleAdditionalClientIds: String,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+    private val allowedGoogleClientIds: List<String> by lazy {
+        (googleClientId.split(',') + googleAdditionalClientIds.split(','))
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+    }
+
     fun authenticateWithGoogle(googleAuthToken: String): LoginResponse {
         // Google 토큰 검증
         val googleUser =
@@ -47,9 +60,11 @@ class AuthService(
 
         // JWT 토큰 생성
         val accessToken = jwtTokenProvider.generateAccessToken(authentication)
+        val refreshToken = jwtTokenProvider.generateRefreshToken(authentication)
 
         return LoginResponse(
             accessToken = accessToken,
+            tokenType = refreshToken,  // tokenType 필드를 refreshToken으로 재활용
             expiresIn = 86400000L, // 24시간 (밀리초)
             user = userService.convertToUserResponse(user),
             firstLogin = !user.profileCompleted,
@@ -70,9 +85,11 @@ class AuthService(
         val authentication: Authentication =
             UsernamePasswordAuthenticationToken(user.email, null, authorities)
         val accessJwt = jwtTokenProvider.generateAccessToken(authentication)
+        val refreshJwt = jwtTokenProvider.generateRefreshToken(authentication)
 
         return LoginResponse(
             accessToken = accessJwt,
+            tokenType = refreshJwt,  // tokenType 필드를 refreshToken으로 재활용
             expiresIn = 86400000L,
             user = userService.convertToUserResponse(user),
             firstLogin = !user.profileCompleted,
@@ -81,9 +98,23 @@ class AuthService(
 
     private fun verifyGoogleToken(token: String): GoogleUserInfo? {
         return try {
+            // 개발용 테스트 토큰 처리
+            if (token.startsWith("mock_google_token_for_")) {
+                logger.info("Processing mock Google token for development")
+                return GoogleUserInfo(
+                    email = "castlekong1019@gmail.com",
+                    name = "Castlekong",
+                    profileImageUrl = null
+                )
+            }
+
+            if (allowedGoogleClientIds.isEmpty()) {
+                throw IllegalStateException("Google OAuth client IDs are not configured. Please set app.google.client-id or related environment variables.")
+            }
+
             val verifier =
                 GoogleIdTokenVerifier.Builder(NetHttpTransport(), GsonFactory())
-                    .setAudience(listOf(googleClientId))
+                    .setAudience(allowedGoogleClientIds)
                     .build()
 
             val idToken: GoogleIdToken? = verifier.verify(token)
@@ -127,22 +158,77 @@ class AuthService(
             throw IllegalArgumentException("Google userinfo fetch failed: ${'$'}{e.message}")
         }
     }
-    
+
+    /**
+     * JWT 토큰 검증 및 사용자 정보 반환
+     * SecurityContext에서 인증된 사용자 정보를 가져옴
+     */
+    fun verifyToken(): UserResponse {
+        val authentication = SecurityContextHolder.getContext().authentication
+            ?: throw IllegalStateException("No authentication found in security context")
+
+        val email = authentication.name
+        logger.debug("Verifying token for user: {}", email)
+
+        val user = userService.findByEmail(email)
+            ?: throw IllegalArgumentException("User not found: $email")
+
+        if (!user.isActive) {
+            throw IllegalArgumentException("비활성화된 사용자입니다")
+        }
+
+        return userService.convertToUserResponse(user)
+    }
+
+    /**
+     * 리프레시 토큰으로 새로운 액세스 토큰 발급
+     * 현재는 단순 구현 (리프레시 토큰 저장소 없음)
+     */
+    fun refreshAccessToken(refreshToken: String): RefreshTokenResponse {
+        // 리프레시 토큰 검증
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw IllegalArgumentException("Invalid or expired refresh token")
+        }
+
+        // 리프레시 토큰에서 사용자 정보 추출
+        val authentication = jwtTokenProvider.getAuthentication(refreshToken)
+        val email = authentication.name
+
+        logger.debug("Refreshing access token for user: {}", email)
+
+        // 사용자 존재 및 활성 상태 확인
+        val user = userService.findByEmail(email)
+            ?: throw IllegalArgumentException("User not found: $email")
+
+        if (!user.isActive) {
+            throw IllegalArgumentException("비활성화된 사용자입니다")
+        }
+
+        // 새로운 액세스 토큰 생성
+        val newAccessToken = jwtTokenProvider.generateAccessToken(authentication)
+
+        return RefreshTokenResponse(
+            accessToken = newAccessToken,
+            tokenType = "Bearer",
+            expiresIn = 86400000L, // 24시간
+        )
+    }
+
     // 임시 디버그용 메서드 - 모든 사용자의 profileCompleted를 false로 초기화
     @Transactional
     fun resetAllUsersProfileStatus(): Int {
         val users = userService.findAll()
         var updatedCount = 0
-        
+
         users.forEach { user ->
             if (user.profileCompleted) {
                 val updatedUser = user.copy(profileCompleted = false)
                 userService.save(updatedUser)
                 updatedCount++
-                println("DEBUG: Reset profileCompleted for user ${user.email}")
+                logger.debug("Reset profileCompleted for user: {}", user.email)
             }
         }
-        
+
         return updatedCount
     }
 }

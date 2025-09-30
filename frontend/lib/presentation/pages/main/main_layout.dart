@@ -1,0 +1,120 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:responsive_framework/responsive_framework.dart';
+import '../../widgets/navigation/sidebar_navigation.dart';
+import '../../widgets/navigation/bottom_navigation.dart';
+import '../../widgets/navigation/top_navigation.dart';
+import '../../../core/navigation/navigation_controller.dart';
+import '../../../core/navigation/router_listener.dart';
+import '../../../core/navigation/back_button_handler.dart';
+import '../../../core/navigation/layout_mode.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/models/auth_models.dart';
+import '../../providers/auth_provider.dart';
+import '../../widgets/user/user_info_card.dart';
+
+class MainLayout extends ConsumerWidget {
+  final Widget child;
+
+  const MainLayout({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 화면 크기로부터 레이아웃 모드 계산
+    final layoutMode = LayoutModeExtension.fromContext(context);
+    final navigationState = ref.watch(navigationControllerProvider);
+    final currentUser = ref.watch(currentUserProvider);
+
+    // 라우트 리스너 활성화
+    ref.watch(routeListenerProvider);
+
+    // 레이아웃 모드 전환 감지 및 상태 동기화
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handleLayoutModeTransition(ref, layoutMode);
+    });
+
+    return RouterListener(
+      child: BackButtonHandler(
+        child: Scaffold(
+          backgroundColor: AppColors.lightBackground,
+          body: Column(
+            children: [
+              const TopNavigation(),
+              Expanded(
+                child: _buildLayoutForMode(layoutMode, navigationState),
+              ),
+            ],
+          ),
+          bottomNavigationBar: layoutMode.usesBottomNavigation
+              ? _buildMobileBottomSection(currentUser)
+              : null,
+        ),
+      ),
+    );
+  }
+
+  /// 레이아웃 모드 전환 처리
+  void _handleLayoutModeTransition(WidgetRef ref, LayoutMode newMode) {
+    final navigationController = ref.read(navigationControllerProvider.notifier);
+    navigationController.updateLayoutMode(newMode);
+  }
+
+  /// 레이아웃 모드에 따른 레이아웃 빌드
+  Widget _buildLayoutForMode(LayoutMode mode, NavigationState navigationState) {
+    switch (mode) {
+      case LayoutMode.compact:
+        return _buildCompactLayout();
+      case LayoutMode.medium:
+      case LayoutMode.wide:
+        return _buildSidebarLayout(navigationState);
+    }
+  }
+
+  /// COMPACT 모드: 모바일 레이아웃 (하단 네비게이션)
+  Widget _buildCompactLayout() {
+    return Container(
+      color: AppColors.lightBackground,
+      child: child,
+    );
+  }
+
+  /// MEDIUM/WIDE 모드: 사이드바 레이아웃
+  Widget _buildSidebarLayout(NavigationState navigationState) {
+    return Row(
+      children: [
+        const SidebarNavigation(),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.lightBackground,
+              border: navigationState.shouldCollapseSidebar
+                  ? null
+                  : const Border(
+                      left: BorderSide(color: AppColors.lightOutline, width: 1),
+                    ),
+            ),
+            child: ClipRect(child: child),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileBottomSection(UserInfo? currentUser) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (currentUser != null)
+          UserInfoCard(
+            user: currentUser,
+            isCompact: false,
+          ),
+        const BottomNavigation(),
+      ],
+    );
+  }
+}

@@ -1,0 +1,260 @@
+# Backend API Reference
+
+본 문서는 백엔드 API의 명세를 코드 기준으로 정리한 최신 문서입니다.
+
+## API 응답 구조
+
+모든 API 응답은 다음과 같은 `ApiResponse<T>` 구조를 따릅니다:
+
+```json
+{
+  "success": true,           // 성공 여부
+  "data": { ... },          // 실제 데이터 (T 타입)
+  "message": "메시지",       // 성공/실패 메시지 (선택적)
+  "errorCode": "ERROR_CODE" // 에러 코드 (선택적)
+}
+```
+
+- **성공 시**: `success: true`, `data`에 실제 응답 데이터
+- **실패 시**: `success: false`, `message`에 에러 메시지, `errorCode`에 에러 코드
+
+## 1. Auth API (`/api/auth`)
+
+Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
+
+-   `POST /google`
+    -   **설명**: Google 인증 토큰(ID Token 또는 Access Token)으로 로그인/회원가입을 처리합니다.
+    -   **요청**: `GoogleLoginRequest`
+        ```json
+        {
+          "googleAuthToken": "ID_TOKEN_STRING",  // ID Token (권장)
+          "googleAccessToken": "ACCESS_TOKEN_STRING"  // Access Token (대안)
+        }
+        ```
+    -   **응답**: `ApiResponse<LoginResponse>` (JWT 토큰 및 사용자 정보 포함)
+    -   **응답 구조**:
+        ```json
+        {
+          "success": true,
+          "data": {
+            "accessToken": "eyJ...",
+            "tokenType": "Bearer",
+            "expiresIn": 86400000,
+            "user": {
+              "id": 1,
+              "name": "사용자명",
+              "email": "user@example.com",
+              "globalRole": "STUDENT",
+              "isActive": true,
+              "nickname": "닉네임",
+              "profileImageUrl": null,
+              "bio": null,
+              "profileCompleted": true,
+              "emailVerified": true,
+              "professorStatus": null,
+              "department": "AI/SW계열",
+              "studentNo": "20250001",
+              "schoolEmail": null,
+              "createdAt": "2025-09-29T03:22:41.234567",
+              "updatedAt": "2025-09-29T03:22:41.234567"
+            },
+            "firstLogin": false
+          },
+          "message": null,
+          "errorCode": null
+        }
+        ```
+
+-   `POST /google/callback`
+    -   **설명**: Google ID Token으로 로그인/회원가입을 처리하는 콜백 엔드포인트입니다.
+    -   **요청**: `{"id_token": "..."}`
+    -   **응답**: `ApiResponse<LoginResponse>` (위와 동일한 구조)
+    -   **테스트**: 개발용 토큰 `mock_google_token_for_castlekong1019`를 사용하면 테스트 계정으로 로그인
+
+-   `POST /logout`
+    -   **설명**: 사용자를 로그아웃 처리합니다. (현재는 토큰 무효화 로직 없음)
+    -   **권한**: `isAuthenticated()`
+
+-   `POST /debug/reset-profile-status`
+    -   **설명**: [DEBUG] 모든 사용자의 프로필 완성 상태(`profileCompleted`)를 `false`로 초기화합니다. 개발 환경에서만 사용해야 합니다.
+
+## 2. User API (`/api/users`)
+
+사용자 정보, 프로필, 활동 관련 API를 제공합니다.
+
+-   `POST /`
+    -   **설명**: 온보딩 과정에서 사용자의 초기 프로필 정보(닉네임, 학과, 학번, 역할 등)를 제출받아 저장합니다.
+    -   **권한**: `isAuthenticated()`
+    -   **요청**: `SignupProfileRequest`
+        ```json
+        {
+          "name": "실명",
+          "nickname": "닉네임",
+          "college": "AI/SW계열",
+          "dept": "AI/SW학과",
+          "studentNo": "20250001",
+          "schoolEmail": "student@hanshin.ac.kr",
+          "role": "STUDENT"
+        }
+        ```
+    -   **응답**: `ApiResponse<UserResponse>`
+
+-   `GET /nickname-check`
+    -   **설명**: 닉네임 중복 여부를 확인하고, 중복 시 추천 닉네임을 제공합니다.
+    -   **권한**: `isAuthenticated()`
+    -   **파라미터**: `nickname` (String)
+    -   **응답**: `ApiResponse<NicknameCheckResponse>`
+        ```json
+        {
+          "success": true,
+          "data": {
+            "available": false,
+            "suggestions": ["닉네임1", "닉네임2", "닉네임3"]
+          },
+          "message": null,
+          "errorCode": null
+        }
+        ```
+
+-   `PUT /profile`
+    -   **설명**: 사용자 프로필 정보(닉네임, 프로필 이미지, 자기소개 등)를 업데이트합니다.
+    -   **권한**: `isAuthenticated()`
+    -   **요청**: `ProfileUpdateRequest`
+    -   **응답**: `UserResponse`
+
+-   `GET /search`
+    -   **설명**: 사용자 이름 또는 닉네임으로 사용자를 검색합니다. 역할(e.g., `PROFESSOR`)로 필터링할 수 있습니다.
+    -   **권한**: `isAuthenticated()`
+    -   **파라미터**: `q` (String), `role` (String, Optional)
+    -   **응답**: `List<UserSummaryResponse>`
+
+-   `GET /me/join-requests`
+    -   **설명**: 현재 사용자가 신청한 그룹 가입 요청 목록을 조회합니다.
+    -   **권한**: `isAuthenticated()`
+    -   **파라미터**: `status` (String, Optional, 기본값: `PENDING`)
+    -   **응답**: `List<GroupJoinRequestResponse>`
+
+-   `GET /me/sub-group-requests`
+    -   **설명**: 현재 사용자가 신청한 하위 그룹 생성 요청 목록을 조회합니다.
+    -   **권한**: `isAuthenticated()`
+    -   **파라미터**: `status` (String, Optional, 기본값: `PENDING`)
+    -   **응답**: `List<SubGroupRequestResponse>`
+
+## 3. Group API (`/api/groups`)
+
+그룹 생성, 조회, 멤버 관리 등 그룹과 관련된 핵심 기능을 제공합니다.
+
+### 3.1. 그룹 관리
+
+-   `POST /`: 그룹 생성
+-   `GET /`: 모든 그룹 목록 조회 (페이징)
+-   `GET /all`: 모든 그룹 목록 조회 (페이징 없음)
+-   `GET /explore`: 조건부 그룹 검색 (모집여부, 공개범위, 종류, 소속, 키워드, 태그 등)
+-   `GET /hierarchy`: 전체 그룹 계층 구조 조회 (온보딩용)
+-   `GET /{groupId}`: 특정 그룹 상세 정보 조회
+-   `PUT /{groupId}`: 그룹 정보 수정 (`GROUP_MANAGE` 권한 필요)
+-   `DELETE /{groupId}`: 그룹 삭제 (`GROUP_MANAGE` 권한 필요)
+
+### 3.2. 멤버십 관리
+
+-   `POST /{groupId}/join`: 그룹 가입 신청
+-   `DELETE /{groupId}/leave`: 그룹 탈퇴
+-   `GET /{groupId}/members`: 그룹 멤버 목록 조회 (`ADMIN_MANAGE` 권한 필요)
+-   `GET /{groupId}/members/me`: 나의 그룹 내 멤버십 정보 조회
+-   `PUT /{groupId}/members/{userId}/role`: 멤버 역할 변경 (`ADMIN_MANAGE` 권한 필요)
+-   `DELETE /{groupId}/members/{userId}`: 멤버 강제 탈퇴 (`ADMIN_MANAGE` 권한 필요)
+-   `POST /{groupId}/transfer-ownership/{newOwnerId}`: 그룹 소유권 이전 (`GROUP_MANAGE` 권한 필요)
+
+### 3.3. 역할(Role) 관리
+
+-   `POST /{groupId}/roles`: 그룹 내 역할 생성 (`ADMIN_MANAGE` 권한 필요)
+-   `GET /{groupId}/roles`: 그룹 내 역할 목록 조회 (`ADMIN_MANAGE` 권한 필요)
+-   `GET /{groupId}/roles/{roleId}`: 특정 역할 상세 조회 (`ADMIN_MANAGE` 권한 필요)
+-   `PUT /{groupId}/roles/{roleId}`: 역할 정보 및 권한 수정 (`ADMIN_MANAGE` 권한 필요)
+-   `DELETE /{groupId}/roles/{roleId}`: 역할 삭제 (`ADMIN_MANAGE` 권한 필요)
+
+### 3.4. 가입 및 생성 요청 관리
+
+-   `GET /{groupId}/join-requests`: 그룹 가입 신청 목록 조회 (`ADMIN_MANAGE` 권한 필요)
+-   `PATCH /{groupId}/join-requests/{requestId}`: 가입 신청 승인/거절 (`ADMIN_MANAGE` 권한 필요)
+-   `POST /{groupId}/sub-groups/requests`: 하위 그룹 생성 요청
+-   `GET /{groupId}/sub-groups/requests`: 하위 그룹 생성 요청 목록 조회 (`GROUP_MANAGE` 권한 필요)
+-   `PATCH /{groupId}/sub-groups/requests/{requestId}`: 하위 그룹 생성 요청 승인/거절 (`GROUP_MANAGE` 권한 필요)
+
+### 3.5. 기타
+
+-   `GET /{groupId}/sub-groups`: 하위 그룹 목록 조회
+-   `POST /{groupId}/professors/{professorId}`: 지도교수 지정 (`GROUP_MANAGE` 권한 필요)
+-   `DELETE /{groupId}/professors/{professorId}`: 지도교수 지정 해제 (`GROUP_MANAGE` 권한 필요)
+-   `GET /{groupId}/professors`: 지도교수 목록 조회
+-   `GET /{groupId}/workspace`: 그룹의 워크스페이스 정보 조회 (멤버만 가능)
+-   `GET /{groupId}/admin/stats`: 그룹 관리 통계 조회 (멤버만 가능)
+-   `GET /{groupId}/membership/check`: 현재 사용자의 특정 그룹 멤버 여부 확인
+-   `POST /membership/check`: 현재 사용자의 여러 그룹 멤버 여부 일괄 확인
+
+## 4. Recruitment API (`/api`)
+
+그룹의 신규 멤버 모집과 관련된 기능을 제공합니다.
+
+-   `POST /groups/{groupId}/recruitments`: 모집 공고 생성 (`RECRUITMENT_MANAGE` 권한 필요)
+-   `GET /groups/{groupId}/recruitments`: 특정 그룹의 활성 모집 공고 조회
+-   `PUT /recruitments/{recruitmentId}`: 모집 공고 수정 (`RECRUITMENT_MANAGE` 권한 필요)
+-   `PATCH /recruitments/{recruitmentId}/close`: 모집 공고 마감 (`RECRUITMENT_MANAGE` 권한 필요)
+-   `DELETE /recruitments/{recruitmentId}`: 모집 공고 삭제 (`RECRUITMENT_MANAGE` 권한 필요)
+-   `GET /groups/{groupId}/recruitments/archive`: 특정 그룹의 지난 모집 공고 목록 조회 (`RECRUITMENT_MANAGE` 권한 필요)
+-   `GET /recruitments/public`: 공개된 전체 모집 공고 검색
+-   `POST /recruitments/{recruitmentId}/applications`: 모집에 지원서 제출
+-   `GET /recruitments/{recruitmentId}/applications`: 특정 모집의 지원서 목록 조회 (`RECRUITMENT_MANAGE` 권한 필요)
+-   `GET /applications/{applicationId}`: 지원서 상세 조회 (모집 관리자 또는 지원자 본인만 가능)
+-   `PATCH /applications/{applicationId}/review`: 지원서 심사 (승인/거절) (`RECRUITMENT_MANAGE` 권한 필요)
+-   `DELETE /applications/{applicationId}`: 지원서 제출 철회 (지원자 본인만 가능)
+-   `GET /recruitments/{recruitmentId}/stats`: 모집 관련 통계 조회 (`RECRUITMENT_MANAGE` 권한 필요)
+
+## 5. Content API (`/api`)
+
+워크스페이스, 채널, 게시글, 댓글 등 컨텐츠 관련 기능을 제공합니다.
+
+### 5.1. 워크스페이스 및 채널
+
+-   `GET /groups/{groupId}/workspaces`: 그룹의 워크스페이스 목록 조회 (`CHANNEL_READ` 권한 필요)
+-   `POST /groups/{groupId}/workspaces`: 워크스페이스 생성 (`GROUP_MANAGE` 권한 필요)
+-   `PUT /workspaces/{workspaceId}`: 워크스페이스 수정 (관련자만 가능)
+-   `DELETE /workspaces/{workspaceId}`: 워크스페이스 삭제 (관련자만 가능)
+-   `GET /workspaces/{workspaceId}/channels`: 워크스페이스 내 채널 목록 조회
+-   `POST /workspaces/{workspaceId}/channels`: 채널 생성 (관련자만 가능)
+-   `PUT /channels/{channelId}`: 채널 수정 (관련자만 가능)
+-   `DELETE /channels/{channelId}`: 채널 삭제 (관련자만 가능)
+-   `GET /channels/{channelId}/permissions/me`: 채널에 대한 나의 권한 목록 조회
+
+### 5.2. 게시글 및 댓글
+
+-   `GET /channels/{channelId}/posts`: 채널 내 게시글 목록 조회 (`POST_READ` 권한 필요)
+-   `POST /channels/{channelId}/posts`: 게시글 작성 (`POST_WRITE` 권한 필요)
+-   `GET /posts/{postId}`: 게시글 상세 조회 (`POST_READ` 권한 필요)
+-   `PUT /posts/{postId}`: 게시글 수정 (작성자 또는 관리자)
+-   `DELETE /posts/{postId}`: 게시글 삭제 (작성자 또는 관리자)
+-   `GET /posts/{postId}/comments`: 게시글의 댓글 목록 조회
+-   `POST /posts/{postId}/comments`: 댓글 작성
+-   `PUT /comments/{commentId}`: 댓글 수정 (작성자 또는 관리자)
+-   `DELETE /comments/{commentId}`: 댓글 삭제 (작성자 또는 관리자)
+
+## 6. Admin API (`/api/admin`)
+
+플랫폼 전체 관리자 기능입니다.
+
+-   `GET /join-requests`: 모든 그룹 가입 신청 목록 조회 (`ADMIN` 역할 필요)
+-   `PATCH /join-requests/{id}`: 그룹 가입 신청 처리 (`ADMIN` 역할 필요)
+-   `GET /group-requests`: 모든 하위 그룹 생성 요청 목록 조회 (`ADMIN` 역할 필요)
+-   `PATCH /group-requests/{id}`: 하위 그룹 생성 요청 처리 (`ADMIN` 역할 필요)
+
+## 7. 기타 API
+
+-   **Email Verification API (`/api/email/verification`)**
+    -   `POST /send`: 학교 이메일 인증 코드 발송
+    -   `POST /verify`: 인증 코드 검증
+
+-   **Me API (`/api`)**
+    -   `GET /me`: 현재 로그인한 사용자 정보 조회
+
+-   **Role API (`/api/roles`)**
+    -   `POST /apply`: 역할(교수) 신청

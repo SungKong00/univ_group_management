@@ -3,8 +3,8 @@ package org.castlekong.backend.service
 import org.castlekong.backend.dto.CreateGroupRoleRequest
 import org.castlekong.backend.dto.GroupRoleResponse
 import org.castlekong.backend.dto.UpdateGroupRoleRequest
-import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.entity.GroupPermission
+import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.GroupRepository
@@ -16,13 +16,18 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class GroupRoleService(
     private val groupRepository: GroupRepository,
-    private val groupRoleRepository: GroupRoleRepository
+    private val groupRoleRepository: GroupRoleRepository,
+    private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
-
     @Transactional
-    fun createGroupRole(groupId: Long, request: CreateGroupRoleRequest, userId: Long): GroupRoleResponse {
-        val group = groupRepository.findById(groupId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+    fun createGroupRole(
+        groupId: Long,
+        request: CreateGroupRoleRequest,
+        userId: Long,
+    ): GroupRoleResponse {
+        val group =
+            groupRepository.findById(groupId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
 
         // 권한 확인 (그룹 소유자만 역할 생성 가능)
         if (group.owner.id != userId) {
@@ -35,22 +40,25 @@ class GroupRoleService(
         }
 
         // 권한 문자열을 GroupPermission enum으로 변환
-        val permissions = request.permissions.mapNotNull { permString ->
-            try {
-                GroupPermission.valueOf(permString)
-            } catch (e: IllegalArgumentException) {
-                null // 잘못된 권한은 무시
-            }
-        }.toSet()
+        val permissions =
+            request.permissions.mapNotNull { permString ->
+                try {
+                    GroupPermission.valueOf(permString)
+                } catch (e: IllegalArgumentException) {
+                    null // 잘못된 권한은 무시
+                }
+            }.toSet()
 
-        val groupRole = GroupRole(
-            group = group,
-            name = request.name,
-            permissions = permissions,
-            priority = request.priority
-        )
+        val groupRole =
+            GroupRole(
+                group = group,
+                name = request.name,
+                permissions = permissions,
+                priority = request.priority,
+            )
 
         val savedRole = groupRoleRepository.save(groupRole)
+        permissionService.invalidateGroup(groupId)
         return toGroupRoleResponse(savedRole)
     }
 
@@ -64,9 +72,13 @@ class GroupRoleService(
             .map { toGroupRoleResponse(it) }
     }
 
-    fun getGroupRole(groupId: Long, roleId: Long): GroupRoleResponse {
-        val role = groupRoleRepository.findById(roleId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+    fun getGroupRole(
+        groupId: Long,
+        roleId: Long,
+    ): GroupRoleResponse {
+        val role =
+            groupRoleRepository.findById(roleId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // 역할이 해당 그룹에 속하는지 확인
         if (role.group.id != groupId) {
@@ -77,9 +89,15 @@ class GroupRoleService(
     }
 
     @Transactional
-    fun updateGroupRole(groupId: Long, roleId: Long, request: UpdateGroupRoleRequest, userId: Long): GroupRoleResponse {
-        val role = groupRoleRepository.findById(roleId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+    fun updateGroupRole(
+        groupId: Long,
+        roleId: Long,
+        request: UpdateGroupRoleRequest,
+        userId: Long,
+    ): GroupRoleResponse {
+        val role =
+            groupRoleRepository.findById(roleId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // 역할이 해당 그룹에 속하는지 확인
         if (role.group.id != groupId) {
@@ -104,28 +122,36 @@ class GroupRoleService(
         }
 
         // 권한 문자열을 GroupPermission enum으로 변환
-        val permissions = request.permissions?.mapNotNull { permString ->
-            try {
-                GroupPermission.valueOf(permString)
-            } catch (e: IllegalArgumentException) {
-                null
-            }
-        }?.toSet()
+        val permissions =
+            request.permissions?.mapNotNull { permString ->
+                try {
+                    GroupPermission.valueOf(permString)
+                } catch (e: IllegalArgumentException) {
+                    null
+                }
+            }?.toSet()
 
-        val updatedRole = role.copy(
-            name = request.name ?: role.name,
-            permissions = permissions ?: role.permissions,
-            priority = request.priority ?: role.priority
-        )
+        val updatedRole =
+            role.copy(
+                name = request.name ?: role.name,
+                permissions = permissions ?: role.permissions,
+                priority = request.priority ?: role.priority,
+            )
 
         val savedRole = groupRoleRepository.save(updatedRole)
+        permissionService.invalidateGroup(groupId)
         return toGroupRoleResponse(savedRole)
     }
 
     @Transactional
-    fun deleteGroupRole(groupId: Long, roleId: Long, userId: Long) {
-        val role = groupRoleRepository.findById(roleId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+    fun deleteGroupRole(
+        groupId: Long,
+        roleId: Long,
+        userId: Long,
+    ) {
+        val role =
+            groupRoleRepository.findById(roleId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // 역할이 해당 그룹에 속하는지 확인
         if (role.group.id != groupId) {
@@ -143,6 +169,7 @@ class GroupRoleService(
         }
 
         groupRoleRepository.delete(role)
+        permissionService.invalidateGroup(groupId)
     }
 
     private fun toGroupRoleResponse(groupRole: GroupRole): GroupRoleResponse {
@@ -150,7 +177,7 @@ class GroupRoleService(
             id = groupRole.id,
             name = groupRole.name,
             permissions = groupRole.permissions.map { it.name }.toSet(),
-            priority = groupRole.priority
+            priority = groupRole.priority,
         )
     }
 }

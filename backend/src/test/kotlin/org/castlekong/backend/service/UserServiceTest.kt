@@ -4,8 +4,8 @@ import io.mockk.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.castlekong.backend.dto.ProfileUpdateRequest
-import org.castlekong.backend.entity.User
 import org.castlekong.backend.entity.GlobalRole
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.fixture.TestDataFactory
 import org.castlekong.backend.repository.UserRepository
 import org.junit.jupiter.api.BeforeEach
@@ -18,11 +18,30 @@ import java.util.*
 class UserServiceTest {
     private lateinit var userService: UserService
     private lateinit var userRepository: UserRepository
+    private lateinit var groupRepository: org.castlekong.backend.repository.GroupRepository
+    private lateinit var groupService: GroupService
+    private lateinit var groupJoinRequestRepository: org.castlekong.backend.repository.GroupJoinRequestRepository
+    private lateinit var subGroupRequestRepository: org.castlekong.backend.repository.SubGroupRequestRepository
+    private lateinit var groupMemberRepository: org.castlekong.backend.repository.GroupMemberRepository
 
     @BeforeEach
     fun setUp() {
         userRepository = mockk()
-        userService = UserService(userRepository)
+        groupRepository = mockk()
+        groupService = mockk()
+        groupJoinRequestRepository = mockk()
+        subGroupRequestRepository = mockk()
+        groupMemberRepository = mockk()
+
+        userService =
+            UserService(
+                userRepository,
+                groupRepository,
+                groupService,
+                groupJoinRequestRepository,
+                subGroupRequestRepository,
+                groupMemberRepository,
+            )
     }
 
     @Nested
@@ -65,11 +84,12 @@ class UserServiceTest {
         @Test
         fun `should return existing user when user exists`() {
             // Given
-            val googleUserInfo = GoogleUserInfo(
-                email = TestDataFactory.TEST_EMAIL,
-                name = TestDataFactory.TEST_NAME,
-                profileImageUrl = null
-            )
+            val googleUserInfo =
+                GoogleUserInfo(
+                    email = TestDataFactory.TEST_EMAIL,
+                    name = TestDataFactory.TEST_NAME,
+                    profileImageUrl = null,
+                )
             val existingUser = TestDataFactory.createTestUser()
             every { userRepository.findByEmail(googleUserInfo.email) } returns Optional.of(existingUser)
 
@@ -85,17 +105,19 @@ class UserServiceTest {
         @Test
         fun `should create new user when user does not exist`() {
             // Given
-            val googleUserInfo = GoogleUserInfo(
-                email = "new@example.com",
-                name = "새 사용자",
-                profileImageUrl = "https://example.com/profile.jpg"
-            )
-            val newUser = User(
-                name = googleUserInfo.name,
-                email = googleUserInfo.email,
-                password = "",
-                globalRole = GlobalRole.STUDENT,
-            )
+            val googleUserInfo =
+                GoogleUserInfo(
+                    email = "new@example.com",
+                    name = "새 사용자",
+                    profileImageUrl = "https://example.com/profile.jpg",
+                )
+            val newUser =
+                User(
+                    name = googleUserInfo.name,
+                    email = googleUserInfo.email,
+                    password = "",
+                    globalRole = GlobalRole.STUDENT,
+                )
             val savedUser = newUser.copy(id = 1L)
 
             every { userRepository.findByEmail(googleUserInfo.email) } returns Optional.empty()
@@ -110,7 +132,7 @@ class UserServiceTest {
             assertThat(result.name).isEqualTo(googleUserInfo.name)
             assertThat(result.globalRole).isEqualTo(GlobalRole.STUDENT)
             assertThat(result.password).isEmpty()
-            
+
             verify { userRepository.findByEmail(googleUserInfo.email) }
             verify { userRepository.save(any<User>()) }
         }
@@ -123,20 +145,22 @@ class UserServiceTest {
         fun `should update user profile successfully`() {
             // Given
             val userId = 1L
-            val request = ProfileUpdateRequest(
-                globalRole = "PROFESSOR",
-                nickname = "테스트닉네임",
-                profileImageUrl = "https://example.com/new-profile.jpg",
-                bio = "테스트 자기소개"
-            )
+            val request =
+                ProfileUpdateRequest(
+                    globalRole = "PROFESSOR",
+                    nickname = "테스트닉네임",
+                    profileImageUrl = "https://example.com/new-profile.jpg",
+                    bio = "테스트 자기소개",
+                )
             val existingUser = TestDataFactory.createTestUser(id = userId)
-            val updatedUser = existingUser.copy(
-                globalRole = GlobalRole.PROFESSOR,
-                nickname = request.nickname,
-                profileImageUrl = request.profileImageUrl,
-                bio = request.bio,
-                profileCompleted = true
-            )
+            val updatedUser =
+                existingUser.copy(
+                    globalRole = GlobalRole.PROFESSOR,
+                    nickname = request.nickname,
+                    profileImageUrl = request.profileImageUrl,
+                    bio = request.bio,
+                    profileCompleted = true,
+                )
 
             every { userRepository.findById(userId) } returns Optional.of(existingUser)
             every { userRepository.save(any<User>()) } returns updatedUser
@@ -150,7 +174,7 @@ class UserServiceTest {
             assertThat(result.profileImageUrl).isEqualTo(request.profileImageUrl)
             assertThat(result.bio).isEqualTo(request.bio)
             assertThat(result.profileCompleted).isTrue()
-            
+
             verify { userRepository.findById(userId) }
             verify { userRepository.save(any<User>()) }
         }
@@ -159,12 +183,13 @@ class UserServiceTest {
         fun `should throw exception when user not found`() {
             // Given
             val userId = 999L
-            val request = ProfileUpdateRequest(
-                globalRole = "STUDENT",
-                nickname = "테스트닉네임",
-                profileImageUrl = null,
-                bio = null
-            )
+            val request =
+                ProfileUpdateRequest(
+                    globalRole = "STUDENT",
+                    nickname = "테스트닉네임",
+                    profileImageUrl = null,
+                    bio = null,
+                )
             every { userRepository.findById(userId) } returns Optional.empty()
 
             // When & Then
@@ -180,12 +205,13 @@ class UserServiceTest {
         fun `should handle invalid global role`() {
             // Given
             val userId = 1L
-            val request = ProfileUpdateRequest(
-                globalRole = "INVALID_ROLE",
-                nickname = "테스트닉네임",
-                profileImageUrl = null,
-                bio = null
-            )
+            val request =
+                ProfileUpdateRequest(
+                    globalRole = "INVALID_ROLE",
+                    nickname = "테스트닉네임",
+                    profileImageUrl = null,
+                    bio = null,
+                )
             val existingUser = TestDataFactory.createTestUser(id = userId)
 
             every { userRepository.findById(userId) } returns Optional.of(existingUser)
@@ -206,18 +232,19 @@ class UserServiceTest {
         @Test
         fun `should convert user to user response correctly`() {
             // Given
-            val user = TestDataFactory.createTestUser(
-                id = 1L,
-                email = "test@example.com",
-                name = "테스트 사용자",
-                globalRole = GlobalRole.PROFESSOR
-            ).copy(
-                nickname = "테스트닉네임",
-                profileImageUrl = "https://example.com/profile.jpg",
-                bio = "테스트 자기소개",
-                profileCompleted = true,
-                emailVerified = true
-            )
+            val user =
+                TestDataFactory.createTestUser(
+                    id = 1L,
+                    email = "test@example.com",
+                    name = "테스트 사용자",
+                    globalRole = GlobalRole.PROFESSOR,
+                ).copy(
+                    nickname = "테스트닉네임",
+                    profileImageUrl = "https://example.com/profile.jpg",
+                    bio = "테스트 자기소개",
+                    profileCompleted = true,
+                    emailVerified = true,
+                )
 
             // When
             val result = userService.convertToUserResponse(user)

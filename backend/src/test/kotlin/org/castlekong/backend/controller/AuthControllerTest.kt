@@ -115,10 +115,11 @@ class AuthControllerTest {
         @Test
         fun `should return 200 when valid Google access token provided`() {
             // Given
-            val googleLoginRequest = org.castlekong.backend.dto.GoogleLoginRequest(
-                googleAuthToken = null,
-                googleAccessToken = "valid.google.access.token"
-            )
+            val googleLoginRequest =
+                org.castlekong.backend.dto.GoogleLoginRequest(
+                    googleAuthToken = null,
+                    googleAccessToken = "valid.google.access.token",
+                )
             val userResponse =
                 UserResponse(
                     id = 2L,
@@ -167,10 +168,11 @@ class AuthControllerTest {
         @Test
         fun `should return 401 when invalid Google access token provided`() {
             // Given
-            val invalidGoogleLoginRequest = org.castlekong.backend.dto.GoogleLoginRequest(
-                googleAuthToken = null,
-                googleAccessToken = "invalid.google.access.token"
-            )
+            val invalidGoogleLoginRequest =
+                org.castlekong.backend.dto.GoogleLoginRequest(
+                    googleAuthToken = null,
+                    googleAccessToken = "invalid.google.access.token",
+                )
 
             every { authService.authenticateWithGoogleAccessToken(any()) } throws IllegalArgumentException("Invalid Google access token")
 

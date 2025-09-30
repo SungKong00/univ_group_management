@@ -8,10 +8,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 data class RoleApplyRequest(val role: String)
 
@@ -23,24 +20,15 @@ class RoleController(
 ) {
     @PostMapping("/apply")
     @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "역할 신청", description = "role=PROFESSOR일 때 승인 대기 상태를 생성합니다")
     fun applyRole(
         authentication: Authentication,
         @RequestBody req: RoleApplyRequest,
-    ): ResponseEntity<ApiResponse<Unit>> {
-        return try {
-            val user = userService.findByEmail(authentication.name)
-                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error(code = "USER_NOT_FOUND", message = "사용자를 찾을 수 없습니다."))
-            userService.applyRole(user.id, req.role)
-            ResponseEntity.ok(ApiResponse.success())
-        } catch (e: IllegalArgumentException) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(code = "VALIDATION_ERROR", message = e.message ?: "잘못된 요청"))
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(code = "INTERNAL_SERVER_ERROR", message = "서버 내부 오류"))
-        }
+    ): ApiResponse<Unit> {
+        val user = userService.findByEmail(authentication.name)
+            ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
+        userService.applyRole(user.id, req.role)
+        return ApiResponse.success()
     }
 }
-

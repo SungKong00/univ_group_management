@@ -22,9 +22,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @WebMvcTest(controllers = [EmailVerificationController::class])
 class EmailVerificationControllerTest {
     @Autowired lateinit var mockMvc: MockMvc
+
     @Autowired lateinit var objectMapper: ObjectMapper
 
     @MockkBean lateinit var emailVerificationService: EmailVerificationService
+
     @MockkBean lateinit var jwtTokenProvider: JwtTokenProvider
 
     @Test
@@ -37,7 +39,7 @@ class EmailVerificationControllerTest {
             post("/api/email/verification/send")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(req))
+                .content(objectMapper.writeValueAsString(req)),
         )
             .andExpect(status().isOk)
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -53,7 +55,7 @@ class EmailVerificationControllerTest {
             post("/api/email/verification/verify")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(req))
+                .content(objectMapper.writeValueAsString(req)),
         )
             .andExpect(status().isOk)
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))

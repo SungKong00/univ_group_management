@@ -1,10 +1,7 @@
 package org.castlekong.backend.security
 
 import org.castlekong.backend.entity.GroupPermission
-import org.castlekong.backend.entity.GroupRole
-import org.castlekong.backend.repository.GroupMemberRepository
-import org.castlekong.backend.repository.GroupMemberPermissionOverrideRepository
-import org.castlekong.backend.repository.UserRepository
+import org.castlekong.backend.repository.*
 import org.springframework.security.access.PermissionEvaluator
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -15,10 +12,15 @@ import java.io.Serializable
 class GroupPermissionEvaluator(
     private val userRepository: UserRepository,
     private val groupMemberRepository: GroupMemberRepository,
-    private val overrideRepository: GroupMemberPermissionOverrideRepository,
+    private val groupRecruitmentRepository: GroupRecruitmentRepository,
+    private val recruitmentApplicationRepository: RecruitmentApplicationRepository,
+    private val permissionService: PermissionService,
 ) : PermissionEvaluator {
-
-    override fun hasPermission(authentication: Authentication?, targetDomainObject: Any?, permission: Any?): Boolean {
+    override fun hasPermission(
+        authentication: Authentication?,
+        targetDomainObject: Any?,
+        permission: Any?,
+    ): Boolean {
         // Not used in our design; use the (Serializable targetId, String targetType, permission) variant
         return false
     }
@@ -37,36 +39,45 @@ class GroupPermissionEvaluator(
         val email = authentication.name ?: return false
         val user = userRepository.findByEmail(email).orElse(null) ?: return false
 
-        // Currently only GROUP targetType is supported
-        if (targetType != null && targetType != "GROUP") return false
+        return when (targetType) {
+            "GROUP" -> checkGroupPermission(targetId, user.id, permission)
+            "RECRUITMENT" -> checkRecruitmentPermission(targetId, user.id, permission)
+            "APPLICATION" -> checkApplicationPermission(targetId, user.id, permission)
+            else -> false
+        }
+    }
 
-        val member = groupMemberRepository.findByGroupIdAndUserId(targetId, user.id).orElse(null) ?: return false
+    private fun checkGroupPermission(groupId: Long, userId: Long, permission: String): Boolean {
+        val effective = permissionService.getEffective(groupId, userId, ::systemRolePermissions)
+        return effective.any { it.name == permission }
+    }
 
-        val role: GroupRole = member.role
-        val basePermissions: Set<GroupPermission> =
-            if (role.isSystemRole) systemRolePermissions(role.name)
-            else role.permissions
+    private fun checkRecruitmentPermission(recruitmentId: Long, userId: Long, permission: String): Boolean {
+        val recruitment = groupRecruitmentRepository.findById(recruitmentId).orElse(null) ?: return false
+        return checkGroupPermission(recruitment.group.id, userId, permission)
+    }
 
-        val override = overrideRepository.findByGroupIdAndUserId(targetId, user.id).orElse(null)
-        val effective = if (override != null) {
-            basePermissions
-                .plus(override.allowedPermissions)
-                .minus(override.deniedPermissions)
-        } else basePermissions
-
-        return effective.map { it.name }.toSet().contains(permission)
+    private fun checkApplicationPermission(applicationId: Long, userId: Long, permission: String): Boolean {
+        val application = recruitmentApplicationRepository.findById(applicationId).orElse(null) ?: return false
+        return when (permission) {
+            "VIEW" -> {
+                // 지원자 본인이거나 모집 관리 권한이 있는 경우
+                application.applicant.id == userId ||
+                checkGroupPermission(application.recruitment.group.id, userId, "RECRUITMENT_MANAGE")
+            }
+            "RECRUITMENT_MANAGE" -> {
+                checkGroupPermission(application.recruitment.group.id, userId, "RECRUITMENT_MANAGE")
+            }
+            else -> false
+        }
     }
 
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> {
         return when (roleName.uppercase()) {
             "OWNER" -> GroupPermission.entries.toSet()
-            "ADVISOR" -> GroupPermission.entries.toSet() // refine if limited
-            "MEMBER" -> setOf(
-                GroupPermission.CHANNEL_READ,
-                GroupPermission.POST_CREATE,
-                GroupPermission.POST_UPDATE_OWN,
-                GroupPermission.POST_DELETE_OWN,
-            )
+            // ADVISOR: 거의 모든 권한, 단 그룹장 위임 등 제한적 예외만 적용 (MVP에서는 동일)
+            "ADVISOR" -> GroupPermission.entries.toSet()
+            "MEMBER" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
             else -> emptySet()
         }
     }

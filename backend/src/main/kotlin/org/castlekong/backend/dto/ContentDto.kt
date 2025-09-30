@@ -57,14 +57,12 @@ data class ChannelResponse(
 
 // Post DTOs
 data class CreatePostRequest(
-    val title: String? = null,
     @field:NotBlank(message = "내용은 필수입니다")
     val content: String,
     val type: String? = null,
 )
 
 data class UpdatePostRequest(
-    val title: String? = null,
     val content: String? = null,
     val type: String? = null,
 )
@@ -73,12 +71,13 @@ data class PostResponse(
     val id: Long,
     val channelId: Long,
     val author: UserSummaryResponse,
-    val title: String,
     val content: String,
     val type: String,
     val isPinned: Boolean,
     val viewCount: Long,
     val likeCount: Long,
+    val commentCount: Long,
+    val lastCommentedAt: LocalDateTime?,
     val attachments: Set<String>,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
@@ -104,4 +103,15 @@ data class CommentResponse(
     val likeCount: Long,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
+)
+
+// 명세서에서 요구하는 WorkspaceDto
+data class WorkspaceDto(
+    val groupId: Long,
+    val groupName: String,
+    val myRole: String,
+    val myMembership: GroupMemberResponse,
+    val notices: List<PostResponse>,
+    val channels: List<ChannelResponse>,
+    val members: List<GroupMemberResponse>,
 )

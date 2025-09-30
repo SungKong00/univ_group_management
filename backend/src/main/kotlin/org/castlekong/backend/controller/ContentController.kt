@@ -13,18 +13,22 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api")
 class ContentController(
     private val contentService: ContentService,
-    private val userService: UserService,
-) {
+    userService: UserService,
+    // 채널 권한 조회용 서비스 주입
+    private val channelPermissionManagementService: org.castlekong.backend.service.ChannelPermissionManagementService,
+) : BaseController(userService) {
     // === Workspaces (compat: group-level single workspace) ===
     @GetMapping("/groups/{groupId}/workspaces")
-    @PreAuthorize("isAuthenticated()")
-    fun getWorkspaces(@PathVariable groupId: Long): ApiResponse<List<WorkspaceResponse>> {
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'CHANNEL_READ')")
+    fun getWorkspaces(
+        @PathVariable groupId: Long,
+    ): ApiResponse<List<WorkspaceResponse>> {
         val response = contentService.getWorkspacesByGroup(groupId)
         return ApiResponse.success(response)
     }
 
     @PostMapping("/groups/{groupId}/workspaces")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'GROUP_MANAGE')")
     @ResponseStatus(HttpStatus.CREATED)
     fun createWorkspace(
         @PathVariable groupId: Long,
@@ -39,24 +43,34 @@ class ContentController(
     fun updateWorkspace(
         @PathVariable workspaceId: Long,
         @Valid @RequestBody request: UpdateWorkspaceRequest,
+        authentication: Authentication,
     ): ApiResponse<WorkspaceResponse> {
-        val response = contentService.updateWorkspace(workspaceId, request)
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.updateWorkspace(workspaceId, request, user.id)
         return ApiResponse.success(response)
     }
 
     @DeleteMapping("/workspaces/{workspaceId}")
     @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteWorkspace(@PathVariable workspaceId: Long): ApiResponse<Unit> {
-        contentService.deleteWorkspace(workspaceId)
+    fun deleteWorkspace(
+        @PathVariable workspaceId: Long,
+        authentication: Authentication,
+    ): ApiResponse<Unit> {
+        val user = getUserByEmail(authentication.name)
+        contentService.deleteWorkspace(workspaceId, user.id)
         return ApiResponse.success()
     }
 
     // === Channels ===
     @GetMapping("/workspaces/{workspaceId}/channels")
     @PreAuthorize("isAuthenticated()")
-    fun getChannels(@PathVariable workspaceId: Long): ApiResponse<List<ChannelResponse>> {
-        val response = contentService.getChannelsByWorkspace(workspaceId)
+    fun getChannels(
+        @PathVariable workspaceId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<ChannelResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getChannelsByWorkspace(workspaceId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -99,14 +113,18 @@ class ContentController(
 
     // === Posts ===
     @GetMapping("/channels/{channelId}/posts")
-    @PreAuthorize("isAuthenticated()")
-    fun getChannelPosts(@PathVariable channelId: Long): ApiResponse<List<PostResponse>> {
-        val response = contentService.getPosts(channelId)
+    @PreAuthorize("hasPermission(#channelId, 'CHANNEL', 'POST_READ')")
+    fun getChannelPosts(
+        @PathVariable channelId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<PostResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getPosts(channelId, user.id)
         return ApiResponse.success(response)
     }
 
     @PostMapping("/channels/{channelId}/posts")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasPermission(#channelId, 'CHANNEL', 'POST_WRITE')")
     @ResponseStatus(HttpStatus.CREATED)
     fun createPost(
         @PathVariable channelId: Long,
@@ -119,9 +137,13 @@ class ContentController(
     }
 
     @GetMapping("/posts/{postId}")
-    @PreAuthorize("isAuthenticated()")
-    fun getPost(@PathVariable postId: Long): ApiResponse<PostResponse> {
-        val response = contentService.getPost(postId)
+    @PreAuthorize("hasPermission(#postId, 'POST', 'POST_READ')")
+    fun getPost(
+        @PathVariable postId: Long,
+        authentication: Authentication,
+    ): ApiResponse<PostResponse> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getPost(postId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -152,8 +174,12 @@ class ContentController(
     // === Comments ===
     @GetMapping("/posts/{postId}/comments")
     @PreAuthorize("isAuthenticated()")
-    fun getComments(@PathVariable postId: Long): ApiResponse<List<CommentResponse>> {
-        val response = contentService.getComments(postId)
+    fun getComments(
+        @PathVariable postId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<CommentResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getComments(postId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -194,6 +220,17 @@ class ContentController(
         return ApiResponse.success()
     }
 
-    private fun getUserByEmail(email: String) = userService.findByEmail(email)
-        ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
+    // === Channel Permissions ===
+    @GetMapping("/channels/{channelId}/permissions/me")
+    @PreAuthorize("isAuthenticated()")
+    fun getMyChannelPermissions(
+        @PathVariable channelId: Long,
+        authentication: Authentication,
+    ): ApiResponse<Map<String, Any>> {
+        val user = getUserByEmail(authentication.name)
+        val perms = channelPermissionManagementService.getUserChannelPermissions(channelId, user.id)
+        val payload = mapOf("permissions" to perms.map { it.name })
+        return ApiResponse.success(payload)
+    }
+
 }
