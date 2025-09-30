@@ -7,6 +7,7 @@ import '../../widgets/navigation/top_navigation.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/router_listener.dart';
 import '../../../core/navigation/back_button_handler.dart';
+import '../../../core/navigation/layout_mode.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/models/auth_models.dart';
@@ -23,16 +24,17 @@ class MainLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
+    // 화면 크기로부터 레이아웃 모드 계산
+    final layoutMode = LayoutModeExtension.fromContext(context);
     final navigationState = ref.watch(navigationControllerProvider);
     final currentUser = ref.watch(currentUserProvider);
 
     // 라우트 리스너 활성화
     ref.watch(routeListenerProvider);
 
-    // 반응형 전환 감지 및 상태 동기화
+    // 레이아웃 모드 전환 감지 및 상태 동기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _handleResponsiveTransition(ref, isDesktop, navigationState);
+      _handleLayoutModeTransition(ref, layoutMode);
     });
 
     return RouterListener(
@@ -43,38 +45,45 @@ class MainLayout extends ConsumerWidget {
             children: [
               const TopNavigation(),
               Expanded(
-                child: isDesktop
-                    ? _buildDesktopLayout(navigationState)
-                    : _buildMobileLayout(),
+                child: _buildLayoutForMode(layoutMode, navigationState),
               ),
             ],
           ),
-          bottomNavigationBar: isDesktop
-              ? null
-              : _buildMobileBottomSection(currentUser),
+          bottomNavigationBar: layoutMode.usesBottomNavigation
+              ? _buildMobileBottomSection(currentUser)
+              : null,
         ),
       ),
     );
   }
 
-  void _handleResponsiveTransition(
-    WidgetRef ref,
-    bool isDesktop,
-    NavigationState navigationState,
-  ) {
+  /// 레이아웃 모드 전환 처리
+  void _handleLayoutModeTransition(WidgetRef ref, LayoutMode newMode) {
     final navigationController = ref.read(navigationControllerProvider.notifier);
-
-    // 모바일 → 웹 전환 시: 워크스페이스에 있으면 사이드바 축소 유지
-    if (isDesktop && navigationState.currentRoute.startsWith(AppConstants.workspaceRoute)) {
-      if (!navigationState.isWorkspaceCollapsed) {
-        navigationController.enterWorkspace();
-      }
-    }
-
-    // 웹 → 모바일 전환 시: 별도 처리 없음 (모바일은 하단 네비게이션 사용)
+    navigationController.updateLayoutMode(newMode);
   }
 
-  Widget _buildDesktopLayout(NavigationState navigationState) {
+  /// 레이아웃 모드에 따른 레이아웃 빌드
+  Widget _buildLayoutForMode(LayoutMode mode, NavigationState navigationState) {
+    switch (mode) {
+      case LayoutMode.compact:
+        return _buildCompactLayout();
+      case LayoutMode.medium:
+      case LayoutMode.wide:
+        return _buildSidebarLayout(navigationState);
+    }
+  }
+
+  /// COMPACT 모드: 모바일 레이아웃 (하단 네비게이션)
+  Widget _buildCompactLayout() {
+    return Container(
+      color: AppColors.lightBackground,
+      child: child,
+    );
+  }
+
+  /// MEDIUM/WIDE 모드: 사이드바 레이아웃
+  Widget _buildSidebarLayout(NavigationState navigationState) {
     return Row(
       children: [
         const SidebarNavigation(),
@@ -82,7 +91,7 @@ class MainLayout extends ConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.lightBackground,
-              border: navigationState.isWorkspaceCollapsed
+              border: navigationState.shouldCollapseSidebar
                   ? null
                   : const Border(
                       left: BorderSide(color: AppColors.lightOutline, width: 1),
@@ -92,13 +101,6 @@ class MainLayout extends ConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildMobileLayout() {
-    return Container(
-      color: AppColors.lightBackground,
-      child: child,
     );
   }
 

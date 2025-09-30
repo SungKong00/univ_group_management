@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/app_constants.dart';
 import 'navigation_config.dart';
+import 'layout_mode.dart';
 
 /// 네비게이션 탭 정의
 ///
@@ -51,6 +52,7 @@ class NavigationState extends Equatable {
     this.currentTab = NavigationTab.home,
     this.isWorkspaceCollapsed = false,
     this.tabHistories = const {},
+    this.layoutMode = LayoutMode.wide,
   });
 
   /// 현재 라우트
@@ -65,17 +67,22 @@ class NavigationState extends Equatable {
   /// 각 탭별 히스토리 스택
   final Map<NavigationTab, List<String>> tabHistories;
 
+  /// 현재 레이아웃 모드 (COMPACT/MEDIUM/WIDE)
+  final LayoutMode layoutMode;
+
   NavigationState copyWith({
     String? currentRoute,
     NavigationTab? currentTab,
     bool? isWorkspaceCollapsed,
     Map<NavigationTab, List<String>>? tabHistories,
+    LayoutMode? layoutMode,
   }) {
     return NavigationState(
       currentRoute: currentRoute ?? this.currentRoute,
       currentTab: currentTab ?? this.currentTab,
       isWorkspaceCollapsed: isWorkspaceCollapsed ?? this.isWorkspaceCollapsed,
       tabHistories: tabHistories ?? this.tabHistories,
+      layoutMode: layoutMode ?? this.layoutMode,
     );
   }
 
@@ -91,12 +98,27 @@ class NavigationState extends Equatable {
     return currentTab.isRootRoute(currentRoute);
   }
 
+  /// 사이드바를 강제로 축소해야 하는지 확인
+  /// - MEDIUM 모드: 항상 축소
+  /// - WIDE 모드 + 워크스페이스: 워크스페이스 상태에 따라 축소
+  /// - COMPACT 모드: 사이드바 없음
+  bool get shouldCollapseSidebar {
+    if (layoutMode == LayoutMode.medium) {
+      return true; // 태블릿은 항상 축소
+    }
+    if (layoutMode == LayoutMode.wide && isWorkspaceCollapsed) {
+      return true; // 데스크톱에서 워크스페이스 축소 상태
+    }
+    return false;
+  }
+
   @override
   List<Object?> get props => [
         currentRoute,
         currentTab,
         isWorkspaceCollapsed,
         tabHistories,
+        layoutMode,
       ];
 }
 
@@ -255,6 +277,26 @@ class NavigationController extends StateNotifier<NavigationState> {
     state = state.copyWith(
       isWorkspaceCollapsed: false,
     );
+  }
+
+  /// 레이아웃 모드 업데이트
+  /// 화면 크기 변경 시 MainLayout에서 호출
+  void updateLayoutMode(LayoutMode newMode) {
+    if (state.layoutMode == newMode) return;
+
+    // MEDIUM 모드로 전환 시: 워크스페이스 상태 무시하고 항상 축소
+    // WIDE 모드로 전환 시: 워크스페이스가 아니면 확장
+    final shouldUpdateWorkspaceState = newMode == LayoutMode.wide &&
+                                       state.currentTab != NavigationTab.workspace;
+
+    state = state.copyWith(
+      layoutMode: newMode,
+      isWorkspaceCollapsed: shouldUpdateWorkspaceState ? false : null,
+    );
+
+    if (kDebugMode) {
+      developer.log('Layout mode changed: ${newMode.displayName}', name: 'NavigationController');
+    }
   }
 
   /// 디버그용: 현재 상태 출력

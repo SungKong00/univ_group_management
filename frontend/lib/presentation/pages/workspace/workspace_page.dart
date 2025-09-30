@@ -50,6 +50,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   @override
   Widget build(BuildContext context) {
     final workspaceState = ref.watch(workspaceStateProvider);
+    // 문서 스펙: TABLET(451px) 이상을 데스크톱 레이아웃으로 간주
+    // largerThan(MOBILE) = 451px 이상 = TABLET, DESKTOP, 4K
     final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
 
     return Container(

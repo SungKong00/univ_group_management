@@ -17,7 +17,8 @@ class SidebarNavigation extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigationState = ref.watch(navigationControllerProvider);
-    final isCollapsed = navigationState.isWorkspaceCollapsed;
+    // 레이아웃 모드와 워크스페이스 상태를 모두 고려한 축소 여부
+    final isCollapsed = navigationState.shouldCollapseSidebar;
     final currentUser = ref.watch(currentUserProvider);
 
     return AnimatedContainer(

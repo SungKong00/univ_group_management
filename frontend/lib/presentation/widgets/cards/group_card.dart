@@ -94,8 +94,8 @@ class GroupCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isActive
-                          ? AppColors.brand.withValues(alpha: 0.1)
-                          : AppColors.lightOutline,
+                          ? AppColors.brandLight
+                          : AppColors.neutral200,
                       borderRadius: BorderRadius.circular(AppComponents.badgeRadius),
                     ),
                     child: Text(

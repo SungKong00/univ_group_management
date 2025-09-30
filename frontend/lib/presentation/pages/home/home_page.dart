@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../widgets/cards/action_card.dart';
 import '../../widgets/cards/group_card.dart';
 
@@ -9,8 +11,9 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final isWide = mediaQuery.size.width >= 768;
+    // 문서 스펙: TABLET(451px) 이상을 데스크톱 레이아웃으로 간주
+    // largerThan(MOBILE) = 451px 이상 = TABLET, DESKTOP, 4K
+    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
@@ -18,7 +21,12 @@ class HomePage extends StatelessWidget {
         child: FocusTraversalGroup(
           policy: OrderedTraversalPolicy(),
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(isWide ? AppSpacing.lg : AppSpacing.md),
+            // 문서 스펙: 모바일 96px, 데스크톱 120px 수직 여백
+            // 수평 여백은 기존대로 lg/md 사용
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop ? AppSpacing.lg : AppSpacing.md,
+              vertical: isDesktop ? AppSpacing.offsetMax : AppSpacing.offsetMin,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -34,7 +42,7 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                _buildQuickActions(context, isWide),
+                _buildQuickActions(context, isDesktop),
                 const SizedBox(height: AppSpacing.lg),
                 _buildRecentGroups(context),
                 const SizedBox(height: AppSpacing.lg),
@@ -47,7 +55,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, bool isWide) {
+  Widget _buildQuickActions(BuildContext context, bool isDesktop) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -56,7 +64,7 @@ class HomePage extends StatelessWidget {
           style: AppTheme.headlineSmallTheme(context),
         ),
         const SizedBox(height: AppSpacing.sm),
-        isWide
+        isDesktop
             ? Row(
                 children: [
                   Expanded(

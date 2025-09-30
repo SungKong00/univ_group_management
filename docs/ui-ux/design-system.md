@@ -35,25 +35,38 @@
 
 ### 브랜드 컬러
 ```dart
-primary: #6A1B9A      // 메인 브랜드 컬러
-brandStrong: #4A148C  // 강조용 진한 보라
-brandLight: #9C27B0   // 부드러운 보조 컬러
+primary:     #5C068C   // 메인 브랜드 컬러 (학교 공식: Pantone 2597 CVC)
+brandStrong: #4B0672   // Hover/Active 등 진한 보라(톤 다운)
+brandLight:  #F2E8FA   // 톤 컨테이너/칩/강조 배경(연보라 틴트)
 ```
 
 ### 중성 컬러 (Neutral)
 ```dart
-neutral900: #0F172A   // 제목, 중요 텍스트
-neutral800: #1E293B   // 부제목
+neutral900: #0F172A   // 제목, 가장 중요한 텍스트
+neutral800: #1E293B   // 섹션 타이틀
 neutral700: #334155   // 본문 텍스트
-neutral600: #64748B   // 보조 텍스트
-neutral500-100: #94A3B8 → #F8FAFC  // 배경, 구분선
+neutral600: #64748B   // 보조 텍스트/아이콘
+neutral500: #94A3B8   // 서브 아이콘, 비활성 텍스트
+neutral400: #CBD5E1   // 얕은 보더/디바이더
+neutral300: #E2E8F0   // 카드 보더/섹션 분리
+neutral200: #EEF2F6   // 카드/패널 표면 구분
+neutral100: #F8FAFC   // 페이지 베이스 배경
 ```
 
 ### 시스템 컬러
 ```dart
-success: #10B981      // 성공 상태
-error: #EF4444        // 오류 상태
-focusRing: rgba(106, 27, 154, 0.45)  // 포커스 링
+// 액션(행동) — 버튼/링크/선택 상태는 블루로 통일
+actionPrimary:  #1D4ED8   // 주요 CTA/링크
+actionHover:    #0F3CC9   // Hover/포커스 시
+actionTonalBg:  #EAF2FF   // 선택 배경/하이라이트 표면
+
+// 상태(의미 고정)
+success:        #10B981   // 성공/활성
+warning:        #F59E0B   // 경고
+error:          #E63946   // 오류/위험(가독성 좋은 레드)
+
+// 접근성
+focusRing:      rgba(92, 6, 140, 0.45)  // 브랜드 보라 Focus Ring(2px 권장)
 ```
 
 ## 타이포그래피 (AppTypography)

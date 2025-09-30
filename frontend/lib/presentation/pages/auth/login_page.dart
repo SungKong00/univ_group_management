@@ -341,7 +341,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         width: double.infinity,
         padding: const EdgeInsets.all(AppTheme.spacing12),
         decoration: BoxDecoration(
-          color: AppColors.neutral100,
+          color: AppColors.neutral200,
           borderRadius: BorderRadius.circular(AppTheme.radiusInput),
           border: Border.all(color: AppColors.outline),
         ),

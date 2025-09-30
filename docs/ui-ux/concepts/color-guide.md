@@ -12,15 +12,35 @@
 
 ### 2) 팔레트 및 역할
 
-| 색상명 | Hex | 역할 | 대표 용도 |
-|:--|:--|:--|:--|
-| 메인 퍼플(공식) | #5C068C | Brand Accent | 로고, 헤더, 주요 CTA, 포인트 |
-| 라이트 배경 | #FFFFFF | Primary Surface | 화면 기본 배경, 카드 배경 |
-| 기본 텍스트 | #121212 | Primary Text & UI | 본문, 헤드라인, 기본 아이콘 |
-| 보조 텍스트/경계 | #6C757D | Secondary Text & Border | 설명문, 비활성, 구분선 |
-| 하이라이트 블루 | #1E6FFF | Primary Action | 가장 중요한 CTA, 링크 |
-| 민트 그린 | #00D9B2 | Success / Positive | 성공 피드백, 뱃지 |
-| 에너제틱 레드 | #E63946 | Danger / Alert | 오류, 경고, 파괴적 액션 |
+#### 브랜드 컬러
+primary:     #5C068C   // 메인 브랜드 컬러 (학교 공식: Pantone 2597 CVC)
+brandStrong: #4B0672   // Hover/Active 등 진한 보라(톤 다운)
+brandLight:  #F2E8FA   // 톤 컨테이너/칩/강조 배경(연보라 틴트)
+
+#### 중성 컬러
+neutral900: #0F172A   // 제목, 가장 중요한 텍스트
+neutral800: #1E293B   // 섹션 타이틀
+neutral700: #334155   // 본문 텍스트
+neutral600: #64748B   // 보조 텍스트/아이콘
+neutral500: #94A3B8   // 서브 아이콘, 비활성 텍스트
+neutral400: #CBD5E1   // 얕은 보더/디바이더
+neutral300: #E2E8F0   // 카드 보더/섹션 분리
+neutral200: #EEF2F6   // 카드/패널 표면 구분
+neutral100: #F8FAFC   // 페이지 베이스 배경
+
+#### 시스템 컬러
+// 액션(행동) — 버튼/링크/선택 상태는 블루로 통일
+actionPrimary:  #1D4ED8   // 주요 CTA/링크
+actionHover:    #0F3CC9   // Hover/포커스 시
+actionTonalBg:  #EAF2FF   // 선택 배경/하이라이트 표면
+
+// 상태(의미 고정)
+success:        #10B981   // 성공/활성
+warning:        #F59E0B   // 경고
+error:          #E63946   // 오류/위험(가독성 좋은 레드)
+
+// 접근성
+focusRing:      rgba(92, 6, 140, 0.45)  // 브랜드 보라 Focus Ring(2px 권장)
 
 ### 3) 인터랙션
 - Hover: 액션 색상은 명도만 소폭 상승. 예) #1E6FFF → #3B87FF  
@@ -40,16 +60,38 @@
 
 ### 2) 팔레트 및 역할
 
-| 색상명 | Hex | 역할 | 대표 용도 |
-|:--|:--|:--|:--|
-| 메인 퍼플(공식) | #5C068C | Brand Accent | 포인트, 강조 텍스트, 링크 |
-| 리치 블랙 | #121212 | Primary Surface | 화면 기본 배경 |
-| 소프트 화이트 | #FFFFFF | Primary Text & UI | 본문, 아이콘 |
-| 쿨 그레이 | #ABB8C3 | Secondary Text & Border | 보조 텍스트, 구분선, 비활성 |
-| 하이라이트 블루 | #1E6FFF | Primary Action | 주요 CTA, 활성 탭 |
-| 민트 그린 | #00D9B2 | Success / Positive | 성공 피드백, 알림 |
-| 에너제틱 레드 | #E63946 | Danger / Alert | 오류, 경고 |
-| 서피스 엘리베이트 | #1A1A1A | Surface Elevated | 카드/패널 배경 |
+#### 브랜드 컬러
+primary:     #5C068C   // 메인 브랜드 컬러 (Pantone 2597 CVC)
+brandStrong: #D6B8F2   // 다크 배경에서 밝게 띄우는 보라 포인트
+brandLight:  #521A77   // 보라 톤 컨테이너/칩/토글 배경
+
+#### 중성컬러
+neutralSurface:        #121212   // 기본 배경
+neutralSurfaceElevated:#1A1A1A   // 카드/패널 표면
+neutralBorder:         #2B3440   // 경계선/디바이더
+
+neutral900: #FFFFFF    // 제목/주요 텍스트
+neutral800: #E5E7EB    // 부제목/서브 타이틀
+neutral700: #CBD5E1    // 본문 텍스트
+neutral600: #94A3B8    // 보조 텍스트/아이콘
+neutral500: #64748B    // 비활성 텍스트
+neutral400: #475569    // 진한 보더/구분선
+
+#### 시스템 컬러
+actionPrimary:   #3B82F6              // 주요 CTA/링크
+actionHover:     #60A5FA              // Hover/Focus 시
+actionTonalBg:   rgba(59,130,246,0.16)// 선택 배경/하이라이트
+
+success:         #10B981              // 성공/활성
+successTonalBg:  rgba(16,185,129,0.16)
+
+warning:         #F59E0B              // 경고
+warningTonalBg:  rgba(245,158,11,0.16)
+
+error:           #E63946              // 오류/위험
+errorTonalBg:    rgba(230,57,70,0.16)
+
+focusRing:       rgba(92,6,140,0.55)  // 브랜드 보라 포커스 링
 
 ### 3) 인터랙션
 - Hover: 액션 색상은 명도만 소폭 상승. 예) #1E6FFF → #3B87FF  

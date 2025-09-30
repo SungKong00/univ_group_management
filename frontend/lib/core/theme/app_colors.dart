@@ -23,20 +23,34 @@ class AppColors {
   /// 용도: 로고, 브랜드 아이덴티티, 포커스 링
   static const Color brand = ColorTokens.brandPurple;
 
+  /// 브랜드 강조 컬러 (진한 퍼플)
+  /// 용도: Hover, Active 상태
+  static const Color brandStrong = ColorTokens.brandStrong;
+
+  /// 브랜드 연한 컬러 (연한 퍼플)
+  /// 용도: 톤 컨테이너, 칩 배경, 강조 배경
+  static const Color brandLight = ColorTokens.brandLight;
+
   // ========== Action Colors ==========
-  /// Primary Action 컬러 (하이라이트 블루)
+  /// Primary Action 컬러 (액션 블루)
   /// 용도: 가장 중요한 CTA 버튼, 링크, 활성 상태
   static const Color action = ColorTokens.actionBlue;
 
   /// Action Hover 상태
   static const Color actionHover = ColorTokens.actionBlueHover;
 
-  // ========== Feedback Colors ==========
-  /// 성공/긍정 피드백 (민트 그린)
-  static const Color success = ColorTokens.successMint;
+  /// Action Tonal 배경 (선택/하이라이트 표면)
+  static const Color actionTonalBg = ColorTokens.actionTonalBg;
 
-  /// 오류/위험 알림 (에너제틱 레드)
-  static const Color error = ColorTokens.dangerRed;
+  // ========== Feedback Colors ==========
+  /// 성공/긍정 피드백 (그린)
+  static const Color success = ColorTokens.successGreen;
+
+  /// 경고 피드백 (옐로우)
+  static const Color warning = ColorTokens.warningYellow;
+
+  /// 오류/위험 알림 (레드)
+  static const Color error = ColorTokens.errorRed;
 
   // ========== Light Mode Surface ==========
   /// 라이트 모드 기본 배경
@@ -106,11 +120,13 @@ class AppColors {
 
   /// Neutral 계열 (ColorTokens 직접 노출)
   static const Color neutral100 = ColorTokens.neutral100;
+  static const Color neutral200 = ColorTokens.neutral200;
   static const Color neutral300 = ColorTokens.neutral300;
-  static const Color neutral400 = Color(0xFFCED4DA); // 중간값 추가
+  static const Color neutral400 = ColorTokens.neutral400;
   static const Color neutral500 = ColorTokens.neutral500;
-  static const Color neutral600 = Color(0xFF868E96); // 중간값 추가
+  static const Color neutral600 = ColorTokens.neutral600;
   static const Color neutral700 = ColorTokens.neutral700;
+  static const Color neutral800 = ColorTokens.neutral800;
   static const Color neutral900 = ColorTokens.neutral900;
 
   /// OnPrimary 편의 속성
