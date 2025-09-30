@@ -54,6 +54,37 @@ class AuthController(
         return ApiResponse.success(loginResponse)
     }
 
+    @GetMapping("/verify")
+    @Operation(summary = "토큰 검증", description = "JWT 액세스 토큰의 유효성을 검증하고 사용자 정보를 반환합니다")
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "토큰 유효함"),
+            SwaggerApiResponse(responseCode = "401", description = "토큰 만료 또는 유효하지 않음"),
+        ],
+    )
+    fun verifyToken(): ApiResponse<UserResponse> {
+        val userResponse = authService.verifyToken()
+        return ApiResponse.success(userResponse)
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "토큰 갱신", description = "리프레시 토큰으로 새로운 액세스 토큰을 발급받습니다")
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "토큰 갱신 성공"),
+            SwaggerApiResponse(responseCode = "401", description = "리프레시 토큰 만료 또는 유효하지 않음"),
+        ],
+    )
+    fun refreshToken(
+        @RequestBody payload: Map<String, String>,
+    ): ApiResponse<RefreshTokenResponse> {
+        val refreshToken = payload["refreshToken"]
+            ?: throw ValidationException("refreshToken is required")
+
+        val response = authService.refreshAccessToken(refreshToken)
+        return ApiResponse.success(response)
+    }
+
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "사용자를 로그아웃하고 토큰을 무효화합니다")
     @ApiResponses(

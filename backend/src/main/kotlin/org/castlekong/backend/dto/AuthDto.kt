@@ -67,3 +67,10 @@ data class EmailVerifyRequest(
     val email: String,
     val code: String,
 )
+
+// 토큰 갱신 응답
+data class RefreshTokenResponse(
+    val accessToken: String,
+    val tokenType: String = "Bearer",
+    val expiresIn: Long,
+)
