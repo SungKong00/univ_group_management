@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import '../models/auth_models.dart';
 import '../network/dio_client.dart';
+import '../router/app_router.dart';
 import 'local_storage.dart';
 
 class AuthService {
@@ -53,6 +54,10 @@ class AuthService {
           await _saveTokens(loginResponse.accessToken, loginResponse.tokenType);
           await _saveUserInfo(loginResponse.user);
           _currentUser = loginResponse.user;
+
+          // GoRouter에 인증 상태 변경 알림
+          authChangeNotifier.notifyAuthChanged();
+
           return loginResponse;
         } else {
           throw Exception(apiResponse.message ?? 'Login failed');
@@ -102,6 +107,10 @@ class AuthService {
           await _saveTokens(loginResponse.accessToken, loginResponse.tokenType);
           await _saveUserInfo(loginResponse.user);
           _currentUser = loginResponse.user;
+
+          // GoRouter에 인증 상태 변경 알림
+          authChangeNotifier.notifyAuthChanged();
+
           return loginResponse;
         } else {
           throw Exception(apiResponse.message ?? 'Login failed');
@@ -161,6 +170,9 @@ class AuthService {
     // 로컬 토큰 및 사용자 정보 삭제
     await _clearTokens();
     _currentUser = null;
+
+    // GoRouter에 인증 상태 변경 알림
+    authChangeNotifier.notifyAuthChanged();
   }
 
   /// 토큰 저장

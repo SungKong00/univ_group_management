@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/pages/auth/login_page.dart';
 import '../../presentation/pages/auth/profile_setup_page.dart';
@@ -10,10 +11,19 @@ import '../../presentation/pages/main/main_layout.dart';
 import '../constants/app_constants.dart';
 import '../services/auth_service.dart';
 
+/// AuthService 상태 변화를 GoRouter에 알리는 ChangeNotifier
+class AuthChangeNotifier extends ChangeNotifier {
+  void notifyAuthChanged() {
+    notifyListeners();
+  }
+}
+
 final _authService = AuthService();
+final authChangeNotifier = AuthChangeNotifier();
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppConstants.loginRoute,
+  refreshListenable: authChangeNotifier,
   routes: [
     GoRoute(
       path: AppConstants.loginRoute,

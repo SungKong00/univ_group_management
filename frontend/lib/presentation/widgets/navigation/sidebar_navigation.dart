@@ -5,6 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/back_button_handler.dart';
+import '../../providers/auth_provider.dart';
+import '../user/user_info_card.dart';
 
 class SidebarNavigation extends ConsumerWidget {
   const SidebarNavigation({super.key});
@@ -13,6 +15,7 @@ class SidebarNavigation extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final navigationState = ref.watch(navigationControllerProvider);
     final isCollapsed = navigationState.isWorkspaceCollapsed;
+    final currentUser = ref.watch(currentUserProvider);
 
     return AnimatedContainer(
       duration: AppConstants.animationDuration,
@@ -33,6 +36,11 @@ class SidebarNavigation extends ConsumerWidget {
                 isCollapsed,
               )),
           const Spacer(),
+          if (currentUser != null)
+            UserInfoCard(
+              user: currentUser,
+              isCompact: isCollapsed,
+            ),
         ],
       ),
     );

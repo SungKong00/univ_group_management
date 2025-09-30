@@ -2,26 +2,26 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/auth_models.dart';
-import '../../../core/services/auth_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../widgets/buttons/outlined_link_button.dart';
 import '../../widgets/buttons/primary_button.dart';
+import '../../providers/auth_provider.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final AuthService _authService = AuthService();
+class _LoginPageState extends ConsumerState<LoginPage> {
   bool _isLoading = false;
   bool _showEntryAnimation = false;
   GoogleSignIn? _googleSignIn;
@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
 
-      final loginResponse = await _authService.loginWithGoogle(
+      final loginResponse = await ref.read(authProvider.notifier).loginWithGoogle(
         idToken: (idToken != null && idToken.isNotEmpty) ? idToken : null,
         accessToken: (accessToken != null && accessToken.isNotEmpty) ? accessToken : null,
       );
@@ -127,7 +127,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final loginResponse = await _authService.loginWithTestAccount();
+      final loginResponse = await ref.read(authProvider.notifier).loginWithTestAccount();
 
       if (!mounted) {
         return;

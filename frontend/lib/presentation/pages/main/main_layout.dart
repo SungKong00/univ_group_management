@@ -9,6 +9,9 @@ import '../../../core/navigation/router_listener.dart';
 import '../../../core/navigation/back_button_handler.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/models/auth_models.dart';
+import '../../providers/auth_provider.dart';
+import '../../widgets/user/user_info_card.dart';
 
 class MainLayout extends ConsumerWidget {
   final Widget child;
@@ -22,6 +25,7 @@ class MainLayout extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
     final navigationState = ref.watch(navigationControllerProvider);
+    final currentUser = ref.watch(currentUserProvider);
 
     // 라우트 리스너 활성화
     ref.watch(routeListenerProvider);
@@ -45,7 +49,9 @@ class MainLayout extends ConsumerWidget {
               ),
             ],
           ),
-          bottomNavigationBar: isDesktop ? null : const BottomNavigation(),
+          bottomNavigationBar: isDesktop
+              ? null
+              : _buildMobileBottomSection(currentUser),
         ),
       ),
     );
@@ -93,6 +99,20 @@ class MainLayout extends ConsumerWidget {
     return Container(
       color: AppTheme.background,
       child: child,
+    );
+  }
+
+  Widget _buildMobileBottomSection(UserInfo? currentUser) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (currentUser != null)
+          UserInfoCard(
+            user: currentUser,
+            isCompact: false,
+          ),
+        const BottomNavigation(),
+      ],
     );
   }
 }
