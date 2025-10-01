@@ -76,27 +76,29 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
         final t = _controller.value; // 0=확장, 1=축소
 
         // 콘텐츠 표시 여부 결정 (지연된 조건부 렌더링)
-        // 축소 시: t가 0.4 넘으면 제거 (텍스트 먼저 사라짐, 공간 부족 전에 제거)
-        // 확장 시: t가 0.4 이하일 때 표시 (사이드바 너비 확보 후 추가)
-        final shouldShowContent = t < 0.4;
+        // 축소 시: t가 0.2 넘으면 제거 (텍스트 먼저 사라짐, 공간 부족 전에 제거)
+        // 확장 시: t가 0.2 이하일 때 표시 (사이드바 너비 확보 후 추가)
+        final shouldShowContent = t < 0.2;
 
         // 페이드 진행도 계산
-        // 확장: t 1.0→0.4에서 opacity 0→1
-        // 축소: t 0.0→0.4에서 opacity 1→0
+        // 확장: t 1.0→0.2에서 opacity 0→1
+        // 축소: t 0.0→0.2에서 opacity 1→0
         final contentOpacity = shouldShowContent
-            ? (1 - (t / 0.4)).clamp(0.0, 1.0)
+            ? (1 - (t / 0.2)).clamp(0.0, 1.0)
             : 0.0;
 
         // 아바타 중앙 이동 애니메이션
-        // 축소 시: 왼쪽(0) → 중앙(8px)으로 이동
-        // 확장 시: 중앙(8px) → 왼쪽(0)으로 이동
-        final avatarDx = Curves.easeInOutCubic.transform(t) * 8.0;
+        // 축소 시: 왼쪽(0) → 중앙(12px)으로 이동
+        // 확장 시: 중앙(12px) → 왼쪽(0)으로 이동
+        final avatarDx = Curves.easeInOutCubic.transform(t) * 12.0;
 
         return _buildSurface(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.start, // 항상 왼쪽 정렬 유지
-            children: [
+          child: ClipRect(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
               // Avatar: Transform으로 위치 애니메이션
               Transform.translate(
                 offset: Offset(avatarDx, 0),
@@ -164,6 +166,7 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
                 ],
               ],
             ],
+            ),
           ),
         );
       },
@@ -179,8 +182,8 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
           curve: Curves.easeInOutCubic,
           width: double.infinity,
           padding: EdgeInsets.symmetric(
-            horizontal: widget.isCompact ? AppSpacing.xs : AppSpacing.sm,
-            vertical: 10, // 고정: 높이 변화 제거로 대각선 이동 구현
+            horizontal: widget.isCompact ? AppSpacing.xxs : AppSpacing.sm,
+            vertical: 10,
           ),
           decoration: const BoxDecoration(
             border: Border(
@@ -284,72 +287,6 @@ class _Initials extends StatelessWidget {
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
     return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
-  }
-}
-
-class _PrimaryName extends StatelessWidget {
-  final UserInfo user;
-  final bool isCompact;
-  const _PrimaryName({required this.user, required this.isCompact});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      user.nickname ?? user.name,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: TextStyle(
-        fontSize: isCompact ? 12 : 14,
-        fontWeight: FontWeight.w600,
-        color: AppColors.neutral900,
-        height: 1.2,
-      ),
-    );
-  }
-}
-
-class _InfoSection extends StatelessWidget {
-  final UserInfo user;
-  final bool isCompact;
-  const _InfoSection({required this.user, required this.isCompact});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          user.nickname ?? user.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: isCompact ? 12 : 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.neutral900,
-            height: 1.2,
-          ),
-        ),
-        if (!isCompact) ...[
-          const SizedBox(height: 2),
-          Text(
-            user.email,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w400,
-              color: AppColors.neutral600,
-              height: 1.2,
-            ),
-          ),
-          if (user.department != null) ...[
-            const SizedBox(height: 2),
-            _Tag(user.department!),
-          ],
-        ],
-      ],
-    );
   }
 }
 
