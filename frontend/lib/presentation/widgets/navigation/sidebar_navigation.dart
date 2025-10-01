@@ -236,65 +236,6 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
     );
   }
 
-  Widget _buildCollapsedItem(NavigationConfig config, bool isSelected) {
-    // 기존 메서드는 호출되지 않음 (구조 단순화). 유지 혹은 추후 제거 가능.
-    return Center(
-      child: Icon(
-        config.icon,
-        size: 24,
-        color: isSelected ? AppColors.action : AppColors.lightSecondary,
-      ),
-    );
-  }
-
-  Widget _buildExpandedItem(NavigationConfig config, bool isSelected) {
-    // 기존 메서드는 호출되지 않음 (구조 단순화). 유지 혹은 추후 제거 가능.
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(
-          config.icon,
-          size: 24,
-          color: isSelected ? AppColors.action : AppColors.lightSecondary,
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                config.title,
-                style: AppTheme.titleMedium.copyWith(
-                  color: isSelected ? AppColors.action : AppColors.lightOnSurface,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                config.description,
-                style: AppTheme.bodySmall.copyWith(
-                  color: isSelected ? AppColors.action.withValues(alpha: 0.8) : AppColors.lightSecondary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-        if (isSelected)
-          Container(
-            width: 4,
-            height: 20,
-            decoration: BoxDecoration(
-              color: AppColors.action,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-      ],
-    );
-  }
-
   void _handleItemTap(BuildContext context, WidgetRef ref, NavigationConfig config) {
     final navigationController = ref.read(navigationControllerProvider.notifier);
 

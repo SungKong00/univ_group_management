@@ -11,6 +11,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/models/auth_models.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/user/user_info_card.dart';
+import '../../../core/theme/theme.dart'; // AppMotion 사용 추가
 
 class MainLayout extends ConsumerWidget {
   final Widget child;
@@ -103,16 +104,50 @@ class MainLayout extends ConsumerWidget {
   }
 
   Widget _buildMobileBottomSection(UserInfo? currentUser) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (currentUser != null)
-          UserInfoCard(
-            user: currentUser,
-            isCompact: false,
-          ),
-        const BottomNavigation(),
-      ],
+    return SafeArea(
+      top: false,
+      child: AnimatedSize(
+        duration: AppMotion.standard,
+        curve: AppMotion.easing,
+        alignment: Alignment.bottomCenter,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AnimatedSwitcher(
+              duration: AppMotion.standard,
+              switchInCurve: AppMotion.easing,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                final fade = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+                return ClipRect(
+                  child: FadeTransition(
+                    opacity: fade,
+                    child: SizeTransition(
+                      sizeFactor: animation,
+                      axis: Axis.vertical,
+                      axisAlignment: 1.0, // 하단 고정 확장
+                      child: child,
+                    ),
+                  ),
+                );
+              },
+              child: currentUser != null
+                  ? UserInfoCard(
+                      key: ValueKey('user-card-${currentUser.id}'),
+                      user: currentUser,
+                      isCompact: false,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            // 네비게이션 바 높이 안정화를 위한 래퍼
+            const SizedBox(
+              height: kBottomNavigationBarHeight,
+              child: BottomNavigation(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
