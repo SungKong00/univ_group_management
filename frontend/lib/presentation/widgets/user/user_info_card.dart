@@ -180,7 +180,7 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
           width: double.infinity,
           padding: EdgeInsets.symmetric(
             horizontal: widget.isCompact ? AppSpacing.xs : AppSpacing.sm,
-            vertical: widget.isCompact ? 6 : 10,
+            vertical: 10, // 고정: 높이 변화 제거로 대각선 이동 구현
           ),
           decoration: const BoxDecoration(
             border: Border(
@@ -229,7 +229,9 @@ class _AvatarSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = isCompact ? 32.0 : 40.0;
     final radius = size / 2;
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeInOutCubic,
       width: size,
       height: size,
       decoration: BoxDecoration(
@@ -263,14 +265,16 @@ class _Initials extends StatelessWidget {
   Widget build(BuildContext context) {
     final initials = _computeInitials(user.name);
     return Center(
-      child: Text(
-        initials,
+      child: AnimatedDefaultTextStyle(
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeInOutCubic,
         style: TextStyle(
           fontSize: isCompact ? 12 : 14,
           fontWeight: FontWeight.w600,
           color: AppColors.brand,
           height: 1.0,
         ),
+        child: Text(initials),
       ),
     );
   }
