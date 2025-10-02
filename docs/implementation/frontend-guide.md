@@ -132,6 +132,18 @@ class LoginPage extends StatefulWidget {
 // 온보딩 플로우 지원
 ```
 
+### 계층적 네비게이션 시스템
+```dart
+// 페이지별 동적 브레드크럼
+// - 일반 페이지: BreadcrumbWidget (단순 제목)
+// - 워크스페이스: WorkspaceHeader (그룹/채널 + 드롭다운 지원)
+
+// Provider 기반 경로 계산
+final breadcrumb = ref.watch(
+  pageBreadcrumbFromPathProvider(routePath)
+);
+```
+
 ## 상태 관리 패턴
 
 ### Riverpod 활용
