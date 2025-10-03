@@ -2,6 +2,43 @@
 
 본 문서는 워크스페이스 내부의 주요 콘텐츠 페이지(채널, 그룹 홈, 그룹 캘린더)의 구조와 기능을 정의합니다. 이 페이지들은 워크스페이스의 좌측/모바일 네비게이션을 통해 전환되는 '콘텐츠 페이지' 영역에 해당합니다.
 
+## 구현 현황
+
+### 완료된 기능 (2025-10-04)
+
+**채널 네비게이션 시스템**
+- 채널 목록 API 연동 (`/workspaces/{workspaceId}/channels`)
+- 멤버십 권한 확인 API 연동 (`/groups/{groupId}/members/me`)
+- 슬라이드 애니메이션 (160ms, left → right)
+- 읽지 않음 배지 표시 (더미 데이터)
+- 그룹 홈 / 캘린더 / 채널 뷰 전환
+- 관리자 페이지 버튼 (조건부: hasAnyGroupPermission)
+
+**구현 파일**
+- `/frontend/lib/core/models/channel_models.dart` - Channel, MembershipInfo 모델
+- `/frontend/lib/core/services/channel_service.dart` - 채널 API 서비스
+- `/frontend/lib/presentation/widgets/workspace/channel_navigation.dart` - 채널 네비게이션
+- `/frontend/lib/presentation/widgets/workspace/channel_item.dart` - 채널 아이템
+- `/frontend/lib/presentation/widgets/workspace/unread_badge.dart` - 읽지 않음 배지
+- `/frontend/lib/presentation/providers/workspace_state_provider.dart` - 상태 관리 확장
+- `/frontend/lib/presentation/pages/workspace/workspace_page.dart` - 워크스페이스 페이지 통합
+
+### 향후 개선 사항
+
+**읽지 않음 카운트 API**
+현재 더미 데이터 사용 중. 백엔드 API 구현 필요.
+
+제안 엔드포인트:
+- `GET /channels/{channelId}/unread-count` - 개별 채널 읽지 않음 카운트
+- 또는 채널 목록 API에 `unreadCount` 필드 포함
+
+**워크스페이스 ID 조회**
+현재 `workspaceId = groupId`로 가정하고 있음. 실제로는 그룹 정보에서 워크스페이스 ID를 조회해야 함.
+
+제안:
+- 그룹 상세 API 응답에 `workspaceId` 필드 추가
+- 또는 `GET /groups/{groupId}/workspace` 엔드포인트 활용
+
 ## 1. 채널 페이지
 
 채널은 그룹 멤버들이 메시지 형식으로 소통하는 핵심 공간입니다.

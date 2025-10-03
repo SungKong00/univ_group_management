@@ -5,6 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
+import '../../widgets/workspace/channel_navigation.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
@@ -65,9 +66,15 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   Widget _buildDesktopWorkspace(WorkspaceState workspaceState) {
     return Row(
       children: [
-        // 채널 네비게이션 바 (좌측)
+        // 채널 네비게이션 바 (좌측) - with slide animation
         if (workspaceState.isInWorkspace)
-          _buildChannelSidebar(workspaceState),
+          ChannelNavigation(
+            channels: workspaceState.channels,
+            selectedChannelId: workspaceState.selectedChannelId,
+            hasAnyGroupPermission: workspaceState.hasAnyGroupPermission,
+            unreadCounts: workspaceState.unreadCounts,
+            isVisible: true,
+          ),
 
         // 메인 콘텐츠 영역
         Expanded(
@@ -88,83 +95,36 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     } else if (workspaceState.hasSelectedChannel) {
       return _buildChannelView(workspaceState);
     } else {
-      return _buildChannelList(workspaceState);
+      // Show channel list with navigation
+      return Center(
+        child: Text(
+          '모바일 채널 목록 (준비 중)',
+          style: AppTheme.bodyLarge.copyWith(
+            color: AppColors.neutral600,
+          ),
+        ),
+      );
     }
   }
 
-  Widget _buildChannelSidebar(WorkspaceState workspaceState) {
-    return Container(
-      width: 256,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          right: BorderSide(color: AppColors.lightOutline, width: 1),
-        ),
-      ),
-      child: Column(
-        children: [
-          _buildGroupHeader(),
-          _buildChannelList(workspaceState),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGroupHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '그룹 홈',
-            style: AppTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Group ID: ${widget.groupId}',
-            style: AppTheme.bodySmall.copyWith(
-              color: AppColors.neutral600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChannelList(WorkspaceState workspaceState) {
-    return Expanded(
-      child: ListView(
-        children: [
-          _buildChannelItem('general', '일반', isSelected: workspaceState.selectedChannelId == 'general'),
-          _buildChannelItem('announcements', '공지사항', isSelected: workspaceState.selectedChannelId == 'announcements'),
-          _buildChannelItem('random', '자유게시판', isSelected: workspaceState.selectedChannelId == 'random'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChannelItem(String channelId, String name, {bool isSelected = false}) {
-    return ListTile(
-      leading: const Icon(Icons.tag),
-      title: Text(name),
-      selected: isSelected,
-      onTap: () {
-        ref.read(workspaceStateProvider.notifier).selectChannel(channelId);
-      },
-    );
-  }
 
   Widget _buildMainContent(WorkspaceState workspaceState) {
     if (!workspaceState.isInWorkspace) {
       return _buildEmptyState();
     }
 
-    if (!workspaceState.hasSelectedChannel) {
-      return _buildNoChannelSelected();
+    // Switch view based on currentView
+    switch (workspaceState.currentView) {
+      case WorkspaceView.groupHome:
+        return _buildGroupHomeView();
+      case WorkspaceView.calendar:
+        return _buildCalendarView();
+      case WorkspaceView.channel:
+        if (!workspaceState.hasSelectedChannel) {
+          return _buildNoChannelSelected();
+        }
+        return _buildChannelView(workspaceState);
     }
-
-    return _buildChannelView(workspaceState);
   }
 
   Widget _buildChannelView(WorkspaceState workspaceState) {
@@ -266,6 +226,60 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildGroupHomeView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.home_outlined,
+            size: 64,
+            color: AppColors.brand,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '그룹 홈',
+            style: AppTheme.displaySmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '그룹 홈 (준비 중)',
+            style: AppTheme.bodyLarge.copyWith(
+              color: AppColors.neutral600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalendarView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.calendar_today_outlined,
+            size: 64,
+            color: AppColors.brand,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '캘린더',
+            style: AppTheme.displaySmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '캘린더 (준비 중)',
+            style: AppTheme.bodyLarge.copyWith(
+              color: AppColors.neutral600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
