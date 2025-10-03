@@ -45,6 +45,34 @@ enum NavigationTab {
 }
 
 
+/// 단일 네비게이션 히스토리 항목
+class NavigationEntry extends Equatable {
+  const NavigationEntry({
+    required this.route,
+    this.context,
+  });
+
+  /// 이동한 라우트 경로
+  final String route;
+
+  /// 페이지 복원에 필요한 추가 컨텍스트
+  final Map<String, dynamic>? context;
+
+  NavigationEntry copyWith({
+    String? route,
+    Map<String, dynamic>? context,
+  }) {
+    return NavigationEntry(
+      route: route ?? this.route,
+      context: context ?? this.context,
+    );
+  }
+
+  @override
+  List<Object?> get props => [route, context];
+}
+
+
 /// 통합된 네비게이션 상태
 class NavigationState extends Equatable {
   const NavigationState({
@@ -65,7 +93,7 @@ class NavigationState extends Equatable {
   final bool isWorkspaceCollapsed;
 
   /// 각 탭별 히스토리 스택
-  final Map<NavigationTab, List<String>> tabHistories;
+  final Map<NavigationTab, List<NavigationEntry>> tabHistories;
 
   /// 현재 레이아웃 모드 (COMPACT/MEDIUM/WIDE)
   final LayoutMode layoutMode;
@@ -74,7 +102,7 @@ class NavigationState extends Equatable {
     String? currentRoute,
     NavigationTab? currentTab,
     bool? isWorkspaceCollapsed,
-    Map<NavigationTab, List<String>>? tabHistories,
+    Map<NavigationTab, List<NavigationEntry>>? tabHistories,
     LayoutMode? layoutMode,
   }) {
     return NavigationState(
@@ -134,7 +162,9 @@ class NavigationController extends StateNotifier<NavigationState> {
       currentRoute: AppConstants.homeRoute,
       currentTab: NavigationTab.home,
       tabHistories: {
-        NavigationTab.home: [AppConstants.homeRoute],
+        NavigationTab.home: [
+          NavigationEntry(route: AppConstants.homeRoute),
+        ],
       },
     );
   }
@@ -144,22 +174,47 @@ class NavigationController extends StateNotifier<NavigationState> {
     final tab = NavigationTab.fromRoute(route);
 
     // 탭별 히스토리 업데이트
-    final newTabHistories = Map<NavigationTab, List<String>>.from(state.tabHistories);
     final isRootRoute = tab.isRootRoute(route);
     final rootRoute = tab.route;
+    final normalizedContext = _normalizeContext(context);
+    final newTabHistories = Map<NavigationTab, List<NavigationEntry>>.from(state.tabHistories);
 
     if (isRootRoute) {
-      newTabHistories[tab] = [route];
+      newTabHistories[tab] = [
+        NavigationEntry(
+          route: route,
+          context: normalizedContext,
+        ),
+      ];
     } else {
-      final currentTabHistory = List<String>.from(newTabHistories[tab] ?? []);
+      final currentTabHistory =
+          List<NavigationEntry>.from(newTabHistories[tab] ?? []);
+
+      NavigationEntry? existingRoot;
+      for (final entry in currentTabHistory) {
+        if (tab.isRootRoute(entry.route)) {
+          existingRoot = entry;
+          break;
+        }
+      }
 
       // 루트 라우트를 항상 스택의 시작에 유지
-      currentTabHistory.removeWhere(tab.isRootRoute);
-      currentTabHistory.insert(0, rootRoute);
+      currentTabHistory.removeWhere((entry) => tab.isRootRoute(entry.route));
+      currentTabHistory.insert(
+        0,
+        existingRoot ?? NavigationEntry(route: rootRoute),
+      );
 
-      if (currentTabHistory.last != route) {
-        currentTabHistory.remove(route);
-        currentTabHistory.add(route);
+      final newEntry = NavigationEntry(
+        route: route,
+        context: normalizedContext,
+      );
+
+      if (currentTabHistory.isEmpty || currentTabHistory.last.route != route) {
+        currentTabHistory.removeWhere((entry) => entry.route == route);
+        currentTabHistory.add(newEntry);
+      } else {
+        currentTabHistory[currentTabHistory.length - 1] = newEntry;
       }
 
       newTabHistories[tab] = currentTabHistory;
@@ -180,50 +235,63 @@ class NavigationController extends StateNotifier<NavigationState> {
     }
   }
 
+  Map<String, dynamic>? _normalizeContext(Map<String, dynamic>? context) {
+    if (context == null) {
+      return null;
+    }
+    return Map.unmodifiable(Map<String, dynamic>.from(context));
+  }
+
   /// 탭별 뒤로가기 (탭 루트에서는 홈으로)
   String? goBack() {
-    // 1. 현재 탭에서 뒤로가기 가능한 경우
-    if (state.canGoBackInCurrentTab) {
-      return _goBackInCurrentTab();
+    final currentTab = state.currentTab;
+    final currentHistory = List<NavigationEntry>.from(
+      state.tabHistories[currentTab] ?? const [],
+    );
+
+    if (currentHistory.length <= 1) {
+      return _handleTabRootExit();
     }
 
-    // 2. 탭 루트에 있고 홈이 아닌 경우 홈으로 이동
+    final newTabHistories =
+        Map<NavigationTab, List<NavigationEntry>>.from(state.tabHistories);
+    currentHistory.removeLast();
+
+    final previousEntry = currentHistory.last;
+    newTabHistories[currentTab] = currentHistory;
+
+    final isAtRootAfterPop =
+        currentHistory.length == 1 && currentHistory.last.route == currentTab.route;
+
+    // 워크스페이스의 루트 페이지는 시각적으로 비어 있으므로 홈으로 이동시킨다.
+    if (currentTab == NavigationTab.workspace && isAtRootAfterPop) {
+      state = state.copyWith(tabHistories: newTabHistories);
+      return _handleTabRootExit();
+    }
+
+    state = state.copyWith(
+      currentRoute: previousEntry.route,
+      tabHistories: newTabHistories,
+    );
+
+    return previousEntry.route;
+  }
+
+  String? _handleTabRootExit() {
     if (state.currentTab != NavigationTab.home) {
       navigateToHome();
       return AppConstants.homeRoute;
     }
-
-    // 3. 이미 홈에 있으면 뒤로갈 수 없음
     return null;
   }
-
-  /// 현재 탭 내에서 뒤로가기
-  String? _goBackInCurrentTab() {
-    final newTabHistories = Map<NavigationTab, List<String>>.from(state.tabHistories);
-    final currentTabHistory = List<String>.from(newTabHistories[state.currentTab] ?? []);
-
-    if (currentTabHistory.length > 1) {
-      currentTabHistory.removeLast();
-      newTabHistories[state.currentTab] = currentTabHistory;
-
-      final previousRoute = currentTabHistory.last;
-
-      state = state.copyWith(
-        currentRoute: previousRoute,
-        tabHistories: newTabHistories,
-      );
-
-      return previousRoute;
-    }
-
-    return null;
-  }
-
 
   /// 홈으로 이동 (다른 탭 히스토리는 유지)
   void navigateToHome() {
-    final newTabHistories = Map<NavigationTab, List<String>>.from(state.tabHistories);
-    newTabHistories[NavigationTab.home] = [AppConstants.homeRoute];
+    final newTabHistories =
+        Map<NavigationTab, List<NavigationEntry>>.from(state.tabHistories);
+    newTabHistories[NavigationTab.home] = [
+      NavigationEntry(route: AppConstants.homeRoute),
+    ];
 
     state = state.copyWith(
       currentRoute: AppConstants.homeRoute,
@@ -312,7 +380,8 @@ class NavigationController extends StateNotifier<NavigationState> {
 
     developer.log('Tab Histories:', name: 'NavigationController');
     state.tabHistories.forEach((tab, history) {
-      developer.log('  ${tab.name}: $history', name: 'NavigationController');
+      final routes = history.map((entry) => entry.route).toList();
+      developer.log('  ${tab.name}: $routes', name: 'NavigationController');
     });
   }
 }

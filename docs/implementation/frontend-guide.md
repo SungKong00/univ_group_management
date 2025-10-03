@@ -144,6 +144,10 @@ final breadcrumb = ref.watch(
 );
 ```
 
+- `NavigationController`는 `NavigationEntry` 구조체로 탭별 히스토리를 유지한다.
+  - 라우트와 복원용 컨텍스트(Map)를 함께 기록해 이후 화면 복구가 가능하다.
+  - 워크스페이스 탭에서 루트(그룹 미선택)로 되돌아오면 홈으로 이동해 빈 화면을 피한다.
+
 ## 상태 관리 패턴
 
 ### Riverpod 활용
