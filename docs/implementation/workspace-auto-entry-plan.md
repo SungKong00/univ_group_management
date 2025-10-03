@@ -1,7 +1,7 @@
 # 워크스페이스 자동 진입 시스템 구현 계획
 
 > **생성일**: 2025-10-04
-> **상태**: Phase 1 백엔드 API 구현 완료 / Phase 2 프론트엔드 개발 대기
+> **상태**: Phase 1~4 완료 / Phase 5 UI 상호작용 최적화 완료
 > **우선순위**: 중간
 
 ## 문제 정의
@@ -76,37 +76,30 @@
 
 ```dart
 class GroupService {
-  final DioClient _client;
+  static final GroupService _instance = GroupService._internal();
+  factory GroupService() => _instance;
+  GroupService._internal();
 
-  GroupService(this._client);
+  final DioClient _dioClient = DioClient();
 
-  /// 사용자가 속한 모든 그룹 조회
   Future<List<GroupMembership>> getMyGroups() async {
-    try {
-      final response = await _client.get('/me/groups');
-      final apiResponse = ApiResponse.fromJson(
-        response.data,
-        (json) => (json as List)
-            .map((item) => GroupMembership.fromJson(item))
-            .toList(),
-      );
-      return apiResponse.data ?? [];
-    } catch (e) {
-      developer.log('Failed to fetch my groups: $e');
-      return [];
-    }
+    final response = await _dioClient.get<Map<String, dynamic>>('/me/groups');
+    if (response.data == null) return [];
+
+    final apiResponse = ApiResponse.fromJson(
+      response.data!,
+      (json) => (json as List<dynamic>)
+          .map((item) => GroupMembership.fromJson(item as Map<String, dynamic>))
+          .toList(),
+    );
+    return apiResponse.success ? (apiResponse.data ?? []) : [];
   }
 
-  /// 최상위 그룹 선택
   GroupMembership? getTopLevelGroup(List<GroupMembership> groups) {
     if (groups.isEmpty) return null;
-
-    // level이 가장 작은 그룹들 필터링
     final minLevel = groups.map((g) => g.level).reduce((a, b) => a < b ? a : b);
-    final topLevelGroups = groups.where((g) => g.level == minLevel).toList();
-
-    // id가 가장 작은 그룹 선택
-    topLevelGroups.sort((a, b) => a.id.compareTo(b.id));
+    final topLevelGroups = groups.where((g) => g.level == minLevel).toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
     return topLevelGroups.first;
   }
 }
@@ -166,7 +159,7 @@ void _handleItemTap(BuildContext context, WidgetRef ref, NavigationConfig config
     // TODO: 로딩 인디케이터 추가
 
     // 최상위 그룹 조회
-    final groupService = GroupService(DioClient());
+    final groupService = GroupService();
     final myGroups = await groupService.getMyGroups();
     final topGroup = groupService.getTopLevelGroup(myGroups);
 
@@ -215,7 +208,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   /// 워크스페이스 진입 (그룹 ID 자동 감지)
   Future<void> enterWorkspaceAuto() async {
-    final groupService = GroupService(DioClient());
+    final groupService = GroupService();
     final myGroups = await groupService.getMyGroups();
     final topGroup = groupService.getTopLevelGroup(myGroups);
 
@@ -226,20 +219,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 }
 ```
 
-### 3. 라우팅 개선
+### 3. 라우팅 & 레이아웃 애니메이션
 
-**현재 구조**:
-```
-/workspace (groupId 없음, 빈 상태)
-/workspace/:groupId (특정 그룹 워크스페이스)
-/workspace/:groupId/channel/:channelId (특정 채널)
-```
+워크스페이스 진입 시 글로벌 네비게이션(사이드바/상단 바)은 그대로 유지하고 콘텐츠 영역만 전환되도록 전환 방식을 조정했다.
 
-**개선 후**:
-- `/workspace` 접근 시 자동으로 `/workspace/:topGroupId`로 리다이렉트
-- 또는 `/workspace` 자체에서 최상위 그룹을 로드하여 표시
-
-#### 3.1. 라우터 리다이렉트 추가
+#### 3.1. 라우터 전환 제거
 
 **파일**: `lib/core/router/app_router.dart`
 
@@ -247,23 +231,85 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 GoRoute(
   path: AppConstants.workspaceRoute,
   name: 'workspace',
-  redirect: (context, state) async {
-    // 워크스페이스 루트 경로 접근 시 최상위 그룹으로 리다이렉트
-    final groupService = GroupService(DioClient());
-    final myGroups = await groupService.getMyGroups();
-    final topGroup = groupService.getTopLevelGroup(myGroups);
-
-    if (topGroup != null) {
-      return '/workspace/${topGroup.id}';
-    }
-    return null; // 소속 그룹 없으면 그대로 진행
-  },
-  builder: (context, state) => const WorkspacePage(),
+  pageBuilder: (context, state) => const NoTransitionPage(
+    child: WorkspacePage(),
+  ),
   routes: [
-    // 하위 라우트...
+    GoRoute(
+      path: '/:groupId',
+      name: 'group-workspace',
+      pageBuilder: (context, state) {
+        final groupId = state.pathParameters['groupId']!;
+        return NoTransitionPage(
+          child: WorkspacePage(groupId: groupId),
+        );
+      },
+      routes: [
+        GoRoute(
+          path: '/channel/:channelId',
+          name: 'channel',
+          pageBuilder: (context, state) {
+            final groupId = state.pathParameters['groupId']!;
+            final channelId = state.pathParameters['channelId']!;
+            return NoTransitionPage(
+              child: WorkspacePage(
+                groupId: groupId,
+                channelId: channelId,
+              ),
+            );
+          },
+        ),
+      ],
+    ),
   ],
 ),
 ```
+
+- 머티리얼 기본 전환(오른쪽→왼쪽 슬라이드)을 제거해 글로벌 네비게이션이 화면 전체와 함께 이동하는 문제를 해결했다.
+- 워크스페이스 내에서는 ChannelNavigation 위젯의 자체 애니메이션만 재생된다.
+
+#### 3.2. 데스크톱 레이아웃 여백 예약
+
+**파일**: `lib/presentation/pages/workspace/workspace_page.dart`
+
+```dart
+Widget _buildDesktopWorkspace(WorkspaceState workspaceState) {
+  final showChannelNavigation = workspaceState.isInWorkspace;
+  final showComments = workspaceState.isCommentsVisible;
+
+  return Stack(
+    children: [
+      Positioned.fill(
+        left: showChannelNavigation ? AppConstants.sidebarWidth : 0,
+        right: showComments ? _commentsSidebarWidth : 0,
+        child: _buildMainContent(workspaceState),
+      ),
+      if (showChannelNavigation)
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          child: ChannelNavigation(
+            channels: workspaceState.channels,
+            selectedChannelId: workspaceState.selectedChannelId,
+            hasAnyGroupPermission: workspaceState.hasAnyGroupPermission,
+            unreadCounts: workspaceState.unreadCounts,
+          ),
+        ),
+      if (showComments)
+        Positioned(
+          right: 0,
+          top: 0,
+          bottom: 0,
+          child: _buildCommentsSidebar(workspaceState),
+        ),
+    ],
+  );
+}
+```
+
+- 채널/댓글 사이드바 폭(256px/300px)을 선점해 콘텐츠가 갑자기 밀리는 현상을 방지했다.
+- ChannelNavigation의 슬라이드 인 애니메이션이 글로벌 사이드바 축소와 동시에 재생되도록 40ms 지연을 적용했다.
 
 ## 구현 순서
 
@@ -293,6 +339,11 @@ GoRoute(
 2. ✅ Toss 디자인 4대 원칙 적용
 3. ✅ "그룹 탐색하기" 버튼으로 /home 이동
 4. ✅ API 실패 시 graceful degradation
+
+### Phase 5: UI 상호작용 최적화 ✅ 완료 (2025-10-05)
+1. ✅ 워크스페이스 라우트를 `NoTransitionPage`로 전환 (app_router.dart:47-76)
+2. ✅ 데스크톱 WorkspacePage를 `Stack` 기반 레이아웃으로 재구성 (workspace_page.dart:68-109)
+3. ✅ ChannelNavigation 등장 타이밍을 글로벌 사이드바 축소와 동기화 (channel_navigation.dart:67-160)
 
 ## 엣지 케이스 처리
 
@@ -343,7 +394,7 @@ Widget _buildNoGroupsState() {
 ```dart
 // Riverpod Provider로 캐싱
 final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
-  final groupService = GroupService(DioClient());
+  final groupService = GroupService();
   return await groupService.getMyGroups();
 });
 
@@ -362,7 +413,7 @@ final topGroupProvider = Provider<GroupMembership?>((ref) {
   final myGroupsAsync = ref.watch(myGroupsProvider);
   return myGroupsAsync.maybeWhen(
     data: (groups) {
-      final groupService = GroupService(DioClient());
+      final groupService = GroupService();
       return groupService.getTopLevelGroup(groups);
     },
     orElse: () => null,

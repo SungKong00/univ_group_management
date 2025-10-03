@@ -45,6 +45,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
   ProviderSubscription<NavigationState>? _navigationSubscription;
   bool _hasPlayedEntrance = false;
   int _entranceRequestId = 0;
+  static const Duration _entranceDelay = Duration(milliseconds: 40);
 
   @override
   void initState() {
@@ -149,9 +150,9 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
       _animationController.reset();
     }
 
-    // 글로벌 네비게이션 축소 애니메이션(AppConstants.animationDuration) 이후에 진입한다.
+    // 글로벌 네비게이션 축소와 거의 동시에 진입하도록 짧은 지연을 둔다.
     final int requestId = ++_entranceRequestId;
-    Future.delayed(AppConstants.animationDuration, () {
+    Future.delayed(_entranceDelay, () {
       if (!mounted || _hasPlayedEntrance || requestId != _entranceRequestId) {
         return;
       }
