@@ -173,6 +173,23 @@ class ContentService(
         return channelRepository.findByWorkspace_Id(workspaceId).map { toChannelResponse(it) }
     }
 
+    fun getChannelsByGroup(
+        groupId: Long,
+        requesterId: Long,
+    ): List<ChannelResponse> {
+        // 1. 그룹 존재 확인
+        val group = groupRepository.findById(groupId)
+            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+
+        // 2. 사용자 멤버십 확인
+        val member = groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
+            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+
+        // 3. 채널 목록 직접 조회 (workspace 테이블 우회)
+        // Note: 현재 구조에서는 채널이 group에 직접 연결되어 있음
+        return channelRepository.findByGroup_Id(groupId).map { toChannelResponse(it) }
+    }
+
     @Transactional
     fun createChannel(
         workspaceId: Long,

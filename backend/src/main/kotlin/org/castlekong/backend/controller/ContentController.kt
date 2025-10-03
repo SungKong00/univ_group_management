@@ -74,6 +74,17 @@ class ContentController(
         return ApiResponse.success(response)
     }
 
+    @GetMapping("/groups/{groupId}/channels")
+    @PreAuthorize("isAuthenticated()")
+    fun getChannelsByGroup(
+        @PathVariable groupId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<ChannelResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getChannelsByGroup(groupId, user.id)
+        return ApiResponse.success(response)
+    }
+
     @PostMapping("/workspaces/{workspaceId}/channels")
     @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)

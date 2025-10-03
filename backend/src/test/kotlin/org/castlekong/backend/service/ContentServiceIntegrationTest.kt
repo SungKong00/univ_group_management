@@ -206,6 +206,30 @@ class ContentServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("그룹 ID로 채널 목록을 조회할 수 있다")
+    fun getChannelsByGroup_Success() {
+        val workspace = ensureDefaultWorkspace()
+        contentService.createChannel(workspace.id, CreateChannelRequest(name = "공지사항"), owner.id!!)
+        contentService.createChannel(workspace.id, CreateChannelRequest(name = "자유게시판"), owner.id!!)
+
+        val channels = contentService.getChannelsByGroup(group.id!!, member.id!!)
+
+        assertThat(channels).hasSize(2)
+        assertThat(channels.map { it.name }).contains("공지사항", "자유게시판")
+    }
+
+    @Test
+    @DisplayName("그룹 채널 목록은 멤버가 아닌 사용자에게 차단된다")
+    fun getChannelsByGroup_ForbiddenForNonMember() {
+        val workspace = ensureDefaultWorkspace()
+        contentService.createChannel(workspace.id, CreateChannelRequest(name = "정보"), owner.id!!)
+
+        assertThatThrownBy { contentService.getChannelsByGroup(group.id!!, outsider.id!!) }
+            .isInstanceOf(BusinessException::class.java)
+            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FORBIDDEN)
+    }
+
+    @Test
     @DisplayName("멤버는 채널에 게시글을 작성할 수 있다 (권한 부여 후)")
     fun createPost_Success() {
         val channel = createDefaultChannel()
