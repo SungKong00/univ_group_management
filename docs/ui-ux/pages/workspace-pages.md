@@ -9,7 +9,7 @@
 **채널 네비게이션 시스템**
 - 채널 목록 API 연동 (`/workspaces/{workspaceId}/channels`)
 - 멤버십 권한 확인 API 연동 (`/groups/{groupId}/members/me`)
-- 슬라이드 애니메이션 (160ms, 왼쪽→오른쪽, 40ms 지연 / 글로벌 사이드바 축소와 동기화)
+- 슬라이드 애니메이션 (160ms, 왼쪽→오른쪽, 지연 없음 / 글로벌 사이드바 축소와 동시 재생)
 - 읽지 않음 배지 표시 (더미 데이터)
 - 그룹 홈 / 캘린더 / 채널 뷰 전환
 - 관리자 페이지 버튼 (조건부: hasAnyGroupPermission)
@@ -32,7 +32,7 @@
 - `/frontend/lib/presentation/pages/workspace/workspace_page.dart` - 워크스페이스 페이지
 
 **레이아웃/전환 개선 (2025-10-05)**
-- 글로벌 라우팅 전환 제거(`NoTransitionPage`)로 상단/좌측 네비게이션 고정 유지
+- 글로벌 라우팅 전환을 `NoTransitionPage`로 통일해 상단/좌측 네비게이션 고정 유지
 - 데스크톱 워크스페이스 콘텐츠 영역을 `Stack`+`Positioned`로 재구성해 채널/댓글 사이드바 폭 선점
 
 ### 향후 개선 사항

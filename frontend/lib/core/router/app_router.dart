@@ -42,7 +42,9 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: AppConstants.homeRoute,
           name: 'home',
-          builder: (context, state) => const HomePage(),
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: HomePage(),
+          ),
         ),
         GoRoute(
           path: AppConstants.workspaceRoute,
@@ -82,17 +84,23 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: AppConstants.calendarRoute,
           name: 'calendar',
-          builder: (context, state) => const CalendarPage(),
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: CalendarPage(),
+          ),
         ),
         GoRoute(
           path: AppConstants.activityRoute,
           name: 'activity',
-          builder: (context, state) => const ActivityPage(),
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: ActivityPage(),
+          ),
         ),
         GoRoute(
           path: AppConstants.profileRoute,
           name: 'profile',
-          builder: (context, state) => const ProfilePage(),
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: ProfilePage(),
+          ),
         ),
       ],
     ),

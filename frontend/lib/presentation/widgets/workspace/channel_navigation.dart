@@ -45,7 +45,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
   ProviderSubscription<NavigationState>? _navigationSubscription;
   bool _hasPlayedEntrance = false;
   int _entranceRequestId = 0;
-  static const Duration _entranceDelay = Duration(milliseconds: 40);
+  static const Duration _entranceDelay = Duration.zero;
 
   @override
   void initState() {
@@ -65,7 +65,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
       ),
     );
 
-    // 워크스페이스 진입 시 글로벌 네비게이션 축소가 끝난 뒤에 등장하도록 대기한다.
+    // 워크스페이스 진입 시 글로벌 네비게이션 축소와 동시에 등장하도록 대기한다.
     _navigationSubscription = ref.listenManual<NavigationState>(
       navigationControllerProvider,
       _handleNavigationChange,

@@ -309,7 +309,7 @@ Widget _buildDesktopWorkspace(WorkspaceState workspaceState) {
 ```
 
 - 채널/댓글 사이드바 폭(256px/300px)을 선점해 콘텐츠가 갑자기 밀리는 현상을 방지했다.
-- ChannelNavigation의 슬라이드 인 애니메이션이 글로벌 사이드바 축소와 동시에 재생되도록 40ms 지연을 적용했다.
+- ChannelNavigation의 슬라이드 인 애니메이션을 지연 없이 실행해 글로벌 사이드바 축소와 동시에 재생되도록 맞췄다.
 
 ## 구현 순서
 
@@ -341,7 +341,7 @@ Widget _buildDesktopWorkspace(WorkspaceState workspaceState) {
 4. ✅ API 실패 시 graceful degradation
 
 ### Phase 5: UI 상호작용 최적화 ✅ 완료 (2025-10-05)
-1. ✅ 워크스페이스 라우트를 `NoTransitionPage`로 전환 (app_router.dart:47-76)
+1. ✅ ShellRoute 하위 페이지를 `NoTransitionPage`로 통일해 전환 애니메이션 일관성 확보 (app_router.dart:43-95)
 2. ✅ 데스크톱 WorkspacePage를 `Stack` 기반 레이아웃으로 재구성 (workspace_page.dart:68-109)
 3. ✅ ChannelNavigation 등장 타이밍을 글로벌 사이드바 축소와 동기화 (channel_navigation.dart:67-160)
 
