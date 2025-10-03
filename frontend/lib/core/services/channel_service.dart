@@ -13,15 +13,15 @@ class ChannelService {
 
   final DioClient _dioClient = DioClient();
 
-  /// Get channels for a workspace
+  /// Get channels for a group
   ///
-  /// GET /workspaces/{workspaceId}/channels
-  Future<List<Channel>> getChannels(int workspaceId) async {
+  /// GET /groups/{groupId}/channels
+  Future<List<Channel>> getChannels(int groupId) async {
     try {
-      developer.log('Fetching channels for workspace: $workspaceId', name: 'ChannelService');
+      developer.log('Fetching channels for group: $groupId', name: 'ChannelService');
 
       final response = await _dioClient.get<Map<String, dynamic>>(
-        '/workspaces/$workspaceId/channels',
+        '/groups/$groupId/channels',
       );
 
       if (response.data != null) {

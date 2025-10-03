@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:developer' as developer;
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
@@ -10,6 +11,7 @@ import '../../../core/navigation/navigation_utils.dart';
 import '../../../core/navigation/back_button_handler.dart';
 import '../../../core/services/group_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/workspace_state_provider.dart';
 import '../user/user_info_card.dart';
 
 // 기존 ConsumerWidget -> 애니메이션(AnimatedSize 등) 제어 위해 Stateful 로 변경
@@ -243,16 +245,57 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
     if (config.route == AppConstants.workspaceRoute) {
       navigationController.enterWorkspace();
 
-      // Fetch top-level group and navigate
-      final groupService = GroupService();
-      final myGroups = await groupService.getMyGroups();
-      final topGroup = groupService.getTopLevelGroup(myGroups);
+      try {
+        developer.log('Workspace tab clicked', name: 'SidebarNav');
 
-      if (topGroup != null && context.mounted) {
-        context.go('/workspace/${topGroup.id}');
-      } else if (context.mounted) {
-        // No groups available, go to default workspace page
-        NavigationHelper.navigateWithSync(context, ref, config.route);
+        // Set loading state
+        ref.read(workspaceStateProvider.notifier).setLoadingState(true);
+
+        developer.log('Fetching user groups...', name: 'SidebarNav');
+
+        // Fetch top-level group and navigate
+        final groupService = GroupService();
+        final myGroups = await groupService.getMyGroups();
+
+        developer.log('Groups fetched: ${myGroups.length}', name: 'SidebarNav');
+        final topGroup = groupService.getTopLevelGroup(myGroups);
+
+        if (topGroup != null && context.mounted) {
+          developer.log('Navigating to workspace/${topGroup.id}', name: 'SidebarNav');
+          ref.read(workspaceStateProvider.notifier).clearError();
+          context.go('/workspace/${topGroup.id}');
+        } else if (context.mounted) {
+          developer.log('No groups available', name: 'SidebarNav');
+          ref.read(workspaceStateProvider.notifier).setError('소속된 그룹이 없습니다');
+          NavigationHelper.navigateWithSync(context, ref, config.route);
+        }
+      } catch (e, stackTrace) {
+        developer.log(
+          'Error loading workspace: $e',
+          name: 'SidebarNav',
+          error: e,
+          stackTrace: stackTrace,
+          level: 900,
+        );
+
+        if (context.mounted) {
+          ref.read(workspaceStateProvider.notifier).setError('워크스페이스를 불러올 수 없습니다');
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('워크스페이스를 불러오는 중 오류가 발생했습니다'),
+              backgroundColor: AppColors.error,
+              action: SnackBarAction(
+                label: '다시 시도',
+                textColor: Colors.white,
+                onPressed: () => _handleItemTap(context, ref, config),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } finally {
+        ref.read(workspaceStateProvider.notifier).setLoadingState(false);
       }
     } else {
       navigationController.exitWorkspace();

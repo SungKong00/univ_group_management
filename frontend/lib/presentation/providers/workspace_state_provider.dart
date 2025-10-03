@@ -22,6 +22,8 @@ class WorkspaceState extends Equatable {
     this.currentView = WorkspaceView.channel,
     this.hasAnyGroupPermission = false,
     this.isLoadingChannels = false,
+    this.isLoadingWorkspace = false,
+    this.errorMessage,
   });
 
   final String? selectedGroupId;
@@ -34,6 +36,8 @@ class WorkspaceState extends Equatable {
   final WorkspaceView currentView;
   final bool hasAnyGroupPermission;
   final bool isLoadingChannels;
+  final bool isLoadingWorkspace;
+  final String? errorMessage;
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -46,6 +50,8 @@ class WorkspaceState extends Equatable {
     WorkspaceView? currentView,
     bool? hasAnyGroupPermission,
     bool? isLoadingChannels,
+    bool? isLoadingWorkspace,
+    String? errorMessage,
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
@@ -58,6 +64,8 @@ class WorkspaceState extends Equatable {
       currentView: currentView ?? this.currentView,
       hasAnyGroupPermission: hasAnyGroupPermission ?? this.hasAnyGroupPermission,
       isLoadingChannels: isLoadingChannels ?? this.isLoadingChannels,
+      isLoadingWorkspace: isLoadingWorkspace ?? this.isLoadingWorkspace,
+      errorMessage: errorMessage,
     );
   }
 
@@ -77,6 +85,8 @@ class WorkspaceState extends Equatable {
         currentView,
         hasAnyGroupPermission,
         isLoadingChannels,
+        isLoadingWorkspace,
+        errorMessage,
       ];
 }
 
@@ -111,8 +121,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
       // Fetch channels and membership in parallel
       final results = await Future.wait([
-        // Get workspace ID first (for now, assume workspaceId = groupId)
-        // TODO: Get actual workspace ID from group info
+        // Fetch channels directly by groupId
         _channelService.getChannels(groupIdInt),
         _channelService.getMyMembership(groupIdInt),
       ]);
@@ -206,6 +215,24 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = state.copyWith(
       workspaceContext: Map.from(state.workspaceContext)..addAll(context),
     );
+  }
+
+  /// Set loading state for workspace initialization
+  void setLoadingState(bool isLoading) {
+    state = state.copyWith(isLoadingWorkspace: isLoading);
+  }
+
+  /// Set error message
+  void setError(String message) {
+    state = state.copyWith(
+      errorMessage: message,
+      isLoadingWorkspace: false,
+    );
+  }
+
+  /// Clear error message
+  void clearError() {
+    state = state.copyWith(errorMessage: null);
   }
 
   // 반응형 전환을 위한 상태 복원 메서드

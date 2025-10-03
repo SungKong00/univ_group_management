@@ -131,6 +131,16 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
 
   Widget _buildMainContent(WorkspaceState workspaceState) {
+    // Show loading state
+    if (workspaceState.isLoadingWorkspace) {
+      return _buildLoadingState();
+    }
+
+    // Show error state
+    if (workspaceState.errorMessage != null) {
+      return _buildErrorState(workspaceState.errorMessage!);
+    }
+
     if (!workspaceState.isInWorkspace) {
       return _buildEmptyState();
     }
@@ -383,5 +393,119 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         ],
       ),
     );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.brand),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            '워크스페이스를 불러오는 중...',
+            style: AppTheme.bodyLarge.copyWith(
+              color: AppColors.neutral700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String errorMessage) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppColors.error,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              errorMessage,
+              style: AppTheme.displaySmall.copyWith(
+                color: AppColors.neutral900,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '문제가 지속되면 관리자에게 문의하세요',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppColors.neutral600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () => _retryLoadWorkspace(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.action,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(120, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    '다시 시도',
+                    style: AppTheme.titleMedium.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                OutlinedButton(
+                  onPressed: () => context.go(AppConstants.homeRoute),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.action,
+                    side: const BorderSide(color: AppColors.action),
+                    minimumSize: const Size(120, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    '홈으로',
+                    style: AppTheme.titleMedium.copyWith(
+                      color: AppColors.action,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _retryLoadWorkspace() {
+    // Clear error and try again
+    ref.read(workspaceStateProvider.notifier).clearError();
+
+    // If we have a groupId, re-initialize workspace
+    if (widget.groupId != null) {
+      _initializeWorkspace();
+    } else {
+      // Otherwise, just trigger workspace navigation again
+      // by navigating back and forth (simulating a fresh workspace tab click)
+      context.go(AppConstants.homeRoute);
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          context.go(AppConstants.workspaceRoute);
+        }
+      });
+    }
   }
 }
