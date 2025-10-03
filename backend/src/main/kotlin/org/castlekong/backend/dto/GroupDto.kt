@@ -194,3 +194,16 @@ data class AdminStatsResponse(
     val roleCount: Int,
     val channelCount: Int,
 )
+
+// 내 그룹 목록 조회용 DTO (워크스페이스 자동 진입용)
+data class MyGroupResponse(
+    val id: Long,
+    val name: String,
+    val type: GroupType,
+    val level: Int,  // 계층 레벨 (0=최상위, 1=하위, ...)
+    val parentId: Long?,
+    val role: String,  // OWNER, ADVISOR, MEMBER
+    val permissions: Set<String>,  // GroupPermission 목록
+    val profileImageUrl: String? = null,
+    val visibility: GroupVisibility,
+)

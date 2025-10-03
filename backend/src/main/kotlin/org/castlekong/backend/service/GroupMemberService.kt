@@ -567,4 +567,37 @@ class GroupMemberService(
             "MEMBER" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
             else -> emptySet()
         }
+
+    // === 내 그룹 목록 조회 (워크스페이스 자동 진입용) ===
+
+    fun getMyGroups(userId: Long): List<MyGroupResponse> {
+        val memberships = groupMemberRepository.findByUserIdWithDetails(userId)
+
+        return memberships.map { membership ->
+            val group = membership.group
+            val level = calculateGroupLevel(group)
+
+            MyGroupResponse(
+                id = group.id,
+                name = group.name,
+                type = group.groupType,
+                level = level,
+                parentId = group.parent?.id,
+                role = membership.role.name,
+                permissions = membership.role.permissions.map { it.name }.toSet(),
+                profileImageUrl = group.profileImageUrl,
+                visibility = group.visibility
+            )
+        }.sortedWith(compareBy({ it.level }, { it.id }))
+    }
+
+    private fun calculateGroupLevel(group: Group): Int {
+        var level = 0
+        var current: Group? = group
+        while (current?.parent != null) {
+            level++
+            current = current.parent
+        }
+        return level
+    }
 }

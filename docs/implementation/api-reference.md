@@ -428,6 +428,63 @@ GET /api/recruitments/{id}/stats
 
 -   **Me API (`/api`)**
     -   `GET /me`: 현재 로그인한 사용자 정보 조회
+    -   `GET /me/groups`: 내가 속한 모든 그룹 목록 조회 (계층 레벨순 정렬)
+
+### Me API 상세
+
+#### GET /api/me/groups
+현재 사용자가 속한 모든 그룹을 계층 레벨 순으로 조회합니다.
+
+-   **권한**: `isAuthenticated()`
+-   **사용 사례**: 워크스페이스 자동 진입 시 최상위 그룹 선택
+-   **정렬**: level 오름차순 (0=최상위) → id 오름차순
+-   **응답**: `ApiResponse<List<MyGroupResponse>>`
+
+**응답 구조**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "한신대학교",
+      "type": "UNIVERSITY",
+      "level": 0,
+      "parentId": null,
+      "role": "MEMBER",
+      "permissions": ["CHANNEL_READ", "POST_READ"],
+      "profileImageUrl": null,
+      "visibility": "PUBLIC"
+    },
+    {
+      "id": 2,
+      "name": "AI/SW학부",
+      "type": "DEPARTMENT",
+      "level": 2,
+      "parentId": 1,
+      "role": "MEMBER",
+      "permissions": ["CHANNEL_READ", "POST_READ", "POST_WRITE"],
+      "profileImageUrl": null,
+      "visibility": "PUBLIC"
+    }
+  ],
+  "error": null
+}
+```
+
+**프론트엔드 최상위 그룹 선택 로직**:
+```dart
+// 1. level이 가장 작은 그룹들 필터링
+final minLevel = groups.map((g) => g.level).reduce((a, b) => a < b ? a : b);
+final topLevelGroups = groups.where((g) => g.level == minLevel).toList();
+
+// 2. id가 가장 작은 그룹 선택 (가장 먼저 가입한 그룹)
+topLevelGroups.sort((a, b) => a.id.compareTo(b.id));
+final topGroup = topLevelGroups.first;
+
+// 3. /workspace/{topGroup.id}로 자동 진입
+context.go('/workspace/${topGroup.id}');
+```
 
 -   **Role API (`/api/roles`)**
     -   `POST /apply`: 역할(교수) 신청

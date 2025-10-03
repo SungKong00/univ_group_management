@@ -80,6 +80,7 @@
 - **프론트엔드 UI**: 워크스페이스 화면 개발 중
 - **컨텐츠 시스템**: 게시글/댓글 프론트엔드
 - **채널 권한 설정 UI**: Permission-Centric 매트릭스 UX 반영 작업 예정
+- **워크스페이스 자동 진입**: 백엔드 API 필요 ([구현 계획](docs/implementation/workspace-auto-entry-plan.md))
 
 ### ❌ 미구현
 - **모집 시스템 프론트엔드**: 그룹 모집 게시판 UI

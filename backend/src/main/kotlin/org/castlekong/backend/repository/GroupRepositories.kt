@@ -124,6 +124,17 @@ interface GroupMemberRepository : JpaRepository<GroupMember, Long> {
 
     fun findByUserId(userId: Long): List<GroupMember>
 
+    // 내 그룹 목록 조회 (워크스페이스 자동 진입용) - JOIN FETCH 최적화
+    @Query("""
+        SELECT gm FROM GroupMember gm
+        JOIN FETCH gm.group g
+        JOIN FETCH gm.role r
+        LEFT JOIN FETCH r.permissions
+        WHERE gm.user.id = :userId
+        ORDER BY g.id ASC
+    """)
+    fun findByUserIdWithDetails(@Param("userId") userId: Long): List<GroupMember>
+
     // 지도교수 관련 메소드 (특정 권한을 가진 멤버 조회)
     @Query("SELECT gm FROM GroupMember gm WHERE gm.group.id = :groupId AND gm.role.name = 'ADVISOR'")
     fun findAdvisorsByGroupId(groupId: Long): List<GroupMember>
