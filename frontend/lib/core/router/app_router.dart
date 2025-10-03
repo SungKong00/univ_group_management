@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/pages/auth/login_page.dart';
 import '../../presentation/pages/auth/profile_setup_page.dart';
@@ -46,25 +47,31 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: AppConstants.workspaceRoute,
           name: 'workspace',
-          builder: (context, state) => const WorkspacePage(),
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: WorkspacePage(),
+          ),
           routes: [
             GoRoute(
               path: '/:groupId',
               name: 'group-workspace',
-              builder: (context, state) {
+              pageBuilder: (context, state) {
                 final groupId = state.pathParameters['groupId']!;
-                return WorkspacePage(groupId: groupId);
+                return NoTransitionPage(
+                  child: WorkspacePage(groupId: groupId),
+                );
               },
               routes: [
                 GoRoute(
                   path: '/channel/:channelId',
                   name: 'channel',
-                  builder: (context, state) {
+                  pageBuilder: (context, state) {
                     final groupId = state.pathParameters['groupId']!;
                     final channelId = state.pathParameters['channelId']!;
-                    return WorkspacePage(
-                      groupId: groupId,
-                      channelId: channelId,
+                    return NoTransitionPage(
+                      child: WorkspacePage(
+                        groupId: groupId,
+                        channelId: channelId,
+                      ),
                     );
                   },
                 ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/channel_models.dart';
+import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../providers/workspace_state_provider.dart';
 import 'channel_item.dart';
@@ -14,7 +16,8 @@ import 'channel_item.dart';
 /// - Middle section: Channel list
 /// - Bottom section: Admin page button (conditional)
 ///
-/// Features slide animation from left (-256px) to visible.
+/// Features a deferred slide-in animation that begins once the global sidebar has
+/// collapsed, creating a seamless hand-off between the two navigation rails.
 class ChannelNavigation extends ConsumerStatefulWidget {
   final List<Channel> channels;
   final String? selectedChannelId;
@@ -38,7 +41,10 @@ class ChannelNavigation extends ConsumerStatefulWidget {
 class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  late Animation<Offset> _slideAnimation;
+  late Animation<double> _entranceOffset;
+  ProviderSubscription<NavigationState>? _navigationSubscription;
+  bool _hasPlayedEntrance = false;
+  int _entranceRequestId = 0;
 
   @override
   void initState() {
@@ -48,17 +54,25 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
       vsync: this,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(-1.0, 0.0), // Start from left (-256px)
-      end: Offset.zero, // End at normal position
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: AppMotion.easing,
-    ));
+    _entranceOffset = Tween<double>(
+      begin: -AppConstants.sidebarWidth.toDouble(),
+      end: 0,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: AppMotion.easing,
+      ),
+    );
 
-    // Start animation when widget is first built
-    if (widget.isVisible) {
-      _animationController.forward();
+    // 워크스페이스 진입 시 글로벌 네비게이션 축소가 끝난 뒤에 등장하도록 대기한다.
+    _navigationSubscription = ref.listenManual<NavigationState>(
+      navigationControllerProvider,
+      _handleNavigationChange,
+    );
+
+    final navigationState = ref.read(navigationControllerProvider);
+    if (widget.isVisible && navigationState.shouldCollapseSidebar) {
+      _scheduleEntrance();
     }
   }
 
@@ -67,23 +81,31 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
     super.didUpdateWidget(oldWidget);
     if (widget.isVisible != oldWidget.isVisible) {
       if (widget.isVisible) {
-        _animationController.forward();
+        _scheduleEntrance(reset: true);
       } else {
         _animationController.reverse();
+        _hasPlayedEntrance = false;
       }
     }
   }
 
   @override
   void dispose() {
+    _navigationSubscription?.close();
     _animationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return SlideTransition(
-      position: _slideAnimation,
+    return AnimatedBuilder(
+      animation: _entranceOffset,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(_entranceOffset.value, 0),
+          child: child,
+        );
+      },
       child: Container(
         width: AppConstants.sidebarWidth,
         decoration: const BoxDecoration(
@@ -105,6 +127,37 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
         ),
       ),
     );
+  }
+
+  void _handleNavigationChange(NavigationState? previous, NavigationState next) {
+    if (!widget.isVisible) {
+      return;
+    }
+
+    if (next.shouldCollapseSidebar && !_hasPlayedEntrance) {
+      _scheduleEntrance();
+    }
+  }
+
+  void _scheduleEntrance({bool reset = false}) {
+    if (_hasPlayedEntrance && !reset) {
+      return;
+    }
+
+    if (reset) {
+      _hasPlayedEntrance = false;
+      _animationController.reset();
+    }
+
+    // 글로벌 네비게이션 축소 애니메이션(AppConstants.animationDuration) 이후에 진입한다.
+    final int requestId = ++_entranceRequestId;
+    Future.delayed(AppConstants.animationDuration, () {
+      if (!mounted || _hasPlayedEntrance || requestId != _entranceRequestId) {
+        return;
+      }
+      _animationController.forward();
+      _hasPlayedEntrance = true;
+    });
   }
 
   Widget _buildTopSection() {

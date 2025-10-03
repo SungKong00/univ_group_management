@@ -9,19 +9,27 @@
 **채널 네비게이션 시스템**
 - 채널 목록 API 연동 (`/workspaces/{workspaceId}/channels`)
 - 멤버십 권한 확인 API 연동 (`/groups/{groupId}/members/me`)
-- 슬라이드 애니메이션 (160ms, left → right)
+- 슬라이드 애니메이션 (160ms, 왼쪽→오른쪽, 50ms 지연)
 - 읽지 않음 배지 표시 (더미 데이터)
 - 그룹 홈 / 캘린더 / 채널 뷰 전환
 - 관리자 페이지 버튼 (조건부: hasAnyGroupPermission)
 
+**워크스페이스 자동 진입**
+- 최상위 그룹 자동 선택 (level 최소 → id 최소)
+- 소속 그룹 없을 시 빈 상태 UI 표시
+- "그룹 탐색하기" 버튼으로 /home 이동
+
 **구현 파일**
 - `/frontend/lib/core/models/channel_models.dart` - Channel, MembershipInfo 모델
+- `/frontend/lib/core/models/group_models.dart` - GroupMembership 모델
 - `/frontend/lib/core/services/channel_service.dart` - 채널 API 서비스
+- `/frontend/lib/core/services/group_service.dart` - 그룹 API 서비스
 - `/frontend/lib/presentation/widgets/workspace/channel_navigation.dart` - 채널 네비게이션
 - `/frontend/lib/presentation/widgets/workspace/channel_item.dart` - 채널 아이템
 - `/frontend/lib/presentation/widgets/workspace/unread_badge.dart` - 읽지 않음 배지
-- `/frontend/lib/presentation/providers/workspace_state_provider.dart` - 상태 관리 확장
-- `/frontend/lib/presentation/pages/workspace/workspace_page.dart` - 워크스페이스 페이지 통합
+- `/frontend/lib/presentation/widgets/navigation/sidebar_navigation.dart` - 워크스페이스 자동 진입
+- `/frontend/lib/presentation/providers/workspace_state_provider.dart` - 상태 관리
+- `/frontend/lib/presentation/pages/workspace/workspace_page.dart` - 워크스페이스 페이지
 
 ### 향후 개선 사항
 

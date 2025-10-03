@@ -66,27 +66,47 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   }
 
   Widget _buildDesktopWorkspace(WorkspaceState workspaceState) {
-    return Row(
-      children: [
-        // 채널 네비게이션 바 (좌측) - with slide animation
-        if (workspaceState.isInWorkspace)
-          ChannelNavigation(
-            channels: workspaceState.channels,
-            selectedChannelId: workspaceState.selectedChannelId,
-            hasAnyGroupPermission: workspaceState.hasAnyGroupPermission,
-            unreadCounts: workspaceState.unreadCounts,
-            isVisible: true,
-          ),
+    final bool showChannelNavigation = workspaceState.isInWorkspace;
+    final bool showComments = workspaceState.isCommentsVisible;
 
-        // 메인 콘텐츠 영역
-        Expanded(
-          child: _buildMainContent(workspaceState),
-        ),
+    return LayoutBuilder(
+      builder: (context, _) {
+        final double leftInset = showChannelNavigation ? AppConstants.sidebarWidth : 0;
+        final double rightInset = showComments ? _commentsSidebarWidth : 0;
 
-        // 댓글 사이드바 (우측)
-        if (workspaceState.isCommentsVisible)
-          _buildCommentsSidebar(workspaceState),
-      ],
+        return Stack(
+          children: [
+            // 메인 콘텐츠 영역은 좌측 채널 바와 우측 댓글 바 폭만큼 여백을 둔다.
+            Positioned.fill(
+              left: leftInset,
+              right: rightInset,
+              child: _buildMainContent(workspaceState),
+            ),
+
+            if (showChannelNavigation)
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: 0,
+                child: ChannelNavigation(
+                  channels: workspaceState.channels,
+                  selectedChannelId: workspaceState.selectedChannelId,
+                  hasAnyGroupPermission: workspaceState.hasAnyGroupPermission,
+                  unreadCounts: workspaceState.unreadCounts,
+                  isVisible: true,
+                ),
+              ),
+
+            if (showComments)
+              Positioned(
+                top: 0,
+                bottom: 0,
+                right: 0,
+                child: _buildCommentsSidebar(workspaceState),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -183,9 +203,11 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     );
   }
 
+  static const double _commentsSidebarWidth = 300;
+
   Widget _buildCommentsSidebar(WorkspaceState workspaceState) {
     return Container(
-      width: 300,
+      width: _commentsSidebarWidth,
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
