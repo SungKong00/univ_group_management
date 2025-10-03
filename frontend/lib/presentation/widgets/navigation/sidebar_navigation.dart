@@ -8,6 +8,7 @@ import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/navigation_config.dart';
 import '../../../core/navigation/navigation_utils.dart';
 import '../../../core/navigation/back_button_handler.dart';
+import '../../../core/services/group_service.dart';
 import '../../providers/auth_provider.dart';
 import '../user/user_info_card.dart';
 
@@ -236,19 +237,26 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
     );
   }
 
-  void _handleItemTap(BuildContext context, WidgetRef ref, NavigationConfig config) {
+  void _handleItemTap(BuildContext context, WidgetRef ref, NavigationConfig config) async {
     final navigationController = ref.read(navigationControllerProvider.notifier);
 
     if (config.route == AppConstants.workspaceRoute) {
       navigationController.enterWorkspace();
+
+      // Fetch top-level group and navigate
+      final groupService = GroupService();
+      final myGroups = await groupService.getMyGroups();
+      final topGroup = groupService.getTopLevelGroup(myGroups);
+
+      if (topGroup != null && context.mounted) {
+        context.go('/workspace/${topGroup.id}');
+      } else if (context.mounted) {
+        // No groups available, go to default workspace page
+        NavigationHelper.navigateWithSync(context, ref, config.route);
+      }
     } else {
       navigationController.exitWorkspace();
+      NavigationHelper.navigateWithSync(context, ref, config.route);
     }
-
-    NavigationHelper.navigateWithSync(
-      context,
-      ref,
-      config.route,
-    );
   }
 }

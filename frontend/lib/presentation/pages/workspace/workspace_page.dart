@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../widgets/workspace/channel_navigation.dart';
@@ -285,27 +287,51 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.workspaces_outlined,
-            size: 64,
-            color: AppColors.brand,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '워크스페이스',
-            style: AppTheme.displaySmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '그룹을 선택하여 워크스페이스에 참여하세요',
-            style: AppTheme.bodyLarge.copyWith(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.group_add_outlined,
+              size: 64,
               color: AppColors.neutral600,
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text(
+              '소속된 그룹이 없습니다',
+              style: AppTheme.displaySmall.copyWith(
+                color: AppColors.neutral900,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '홈에서 그룹을 탐색하고 가입해보세요',
+              style: AppTheme.bodyLarge.copyWith(
+                color: AppColors.neutral700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () => context.go(AppConstants.homeRoute),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.action,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(160, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                '그룹 탐색하기',
+                style: AppTheme.titleMedium.copyWith(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
