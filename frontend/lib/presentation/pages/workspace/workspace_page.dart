@@ -5,6 +5,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/models/channel_models.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../../providers/my_groups_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
@@ -192,13 +193,26 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   }
 
   Widget _buildChannelView(WorkspaceState workspaceState) {
+    // 선택된 채널 찾기
+    Channel? selectedChannel;
+    try {
+      selectedChannel = workspaceState.channels.firstWhere(
+        (channel) => channel.id.toString() == workspaceState.selectedChannelId,
+      );
+    } catch (e) {
+      selectedChannel = null;
+    }
+
+    // 채널을 찾지 못한 경우 fallback
+    final channelName = selectedChannel?.name ?? '채널을 불러올 수 없습니다';
+
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '채널: ${workspaceState.selectedChannelId}',
+            channelName,
             style: AppTheme.headlineMedium,
           ),
           const SizedBox(height: 16),
