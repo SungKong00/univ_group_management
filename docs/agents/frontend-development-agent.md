@@ -468,7 +468,7 @@ WCAG 2.1 AA 기준:
 
 - **프로젝트 컨텍스트**: [CLAUDE.md](../../CLAUDE.md)
 - **재사용성 가이드**: [docs/implementation/component-reusability-guide.md](../implementation/component-reusability-guide.md) ⭐ 필수
-- **디자인 시스템**: [docs/ui-ux/design-system.md](../ui-ux/design-system.md)
+- **디자인 시스템**: [docs/ui-ux/concepts/design-system.md](../ui-ux/concepts/design-system.md)
 - **개발 워크플로우**: [docs/workflows/development-flow.md](../workflows/development-flow.md)
 - **프론트엔드 가이드**: [docs/implementation/frontend-guide.md](../implementation/frontend-guide.md)
 

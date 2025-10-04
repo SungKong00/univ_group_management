@@ -123,6 +123,21 @@ CLAUDE.md (마스터 인덱스)
 - 동일한 내용이 여러 파일에 있으면 하나로 통합
 - 참조 링크로 중복 방지
 
+### 4. 컨텍스트 추적 문서 업데이트
+코드 변경 및 문서 수정 사항을 체계적으로 추적하기 위해, 다음 두 관리 문서를 업데이트합니다. 이 작업은 주로 자동화된 에이전트가 수행하지만, 수동으로 작업할 때의 규칙은 다음과 같습니다.
+
+#### [`context-update-log.md`](docs/context-tracking/context-update-log.md) 업데이트
+- **시점**: 문서 수정 내용을 **커밋(Commit)할 때마다** 진행합니다.
+- **방법**: 파일 최상단에 새로운 로그 항목을 **추가(Append)**합니다.
+- **내용**: 어떤 커밋에서 어떤 문서가 왜 업데이트되었는지, 그리고 그로 인해 새로 업데이트가 필요해진 문서는 무엇인지 형식에 맞게 기록합니다.
+
+#### [`sync-status.md`](docs/context-tracking/sync-status.md) 업데이트
+- **시점**: 특정 문서의 **동기화 상태가 변경될 때마다** 진행합니다.
+- **방법**: 테이블에서 해당 파일의 상태 표시자(예: `✅`, `❌`)를 **수정(Modify)**하고, 상단의 전체 동기화율을 다시 계산하여 갱신합니다.
+- **주요 변경 사례**:
+    - 코드 변경으로 기존 문서가 더 이상 최신이 아닐 때: `✅ 최신` → `❌ 업데이트 필요`
+    - 업데이트가 필요한 문서를 수정하여 최신화했을 때: `❌ 업데이트 필요` → `✅ 최신`
+
 ## 📋 체크리스트
 
 ### 새 문서 작성 시
@@ -135,6 +150,7 @@ CLAUDE.md (마스터 인덱스)
 - [ ] 관련 문서의 링크 확인
 - [ ] 일관성 검토
 - [ ] 필요시 CLAUDE.md 업데이트
+- [ ] 컨텍스트 추적 문서 2종([로그](docs/context-tracking/context-update-log.md), [상태](docs/context-tracking/sync-status.md))를 업데이트했는가?
 
 ## 🎯 목표
 
@@ -143,3 +159,24 @@ CLAUDE.md (마스터 인덱스)
 2. **일관된 구조**: 예측 가능한 문서 구조
 3. **유지보수 용이**: 변경사항이 전체에 반영됨
 4. **컨텍스트 최적화**: 100줄 이내로 한 번에 이해 가능
+
+---
+
+##  문서 동기화 워크플로우
+
+### 1. 구현 완료 후 문서 업데이트
+```markdown
+1. API 변경 시: [api-reference.md](../implementation/api-reference.md)
+2. DB 스키마 변경 시: [database-reference.md](../implementation/database-reference.md)
+3. 새 개념 추가/확장 시: concepts/ (예: recruitment-system.md 확장)
+4. UI 변경 시: ui-ux/pages/ (예: channel-pages.md Permission-Centric 반영)
+5. 권한 모델 영향 시: permission-system.md / channel-permissions.md
+6. 최상위 요약: CLAUDE.md 개정 요약 반영
+```
+
+### 2. 문서 일관성 확인
+```markdown
+□ Git / Commit / PR / 리뷰 문서 링크 포함
+□ 채널 권한 플로우(매트릭스)가 channel-pages.md 와 api-reference.md 정합
+□ 모집 API 스펙이 recruitment-system.md 와 api-reference.md 정합
+```
