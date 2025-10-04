@@ -10,16 +10,13 @@ import '../../providers/workspace_state_provider.dart';
 import '../../providers/my_groups_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../widgets/workspace/channel_navigation.dart';
+import '../../widgets/workspace/mobile_channel_list.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
   final String? channelId;
 
-  const WorkspacePage({
-    super.key,
-    this.groupId,
-    this.channelId,
-  });
+  const WorkspacePage({super.key, this.groupId, this.channelId});
 
   @override
   ConsumerState<WorkspacePage> createState() => _WorkspacePageState();
@@ -52,7 +49,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   void _initializeWorkspace() {
     final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
 
     // 워크스페이스 상태 설정
     workspaceNotifier.enterWorkspace(
@@ -85,7 +84,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
     return LayoutBuilder(
       builder: (context, _) {
-        final double leftInset = showChannelNavigation ? AppConstants.sidebarWidth : 0;
+        final double leftInset = showChannelNavigation
+            ? AppConstants.sidebarWidth
+            : 0;
         final double rightInset = showComments ? _commentsSidebarWidth : 0;
 
         return Stack(
@@ -109,7 +110,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
                     final currentGroupName = groupsAsync.maybeWhen(
                       data: (groups) {
                         final currentGroup = groups.firstWhere(
-                          (g) => g.id.toString() == workspaceState.selectedGroupId,
+                          (g) =>
+                              g.id.toString() == workspaceState.selectedGroupId,
                           orElse: () => groups.first,
                         );
                         return currentGroup.name;
@@ -120,7 +122,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
                     return ChannelNavigation(
                       channels: workspaceState.channels,
                       selectedChannelId: workspaceState.selectedChannelId,
-                      hasAnyGroupPermission: workspaceState.hasAnyGroupPermission,
+                      hasAnyGroupPermission:
+                          workspaceState.hasAnyGroupPermission,
                       unreadCounts: workspaceState.unreadCounts,
                       isVisible: true,
                       currentGroupId: workspaceState.selectedGroupId,
@@ -144,24 +147,62 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   }
 
   Widget _buildMobileWorkspace(WorkspaceState workspaceState) {
-    // 모바일에서는 단계별 전체 화면 전환
+    // 1. 로딩 상태 체크
+    if (workspaceState.isLoadingWorkspace) {
+      return _buildLoadingState();
+    }
+
+    // 2. 에러 상태 체크
+    if (workspaceState.errorMessage != null) {
+      return _buildErrorState(workspaceState.errorMessage!);
+    }
+
+    // 3. 워크스페이스 미진입 체크
+    if (!workspaceState.isInWorkspace) {
+      return _buildEmptyState();
+    }
+
+    // 4. 댓글 뷰
     if (workspaceState.isViewingComments) {
       return _buildCommentsView(workspaceState);
-    } else if (workspaceState.hasSelectedChannel) {
-      return _buildChannelView(workspaceState);
-    } else {
-      // Show channel list with navigation
-      return Center(
-        child: Text(
-          '모바일 채널 목록 (준비 중)',
-          style: AppTheme.bodyLarge.copyWith(
-            color: AppColors.neutral600,
-          ),
-        ),
-      );
     }
+
+    // 5. 채널 뷰
+    if (workspaceState.hasSelectedChannel) {
+      return _buildChannelView(workspaceState);
+    }
+
+    // 6. 기본: 채널 목록 표시
+    return _buildMobileChannelList(workspaceState);
   }
 
+  Widget _buildMobileChannelList(WorkspaceState workspaceState) {
+    return Consumer(
+      builder: (context, ref, _) {
+        // 그룹 정보 가져오기
+        final groupsAsync = ref.watch(myGroupsProvider);
+        final currentGroupName = groupsAsync.maybeWhen(
+          data: (groups) {
+            final currentGroup = groups.firstWhere(
+              (g) => g.id.toString() == workspaceState.selectedGroupId,
+              orElse: () => groups.first,
+            );
+            return currentGroup.name;
+          },
+          orElse: () => null,
+        );
+
+        return MobileChannelList(
+          channels: workspaceState.channels,
+          selectedChannelId: workspaceState.selectedChannelId,
+          hasAnyGroupPermission: workspaceState.hasAnyGroupPermission,
+          unreadCounts: workspaceState.unreadCounts,
+          currentGroupId: workspaceState.selectedGroupId,
+          currentGroupName: currentGroupName,
+        );
+      },
+    );
+  }
 
   Widget _buildMainContent(WorkspaceState workspaceState) {
     // Show loading state
@@ -211,18 +252,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            channelName,
-            style: AppTheme.headlineMedium,
-          ),
+          Text(channelName, style: AppTheme.headlineMedium),
           const SizedBox(height: 16),
           Expanded(
             child: Center(
               child: Text(
                 '게시글 목록이 여기에 표시됩니다',
-                style: AppTheme.bodyLarge.copyWith(
-                  color: AppColors.neutral600,
-                ),
+                style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
               ),
             ),
           ),
@@ -250,10 +286,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
               maxLines: null,
             ),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.send),
-          ),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.send)),
         ],
       ),
     );
@@ -281,10 +314,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Text(
-                '댓글',
-                style: AppTheme.titleLarge,
-              ),
+              Text('댓글', style: AppTheme.titleLarge),
               const Spacer(),
               IconButton(
                 onPressed: () {
@@ -299,9 +329,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           child: Center(
             child: Text(
               '댓글이 여기에 표시됩니다',
-              style: AppTheme.bodyLarge.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
             ),
           ),
         ),
@@ -314,22 +342,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.home_outlined,
-            size: 64,
-            color: AppColors.brand,
-          ),
+          const Icon(Icons.home_outlined, size: 64, color: AppColors.brand),
           const SizedBox(height: 16),
-          Text(
-            '그룹 홈',
-            style: AppTheme.displaySmall,
-          ),
+          Text('그룹 홈', style: AppTheme.displaySmall),
           const SizedBox(height: 8),
           Text(
             '그룹 홈 (준비 중)',
-            style: AppTheme.bodyLarge.copyWith(
-              color: AppColors.neutral600,
-            ),
+            style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
           ),
         ],
       ),
@@ -347,16 +366,11 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             color: AppColors.brand,
           ),
           const SizedBox(height: 16),
-          Text(
-            '캘린더',
-            style: AppTheme.displaySmall,
-          ),
+          Text('캘린더', style: AppTheme.displaySmall),
           const SizedBox(height: 8),
           Text(
             '캘린더 (준비 중)',
-            style: AppTheme.bodyLarge.copyWith(
-              color: AppColors.neutral600,
-            ),
+            style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
           ),
         ],
       ),
@@ -385,9 +399,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             const SizedBox(height: 16),
             Text(
               '홈에서 그룹을 탐색하고 가입해보세요',
-              style: AppTheme.bodyLarge.copyWith(
-                color: AppColors.neutral700,
-              ),
+              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral700),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -403,9 +415,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
               ),
               child: Text(
                 '그룹 탐색하기',
-                style: AppTheme.titleMedium.copyWith(
-                  color: Colors.white,
-                ),
+                style: AppTheme.titleMedium.copyWith(color: Colors.white),
               ),
             ),
           ],
@@ -419,22 +429,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.tag,
-            size: 48,
-            color: AppColors.brand,
-          ),
+          const Icon(Icons.tag, size: 48, color: AppColors.brand),
           const SizedBox(height: 16),
-          Text(
-            '채널을 선택하세요',
-            style: AppTheme.headlineMedium,
-          ),
+          Text('채널을 선택하세요', style: AppTheme.headlineMedium),
           const SizedBox(height: 8),
           Text(
             '좌측에서 참여할 채널을 선택해주세요',
-            style: AppTheme.bodyLarge.copyWith(
-              color: AppColors.neutral600,
-            ),
+            style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
           ),
         ],
       ),
@@ -452,9 +453,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           const SizedBox(height: 24),
           Text(
             '워크스페이스를 불러오는 중...',
-            style: AppTheme.bodyLarge.copyWith(
-              color: AppColors.neutral700,
-            ),
+            style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral700),
           ),
         ],
       ),
@@ -468,11 +467,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 24),
             Text(
               errorMessage,
@@ -484,9 +479,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             const SizedBox(height: 16),
             Text(
               '문제가 지속되면 관리자에게 문의하세요',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -505,9 +498,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
                   ),
                   child: Text(
                     '다시 시도',
-                    style: AppTheme.titleMedium.copyWith(
-                      color: Colors.white,
-                    ),
+                    style: AppTheme.titleMedium.copyWith(color: Colors.white),
                   ),
                 ),
                 const SizedBox(width: 16),
