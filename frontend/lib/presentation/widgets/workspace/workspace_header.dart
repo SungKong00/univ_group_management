@@ -2,83 +2,74 @@ import 'package:flutter/material.dart';
 import '../../../core/models/page_breadcrumb.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
+import 'group_dropdown.dart';
 
 /// 워크스페이스 전용 헤더 위젯
 ///
 /// 워크스페이스 페이지의 상단 제목 영역을 담당합니다.
-/// 일반 브레드크럼과 달리, 그룹 전환 드롭다운, 추가 액션 버튼 등
-/// 워크스페이스 전용 기능을 지원합니다.
+/// 일반 브레드크럼과 달리, 그룹 전환 드롭다운 기능을 지원합니다.
+///
+/// **디자인 원칙 (Toss):**
+/// - Simplicity First: "워크스페이스" 제목 제거, 그룹명만 표시
+/// - Easy to Answer: 현재 위치를 즉시 파악 가능
+/// - Typography Hierarchy: headlineMedium (20px/600)으로 그룹명 강조
 ///
 /// **구성:**
-/// - 주제목: "워크스페이스" (headlineMedium: 20px/600/neutral900)
-/// - 경로: 그룹명 + 드롭다운 버튼 (향후 확장)
-/// - 채널명: 옵션 (있을 경우 표시)
-///
-/// **향후 확장 계획:**
-/// - 그룹명 옆 드롭다운 버튼으로 워크스페이스 전환
-/// - 채널명 옆 추가 액션 버튼 (설정, 알림 등)
+/// - 그룹명: headlineMedium (20px/600/neutral900) + 드롭다운 아이콘
+/// - 채널명: bodyMedium (14px/400/neutral600) - 옵션
 ///
 /// **사용 예시:**
 /// ```dart
 /// WorkspaceHeader(
 ///   breadcrumb: PageBreadcrumb(
-///     title: "워크스페이스",
-///     path: ["워크스페이스", "컴퓨터공학과", "공지사항"],
+///     title: "",  // 제목 없음 (그룹명만 표시)
+///     path: ["컴퓨터공학과", "공지사항"],
 ///   ),
+///   currentGroupId: "1",
 /// )
 /// ```
 class WorkspaceHeader extends StatelessWidget {
   const WorkspaceHeader({
     super.key,
     required this.breadcrumb,
-    this.onGroupDropdownTap,
+    this.currentGroupId,
     this.onChannelActionTap,
   });
 
   final PageBreadcrumb breadcrumb;
 
-  /// 그룹 드롭다운 버튼 클릭 핸들러 (향후 구현)
-  final VoidCallback? onGroupDropdownTap;
+  /// 현재 선택된 그룹 ID (드롭다운에 필요)
+  final String? currentGroupId;
 
   /// 채널 액션 버튼 클릭 핸들러 (향후 구현)
   final VoidCallback? onChannelActionTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 주제목: "워크스페이스"
-        Text(
-          breadcrumb.title,
-          style: AppTheme.headlineMedium.copyWith(
-            color: AppColors.neutral900,
-            height: 1.2,
-          ),
-        ),
-
-        // 경로 (그룹명 + 채널명)
-        if (breadcrumb.hasPath) ...[
-          const SizedBox(height: 2),
-          _buildPathRow(),
-        ],
-      ],
-    );
+    // Simplicity First: 제목 제거, 그룹명만 크고 굵게 표시
+    return _buildHeaderRow();
   }
 
-  /// 워크스페이스 경로 행 (그룹 + 드롭다운 + 채널)
-  Widget _buildPathRow() {
+  /// 헤더 행 (그룹명 + 채널명)
+  Widget _buildHeaderRow() {
+    if (!breadcrumb.hasPath || breadcrumb.path!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     final path = breadcrumb.path!;
-    final widgets = <Widget>[];
+    final groupName = path.first; // 첫 번째 항목이 그룹명
+    final hasChannel = path.length > 1;
+    final channelName = hasChannel ? path[1] : null;
 
-    for (int i = 0; i < path.length; i++) {
-      // 첫 번째 항목("워크스페이스")는 건너뜀
-      if (i == 0) continue;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // 그룹명 섹션 (headlineMedium + 드롭다운)
+        _buildGroupNameSection(groupName),
 
-      // 구분자 (첫 항목 앞에는 표시)
-      if (widgets.isNotEmpty) {
-        widgets.add(
+        // 채널명 (있을 경우만)
+        if (hasChannel && channelName != null) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6.0),
             child: Text(
@@ -89,60 +80,29 @@ class WorkspaceHeader extends StatelessWidget {
               ),
             ),
           ),
-        );
-      }
-
-      // 그룹명 (두 번째 항목) - 향후 드롭다운 버튼 추가 예정
-      if (i == 1) {
-        widgets.add(_buildGroupNameSection(path[i]));
-      }
-      // 채널명 (세 번째 항목) - 향후 액션 버튼 추가 예정
-      else if (i == 2) {
-        widgets.add(_buildChannelNameSection(path[i]));
-      }
-      // 기타 경로
-      else {
-        widgets.add(
-          Text(
-            path[i],
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppColors.neutral600,
-              height: 1.3,
-            ),
-          ),
-        );
-      }
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: widgets,
+          _buildChannelNameSection(channelName),
+        ],
+      ],
     );
   }
 
-  /// 그룹명 섹션 (향후 드롭다운 버튼 추가 예정)
+  /// 그룹명 섹션 (headlineMedium + 드롭다운)
   Widget _buildGroupNameSection(String groupName) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          groupName,
-          style: AppTheme.bodyMedium.copyWith(
-            color: AppColors.neutral600,
-            height: 1.3,
-          ),
-        ),
-        // TODO: 드롭다운 버튼 추가
-        // if (onGroupDropdownTap != null) ...[
-        //   const SizedBox(width: 4),
-        //   IconButton(
-        //     icon: const Icon(Icons.arrow_drop_down, size: 20),
-        //     onPressed: onGroupDropdownTap,
-        //     padding: EdgeInsets.zero,
-        //     constraints: const BoxConstraints(),
-        //   ),
-        // ],
-      ],
+    // currentGroupId가 있으면 드롭다운 표시, 없으면 크고 굵은 텍스트
+    if (currentGroupId != null) {
+      return GroupDropdown(
+        currentGroupId: currentGroupId!,
+        currentGroupName: groupName,
+      );
+    }
+
+    // Fallback: 드롭다운 없이 크고 굵은 텍스트만 표시
+    return Text(
+      groupName,
+      style: AppTheme.headlineMedium.copyWith(
+        color: AppColors.neutral900,
+        height: 1.2,
+      ),
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/channel_models.dart';
+import '../../../core/models/page_breadcrumb.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
@@ -8,6 +9,7 @@ import '../../../core/theme/theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../providers/workspace_state_provider.dart';
 import 'channel_item.dart';
+import 'workspace_header.dart';
 
 /// Channel Navigation Widget
 ///
@@ -24,6 +26,8 @@ class ChannelNavigation extends ConsumerStatefulWidget {
   final bool hasAnyGroupPermission;
   final Map<String, int> unreadCounts; // Dummy data
   final bool isVisible;
+  final String? currentGroupId; // 현재 선택된 그룹 ID
+  final String? currentGroupName; // 현재 선택된 그룹 이름
 
   const ChannelNavigation({
     super.key,
@@ -32,6 +36,8 @@ class ChannelNavigation extends ConsumerStatefulWidget {
     required this.hasAnyGroupPermission,
     required this.unreadCounts,
     this.isVisible = true,
+    this.currentGroupId,
+    this.currentGroupName,
   });
 
   @override
@@ -117,6 +123,20 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
         ),
         child: Column(
           children: [
+            // 워크스페이스 헤더 (그룹 드롭다운 포함)
+            // Simplicity First: 제목 제거, 그룹명만 표시
+            if (widget.currentGroupName != null)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                child: WorkspaceHeader(
+                  breadcrumb: PageBreadcrumb(
+                    title: '', // 제목 없음 (Simplicity First)
+                    path: [widget.currentGroupName!], // 그룹명만
+                  ),
+                  currentGroupId: widget.currentGroupId,
+                ),
+              ),
+            const Divider(height: 1, thickness: 1),
             _buildTopSection(),
             const Divider(height: 1, thickness: 1),
             _buildChannelList(),

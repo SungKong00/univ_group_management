@@ -96,24 +96,25 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   final ChannelService _channelService = ChannelService();
 
   void enterWorkspace(String groupId, {String? channelId}) {
+    // Reset state when entering a new workspace
     state = state.copyWith(
       selectedGroupId: groupId,
-      selectedChannelId: channelId,
+      selectedChannelId: null, // Will be set after channels load
       isCommentsVisible: false,
       selectedPostId: null,
       currentView: WorkspaceView.channel,
       workspaceContext: {
         'groupId': groupId,
-        if (channelId != null) 'channelId': channelId,
       },
     );
 
     // Load channels and membership info
-    loadChannels(groupId);
+    // channelId will be auto-selected in loadChannels if not provided
+    loadChannels(groupId, autoSelectChannelId: channelId);
   }
 
   /// Load channels and membership information for a group
-  Future<void> loadChannels(String groupId) async {
+  Future<void> loadChannels(String groupId, {String? autoSelectChannelId}) async {
     try {
       final groupIdInt = int.parse(groupId);
 
@@ -138,11 +139,22 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         }
       }
 
+      // Auto-select channel: prioritize passed channelId, then first channel
+      String? selectedChannelId;
+      if (autoSelectChannelId != null) {
+        selectedChannelId = autoSelectChannelId;
+      } else if (channels.isNotEmpty) {
+        selectedChannelId = channels.first.id.toString();
+      }
+
       state = state.copyWith(
         channels: channels,
         unreadCounts: unreadCounts,
         hasAnyGroupPermission: membership?.hasAnyGroupPermission ?? false,
         isLoadingChannels: false,
+        selectedChannelId: selectedChannelId,
+        workspaceContext: Map.from(state.workspaceContext)
+          ..['channelId'] = selectedChannelId,
       );
     } catch (e) {
       state = state.copyWith(

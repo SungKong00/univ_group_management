@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../providers/workspace_state_provider.dart';
+import '../../providers/my_groups_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../widgets/workspace/channel_navigation.dart';
 
@@ -34,6 +35,18 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         _initializeWorkspace();
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(WorkspacePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // groupId가 변경되면 워크스페이스 재초기화
+    if (widget.groupId != oldWidget.groupId && widget.groupId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeWorkspace();
+      });
+    }
   }
 
   void _initializeWorkspace() {
@@ -88,12 +101,31 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
                 top: 0,
                 bottom: 0,
                 left: 0,
-                child: ChannelNavigation(
-                  channels: workspaceState.channels,
-                  selectedChannelId: workspaceState.selectedChannelId,
-                  hasAnyGroupPermission: workspaceState.hasAnyGroupPermission,
-                  unreadCounts: workspaceState.unreadCounts,
-                  isVisible: true,
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    // 그룹 정보 가져오기
+                    final groupsAsync = ref.watch(myGroupsProvider);
+                    final currentGroupName = groupsAsync.maybeWhen(
+                      data: (groups) {
+                        final currentGroup = groups.firstWhere(
+                          (g) => g.id.toString() == workspaceState.selectedGroupId,
+                          orElse: () => groups.first,
+                        );
+                        return currentGroup.name;
+                      },
+                      orElse: () => null,
+                    );
+
+                    return ChannelNavigation(
+                      channels: workspaceState.channels,
+                      selectedChannelId: workspaceState.selectedChannelId,
+                      hasAnyGroupPermission: workspaceState.hasAnyGroupPermission,
+                      unreadCounts: workspaceState.unreadCounts,
+                      isVisible: true,
+                      currentGroupId: workspaceState.selectedGroupId,
+                      currentGroupName: currentGroupName,
+                    );
+                  },
                 ),
               ),
 
