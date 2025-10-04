@@ -290,12 +290,21 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 그룹명: headlineMedium (20px/600)으로 강조
-              Text(
-                widget.currentGroupName,
-                style: AppTheme.headlineMedium.copyWith(
-                  color: AppColors.neutral900,
-                  height: 1.2,
+              // 그룹명: 좁은 공간에서는 bodyLarge (16px/600)으로 축소
+              // 긴 그룹명 대응: Flexible로 동적 너비 조정 + 말줄임 + 툴팁
+              Flexible(
+                child: Tooltip(
+                  message: widget.currentGroupName,
+                  child: Text(
+                    widget.currentGroupName,
+                    style: AppTheme.bodyLarge.copyWith(
+                      color: AppColors.neutral900,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
                 ),
               ),
               const SizedBox(width: 4),

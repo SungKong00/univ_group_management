@@ -62,7 +62,6 @@ class WorkspaceHeader extends StatelessWidget {
     final channelName = hasChannel ? path[1] : null;
 
     return Row(
-      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // 그룹명 섹션 (headlineMedium + 드롭다운)
