@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/navigation/navigation_controller.dart';
+import '../../../core/navigation/layout_mode.dart';
 import '../../providers/page_title_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../common/breadcrumb_widget.dart';
 import '../workspace/workspace_header.dart';
 
@@ -15,6 +17,8 @@ class TopNavigation extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final navigationState = ref.watch(navigationControllerProvider);
     final currentRoute = GoRouterState.of(context);
+    final layoutMode = LayoutModeExtension.fromContext(context);
+    final currentUser = ref.watch(currentUserProvider);
 
     // 경로(path)를 기반으로 브레드크럼 가져오기
     final routePath = currentRoute.uri.path;
@@ -62,7 +66,14 @@ class TopNavigation extends ConsumerWidget {
                   : BreadcrumbWidget(breadcrumb: breadcrumb),
             ),
           ),
-          const SizedBox(width: 16),
+          // 모바일 전용: 우측 사용자 아바타
+          if (layoutMode == LayoutMode.compact && currentUser != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: _UserAvatarButton(user: currentUser),
+            )
+          else
+            const SizedBox(width: 16),
         ],
       ),
     );
@@ -75,5 +86,47 @@ class TopNavigation extends ConsumerWidget {
     if (previousRoute != null) {
       context.go(previousRoute);
     }
+  }
+}
+
+/// 모바일 전용 사용자 아바타 버튼
+/// TODO: 터치 시 사용자 정보 팝업 표시 기능 추가 예정
+class _UserAvatarButton extends StatelessWidget {
+  final dynamic user;
+
+  const _UserAvatarButton({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // TODO: 사용자 정보 팝업 표시 (아이디, 메일, 학과, 로그아웃 버튼)
+        // showDialog 또는 BottomSheet 활용 예정
+      },
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.brandLight,
+          border: Border.all(color: AppColors.brand, width: 1.5),
+        ),
+        child: Center(
+          child: Text(
+            _getInitial(user.name ?? ''),
+            style: const TextStyle(
+              color: AppColors.brand,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getInitial(String name) {
+    if (name.isEmpty) return '?';
+    return name.substring(0, 1).toUpperCase();
   }
 }

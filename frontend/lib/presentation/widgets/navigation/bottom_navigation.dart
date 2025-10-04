@@ -29,6 +29,8 @@ class BottomNavigation extends ConsumerWidget {
         unselectedItemColor: AppColors.neutral600,
         backgroundColor: Colors.white,
         elevation: 0,
+        selectedFontSize: 10,
+        unselectedFontSize: 10,
         onTap: (index) => _onTap(context, ref, index),
         items: NavigationConfig.items
             .map(

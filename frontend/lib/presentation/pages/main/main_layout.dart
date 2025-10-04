@@ -104,50 +104,10 @@ class MainLayout extends ConsumerWidget {
   }
 
   Widget _buildMobileBottomSection(UserInfo? currentUser) {
-    return SafeArea(
-      top: false,
-      child: AnimatedSize(
-        duration: AppMotion.standard,
-        curve: AppMotion.easing,
-        alignment: Alignment.bottomCenter,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AnimatedSwitcher(
-              duration: AppMotion.standard,
-              switchInCurve: AppMotion.easing,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) {
-                final fade = CurvedAnimation(parent: animation, curve: Curves.easeOut);
-                return ClipRect(
-                  child: FadeTransition(
-                    opacity: fade,
-                    child: SizeTransition(
-                      sizeFactor: animation,
-                      axis: Axis.vertical,
-                      axisAlignment: 1.0, // 하단 고정 확장
-                      child: child,
-                    ),
-                  ),
-                );
-              },
-              child: currentUser != null
-                  ? UserInfoCard(
-                      key: ValueKey('user-card-${currentUser.id}'),
-                      user: currentUser,
-                      isCompact: false,
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            // 네비게이션 바 높이 안정화를 위한 래퍼
-            const SizedBox(
-              height: kBottomNavigationBarHeight,
-              child: BottomNavigation(),
-            ),
-          ],
-        ),
-      ),
+    // 모바일에서는 하단에 네비게이션만 표시 (사용자 정보는 상단바로 이동)
+    return const SizedBox(
+      height: kBottomNavigationBarHeight,
+      child: BottomNavigation(),
     );
   }
 }
