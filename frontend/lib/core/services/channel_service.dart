@@ -83,4 +83,37 @@ class ChannelService {
       return null;
     }
   }
+
+  /// Get current user's permissions for a specific channel
+  ///
+  /// GET /channels/{channelId}/permissions/me
+  Future<ChannelPermissions?> getMyPermissions(int channelId) async {
+    try {
+      developer.log('Fetching permissions for channel: $channelId', name: 'ChannelService');
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/channels/$channelId/permissions/me',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => ChannelPermissions.fromJson(json as Map<String, dynamic>),
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log('Successfully fetched channel permissions', name: 'ChannelService');
+          return apiResponse.data!;
+        } else {
+          developer.log('Failed to fetch channel permissions: ${apiResponse.message}', name: 'ChannelService', level: 900);
+          return null;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      developer.log('Error fetching channel permissions: $e', name: 'ChannelService', level: 900);
+      return null;
+    }
+  }
 }

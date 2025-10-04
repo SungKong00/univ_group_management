@@ -269,26 +269,54 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   }
 
   Widget _buildMessageComposer() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.neutral300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              decoration: const InputDecoration(
-                hintText: '메시지를 입력하세요...',
-                border: InputBorder.none,
-              ),
-              maxLines: null,
-            ),
+    return Consumer(
+      builder: (context, ref, child) {
+        final workspaceState = ref.watch(workspaceStateProvider);
+        final channelPermissions = workspaceState.channelPermissions;
+        final isLoadingPermissions = workspaceState.isLoadingPermissions;
+
+        // Determine if user can write posts
+        final canWritePost = channelPermissions?.canWritePost ?? false;
+        final canUploadFile = channelPermissions?.canUploadFile ?? false;
+
+        // Placeholder text based on permissions
+        final hintText = canWritePost
+            ? '메시지를 입력하세요...'
+            : '쓰기 권한이 없습니다';
+
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.neutral300),
+            borderRadius: BorderRadius.circular(8),
           ),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.send)),
-        ],
-      ),
+          child: Row(
+            children: [
+              // File attachment button (only show if user has FILE_UPLOAD permission)
+              if (canUploadFile)
+                IconButton(
+                  onPressed: canWritePost ? () {} : null,
+                  icon: const Icon(Icons.attach_file),
+                  color: AppColors.neutral600,
+                ),
+              Expanded(
+                child: TextField(
+                  enabled: !isLoadingPermissions && canWritePost,
+                  decoration: InputDecoration(
+                    hintText: isLoadingPermissions ? '권한 확인 중...' : hintText,
+                    border: InputBorder.none,
+                  ),
+                  maxLines: null,
+                ),
+              ),
+              IconButton(
+                onPressed: canWritePost ? () {} : null,
+                icon: const Icon(Icons.send),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

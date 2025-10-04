@@ -24,6 +24,8 @@ class WorkspaceState extends Equatable {
     this.isLoadingChannels = false,
     this.isLoadingWorkspace = false,
     this.errorMessage,
+    this.channelPermissions,
+    this.isLoadingPermissions = false,
   });
 
   final String? selectedGroupId;
@@ -38,6 +40,8 @@ class WorkspaceState extends Equatable {
   final bool isLoadingChannels;
   final bool isLoadingWorkspace;
   final String? errorMessage;
+  final ChannelPermissions? channelPermissions;
+  final bool isLoadingPermissions;
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -52,6 +56,8 @@ class WorkspaceState extends Equatable {
     bool? isLoadingChannels,
     bool? isLoadingWorkspace,
     String? errorMessage,
+    ChannelPermissions? channelPermissions,
+    bool? isLoadingPermissions,
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
@@ -66,6 +72,8 @@ class WorkspaceState extends Equatable {
       isLoadingChannels: isLoadingChannels ?? this.isLoadingChannels,
       isLoadingWorkspace: isLoadingWorkspace ?? this.isLoadingWorkspace,
       errorMessage: errorMessage,
+      channelPermissions: channelPermissions ?? this.channelPermissions,
+      isLoadingPermissions: isLoadingPermissions ?? this.isLoadingPermissions,
     );
   }
 
@@ -87,6 +95,8 @@ class WorkspaceState extends Equatable {
         isLoadingChannels,
         isLoadingWorkspace,
         errorMessage,
+        channelPermissions,
+        isLoadingPermissions,
       ];
 }
 
@@ -156,6 +166,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         workspaceContext: Map.from(state.workspaceContext)
           ..['channelId'] = selectedChannelId,
       );
+
+      // Auto-load permissions for the selected channel
+      if (selectedChannelId != null) {
+        await loadChannelPermissions(selectedChannelId);
+      }
     } catch (e) {
       state = state.copyWith(
         isLoadingChannels: false,
@@ -174,6 +189,31 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       workspaceContext: Map.from(state.workspaceContext)
         ..['channelId'] = channelId,
     );
+
+    // Load permissions for the selected channel
+    loadChannelPermissions(channelId);
+  }
+
+  /// Load channel permissions for the currently selected channel
+  Future<void> loadChannelPermissions(String channelId) async {
+    try {
+      final channelIdInt = int.parse(channelId);
+
+      state = state.copyWith(isLoadingPermissions: true);
+
+      final permissions = await _channelService.getMyPermissions(channelIdInt);
+
+      state = state.copyWith(
+        channelPermissions: permissions,
+        isLoadingPermissions: false,
+      );
+    } catch (e) {
+      // On error, set permissions to null (defaults to disabled)
+      state = state.copyWith(
+        channelPermissions: null,
+        isLoadingPermissions: false,
+      );
+    }
   }
 
   /// Show group home view

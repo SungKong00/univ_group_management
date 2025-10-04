@@ -92,3 +92,55 @@ class MembershipInfo {
   @override
   int get hashCode => userId.hashCode;
 }
+
+/// ChannelPermissions model
+///
+/// Represents user's permissions within a specific channel.
+/// Used for checking channel-level permissions like POST_WRITE, COMMENT_WRITE, FILE_UPLOAD.
+class ChannelPermissions {
+  final List<String> permissions;
+
+  const ChannelPermissions({
+    required this.permissions,
+  });
+
+  factory ChannelPermissions.fromJson(Map<String, dynamic> json) {
+    return ChannelPermissions(
+      permissions: (json['permissions'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList() ??
+          [],
+    );
+  }
+
+  /// Check if user has POST_WRITE permission
+  /// Required to enable the message input field
+  bool get canWritePost => permissions.contains('POST_WRITE');
+
+  /// Check if user has COMMENT_WRITE permission
+  /// Required to enable the comment input field
+  bool get canWriteComment => permissions.contains('COMMENT_WRITE');
+
+  /// Check if user has FILE_UPLOAD permission
+  /// Required to show/enable the file attachment button
+  bool get canUploadFile => permissions.contains('FILE_UPLOAD');
+
+  /// Check if user has POST_READ permission
+  /// Required to view posts in the channel
+  bool get canReadPost => permissions.contains('POST_READ');
+
+  /// Check if user has CHANNEL_VIEW permission
+  /// Required to view the channel itself
+  bool get canViewChannel => permissions.contains('CHANNEL_VIEW');
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ChannelPermissions &&
+        permissions.length == other.permissions.length &&
+        permissions.every((p) => other.permissions.contains(p));
+  }
+
+  @override
+  int get hashCode => permissions.hashCode;
+}
