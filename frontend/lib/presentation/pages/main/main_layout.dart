@@ -10,8 +10,6 @@ import '../../../core/navigation/layout_mode.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/models/auth_models.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/user/user_info_card.dart';
-import '../../../core/theme/theme.dart'; // AppMotion 사용 추가
 
 class MainLayout extends ConsumerWidget {
   final Widget child;
