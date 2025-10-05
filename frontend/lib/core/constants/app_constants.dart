@@ -46,7 +46,7 @@ class AppConstants {
   static const double sidebarWidth = 256;
   static const double sidebarCollapsedWidth = 72;
   static const double backButtonWidth = 72;
-  static const double topNavigationHeight = 64;
+  static const double topNavigationHeight = 48;
 
   // Animation Duration
   static const Duration animationDuration = Duration(milliseconds: 200);

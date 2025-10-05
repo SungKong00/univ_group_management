@@ -52,7 +52,10 @@ class TopNavigation extends ConsumerWidget {
                 ? IconButton(
                     onPressed: () => _handleBackNavigation(context, ref),
                     icon: const Icon(Icons.arrow_back),
-                    iconSize: 24,
+                    iconSize: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    splashRadius: 20,
                     tooltip: '뒤로가기',
                   )
                 : null,
@@ -60,7 +63,7 @@ class TopNavigation extends ConsumerWidget {
           // 페이지 헤더 영역 (워크스페이스 vs 일반)
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: 8.0),
+              padding: const EdgeInsets.only(left: 4.0),
               child: isWorkspace
                   ? WorkspaceHeader(breadcrumb: breadcrumb)
                   : BreadcrumbWidget(breadcrumb: breadcrumb),
@@ -104,8 +107,8 @@ class _UserAvatarButton extends StatelessWidget {
         // showDialog 또는 BottomSheet 활용 예정
       },
       child: Container(
-        width: 32,
-        height: 32,
+        width: 24,
+        height: 24,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: AppColors.brandLight,
@@ -116,7 +119,7 @@ class _UserAvatarButton extends StatelessWidget {
             _getInitial(user.name ?? ''),
             style: const TextStyle(
               color: AppColors.brand,
-              fontSize: 14,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
           ),

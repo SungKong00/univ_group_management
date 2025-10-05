@@ -45,17 +45,14 @@ class BreadcrumbWidget extends StatelessWidget {
         // 주제목 (진하고 크게)
         Text(
           breadcrumb.title,
-          style: AppTheme.headlineMedium.copyWith(
+          style: AppTheme.titleLarge.copyWith(
             color: AppColors.neutral900,
             height: 1.2,
           ),
         ),
 
         // 경로 (있을 경우만 표시)
-        if (breadcrumb.hasPath) ...[
-          const SizedBox(height: 2),
-          _buildPathRow(),
-        ],
+        if (breadcrumb.hasPath) _buildPathRow(),
       ],
     );
   }
@@ -70,9 +67,9 @@ class BreadcrumbWidget extends StatelessWidget {
       widgets.add(
         Text(
           path[i],
-          style: AppTheme.bodyMedium.copyWith(
+          style: AppTheme.bodySmall.copyWith(
             color: AppColors.neutral600,
-            height: 1.3,
+            height: 1.2,
           ),
         ),
       );
@@ -81,12 +78,12 @@ class BreadcrumbWidget extends StatelessWidget {
       if (i < path.length - 1) {
         widgets.add(
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: Text(
               '>',
-              style: AppTheme.bodyMedium.copyWith(
+              style: AppTheme.bodySmall.copyWith(
                 color: AppColors.neutral500,
-                height: 1.3,
+                height: 1.2,
               ),
             ),
           ),

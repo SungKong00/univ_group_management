@@ -70,12 +70,12 @@ class WorkspaceHeader extends StatelessWidget {
         // 채널명 (있을 경우만)
         if (hasChannel && channelName != null) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: Text(
               '>',
-              style: AppTheme.bodyMedium.copyWith(
+              style: AppTheme.bodySmall.copyWith(
                 color: AppColors.neutral500,
-                height: 1.3,
+                height: 1.2,
               ),
             ),
           ),
@@ -98,7 +98,7 @@ class WorkspaceHeader extends StatelessWidget {
     // Fallback: 드롭다운 없이 크고 굵은 텍스트만 표시
     return Text(
       groupName,
-      style: AppTheme.headlineMedium.copyWith(
+      style: AppTheme.titleLarge.copyWith(
         color: AppColors.neutral900,
         height: 1.2,
       ),
@@ -112,9 +112,9 @@ class WorkspaceHeader extends StatelessWidget {
       children: [
         Text(
           channelName,
-          style: AppTheme.bodyMedium.copyWith(
+          style: AppTheme.bodySmall.copyWith(
             color: AppColors.neutral600,
-            height: 1.3,
+            height: 1.2,
           ),
         ),
         // TODO: 채널 액션 버튼 추가

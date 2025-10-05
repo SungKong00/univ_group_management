@@ -285,7 +285,7 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
         onTap: _toggleDropdown,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -297,7 +297,7 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
                   message: widget.currentGroupName,
                   child: Text(
                     widget.currentGroupName,
-                    style: AppTheme.bodyLarge.copyWith(
+                    style: AppTheme.titleLarge.copyWith(
                       color: AppColors.neutral900,
                       fontWeight: FontWeight.w600,
                       height: 1.2,
@@ -311,7 +311,7 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
               // 드롭다운 아이콘
               Icon(
                 _isExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                size: 20,
+                size: 18,
                 color: AppColors.neutral600,
               ),
             ],
