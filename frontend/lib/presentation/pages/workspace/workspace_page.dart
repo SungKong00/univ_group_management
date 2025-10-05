@@ -355,10 +355,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('게시글이 작성되었습니다'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+           duration: Duration(milliseconds: 500),
+         ),
+       );
+     }
   }
 
   static const double _commentsSidebarWidth = 300;
