@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'core/theme/theme.dart';
 import 'core/theme/theme_provider.dart';
@@ -17,6 +18,9 @@ void main() async {
   try {
     // Load environment variables
     await dotenv.load(fileName: '.env');
+
+    // Initialize Korean locale for date formatting
+    await initializeDateFormatting('ko_KR', null);
 
     // Initialize LocalStorage with eager loading (부트 타임 최적화)
     // access token만 즉시 로드하고 나머지는 백그라운드에서 프리로드

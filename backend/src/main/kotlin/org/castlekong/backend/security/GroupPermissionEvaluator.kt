@@ -1,7 +1,9 @@
 package org.castlekong.backend.security
 
+import org.castlekong.backend.entity.ChannelPermission
 import org.castlekong.backend.entity.GroupPermission
 import org.castlekong.backend.repository.*
+import org.slf4j.LoggerFactory
 import org.springframework.security.access.PermissionEvaluator
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -14,6 +16,8 @@ class GroupPermissionEvaluator(
     private val groupMemberRepository: GroupMemberRepository,
     private val groupRecruitmentRepository: GroupRecruitmentRepository,
     private val recruitmentApplicationRepository: RecruitmentApplicationRepository,
+    private val channelRepository: ChannelRepository,
+    private val channelRoleBindingRepository: ChannelRoleBindingRepository,
     private val permissionService: PermissionService,
 ) : PermissionEvaluator {
     override fun hasPermission(
@@ -41,6 +45,7 @@ class GroupPermissionEvaluator(
 
         return when (targetType) {
             "GROUP" -> checkGroupPermission(targetId, user.id, permission)
+            "CHANNEL" -> checkChannelPermission(targetId, user.id, permission)
             "RECRUITMENT" -> checkRecruitmentPermission(targetId, user.id, permission)
             "APPLICATION" -> checkApplicationPermission(targetId, user.id, permission)
             else -> false
@@ -50,6 +55,22 @@ class GroupPermissionEvaluator(
     private fun checkGroupPermission(groupId: Long, userId: Long, permission: String): Boolean {
         val effective = permissionService.getEffective(groupId, userId, ::systemRolePermissions)
         return effective.any { it.name == permission }
+    }
+
+    private fun checkChannelPermission(channelId: Long, userId: Long, permission: String): Boolean {
+        val channel = channelRepository.findById(channelId).orElse(null) ?: return false
+        val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
+            .orElse(null) ?: return false
+        val binding = channelRoleBindingRepository
+            .findByChannelIdAndGroupRoleId(channelId, member.role.id) ?: return false
+
+        return try {
+            val channelPermission = ChannelPermission.valueOf(permission)
+            binding.permissions.contains(channelPermission)
+        } catch (e: IllegalArgumentException) {
+            log.warn("Invalid channel permission: $permission", e)
+            false
+        }
     }
 
     private fun checkRecruitmentPermission(recruitmentId: Long, userId: Long, permission: String): Boolean {
@@ -80,5 +101,9 @@ class GroupPermissionEvaluator(
             "MEMBER" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
             else -> emptySet()
         }
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(GroupPermissionEvaluator::class.java)
     }
 }

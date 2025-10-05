@@ -11,6 +11,9 @@ import '../../providers/my_groups_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../widgets/workspace/channel_navigation.dart';
 import '../../widgets/workspace/mobile_channel_list.dart';
+import '../../widgets/post/post_list.dart';
+import '../../widgets/post/post_composer.dart';
+import '../../../core/services/post_service.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
@@ -23,6 +26,8 @@ class WorkspacePage extends ConsumerStatefulWidget {
 }
 
 class _WorkspacePageState extends ConsumerState<WorkspacePage> {
+  int _postListKey = 0;
+
   @override
   void initState() {
     super.initState();
@@ -246,6 +251,41 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
     // 채널을 찾지 못한 경우 fallback
     final channelName = selectedChannel?.name ?? '채널을 불러올 수 없습니다';
+    final channelPermissions = workspaceState.channelPermissions;
+    final canWritePost = channelPermissions?.canWritePost ?? false;
+
+    // 권한이 없는 경우 권한 에러 표시
+    if (channelPermissions != null && !channelPermissions.canViewChannel) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 64,
+                color: AppColors.neutral400,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '이 채널을 볼 권한이 없습니다',
+                style: AppTheme.headlineMedium.copyWith(
+                  color: AppColors.neutral900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '권한 관리자에게 문의하세요',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppColors.neutral600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -255,11 +295,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           Text(channelName, style: AppTheme.headlineMedium),
           const SizedBox(height: 16),
           Expanded(
-            child: Center(
-              child: Text(
-                '게시글 목록이 여기에 표시됩니다',
-                style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-              ),
+            child: PostList(
+              key: ValueKey('post_list_${workspaceState.selectedChannelId}_$_postListKey'),
+              channelId: workspaceState.selectedChannelId!,
+              canWrite: canWritePost,
+              onTapComment: (postId) {
+                ref.read(workspaceStateProvider.notifier).showComments(postId.toString());
+              },
             ),
           ),
           _buildMessageComposer(),
@@ -279,45 +321,44 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         final canWritePost = channelPermissions?.canWritePost ?? false;
         final canUploadFile = channelPermissions?.canUploadFile ?? false;
 
-        // Placeholder text based on permissions
-        final hintText = canWritePost
-            ? '메시지를 입력하세요...'
-            : '쓰기 권한이 없습니다';
-
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.neutral300),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              // File attachment button (only show if user has FILE_UPLOAD permission)
-              if (canUploadFile)
-                IconButton(
-                  onPressed: canWritePost ? () {} : null,
-                  icon: const Icon(Icons.attach_file),
-                  color: AppColors.neutral600,
-                ),
-              Expanded(
-                child: TextField(
-                  enabled: !isLoadingPermissions && canWritePost,
-                  decoration: InputDecoration(
-                    hintText: isLoadingPermissions ? '권한 확인 중...' : hintText,
-                    border: InputBorder.none,
-                  ),
-                  maxLines: null,
-                ),
-              ),
-              IconButton(
-                onPressed: canWritePost ? () {} : null,
-                icon: const Icon(Icons.send),
-              ),
-            ],
-          ),
+        return PostComposer(
+          canWrite: canWritePost,
+          canUploadFile: canUploadFile,
+          isLoading: isLoadingPermissions,
+          onSubmit: (content) => _handleSubmitPost(context, ref, content),
         );
       },
     );
+  }
+
+  Future<void> _handleSubmitPost(
+    BuildContext context,
+    WidgetRef ref,
+    String content,
+  ) async {
+    final workspaceState = ref.read(workspaceStateProvider);
+    final channelId = workspaceState.selectedChannelId;
+
+    if (channelId == null) {
+      throw Exception('채널을 선택해주세요');
+    }
+
+    final postService = PostService();
+    await postService.createPost(channelId, content);
+
+    // 게시글 작성 성공 후 목록 새로고침
+    setState(() {
+      _postListKey++;
+    });
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('게시글이 작성되었습니다'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   static const double _commentsSidebarWidth = 300;

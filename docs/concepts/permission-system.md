@@ -65,6 +65,75 @@
 3. (채널 자원인 경우) ChannelRoleBinding 매핑으로 채널 수준 권한 결합
 4. PermissionService 캐시 조회 → 없으면 계산 후 캐시 저장
 
+## Spring Security 통합
+
+### GroupPermissionEvaluator
+Spring Security의 `@PreAuthorize` 어노테이션과 통합하여 선언적 권한 검증을 제공합니다.
+
+**주요 역할**:
+- `PermissionEvaluator` 인터페이스 구현
+- 대상 리소스 타입(GROUP, CHANNEL, RECRUITMENT 등)별 권한 검증 라우팅
+- 2단계 권한 검증 플로우 실행
+
+**지원하는 대상 타입**:
+- `GROUP`: 그룹 레벨 권한 검증 (예: GROUP_MANAGE, MEMBER_MANAGE)
+- `CHANNEL`: 채널 레벨 권한 검증 (예: CHANNEL_VIEW, POST_WRITE)
+- `RECRUITMENT`: 모집 관련 권한 검증 (그룹 권한으로 위임)
+- `APPLICATION`: 지원서 관련 권한 검증 (본인 또는 모집 관리 권한)
+
+**사용 예시**:
+```kotlin
+@PreAuthorize("@security.hasGroupPerm(#groupId, 'CHANNEL_MANAGE')")
+fun createChannel(groupId: Long, request: CreateChannelRequest): ChannelDto
+
+@PreAuthorize("@security.hasChannelPerm(#channelId, 'POST_WRITE')")
+fun createPost(channelId: Long, request: CreatePostRequest): PostDto
+```
+
+### 2단계 권한 검증 플로우 (채널 권한 예시)
+
+1. **그룹 멤버십 검증**
+   - 사용자가 채널이 속한 그룹의 멤버인지 확인
+   - 멤버가 아니면 즉시 `false` 반환 (403 Forbidden)
+
+2. **채널 권한 바인딩 검증**
+   - 사용자의 그룹 역할(GroupRole) 조회
+   - ChannelRoleBinding에서 (채널, 역할) 매핑 조회
+   - 바인딩에 요청한 ChannelPermission이 포함되어 있는지 확인
+
+**구현 패턴**:
+```kotlin
+private fun checkChannelPermission(channelId: Long, userId: Long, permission: String): Boolean {
+    // 1단계: 채널 조회 및 그룹 멤버십 확인
+    val channel = channelRepository.findById(channelId).orElse(null) ?: return false
+    val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
+        .orElse(null) ?: return false
+
+    // 2단계: 채널 권한 바인딩 확인
+    val binding = channelRoleBindingRepository
+        .findByChannelIdAndGroupRoleId(channelId, member.role.id) ?: return false
+
+    return try {
+        val channelPermission = ChannelPermission.valueOf(permission)
+        binding.permissions.contains(channelPermission)
+    } catch (e: IllegalArgumentException) {
+        log.warn("Invalid channel permission: $permission", e)
+        false
+    }
+}
+```
+
+**특징**:
+- Security Layer에서 Repository를 직접 사용 (Service Layer 우회)
+- 순수 권한 검증 로직만 수행 (비즈니스 로직 없음)
+- 빠른 실패(Fail Fast) 전략: 조건 미충족 시 즉시 `false` 반환
+- ADMIN 권한 사용자는 모든 검증 우회 (short-circuit)
+
+### 권한 검증 실패 처리
+- `@PreAuthorize`가 `false`를 반환하면 Spring Security가 자동으로 `403 Forbidden` 응답
+- GlobalExceptionHandler에서 `AccessDeniedException` 처리
+- 일관된 ApiResponse 에러 형식으로 변환
+
 ## 권한 캐싱 & 무효화 전략
 `PermissionService` 는 (groupId, userId) 단위 캐시를 유지하며 아래 이벤트에서 무효화:
 - 역할 생성 / 수정 / 삭제

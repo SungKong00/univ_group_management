@@ -2,6 +2,7 @@ package org.castlekong.backend.controller
 
 import jakarta.validation.Valid
 import org.castlekong.backend.dto.*
+import org.castlekong.backend.service.ChannelPermissionManagementService
 import org.castlekong.backend.service.ContentService
 import org.castlekong.backend.service.UserService
 import org.springframework.http.HttpStatus
@@ -15,7 +16,7 @@ class ContentController(
     private val contentService: ContentService,
     userService: UserService,
     // 채널 권한 조회용 서비스 주입
-    private val channelPermissionManagementService: org.castlekong.backend.service.ChannelPermissionManagementService,
+    private val channelPermissionManagementService: ChannelPermissionManagementService,
 ) : BaseController(userService) {
     // === Workspaces (compat: group-level single workspace) ===
     @GetMapping("/groups/{groupId}/workspaces")

@@ -106,6 +106,9 @@ class JwtAuthenticationFilter : OncePerRequestFilter() {
 @Component("security")
 class GroupPermissionEvaluator(
     private val userRepository: UserRepository,
+    private val groupMemberRepository: GroupMemberRepository,
+    private val channelRepository: ChannelRepository,
+    private val channelRoleBindingRepository: ChannelRoleBindingRepository,
     private val permissionService: PermissionService
 ) : PermissionEvaluator {
     override fun hasPermission(
@@ -121,14 +124,92 @@ class GroupPermissionEvaluator(
 
         val user = userRepository.findByEmail(authentication.name).orElse(null) ?: return false
 
-        // 2. PermissionService에 권한 계산 위임 (캐싱 처리 포함)
-        val effectivePermissions = permissionService.getEffective(targetId, user.id)
-        
-        // 3. 최종 권한 확인
-        return effectivePermissions.any { it.name == permission }
+        // 2. 대상 타입별 권한 검증 라우팅
+        return when (targetType) {
+            "GROUP" -> checkGroupPermission(targetId, user.id, permission)
+            "CHANNEL" -> checkChannelPermission(targetId, user.id, permission)
+            "RECRUITMENT" -> checkRecruitmentPermission(targetId, user.id, permission)
+            "APPLICATION" -> checkApplicationPermission(targetId, user.id, permission)
+            else -> false
+        }
+    }
+
+    private fun checkChannelPermission(channelId: Long, userId: Long, permission: String): Boolean {
+        // 1단계: 채널 조회 및 그룹 멤버십 확인
+        val channel = channelRepository.findById(channelId).orElse(null) ?: return false
+        val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
+            .orElse(null) ?: return false
+
+        // 2단계: 채널 권한 바인딩 확인
+        val binding = channelRoleBindingRepository
+            .findByChannelIdAndGroupRoleId(channelId, member.role.id) ?: return false
+
+        return try {
+            val channelPermission = ChannelPermission.valueOf(permission)
+            binding.permissions.contains(channelPermission)
+        } catch (e: IllegalArgumentException) {
+            log.warn("Invalid channel permission: $permission", e)
+            false
+        }
     }
 }
 ```
+
+### 권한 검증 레이어 설계 결정
+
+**핵심 결정: Security Layer에서 Repository 직접 사용**
+
+GroupPermissionEvaluator는 Spring Security의 일부로서 `@PreAuthorize` 어노테이션이 실행되는 시점에 동작합니다. 이는 Controller 메서드가 호출되기 **전**에 실행되므로, Service Layer를 우회하여 Repository를 직접 사용하는 것이 적절합니다.
+
+**Option A (채택): Security → Repository 직접 호출**
+```
+@PreAuthorize 실행 → GroupPermissionEvaluator
+                    ↓
+                Repository (직접)
+                    ↓
+                결과 반환 → true/false
+                    ↓
+         true면 Controller 실행, false면 403
+```
+
+**장점**:
+- 빠른 권한 검증 (Service Layer 우회)
+- 순수한 권한 검증 로직 (비즈니스 로직과 분리)
+- 명확한 책임 분리: Security는 "접근 가능 여부만" 판단
+- 불필요한 데이터 로딩 방지 (권한 검증에 필요한 최소 데이터만)
+
+**Option B (기각): ChannelPermissionService 생성**
+```
+@PreAuthorize → GroupPermissionEvaluator
+                    ↓
+            ChannelPermissionService
+                    ↓
+                Repository
+```
+
+**기각 이유**:
+- 권한 검증은 비즈니스 로직이 아닌 인프라 관심사
+- Service Layer가 순수 권한 검증만 수행하면 역할이 모호해짐
+- 추가 레이어로 인한 복잡도 증가
+- 트랜잭션 경계 설정이 불필요 (읽기 전용 권한 체크)
+
+**구현 원칙**:
+1. **빠른 실패(Fail Fast)**: 조건 미충족 시 즉시 `false` 반환
+2. **최소 권한 원칙**: 필요한 데이터만 조회 (엔티티 전체 로딩 지양)
+3. **무상태(Stateless)**: 각 권한 검증은 독립적으로 실행
+4. **로깅**: 잘못된 권한 요청은 경고 로그 기록
+
+**검증 플로우 (채널 권한 예시)**:
+1. 채널 존재 확인 (`channelRepository.findById`)
+2. 그룹 멤버십 확인 (`groupMemberRepository.findByGroupIdAndUserId`)
+3. 역할-채널 바인딩 확인 (`channelRoleBindingRepository.findByChannelIdAndGroupRoleId`)
+4. 요청한 권한이 바인딩에 포함되어 있는지 확인
+
+**그룹 권한 vs 채널 권한 차이**:
+- **그룹 권한**: PermissionService의 캐시를 활용 (복잡한 상속/오버라이드 로직)
+- **채널 권한**: Repository 직접 조회 (단순한 바인딩 매핑 확인)
+
+**참고**: 채널 권한은 PermissionService 캐시를 사용하지 않습니다. 채널별 권한 바인딩은 그룹 권한보다 단순하고, 캐시 무효화 복잡도를 피하기 위해 직접 조회를 선택했습니다.
 
 ## 표준 응답 형식 (갱신)
 ```kotlin
