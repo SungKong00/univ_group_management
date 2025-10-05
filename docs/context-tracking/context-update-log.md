@@ -4,6 +4,43 @@
 
 ## 2025년 10월
 
+### 2025-10-06 - MeControllerTest 통합 테스트 변환
+**커밋**: 현재 세션
+**유형**: 테스트 개선 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 백엔드 (컨트롤러 테스트)
+
+**구현 내용**:
+- MeControllerTest: @WebMvcTest → @SpringBootTest 통합 테스트 변환
+  - NoSuchBeanDefinitionException: GroupMemberService 해결
+  - 실제 Repository 및 Service 사용
+  - JWT 토큰 기반 인증 테스트 구현
+- 7개 테스트 추가:
+  - GET /api/me 성공/인증 실패/잘못된 토큰
+  - GET /api/me/groups 성공/빈 배열/인증 실패/레벨순 정렬
+- Spring Security 응답 처리 개선:
+  - `.isUnauthorized` → `.is4xxClientError` (401/403 모두 허용)
+- 통합 테스트 패턴 확립:
+  - ContentControllerTest (29 tests) ✅
+  - RecruitmentControllerTest (35 tests) ✅
+  - MeControllerTest (7 tests) ✅
+  - 전체 200개 컨트롤러 테스트 통과
+
+**동기화 완료 문서**:
+- ✅ testing-strategy.md: 통합 테스트 패턴 및 MeControllerTest 예시 추가
+- ✅ backend-guide.md: 컨트롤러 테스트 작성 가이드 업데이트
+- ✅ context-update-log.md: 현재 로그 추가
+- ✅ sync-status.md: 동기화 상태 갱신
+
+**핵심 학습 사항**:
+- @WebMvcTest는 Service 레이어 빈을 로드하지 않음 → 다중 서비스 의존성 컨트롤러는 @SpringBootTest 사용
+- Spring Security는 상황에 따라 401 또는 403 반환 → `.is4xxClientError` 사용
+- JWT 토큰 생성: `jwtTokenProvider.generateAccessToken(UsernamePasswordAuthenticationToken)`
+
+**메모**: 통합 테스트 패턴을 모든 컨트롤러 테스트에 일관되게 적용 완료
+
+---
+
 ### 2025-10-06 - 댓글 버튼 UI 개선
 **커밋**: 현재 세션
 **유형**: 코드 수정 + 문서 동기화

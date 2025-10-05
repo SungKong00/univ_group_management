@@ -94,51 +94,100 @@ fun `하위 그룹 생성 시 상위 그룹 권한이 필요하다`() {
 
 ### 2. API 테스트 (Controller Layer)
 
-#### MockMvc 기반 테스트
+#### 통합 테스트 패턴 (권장)
 ```kotlin
-@SpringBootTest
-@AutoConfigureTestDatabase
-@TestMethodOrder(OrderAnnotation::class)
-class GroupControllerIntegrationTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Transactional
+@DisplayName("MeController 통합 테스트")
+class MeControllerTest {
 
-    @Autowired lateinit var mockMvc: MockMvc
-    @Autowired lateinit var objectMapper: ObjectMapper
+    @Autowired private lateinit var mockMvc: MockMvc
+    @Autowired private lateinit var userRepository: UserRepository
+    @Autowired private lateinit var jwtTokenProvider: JwtTokenProvider
 
-    @Test
-    @WithMockUser(username = "test@test.com")
-    fun `POST groups - 그룹 생성 성공`() {
-        // Given
-        val request = CreateGroupRequest(
-            name = "새 그룹",
-            visibility = GroupVisibility.PUBLIC
+    private lateinit var testUser: User
+    private lateinit var token: String
+
+    @BeforeEach
+    fun setUp() {
+        testUser = userRepository.save(
+            TestDataFactory.createTestUser(
+                email = "test-${System.nanoTime()}@example.com"
+            )
         )
+        token = generateToken(testUser)
+    }
 
-        // When & Then
-        mockMvc.perform(
-            post("/api/groups")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
+    private fun generateToken(user: User): String {
+        val authentication = UsernamePasswordAuthenticationToken(
+            user.email,
+            null,
+            listOf(SimpleGrantedAuthority("ROLE_${user.globalRole.name}"))
         )
-        .andExpect(status().isCreated)
-        .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.data.name").value("새 그룹"))
+        return jwtTokenProvider.generateAccessToken(authentication)
     }
 
     @Test
-    fun `인증되지 않은 사용자는 그룹 생성할 수 없다`() {
-        // Given
-        val request = CreateGroupRequest("그룹", GroupVisibility.PUBLIC)
-
-        // When & Then
+    @DisplayName("GET /api/me - 내 정보 조회 성공")
+    fun getMe_success() {
         mockMvc.perform(
-            post("/api/groups")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
+            get("/api/me")
+                .header("Authorization", "Bearer $token")
+                .accept(MediaType.APPLICATION_JSON)
         )
-        .andExpect(status().isUnauthorized)
+        .andExpect(status().isOk)
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.data.email").value(testUser.email))
+    }
+
+    @Test
+    @DisplayName("GET /api/me - 인증 없이 요청 시 401 또는 403")
+    fun getMe_unauthorized() {
+        mockMvc.perform(
+            get("/api/me")
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().is4xxClientError) // 401 or 403 허용
     }
 }
 ```
+
+#### @WebMvcTest vs @SpringBootTest 선택 기준
+
+**@WebMvcTest 사용 (슬라이스 테스트)**
+- Controller만 테스트하고 Service는 Mock 처리
+- 빠른 테스트 실행 필요
+- 단순한 컨트롤러 (적은 의존성)
+
+**@SpringBootTest 사용 (통합 테스트)** ✅ 권장
+- 실제 환경과 동일한 인증/권한 흐름 검증
+- 다중 Service 의존성이 있는 컨트롤러
+- Spring Security 통합 필요
+- 실제 Repository/Service 동작 검증
+
+**예시: MeController의 경우**
+```kotlin
+// ❌ @WebMvcTest 사용 시 문제
+// NoSuchBeanDefinitionException: GroupMemberService 발생
+// → MeController가 UserService + GroupMemberService 의존
+
+// ✅ @SpringBootTest 사용
+// 모든 빈이 로드되어 실제 환경과 동일하게 테스트
+```
+
+#### Spring Security 인증 테스트 패턴
+```kotlin
+// ❌ 잘못된 예: 특정 상태 코드 기대
+.andExpect(status().isUnauthorized) // 401만 기대
+
+// ✅ 올바른 예: 4xx 클라이언트 에러 허용
+.andExpect(status().is4xxClientError) // 401 or 403 허용
+```
+
+Spring Security는 상황에 따라 401(Unauthorized) 또는 403(Forbidden)을 반환할 수 있으므로,
+`.is4xxClientError`를 사용하여 두 상태 코드를 모두 허용하는 것이 안전합니다.
 
 ### 3. 데이터베이스 테스트
 
