@@ -141,8 +141,8 @@ class _PostItemState extends State<PostItem> {
     if (_isCommentHovered && hasComments) {
       buttonText = '댓글 펼치기';
     } else if (hasComments) {
-      final lastCommentTime = widget.post.lastCommentAt != null
-          ? _formatRelativeTime(widget.post.lastCommentAt!)
+      final lastCommentTime = widget.post.lastCommentedAt != null
+          ? _formatRelativeTime(widget.post.lastCommentedAt!)
           : '';
       buttonText = '${widget.post.commentCount}개의 댓글';
       if (lastCommentTime.isNotEmpty) {

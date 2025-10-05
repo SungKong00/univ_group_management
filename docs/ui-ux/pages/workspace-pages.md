@@ -35,6 +35,19 @@
 - 글로벌 라우팅 전환을 `NoTransitionPage`로 통일해 상단/좌측 네비게이션 고정 유지
 - 데스크톱 워크스페이스 콘텐츠 영역을 `Stack`+`Positioned`로 재구성해 채널/댓글 사이드바 폭 선점
 
+**그룹 드롭다운 최적화 (2025-10-06)**
+- 스마트 폰트 크기: 채널바 너비 기반 동적 폰트 크기 조정 (bodyLarge 16px ↔ bodySmall 12px)
+- 텍스트 너비 계산: TextPainter로 사전 측정하여 오버플로우 방지
+- 반응형 아이콘 크기: 폰트 크기에 따라 20px ↔ 16px 자동 조정
+- 구현 파일: `/frontend/lib/presentation/widgets/workspace/group_dropdown.dart`
+
+**워크스페이스 애니메이션 (2025-10-06)**
+- 댓글창 슬라이드 애니메이션: SlideTransition (오른쪽 → 왼쪽, 160ms, easeOutCubic)
+- AnimationController: SingleTickerProviderStateMixin 사용
+- 상태 동기화: 애니메이션 완료 후 workspaceState.isCommentsVisible 업데이트
+- 중복 실행 방지: `_isAnimatingOut` 플래그로 제어
+- 구현 파일: `/frontend/lib/presentation/pages/workspace/workspace_page.dart`
+
 ### 향후 개선 사항
 
 **읽지 않음 카운트 API**
@@ -148,6 +161,11 @@
     -   "그룹 정보가 업데이트되었습니다."
 
 ## 3. 그룹 캘린더 페이지
+
+> **구현 상태**: Phase 6 이후 예정 (현재 0% 완료)
+> **개발 우선순위**: 권한 페이지 → 홍보/모집 → 캘린더
+> **스키마 설계**: 추후 작성 예정
+> **UI 명세**: 아이디어 초안 단계
 
 그룹 멤버들의 공통 일정과 예약 가능한 장소의 일정을 관리합니다.
 

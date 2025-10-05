@@ -93,7 +93,7 @@ class RecruitmentMapper(
             approvedApplications = stats.approvedApplications,
             rejectedApplications = stats.rejectedApplications,
             createdAt = recruitment.createdAt,
-            closedAt = recruitment.closedAt!!,
+            closedAt = recruitment.closedAt ?: recruitment.createdAt, // fallback to createdAt if closedAt is null
         )
     }
 }

@@ -6,7 +6,6 @@ import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../providers/workspace_state_provider.dart';
 import 'channel_item.dart';
 import 'workspace_header.dart';
@@ -21,6 +20,7 @@ import 'workspace_header.dart';
 /// Features a deferred slide-in animation that begins once the global sidebar has
 /// collapsed, creating a seamless hand-off between the two navigation rails.
 class ChannelNavigation extends ConsumerStatefulWidget {
+  final double width; // 반응형 너비
   final List<Channel> channels;
   final String? selectedChannelId;
   final bool hasAnyGroupPermission;
@@ -31,6 +31,7 @@ class ChannelNavigation extends ConsumerStatefulWidget {
 
   const ChannelNavigation({
     super.key,
+    required this.width,
     required this.channels,
     this.selectedChannelId,
     required this.hasAnyGroupPermission,
@@ -62,7 +63,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
     );
 
     _entranceOffset = Tween<double>(
-      begin: -AppConstants.sidebarWidth.toDouble(),
+      begin: -widget.width,
       end: 0,
     ).animate(
       CurvedAnimation(
@@ -114,7 +115,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
         );
       },
       child: Container(
-        width: AppConstants.sidebarWidth,
+        width: widget.width,
         decoration: const BoxDecoration(
           color: Colors.white,
           border: Border(
@@ -134,6 +135,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
                     path: [widget.currentGroupName!], // 그룹명만
                   ),
                   currentGroupId: widget.currentGroupId,
+                  channelBarWidth: widget.width, // 반응형 너비 전달
                 ),
               ),
             const Divider(height: 1, thickness: 1),

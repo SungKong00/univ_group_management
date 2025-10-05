@@ -125,7 +125,7 @@ class ContentServiceIntegrationTest {
         val existing = workspaceRepository.findByGroup_Id(group.id!!)
         assertThat(existing).isEmpty()
 
-        val workspaces = contentService.getWorkspacesByGroup(group.id!!)
+        val workspaces = contentService.getWorkspacesByGroup(group.id!!, owner.id)
 
         assertThat(workspaces).hasSize(1)
         assertThat(workspaces[0].name).isEqualTo("기본 워크스페이스")
@@ -135,8 +135,8 @@ class ContentServiceIntegrationTest {
     @Test
     @DisplayName("그룹 워크스페이스 조회는 멱등적이며 단 하나만 존재한다")
     fun getWorkspacesByGroup_IdempotentSingle() {
-        val first = contentService.getWorkspacesByGroup(group.id!!)
-        val second = contentService.getWorkspacesByGroup(group.id!!)
+        val first = contentService.getWorkspacesByGroup(group.id!!, owner.id)
+        val second = contentService.getWorkspacesByGroup(group.id!!, owner.id)
         assertThat(first).hasSize(1)
         assertThat(second).hasSize(1)
         assertThat(first[0].id).isEqualTo(second[0].id)
@@ -327,7 +327,7 @@ class ContentServiceIntegrationTest {
     private fun ensureDefaultWorkspace(): WorkspaceResponse {
         val existing = workspaceRepository.findByGroup_Id(group.id!!)
         return if (existing.isEmpty()) {
-            contentService.getWorkspacesByGroup(group.id!!)[0]
+            contentService.getWorkspacesByGroup(group.id!!, owner.id)[0]
         } else {
             val workspace = existing[0]
             WorkspaceResponse(

@@ -12,7 +12,7 @@ class Post {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final int commentCount;
-  final DateTime? lastCommentAt;
+  final DateTime? lastCommentedAt;
 
   const Post({
     required this.id,
@@ -23,7 +23,7 @@ class Post {
     required this.createdAt,
     this.updatedAt,
     this.commentCount = 0,
-    this.lastCommentAt,
+    this.lastCommentedAt,
   });
 
   /// JSON → Post 변환
@@ -43,8 +43,8 @@ class Post {
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
       commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
-      lastCommentAt: json['lastCommentAt'] != null
-          ? DateTime.parse(json['lastCommentAt'] as String)
+      lastCommentedAt: json['lastCommentedAt'] != null
+          ? DateTime.parse(json['lastCommentedAt'] as String)
           : null,
     );
   }
@@ -60,7 +60,7 @@ class Post {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'commentCount': commentCount,
-      'lastCommentAt': lastCommentAt?.toIso8601String(),
+      'lastCommentedAt': lastCommentedAt?.toIso8601String(),
     };
   }
 
@@ -74,7 +74,7 @@ class Post {
     DateTime? createdAt,
     DateTime? updatedAt,
     int? commentCount,
-    DateTime? lastCommentAt,
+    DateTime? lastCommentedAt,
   }) {
     return Post(
       id: id ?? this.id,
@@ -85,7 +85,7 @@ class Post {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       commentCount: commentCount ?? this.commentCount,
-      lastCommentAt: lastCommentAt ?? this.lastCommentAt,
+      lastCommentedAt: lastCommentedAt ?? this.lastCommentedAt,
     );
   }
 }

@@ -20,11 +20,13 @@ class ContentController(
 ) : BaseController(userService) {
     // === Workspaces (compat: group-level single workspace) ===
     @GetMapping("/groups/{groupId}/workspaces")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'CHANNEL_READ')")
+    @PreAuthorize("isAuthenticated()")
     fun getWorkspaces(
         @PathVariable groupId: Long,
+        authentication: Authentication,
     ): ApiResponse<List<WorkspaceResponse>> {
-        val response = contentService.getWorkspacesByGroup(groupId)
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getWorkspacesByGroup(groupId, user.id)
         return ApiResponse.success(response)
     }
 

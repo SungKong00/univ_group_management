@@ -35,6 +35,9 @@ class SecurityConfig(
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    // 공개 모집 조회 엔드포인트
+                    .requestMatchers(HttpMethod.GET, "/api/groups/*/recruitments").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/recruitments/public").permitAll()
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

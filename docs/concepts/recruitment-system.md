@@ -46,7 +46,7 @@ RECRUITMENT_MANAGE 권한자:
 └── 공개된 지원자 수 조회 (설정에 따라)
 ```
 
-## 구현 상태 (2025-10-01)
+## 구현 상태 (2025-10-06)
 | 항목 | 구현 여부 | 비고 |
 |------|-----------|------|
 | 단일 활성 모집 제한 | ✅ | 그룹당 OPEN 1개 검사 로직 존재 |
@@ -56,6 +56,8 @@ RECRUITMENT_MANAGE 권한자:
 | 지원서 심사(승인/거절) | ✅ | 승인 시 그룹 자동 가입 처리 |
 | 지원서 철회 | ✅ | 지원자 본인만 삭제(철회) |
 | 아카이브 조회 | ✅ | CLOSED 상태 포함 목록 (`/archive`) |
+| JPA Dirty Checking 최적화 | ✅ | data class → class 전환, var 필드 직접 수정 |
+| N+1 문제 해결 | ✅ | FETCH JOIN 쿼리 추가 (findByIdWithRelations) |
 | 통계 엔드포인트 | ⏳ | `/stats` 설계만 존재 (집계 로직 미구현) |
 | 자동 마감 배치 | ⏳ | 예약 작업 설계 예정 (Quartz/스케줄러) |
 | 알림 시스템 연동 | ❌ | Notification 모듈 미구현 |
@@ -82,22 +84,22 @@ RECRUITMENT_MANAGE 권한자:
 
 ### GroupRecruitment (모집 게시글)
 ```kotlin
-data class GroupRecruitment(
+class GroupRecruitment(
     val id: Long,
-    val group: Group,                    // 모집하는 그룹
-    val createdBy: User,                 // 작성자
-    val title: String,                   // 모집 제목
-    val content: String?,                // 모집 내용
-    val maxApplicants: Int?,             // 최대 지원자 수
-    val recruitmentStartDate: LocalDateTime, // 모집 시작일
-    val recruitmentEndDate: LocalDateTime?,  // 모집 마감일
-    val status: RecruitmentStatus,       // 모집 상태
-    val autoApprove: Boolean,            // 자동 승인 여부
-    val showApplicantCount: Boolean,     // 지원자 수 공개 여부
-    val applicationQuestions: List<String>, // 지원서 질문
+    val group: Group,                    // 모집하는 그룹 (불변)
+    val createdBy: User,                 // 작성자 (불변)
+    var title: String,                   // 모집 제목 (수정 가능)
+    var content: String?,                // 모집 내용 (수정 가능)
+    var maxApplicants: Int?,             // 최대 지원자 수 (수정 가능)
+    val recruitmentStartDate: LocalDateTime, // 모집 시작일 (불변)
+    var recruitmentEndDate: LocalDateTime?,  // 모집 마감일 (수정 가능)
+    var status: RecruitmentStatus,       // 모집 상태 (수정 가능)
+    var autoApprove: Boolean,            // 자동 승인 여부 (수정 가능)
+    var showApplicantCount: Boolean,     // 지원자 수 공개 여부 (수정 가능)
+    var applicationQuestions: List<String>, // 지원서 질문 (수정 가능)
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
-    val closedAt: LocalDateTime?         // 마감 시점
+    var updatedAt: LocalDateTime,
+    var closedAt: LocalDateTime?         // 마감 시점 (수정 가능)
 )
 
 enum class RecruitmentStatus {

@@ -7,6 +7,8 @@
 - **그룹 계층**: [docs/concepts/group-hierarchy.md](docs/concepts/group-hierarchy.md)
 - **권한 시스템**: [docs/concepts/permission-system.md](docs/concepts/permission-system.md)
 - **워크스페이스**: [docs/concepts/workspace-channel.md](docs/concepts/workspace-channel.md)
+- **캘린더 시스템** (Phase 6): [docs/concepts/calendar-system.md](docs/concepts/calendar-system.md)
+- **장소 관리** (Phase 6): [docs/concepts/calendar-place-management.md](docs/concepts/calendar-place-management.md)
 
 ### 개발 가이드
 - **백엔드 개발**: [docs/implementation/backend-guide.md](docs/implementation/backend-guide.md)

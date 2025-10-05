@@ -5,6 +5,7 @@ import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../dialogs/logout_dialog.dart';
+import 'avatar_popup_menu.dart';
 
 /// UserInfoCard v2
 /// 목표:
@@ -37,6 +38,8 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller; // 확장/축소 애니메이션 (0=확장, 1=축소)
   bool _isLoggingOut = false;
+  OverlayEntry? _popupOverlay;
+  final LayerLink _layerLink = LayerLink();
 
   @override
   void initState() {
@@ -64,8 +67,51 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
 
   @override
   void dispose() {
+    _removePopup();
     _controller.dispose();
     super.dispose();
+  }
+
+  void _showPopup() {
+    if (_popupOverlay != null) return;
+
+    _popupOverlay = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // 외부 클릭 시 팝업 닫기
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _removePopup,
+              behavior: HitTestBehavior.translucent,
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          // 팝업 메뉴
+          Positioned(
+            width: 240,
+            child: CompositedTransformFollower(
+              link: _layerLink,
+              offset: const Offset(60, -150), // 아바타 위쪽에 팝업 표시
+              child: AvatarPopupMenu(
+                user: widget.user,
+                onLogout: () {
+                  _removePopup();
+                  _handleLogout();
+                },
+                onClose: _removePopup,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Overlay.of(context).insert(_popupOverlay!);
+  }
+
+  void _removePopup() {
+    _popupOverlay?.remove();
+    _popupOverlay = null;
   }
 
   @override
@@ -100,11 +146,15 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
               mainAxisSize: MainAxisSize.min,
               children: [
               // Avatar: Transform으로 위치 애니메이션
-              Transform.translate(
-                offset: Offset(avatarDx, 0),
-                child: _AvatarSection(
-                  user: widget.user,
-                  isCompact: widget.isCompact,
+              CompositedTransformTarget(
+                link: _layerLink,
+                child: Transform.translate(
+                  offset: Offset(avatarDx, 0),
+                  child: _AvatarSection(
+                    user: widget.user,
+                    isCompact: widget.isCompact,
+                    onTap: widget.isCompact ? _showPopup : null,
+                  ),
                 ),
               ),
 
@@ -226,13 +276,19 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
 class _AvatarSection extends StatelessWidget {
   final UserInfo user;
   final bool isCompact;
-  const _AvatarSection({required this.user, required this.isCompact});
+  final VoidCallback? onTap;
+  const _AvatarSection({
+    required this.user,
+    required this.isCompact,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final size = isCompact ? 32.0 : 40.0;
     final radius = size / 2;
-    return AnimatedContainer(
+
+    final avatar = AnimatedContainer(
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeInOutCubic,
       width: size,
@@ -245,6 +301,18 @@ class _AvatarSection extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: _buildImageOrInitials(size),
     );
+
+    if (onTap != null) {
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          child: avatar,
+        ),
+      );
+    }
+
+    return avatar;
   }
 
   Widget _buildImageOrInitials(double size) {

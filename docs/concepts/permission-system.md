@@ -194,7 +194,53 @@ private fun checkChannelPermission(channelId: Long, userId: Long, permission: St
 - 2025-10-01 (rev3): 권한 모델을 역할 중심 기술 → 권한별 역할 매핑(Permission-Centric)으로 문서화
 - 2025-10-01 (rev5): 기본 2채널 템플릿 + 사용자 정의 채널 0바인딩 혼합 전략 명시
 
+## 캘린더 권한 (Calendar Permissions)
+
+> **개발 우선순위**: Phase 6 이후 예정
+> **상태**: 개념 설계 중, 스키마 미확정
+
+캘린더 시스템에 필요한 권한은 다음과 같이 계획되어 있습니다:
+
+### 그룹 레벨 권한
+- `CALENDAR_VIEW`: 그룹 캘린더 조회 권한
+- `CALENDAR_MANAGE`: 공식 일정 생성/수정/삭제 권한
+
+### 장소 관리 권한 (설계 의논 필요)
+장소 관리 권한은 다음 두 가지 방식 중 하나로 통합될 예정:
+
+**Option A: RBAC 시스템 통합** (권장)
+- `PLACE_MANAGE`: 장소 등록, 사용 그룹 승인, 예약 관리
+- `PLACE_RESERVE`: 장소 예약 권한 (사용 그룹 멤버)
+- 기존 GroupRole에 추가하여 일관된 권한 체계 유지
+
+**Option B: 독립 권한 시스템**
+- 장소별 독립적인 권한 테이블 (PlacePermission 엔티티)
+- 그룹 권한과 별도로 관리
+- 복잡도 증가, 권한 확인 로직 이원화
+
+### 권한 매트릭스 (예시)
+
+> 아래는 Option A 채택 시 예상 매트릭스입니다.
+
+| 권한 | OWNER | ADVISOR | MEMBER | 설명 |
+|------|-------|---------|--------|------|
+| CALENDAR_VIEW | ✓ | ✓ | ✓ | 그룹 캘린더 조회 |
+| CALENDAR_MANAGE | ✓ | ✓ | - | 공식 일정 관리 |
+| PLACE_MANAGE | ✓ | - | - | 장소 관리 (관리 주체 그룹만) |
+| PLACE_RESERVE | ✓ | ✓ | ✓ | 장소 예약 (사용 그룹) |
+
+### 다음 단계
+1. 데이터베이스 스키마 설계 완료 후 권한 구조 확정
+2. 장소 관리 권한 통합 방식 결정 (Option A vs B)
+3. 권한 검증 로직 구현 (PermissionService 확장)
+4. UI 권한 매트릭스에 캘린더 권한 추가
+
+**관련 문서**: [캘린더 시스템](calendar-system.md) | [장소 관리](calendar-place-management.md)
+
+---
+
 ## 추가 참고
 - 채널 권한: `channel-permissions.md`
 - 워크스페이스 구조: `workspace-channel.md`
+- 캘린더 시스템: `calendar-system.md`
 - 문제 해결: `../troubleshooting/permission-errors.md`

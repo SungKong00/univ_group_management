@@ -91,58 +91,54 @@ class RecruitmentService(
         request: UpdateRecruitmentRequest,
         userId: Long,
     ): RecruitmentResponse {
-        val recruitment = groupRecruitmentRepository.findById(recruitmentId)
-            .orElseThrow { BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND) }
+        val recruitment = groupRecruitmentRepository.findByIdWithRelations(recruitmentId)
+            ?: throw BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND)
 
         if (recruitment.status != RecruitmentStatus.OPEN) {
             throw BusinessException(ErrorCode.RECRUITMENT_NOT_ACTIVE)
         }
 
-        val updatedRecruitment = recruitment.copy(
-            title = request.title ?: recruitment.title,
-            content = request.content ?: recruitment.content,
-            maxApplicants = request.maxApplicants ?: recruitment.maxApplicants,
-            recruitmentEndDate = request.recruitmentEndDate ?: recruitment.recruitmentEndDate,
-            autoApprove = request.autoApprove ?: recruitment.autoApprove,
-            showApplicantCount = request.showApplicantCount ?: recruitment.showApplicantCount,
-            applicationQuestions = request.applicationQuestions ?: recruitment.applicationQuestions,
-            updatedAt = LocalDateTime.now(),
-        )
+        // 직접 필드 수정으로 JPA dirty checking 활용
+        request.title?.let { recruitment.title = it }
+        request.content?.let { recruitment.content = it }
+        request.maxApplicants?.let { recruitment.maxApplicants = it }
+        request.recruitmentEndDate?.let { recruitment.recruitmentEndDate = it }
+        request.autoApprove?.let { recruitment.autoApprove = it }
+        request.showApplicantCount?.let { recruitment.showApplicantCount = it }
+        request.applicationQuestions?.let { recruitment.applicationQuestions = it }
+        recruitment.updatedAt = LocalDateTime.now()
 
-        val savedRecruitment = groupRecruitmentRepository.save(updatedRecruitment)
         val applicantCount = recruitmentApplicationRepository.countByRecruitmentId(recruitmentId)
         val groupMemberCount = groupMemberRepository.countByGroupId(recruitment.group.id).toInt()
 
-        return recruitmentMapper.toRecruitmentResponse(savedRecruitment, applicantCount.toInt(), groupMemberCount)
+        return recruitmentMapper.toRecruitmentResponse(recruitment, applicantCount.toInt(), groupMemberCount)
     }
 
     @Transactional
     fun closeRecruitment(recruitmentId: Long, userId: Long): RecruitmentResponse {
-        val recruitment = groupRecruitmentRepository.findById(recruitmentId)
-            .orElseThrow { BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND) }
+        val recruitment = groupRecruitmentRepository.findByIdWithRelations(recruitmentId)
+            ?: throw BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND)
 
         if (recruitment.status != RecruitmentStatus.OPEN) {
             throw BusinessException(ErrorCode.RECRUITMENT_NOT_ACTIVE)
         }
 
-        val closedRecruitment = recruitment.copy(
-            status = RecruitmentStatus.CLOSED,
-            closedAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now(),
-        )
+        // 직접 필드 수정으로 JPA dirty checking 활용
+        recruitment.status = RecruitmentStatus.CLOSED
+        recruitment.closedAt = LocalDateTime.now()
+        recruitment.updatedAt = LocalDateTime.now()
 
-        val savedRecruitment = groupRecruitmentRepository.save(closedRecruitment)
         val applicantCount = recruitmentApplicationRepository.countByRecruitmentId(recruitmentId)
         val groupMemberCount = groupMemberRepository.countByGroupId(recruitment.group.id).toInt()
 
         logger.info("Closed recruitment: $recruitmentId by user: $userId")
-        return recruitmentMapper.toRecruitmentResponse(savedRecruitment, applicantCount.toInt(), groupMemberCount)
+        return recruitmentMapper.toRecruitmentResponse(recruitment, applicantCount.toInt(), groupMemberCount)
     }
 
     @Transactional
     fun deleteRecruitment(recruitmentId: Long, userId: Long) {
-        val recruitment = groupRecruitmentRepository.findById(recruitmentId)
-            .orElseThrow { BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND) }
+        val recruitment = groupRecruitmentRepository.findByIdWithRelations(recruitmentId)
+            ?: throw BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND)
 
         if (recruitment.status != RecruitmentStatus.OPEN) {
             throw BusinessException(ErrorCode.RECRUITMENT_NOT_ACTIVE)
@@ -178,7 +174,8 @@ class RecruitmentService(
         }
 
         // 마감일 확인
-        if (recruitment.recruitmentEndDate != null && recruitment.recruitmentEndDate.isBefore(LocalDateTime.now())) {
+        val endDate = recruitment.recruitmentEndDate
+        if (endDate != null && endDate.isBefore(LocalDateTime.now())) {
             throw BusinessException(ErrorCode.RECRUITMENT_EXPIRED)
         }
 
@@ -195,9 +192,10 @@ class RecruitmentService(
         }
 
         // 최대 지원자 수 확인
-        if (recruitment.maxApplicants != null) {
+        val maxApplicants = recruitment.maxApplicants
+        if (maxApplicants != null) {
             val currentCount = recruitmentApplicationRepository.countByRecruitmentId(recruitmentId)
-            if (currentCount >= recruitment.maxApplicants) {
+            if (currentCount >= maxApplicants) {
                 throw BusinessException(ErrorCode.RECRUITMENT_FULL)
             }
         }
@@ -284,6 +282,11 @@ class RecruitmentService(
 
         if (application.applicant.id != applicantId) {
             throw BusinessException(ErrorCode.ACCESS_DENIED)
+        }
+
+        // 이미 심사된 지원서는 철회할 수 없음
+        if (application.status == ApplicationStatus.APPROVED || application.status == ApplicationStatus.REJECTED) {
+            throw BusinessException(ErrorCode.APPLICATION_ALREADY_REVIEWED)
         }
 
         if (application.status != ApplicationStatus.PENDING) {

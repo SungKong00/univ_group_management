@@ -33,11 +33,19 @@ class GlobalExceptionHandler {
                 ErrorCode.CHANNEL_NOT_FOUND,
                 ErrorCode.POST_NOT_FOUND,
                 ErrorCode.COMMENT_NOT_FOUND,
+                ErrorCode.RECRUITMENT_NOT_FOUND,
+                ErrorCode.APPLICATION_NOT_FOUND,
+                ErrorCode.REQUEST_NOT_FOUND,
                 -> HttpStatus.NOT_FOUND
                 ErrorCode.USER_ALREADY_EXISTS,
                 ErrorCode.GROUP_NAME_ALREADY_EXISTS,
                 ErrorCode.GROUP_ROLE_NAME_ALREADY_EXISTS,
                 ErrorCode.ALREADY_GROUP_MEMBER,
+                ErrorCode.RECRUITMENT_ALREADY_EXISTS,
+                ErrorCode.APPLICATION_ALREADY_EXISTS,
+                ErrorCode.APPLICATION_ALREADY_REVIEWED,
+                ErrorCode.APPLICATION_CANNOT_WITHDRAW,
+                ErrorCode.REQUEST_ALREADY_EXISTS,
                 -> HttpStatus.CONFLICT
                 else -> HttpStatus.BAD_REQUEST
             }

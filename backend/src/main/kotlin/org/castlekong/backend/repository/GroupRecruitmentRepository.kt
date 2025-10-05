@@ -13,13 +13,35 @@ import java.time.LocalDateTime
 @Repository
 interface GroupRecruitmentRepository : JpaRepository<GroupRecruitment, Long> {
 
+    // ID로 조회 (연관 엔티티 FETCH JOIN)
+    @Query("""
+        SELECT r FROM GroupRecruitment r
+        JOIN FETCH r.group
+        JOIN FETCH r.createdBy
+        WHERE r.id = :id
+    """)
+    fun findByIdWithRelations(@Param("id") id: Long): GroupRecruitment?
+
     // 그룹별 모집 게시글 조회
     fun findByGroupId(groupId: Long): List<GroupRecruitment>
 
     // 그룹별 모집 게시글 페이징 조회
+    @Query("""
+        SELECT DISTINCT r FROM GroupRecruitment r
+        JOIN FETCH r.group g
+        JOIN FETCH r.createdBy
+        WHERE g.id = :groupId
+        AND r.status = :status
+        ORDER BY r.createdAt DESC
+    """,
+    countQuery = """
+        SELECT COUNT(DISTINCT r) FROM GroupRecruitment r
+        WHERE r.group.id = :groupId
+        AND r.status = :status
+    """)
     fun findByGroupIdAndStatus(
-        groupId: Long,
-        status: RecruitmentStatus,
+        @Param("groupId") groupId: Long,
+        @Param("status") status: RecruitmentStatus,
         pageable: Pageable
     ): Page<GroupRecruitment>
 
@@ -35,8 +57,9 @@ interface GroupRecruitmentRepository : JpaRepository<GroupRecruitment, Long> {
 
     // 전체 모집 게시글 탐색 (공개)
     @Query("""
-        SELECT r FROM GroupRecruitment r
-        JOIN r.group g
+        SELECT DISTINCT r FROM GroupRecruitment r
+        JOIN FETCH r.group g
+        JOIN FETCH r.createdBy
         WHERE r.status = 'OPEN'
         AND g.visibility = 'PUBLIC'
         AND r.recruitmentStartDate <= :now
@@ -50,8 +73,9 @@ interface GroupRecruitmentRepository : JpaRepository<GroupRecruitment, Long> {
 
     // 키워드 검색
     @Query("""
-        SELECT r FROM GroupRecruitment r
-        JOIN r.group g
+        SELECT DISTINCT r FROM GroupRecruitment r
+        JOIN FETCH r.group g
+        JOIN FETCH r.createdBy
         WHERE r.status = 'OPEN'
         AND g.visibility = 'PUBLIC'
         AND r.recruitmentStartDate <= :now

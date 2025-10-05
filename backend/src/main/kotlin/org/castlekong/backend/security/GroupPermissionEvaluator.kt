@@ -18,6 +18,7 @@ class GroupPermissionEvaluator(
     private val recruitmentApplicationRepository: RecruitmentApplicationRepository,
     private val channelRepository: ChannelRepository,
     private val channelRoleBindingRepository: ChannelRoleBindingRepository,
+    private val postRepository: PostRepository,
     private val permissionService: PermissionService,
 ) : PermissionEvaluator {
     override fun hasPermission(
@@ -46,6 +47,7 @@ class GroupPermissionEvaluator(
         return when (targetType) {
             "GROUP" -> checkGroupPermission(targetId, user.id, permission)
             "CHANNEL" -> checkChannelPermission(targetId, user.id, permission)
+            "POST" -> checkPostPermission(targetId, user.id, permission)
             "RECRUITMENT" -> checkRecruitmentPermission(targetId, user.id, permission)
             "APPLICATION" -> checkApplicationPermission(targetId, user.id, permission)
             else -> false
@@ -71,6 +73,12 @@ class GroupPermissionEvaluator(
             log.warn("Invalid channel permission: $permission", e)
             false
         }
+    }
+
+    private fun checkPostPermission(postId: Long, userId: Long, permission: String): Boolean {
+        // Load post and delegate to channel permission check
+        val post = postRepository.findById(postId).orElse(null) ?: return false
+        return checkChannelPermission(post.channel.id, userId, permission)
     }
 
     private fun checkRecruitmentPermission(recruitmentId: Long, userId: Long, permission: String): Boolean {

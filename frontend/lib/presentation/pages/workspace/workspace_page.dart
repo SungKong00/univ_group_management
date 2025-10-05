@@ -30,14 +30,44 @@ class WorkspacePage extends ConsumerStatefulWidget {
   ConsumerState<WorkspacePage> createState() => _WorkspacePageState();
 }
 
-class _WorkspacePageState extends ConsumerState<WorkspacePage> {
+class _WorkspacePageState extends ConsumerState<WorkspacePage>
+    with SingleTickerProviderStateMixin {
   int _postListKey = 0;
   int _commentListKey = 0;
   bool _previousIsMobile = false;
+  bool _isAnimatingOut = false; // 슬라이드 아웃 애니메이션 진행 중 플래그
+  late AnimationController _commentsAnimationController;
+  late Animation<Offset> _commentsSlideAnimation;
 
   @override
   void initState() {
     super.initState();
+
+    // 댓글창 슬라이드 애니메이션 초기화
+    _commentsAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 160), // 디자인 시스템 표준 duration
+    );
+
+    _commentsSlideAnimation = Tween<Offset>(
+      begin: const Offset(1.0, 0.0), // 오른쪽 밖에서 시작
+      end: Offset.zero, // 제자리로 이동
+    ).animate(CurvedAnimation(
+      parent: _commentsAnimationController,
+      curve: Curves.easeOutCubic, // 디자인 시스템 표준 easing
+    ));
+
+    // 애니메이션 상태 리스너: 슬라이드 아웃 완료 감지
+    _commentsAnimationController.addStatusListener((status) {
+      if (status == AnimationStatus.dismissed && _isAnimatingOut) {
+        // 애니메이션이 완전히 종료되면 플래그 해제하고 상태 동기화
+        setState(() {
+          _isAnimatingOut = false;
+        });
+        // ✅ 상태 동기화: 애니메이션 완료 후 workspaceState.isCommentsVisible를 false로 설정
+        ref.read(workspaceStateProvider.notifier).hideComments();
+      }
+    });
 
     // 워크스페이스 진입 시 상태 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -76,6 +106,12 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   }
 
   @override
+  void dispose() {
+    _commentsAnimationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final workspaceState = ref.watch(workspaceStateProvider);
 
@@ -89,6 +125,16 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         // 반응형 전환 감지 및 상태 보존
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _handleResponsiveTransition(isMobile);
+
+          // 데스크톱에서 댓글 가시성 변화에 따라 애니메이션 트리거
+          // ✅ _isAnimatingOut이 아닐 때만 forward 허용 (중복 실행 방지)
+          if (isDesktop) {
+            if (workspaceState.isCommentsVisible && !_isAnimatingOut) {
+              _commentsAnimationController.forward();
+            } else if (!workspaceState.isCommentsVisible && !_isAnimatingOut) {
+              _commentsAnimationController.reverse();
+            }
+          }
         });
 
         // 모바일에서 뒤로가기 핸들링 추가
@@ -146,14 +192,14 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   Widget _buildDesktopWorkspace(WorkspaceState workspaceState) {
     final bool showChannelNavigation = workspaceState.isInWorkspace;
-    final bool showComments = workspaceState.isCommentsVisible;
+    final bool showComments = workspaceState.isCommentsVisible || _isAnimatingOut;
 
     return LayoutBuilder(
       builder: (context, _) {
-        final double leftInset = showChannelNavigation
-            ? AppConstants.sidebarWidth
-            : 0;
-        final double rightInset = showComments ? _commentsSidebarWidth : 0;
+        final double channelBarWidth = _getChannelBarWidth(context);
+        final double commentBarWidth = _getCommentsSidebarWidth(context);
+        final double leftInset = showChannelNavigation ? channelBarWidth : 0;
+        final double rightInset = showComments ? commentBarWidth : 0;
 
         return Stack(
           children: [
@@ -186,6 +232,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
                     );
 
                     return ChannelNavigation(
+                      width: channelBarWidth,
                       channels: workspaceState.channels,
                       selectedChannelId: workspaceState.selectedChannelId,
                       hasAnyGroupPermission:
@@ -199,12 +246,36 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
                 ),
               ),
 
+            // 백드롭 레이어: 댓글창이 열려있을 때 외부 클릭 감지를 위한 반투명 오버레이
+            if (showComments)
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: leftInset, // 채널바 제외
+                right: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    // 백드롭 클릭 시 댓글창 닫기 (슬라이드 아웃 애니메이션)
+                    setState(() {
+                      _isAnimatingOut = true;
+                    });
+                    _commentsAnimationController.reverse();
+                  },
+                  child: Container(
+                    color: Colors.black.withOpacity(0.12),
+                  ),
+                ),
+              ),
+
             if (showComments)
               Positioned(
                 top: 0,
                 bottom: 0,
                 right: 0,
-                child: _buildCommentsSidebar(workspaceState),
+                child: SlideTransition(
+                  position: _commentsSlideAnimation,
+                  child: _buildCommentsSidebar(workspaceState),
+                ),
               ),
           ],
         );
@@ -480,11 +551,29 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     }
   }
 
-  static const double _commentsSidebarWidth = 300;
+  /// 반응형 너비 계산: 채널바
+  double _getChannelBarWidth(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth >= 1200) {
+      return 256; // 1200px 이상: 기존 채널바 너비
+    } else {
+      return 200; // 900~1199px: 축소된 채널바 너비
+    }
+  }
+
+  /// 반응형 너비 계산: 댓글창
+  double _getCommentsSidebarWidth(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth >= 1200) {
+      return 390; // 1200px 이상: 넓은 댓글창
+    } else {
+      return 300; // 900~1199px: 좁은 댓글창
+    }
+  }
 
   Widget _buildCommentsSidebar(WorkspaceState workspaceState) {
     return Container(
-      width: _commentsSidebarWidth,
+      width: _getCommentsSidebarWidth(context),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -518,7 +607,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
                 const Spacer(),
                 IconButton(
                   onPressed: () {
-                    ref.read(workspaceStateProvider.notifier).hideComments();
+                    // 1. 슬라이드 아웃 애니메이션 시작
+                    setState(() {
+                      _isAnimatingOut = true;
+                    });
+
+                    // 2. reverse() 애니메이션 실행 (AnimationStatus 리스너가 완료 후 hideComments() 자동 호출)
+                    _commentsAnimationController.reverse();
                   },
                   icon: const Icon(Icons.close),
                 ),

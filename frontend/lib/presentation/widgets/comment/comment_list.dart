@@ -177,7 +177,8 @@ class _CommentListState extends State<CommentList> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: _comments.length,
       separatorBuilder: (context, index) => Divider(
-        height: 1,
+        height: 24,
+        thickness: 1,
         color: AppColors.neutral200,
       ),
       itemBuilder: (context, index) {

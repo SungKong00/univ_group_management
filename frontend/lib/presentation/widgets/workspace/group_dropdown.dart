@@ -31,10 +31,17 @@ class GroupDropdown extends ConsumerStatefulWidget {
     super.key,
     required this.currentGroupId,
     required this.currentGroupName,
+    this.channelBarWidth,
   });
 
   final String currentGroupId;
   final String currentGroupName;
+
+  /// 채널바 너비 (스마트 폰트 크기 결정)
+  /// - bodyLarge(16px/600)로 렌더링 시 텍스트 너비 측정
+  /// - 사용 가능한 너비(channelBarWidth - 40px)를 초과하면 bodySmall(12px/600) 사용
+  /// - 그렇지 않으면 bodyLarge(16px/600) 유지
+  final double? channelBarWidth;
 
   @override
   ConsumerState<GroupDropdown> createState() => _GroupDropdownState();
@@ -44,6 +51,27 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
   bool _isExpanded = false;
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
+
+  /// 주어진 텍스트를 특정 스타일로 렌더링했을 때의 너비를 계산합니다.
+  ///
+  /// **사용 목적:**
+  /// - 텍스트가 overflow될지 사전에 판단하기 위한 측정 도구
+  /// - bodyLarge(16px)로 렌더링 시 너비를 계산하여 스마트 폰트 크기 결정
+  ///
+  /// **파라미터:**
+  /// - text: 측정할 텍스트
+  /// - style: 적용할 텍스트 스타일
+  ///
+  /// **반환값:**
+  /// - 렌더링된 텍스트의 픽셀 너비
+  double _calculateTextWidth(String text, TextStyle style) {
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return textPainter.width;
+  }
 
   @override
   void dispose() {
@@ -279,25 +307,48 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
 
   @override
   Widget build(BuildContext context) {
+    // 스마트 폰트 크기 결정 로직
+    // - 사용 가능한 너비 = channelBarWidth - 56px (패딩16 + 아이콘20 + 간격4 + 추가여백16)
+    // - bodyLarge(16px/600)로 렌더링 시 텍스트 너비 측정
+    // - 텍스트가 사용 가능한 너비를 초과할 경우에만 bodySmall(12px/600) 사용
+    //
+    // **예시:**
+    // - channelBarWidth: 200px
+    // - 사용 가능한 너비: 144px
+    // - "컴퓨터공학과" bodyLarge 너비: ~120px → bodyLarge 유지
+    // - "미디어영상광고홍보학과" bodyLarge 너비: ~200px → bodySmall 전환
+    final channelBarWidth = widget.channelBarWidth ?? 256;
+    final availableWidth = channelBarWidth - 56; // 패딩16 + 아이콘20 + 간격4 + 추가여백16
+
+    final largeTextStyle = AppTheme.bodyLarge.copyWith(
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+    );
+    final largeTextWidth = _calculateTextWidth(widget.currentGroupName, largeTextStyle);
+
+    final shouldUseSmallFont = largeTextWidth > availableWidth;
+    final textStyle = shouldUseSmallFont ? AppTheme.bodySmall : AppTheme.bodyLarge;
+    final iconSize = shouldUseSmallFont ? 16.0 : 20.0;
+
     return CompositedTransformTarget(
       link: _layerLink,
       child: InkWell(
         onTap: _toggleDropdown,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 그룹명: 좁은 공간에서는 bodyLarge (16px/600)으로 축소
+              // 그룹명: 반응형 폰트 크기 적용
               // 긴 그룹명 대응: Flexible로 동적 너비 조정 + 말줄임 + 툴팁
               Flexible(
                 child: Tooltip(
                   message: widget.currentGroupName,
                   child: Text(
                     widget.currentGroupName,
-                    style: AppTheme.titleLarge.copyWith(
+                    style: textStyle.copyWith(
                       color: AppColors.neutral900,
                       fontWeight: FontWeight.w600,
                       height: 1.2,
@@ -308,10 +359,10 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
                 ),
               ),
               const SizedBox(width: 4),
-              // 드롭다운 아이콘
+              // 드롭다운 아이콘 (반응형 크기)
               Icon(
                 _isExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                size: 18,
+                size: iconSize,
                 color: AppColors.neutral600,
               ),
             ],

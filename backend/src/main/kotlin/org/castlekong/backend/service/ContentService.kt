@@ -75,11 +75,16 @@ class ContentService(
     }
 
     // Workspaces
-    fun getWorkspacesByGroup(groupId: Long): List<WorkspaceResponse> {
+    fun getWorkspacesByGroup(groupId: Long, requesterId: Long): List<WorkspaceResponse> {
         val group =
             groupRepository.findById(groupId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         if (group.deletedAt != null) throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
+
+        // Check group membership
+        groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
+            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+
         val existing = workspaceRepository.findByGroup_Id(groupId)
         if (existing.isNotEmpty()) return existing.map { toWorkspaceResponse(it) }
         // ensure single default workspace

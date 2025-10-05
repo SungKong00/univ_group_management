@@ -34,6 +34,7 @@ class WorkspaceHeader extends StatelessWidget {
     required this.breadcrumb,
     this.currentGroupId,
     this.onChannelActionTap,
+    this.channelBarWidth,
   });
 
   final PageBreadcrumb breadcrumb;
@@ -43,6 +44,9 @@ class WorkspaceHeader extends StatelessWidget {
 
   /// 채널 액션 버튼 클릭 핸들러 (향후 구현)
   final VoidCallback? onChannelActionTap;
+
+  /// 채널바 너비 (그룹 드롭다운 반응형 스타일 결정에 사용)
+  final double? channelBarWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +96,7 @@ class WorkspaceHeader extends StatelessWidget {
       return GroupDropdown(
         currentGroupId: currentGroupId!,
         currentGroupName: groupName,
+        channelBarWidth: channelBarWidth, // 반응형 너비 전달
       );
     }
 

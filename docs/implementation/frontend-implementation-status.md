@@ -1,7 +1,7 @@
 # 프론트엔드 구현 현황 (Frontend Implementation Status)
 
-> **최종 업데이트**: 2025-10-05
-> **현재 상태**: 게시글/댓글 시스템 구현 완료, 권한 기반 UI 제어, 채널별 권한 검증
+> **최종 업데이트**: 2025-10-06
+> **현재 상태**: 게시글/댓글 시스템 구현 완료, 워크스페이스 애니메이션 추가, 그룹 드롭다운 최적화
 
 ## 📊 전체 진행률
 
@@ -83,20 +83,29 @@ lib/
 - `lib/presentation/pages/main/main_layout.dart`
 - `lib/presentation/widgets/navigation/`
 
-### ✅ 워크스페이스 상태 관리 (85% 완료)
+### ✅ 워크스페이스 상태 관리 (90% 완료)
 
 **완전 구현된 기능:**
 - ✅ **WorkspaceStateProvider**: 그룹/채널/댓글 상태 관리
 - ✅ **반응형 전환 지원**: 웹 ↔ 모바일 상태 보존
 - ✅ **채널 선택 시스템**: 사이드바 + 메인 콘텐츠 연동
 - ✅ **댓글 사이드바**: 웹에서 우측 슬라이드, 모바일에서 전체화면
+- ✅ **댓글창 애니메이션**: 슬라이드 인/아웃 애니메이션 (160ms, easeOutCubic) (2025-10-06 추가)
 - ✅ **그룹 전환 드롭다운**: 워크스페이스 상단에서 그룹 전환 가능 (2025-10-04 추가)
+- ✅ **스마트 폰트 크기**: 채널바 너비 기반 동적 폰트 크기 조정 (2025-10-06 추가)
 
 **구현 위치:**
 - `lib/presentation/providers/workspace_state_provider.dart`
 - `lib/presentation/providers/my_groups_provider.dart`
 - `lib/presentation/pages/workspace/workspace_page.dart`
 - `lib/presentation/widgets/workspace/group_dropdown.dart`
+
+**애니메이션 상세 (2025-10-06):**
+- AnimationController: SingleTickerProviderStateMixin 사용
+- Duration: 160ms (디자인 시스템 표준)
+- Curve: easeOutCubic (디자인 시스템 표준)
+- SlideTransition: 오른쪽 → 왼쪽 (Offset(1.0, 0.0) → Offset.zero)
+- 상태 동기화: 애니메이션 완료 후 workspaceState.isCommentsVisible 업데이트
 
 ### ✅ 테마 시스템 (95% 완료)
 
@@ -206,6 +215,43 @@ final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref)
 - ❌ User 모델 및 서비스
 - ❌ Repository 패턴 구현
 - ❌ 전역 상태 관리 (Provider 확장)
+
+### ❌ 캘린더 시스템 (0% 완료) - Phase 6 이후 예정
+
+**개발 우선순위**: 권한 페이지 → 홍보/모집 → 캘린더
+
+**현재 상태:**
+- ❌ Placeholder만 존재 (`frontend/lib/presentation/pages/calendar/calendar_page.dart`)
+- ❌ 데이터 모델 미구현 (Event, Timetable, Place)
+- ❌ API 연동 없음
+- ❌ 캘린더 뷰 UI 미구현
+
+**구현 예정 기능:**
+- 4가지 캘린더 뷰
+  - 학교 시간표 (School Timetable)
+  - 개인 일정 캘린더 (Personal Calendar)
+  - 그룹 캘린더 (Group Calendar)
+  - 장소 캘린더 (Place Calendar)
+- 공식/비공식 일정 관리
+- 장소 예약 시스템
+- 게시글 연동 (JSON 임베딩 방식)
+- 최적 시간 추천 알고리즘
+
+**구현 위치 (예상):**
+- `lib/core/models/event_models.dart` - Event, Timetable, Place 모델
+- `lib/core/services/calendar_service.dart` - 캘린더 API 서비스
+- `lib/presentation/pages/calendar/` - 캘린더 페이지 및 위젯
+- `lib/presentation/providers/calendar_provider.dart` - 캘린더 상태 관리
+
+**선행 작업 필요:**
+- 백엔드 데이터베이스 스키마 설계
+- 백엔드 API 엔드포인트 구현
+- 권한 시스템 통합 (CALENDAR_MANAGE 등)
+
+**관련 문서:**
+- [캘린더 시스템 개념](../concepts/calendar-system.md)
+- [장소 관리 시스템](../concepts/calendar-place-management.md)
+- [워크스페이스 UI 명세](../ui-ux/pages/workspace-pages.md)
 
 ### ❌ 고급 기능 (0% 완료)
 - ❌ 알림 시스템
