@@ -30,19 +30,23 @@ class Comment {
 
   /// JSON → Comment 변환
   factory Comment.fromJson(Map<String, dynamic> json) {
+    // 백엔드 응답: author는 중첩된 객체 {id, name, email, profileImageUrl}
+    final author = json['author'] as Map<String, dynamic>?;
+
     return Comment(
-      id: json['id'] as int,
-      postId: json['postId'] as int,
+      id: (json['id'] as num).toInt(),
+      postId: (json['postId'] as num).toInt(),
       content: json['content'] as String,
-      authorId: json['authorId'] as int,
-      authorName: json['authorName'] as String,
-      authorProfileUrl: json['authorProfileUrl'] as String?,
+      // author 객체에서 필드 추출, null일 경우 기본값 사용
+      authorId: (author?['id'] as num?)?.toInt() ?? 0,
+      authorName: author?['name'] as String? ?? 'Unknown',
+      authorProfileUrl: author?['profileImageUrl'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
-      depth: json['depth'] as int? ?? 0,
-      parentCommentId: json['parentCommentId'] as int?,
+      depth: 0, // 백엔드에서 제공하지 않으므로 항상 0
+      parentCommentId: (json['parentCommentId'] as num?)?.toInt(),
     );
   }
 

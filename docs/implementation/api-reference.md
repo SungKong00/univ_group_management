@@ -470,10 +470,14 @@ GET /api/posts/{postId}/comments?page=0&size=50
         "id": 1,
         "postId": 10,
         "content": "댓글 내용",
-        "authorId": 5,
-        "authorName": "작성자명",
+        "author": {
+          "id": 5,
+          "name": "작성자명",
+          "profileImageUrl": "url..."
+        },
         "createdAt": "2025-10-05T14:35:00",
-        "updatedAt": "2025-10-05T14:35:00"
+        "updatedAt": "2025-10-05T14:35:00",
+        "parentCommentId": null
       }
     ],
     "hasNext": false

@@ -4,6 +4,20 @@
 
 ## 2025년 10월
 
+### 2025-10-05 - 에이전트 마스터 워크플로우 개정
+**업데이트된 문서:**
+- ✅ `GEMINI.md` - "문서 업데이트"와 "커밋" 요청을 처리하는 통합 워크플로우로 전면 개정
+- ✅ `docs/context-tracking/context-update-log.md` - 현재 로그 추가
+- ✅ `docs/context-tracking/sync-status.md` - `GEMINI.md` 추적 시작 및 동기화 상태 업데이트
+- ✅ `docs/context-tracking/pending-updates.md` - 최종 업데이트 날짜 갱신
+
+**코드 변경사항:**
+- `frontend/lib/core/models/*.dart`: 주석 스타일 변경 (`///` -> `//`)
+- `frontend/lib/presentation/pages/workspace/workspace_page.dart`: SnackBar 지속 시간 변경 (2000ms -> 500ms)
+
+**관련 커밋:**
+- 현재 세션
+
 ### 2025-10-05 - 게시글/댓글 시스템 구현 (Context Manager 업데이트)
 **업데이트된 문서:**
 - ✅ `docs/implementation/frontend-guide.md` - 게시글/댓글 컴포넌트 아키텍처 패턴 추가 (신규)

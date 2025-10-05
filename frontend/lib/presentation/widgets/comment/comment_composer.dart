@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// 댓글 작성 입력창 위젯
+///
+/// - Shift+Enter: 줄바꿈
+/// - Enter: 전송
+/// - 최대 4줄 자동 높이 조절
 class CommentComposer extends StatefulWidget {
   final bool canWrite;
   final bool isLoading;
@@ -62,7 +67,7 @@ class _CommentComposerState extends State<CommentComposer> {
     final hintText = widget.isLoading
         ? '권한 확인 중...'
         : widget.canWrite
-            ? '댓글을 입력하세요...'
+            ? '댓글을 입력하세요... (Shift+Enter: 줄바꿈, Enter: 전송)'
             : '댓글 작성 권한이 없습니다';
 
     return Container(
@@ -81,78 +86,86 @@ class _CommentComposerState extends State<CommentComposer> {
               constraints: const BoxConstraints(
                 maxHeight: 100, // 최대 4줄
               ),
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                enabled: !isDisabled,
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                decoration: InputDecoration(
-                  hintText: hintText,
-                  hintStyle: AppTheme.bodyMedium.copyWith(
-                    color: AppColors.neutral500,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppColors.neutral300),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppColors.neutral300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppColors.brand, width: 2),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                ),
-                style: AppTheme.bodyMedium.copyWith(
-                  color: AppColors.neutral900,
-                ),
-                onSubmitted: (_) => _handleSubmit(),
-                onChanged: (value) {
-                  setState(() {});
+              child: KeyboardListener(
+                focusNode: FocusNode(),
+                onKeyEvent: (event) {
+                  // Enter 키 감지: Shift 없이 Enter만 누른 경우 전송
+                  if (event is KeyDownEvent &&
+                      event.logicalKey == LogicalKeyboardKey.enter) {
+                    if (!HardwareKeyboard.instance.isShiftPressed) {
+                      // Enter만 누른 경우 → 전송
+                      _handleSubmit();
+                    }
+                    // Shift+Enter → 기본 동작 (줄바꿈) 유지
+                  }
                 },
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  enabled: !isDisabled,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  decoration: InputDecoration(
+                    hintText: hintText,
+                    hintStyle: AppTheme.bodyMedium.copyWith(
+                      color: AppColors.neutral500,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.neutral300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.neutral300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.brand, width: 2),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                  ),
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppColors.neutral900,
+                  ),
+                  onChanged: (value) {
+                    setState(() {});
+                  },
+                ),
               ),
             ),
           ),
           const SizedBox(width: 8),
-          _isSending
-              ? const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.brand,
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4.0),
+            child: _isSending
+                ? const Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.brand,
+                        ),
                       ),
                     ),
+                  )
+                : IconButton(
+                    onPressed: _controller.text.trim().isEmpty || isDisabled
+                        ? null
+                        : _handleSubmit,
+                    icon: const Icon(Icons.send),
+                    color: _controller.text.trim().isEmpty || isDisabled
+                        ? AppColors.neutral400
+                        : AppColors.brand,
+                    tooltip: '전송',
                   ),
-                )
-              : ElevatedButton(
-                  onPressed: _controller.text.trim().isEmpty || isDisabled
-                      ? null
-                      : _handleSubmit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brand,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.neutral300,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('전송'),
-                ),
+          ),
         ],
       ),
     );

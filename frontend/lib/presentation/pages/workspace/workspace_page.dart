@@ -13,7 +13,10 @@ import '../../widgets/workspace/channel_navigation.dart';
 import '../../widgets/workspace/mobile_channel_list.dart';
 import '../../widgets/post/post_list.dart';
 import '../../widgets/post/post_composer.dart';
+import '../../widgets/comment/comment_list.dart';
+import '../../widgets/comment/comment_composer.dart';
 import '../../../core/services/post_service.dart';
+import '../../../core/services/comment_service.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
@@ -27,6 +30,7 @@ class WorkspacePage extends ConsumerStatefulWidget {
 
 class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   int _postListKey = 0;
+  int _commentListKey = 0;
 
   @override
   void initState() {
@@ -361,6 +365,37 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
      }
   }
 
+  Future<void> _handleSubmitComment(
+    BuildContext context,
+    WidgetRef ref,
+    String content,
+  ) async {
+    final workspaceState = ref.read(workspaceStateProvider);
+    final postIdStr = workspaceState.selectedPostId;
+
+    if (postIdStr == null) {
+      throw Exception('게시글을 선택해주세요');
+    }
+
+    final postId = int.parse(postIdStr);
+    final commentService = CommentService();
+    await commentService.createComment(postId, content);
+
+    // 댓글 작성 성공 후 목록 새로고침
+    setState(() {
+      _commentListKey++;
+    });
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('댓글이 작성되었습니다'),
+          duration: Duration(milliseconds: 500),
+        ),
+      );
+    }
+  }
+
   static const double _commentsSidebarWidth = 300;
 
   Widget _buildCommentsSidebar(WorkspaceState workspaceState) {
@@ -377,10 +412,20 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   }
 
   Widget _buildCommentsView(WorkspaceState workspaceState) {
+    final postIdStr = workspaceState.selectedPostId;
+    final postId = postIdStr != null ? int.tryParse(postIdStr) : null;
+    final canWrite = workspaceState.channelPermissions?.canWriteComment ?? false;
+
     return Column(
       children: [
+        // 댓글 헤더
         Container(
           padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: AppColors.neutral200, width: 1),
+            ),
+          ),
           child: Row(
             children: [
               Text('댓글', style: AppTheme.titleLarge),
@@ -394,14 +439,32 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             ],
           ),
         ),
-        Expanded(
-          child: Center(
-            child: Text(
-              '댓글이 여기에 표시됩니다',
-              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
+        // 댓글 목록
+        if (postId != null)
+          Expanded(
+            child: CommentList(
+              key: ValueKey('comment_list_${postId}_$_commentListKey'),
+              postId: postId,
+            ),
+          )
+        else
+          Expanded(
+            child: Center(
+              child: Text(
+                '게시글을 선택해주세요',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppColors.neutral600,
+                ),
+              ),
             ),
           ),
-        ),
+        // 댓글 입력창
+        if (postId != null)
+          CommentComposer(
+            canWrite: canWrite,
+            isLoading: workspaceState.channelPermissions == null,
+            onSubmit: (content) => _handleSubmitComment(context, ref, content),
+          ),
       ],
     );
   }

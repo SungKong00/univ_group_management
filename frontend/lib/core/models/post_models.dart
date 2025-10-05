@@ -32,7 +32,7 @@ class Post {
     final author = json['author'] as Map<String, dynamic>?;
 
     return Post(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       content: json['content'] as String,
       // author 객체에서 필드 추출, null일 경우 기본값 사용
       authorId: (author?['id'] as num?)?.toInt() ?? 0,
@@ -42,7 +42,7 @@ class Post {
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
-      commentCount: json['commentCount'] as int? ?? 0,
+      commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
       lastCommentAt: json['lastCommentAt'] != null
           ? DateTime.parse(json['lastCommentAt'] as String)
           : null,
