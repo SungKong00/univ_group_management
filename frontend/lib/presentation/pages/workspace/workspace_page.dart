@@ -81,8 +81,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 문서 스펙: TABLET(451px) 이상을 데스크톱 레이아웃으로 간주
-        // largerThan(MOBILE) = 451px 이상 = TABLET, DESKTOP, 4K
+        // 문서 스펙: MOBILE(0-600px), TABLET(601-800px), DESKTOP(801px+)
+        // largerThan(MOBILE) = 601px 이상 = TABLET, DESKTOP, 4K
         final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
         final isMobile = !isDesktop;
 

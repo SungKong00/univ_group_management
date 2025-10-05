@@ -77,7 +77,7 @@ lib/
 - ✅ **TopNavigation**: 뒤로가기 버튼 + 페이지 제목
 - ✅ **SidebarNavigation**: 축소/확장 애니메이션 + 선택 표시
 - ✅ **BottomNavigation**: 모바일 하단 네비게이션
-- ✅ **ResponsiveBreakpoints**: 768px 기준 반응형
+- ✅ **ResponsiveBreakpoints**: 600px 기준 반응형 (MOBILE: 0-600px, TABLET: 601-800px, DESKTOP: 801px+)
 
 **구현 위치:**
 - `lib/presentation/pages/main/main_layout.dart`
