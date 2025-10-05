@@ -51,6 +51,12 @@ $RECYCLE.BIN/
 *.iws
 .vscode/
 
+# IntelliJ IDEA - 추가 무시 항목
+.idea/workspace.xml
+.idea/caches/
+.idea/deviceManager.xml
+.idea/vcs.xml
+
 ####################################
 # 공통 빌드/패키징 산출물
 ####################################
