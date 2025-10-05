@@ -51,7 +51,10 @@ class _PostItemState extends State<PostItem> {
                   _buildContent(),
                   const SizedBox(height: 12),
                   // 댓글 버튼
-                  _buildCommentButton(),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 64),
+                    child: _buildCommentButton(),
+                  ),
                 ],
               ),
             ),
@@ -149,46 +152,77 @@ class _PostItemState extends State<PostItem> {
       buttonText = '댓글 작성하기';
     }
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isCommentHovered = true),
-      onExit: (_) => setState(() => _isCommentHovered = false),
-      child: InkWell(
-        onTap: widget.onTapComment,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: _isCommentHovered
-                  ? AppColors.brand
-                  : Colors.transparent,
-              width: 1,
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 화면 너비 파악
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isMobile = screenWidth <= 600;
+
+        // 반응형 너비 계산
+        // 모바일: 부모(게시글 콘텐츠) 너비의 70%
+        // 웹: 최대 800px
+        final buttonWidth = isMobile
+            ? constraints.maxWidth * 0.7
+            : 800.0;
+
+        return MouseRegion(
+          onEnter: (_) => setState(() => _isCommentHovered = true),
+          onExit: (_) => setState(() => _isCommentHovered = false),
+          child: InkWell(
+            onTap: widget.onTapComment,
             borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.chat_bubble_outline,
-                size: 16,
-                color: _isCommentHovered
-                    ? AppColors.brand
-                    : AppColors.neutral600,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                buttonText,
-                style: AppTheme.bodySmall.copyWith(
+            child: Container(
+              width: buttonWidth,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(
                   color: _isCommentHovered
                       ? AppColors.brand
-                      : AppColors.neutral700,
+                      : Colors.transparent,
+                  width: 1,
                 ),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ],
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // 왼쪽: 아이콘 + 텍스트
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline,
+                        size: 16,
+                        color: _isCommentHovered
+                            ? AppColors.brand
+                            : AppColors.neutral600,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        buttonText,
+                        style: AppTheme.bodySmall.copyWith(
+                          color: _isCommentHovered
+                              ? AppColors.brand
+                              : AppColors.neutral700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // 오른쪽: ">" 아이콘
+                  Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: _isCommentHovered
+                        ? AppColors.brand
+                        : AppColors.neutral600,
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

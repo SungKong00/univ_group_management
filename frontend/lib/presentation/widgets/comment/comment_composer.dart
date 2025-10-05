@@ -137,7 +137,6 @@ class _CommentComposerState extends State<CommentComposer> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
           Padding(
             padding: const EdgeInsets.only(bottom: 4.0),
             child: _isSending
