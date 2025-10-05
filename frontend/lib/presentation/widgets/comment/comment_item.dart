@@ -24,7 +24,7 @@ class CommentItem extends StatelessWidget {
       padding: EdgeInsets.only(
         left: comment.depth > 0 ? 32.0 : AppSpacing.xs,
         top: AppSpacing.sm,
-        right: 0,
+        right: AppSpacing.sm,
         bottom: AppSpacing.sm,
       ),
       child: Row(
