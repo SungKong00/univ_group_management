@@ -4,6 +4,57 @@
 
 ## 2025년 10월
 
+### 2025-10-06 - 캘린더 시스템 설계 결정사항 문서화
+**커밋**: 현재 세션
+**유형**: 문서 업데이트 (개념 설계 확정)
+**우선순위**: High
+**영향 범위**: 백엔드/프론트엔드 (Phase 6 준비)
+
+**업데이트된 문서**:
+- ✅ `docs/concepts/calendar-system.md` - 설계 결정사항 섹션 추가 (100줄 초과로 분할)
+- 🆕 `docs/concepts/calendar-design-decisions.md` - 7가지 설계 결정사항 신규 문서 생성
+  - DD-CAL-001: 권한 통합 방식 (RBAC 통합)
+  - DD-CAL-002: 반복 일정 저장 방식 (명시적 인스턴스)
+  - DD-CAL-003: 반복 일정 예외 처리 (EventException 분리)
+  - DD-CAL-004: 참여자 관리 방식 (독립 엔티티)
+  - DD-CAL-005: 시간표 데이터 정규화 (Course/CourseTimetable 분리)
+  - DD-CAL-006: 장소 예약 통합 방식 (GroupEvent 부속)
+  - DD-CAL-007: 최적 시간 추천 알고리즘 (가능 인원 최대화)
+- ✅ `docs/concepts/permission-system.md` - 캘린더 권한 섹션 업데이트
+  - Option A (RBAC 통합) 확정 명시
+  - Permission-Centric 매트릭스 작성 (4개 권한)
+  - 권한 확인 플로우 추가
+- ✅ `docs/concepts/calendar-place-management.md` - 장소 관리 권한 통합 방식 확정
+  - RBAC 통합 방식 (Option A) 채택
+  - Option B 기각 사유 명시
+- ✅ `docs/implementation/database-reference.md` - 캘린더 시스템 테이블 섹션 추가
+  - 6개 엔티티 개요
+  - 설계 특징 요약
+- ✅ `docs/implementation/backend-guide.md` - 캘린더 시스템 구현 가이드 추가
+  - 4가지 구현 방향 제시
+  - 설계 결정사항 기반 가이드
+- ✅ `docs/implementation/api-reference.md` - 캘린더 API 계획 섹션 추가
+  - 시간표/그룹 일정/장소/최적 시간 API 엔드포인트 명세
+  - 요청/응답 예시
+
+**핵심 결정사항**:
+1. 권한: 기존 RBAC 시스템에 통합 (독립 시스템 기각)
+2. 반복 일정: 명시적 인스턴스 저장 (동적 생성 방식 기각)
+3. 예외 처리: EventException 분리 관리
+4. 참여자: 독립 엔티티로 상태 추적
+5. 시간표: Course와 CourseTimetable 분리 정규화
+6. 장소 예약: GroupEvent 부속 정보 (독립 자원 기각)
+7. 최적 시간: 가능 인원 최대화 알고리즘
+
+**다음 단계**:
+- Phase 6 진입 시 설계 결정사항 기반 엔티티 클래스 작성
+- PermissionService에 캘린더 권한 통합
+- 캘린더 API 엔드포인트 구현
+
+**메모**: 개념 설계 완료로 구현 준비 완료. Phase 6 진입 시 즉시 개발 가능.
+
+---
+
 ### 2025-10-06 - MeControllerTest 통합 테스트 변환
 **커밋**: 현재 세션
 **유형**: 테스트 개선 + 문서 동기화

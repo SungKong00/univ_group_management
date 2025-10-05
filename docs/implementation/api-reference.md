@@ -599,3 +599,59 @@ context.go('/workspace/${topGroup.id}');
 
 -   **Role API (`/api/roles`)**
     -   `POST /apply`: 역할(교수) 신청
+
+---
+
+## 캘린더 API (예정)
+
+> **개발 우선순위**: Phase 6 이후
+> **상태**: 스키마 및 엔드포인트 설계 예정
+> **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md) | [설계 결정사항](../concepts/calendar-design-decisions.md)
+
+### 주요 엔드포인트 계획
+
+#### 시간표 API (`/api/timetable`)
+- `GET /me`: 내 시간표 조회 (강의 + 개인 반복 일정)
+- `POST /courses`: 강의 추가
+- `POST /schedules`: 개인 반복 일정 추가
+- `DELETE /courses/{id}`: 강의 삭제
+- `DELETE /schedules/{id}`: 개인 일정 삭제
+
+#### 그룹 일정 API (`/api/groups/{groupId}/events`)
+- `GET /`: 그룹 캘린더 일정 목록 조회 (권한: `CALENDAR_VIEW`)
+- `POST /`: 일정 생성 (권한: `CALENDAR_MANAGE` for 공식 / 모든 멤버 for 비공식)
+- `PUT /{eventId}`: 일정 수정 ("이 일정만" / "반복 전체" 구분)
+- `DELETE /{eventId}`: 일정 삭제
+- `POST /{eventId}/participants`: 참여 상태 변경 (참여/불참/보류)
+
+#### 장소 API (`/api/places`)
+- `POST /`: 장소 등록 (권한: `CALENDAR_MANAGE`)
+- `GET /{placeId}/calendar`: 장소 캘린더 조회 (해당 장소 예약된 일정)
+- `POST /{placeId}/usage-groups`: 사용 그룹 신청
+- `PUT /{placeId}/usage-groups/{groupId}`: 사용 그룹 승인/거부 (권한: `PLACE_MANAGE`)
+- `POST /{placeId}/availability`: 예약 가능 시간 설정 (권한: `PLACE_MANAGE`)
+
+#### 최적 시간 추천 API (`/api/groups/{groupId}/events/recommend-time`)
+- `POST /`: 최적 시간 추천 (대상자 필터, 분석 옵션 지정)
+- **요청 예시**:
+  ```json
+  {
+    "targetFilters": { "year": 1, "roleIds": [1, 2] },
+    "analyzeOptions": { "includeTimetable": true, "includePlaces": true }
+  }
+  ```
+- **응답 예시**:
+  ```json
+  {
+    "recommendations": [
+      { "startTime": "2025-10-10T14:00", "available": 25, "unavailable": 5 },
+      { "startTime": "2025-10-10T15:00", "available": 23, "unavailable": 7 }
+    ]
+  }
+  ```
+
+### 다음 단계
+1. 엔티티 및 DTO 클래스 설계
+2. 권한 확인 로직 통합 (`@PreAuthorize` 적용)
+3. Repository 쿼리 최적화 (JOIN FETCH)
+4. 반복 일정 생성/수정 로직 구현

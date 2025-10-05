@@ -195,9 +195,11 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     final bool showComments = workspaceState.isCommentsVisible || _isAnimatingOut;
 
     return LayoutBuilder(
-      builder: (context, _) {
-        final double channelBarWidth = _getChannelBarWidth(context);
-        final double commentBarWidth = _getCommentsSidebarWidth(context);
+      builder: (context, constraints) {
+        // MediaQuery를 한 번만 호출하여 성능 최적화
+        final double screenWidth = MediaQuery.of(context).size.width;
+        final double channelBarWidth = screenWidth >= 1200 ? 256.0 : 200.0;
+        final double commentBarWidth = screenWidth >= 1200 ? 390.0 : 300.0;
         final double leftInset = showChannelNavigation ? channelBarWidth : 0;
         final double rightInset = showComments ? commentBarWidth : 0;
 
@@ -272,9 +274,11 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
                 top: 0,
                 bottom: 0,
                 right: 0,
-                child: SlideTransition(
-                  position: _commentsSlideAnimation,
-                  child: _buildCommentsSidebar(workspaceState),
+                child: RepaintBoundary(
+                  child: SlideTransition(
+                    position: _commentsSlideAnimation,
+                    child: _buildCommentsSidebar(workspaceState, commentBarWidth),
+                  ),
                 ),
               ),
           ],
@@ -551,29 +555,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     }
   }
 
-  /// 반응형 너비 계산: 채널바
-  double _getChannelBarWidth(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    if (screenWidth >= 1200) {
-      return 256; // 1200px 이상: 기존 채널바 너비
-    } else {
-      return 200; // 900~1199px: 축소된 채널바 너비
-    }
-  }
-
-  /// 반응형 너비 계산: 댓글창
-  double _getCommentsSidebarWidth(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    if (screenWidth >= 1200) {
-      return 390; // 1200px 이상: 넓은 댓글창
-    } else {
-      return 300; // 900~1199px: 좁은 댓글창
-    }
-  }
-
-  Widget _buildCommentsSidebar(WorkspaceState workspaceState) {
+  Widget _buildCommentsSidebar(WorkspaceState workspaceState, double width) {
     return Container(
-      width: _getCommentsSidebarWidth(context),
+      width: width,
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(

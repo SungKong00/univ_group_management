@@ -538,6 +538,39 @@ VALUES
 |------|-----------|
 | 2025-10-01 | GroupRole 비불변화(data class 제거), 시스템 역할 불변성 명시, ChannelRoleBinding 자동 생성 제거, ChannelRoleBinding 스키마/엔티티 추가, 삭제 Bulk 순서 추가 |
 
+## 캘린더 시스템 테이블 (Calendar System)
+
+> **개발 우선순위**: Phase 6 이후 예정
+> **상태**: 스키마 설계 예정 (개념 설계 완료)
+> **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md) | [설계 결정사항](../concepts/calendar-design-decisions.md)
+
+캘린더 시스템은 6개 엔티티로 구성됩니다:
+
+### 주요 엔티티 개요
+
+1. **CourseTimetable**: 대학 강의 시간표 (사용자가 자신의 수강 과목 선택)
+2. **PersonalSchedule**: 사용자 정의 반복 일정 (아르바이트, 근로장학생 등)
+3. **GroupEvent**: 그룹 일정 (공식/비공식 구분, 반복 패턴 지원)
+4. **EventParticipant**: 일정 참여자 정보 (참여 상태, 불참 사유)
+5. **EventException**: 반복 일정 예외 (특정 날짜만 시간/장소 변경)
+6. **PlaceReservation**: 장소 예약 정보 (GroupEvent와 1:1 관계)
+
+### 설계 특징
+
+- **반복 일정**: 명시적 인스턴스 저장 방식 (DD-CAL-002)
+- **예외 처리**: EventException 분리 관리 (DD-CAL-003)
+- **참여자 관리**: 독립 엔티티로 상태 추적 (DD-CAL-004)
+- **장소 예약**: GroupEvent 부속 정보 (DD-CAL-006)
+
+### 다음 단계
+
+1. 각 엔티티의 상세 스키마 설계
+2. JPA 엔티티 클래스 작성 (Kotlin)
+3. Repository 및 Service 레이어 구현
+4. 캘린더 권한 확인 로직 통합
+
+---
+
 ## 관련 문서
 
 ### 백엔드 구현
@@ -551,6 +584,7 @@ VALUES
 - **워크스페이스**: [../concepts/workspace-channel.md](../concepts/workspace-channel.md)
 - **사용자 여정**: [../concepts/user-lifecycle.md](../concepts/user-lifecycle.md)
 - **모집 시스템**: [../concepts/recruitment-system.md](../concepts/recruitment-system.md)
+- **캘린더 시스템**: [../concepts/calendar-system.md](../concepts/calendar-system.md)
 
 ### 문제 해결
 - **권한 에러**: [../troubleshooting/permission-errors.md](../troubleshooting/permission-errors.md)

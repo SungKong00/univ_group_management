@@ -197,45 +197,60 @@ private fun checkChannelPermission(channelId: Long, userId: Long, permission: St
 ## 캘린더 권한 (Calendar Permissions)
 
 > **개발 우선순위**: Phase 6 이후 예정
-> **상태**: 개념 설계 중, 스키마 미확정
+> **상태**: 개념 설계 완료, RBAC 통합 방식 확정
+> **설계 결정**: [DD-CAL-001](calendar-design-decisions.md#dd-cal-001-권한-통합-방식) 참조
 
-캘린더 시스템에 필요한 권한은 다음과 같이 계획되어 있습니다:
+캘린더 시스템은 기존 RBAC 시스템에 통합하여 일관된 권한 체계를 유지합니다.
 
-### 그룹 레벨 권한
-- `CALENDAR_VIEW`: 그룹 캘린더 조회 권한
-- `CALENDAR_MANAGE`: 공식 일정 생성/수정/삭제 권한
+### 그룹 레벨 권한 정의
 
-### 장소 관리 권한 (설계 의논 필요)
-장소 관리 권한은 다음 두 가지 방식 중 하나로 통합될 예정:
+| 권한 | 설명 | 적용 범위 |
+|------|------|-----------|
+| `CALENDAR_VIEW` | 그룹 캘린더 조회 권한 | 모든 일정 조회 |
+| `CALENDAR_MANAGE` | 공식 일정 생성/수정/삭제 권한 | 공식 일정 전체 관리 |
+| `PLACE_MANAGE` | 장소 등록 및 사용 그룹 승인 권한 | 관리 주체 그룹 전용 |
+| `PLACE_RESERVE` | 장소 예약 권한 | 사용 그룹 멤버 전용 |
 
-**Option A: RBAC 시스템 통합** (권장)
-- `PLACE_MANAGE`: 장소 등록, 사용 그룹 승인, 예약 관리
-- `PLACE_RESERVE`: 장소 예약 권한 (사용 그룹 멤버)
-- 기존 GroupRole에 추가하여 일관된 권한 체계 유지
+### Permission-Centric 매트릭스
 
-**Option B: 독립 권한 시스템**
-- 장소별 독립적인 권한 테이블 (PlacePermission 엔티티)
-- 그룹 권한과 별도로 관리
-- 복잡도 증가, 권한 확인 로직 이원화
+권한별로 허용할 시스템 역할을 지정하는 방식입니다.
 
-### 권한 매트릭스 (예시)
+| 권한 | 허용 역할 목록 (기본 설정) | 비고 |
+|------|---------------------------|------|
+| CALENDAR_VIEW | OWNER, ADVISOR, MEMBER | 모든 멤버 조회 가능 |
+| CALENDAR_MANAGE | OWNER, ADVISOR | 운영진만 공식 일정 관리 |
+| PLACE_MANAGE | OWNER | 그룹장만 장소 관리 (관리 주체) |
+| PLACE_RESERVE | OWNER, ADVISOR, MEMBER | 사용 그룹 멤버 모두 예약 가능 |
 
-> 아래는 Option A 채택 시 예상 매트릭스입니다.
+> 커스텀 역할에도 이 권한들을 부여할 수 있습니다. 예: CALENDAR_MANAGER 역할에 CALENDAR_MANAGE 권한 부여
 
-| 권한 | OWNER | ADVISOR | MEMBER | 설명 |
-|------|-------|---------|--------|------|
-| CALENDAR_VIEW | ✓ | ✓ | ✓ | 그룹 캘린더 조회 |
-| CALENDAR_MANAGE | ✓ | ✓ | - | 공식 일정 관리 |
-| PLACE_MANAGE | ✓ | - | - | 장소 관리 (관리 주체 그룹만) |
-| PLACE_RESERVE | ✓ | ✓ | ✓ | 장소 예약 (사용 그룹) |
+### 권한 확인 플로우
+
+1. **일정 생성/수정/삭제**: `CALENDAR_MANAGE` 권한 확인
+2. **장소 등록**: `PLACE_MANAGE` 권한 확인
+3. **장소 예약**:
+   - 사용 그룹 멤버십 확인
+   - `PLACE_RESERVE` 권한 확인
+4. **일정 조회**: `CALENDAR_VIEW` 권한 확인
+
+### 통합 배경
+
+**Option A 채택 이유** (RBAC 통합):
+- 일관된 권한 확인 로직 (PermissionService 재사용)
+- 개발 복잡도 감소 (권한 로직 이원화 방지)
+- 사용자 학습 곡선 최소화 (단일 권한 설정 UI)
+
+**기각된 대안** (Option B - 독립 시스템):
+- 장소별 독립 권한 테이블 → 복잡도 증가
+- 권한 확인 로직 이원화 → 유지보수 부담
 
 ### 다음 단계
-1. 데이터베이스 스키마 설계 완료 후 권한 구조 확정
-2. 장소 관리 권한 통합 방식 결정 (Option A vs B)
-3. 권한 검증 로직 구현 (PermissionService 확장)
-4. UI 권한 매트릭스에 캘린더 권한 추가
+1. GroupRole 엔티티에 4개 권한 추가
+2. PermissionService에 캘린더 권한 확인 로직 통합
+3. UI 권한 매트릭스에 캘린더 탭 추가
+4. 장소 관리 주체 및 사용 그룹 검증 로직 구현
 
-**관련 문서**: [캘린더 시스템](calendar-system.md) | [장소 관리](calendar-place-management.md)
+**관련 문서**: [캘린더 시스템](calendar-system.md) | [장소 관리](calendar-place-management.md) | [설계 결정사항](calendar-design-decisions.md)
 
 ---
 

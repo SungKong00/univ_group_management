@@ -377,9 +377,48 @@ class MeControllerTest {
 - 새 채널 생성 직후 읽기 실패 테스트: CHANNEL_VIEW / POST_READ 미매핑 시 FORBIDDEN
 - 캐시 무효화 검증: 역할 권한 변경 → 이전 권한으로 접근 실패하는지 확인
 
+---
+
+## 캘린더 시스템 구현 가이드 (예정)
+
+> **개발 우선순위**: Phase 6 이후
+> **상태**: 개념 설계 완료, 구현 미착수
+> **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md) | [설계 결정사항](../concepts/calendar-design-decisions.md)
+
+### 구현 방향
+
+1. **권한 통합** (DD-CAL-001)
+   - GroupRole에 4개 캘린더 권한 추가
+   - PermissionService 확장 (캘린더 권한 확인 로직)
+   - GroupPermissionEvaluator에 CALENDAR 타입 추가
+
+2. **반복 일정 처리** (DD-CAL-002, DD-CAL-003)
+   - 생성 시 반복 범위만큼 인스턴스 명시적 저장
+   - EventException으로 예외 관리
+   - 일정 수정 시 "이 일정만" / "반복 전체" 분기 로직
+
+3. **참여자 관리** (DD-CAL-004)
+   - 일정 생성 시 EventParticipant 자동 생성
+   - 참여 상태 변경 API (참여/불참/보류)
+   - 불참 사유 저장
+
+4. **장소 예약 통합** (DD-CAL-006)
+   - PlaceReservation을 GroupEvent FK로 연결
+   - 일정 삭제 시 예약 계단식 삭제
+   - 장소 캘린더 = 장소 필터링된 일정 조회
+
+### 다음 단계
+1. 6개 엔티티 클래스 작성 (Kotlin)
+2. Repository 및 Service 레이어 구현
+3. 권한 검증 로직 통합
+4. API 엔드포인트 구현 ([API 참조](api-reference.md) 참조)
+
+---
+
 ## 관련 문서
 - [권한 시스템](../concepts/permission-system.md)
 - [채널 권한](../concepts/channel-permissions.md)
 - [워크스페이스 & 채널](../concepts/workspace-channel.md)
+- [캘린더 시스템](../concepts/calendar-system.md)
 - [API 레퍼런스](api-reference.md)
 - [트러블슈팅](../troubleshooting/permission-errors.md)

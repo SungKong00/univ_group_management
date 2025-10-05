@@ -100,7 +100,7 @@ class _CommentListState extends State<CommentList> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.error_outline,
               size: 48,
               color: AppColors.error,
@@ -141,9 +141,9 @@ class _CommentListState extends State<CommentList> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -152,17 +152,19 @@ class _CommentListState extends State<CommentList> {
               size: 48,
               color: AppColors.neutral400,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               '아직 댓글이 없습니다',
-              style: AppTheme.bodyMedium.copyWith(
+              style: TextStyle(
+                fontSize: 14,
                 color: AppColors.neutral600,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               '첫 번째 댓글을 작성해보세요',
-              style: AppTheme.bodySmall.copyWith(
+              style: TextStyle(
+                fontSize: 12,
                 color: AppColors.neutral500,
               ),
             ),
@@ -173,22 +175,36 @@ class _CommentListState extends State<CommentList> {
   }
 
   Widget _buildCommentList() {
-    return ListView.separated(
+    // ListView.builder 사용 + RepaintBoundary로 성능 최적화
+    // 댓글과 Divider를 합친 itemCount (댓글 N개 → 아이템 2N-1개)
+    return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: _comments.length,
-      separatorBuilder: (context, index) => Divider(
-        height: 24,
-        thickness: 1,
-        color: AppColors.neutral200,
-      ),
+      itemCount: _comments.length * 2 - 1,
       itemBuilder: (context, index) {
-        final comment = _comments[index];
-        return CommentItem(
-          comment: comment,
-          // TODO: 대댓글 기능 추가 시 활성화
-          // onTapReply: () {},
-          // TODO: 삭제 권한 확인 후 활성화
-          // onTapDelete: () {},
+        // 홀수 인덱스는 Divider
+        if (index.isOdd) {
+          return const Divider(
+            height: 24,
+            thickness: 1,
+            color: AppColors.neutral200,
+          );
+        }
+
+        // 짝수 인덱스는 댓글 아이템
+        final commentIndex = index ~/ 2;
+        final comment = _comments[commentIndex];
+
+        // RepaintBoundary로 각 댓글을 독립적으로 렌더링
+        // ValueKey로 댓글 재사용 최적화
+        return RepaintBoundary(
+          child: CommentItem(
+            key: ValueKey(comment.id),
+            comment: comment,
+            // TODO: 대댓글 기능 추가 시 활성화
+            // onTapReply: () {},
+            // TODO: 삭제 권한 확인 후 활성화
+            // onTapDelete: () {},
+          ),
         );
       },
     );
