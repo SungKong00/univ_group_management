@@ -4,6 +4,44 @@
 
 ## 2025년 10월
 
+### 2025-10-05 - 게시글/댓글 시스템 구현 (Context Manager 업데이트)
+**업데이트된 문서:**
+- ✅ `docs/implementation/frontend-guide.md` - 게시글/댓글 컴포넌트 아키텍처 패턴 추가 (신규)
+- ✅ `docs/implementation/frontend-implementation-status.md` - 게시글/댓글 시스템 구현 현황 추가 (기존)
+- ✅ `docs/implementation/api-reference.md` - Post/Comment API 상세 엔드포인트 추가 (기존)
+- ✅ `docs/ui-ux/pages/workspace-pages.md` - Post/Comment 컴포넌트 구현 정보 추가 (기존)
+- ✅ `docs/context-tracking/sync-status.md` - 동기화 상태 업데이트
+- ✅ `docs/context-tracking/pending-updates.md` - 대기 목록 업데이트
+- ✅ `docs/context-tracking/context-update-log.md` - 현재 로그 추가
+
+**신규 추가 내용 (frontend-guide.md):**
+- 게시글/댓글 컴포넌트 구조 (post/, comment/ 디렉토리)
+- 데이터 레이어 패턴 (모델, 서비스)
+- 권한 기반 UI 제어 코드 예시
+- 키보드 입력 핸들링 패턴
+- workspace-pages.md로의 크로스 레퍼런스
+
+**구현된 주요 기능:**
+- 프론트엔드: Post/Comment 모델, 서비스, UI 컴포넌트
+- 권한 기반 UI 제어 (POST_WRITE, COMMENT_WRITE)
+- 키보드 입력 (Enter 전송, Shift+Enter 줄바꿈)
+- 날짜 구분선, 스켈레톤 로딩
+
+**관련 커밋:**
+- 현재 세션 (front 브랜치)
+
+### 2025-10-04 - 채널 권한 검증 시스템
+**업데이트된 문서:**
+- ✅ `docs/concepts/permission-system.md` - Spring Security 통합 가이드 추가
+- ✅ `docs/implementation/backend-guide.md` - Security Layer 설계 결정 문서화
+
+**코드 변경사항:**
+- 🆕 GroupPermissionEvaluator에 CHANNEL 타입 권한 검증 추가
+- 🆕 2단계 검증: 그룹 멤버십 → 채널 바인딩
+
+**관련 커밋:**
+- `65ba2a6 - feat(workspace): 채널별 권한 기반 입력창 제어 구현`
+
 ### 2025-10-01 (rev1~rev3)
 **업데이트된 문서:**
 - ✅ `docs/implementation/database-reference.md` - GroupRole data class 제거, 시스템 역할 불변성 명시, ChannelRoleBinding 스키마/JPA 섹션 추가

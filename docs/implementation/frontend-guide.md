@@ -148,6 +148,63 @@ final breadcrumb = ref.watch(
   - 라우트와 복원용 컨텍스트(Map)를 함께 기록해 이후 화면 복구가 가능하다.
   - 워크스페이스 탭에서 루트(그룹 미선택)로 되돌아오면 홈으로 이동해 빈 화면을 피한다.
 
+### 게시글/댓글 시스템 (2025-10-05 추가)
+
+**핵심 컴포넌트 구조:**
+```dart
+// 게시글 컴포넌트
+presentation/widgets/post/
+├── post_card.dart        // 단일 게시글 카드
+├── post_list.dart        // 무한 스크롤 목록
+├── post_composer.dart    // 작성 입력창
+├── date_divider.dart     // 날짜 구분선
+└── post_skeleton.dart    // 로딩 스켈레톤
+
+// 댓글 컴포넌트
+presentation/widgets/comment/
+├── comment_item.dart     // 단일 댓글
+└── comment_composer.dart // 댓글 작성창
+```
+
+**데이터 레이어:**
+```dart
+// 모델 정의
+core/models/
+├── post_models.dart      // Post, PostListResponse, CreatePostRequest
+└── comment_models.dart   // Comment, CommentListResponse, CreateCommentRequest
+
+// API 서비스
+core/services/
+├── post_service.dart     // CRUD + 페이지네이션
+└── comment_service.dart  // CRUD + 페이지네이션
+```
+
+**권한 기반 UI 제어 패턴:**
+```dart
+// 채널 권한 조회
+final permissions = await ref.read(channelServiceProvider)
+    .getMyPermissions(channelId);
+
+// 조건부 렌더링
+if (permissions.contains('POST_WRITE')) {
+  PostComposer(channelId: channelId)
+} else {
+  Text('이 채널에 글을 작성할 권한이 없습니다')
+}
+```
+
+**키보드 입력 핸들링:**
+```dart
+// Enter: 전송, Shift+Enter: 줄바꿈
+onFieldSubmitted: (value) {
+  if (!_isShiftPressed) {
+    _handleSubmit();
+  }
+}
+```
+
+상세 구현: [워크스페이스 페이지 명세](../ui-ux/pages/workspace-pages.md)
+
 ## 상태 관리 패턴
 
 ### Riverpod 활용

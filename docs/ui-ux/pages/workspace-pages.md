@@ -61,10 +61,18 @@
 -   **스크롤**: 기본적으로 가장 최신 게시글(가장 아래)이 보이도록 스크롤이 맨 아래로 이동합니다.
 -   **모바일**: `navigation-and-page-flow.md`에 정의된 전체 화면 전환 플로우를 따릅니다.
 
-### 1.2. 게시글 구성 요소
+### 1.2. 게시글 구성 요소 (구현 완료 - 2025-10-05)
 
 게시글은 제목과 내용을 구분하지 않는 연속적인 메시지 형태입니다.
 
+**구현된 컴포넌트**:
+- `PostCard`: 단일 게시글 카드 (작성자 정보, 본문, 댓글 버튼)
+- `PostList`: 게시글 목록 (무한 스크롤, 날짜 구분선)
+- `PostComposer`: 게시글 작성 입력창 (권한 기반)
+- `DateDivider`: 날짜 구분선 (한국어 로케일)
+- `PostSkeleton`: 로딩 스켈레톤
+
+**디자인 구조**:
 1.  **작성자 정보**: 좌측에 작성자의 프로필 이미지, 우측 상단에 닉네임과 작성 시간(예: "오후 3:15")을 표시합니다.
 2.  **날짜 구분선**: 날짜가 바뀔 경우, 게시글 사이에 "── 2025년 9월 29일 ──"과 같은 구분선을 삽입하여 시각적으로 분리합니다.
 3.  **메시지 본문**: 텍스트 기반의 메시지를 표시합니다.
@@ -72,6 +80,40 @@
     -   **댓글이 없을 때**: "댓글 작성하기" 텍스트를 표시합니다.
     -   **댓글이 있을 때**: "N개의 댓글 • M분 전" 형식으로 댓글 수와 마지막 댓글이 달린 시간을 함께 표시합니다.
     -   **마우스 호버 시**: "댓글 펼치기"로 텍스트가 변경되어 행동을 유도합니다.
+
+**권한 기반 UI 제어**:
+- `POST_WRITE` 권한이 있을 때만 게시글 작성 입력창 표시
+- `COMMENT_WRITE` 권한이 있을 때만 댓글 작성 버튼 활성화
+- 권한이 없는 경우 "이 채널에 글을 작성할 권한이 없습니다" 메시지 표시
+
+**키보드 입력**:
+- Enter: 게시글/댓글 전송
+- Shift + Enter: 줄바꿈
+
+**구현 위치**:
+- `frontend/lib/presentation/widgets/post/post_card.dart`
+- `frontend/lib/presentation/widgets/post/post_list.dart`
+- `frontend/lib/presentation/widgets/post/post_composer.dart`
+- `frontend/lib/presentation/widgets/post/date_divider.dart`
+- `frontend/lib/presentation/widgets/post/post_skeleton.dart`
+
+### 1.3. 댓글 시스템 (구현 완료 - 2025-10-05)
+
+**구현된 컴포넌트**:
+- `CommentItem`: 단일 댓글 아이템
+- `CommentComposer`: 댓글 작성 입력창
+
+**디자인 구조**:
+- 작성자 정보 (프로필 이미지, 닉네임, 시간)
+- 댓글 본문
+- 수정/삭제 버튼 (본인 댓글만)
+
+**권한 제어**:
+- `COMMENT_WRITE` 권한이 있을 때만 댓글 작성 가능
+
+**구현 위치**:
+- `frontend/lib/presentation/widgets/comment/comment_item.dart`
+- `frontend/lib/presentation/widgets/comment/comment_composer.dart`
 
 ## 2. 그룹 홈 페이지
 

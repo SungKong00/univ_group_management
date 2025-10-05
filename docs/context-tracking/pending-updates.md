@@ -4,26 +4,28 @@
 
 ## 🚨 우선순위 높음 (High Priority)
 
-### 모집 시스템 문서 & API 문서 동기화
-**상태**: 완료 (2025-10-01 rev5)
-**적용 내용**: recruitment-system.md 구현 상태 표/권한/에러/DTO/API 매핑 반영, api-reference.md 상세 예시/에러 코드 확장.
-**후속**: 통계 구현 시 stats 응답 확정 필요 (보류)
+### 게시글/댓글 시스템 문서 동기화
+**상태**: ✅ 완료 (2025-10-05)
+**적용 문서**:
+- frontend-implementation-status.md: 구현 현황 추가
+- api-reference.md: Post/Comment API 상세 추가
+- workspace-pages.md: UI 컴포넌트 정보 추가
+**후속**: 파일 업로드 기능 구현 시 문서 업데이트 필요
 
-### 채널 권한 설정 UI/UX 문서화
-**상태**: 완료 (rev5 하이브리드 정책 반영)
-**적용 문서**: channel-pages.md, channel-permissions.md, permission-system.md, troubleshooting/permission-errors.md
-**후속**: UI 컴포넌트 설계 세부 인터랙션(드래그 정렬, 배치 저장) 추가 (선택)
-
-### CLAUDE.md 후속 점검
-**상태**: 완료 (rev5 요약 반영)
-**후속**: 권한 UI 실제 구현 후 스크린샷/워크플로 넣기 (예정)
+### 채널 권한 검증 시스템 문서화
+**상태**: ✅ 완료 (2025-10-04)
+**적용 문서**:
+- permission-system.md: Spring Security 통합 가이드
+- backend-guide.md: Security Layer 설계 결정
+**후속**: 없음
 
 ---
 
 ## ⚠️ 우선순위 중간 (Medium Priority)
 
 ### 개발 워크플로우 문서 Git 전략 연동 검증
-**상태**: 완료 (링크 삽입) / 재검토 예정
+**상태**: ❌ 검증 필요
+**파일**: development-flow.md
 **추가 고려**: 문서 자동 검증 파이프라인 섹션 (추후)
 
 ### UI/UX 전체 정합성 1차 패스
@@ -47,12 +49,14 @@
 ---
 
 ## ✅ 완료/제거된 항목 (History)
-- (완료) 권한 시스템 문서 검토 / 채널 자동 바인딩 제거 반영 (`2025-10-01` rev1~3)
-- (완료) Database Reference: ChannelRoleBinding 스키마/JPA 추가
-- (완료) Troubleshooting: 기본 바인딩 가정 제거
-- (완료) Hybrid Policy 문서화 (rev5 기본 2채널 템플릿 + 사용자 정의 0바인딩)
-- (완료) Recruitment 문서/API 상세 확장
-- (완료) Development Flow 상호 링크 삽입
+- (완료 2025-10-05) 게시글/댓글 시스템 문서 동기화
+- (완료 2025-10-04) 채널 권한 검증 시스템 문서화
+- (완료 2025-10-01) 권한 시스템 문서 검토 / 채널 자동 바인딩 제거 반영 (rev1~3)
+- (완료 2025-10-01) Database Reference: ChannelRoleBinding 스키마/JPA 추가
+- (완료 2025-10-01) Troubleshooting: 기본 바인딩 가정 제거
+- (완료 2025-10-01) Hybrid Policy 문서화 (rev5 기본 2채널 템플릿 + 사용자 정의 0바인딩)
+- (완료 2025-10-01) Recruitment 문서/API 상세 확장
+- (완료 2024-09-29) Development Flow 상호 링크 삽입
 
 ---
 
@@ -62,10 +66,10 @@
 
 ---
 
-## 📊 통계 및 메트릭 (갱신 2025-10-01 rev5)
-- **총 대기 항목**: 5개 (High 0 / Medium 1 / Low 4)
-- **이번 라운드 완료**: 6개
-- **예상 잔여 작업 시간**: 6~9시간 (선택 포함)
+## 📊 통계 및 메트릭 (갱신 2025-10-05)
+- **총 대기 항목**: 5개 (High 0 / Medium 2 / Low 3)
+- **이번 라운드 완료**: 2개 (게시글/댓글 문서화, 권한 검증 문서화)
+- **예상 잔여 작업 시간**: 4~6시간 (선택 포함)
 
 ---
 

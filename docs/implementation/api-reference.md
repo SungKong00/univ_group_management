@@ -399,17 +399,124 @@ GET /api/recruitments/{id}/stats
 -   `DELETE /channels/{channelId}`: 채널 삭제 (관련자만 가능)
 -   `GET /channels/{channelId}/permissions/me`: 채널에 대한 나의 권한 목록 조회
 
-### 5.2. 게시글 및 댓글
+### 5.2. 게시글 (Posts)
 
--   `GET /channels/{channelId}/posts`: 채널 내 게시글 목록 조회 (`POST_READ` 권한 필요)
--   `POST /channels/{channelId}/posts`: 게시글 작성 (`POST_WRITE` 권한 필요)
--   `GET /posts/{postId}`: 게시글 상세 조회 (`POST_READ` 권한 필요)
--   `PUT /posts/{postId}`: 게시글 수정 (작성자 또는 관리자)
--   `DELETE /posts/{postId}`: 게시글 삭제 (작성자 또는 관리자)
--   `GET /posts/{postId}/comments`: 게시글의 댓글 목록 조회
--   `POST /posts/{postId}/comments`: 댓글 작성
--   `PUT /comments/{commentId}`: 댓글 수정 (작성자 또는 관리자)
--   `DELETE /comments/{commentId}`: 댓글 삭제 (작성자 또는 관리자)
+**게시글 목록 조회**
+```
+GET /api/channels/{channelId}/posts?page=0&size=20
+```
+- **권한**: `POST_READ` (채널 권한)
+- **응답**: `ApiResponse<PostListResponse>`
+- **PostListResponse**:
+  ```json
+  {
+    "posts": [
+      {
+        "id": 1,
+        "channelId": 10,
+        "content": "게시글 내용",
+        "authorId": 5,
+        "authorName": "작성자명",
+        "createdAt": "2025-10-05T14:30:00",
+        "updatedAt": "2025-10-05T14:30:00"
+      }
+    ],
+    "hasNext": true
+  }
+  ```
+
+**게시글 작성**
+```
+POST /api/channels/{channelId}/posts
+Content-Type: application/json
+```
+- **권한**: `POST_WRITE` (채널 권한)
+- **요청**: `CreatePostRequest`
+  ```json
+  {
+    "content": "게시글 내용"
+  }
+  ```
+- **응답**: `ApiResponse<Post>`
+
+**게시글 수정**
+```
+PUT /api/posts/{postId}
+```
+- **권한**: 작성자 본인 또는 관리자
+- **요청**: `CreatePostRequest`
+- **응답**: `ApiResponse<Post>`
+
+**게시글 삭제**
+```
+DELETE /api/posts/{postId}
+```
+- **권한**: 작성자 본인 또는 관리자
+- **응답**: `ApiResponse<void>`
+
+### 5.3. 댓글 (Comments)
+
+**댓글 목록 조회**
+```
+GET /api/posts/{postId}/comments?page=0&size=50
+```
+- **권한**: `POST_READ` (채널 권한)
+- **응답**: `ApiResponse<CommentListResponse>`
+- **CommentListResponse**:
+  ```json
+  {
+    "comments": [
+      {
+        "id": 1,
+        "postId": 10,
+        "content": "댓글 내용",
+        "authorId": 5,
+        "authorName": "작성자명",
+        "createdAt": "2025-10-05T14:35:00",
+        "updatedAt": "2025-10-05T14:35:00"
+      }
+    ],
+    "hasNext": false
+  }
+  ```
+
+**댓글 작성**
+```
+POST /api/posts/{postId}/comments
+Content-Type: application/json
+```
+- **권한**: `COMMENT_WRITE` (채널 권한)
+- **요청**: `CreateCommentRequest`
+  ```json
+  {
+    "content": "댓글 내용"
+  }
+  ```
+- **응답**: `ApiResponse<Comment>`
+
+**댓글 수정**
+```
+PUT /api/comments/{commentId}
+```
+- **권한**: 작성자 본인 또는 관리자
+- **요청**: `CreateCommentRequest`
+- **응답**: `ApiResponse<Comment>`
+
+**댓글 삭제**
+```
+DELETE /api/comments/{commentId}
+```
+- **권한**: 작성자 본인 또는 관리자
+- **응답**: `ApiResponse<void>`
+
+**권한 에러 예시**:
+| 상황 | ErrorCode | HTTP |
+|------|-----------|------|
+| 채널 멤버가 아님 | FORBIDDEN | 403 |
+| POST_READ 권한 없음 | FORBIDDEN | 403 |
+| POST_WRITE 권한 없음 | FORBIDDEN | 403 |
+| COMMENT_WRITE 권한 없음 | FORBIDDEN | 403 |
+| 타인 게시글 수정/삭제 | FORBIDDEN | 403 |
 
 ## 6. Admin API (`/api/admin`)
 

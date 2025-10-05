@@ -1,7 +1,7 @@
 # 프론트엔드 구현 현황 (Frontend Implementation Status)
 
-> **최종 업데이트**: 2025-10-04
-> **현재 상태**: Clean Architecture 기반 완전 재구성 완료, 네비게이션 시스템 구현 완료, 그룹 전환 드롭다운 추가
+> **최종 업데이트**: 2025-10-05
+> **현재 상태**: 게시글/댓글 시스템 구현 완료, 권한 기반 UI 제어, 채널별 권한 검증
 
 ## 📊 전체 진행률
 
@@ -11,9 +11,9 @@
 | **네비게이션 시스템** | 95% | ✅ 거의 완료 |
 | **기본 레이아웃** | 90% | ✅ 거의 완료 |
 | **인증 시스템** | 10% | ❌ 미구현 |
-| **데이터 레이어** | 5% | ❌ 미구현 |
-| **워크스페이스 기능** | 40% | 🚧 부분 구현 |
-| **UI 컴포넌트** | 25% | 🚧 부분 구현 |
+| **데이터 레이어** | 35% | 🚧 부분 구현 |
+| **워크스페이스 기능** | 65% | 🚧 부분 구현 |
+| **UI 컴포넌트** | 50% | 🚧 부분 구현 |
 
 ## 🏗️ 아키텍처 구조
 
@@ -30,10 +30,17 @@ lib/
 │   ├── storage/            ❌ 미구현
 │   └── utils/              ❌ 미구현
 │
-├── data/                   ❌ 미구현 (5%)
-│   ├── models/             ❌ 미구현
-│   ├── repositories/       ❌ 미구현
-│   └── services/           ❌ 미구현
+├── core/models/           ✅ 부분 완료 (35%)
+│   ├── post_models.dart    ✅ 완료
+│   ├── comment_models.dart ✅ 완료
+│   ├── channel_models.dart ✅ 완료
+│   └── group_models.dart   ✅ 완료
+│
+├── core/services/         ✅ 부분 완료 (35%)
+│   ├── post_service.dart   ✅ 완료
+│   ├── comment_service.dart ✅ 완료
+│   ├── channel_service.dart ✅ 완료
+│   └── group_service.dart  ✅ 완료
 │
 ├── domain/                 ❌ 미구현 (0%)
 │   ├── entities/           ❌ 미구현
@@ -115,27 +122,46 @@ lib/
 | **캘린더** | 🚧 기본 구조 | 일정 데이터 연동 필요 |
 | **활동** | 🚧 기본 구조 | 활동 데이터 연동 필요 |
 
-### 🚧 워크스페이스 기능 (40% 완료)
+### ✅ 게시글/댓글 시스템 (95% 완료) - 2025-10-05 신규
+
+**완전 구현된 기능:**
+- ✅ **게시글 CRUD**: Post 모델, PostService, API 연동
+- ✅ **댓글 CRUD**: Comment 모델, CommentService, API 연동
+- ✅ **권한 기반 UI**: POST_WRITE, COMMENT_WRITE 권한 검증
+- ✅ **Post 위젯**: PostCard, PostList, PostComposer, DateDivider
+- ✅ **Comment 위젯**: CommentItem, CommentComposer
+- ✅ **키보드 입력**: Enter 전송, Shift+Enter 줄바꿈
+- ✅ **날짜 구분선**: DateDivider (한국어 로케일)
+- ✅ **스켈레톤 로딩**: PostSkeleton
+
+**구현 위치:**
+- `lib/core/models/post_models.dart`
+- `lib/core/models/comment_models.dart`
+- `lib/core/services/post_service.dart`
+- `lib/core/services/comment_service.dart`
+- `lib/presentation/widgets/post/`
+- `lib/presentation/widgets/comment/`
+
+**미완료 부분:**
+- ❌ 파일 업로드
+- ❌ 실시간 업데이트
+- ❌ 게시글 검색
+
+### 🚧 워크스페이스 기능 (65% 완료)
 
 **완료된 부분:**
-- ✅ 채널 네비게이션 바 (더미 데이터)
-- ✅ 메시지 입력창 UI
+- ✅ 채널 네비게이션 바 (API 연동)
+- ✅ 게시글 목록 표시 (권한 기반)
+- ✅ 댓글 시스템 (권한 기반)
+- ✅ 메시지 입력창 UI (권한 제어)
 - ✅ 댓글 사이드바 토글
 - ✅ 반응형 레이아웃 (웹/모바일)
 - ✅ 그룹 전환 드롭다운 (2025-10-04)
-  - 인라인 드롭다운 UI
-  - 계층 구조 들여쓰기 표시
-  - 현재 그룹 강조
-  - `/me/groups` API 연동
-  - **DFS 기반 계층적 정렬** (부모-자식 관계 유지)
-  - **워크스페이스 헤더 UI 개선** (제목 제거, 그룹명 headlineMedium으로 강조)
 
 **미완료 부분:**
-- ❌ 실제 채널 데이터 로딩
-- ❌ 게시글 목록 표시
-- ❌ 댓글 시스템
 - ❌ 실시간 업데이트
 - ❌ 파일 업로드
+- ❌ 읽지 않음 카운트 (현재 더미 데이터)
 
 ## ❌ 미구현 기능
 
@@ -145,11 +171,12 @@ lib/
 - ❌ 자동 로그인
 - ❌ 권한 확인
 
-### ❌ 데이터 레이어 (5% 완료)
-- ❌ API 모델 클래스
-- ❌ Repository 구현
-- ❌ 서비스 클래스
-- ❌ 상태 관리 (그룹, 사용자 등)
+### 🚧 데이터 레이어 (35% 완료)
+- ✅ Post/Comment 모델 및 서비스
+- ✅ Channel/Group 모델 및 서비스
+- ❌ User 모델 및 서비스
+- ❌ Repository 패턴 구현
+- ❌ 전역 상태 관리 (Provider 확장)
 
 ### ❌ 고급 기능 (0% 완료)
 - ❌ 알림 시스템
