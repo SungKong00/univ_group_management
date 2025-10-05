@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/auth_models.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/navigation/navigation_controller.dart';
+import '../../core/providers/provider_reset.dart';
 
 class AuthState {
   final UserInfo? user;
@@ -130,6 +131,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     try {
       await _authService.logout();
+
+      // 모든 사용자 데이터 관련 Provider 초기화
+      resetAllUserDataProviders(_ref);
 
       // NavigationController 초기화 (홈으로 리셋)
       final navigationController = _ref.read(navigationControllerProvider.notifier);
