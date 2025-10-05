@@ -187,6 +187,83 @@ Widget build(BuildContext context) {
 }
 ```
 
+#### 로그아웃 후 이전 계정 데이터 표시 문제 (2025-10-05 추가) {#로그아웃데이터}
+
+**증상:**
+```
+로그아웃 후 다른 계정으로 로그인했는데,
+이전 계정의 워크스페이스 목록이나 그룹 정보가 표시됨
+```
+
+**원인:**
+- Riverpod FutureProvider/Provider가 데이터를 캐시함
+- 로그아웃 시 Provider 상태가 초기화되지 않음
+- 계정 전환 시 이전 계정의 캐시된 데이터가 유지됨
+
+**해결: Provider 초기화 시스템 사용**
+
+1. **중앙 Provider 초기화 시스템 설정** (`core/providers/provider_reset.dart`)
+```dart
+/// 로그아웃 시 자동으로 invalidate될 Provider 목록
+final providersToResetOnLogout = <ProviderOrFamily>[
+  myGroupsProvider,
+  myNotificationsProvider,  // 새로운 Provider 추가 시 여기에 등록
+];
+
+/// 모든 사용자 데이터 관련 Provider를 초기화
+void resetAllUserDataProviders(Ref ref) {
+  // FutureProvider 및 일반 Provider 일괄 초기화
+  for (final provider in providersToResetOnLogout) {
+    ref.invalidate(provider);
+  }
+
+  // StateNotifierProvider 별도 처리
+  ref.read(workspaceStateProvider.notifier).exitWorkspace();
+}
+```
+
+2. **로그아웃 로직에 통합** (`presentation/providers/auth_provider.dart`)
+```dart
+Future<void> logout() async {
+  await _authService.logout();
+
+  // ✅ 모든 사용자 데이터 Provider 초기화
+  resetAllUserDataProviders(_ref);
+
+  // 네비게이션 초기화
+  final navigationController = _ref.read(navigationControllerProvider.notifier);
+  navigationController.resetToHome();
+
+  state = AuthState(user: null, isLoading: false);
+}
+```
+
+3. **autoDispose 패턴 적용**
+```dart
+// ❌ 기존: 메모리에 계속 유지되어 캐시 문제 발생
+final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
+  return await groupService.getMyGroups();
+});
+
+// ✅ 개선: autoDispose로 자동 메모리 관리
+final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref) async {
+  return await groupService.getMyGroups();
+});
+```
+
+**검증 방법:**
+1. 계정 A로 로그인하여 워크스페이스 생성
+2. 로그아웃
+3. 계정 B로 로그인
+4. 계정 A의 워크스페이스가 보이지 않는지 확인
+
+**관련 파일:**
+- `lib/core/providers/provider_reset.dart` - 중앙 Provider 초기화 시스템
+- `lib/presentation/providers/auth_provider.dart` - 로그아웃 로직
+- `lib/presentation/providers/my_groups_provider.dart` - autoDispose 적용 예시
+
+**참고:** [프론트엔드 가이드 - Provider 초기화 시스템](../implementation/frontend-guide.md#상태-관리-패턴)
+
 ## API 통신 에러
 
 ### 8. 네트워크 연결 에러

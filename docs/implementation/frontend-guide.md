@@ -40,12 +40,13 @@ lib/
 │   ├── theme/              # 디자인 시스템
 │   ├── router/             # 라우팅 설정
 │   ├── services/           # API, 인증 서비스
+│   ├── providers/          # 공통 Provider (provider_reset.dart 등)
 │   ├── constants/          # 상수 정의
 │   └── models/             # 데이터 모델
 ├── presentation/           # UI 레이어
 │   ├── pages/              # 페이지 컴포넌트
 │   ├── widgets/            # 재사용 위젯
-│   └── providers/          # 상태 관리
+│   └── providers/          # 상태 관리 (페이지별 Provider)
 └── main.dart              # 앱 진입점
 ```
 
@@ -213,6 +214,76 @@ onFieldSubmitted: (value) {
 // 의존성 주입 패턴
 // 테스트 가능한 구조
 ```
+
+### Provider 초기화 시스템 (2025-10-05 추가)
+
+**중앙 집중식 Provider 관리:**
+
+로그아웃 시 사용자 데이터 관련 Provider를 일괄 초기화하는 시스템입니다. 계정 전환 시 이전 계정의 데이터가 남아있는 문제를 방지합니다.
+
+```dart
+// core/providers/provider_reset.dart
+final providersToResetOnLogout = <ProviderOrFamily>[
+  myGroupsProvider,
+  // 새로운 사용자 데이터 Provider는 여기에 추가
+];
+
+void resetAllUserDataProviders(Ref ref) {
+  // FutureProvider 및 일반 Provider 일괄 초기화
+  for (final provider in providersToResetOnLogout) {
+    ref.invalidate(provider);
+  }
+
+  // StateNotifierProvider 별도 처리
+  ref.read(workspaceStateProvider.notifier).exitWorkspace();
+}
+```
+
+**autoDispose 패턴:**
+
+사용하지 않을 때 자동으로 메모리에서 해제되는 Provider를 만들 수 있습니다.
+
+```dart
+// ❌ 기존 방식: 메모리에 계속 유지됨
+final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
+  return await groupService.getMyGroups();
+});
+
+// ✅ 개선: autoDispose로 자동 메모리 관리
+final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref) async {
+  return await groupService.getMyGroups();
+});
+```
+
+**로그아웃 통합:**
+
+```dart
+// presentation/providers/auth_provider.dart
+Future<void> logout() async {
+  await _authService.logout();
+
+  // 모든 사용자 데이터 Provider 초기화
+  resetAllUserDataProviders(_ref);
+
+  // 네비게이션 초기화
+  final navigationController = _ref.read(navigationControllerProvider.notifier);
+  navigationController.resetToHome();
+
+  state = AuthState(user: null, isLoading: false);
+}
+```
+
+**새로운 사용자 데이터 Provider 추가 시:**
+
+1. `core/providers/provider_reset.dart`의 `providersToResetOnLogout` 리스트에 추가
+2. 가능한 경우 `autoDispose` 적용
+3. StateNotifierProvider는 `resetAllUserDataProviders()` 함수 내부에서 별도 처리
+
+이 패턴은 다음을 보장합니다:
+- 로그아웃 시 모든 사용자 데이터 완전 제거
+- 계정 전환 시 이전 계정 데이터 표시 방지
+- 메모리 효율적인 Provider 관리
+- 확장 가능한 중앙 집중식 구조
 
 ### 인증 상태 관리
 ```dart

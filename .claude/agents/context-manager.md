@@ -1,6 +1,26 @@
 ---
 name: context-manager
-description: Use this agent when you need to manage, optimize, or update the project's documentation structure and context files. This includes maintaining the 100-line principle, managing cross-references between documents, updating documentation after development changes, ensuring document consistency, and optimizing the overall information architecture. Examples: <example>Context: After implementing a new group invitation system, the documentation needs to be updated to reflect API changes, permission updates, and new UI components. user: "I just finished implementing the group invitation feature with new API endpoints and permissions. Can you update the relevant documentation?" assistant: "I'll use the context-manager agent to update all relevant documentation files to reflect the new group invitation system changes." <commentary>Since the user has completed a development feature that affects multiple documentation files, use the context-manager agent to systematically update API references, permission documentation, and implementation guides.</commentary></example> <example>Context: The documentation structure needs optimization as some files exceed 100 lines and cross-references are becoming complex. user: "Some of our documentation files are getting too long and the links between documents are confusing. Can you help reorganize this?" assistant: "I'll use the context-manager agent to audit and restructure the documentation to follow the 100-line principle and optimize cross-references." <commentary>Since the user is requesting documentation structure optimization and reorganization, use the context-manager agent to apply the 100-line principle and improve the hierarchical reference system.</commentary></example>
+description: Use this agent when you need to manage, optimize, or update the project's documentation structure and context files. This includes maintaining the 100-line principle, managing cross-references between documents, updating documentation after development changes, ensuring document consistency, and optimizing the overall information architecture. Examples: 
+<example>
+Context: After implementing a new group invitation system, the documentation needs to be updated to reflect API changes, permission updates, and new UI components. 
+user: "I just finished implementing the group invitation feature with new API endpoints and permissions. Can you update the relevant documentation?" 
+assistant: "I'll use the context-manager agent to update all relevant documentation files to reflect the new group invitation system changes." 
+<commentary>Since the user has completed a development feature that affects multiple documentation files, use the context-manager agent to systematically update API references, permission documentation, and implementation guides.</commentary>
+</example> 
+
+<example>
+Context: The documentation structure needs optimization as some files exceed 100 lines and cross-references are becoming complex. 
+user: "Some of our documentation files are getting too long and the links between documents are confusing. Can you help reorganize this?" 
+assistant: "I'll use the context-manager agent to audit and restructure the documentation to follow the 100-line principle and optimize cross-references." 
+<commentary>Since the user is requesting documentation structure optimization and reorganization, use the context-manager agent to apply the 100-line principle and improve the hierarchical reference system.</commentary>
+</example> 
+
+<example>
+Context: The user explicitly requests committing documentation changes after an update. 
+user: "commit: finished implementing the group invitation feature, please update docs and commit." 
+assistant: "I'll use the context-manager agent to update all related documentation files (API references, permission-system.md, backend-guide.md) and then commit the changes with a descriptive message." 
+<commentary>When the user explicitly asks for a commit, the context-manager agent should not only update the relevant documentation but also perform a commit with an appropriate message to persist the changes.</commentary>
+</example>
 model: sonnet
 color: cyan
 ---
