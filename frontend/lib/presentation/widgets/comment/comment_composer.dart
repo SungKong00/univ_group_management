@@ -6,7 +6,8 @@ import '../../../core/theme/app_theme.dart';
 /// 댓글 작성 입력창 위젯
 ///
 /// - Shift+Enter: 줄바꿈
-/// - 최대 4줄 자동 높이 조절
+/// - Enter: 전송
+/// - 최대 5줄 자동 높이 조절
 class CommentComposer extends StatefulWidget {
   final bool canWrite;
   final bool isLoading;
@@ -71,11 +72,10 @@ class _CommentComposerState extends State<CommentComposer> {
 
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.neutral300, width: 1),
-        ),
-        color: Colors.white,
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.neutral300),
+        borderRadius: BorderRadius.circular(8),
+        color: isDisabled ? AppColors.neutral100 : Colors.white,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -83,7 +83,7 @@ class _CommentComposerState extends State<CommentComposer> {
           Expanded(
             child: ConstrainedBox(
               constraints: const BoxConstraints(
-                maxHeight: 100, // 최대 4줄
+                maxHeight: 120, // 최대 5줄
               ),
               child: KeyboardListener(
                 focusNode: FocusNode(),
@@ -110,21 +110,10 @@ class _CommentComposerState extends State<CommentComposer> {
                     hintStyle: AppTheme.bodyMedium.copyWith(
                       color: AppColors.neutral500,
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColors.neutral300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColors.neutral300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColors.brand, width: 2),
-                    ),
+                    border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 10,
+                      vertical: 8,
                     ),
                   ),
                   style: AppTheme.bodyMedium.copyWith(
@@ -132,6 +121,9 @@ class _CommentComposerState extends State<CommentComposer> {
                   ),
                   onChanged: (value) {
                     setState(() {});
+                  },
+                  onTapOutside: (event) {
+                    _focusNode.unfocus();
                   },
                 ),
               ),

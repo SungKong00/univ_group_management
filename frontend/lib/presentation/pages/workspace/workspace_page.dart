@@ -500,56 +500,59 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     final postId = postIdStr != null ? int.tryParse(postIdStr) : null;
     final canWrite = workspaceState.channelPermissions?.canWriteComment ?? false;
 
-    return Column(
-      children: [
-        // 댓글 헤더
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColors.neutral200, width: 1),
-            ),
-          ),
-          child: Row(
-            children: [
-              Text('댓글', style: AppTheme.titleLarge),
-              const Spacer(),
-              IconButton(
-                onPressed: () {
-                  ref.read(workspaceStateProvider.notifier).hideComments();
-                },
-                icon: const Icon(Icons.close),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // 댓글 헤더
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: AppColors.neutral200, width: 1),
               ),
-            ],
-          ),
-        ),
-        // 댓글 목록
-        if (postId != null)
-          Expanded(
-            child: CommentList(
-              key: ValueKey('comment_list_${postId}_$_commentListKey'),
-              postId: postId,
             ),
-          )
-        else
-          Expanded(
-            child: Center(
-              child: Text(
-                '게시글을 선택해주세요',
-                style: AppTheme.bodyMedium.copyWith(
-                  color: AppColors.neutral600,
+            child: Row(
+              children: [
+                Text('댓글', style: AppTheme.titleLarge),
+                const Spacer(),
+                IconButton(
+                  onPressed: () {
+                    ref.read(workspaceStateProvider.notifier).hideComments();
+                  },
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+          // 댓글 목록
+          if (postId != null)
+            Expanded(
+              child: CommentList(
+                key: ValueKey('comment_list_${postId}_$_commentListKey'),
+                postId: postId,
+              ),
+            )
+          else
+            Expanded(
+              child: Center(
+                child: Text(
+                  '게시글을 선택해주세요',
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppColors.neutral600,
+                  ),
                 ),
               ),
             ),
-          ),
-        // 댓글 입력창
-        if (postId != null)
-          CommentComposer(
-            canWrite: canWrite,
-            isLoading: workspaceState.channelPermissions == null,
-            onSubmit: (content) => _handleSubmitComment(context, ref, content),
-          ),
-      ],
+          // 댓글 입력창
+          if (postId != null)
+            CommentComposer(
+              canWrite: canWrite,
+              isLoading: workspaceState.channelPermissions == null,
+              onSubmit: (content) => _handleSubmitComment(context, ref, content),
+            ),
+        ],
+      ),
     );
   }
 
