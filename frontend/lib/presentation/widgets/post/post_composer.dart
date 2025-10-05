@@ -72,7 +72,7 @@ class _PostComposerState extends State<PostComposer> {
     final hintText = widget.isLoading
         ? '권한 확인 중...'
         : widget.canWrite
-            ? '메시지를 입력하세요... (Shift+Enter: 줄바꿈, Enter: 전송)'
+            ? '메시지를 입력하세요... (Shift+Enter: 줄바꿈)'
             : '쓰기 권한이 없습니다';
 
     return Container(

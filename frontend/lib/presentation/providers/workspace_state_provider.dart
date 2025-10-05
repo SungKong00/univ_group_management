@@ -10,6 +10,13 @@ enum WorkspaceView {
   calendar, // Calendar view
 }
 
+/// Mobile Workspace View Type (3-step navigation flow)
+enum MobileWorkspaceView {
+  channelList, // Step 1: Channel list view
+  channelPosts, // Step 2: Posts in selected channel
+  postComments, // Step 3: Comments for selected post
+}
+
 class WorkspaceState extends Equatable {
   const WorkspaceState({
     this.selectedGroupId,
@@ -20,6 +27,7 @@ class WorkspaceState extends Equatable {
     this.channels = const [],
     this.unreadCounts = const {},
     this.currentView = WorkspaceView.channel,
+    this.mobileView = MobileWorkspaceView.channelList,
     this.hasAnyGroupPermission = false,
     this.isLoadingChannels = false,
     this.isLoadingWorkspace = false,
@@ -36,6 +44,7 @@ class WorkspaceState extends Equatable {
   final List<Channel> channels;
   final Map<String, int> unreadCounts; // Dummy data for now
   final WorkspaceView currentView;
+  final MobileWorkspaceView mobileView;
   final bool hasAnyGroupPermission;
   final bool isLoadingChannels;
   final bool isLoadingWorkspace;
@@ -52,6 +61,7 @@ class WorkspaceState extends Equatable {
     List<Channel>? channels,
     Map<String, int>? unreadCounts,
     WorkspaceView? currentView,
+    MobileWorkspaceView? mobileView,
     bool? hasAnyGroupPermission,
     bool? isLoadingChannels,
     bool? isLoadingWorkspace,
@@ -68,6 +78,7 @@ class WorkspaceState extends Equatable {
       channels: channels ?? this.channels,
       unreadCounts: unreadCounts ?? this.unreadCounts,
       currentView: currentView ?? this.currentView,
+      mobileView: mobileView ?? this.mobileView,
       hasAnyGroupPermission: hasAnyGroupPermission ?? this.hasAnyGroupPermission,
       isLoadingChannels: isLoadingChannels ?? this.isLoadingChannels,
       isLoadingWorkspace: isLoadingWorkspace ?? this.isLoadingWorkspace,
@@ -91,6 +102,7 @@ class WorkspaceState extends Equatable {
         channels,
         unreadCounts,
         currentView,
+        mobileView,
         hasAnyGroupPermission,
         isLoadingChannels,
         isLoadingWorkspace,
@@ -316,6 +328,90 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   void preserveCommentsForMobile() {
     // 모바일에서는 댓글이 전체 화면으로 표시되므로
     // isCommentsVisible 상태는 유지하되 UI 구현에서 처리
+  }
+
+  // 모바일 뷰 전환 메서드
+  void setMobileView(MobileWorkspaceView view) {
+    state = state.copyWith(mobileView: view);
+  }
+
+  // 모바일에서 채널 선택 시 (Step 1 → Step 2)
+  void selectChannelForMobile(String channelId) {
+    state = state.copyWith(
+      selectedChannelId: channelId,
+      mobileView: MobileWorkspaceView.channelPosts,
+      isCommentsVisible: false,
+      selectedPostId: null,
+      workspaceContext: Map.from(state.workspaceContext)
+        ..['channelId'] = channelId,
+    );
+
+    // Load permissions for the selected channel
+    loadChannelPermissions(channelId);
+  }
+
+  // 모바일에서 댓글 보기 시 (Step 2 → Step 3)
+  void showCommentsForMobile(String postId) {
+    state = state.copyWith(
+      isCommentsVisible: true,
+      selectedPostId: postId,
+      mobileView: MobileWorkspaceView.postComments,
+      workspaceContext: Map.from(state.workspaceContext)
+        ..['postId'] = postId
+        ..['commentsVisible'] = true,
+    );
+  }
+
+  // 모바일 뒤로가기 핸들링
+  bool handleMobileBack() {
+    switch (state.mobileView) {
+      case MobileWorkspaceView.postComments:
+        // Step 3 → Step 2: 댓글에서 게시글 목록으로
+        state = state.copyWith(
+          mobileView: MobileWorkspaceView.channelPosts,
+          isCommentsVisible: false,
+          selectedPostId: null,
+          workspaceContext: Map.from(state.workspaceContext)
+            ..remove('postId')
+            ..remove('commentsVisible'),
+        );
+        return true;
+      case MobileWorkspaceView.channelPosts:
+        // Step 2 → Step 1: 게시글 목록에서 채널 목록으로
+        state = state.copyWith(
+          mobileView: MobileWorkspaceView.channelList,
+          selectedChannelId: null,
+          workspaceContext: Map.from(state.workspaceContext)
+            ..remove('channelId'),
+        );
+        return true;
+      case MobileWorkspaceView.channelList:
+        // Step 1: 채널 목록에서는 뒤로가기 허용 (홈으로 이동)
+        return false;
+    }
+  }
+
+  // 반응형 전환 핸들러: 웹 → 모바일
+  void handleWebToMobileTransition() {
+    // 현재 상태에 따라 적절한 모바일 뷰 설정
+    if (state.isCommentsVisible && state.selectedPostId != null) {
+      // 댓글이 열려있으면 댓글 뷰로
+      state = state.copyWith(mobileView: MobileWorkspaceView.postComments);
+    } else if (state.selectedChannelId != null) {
+      // 채널이 선택되어 있으면 게시글 뷰로
+      state = state.copyWith(mobileView: MobileWorkspaceView.channelPosts);
+    } else {
+      // 기본값: 채널 목록
+      state = state.copyWith(mobileView: MobileWorkspaceView.channelList);
+    }
+  }
+
+  // 반응형 전환 핸들러: 모바일 → 웹
+  void handleMobileToWebTransition() {
+    // 모바일 댓글 뷰였다면 웹 댓글 사이드바 복원
+    if (state.mobileView == MobileWorkspaceView.postComments) {
+      restoreCommentsForWeb();
+    }
   }
 }
 

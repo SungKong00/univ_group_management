@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/comment_models.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme.dart';
 
 /// 개별 댓글 아이템 위젯
 class CommentItem extends StatelessWidget {
@@ -21,10 +22,10 @@ class CommentItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        left: comment.depth > 0 ? 32.0 : 0,
-        top: 12.0,
+        left: comment.depth > 0 ? 32.0 : AppSpacing.xs,
+        top: AppSpacing.sm,
         right: 0,
-        bottom: 12.0,
+        bottom: AppSpacing.sm,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

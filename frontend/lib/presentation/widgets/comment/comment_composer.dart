@@ -6,7 +6,6 @@ import '../../../core/theme/app_theme.dart';
 /// 댓글 작성 입력창 위젯
 ///
 /// - Shift+Enter: 줄바꿈
-/// - Enter: 전송
 /// - 최대 4줄 자동 높이 조절
 class CommentComposer extends StatefulWidget {
   final bool canWrite;
@@ -67,7 +66,7 @@ class _CommentComposerState extends State<CommentComposer> {
     final hintText = widget.isLoading
         ? '권한 확인 중...'
         : widget.canWrite
-            ? '댓글을 입력하세요... (Shift+Enter: 줄바꿈, Enter: 전송)'
+            ? '댓글을 입력하세요...'
             : '댓글 작성 권한이 없습니다';
 
     return Container(

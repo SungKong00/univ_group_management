@@ -161,7 +161,8 @@ class MobileChannelList extends ConsumerWidget {
             isSelected: isSelected,
             unreadCount: unreadCount,
             onTap: () {
-              ref.read(workspaceStateProvider.notifier).showChannel(channelId);
+              // 모바일에서는 selectChannelForMobile 사용 (Step 1 → Step 2)
+              ref.read(workspaceStateProvider.notifier).selectChannelForMobile(channelId);
             },
           );
         },

@@ -20,11 +20,23 @@ argument-hint: [개발하고 싶은 기능 설명]
 - 페이지 레이아웃/디자인 구현
 - 반응형 디자인, 사용자 인터페이스
 
+**frontend-debugger** - 프론트엔드 에러 디버깅
+- UI 깨짐, 위젯 렌더링 오류
+- 상태 관리(Provider, Zustand) 문제
+- 성능 저하, 버벅임 현상 해결
+- 권한 관련 UI 표시 오류 수정
+
 **backend-architect** - 백엔드 시스템 개발
 - Spring Boot REST API 개발
 - 비즈니스 로직, 서비스 계층
 - 데이터베이스 스키마 설계
 - 3-layer 아키텍처
+
+**backend-debugger** - 백엔드 에러 디버깅
+- API 실패, 5xx 에러 분석
+- 비즈니스 로직 버그 수정
+- 데이터베이스 관련 예외 처리
+- 보안/권한 관련 에러 해결
 
 **api-integrator** - API 연동 작업
 - 프론트엔드-백엔드 연결

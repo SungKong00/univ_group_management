@@ -11,6 +11,8 @@ import '../../providers/my_groups_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../widgets/workspace/channel_navigation.dart';
 import '../../widgets/workspace/mobile_channel_list.dart';
+import '../../widgets/workspace/mobile_channel_posts_view.dart';
+import '../../widgets/workspace/mobile_post_comments_view.dart';
 import '../../widgets/post/post_list.dart';
 import '../../widgets/post/post_composer.dart';
 import '../../widgets/comment/comment_list.dart';
@@ -31,6 +33,7 @@ class WorkspacePage extends ConsumerStatefulWidget {
 class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   int _postListKey = 0;
   int _commentListKey = 0;
+  bool _previousIsMobile = false;
 
   @override
   void initState() {
@@ -75,16 +78,70 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   @override
   Widget build(BuildContext context) {
     final workspaceState = ref.watch(workspaceStateProvider);
-    // 문서 스펙: TABLET(451px) 이상을 데스크톱 레이아웃으로 간주
-    // largerThan(MOBILE) = 451px 이상 = TABLET, DESKTOP, 4K
-    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
 
-    return Container(
-      color: AppColors.lightBackground,
-      child: isDesktop
-          ? _buildDesktopWorkspace(workspaceState)
-          : _buildMobileWorkspace(workspaceState),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 문서 스펙: TABLET(451px) 이상을 데스크톱 레이아웃으로 간주
+        // largerThan(MOBILE) = 451px 이상 = TABLET, DESKTOP, 4K
+        final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
+        final isMobile = !isDesktop;
+
+        // 반응형 전환 감지 및 상태 보존
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleResponsiveTransition(isMobile);
+        });
+
+        // 모바일에서 뒤로가기 핸들링 추가
+        return PopScope(
+          canPop: !isMobile || !_canHandleMobileBack(),
+          onPopInvoked: (didPop) {
+            if (!didPop && isMobile) {
+              _handleMobileBackPress();
+            }
+          },
+          child: Container(
+            color: AppColors.lightBackground,
+            child: isDesktop
+                ? _buildDesktopWorkspace(workspaceState)
+                : _buildMobileWorkspace(workspaceState),
+          ),
+        );
+      },
     );
+  }
+
+  /// 반응형 전환 핸들러: 웹 ↔ 모바일 전환 시 상태 보존
+  void _handleResponsiveTransition(bool isMobile) {
+    // 전환이 발생했는지 확인
+    if (_previousIsMobile != isMobile) {
+      final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+
+      if (isMobile) {
+        // 웹 → 모바일 전환
+        workspaceNotifier.handleWebToMobileTransition();
+      } else {
+        // 모바일 → 웹 전환
+        workspaceNotifier.handleMobileToWebTransition();
+      }
+
+      _previousIsMobile = isMobile;
+    }
+  }
+
+  /// 모바일 뒤로가기 가능 여부 확인
+  bool _canHandleMobileBack() {
+    final workspaceState = ref.read(workspaceStateProvider);
+    // channelList 상태에서는 뒤로가기를 허용 (홈으로 이동)
+    // 나머지 상태에서는 내부적으로 처리
+    return workspaceState.mobileView != MobileWorkspaceView.channelList;
+  }
+
+  /// 모바일 뒤로가기 처리
+  void _handleMobileBackPress() {
+    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+    // handleMobileBack()이 true를 반환하면 내부적으로 처리됨
+    // false를 반환하면 시스템 뒤로가기 허용
+    workspaceNotifier.handleMobileBack();
   }
 
   Widget _buildDesktopWorkspace(WorkspaceState workspaceState) {
@@ -171,18 +228,45 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       return _buildEmptyState();
     }
 
-    // 4. 댓글 뷰
-    if (workspaceState.isViewingComments) {
-      return _buildCommentsView(workspaceState);
-    }
+    // 4. 모바일 3단계 플로우에 따른 뷰 전환
+    switch (workspaceState.mobileView) {
+      case MobileWorkspaceView.channelList:
+        // Step 1: 채널 목록
+        return _buildMobileChannelList(workspaceState);
 
-    // 5. 채널 뷰
-    if (workspaceState.hasSelectedChannel) {
-      return _buildChannelView(workspaceState);
-    }
+      case MobileWorkspaceView.channelPosts:
+        // Step 2: 선택된 채널의 게시글 목록
+        if (workspaceState.selectedChannelId == null) {
+          // 채널이 선택되지 않았다면 채널 목록으로 폴백
+          return _buildMobileChannelList(workspaceState);
+        }
+        return MobileChannelPostsView(
+          channelId: workspaceState.selectedChannelId!,
+          groupId: workspaceState.selectedGroupId!,
+          permissions: workspaceState.channelPermissions,
+        );
 
-    // 6. 기본: 채널 목록 표시
-    return _buildMobileChannelList(workspaceState);
+      case MobileWorkspaceView.postComments:
+        // Step 3: 선택된 게시글의 댓글
+        if (workspaceState.selectedPostId == null ||
+            workspaceState.selectedChannelId == null) {
+          // 게시글이나 채널이 선택되지 않았다면 게시글 목록으로 폴백
+          if (workspaceState.selectedChannelId != null) {
+            return MobileChannelPostsView(
+              channelId: workspaceState.selectedChannelId!,
+              groupId: workspaceState.selectedGroupId!,
+              permissions: workspaceState.channelPermissions,
+            );
+          }
+          return _buildMobileChannelList(workspaceState);
+        }
+        return MobilePostCommentsView(
+          postId: workspaceState.selectedPostId!,
+          channelId: workspaceState.selectedChannelId!,
+          groupId: workspaceState.selectedGroupId!,
+          permissions: workspaceState.channelPermissions,
+        );
+    }
   }
 
   Widget _buildMobileChannelList(WorkspaceState workspaceState) {
