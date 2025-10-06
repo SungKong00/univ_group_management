@@ -38,34 +38,43 @@ class DateDivider extends StatelessWidget {
     return Material(
       color: bgColor,
       child: Container(
-        // 수직 패딩을 최소화하여 간격을 줄임
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 1,
-                // 테마 outline 색 사용
-                color: outlineColor,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Text(
-                dateText,
-                style: AppTheme.bodySmall.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.w500,
+        // 상하 패딩을 조정해 선이 텍스트에 더 가깝게 위치하도록 함
+        padding: const EdgeInsets.only(top: 4.0, bottom: 0.0),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    height: 1,
+                    // 테마 outline 색 사용
+                    color: outlineColor,
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Container(
-                height: 1,
-                color: outlineColor,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: Text(
+                  dateText,
+                  style: AppTheme.bodySmall.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    height: 1,
+                    color: outlineColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
