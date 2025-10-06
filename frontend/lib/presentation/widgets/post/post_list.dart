@@ -32,6 +32,9 @@ class _PostListState extends ConsumerState<PostList> {
   final PostService _postService = PostService();
   final ScrollController _scrollController = ScrollController();
 
+  // 마지막(최신) 게시물을 상단 정렬하기 위한 키
+  final GlobalKey _lastPostKey = GlobalKey();
+
   List<Post> _posts = [];
   Map<DateTime, List<Post>> _groupedPosts = {};
   bool _isLoading = false;
@@ -72,27 +75,6 @@ class _PostListState extends ConsumerState<PostList> {
     _loadPosts();
   }
 
-  /// 게시글을 날짜별로 그룹화
-  Map<DateTime, List<Post>> _groupPostsByDate(List<Post> posts) {
-    final Map<DateTime, List<Post>> grouped = {};
-
-    for (final post in posts) {
-      // 년-월-일만 추출 (시간 정보 제거)
-      final dateKey = DateTime(
-        post.createdAt.year,
-        post.createdAt.month,
-        post.createdAt.day,
-      );
-
-      if (!grouped.containsKey(dateKey)) {
-        grouped[dateKey] = [];
-      }
-      grouped[dateKey]!.add(post);
-    }
-
-    return grouped;
-  }
-
   Future<void> _loadPosts() async {
     if (_isLoading || !_hasMore) return;
 
@@ -115,6 +97,10 @@ class _PostListState extends ConsumerState<PostList> {
         page: _currentPage,
       );
 
+      // --- Ensure deterministic ordering ---
+      // Sort incoming page posts by createdAt ascending (oldest -> newest)
+      response.posts.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
       setState(() {
         // 정상 스크롤: 새로 로드되는 과거 글을 앞에 추가
         _posts.insertAll(0, response.posts);
@@ -125,13 +111,30 @@ class _PostListState extends ConsumerState<PostList> {
         _isLoading = false;
       });
 
-      // 첫 로드 시 스크롤을 최하단으로 즉시 이동 (애니메이션 없음)
-      // _currentPage++가 위에서 실행된 후이므로 첫 로드는 _currentPage == 1
-      // SliverPadding 레이아웃이 완전히 완료될 때까지 충분한 시간 대기
+      // 첫 로드 시: 최신(마지막) 게시물을 화면 상단에 최대한 가깝게 보이도록 스크롤
       if (_currentPage == 1) {
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted && _scrollController.hasClients) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = _lastPostKey.currentContext;
+          if (mounted && ctx != null) {
+            // 상단 정렬 시도 (duration 0으로 즉시 적용)
+            Scrollable.ensureVisible(
+              ctx,
+              alignment: 0.0, // 0.0 = 상단 정렬
+              duration: Duration.zero,
+            );
+          } else if (_scrollController.hasClients) {
+            // 키를 아직 못 찾았으면 일단 하단으로 이동 후, 한 프레임 뒤에 다시 상단 정렬 재시도
             _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              final ctx2 = _lastPostKey.currentContext;
+              if (mounted && ctx2 != null) {
+                Scrollable.ensureVisible(
+                  ctx2,
+                  alignment: 0.0,
+                  duration: Duration.zero,
+                );
+              }
+            });
           }
         });
       }
@@ -182,6 +185,7 @@ class _PostListState extends ConsumerState<PostList> {
       builder: (context, constraints) {
         // 날짜 키 리스트 (최신 날짜가 마지막)
         final dateKeys = _groupedPosts.keys.toList()..sort();
+        final DateTime? lastDate = dateKeys.isNotEmpty ? dateKeys.last : null;
 
         return CustomScrollView(
           controller: _scrollController,
@@ -199,6 +203,7 @@ class _PostListState extends ConsumerState<PostList> {
             // 날짜별 게시글 그룹
             ...dateKeys.map((date) {
               final postsInDate = _groupedPosts[date]!;
+              final bool isLastDate = lastDate != null && date == lastDate;
 
               return SliverStickyHeader(
                 header: DateDivider(date: date),
@@ -206,7 +211,9 @@ class _PostListState extends ConsumerState<PostList> {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final post = postsInDate[index];
-                      return Column(
+                      final bool isLastItem = isLastDate && index == postsInDate.length - 1;
+
+                      final child = Column(
                         children: [
                           PostItem(
                             post: post,
@@ -218,13 +225,18 @@ class _PostListState extends ConsumerState<PostList> {
                           const Divider(height: 1, color: AppColors.neutral200),
                         ],
                       );
+
+                      // 최신 날짜의 마지막 게시물에 키 부여
+                      return isLastItem
+                          ? Container(key: _lastPostKey, child: child)
+                          : child;
                     },
                     childCount: postsInDate.length,
                   ),
                 ),
               );
             }),
-            // 하단 여백 (마지막 게시글이 화면 상단에 오고, 그 아래 추가 공백까지 보이도록 설정)
+            // 하단 여백을 화면 높이만큼 확보하여 마지막 아이템을 상단에 붙일 수 있도록 함
             SliverPadding(
               padding: EdgeInsets.only(bottom: constraints.maxHeight * 0.3),
             ),
@@ -324,5 +336,31 @@ class _PostListState extends ConsumerState<PostList> {
         ),
       ),
     );
+  }
+
+  // 게시글을 날짜별로 그룹화
+  Map<DateTime, List<Post>> _groupPostsByDate(List<Post> posts) {
+    final Map<DateTime, List<Post>> grouped = {};
+
+    for (final post in posts) {
+      // 년-월-일만 추출 (시간 정보 제거)
+      final dateKey = DateTime(
+        post.createdAt.year,
+        post.createdAt.month,
+        post.createdAt.day,
+      );
+
+      if (!grouped.containsKey(dateKey)) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey]!.add(post);
+    }
+
+    // Ensure each group's posts are sorted ascending by createdAt (oldest -> newest)
+    for (final key in grouped.keys) {
+      grouped[key]!.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    }
+
+    return grouped;
   }
 }
