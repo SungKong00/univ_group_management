@@ -44,6 +44,9 @@ dependencies:
   # Responsive
   responsive_framework: ^1.4.0
 
+  # Sticky Header
+  flutter_sticky_header: ^0.8.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

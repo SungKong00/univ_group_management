@@ -8,6 +8,7 @@ import '../../presentation/pages/workspace/workspace_page.dart';
 import '../../presentation/pages/calendar/calendar_page.dart';
 import '../../presentation/pages/activity/activity_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
+import '../../presentation/pages/group/group_admin_page.dart';
 import '../../presentation/pages/main/main_layout.dart';
 import '../constants/app_constants.dart';
 import '../services/auth_service.dart';
@@ -100,6 +101,13 @@ final GoRouter appRouter = GoRouter(
           name: 'profile',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: ProfilePage(),
+          ),
+        ),
+        GoRoute(
+          path: AppConstants.groupAdminRoute,
+          name: 'group-admin',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: GroupAdminPage(),
           ),
         ),
       ],

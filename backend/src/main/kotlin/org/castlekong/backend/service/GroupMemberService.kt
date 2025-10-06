@@ -29,6 +29,7 @@ class GroupMemberService(
     private val userRepository: UserRepository,
     private val permissionService: org.castlekong.backend.security.PermissionService,
     private val groupMapper: GroupMapper,
+    private val groupRoleInitializationService: GroupRoleInitializationService,
 ) {
     @Transactional
     fun joinGroup(
@@ -89,39 +90,8 @@ class GroupMemberService(
     }
 
     private fun ensureDefaultRoles(group: Group) {
-        if (!groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").isPresent) {
-            groupRoleRepository.save(
-                GroupRole(
-                    group = group,
-                    name = "OWNER",
-                    isSystemRole = true,
-                    permissions = GroupPermission.values().toMutableSet(),
-                    priority = 100,
-                ),
-            )
-        }
-        if (!groupRoleRepository.findByGroupIdAndName(group.id, "ADVISOR").isPresent) {
-            groupRoleRepository.save(
-                GroupRole(
-                    group = group,
-                    name = "ADVISOR",
-                    isSystemRole = true,
-                    permissions = GroupPermission.values().toMutableSet(),
-                    priority = 99,
-                ),
-            )
-        }
-        if (!groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").isPresent) {
-            groupRoleRepository.save(
-                GroupRole(
-                    group = group,
-                    name = "MEMBER",
-                    isSystemRole = true,
-                    permissions = mutableSetOf(),
-                    priority = 1,
-                ),
-            )
-        }
+        // Delegate to GroupRoleInitializationService for consistent role creation
+        groupRoleInitializationService.ensureDefaultRoles(group)
     }
 
     private fun joinParentGroupsAutomatically(

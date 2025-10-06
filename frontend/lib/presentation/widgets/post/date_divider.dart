@@ -27,7 +27,9 @@ class DateDivider extends StatelessWidget {
       dateText = formatter.format(date);
     }
 
-    return Padding(
+    return Container(
+      // Sticky 시 배경색이 필요 (스크롤 시 컨텐츠가 뒤에 보이지 않도록)
+      color: Theme.of(context).scaffoldBackgroundColor,
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Row(
         children: [

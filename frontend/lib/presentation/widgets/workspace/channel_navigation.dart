@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/models/channel_models.dart';
 import '../../../core/models/page_breadcrumb.dart';
 import '../../../core/navigation/navigation_controller.dart';
@@ -145,6 +147,14 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
             if (widget.hasAnyGroupPermission) ...[
               const Divider(height: 1, thickness: 1),
               _buildBottomSection(),
+            ] else ...[
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'DEBUG: No group permission',
+                  style: TextStyle(color: Colors.red, fontSize: 10),
+                ),
+              ),
             ],
           ],
         ),
@@ -308,10 +318,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // TODO: Navigate to admin page
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('관리자 페이지 (준비 중)')),
-            );
+            context.go(AppConstants.groupAdminRoute);
           },
           borderRadius: BorderRadius.circular(AppRadius.button),
           child: Container(

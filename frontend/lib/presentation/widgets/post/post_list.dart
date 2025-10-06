@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import '../../../core/models/post_models.dart';
 import '../../../core/services/post_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -32,6 +33,7 @@ class _PostListState extends ConsumerState<PostList> {
   final ScrollController _scrollController = ScrollController();
 
   List<Post> _posts = [];
+  Map<DateTime, List<Post>> _groupedPosts = {};
   bool _isLoading = false;
   bool _hasMore = true;
   int _currentPage = 0;
@@ -62,11 +64,33 @@ class _PostListState extends ConsumerState<PostList> {
   void _resetAndLoad() {
     setState(() {
       _posts = [];
+      _groupedPosts = {};
       _currentPage = 0;
       _hasMore = true;
       _errorMessage = null;
     });
     _loadPosts();
+  }
+
+  /// 게시글을 날짜별로 그룹화
+  Map<DateTime, List<Post>> _groupPostsByDate(List<Post> posts) {
+    final Map<DateTime, List<Post>> grouped = {};
+
+    for (final post in posts) {
+      // 년-월-일만 추출 (시간 정보 제거)
+      final dateKey = DateTime(
+        post.createdAt.year,
+        post.createdAt.month,
+        post.createdAt.day,
+      );
+
+      if (!grouped.containsKey(dateKey)) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey]!.add(post);
+    }
+
+    return grouped;
   }
 
   Future<void> _loadPosts() async {
@@ -92,21 +116,32 @@ class _PostListState extends ConsumerState<PostList> {
       );
 
       setState(() {
-        // reverse 모드를 위해 새로 추가되는 글을 앞에 삽입 (최신 글이 배열 끝에 유지)
+        // 정상 스크롤: 새로 로드되는 과거 글을 앞에 추가
         _posts.insertAll(0, response.posts);
+        // 날짜별로 재그룹화
+        _groupedPosts = _groupPostsByDate(_posts);
         _currentPage++;
         _hasMore = response.hasMore;
         _isLoading = false;
       });
 
-      // 스크롤 위치 복원 (첫 로드가 아닐 때만)
-      if (savedScrollOffset != null && savedMaxScrollExtent != null) {
-        final offset = savedScrollOffset;
-        final maxExtent = savedMaxScrollExtent;
+      // 첫 로드 시 스크롤을 최하단으로 즉시 이동 (애니메이션 없음)
+      // _currentPage++가 위에서 실행된 후이므로 첫 로드는 _currentPage == 1
+      // SliverPadding 레이아웃이 완전히 완료될 때까지 충분한 시간 대기
+      if (_currentPage == 1) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted && _scrollController.hasClients) {
+            _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+          }
+        });
+      }
+      // 추가 로드 시 스크롤 위치 유지
+      else if (savedScrollOffset != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
-            final delta = _scrollController.position.maxScrollExtent - maxExtent;
-            _scrollController.jumpTo(offset + delta);
+            // 새 콘텐츠 높이만큼 스크롤 위치 조정
+            final delta = _scrollController.position.maxScrollExtent - (savedMaxScrollExtent ?? 0);
+            _scrollController.jumpTo(savedScrollOffset! + delta);
           }
         });
       }
@@ -119,9 +154,8 @@ class _PostListState extends ConsumerState<PostList> {
   }
 
   void _onScroll() {
-    // reverse 모드에서는 상단(minScrollExtent)에 도달하면 이전 글 로드
-    if (_scrollController.position.pixels <=
-        _scrollController.position.minScrollExtent + 200) {
+    // 정상 스크롤: 상단에 도달하면 과거 글 로드
+    if (_scrollController.position.pixels <= 200) {
       _loadPosts();
     }
   }
@@ -143,69 +177,61 @@ class _PostListState extends ConsumerState<PostList> {
       return _buildEmptyState();
     }
 
-    // 게시글 목록
+    // 게시글 목록 (날짜별 그룹화 + StickyHeader)
     return LayoutBuilder(
       builder: (context, constraints) {
-        return ListView.builder(
+        // 날짜 키 리스트 (최신 날짜가 마지막)
+        final dateKeys = _groupedPosts.keys.toList()..sort();
+
+        return CustomScrollView(
           controller: _scrollController,
-          reverse: true,
-          padding: EdgeInsets.only(
-            bottom: constraints.maxHeight * 0.3,
-          ),
-          itemCount: _posts.length + (_isLoading ? 1 : 0),
-          itemBuilder: (context, index) {
-        // 로딩 인디케이터
-        if (index == _posts.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
+          slivers: [
+            // 로딩 인디케이터
+            if (_isLoading)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              ),
+            // 날짜별 게시글 그룹
+            ...dateKeys.map((date) {
+              final postsInDate = _groupedPosts[date]!;
 
-        final post = _posts[index];
-        final showDateDivider = _shouldShowDateDivider(index);
-
-        return Column(
-          children: [
-            if (showDateDivider) DateDivider(date: post.createdAt),
-            PostItem(
-              post: post,
-              onTapComment: () => widget.onTapComment?.call(post.id),
-              onTapPost: () {
-                // TODO: 게시글 상세 보기 (나중에 구현)
-              },
+              return SliverStickyHeader(
+                header: DateDivider(date: date),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final post = postsInDate[index];
+                      return Column(
+                        children: [
+                          PostItem(
+                            post: post,
+                            onTapComment: () => widget.onTapComment?.call(post.id),
+                            onTapPost: () {
+                              // TODO: 게시글 상세 보기 (나중에 구현)
+                            },
+                          ),
+                          const Divider(height: 1, color: AppColors.neutral200),
+                        ],
+                      );
+                    },
+                    childCount: postsInDate.length,
+                  ),
+                ),
+              );
+            }),
+            // 하단 여백 (마지막 게시글이 화면 상단에 오고, 그 아래 추가 공백까지 보이도록 설정)
+            SliverPadding(
+              padding: EdgeInsets.only(bottom: constraints.maxHeight * 0.3),
             ),
-            const Divider(height: 1, color: AppColors.neutral200),
           ],
         );
       },
-        );
-      },
     );
-  }
-
-  bool _shouldShowDateDivider(int index) {
-    // reverse 모드에서는 마지막 아이템(최신)이 첫 날짜 구분선을 가짐
-    if (index == _posts.length - 1) return true;
-
-    final currentPost = _posts[index];
-    final nextPost = _posts[index + 1]; // reverse 모드에서는 다음 아이템과 비교
-
-    final currentDate = DateTime(
-      currentPost.createdAt.year,
-      currentPost.createdAt.month,
-      currentPost.createdAt.day,
-    );
-
-    final nextDate = DateTime(
-      nextPost.createdAt.year,
-      nextPost.createdAt.month,
-      nextPost.createdAt.day,
-    );
-
-    return currentDate != nextDate;
   }
 
   Widget _buildEmptyState() {

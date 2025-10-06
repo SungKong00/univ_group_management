@@ -41,6 +41,9 @@ class GroupMemberServiceIntegrationTest {
     @Autowired
     private lateinit var groupMemberRepository: GroupMemberRepository
 
+    @Autowired
+    private lateinit var groupInitializationRunner: org.castlekong.backend.runner.GroupInitializationRunner
+
     private lateinit var owner: User
     private lateinit var student: User
     private lateinit var professor: User
@@ -444,6 +447,7 @@ class GroupMemberServiceIntegrationTest {
         parent: Group? = null,
         maxMembers: Int? = null,
     ): Group {
+        // 그룹 생성
         val group =
             groupRepository.save(
                 TestDataFactory.createTestGroup(
@@ -455,19 +459,9 @@ class GroupMemberServiceIntegrationTest {
                 ),
             )
 
-        // 기본 역할 생성
-        val ownerRole = groupRoleRepository.save(TestDataFactory.createOwnerRole(group))
-        groupRoleRepository.save(TestDataFactory.createAdvisorRole(group))
-        groupRoleRepository.save(TestDataFactory.createMemberRole(group))
-
-        // 그룹장을 멤버로 추가
-        groupMemberRepository.save(
-            TestDataFactory.createTestGroupMember(
-                group = group,
-                user = owner,
-                role = ownerRole,
-            ),
-        )
+        // GroupInitializationRunner를 직접 호출하여 역할, 채널, 멤버십 초기화
+        // 테스트 환경에서는 ApplicationRunner가 각 테스트마다 실행되지 않으므로 수동 호출 필요
+        groupInitializationRunner.initializeGroup(group)
 
         return group
     }

@@ -58,13 +58,37 @@ class MembershipInfo {
   });
 
   factory MembershipInfo.fromJson(Map<String, dynamic> json) {
-    return MembershipInfo(
-      userId: (json['userId'] as num).toInt(),
-      roleName: json['roleName'] as String? ?? '',
-      permissions: (json['permissions'] as List<dynamic>?)
+    // Handle nested role structure from backend (GroupMemberResponse)
+    // Backend returns: { user: {...}, role: { name: "...", permissions: [...] } }
+    // We need to extract: userId from user.id, roleName from role.name, permissions from role.permissions
+
+    final int userId;
+    final String roleName;
+    final List<String>? permissions;
+
+    if (json['user'] != null && json['role'] != null) {
+      // Backend GroupMemberResponse structure (nested)
+      userId = (json['user']['id'] as num).toInt();
+      roleName = json['role']['name'] as String? ?? '';
+      permissions = (json['role']['permissions'] as List<dynamic>?)
           ?.map((e) => e.toString())
-          .toList(),
+          .toList();
+    } else {
+      // Fallback to flat structure for backward compatibility
+      userId = (json['userId'] as num).toInt();
+      roleName = json['roleName'] as String? ?? '';
+      permissions = (json['permissions'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList();
+    }
+
+    final membership = MembershipInfo(
+      userId: userId,
+      roleName: roleName,
+      permissions: permissions,
     );
+
+    return membership;
   }
 
   /// Check if user has any group-level permission

@@ -17,6 +17,7 @@ class AppConstants {
   static const String calendarRoute = '/calendar';
   static const String activityRoute = '/activity';
   static const String profileRoute = '/profile';
+  static const String groupAdminRoute = '/group-admin';
 
   // Google Sign-In configuration (loaded from .env file)
   static String get googleServerClientId =>

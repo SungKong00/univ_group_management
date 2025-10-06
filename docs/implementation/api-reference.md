@@ -169,6 +169,39 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
 -   `DELETE /{groupId}/leave`: 그룹 탈퇴
 -   `GET /{groupId}/members`: 그룹 멤버 목록 조회 (`ADMIN_MANAGE` 권한 필요)
 -   `GET /{groupId}/members/me`: 나의 그룹 내 멤버십 정보 조회
+    - **설명**: 현재 로그인한 사용자의 특정 그룹 내 역할 및 그룹 수준 권한을 조회합니다.
+    - **권한**: 그룹 멤버
+    - **응답**: `ApiResponse<GroupMemberResponse>`
+    - **응답 구조 (v2, 2025-10-07 이후)**:
+        ```json
+        {
+          "success": true,
+          "data": {
+            "user": {
+              "id": 1,
+              "name": "Castlekong",
+              "nickname": "castlekong",
+              "profileImageUrl": null
+            },
+            "role": {
+              "id": 1,
+              "name": "OWNER",
+              "priority": 100,
+              "permissions": [
+                "GROUP_MANAGE",
+                "RECRUITMENT_MANAGE",
+                "ADMIN_MANAGE"
+                // ... 모든 그룹 권한
+              ]
+            },
+            "joinedAt": "2025-10-07T12:00:00"
+          },
+          "error": null
+        }
+        ```
+    - **참고**: 이전 버전의 평평한 구조(`userId`, `roleName` 등)에서 중첩된 `user`, `role` 객체 구조로 변경되었습니다. 프론트엔드에서는 이 구조에 맞춰 파싱해야 합니다.
+
+-   `PUT /{groupId}/members/{userId}/role`: 멤버 역할 변경 (`ADMIN_MANAGE` 권한 필요)
 -   `PUT /{groupId}/members/{userId}/role`: 멤버 역할 변경 (`ADMIN_MANAGE` 권한 필요)
 -   `DELETE /{groupId}/members/{userId}`: 멤버 강제 탈퇴 (`ADMIN_MANAGE` 권한 필요)
 -   `POST /{groupId}/transfer-ownership/{newOwnerId}`: 그룹 소유권 이전 (`GROUP_MANAGE` 권한 필요)

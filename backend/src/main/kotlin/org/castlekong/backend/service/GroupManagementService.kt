@@ -7,7 +7,6 @@ import org.castlekong.backend.dto.GroupSummaryResponse
 import org.castlekong.backend.dto.UpdateGroupRequest
 import org.castlekong.backend.entity.Group
 import org.castlekong.backend.entity.GroupMember
-import org.castlekong.backend.entity.GroupPermission
 import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.entity.GroupType
 import org.castlekong.backend.entity.GroupVisibility
@@ -50,6 +49,7 @@ class GroupManagementService(
     private val subGroupRequestRepository: SubGroupRequestRepository,
     private val groupMapper: GroupMapper,
     private val channelInitializationService: ChannelInitializationService,
+    private val groupRoleInitializationService: GroupRoleInitializationService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GroupManagementService::class.java)
@@ -106,51 +106,23 @@ class GroupManagementService(
         group: Group,
         owner: User,
     ): Triple<GroupRole, GroupRole, GroupRole> {
-        // 기본 역할들 생성
-        val ownerRole =
-            GroupRole(
-                group = group,
-                name = "OWNER",
-                isSystemRole = true,
-                permissions = GroupPermission.values().toSet().toMutableSet(),
-                priority = 100,
-            )
-
-        val professorRole =
-            GroupRole(
-                group = group,
-                name = "ADVISOR",
-                isSystemRole = true,
-                // preset refined in evaluator
-                permissions = GroupPermission.values().toSet().toMutableSet(),
-                priority = 99,
-            )
-
-        val memberRole =
-            GroupRole(
-                group = group,
-                name = "MEMBER",
-                isSystemRole = true,
-                // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
-                permissions = emptySet<GroupPermission>().toMutableSet(),
-                priority = 1,
-            )
-
-        val savedOwnerRole = groupRoleRepository.save(ownerRole)
-        val savedProfessorRole = groupRoleRepository.save(professorRole)
-        val savedMemberRole = groupRoleRepository.save(memberRole)
+        // Use GroupRoleInitializationService to create default roles
+        val roles = groupRoleInitializationService.ensureDefaultRoles(group)
+        val ownerRole = roles.find { it.name == "OWNER" }!!
+        val advisorRole = roles.find { it.name == "ADVISOR" }!!
+        val memberRole = roles.find { it.name == "MEMBER" }!!
 
         // 그룹 생성자를 OWNER로 추가
         val groupMember =
             GroupMember(
                 group = group,
                 user = owner,
-                role = savedOwnerRole,
+                role = ownerRole,
                 joinedAt = LocalDateTime.now(),
             )
         groupMemberRepository.save(groupMember)
 
-        return Triple(savedOwnerRole, savedProfessorRole, savedMemberRole)
+        return Triple(ownerRole, advisorRole, memberRole)
     }
 
     @Transactional

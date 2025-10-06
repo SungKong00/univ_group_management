@@ -187,10 +187,12 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         selectedChannelId = channels.first.id.toString();
       }
 
+      final hasGroupPerm = membership?.hasAnyGroupPermission ?? false;
+
       state = state.copyWith(
         channels: channels,
         unreadCounts: unreadCounts,
-        hasAnyGroupPermission: membership?.hasAnyGroupPermission ?? false,
+        hasAnyGroupPermission: hasGroupPerm,
         isLoadingChannels: false,
         selectedChannelId: selectedChannelId,
         workspaceContext: Map.from(state.workspaceContext)

@@ -546,22 +546,28 @@ LIMIT 20;
 
 ## 데이터 마이그레이션
 
-### 초기 데이터 설정
+### 초기 데이터 설정 (v2, 2025-10-07 이후)
+
+`data.sql` 파일은 이제 시스템 운영에 필요한 최소한의 데이터만 포함합니다.
+
+-   **포함되는 데이터**: `users`, `groups` (기본적인 대학교, 계열, 학과 구조)
+-   **제외되는 데이터**: `group_roles`, `group_members`, `channels`, `channel_role_bindings` 등
+
+애플리케이션 시작 시 `GroupInitializationRunner`가 `defaultChannelsCreated`가 `false`인 그룹을 대상으로 기본 역할, 채널, 멤버십을 자동으로 생성합니다. 이로 인해 `data.sql`은 매우 단순하게 유지됩니다.
+
+**`data.sql` 예시:**
 ```sql
--- 시스템 관리자 생성
-INSERT INTO users (email, name, global_role, profile_completed)
-VALUES ('admin@hansin.ac.kr', '시스템관리자', 'ADMIN', true);
+-- 사용자 생성
+INSERT INTO users (id, email, name, ...) VALUES (1, 'castlekong1019@gmail.com', ...);
 
--- 기본 대학교 생성
-INSERT INTO groups (name, owner_id, visibility)
-VALUES ('한신대학교', 1, 'PUBLIC');
+-- 최상위 그룹(대학교) 생성
+INSERT INTO groups (id, name, owner_id, university, group_type, ...) VALUES (1, '한신대학교', 1, '한신대학교', 'UNIVERSITY', ...);
 
--- 기본 역할 생성 (각 그룹마다)
-INSERT INTO group_roles (group_id, name, permissions, is_system_role)
-VALUES
-    (1, 'Owner', '["GROUP_MANAGE","MEMBER_READ","MEMBER_APPROVE","MEMBER_KICK","ROLE_MANAGE","CHANNEL_READ","CHANNEL_WRITE","POST_CREATE","POST_UPDATE_OWN","POST_DELETE_OWN","POST_DELETE_ANY","RECRUITMENT_CREATE","RECRUITMENT_UPDATE","RECRUITMENT_DELETE"]', true),
-    (1, 'Member', '["CHANNEL_READ","POST_CREATE","POST_UPDATE_OWN","POST_DELETE_OWN"]', true);
+-- 하위 그룹(계열) 생성
+INSERT INTO groups (id, name, owner_id, parent_id, ...) VALUES (2, 'AI/SW계열', 1, 1, ...);
 ```
+
+> **참고**: 상세한 초기화 로직은 `GroupInitializationRunner`, `GroupRoleInitializationService`, `ChannelInitializationService` 코드를 참조하십시오.
 
 ## 변경 이력 (발췌)
 | 날짜 | 변경 사항 |
