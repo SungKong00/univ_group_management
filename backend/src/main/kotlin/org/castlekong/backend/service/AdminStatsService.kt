@@ -26,12 +26,13 @@ class AdminStatsService(
         val pending = groupJoinRequestRepository.countByGroupIdAndStatus(groupId, GroupJoinRequestStatus.PENDING)
         val members = groupMemberRepository.countByGroupId(groupId)
         val roles = groupRoleRepository.findByGroupId(groupId).size.toLong()
-        val channels = try {
-            // 새로 추가한 count 메서드 사용 (없는 경우 size 계산 fallback)
-            channelRepository.countByGroup_Id(groupId)
-        } catch (e: Exception) {
-            channelRepository.findByGroup_Id(groupId).size.toLong()
-        }
+        val channels =
+            try {
+                // 새로 추가한 count 메서드 사용 (없는 경우 size 계산 fallback)
+                channelRepository.countByGroup_Id(groupId)
+            } catch (e: Exception) {
+                channelRepository.findByGroup_Id(groupId).size.toLong()
+            }
         return AdminStatsResponse(
             pendingCount = pending.toInt(),
             memberCount = members.toInt(),
@@ -40,4 +41,3 @@ class AdminStatsService(
         )
     }
 }
-

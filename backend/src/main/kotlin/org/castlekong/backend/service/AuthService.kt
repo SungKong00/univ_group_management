@@ -1,7 +1,5 @@
 package org.castlekong.backend.service
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.castlekong.backend.dto.LoginResponse
 import org.castlekong.backend.dto.RefreshTokenResponse
 import org.castlekong.backend.dto.UserResponse
@@ -9,7 +7,6 @@ import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.security.JwtTokenProvider
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -64,7 +61,7 @@ class AuthService(
 
         return LoginResponse(
             accessToken = accessJwt,
-            tokenType = "Bearer",  // tokenType은 Bearer 문자열 유지
+            tokenType = "Bearer", // tokenType은 Bearer 문자열 유지
             expiresIn = 86400000L,
             user = userService.convertToUserResponse(user),
             firstLogin = !user.profileCompleted,
@@ -76,14 +73,16 @@ class AuthService(
      * SecurityContext에서 인증된 사용자 정보를 가져옴
      */
     fun verifyToken(): UserResponse {
-        val authentication = SecurityContextHolder.getContext().authentication
-            ?: throw BusinessException(ErrorCode.UNAUTHORIZED)
+        val authentication =
+            SecurityContextHolder.getContext().authentication
+                ?: throw BusinessException(ErrorCode.UNAUTHORIZED)
 
         val email = authentication.name
         logger.debug("Verifying token for user: {}", email)
 
-        val user = userService.findByEmail(email)
-            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+        val user =
+            userService.findByEmail(email)
+                ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
 
         if (!user.isActive) throw BusinessException(ErrorCode.UNAUTHORIZED)
 
@@ -106,8 +105,9 @@ class AuthService(
         logger.debug("Refreshing access token for user: {}", email)
 
         // 사용자 존재 및 활성 상태 확인
-        val user = userService.findByEmail(email)
-            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+        val user =
+            userService.findByEmail(email)
+                ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
 
         if (!user.isActive) throw BusinessException(ErrorCode.UNAUTHORIZED)
 

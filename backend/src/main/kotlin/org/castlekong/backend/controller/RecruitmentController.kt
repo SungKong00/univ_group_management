@@ -4,7 +4,6 @@ import jakarta.validation.Valid
 import org.castlekong.backend.dto.*
 import org.castlekong.backend.service.RecruitmentService
 import org.castlekong.backend.service.UserService
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -17,7 +16,6 @@ class RecruitmentController(
     private val recruitmentService: RecruitmentService,
     userService: UserService,
 ) : BaseController(userService) {
-
     // 모집 게시글 관련 엔드포인트
 
     @PostMapping("/groups/{groupId}/recruitments")
@@ -125,7 +123,9 @@ class RecruitmentController(
     }
 
     @GetMapping("/applications/{applicationId}")
-    @PreAuthorize("hasPermission(#applicationId, 'APPLICATION', 'VIEW') or @recruitmentController.isApplicationOwner(#applicationId, authentication)")
+    @PreAuthorize(
+        "hasPermission(#applicationId, 'APPLICATION', 'VIEW') or @recruitmentController.isApplicationOwner(#applicationId, authentication)",
+    )
     fun getApplication(
         @PathVariable applicationId: Long,
         authentication: Authentication,
@@ -168,7 +168,10 @@ class RecruitmentController(
 
     // 헬퍼 메서드 (Security Expression에서 사용)
 
-    fun isApplicationOwner(applicationId: Long, authentication: Authentication): Boolean {
+    fun isApplicationOwner(
+        applicationId: Long,
+        authentication: Authentication,
+    ): Boolean {
         return try {
             val user = getCurrentUser(authentication)
             val application = recruitmentService.getApplication(applicationId)

@@ -54,17 +54,27 @@ class GroupPermissionEvaluator(
         }
     }
 
-    private fun checkGroupPermission(groupId: Long, userId: Long, permission: String): Boolean {
+    private fun checkGroupPermission(
+        groupId: Long,
+        userId: Long,
+        permission: String,
+    ): Boolean {
         val effective = permissionService.getEffective(groupId, userId, ::systemRolePermissions)
         return effective.any { it.name == permission }
     }
 
-    private fun checkChannelPermission(channelId: Long, userId: Long, permission: String): Boolean {
+    private fun checkChannelPermission(
+        channelId: Long,
+        userId: Long,
+        permission: String,
+    ): Boolean {
         val channel = channelRepository.findById(channelId).orElse(null) ?: return false
-        val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
-            .orElse(null) ?: return false
-        val binding = channelRoleBindingRepository
-            .findByChannelIdAndGroupRoleId(channelId, member.role.id) ?: return false
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
+                .orElse(null) ?: return false
+        val binding =
+            channelRoleBindingRepository
+                .findByChannelIdAndGroupRoleId(channelId, member.role.id) ?: return false
 
         return try {
             val channelPermission = ChannelPermission.valueOf(permission)
@@ -75,24 +85,36 @@ class GroupPermissionEvaluator(
         }
     }
 
-    private fun checkPostPermission(postId: Long, userId: Long, permission: String): Boolean {
+    private fun checkPostPermission(
+        postId: Long,
+        userId: Long,
+        permission: String,
+    ): Boolean {
         // Load post and delegate to channel permission check
         val post = postRepository.findById(postId).orElse(null) ?: return false
         return checkChannelPermission(post.channel.id, userId, permission)
     }
 
-    private fun checkRecruitmentPermission(recruitmentId: Long, userId: Long, permission: String): Boolean {
+    private fun checkRecruitmentPermission(
+        recruitmentId: Long,
+        userId: Long,
+        permission: String,
+    ): Boolean {
         val recruitment = groupRecruitmentRepository.findById(recruitmentId).orElse(null) ?: return false
         return checkGroupPermission(recruitment.group.id, userId, permission)
     }
 
-    private fun checkApplicationPermission(applicationId: Long, userId: Long, permission: String): Boolean {
+    private fun checkApplicationPermission(
+        applicationId: Long,
+        userId: Long,
+        permission: String,
+    ): Boolean {
         val application = recruitmentApplicationRepository.findById(applicationId).orElse(null) ?: return false
         return when (permission) {
             "VIEW" -> {
                 // 지원자 본인이거나 모집 관리 권한이 있는 경우
                 application.applicant.id == userId ||
-                checkGroupPermission(application.recruitment.group.id, userId, "RECRUITMENT_MANAGE")
+                    checkGroupPermission(application.recruitment.group.id, userId, "RECRUITMENT_MANAGE")
             }
             "RECRUITMENT_MANAGE" -> {
                 checkGroupPermission(application.recruitment.group.id, userId, "RECRUITMENT_MANAGE")

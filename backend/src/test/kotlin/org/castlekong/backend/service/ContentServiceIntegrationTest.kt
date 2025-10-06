@@ -5,8 +5,6 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.castlekong.backend.dto.CreateChannelRequest
 import org.castlekong.backend.dto.CreateCommentRequest
 import org.castlekong.backend.dto.CreatePostRequest
-import org.castlekong.backend.dto.CreateWorkspaceRequest
-import org.castlekong.backend.dto.UpdateChannelRequest
 import org.castlekong.backend.dto.UpdatePostRequest
 import org.castlekong.backend.dto.UpdateWorkspaceRequest
 import org.castlekong.backend.dto.WorkspaceResponse
@@ -169,11 +167,12 @@ class ContentServiceIntegrationTest {
     @DisplayName("공지 타입 사용자 정의 채널도 권한 바인딩 0개로 시작한다")
     fun createAnnouncementChannel_StartsWithoutBindings() {
         val workspace = ensureDefaultWorkspace()
-        val channel = contentService.createChannel(
-            workspace.id,
-            CreateChannelRequest(name = "공지2", description = "추가 공지", type = "ANNOUNCEMENT"),
-            owner.id!!
-        )
+        val channel =
+            contentService.createChannel(
+                workspace.id,
+                CreateChannelRequest(name = "공지2", description = "추가 공지", type = "ANNOUNCEMENT"),
+                owner.id!!,
+            )
         val bindings = channelRoleBindingRepository.findByChannelId(channel.id)
         assertThat(bindings).isEmpty()
     }
@@ -372,7 +371,11 @@ class ContentServiceIntegrationTest {
         return group
     }
 
-    private fun grantBindings(channelId: Long, ownerPerms: Set<ChannelPermission>, memberPerms: Set<ChannelPermission>) {
+    private fun grantBindings(
+        channelId: Long,
+        ownerPerms: Set<ChannelPermission>,
+        memberPerms: Set<ChannelPermission>,
+    ) {
         val channel = channelRepository.findById(channelId).get()
         val ownerRole = groupRoleRepository.findByGroupIdAndName(channel.group.id!!, "OWNER").get()
         val memberRole = groupRoleRepository.findByGroupIdAndName(channel.group.id!!, "MEMBER").get()
@@ -380,9 +383,21 @@ class ContentServiceIntegrationTest {
         channelRoleBindingRepository.save(ChannelRoleBinding.create(channel, memberRole, memberPerms))
     }
 
-    private fun grantFull(channelId: Long) = grantBindings(
-        channelId,
-        setOf(ChannelPermission.CHANNEL_VIEW, ChannelPermission.POST_READ, ChannelPermission.POST_WRITE, ChannelPermission.COMMENT_WRITE, ChannelPermission.FILE_UPLOAD),
-        setOf(ChannelPermission.CHANNEL_VIEW, ChannelPermission.POST_READ, ChannelPermission.POST_WRITE, ChannelPermission.COMMENT_WRITE)
-    )
+    private fun grantFull(channelId: Long) =
+        grantBindings(
+            channelId,
+            setOf(
+                ChannelPermission.CHANNEL_VIEW,
+                ChannelPermission.POST_READ,
+                ChannelPermission.POST_WRITE,
+                ChannelPermission.COMMENT_WRITE,
+                ChannelPermission.FILE_UPLOAD,
+            ),
+            setOf(
+                ChannelPermission.CHANNEL_VIEW,
+                ChannelPermission.POST_READ,
+                ChannelPermission.POST_WRITE,
+                ChannelPermission.COMMENT_WRITE,
+            ),
+        )
 }

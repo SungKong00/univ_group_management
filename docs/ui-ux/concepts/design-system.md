@@ -132,6 +132,39 @@
     )
     ```
 
+### 6.5. 헤더 (Header)
+
+-   **원칙: 명시적 제목 우선 (Explicit Title First)**
+    -   페이지의 목적이 "워크스페이스", "댓글" 등 명확한 제목으로 정의될 경우, 이를 최상단에 `titleLarge`로 크게 표시하여 사용자가 현재 컨텍스트를 즉시 인지하도록 합니다.
+    -   명시적인 제목이 없는 일반적인 경우에는, 기존처럼 그룹/채널 경로만 간결하게 표시하여 `Simplicity`를 유지합니다.
+
+-   **구조: 2단 계층 구조**
+    1.  **제목 (Title)**: `titleLarge` (20px/600) 스타일로 페이지의 명시적 제목을 표시합니다. (예: "댓글")
+    2.  **경로 (Path)**: 제목 아래에 `bodySmall` (12px/400, `neutral600`) 스타일로 현재 위치 경로를 표시합니다. (예: "컴퓨터공학과 > 정기 회의")
+
+-   **구현 예시 (Flutter - WorkspaceHeader):**
+    ```dart
+    // breadcrumb.title이 있을 경우 (예: "댓글")
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("댓글", style: AppTheme.titleLarge), // 1. 명시적 제목
+        SizedBox(height: 4),
+        Text("컴퓨터공학과 > 정기 회의", style: AppTheme.bodySmall), // 2. 경로
+      ],
+    )
+
+    // breadcrumb.title이 없을 경우
+    // 기존처럼 단일 행으로 그룹/채널 경로만 표시
+    Row(
+      children: [
+        GroupDropdown(...),
+        Text(">"),
+        Text("정기 회의"),
+      ],
+    )
+    ```
+
 ---
 
 ## 7. 정보 화면 설계 패턴 (토스 철학 적용)

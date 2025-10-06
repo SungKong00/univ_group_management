@@ -26,6 +26,7 @@ class UserService(
     private val groupMemberRepository: org.castlekong.backend.repository.GroupMemberRepository,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
+
     fun findByEmail(email: String): User? {
         return userRepository.findByEmail(email).orElse(null)
     }

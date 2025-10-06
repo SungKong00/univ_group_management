@@ -158,7 +158,7 @@ class MobileChannelList extends ConsumerWidget {
         itemBuilder: (context, index) {
           final channel = channels[index];
           final channelId = channel.id.toString();
-          final isSelected = selectedChannelId == channelId;
+          const isSelected = false; // 모바일에서는 선택 강조 표시 안 함
           final unreadCount = unreadCounts[channelId] ?? 0;
 
           return ChannelItem(

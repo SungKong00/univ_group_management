@@ -5,12 +5,12 @@ import org.castlekong.backend.entity.ChannelType
 import org.castlekong.backend.entity.Comment
 import org.castlekong.backend.entity.Post
 import org.castlekong.backend.entity.Workspace
-import java.time.LocalDateTime
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 interface ChannelRepository : JpaRepository<Channel, Long> {
@@ -52,7 +52,7 @@ interface PostRepository : JpaRepository<Post, Long> {
 
     @Modifying
     @Query(
-        "UPDATE Post p SET p.commentCount = CASE WHEN :delta < 0 AND p.commentCount + :delta < 0 THEN 0 ELSE p.commentCount + :delta END, p.lastCommentedAt = :lastCommentedAt WHERE p.id = :postId"
+        "UPDATE Post p SET p.commentCount = CASE WHEN :delta < 0 AND p.commentCount + :delta < 0 THEN 0 ELSE p.commentCount + :delta END, p.lastCommentedAt = :lastCommentedAt WHERE p.id = :postId",
     )
     fun updateCommentStats(
         @Param("postId") postId: Long,

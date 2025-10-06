@@ -25,6 +25,7 @@ class ContentService(
     private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
+
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> =
         when (roleName.uppercase()) {
             "OWNER" -> GroupPermission.entries.toSet()
@@ -52,11 +53,13 @@ class ContentService(
         userId: Long,
         required: ChannelPermission,
     ): Boolean {
-        val channel = channelRepository.findById(channelId)
-            .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
+        val channel =
+            channelRepository.findById(channelId)
+                .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
 
-        val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
 
         // 사용자의 역할에 대한 채널 권한 바인딩 조회
         val bindings = channelRoleBindingRepository.findByChannelIdAndGroupRoleId(channelId, member.role.id)
@@ -75,7 +78,10 @@ class ContentService(
     }
 
     // Workspaces
-    fun getWorkspacesByGroup(groupId: Long, requesterId: Long): List<WorkspaceResponse> {
+    fun getWorkspacesByGroup(
+        groupId: Long,
+        requesterId: Long,
+    ): List<WorkspaceResponse> {
         val group =
             groupRepository.findById(groupId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
@@ -161,7 +167,12 @@ class ContentService(
         }
         // 3) 채널 삭제 (개별 select 없이 일괄) - 현재 deleteAll(channels) 사용
         channelRepository.deleteAll(channels)
-        logger.debug("Workspace {} contents deleted: channels={}, posts={}, comments deleted in bulk", workspaceId, channelIds.size, postIds.size)
+        logger.debug(
+            "Workspace {} contents deleted: channels={}, posts={}, comments deleted in bulk",
+            workspaceId,
+            channelIds.size,
+            postIds.size,
+        )
     }
 
     // Channels
@@ -173,8 +184,9 @@ class ContentService(
             workspaceRepository.findById(workspaceId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val member = groupMemberRepository.findByGroupIdAndUserId(workspace.group.id, requesterId)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(workspace.group.id, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return channelRepository.findByWorkspace_Id(workspaceId).map { toChannelResponse(it) }
     }
 
@@ -183,12 +195,14 @@ class ContentService(
         requesterId: Long,
     ): List<ChannelResponse> {
         // 1. 그룹 존재 확인
-        val group = groupRepository.findById(groupId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+        val group =
+            groupRepository.findById(groupId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
 
         // 2. 사용자 멤버십 확인
-        val member = groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
 
         // 3. 채널 목록 직접 조회 (workspace 테이블 우회)
         // Note: 현재 구조에서는 채널이 group에 직접 연결되어 있음
@@ -288,8 +302,9 @@ class ContentService(
             channelRepository.findById(channelId)
                 .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, requesterId)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(channel.group.id, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return postRepository.findByChannel_Id(channelId).map { toPostResponse(it) }
     }
 
@@ -301,8 +316,9 @@ class ContentService(
             postRepository.findById(postId)
                 .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val member = groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, requesterId)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return toPostResponse(post)
     }
 
@@ -319,8 +335,9 @@ class ContentService(
             userRepository.findById(authorId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val authorMember = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, author.id)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val authorMember =
+            groupMemberRepository.findByGroupIdAndUserId(channel.group.id, author.id)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         ensureChannelPermission(channelId, author.id, ChannelPermission.POST_WRITE)
         val type = request.type?.let { runCatching { PostType.valueOf(it) }.getOrDefault(PostType.GENERAL) } ?: PostType.GENERAL
         val post =
@@ -392,8 +409,9 @@ class ContentService(
             postRepository.findById(postId)
                 .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val member = groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, requesterId)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return commentRepository.findByPost_Id(postId).map { toCommentResponse(it) }
     }
 
@@ -410,8 +428,9 @@ class ContentService(
             userRepository.findById(authorId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val authorMember = groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, author.id)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val authorMember =
+            groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, author.id)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         val parent =
             request.parentCommentId?.let {
                 commentRepository.findById(it).orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }

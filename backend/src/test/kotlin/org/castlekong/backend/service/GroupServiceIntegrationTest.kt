@@ -7,11 +7,11 @@ import org.castlekong.backend.entity.GroupVisibility
 import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
+import org.castlekong.backend.fixture.TestDataFactory // 추가
 import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.GroupRoleRepository
 import org.castlekong.backend.repository.UserRepository
-import org.castlekong.backend.fixture.TestDataFactory // 추가
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

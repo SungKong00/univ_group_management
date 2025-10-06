@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/layout_mode.dart';
@@ -10,6 +11,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../common/breadcrumb_widget.dart';
 import '../workspace/workspace_header.dart';
+import '../user/avatar_popup_menu.dart';
+import '../dialogs/logout_dialog.dart';
 
 class TopNavigation extends ConsumerWidget {
   const TopNavigation({super.key});
@@ -117,34 +120,129 @@ class TopNavigation extends ConsumerWidget {
 }
 
 /// 모바일 전용 사용자 아바타 버튼
-/// TODO: 터치 시 사용자 정보 팝업 표시 기능 추가 예정
-class _UserAvatarButton extends StatelessWidget {
+/// 터치 시 계정 정보 팝업(이름, 이메일, 학과, 로그아웃)을 표시합니다.
+class _UserAvatarButton extends ConsumerStatefulWidget {
   final dynamic user;
 
   const _UserAvatarButton({required this.user});
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // TODO: 사용자 정보 팝업 표시 (아이디, 메일, 학과, 로그아웃 버튼)
-        // showDialog 또는 BottomSheet 활용 예정
-      },
-      child: Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.brandLight,
-          border: Border.all(color: AppColors.brand, width: 1.5),
+  ConsumerState<_UserAvatarButton> createState() => _UserAvatarButtonState();
+}
+
+class _UserAvatarButtonState extends ConsumerState<_UserAvatarButton> {
+  OverlayEntry? _popupOverlay;
+  final LayerLink _layerLink = LayerLink();
+
+  @override
+  void dispose() {
+    _removePopup();
+    super.dispose();
+  }
+
+  void _showPopup() {
+    if (_popupOverlay != null) return;
+
+    _popupOverlay = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // 외부 클릭 시 팝업 닫기
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _removePopup,
+              behavior: HitTestBehavior.translucent,
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          // 팝업 메뉴 (아바타 아래 8px, 우측 정렬)
+          Positioned(
+            width: 240,
+            child: CompositedTransformFollower(
+              link: _layerLink,
+              targetAnchor: Alignment.bottomRight,
+              followerAnchor: Alignment.topRight,
+              offset: const Offset(0, AppSpacing.xxs), // 8px 아래
+              child: AvatarPopupMenu(
+                user: widget.user,
+                onLogout: () {
+                  _removePopup();
+                  _handleLogout();
+                },
+                onClose: _removePopup,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Overlay.of(context).insert(_popupOverlay!);
+  }
+
+  void _removePopup() {
+    _popupOverlay?.remove();
+    _popupOverlay = null;
+  }
+
+  Future<void> _handleLogout() async {
+    // 확인 다이얼로그
+    final confirmed = await showLogoutDialog(context);
+    if (!confirmed) return;
+
+    try {
+      await ref.read(authProvider.notifier).logout();
+      // 로그아웃 성공 시 AuthProvider가 자동으로 로그인 페이지로 리디렉션
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('로그아웃 실패: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
         ),
-        child: Center(
-          child: Text(
-            _getInitial(user.name ?? ''),
-            style: const TextStyle(
-              color: AppColors.brand,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: Semantics(
+        label: '계정 메뉴',
+        button: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _showPopup,
+            borderRadius: BorderRadius.circular(22), // 44px / 2
+            splashColor: AppColors.brand.withValues(alpha: 0.1),
+            highlightColor: AppColors.brand.withValues(alpha: 0.05),
+            child: Container(
+              // 터치 영역 44px 확보
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              child: Container(
+                // 시각적 크기는 24px 유지
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.brandLight,
+                  border: Border.all(color: AppColors.brand, width: 1.5),
+                ),
+                child: Center(
+                  child: Text(
+                    _getInitial(widget.user.name ?? ''),
+                    style: const TextStyle(
+                      color: AppColors.brand,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),

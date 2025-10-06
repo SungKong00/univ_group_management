@@ -82,27 +82,30 @@ class ContentControllerTest {
         val suffix = System.nanoTime().toString()
 
         // Create users
-        owner = userRepository.save(
-            TestDataFactory.createTestUser(
-                name = "그룹장",
-                email = "owner-ctrl+$suffix@example.com",
-                globalRole = GlobalRole.STUDENT
-            ).copy(profileCompleted = true)
-        )
-
-        member = userRepository.save(
-            TestDataFactory.createStudentUser(
-                name = "멤버",
-                email = "member-ctrl+$suffix@example.com"
+        owner =
+            userRepository.save(
+                TestDataFactory.createTestUser(
+                    name = "그룹장",
+                    email = "owner-ctrl+$suffix@example.com",
+                    globalRole = GlobalRole.STUDENT,
+                ).copy(profileCompleted = true),
             )
-        )
 
-        outsider = userRepository.save(
-            TestDataFactory.createStudentUser(
-                name = "외부인",
-                email = "outsider-ctrl+$suffix@example.com"
+        member =
+            userRepository.save(
+                TestDataFactory.createStudentUser(
+                    name = "멤버",
+                    email = "member-ctrl+$suffix@example.com",
+                ),
             )
-        )
+
+        outsider =
+            userRepository.save(
+                TestDataFactory.createStudentUser(
+                    name = "외부인",
+                    email = "outsider-ctrl+$suffix@example.com",
+                ),
+            )
 
         // Create group and roles
         group = createGroupWithRoles(owner)
@@ -114,29 +117,31 @@ class ContentControllerTest {
             TestDataFactory.createTestGroupMember(
                 group = group,
                 user = member,
-                role = memberRole
-            )
+                role = memberRole,
+            ),
         )
 
         // Create workspace and channel
-        workspace = workspaceRepository.save(
-            Workspace(
-                name = "기본 워크스페이스",
-                description = "테스트 워크스페이스",
-                group = group
+        workspace =
+            workspaceRepository.save(
+                Workspace(
+                    name = "기본 워크스페이스",
+                    description = "테스트 워크스페이스",
+                    group = group,
+                ),
             )
-        )
 
-        channel = channelRepository.save(
-            Channel(
-                name = "공지사항",
-                description = "공지사항 채널",
-                type = ChannelType.ANNOUNCEMENT,
-                workspace = workspace,
-                group = group,
-                createdBy = owner
+        channel =
+            channelRepository.save(
+                Channel(
+                    name = "공지사항",
+                    description = "공지사항 채널",
+                    type = ChannelType.ANNOUNCEMENT,
+                    workspace = workspace,
+                    group = group,
+                    createdBy = owner,
+                ),
             )
-        )
 
         // Setup channel permissions (Full permissions for testing)
         setupChannelPermissions(channel, ownerRole, memberRole)
@@ -148,12 +153,13 @@ class ContentControllerTest {
     }
 
     private fun createGroupWithRoles(owner: User): Group {
-        val group = groupRepository.save(
-            TestDataFactory.createTestGroup(
-                name = "컨트롤러 테스트 그룹",
-                owner = owner
+        val group =
+            groupRepository.save(
+                TestDataFactory.createTestGroup(
+                    name = "컨트롤러 테스트 그룹",
+                    owner = owner,
+                ),
             )
-        )
 
         val ownerRole = groupRoleRepository.save(TestDataFactory.createOwnerRole(group))
         groupRoleRepository.save(TestDataFactory.createAdvisorRole(group))
@@ -163,43 +169,50 @@ class ContentControllerTest {
             TestDataFactory.createTestGroupMember(
                 group = group,
                 user = owner,
-                role = ownerRole
-            )
+                role = ownerRole,
+            ),
         )
 
         return group
     }
 
-    private fun setupChannelPermissions(channel: Channel, ownerRole: GroupRole, memberRole: GroupRole) {
-        val ownerPermissions = setOf(
-            ChannelPermission.CHANNEL_VIEW,
-            ChannelPermission.POST_READ,
-            ChannelPermission.POST_WRITE,
-            ChannelPermission.COMMENT_WRITE,
-            ChannelPermission.FILE_UPLOAD
-        )
+    private fun setupChannelPermissions(
+        channel: Channel,
+        ownerRole: GroupRole,
+        memberRole: GroupRole,
+    ) {
+        val ownerPermissions =
+            setOf(
+                ChannelPermission.CHANNEL_VIEW,
+                ChannelPermission.POST_READ,
+                ChannelPermission.POST_WRITE,
+                ChannelPermission.COMMENT_WRITE,
+                ChannelPermission.FILE_UPLOAD,
+            )
 
-        val memberPermissions = setOf(
-            ChannelPermission.CHANNEL_VIEW,
-            ChannelPermission.POST_READ,
-            ChannelPermission.POST_WRITE,
-            ChannelPermission.COMMENT_WRITE
-        )
+        val memberPermissions =
+            setOf(
+                ChannelPermission.CHANNEL_VIEW,
+                ChannelPermission.POST_READ,
+                ChannelPermission.POST_WRITE,
+                ChannelPermission.COMMENT_WRITE,
+            )
 
         channelRoleBindingRepository.save(
-            ChannelRoleBinding.create(channel, ownerRole, ownerPermissions)
+            ChannelRoleBinding.create(channel, ownerRole, ownerPermissions),
         )
         channelRoleBindingRepository.save(
-            ChannelRoleBinding.create(channel, memberRole, memberPermissions)
+            ChannelRoleBinding.create(channel, memberRole, memberPermissions),
         )
     }
 
     private fun generateToken(user: User): String {
-        val authentication = UsernamePasswordAuthenticationToken(
-            user.email,
-            null,
-            listOf(org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_${user.globalRole.name}"))
-        )
+        val authentication =
+            UsernamePasswordAuthenticationToken(
+                user.email,
+                null,
+                listOf(org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_${user.globalRole.name}")),
+            )
         return jwtTokenProvider.generateAccessToken(authentication)
     }
 
@@ -209,7 +222,6 @@ class ContentControllerTest {
     @Nested
     @DisplayName("워크스페이스 관리 테스트")
     inner class WorkspaceManagementTest {
-
         @Test
         @DisplayName("GET /api/groups/{groupId}/workspaces - 워크스페이스 목록 조회 성공")
         fun getWorkspaces_success() {
@@ -219,7 +231,7 @@ class ContentControllerTest {
             mockMvc.perform(
                 get("/api/groups/${group.id}/workspaces")
                     .header("Authorization", "Bearer $ownerToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -239,7 +251,7 @@ class ContentControllerTest {
             mockMvc.perform(
                 get("/api/groups/${group.id}/workspaces")
                     .header("Authorization", "Bearer $outsiderToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -250,17 +262,18 @@ class ContentControllerTest {
         @DisplayName("POST /api/groups/{groupId}/workspaces - 워크스페이스 생성 성공")
         fun createWorkspace_success() {
             // Given
-            val request = CreateWorkspaceRequest(
-                name = "새 워크스페이스",
-                description = "새로운 워크스페이스입니다"
-            )
+            val request =
+                CreateWorkspaceRequest(
+                    name = "새 워크스페이스",
+                    description = "새로운 워크스페이스입니다",
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/groups/${group.id}/workspaces")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isCreated)
@@ -274,17 +287,18 @@ class ContentControllerTest {
         @DisplayName("POST /api/groups/{groupId}/workspaces - 일반 멤버는 403")
         fun createWorkspace_forbiddenForMember() {
             // Given: Member doesn't have GROUP_MANAGE permission
-            val request = CreateWorkspaceRequest(
-                name = "멤버 워크스페이스",
-                description = "멤버가 생성 시도"
-            )
+            val request =
+                CreateWorkspaceRequest(
+                    name = "멤버 워크스페이스",
+                    description = "멤버가 생성 시도",
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/groups/${group.id}/workspaces")
                     .header("Authorization", "Bearer $memberToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -294,17 +308,18 @@ class ContentControllerTest {
         @DisplayName("PUT /api/workspaces/{workspaceId} - 워크스페이스 수정 성공")
         fun updateWorkspace_success() {
             // Given
-            val request = UpdateWorkspaceRequest(
-                name = "수정된 워크스페이스",
-                description = "수정된 설명"
-            )
+            val request =
+                UpdateWorkspaceRequest(
+                    name = "수정된 워크스페이스",
+                    description = "수정된 설명",
+                )
 
             // When & Then
             mockMvc.perform(
                 put("/api/workspaces/${workspace.id}")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -318,18 +333,19 @@ class ContentControllerTest {
         @DisplayName("DELETE /api/workspaces/{workspaceId} - 워크스페이스 삭제 성공")
         fun deleteWorkspace_success() {
             // Given: Create a deletable workspace
-            val deletableWorkspace = workspaceRepository.save(
-                Workspace(
-                    name = "삭제용 워크스페이스",
-                    description = "삭제 테스트",
-                    group = group
+            val deletableWorkspace =
+                workspaceRepository.save(
+                    Workspace(
+                        name = "삭제용 워크스페이스",
+                        description = "삭제 테스트",
+                        group = group,
+                    ),
                 )
-            )
 
             // When & Then
             mockMvc.perform(
                 delete("/api/workspaces/${deletableWorkspace.id}")
-                    .header("Authorization", "Bearer $ownerToken")
+                    .header("Authorization", "Bearer $ownerToken"),
             )
                 .andDo(print())
                 .andExpect(status().isNoContent)
@@ -343,7 +359,7 @@ class ContentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/workspaces/${workspace.id}")
-                    .header("Authorization", "Bearer $memberToken")
+                    .header("Authorization", "Bearer $memberToken"),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -357,7 +373,6 @@ class ContentControllerTest {
     @Nested
     @DisplayName("채널 관리 테스트")
     inner class ChannelManagementTest {
-
         @Test
         @DisplayName("GET /api/workspaces/{workspaceId}/channels - 채널 목록 조회 성공")
         fun getChannelsByWorkspace_success() {
@@ -367,7 +382,7 @@ class ContentControllerTest {
             mockMvc.perform(
                 get("/api/workspaces/${workspace.id}/channels")
                     .header("Authorization", "Bearer $memberToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -387,7 +402,7 @@ class ContentControllerTest {
             mockMvc.perform(
                 get("/api/groups/${group.id}/channels")
                     .header("Authorization", "Bearer $memberToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -405,7 +420,7 @@ class ContentControllerTest {
             mockMvc.perform(
                 get("/api/groups/${group.id}/channels")
                     .header("Authorization", "Bearer $outsiderToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -415,18 +430,19 @@ class ContentControllerTest {
         @DisplayName("POST /api/workspaces/{workspaceId}/channels - 채널 생성 성공")
         fun createChannel_success() {
             // Given
-            val request = CreateChannelRequest(
-                name = "새 채널",
-                description = "새로운 채널입니다",
-                type = "TEXT"
-            )
+            val request =
+                CreateChannelRequest(
+                    name = "새 채널",
+                    description = "새로운 채널입니다",
+                    type = "TEXT",
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/workspaces/${workspace.id}/channels")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isCreated)
@@ -438,17 +454,18 @@ class ContentControllerTest {
         @DisplayName("POST /api/workspaces/{workspaceId}/channels - 일반 멤버는 403")
         fun createChannel_forbiddenForMember() {
             // Given
-            val request = CreateChannelRequest(
-                name = "멤버 채널",
-                description = "멤버가 생성 시도"
-            )
+            val request =
+                CreateChannelRequest(
+                    name = "멤버 채널",
+                    description = "멤버가 생성 시도",
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/workspaces/${workspace.id}/channels")
                     .header("Authorization", "Bearer $memberToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -458,18 +475,19 @@ class ContentControllerTest {
         @DisplayName("PUT /api/channels/{channelId} - 채널 수정 성공")
         fun updateChannel_success() {
             // Given
-            val request = UpdateChannelRequest(
-                name = "수정된 채널명",
-                description = "수정된 설명",
-                type = "TEXT"
-            )
+            val request =
+                UpdateChannelRequest(
+                    name = "수정된 채널명",
+                    description = "수정된 설명",
+                    type = "TEXT",
+                )
 
             // When & Then
             mockMvc.perform(
                 put("/api/channels/${channel.id}")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -482,21 +500,22 @@ class ContentControllerTest {
         @DisplayName("DELETE /api/channels/{channelId} - 채널 삭제 성공")
         fun deleteChannel_success() {
             // Given: Create a deletable channel
-            val deletableChannel = channelRepository.save(
-                Channel(
-                    name = "삭제용 채널",
-                    description = "삭제 테스트",
-                    type = ChannelType.TEXT,
-                    workspace = workspace,
-                    group = group,
-                    createdBy = owner
+            val deletableChannel =
+                channelRepository.save(
+                    Channel(
+                        name = "삭제용 채널",
+                        description = "삭제 테스트",
+                        type = ChannelType.TEXT,
+                        workspace = workspace,
+                        group = group,
+                        createdBy = owner,
+                    ),
                 )
-            )
 
             // When & Then
             mockMvc.perform(
                 delete("/api/channels/${deletableChannel.id}")
-                    .header("Authorization", "Bearer $ownerToken")
+                    .header("Authorization", "Bearer $ownerToken"),
             )
                 .andDo(print())
                 .andExpect(status().isNoContent)
@@ -511,7 +530,7 @@ class ContentControllerTest {
             mockMvc.perform(
                 get("/api/channels/${channel.id}/permissions/me")
                     .header("Authorization", "Bearer $memberToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -539,7 +558,7 @@ class ContentControllerTest {
             mockMvc.perform(
                 get("/api/channels/${channel.id}/posts")
                     .header("Authorization", "Bearer $memberToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -556,7 +575,7 @@ class ContentControllerTest {
             mockMvc.perform(
                 get("/api/channels/${channel.id}/posts")
                     .header("Authorization", "Bearer $outsiderToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -566,17 +585,18 @@ class ContentControllerTest {
         @DisplayName("POST /api/channels/{channelId}/posts - 게시글 작성 성공")
         fun createPost_success() {
             // Given: Member has POST_WRITE permission
-            val request = CreatePostRequest(
-                content = "새 게시글입니다",
-                type = "GENERAL"
-            )
+            val request =
+                CreatePostRequest(
+                    content = "새 게시글입니다",
+                    type = "GENERAL",
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/channels/${channel.id}/posts")
                     .header("Authorization", "Bearer $memberToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isCreated)
@@ -594,7 +614,7 @@ class ContentControllerTest {
             mockMvc.perform(
                 get("/api/posts/${post.id}")
                     .header("Authorization", "Bearer $memberToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -608,17 +628,18 @@ class ContentControllerTest {
         fun updatePost_success() {
             // Given: Member created the post
             createTestPost()
-            val request = UpdatePostRequest(
-                content = "수정된 게시글",
-                type = "GENERAL"
-            )
+            val request =
+                UpdatePostRequest(
+                    content = "수정된 게시글",
+                    type = "GENERAL",
+                )
 
             // When & Then
             mockMvc.perform(
                 put("/api/posts/${post.id}")
                     .header("Authorization", "Bearer $memberToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -631,17 +652,18 @@ class ContentControllerTest {
         fun updatePost_forbiddenForOtherUser() {
             // Given: Member created the post, Owner tries to update
             createTestPost()
-            val request = UpdatePostRequest(
-                content = "타인이 수정 시도",
-                type = "GENERAL"
-            )
+            val request =
+                UpdatePostRequest(
+                    content = "타인이 수정 시도",
+                    type = "GENERAL",
+                )
 
             // When & Then
             mockMvc.perform(
                 put("/api/posts/${post.id}")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -656,7 +678,7 @@ class ContentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/posts/${post.id}")
-                    .header("Authorization", "Bearer $memberToken")
+                    .header("Authorization", "Bearer $memberToken"),
             )
                 .andDo(print())
                 .andExpect(status().isNoContent)
@@ -671,21 +693,22 @@ class ContentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/posts/${post.id}")
-                    .header("Authorization", "Bearer $ownerToken")
+                    .header("Authorization", "Bearer $ownerToken"),
             )
                 .andDo(print())
                 .andExpect(status().isNoContent)
         }
 
         private fun createTestPost() {
-            post = postRepository.save(
-                Post(
-                    channel = channel,
-                    author = member,
-                    content = "테스트 게시글",
-                    type = PostType.GENERAL
+            post =
+                postRepository.save(
+                    Post(
+                        channel = channel,
+                        author = member,
+                        content = "테스트 게시글",
+                        type = PostType.GENERAL,
+                    ),
                 )
-            )
         }
     }
 
@@ -708,7 +731,7 @@ class ContentControllerTest {
             mockMvc.perform(
                 get("/api/posts/${post.id}/comments")
                     .header("Authorization", "Bearer $memberToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -721,17 +744,18 @@ class ContentControllerTest {
         fun createComment_success() {
             // Given
             createTestPost()
-            val request = CreateCommentRequest(
-                content = "새 댓글입니다",
-                parentCommentId = null
-            )
+            val request =
+                CreateCommentRequest(
+                    content = "새 댓글입니다",
+                    parentCommentId = null,
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/posts/${post.id}/comments")
                     .header("Authorization", "Bearer $memberToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isCreated)
@@ -744,16 +768,17 @@ class ContentControllerTest {
         fun updateComment_success() {
             // Given
             createTestPostAndComment()
-            val request = UpdateCommentRequest(
-                content = "수정된 댓글"
-            )
+            val request =
+                UpdateCommentRequest(
+                    content = "수정된 댓글",
+                )
 
             // When & Then
             mockMvc.perform(
                 put("/api/comments/${comment.id}")
                     .header("Authorization", "Bearer $memberToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -766,16 +791,17 @@ class ContentControllerTest {
         fun updateComment_forbiddenForOtherUser() {
             // Given: Member created comment, Owner tries to update
             createTestPostAndComment()
-            val request = UpdateCommentRequest(
-                content = "타인이 수정 시도"
-            )
+            val request =
+                UpdateCommentRequest(
+                    content = "타인이 수정 시도",
+                )
 
             // When & Then
             mockMvc.perform(
                 put("/api/comments/${comment.id}")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -790,7 +816,7 @@ class ContentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/comments/${comment.id}")
-                    .header("Authorization", "Bearer $memberToken")
+                    .header("Authorization", "Bearer $memberToken"),
             )
                 .andDo(print())
                 .andExpect(status().isNoContent)
@@ -805,32 +831,34 @@ class ContentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/comments/${comment.id}")
-                    .header("Authorization", "Bearer $ownerToken")
+                    .header("Authorization", "Bearer $ownerToken"),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
         }
 
         private fun createTestPost() {
-            post = postRepository.save(
-                Post(
-                    channel = channel,
-                    author = member,
-                    content = "댓글 테스트용 게시글",
-                    type = PostType.GENERAL
+            post =
+                postRepository.save(
+                    Post(
+                        channel = channel,
+                        author = member,
+                        content = "댓글 테스트용 게시글",
+                        type = PostType.GENERAL,
+                    ),
                 )
-            )
         }
 
         private fun createTestPostAndComment() {
             createTestPost()
-            comment = commentRepository.save(
-                Comment(
-                    post = post,
-                    author = member,
-                    content = "테스트 댓글"
+            comment =
+                commentRepository.save(
+                    Comment(
+                        post = post,
+                        author = member,
+                        content = "테스트 댓글",
+                    ),
                 )
-            )
         }
     }
 }

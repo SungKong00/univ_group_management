@@ -35,10 +35,15 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
   int _postListKey = 0;
   int _commentListKey = 0;
   bool _previousIsMobile = false;
+  bool _previousIsNarrowDesktop = false; // Narrow desktop 상태 추적
   bool _hasResponsiveLayoutInitialized = false;
   bool _isAnimatingOut = false; // 슬라이드 아웃 애니메이션 진행 중 플래그
   late AnimationController _commentsAnimationController;
   late Animation<Offset> _commentsSlideAnimation;
+
+  // 스크롤 위치 보존을 위한 ScrollController (선택사항)
+  final ScrollController _postScrollController = ScrollController();
+  final ScrollController _commentScrollController = ScrollController();
 
   @override
   void initState() {
@@ -115,6 +120,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
   @override
   void dispose() {
     _commentsAnimationController.dispose();
+    _postScrollController.dispose();
+    _commentScrollController.dispose();
     super.dispose();
   }
 
@@ -129,9 +136,14 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
         final isMobile = !isDesktop;
 
+        // Narrow Desktop: 게시글 + 댓글 충돌 발생 구간 (601px~850px)
+        // 채널바(200px) + 여유있는 콘텐츠(350px) + 댓글바(300px) = 850px
+        // 사용자 요청: 850px 미만을 narrow desktop으로 간주
+        final isNarrowDesktop = isDesktop && constraints.maxWidth < 850;
+
         // 반응형 전환 감지 및 상태 보존
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _handleResponsiveTransition(isMobile);
+          _handleResponsiveTransition(isMobile, isNarrowDesktop);
 
           // 데스크톱에서 댓글 가시성 변화에 따라 애니메이션 트리거
           // ✅ _isAnimatingOut이 아닐 때만 forward 허용 (중복 실행 방지)
@@ -144,19 +156,27 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
           }
         });
 
-        // 모바일에서 뒤로가기 핸들링 추가
+        // 뒤로가기 핸들링: 모바일 + Narrow Desktop
+        final canHandleBack = isMobile && _canHandleMobileBack() ||
+            (isNarrowDesktop && workspaceState.isNarrowDesktopCommentsFullscreen);
+
         return PopScope(
-          canPop: !isMobile || !_canHandleMobileBack(),
+          canPop: !canHandleBack,
           // onPopInvoked was deprecated; use onPopInvokedWithResult which provides the pop result as well.
           onPopInvokedWithResult: (didPop, result) {
-            if (!didPop && isMobile) {
-              _handleMobileBackPress();
+            if (!didPop) {
+              if (isMobile) {
+                _handleMobileBackPress();
+              } else if (isNarrowDesktop && workspaceState.isNarrowDesktopCommentsFullscreen) {
+                // Narrow desktop에서 댓글 전체 화면 모드일 때 뒤로가기로 닫기
+                ref.read(workspaceStateProvider.notifier).hideComments();
+              }
             }
           },
           child: Container(
             color: AppColors.lightBackground,
             child: isDesktop
-                ? _buildDesktopWorkspace(workspaceState)
+                ? _buildDesktopWorkspace(workspaceState, isNarrowDesktop: isNarrowDesktop)
                 : _buildMobileWorkspace(workspaceState),
           ),
         );
@@ -164,19 +184,21 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     );
   }
 
-  /// 반응형 전환 핸들러: 웹 ↔ 모바일 전환 시 상태 보존
-  void _handleResponsiveTransition(bool isMobile) {
+  /// 반응형 전환 핸들러: 웹 ↔ 모바일 + Narrow Desktop 전환 시 상태 보존
+  void _handleResponsiveTransition(bool isMobile, bool isNarrowDesktop) {
     // 초회 빌드에서는 전환이 아닌 초기 상태 설정만 수행한다.
     if (!_hasResponsiveLayoutInitialized) {
       _previousIsMobile = isMobile;
+      _previousIsNarrowDesktop = isNarrowDesktop;
       _hasResponsiveLayoutInitialized = true;
       return;
     }
 
-    // 전환이 발생했는지 확인
-    if (_previousIsMobile != isMobile) {
-      final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+    final workspaceState = ref.read(workspaceStateProvider);
 
+    // 모바일 ↔ 웹 전환 처리
+    if (_previousIsMobile != isMobile) {
       if (isMobile) {
         // 웹 → 모바일 전환
         workspaceNotifier.handleWebToMobileTransition();
@@ -186,6 +208,28 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
       }
 
       _previousIsMobile = isMobile;
+    }
+
+    // Narrow Desktop ↔ Wide Desktop 전환 처리
+    if (!isMobile && _previousIsNarrowDesktop != isNarrowDesktop) {
+      // 댓글이 열려있는 경우 narrow desktop 상태 동기화
+      if (workspaceState.isCommentsVisible) {
+        if (isNarrowDesktop && !workspaceState.isNarrowDesktopCommentsFullscreen) {
+          // Wide → Narrow: 댓글을 전체 화면 모드로 전환
+          workspaceNotifier.showComments(
+            workspaceState.selectedPostId!,
+            isNarrowDesktop: true,
+          );
+        } else if (!isNarrowDesktop && workspaceState.isNarrowDesktopCommentsFullscreen) {
+          // Narrow → Wide: 댓글을 사이드바 모드로 전환
+          workspaceNotifier.showComments(
+            workspaceState.selectedPostId!,
+            isNarrowDesktop: false,
+          );
+        }
+      }
+
+      _previousIsNarrowDesktop = isNarrowDesktop;
     }
   }
 
@@ -205,9 +249,12 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     workspaceNotifier.handleMobileBack();
   }
 
-  Widget _buildDesktopWorkspace(WorkspaceState workspaceState) {
+  Widget _buildDesktopWorkspace(WorkspaceState workspaceState, {bool isNarrowDesktop = false}) {
     final bool showChannelNavigation = workspaceState.isInWorkspace;
     final bool showComments = workspaceState.isCommentsVisible || _isAnimatingOut;
+
+    // Narrow desktop + 댓글 전체 화면 모드: 게시글 숨기고 댓글만 표시
+    final bool isNarrowCommentFullscreen = isNarrowDesktop && workspaceState.isNarrowDesktopCommentsFullscreen;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -215,16 +262,22 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         final double screenWidth = MediaQuery.of(context).size.width;
         final double channelBarWidth = screenWidth >= 1200 ? 256.0 : 200.0;
         final double commentBarWidth = screenWidth >= 1200 ? 390.0 : 300.0;
+
+        // Narrow desktop 댓글 전체 화면: 채널바만 표시, 우측은 전체 화면
         final double leftInset = showChannelNavigation ? channelBarWidth : 0;
-        final double rightInset = showComments ? commentBarWidth : 0;
+        final double rightInset = (showComments && !isNarrowCommentFullscreen) ? commentBarWidth : 0;
 
         return Stack(
           children: [
-            // 메인 콘텐츠 영역은 좌측 채널 바와 우측 댓글 바 폭만큼 여백을 둔다.
+            // Narrow desktop 댓글 전체 화면: 게시글 숨김 (Visibility로 깜빡임 방지)
             Positioned.fill(
               left: leftInset,
               right: rightInset,
-              child: _buildMainContent(workspaceState),
+              child: Visibility(
+                visible: !isNarrowCommentFullscreen,
+                maintainState: true,
+                child: _buildMainContent(workspaceState),
+              ),
             ),
 
             if (showChannelNavigation)
@@ -289,11 +342,16 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
               Positioned(
                 top: 0,
                 bottom: 0,
-                right: 0,
+                // Narrow desktop 전체 화면: 채널바 옆에 배치
+                left: isNarrowCommentFullscreen ? leftInset : null,
+                right: isNarrowCommentFullscreen ? 0 : 0,
                 child: RepaintBoundary(
                   child: SlideTransition(
                     position: _commentsSlideAnimation,
-                    child: _buildCommentsSidebar(workspaceState, commentBarWidth),
+                    child: _buildCommentsSidebar(
+                      workspaceState,
+                      isNarrowCommentFullscreen ? null : commentBarWidth,
+                    ),
                   ),
                 ),
               ),
@@ -474,12 +532,23 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
           Text(channelName, style: AppTheme.headlineMedium),
           const SizedBox(height: 16),
           Expanded(
-            child: PostList(
-              key: ValueKey('post_list_${workspaceState.selectedChannelId}_$_postListKey'),
-              channelId: workspaceState.selectedChannelId!,
-              canWrite: canWritePost,
-              onTapComment: (postId) {
-                ref.read(workspaceStateProvider.notifier).showComments(postId.toString());
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // 반응형 기준과 동일하게 constraints.maxWidth 사용
+                final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
+                final isNarrowDesktop = isDesktop && constraints.maxWidth < 850;
+
+                return PostList(
+                  key: ValueKey('post_list_${workspaceState.selectedChannelId}_$_postListKey'),
+                  channelId: workspaceState.selectedChannelId!,
+                  canWrite: canWritePost,
+                  onTapComment: (postId) {
+                    ref.read(workspaceStateProvider.notifier).showComments(
+                      postId.toString(),
+                      isNarrowDesktop: isNarrowDesktop,
+                    );
+                  },
+                );
               },
             ),
           ),
@@ -571,9 +640,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     }
   }
 
-  Widget _buildCommentsSidebar(WorkspaceState workspaceState, double width) {
+  Widget _buildCommentsSidebar(WorkspaceState workspaceState, double? width) {
     return Container(
-      width: width,
+      width: width, // null이면 전체 너비 사용
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -593,9 +662,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // 댓글 헤더
+          // 댓글 헤더 (높이: 채널 네비게이션 그룹 선택창과 동일)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: const BoxDecoration(
               border: Border(
                 bottom: BorderSide(color: AppColors.neutral200, width: 1),
@@ -605,17 +674,25 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
               children: [
                 Text('댓글', style: AppTheme.titleLarge),
                 const Spacer(),
-                IconButton(
-                  onPressed: () {
-                    // 1. 슬라이드 아웃 애니메이션 시작
-                    setState(() {
-                      _isAnimatingOut = true;
-                    });
+                // IconButton 크기 제한하여 전체 높이를 그룹 선택창과 맞춤
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    iconSize: 20,
+                    onPressed: () {
+                      // 1. 슬라이드 아웃 애니메이션 시작
+                      setState(() {
+                        _isAnimatingOut = true;
+                      });
 
-                    // 2. reverse() 애니메이션 실행 (AnimationStatus 리스너가 완료 후 hideComments() 자동 호출)
-                    _commentsAnimationController.reverse();
-                  },
-                  icon: const Icon(Icons.close),
+                      // 2. reverse() 애니메이션 실행 (AnimationStatus 리스너가 완료 후 hideComments() 자동 호출)
+                      _commentsAnimationController.reverse();
+                    },
+                    icon: const Icon(Icons.close),
+                  ),
                 ),
               ],
             ),

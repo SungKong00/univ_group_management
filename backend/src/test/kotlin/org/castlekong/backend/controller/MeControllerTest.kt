@@ -65,17 +65,18 @@ class MeControllerTest {
         val suffix = System.nanoTime().toString()
 
         // Create test user
-        testUser = userRepository.save(
-            TestDataFactory.createTestUser(
-                name = "테스트 사용자",
-                email = "me-test-$suffix@example.com",
-                globalRole = GlobalRole.STUDENT
-            ).copy(
-                profileCompleted = true,
-                nickname = "테스터",
-                bio = "테스트 계정입니다"
+        testUser =
+            userRepository.save(
+                TestDataFactory.createTestUser(
+                    name = "테스트 사용자",
+                    email = "me-test-$suffix@example.com",
+                    globalRole = GlobalRole.STUDENT,
+                ).copy(
+                    profileCompleted = true,
+                    nickname = "테스터",
+                    bio = "테스트 계정입니다",
+                ),
             )
-        )
 
         // Create group and roles
         testGroup = createGroupWithRoles(testUser)
@@ -85,12 +86,13 @@ class MeControllerTest {
     }
 
     private fun createGroupWithRoles(owner: User): Group {
-        val group = groupRepository.save(
-            TestDataFactory.createTestGroup(
-                name = "Me 테스트 그룹",
-                owner = owner
+        val group =
+            groupRepository.save(
+                TestDataFactory.createTestGroup(
+                    name = "Me 테스트 그룹",
+                    owner = owner,
+                ),
             )
-        )
 
         ownerRole = groupRoleRepository.save(TestDataFactory.createOwnerRole(group))
         groupRoleRepository.save(TestDataFactory.createAdvisorRole(group))
@@ -100,26 +102,26 @@ class MeControllerTest {
             TestDataFactory.createTestGroupMember(
                 group = group,
                 user = owner,
-                role = ownerRole
-            )
+                role = ownerRole,
+            ),
         )
 
         return group
     }
 
     private fun generateToken(user: User): String {
-        val authentication = UsernamePasswordAuthenticationToken(
-            user.email,
-            null,
-            listOf(org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_${user.globalRole.name}"))
-        )
+        val authentication =
+            UsernamePasswordAuthenticationToken(
+                user.email,
+                null,
+                listOf(org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_${user.globalRole.name}")),
+            )
         return jwtTokenProvider.generateAccessToken(authentication)
     }
 
     @Nested
     @DisplayName("내 정보 조회 테스트")
     inner class GetMeTest {
-
         @Test
         @DisplayName("GET /api/me - 내 정보 조회 성공")
         fun getMe_success() {
@@ -129,7 +131,7 @@ class MeControllerTest {
             mockMvc.perform(
                 get("/api/me")
                     .header("Authorization", "Bearer $token")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -152,7 +154,7 @@ class MeControllerTest {
             // When & Then
             mockMvc.perform(
                 get("/api/me")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().is4xxClientError) // 401 or 403 허용
@@ -167,7 +169,7 @@ class MeControllerTest {
             mockMvc.perform(
                 get("/api/me")
                     .header("Authorization", "Bearer invalid.token.here")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().is4xxClientError) // 401 or 403 허용
@@ -177,7 +179,6 @@ class MeControllerTest {
     @Nested
     @DisplayName("내 그룹 목록 조회 테스트")
     inner class GetMyGroupsTest {
-
         @Test
         @DisplayName("GET /api/me/groups - 내 그룹 목록 조회 성공")
         fun getMyGroups_success() {
@@ -187,7 +188,7 @@ class MeControllerTest {
             mockMvc.perform(
                 get("/api/me/groups")
                     .header("Authorization", "Bearer $token")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -203,19 +204,20 @@ class MeControllerTest {
         @DisplayName("GET /api/me/groups - 그룹이 없는 사용자는 빈 배열 반환")
         fun getMyGroups_emptyForUserWithoutGroups() {
             // Given: 그룹에 속하지 않은 새 사용자
-            val newUser = userRepository.save(
-                TestDataFactory.createTestUser(
-                    name = "신규 사용자",
-                    email = "new-user-${System.nanoTime()}@example.com"
+            val newUser =
+                userRepository.save(
+                    TestDataFactory.createTestUser(
+                        name = "신규 사용자",
+                        email = "new-user-${System.nanoTime()}@example.com",
+                    ),
                 )
-            )
             val newToken = generateToken(newUser)
 
             // When & Then
             mockMvc.perform(
                 get("/api/me/groups")
                     .header("Authorization", "Bearer $newToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -232,7 +234,7 @@ class MeControllerTest {
             // When & Then
             mockMvc.perform(
                 get("/api/me/groups")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().is4xxClientError) // 401 or 403 허용
@@ -243,27 +245,28 @@ class MeControllerTest {
         fun getMyGroups_sortedByLevel() {
             // Given: 사용자가 여러 그룹에 속함
             // 하위 그룹 생성 (level 1)
-            val subGroup = groupRepository.save(
-                TestDataFactory.createTestGroup(
-                    name = "하위 그룹",
-                    owner = testUser,
-                    parent = testGroup
+            val subGroup =
+                groupRepository.save(
+                    TestDataFactory.createTestGroup(
+                        name = "하위 그룹",
+                        owner = testUser,
+                        parent = testGroup,
+                    ),
                 )
-            )
             val subGroupRole = groupRoleRepository.save(TestDataFactory.createOwnerRole(subGroup))
             groupMemberRepository.save(
                 TestDataFactory.createTestGroupMember(
                     group = subGroup,
                     user = testUser,
-                    role = subGroupRole
-                )
+                    role = subGroupRole,
+                ),
             )
 
             // When & Then
             mockMvc.perform(
                 get("/api/me/groups")
                     .header("Authorization", "Bearer $token")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)

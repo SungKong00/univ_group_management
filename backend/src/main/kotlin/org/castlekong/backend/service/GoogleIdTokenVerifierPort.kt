@@ -46,9 +46,10 @@ class DefaultGoogleIdTokenVerifierPort(
             if (allowedGoogleClientIds.isEmpty()) {
                 throw IllegalStateException("Google OAuth client IDs are not configured. Please set app.google.client-id")
             }
-            val verifier = GoogleIdTokenVerifier.Builder(NetHttpTransport(), GsonFactory())
-                .setAudience(allowedGoogleClientIds)
-                .build()
+            val verifier =
+                GoogleIdTokenVerifier.Builder(NetHttpTransport(), GsonFactory())
+                    .setAudience(allowedGoogleClientIds)
+                    .build()
             val token: GoogleIdToken? = verifier.verify(idToken)
             if (token != null) {
                 val payload = token.payload
@@ -57,10 +58,11 @@ class DefaultGoogleIdTokenVerifierPort(
                     name = payload["name"] as String? ?: "",
                     profileImageUrl = payload["picture"] as String?,
                 )
-            } else null
+            } else {
+                null
+            }
         } catch (e: Exception) {
             throw IllegalArgumentException("Google token verification failed: ${e.message}")
         }
     }
 }
-

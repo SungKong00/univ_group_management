@@ -35,6 +35,7 @@ class WorkspaceState extends Equatable {
     this.channelPermissions,
     this.isLoadingPermissions = false,
     this.channelHistory = const [],
+    this.isNarrowDesktopCommentsFullscreen = false, // Narrow desktop: comments fullscreen mode
   });
 
   final String? selectedGroupId;
@@ -53,6 +54,7 @@ class WorkspaceState extends Equatable {
   final ChannelPermissions? channelPermissions;
   final bool isLoadingPermissions;
   final List<String> channelHistory; // Web-only: channel navigation history
+  final bool isNarrowDesktopCommentsFullscreen; // Narrow desktop: when true, hide posts and show only comments
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -71,6 +73,7 @@ class WorkspaceState extends Equatable {
     ChannelPermissions? channelPermissions,
     bool? isLoadingPermissions,
     List<String>? channelHistory,
+    bool? isNarrowDesktopCommentsFullscreen,
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
@@ -89,6 +92,7 @@ class WorkspaceState extends Equatable {
       channelPermissions: channelPermissions ?? this.channelPermissions,
       isLoadingPermissions: isLoadingPermissions ?? this.isLoadingPermissions,
       channelHistory: channelHistory ?? this.channelHistory,
+      isNarrowDesktopCommentsFullscreen: isNarrowDesktopCommentsFullscreen ?? this.isNarrowDesktopCommentsFullscreen,
     );
   }
 
@@ -114,6 +118,7 @@ class WorkspaceState extends Equatable {
         channelPermissions,
         isLoadingPermissions,
         channelHistory,
+        isNarrowDesktopCommentsFullscreen,
       ];
 }
 
@@ -284,10 +289,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     selectChannel(channelId);
   }
 
-  void showComments(String postId) {
+  void showComments(String postId, {bool isNarrowDesktop = false}) {
     state = state.copyWith(
       isCommentsVisible: true,
       selectedPostId: postId,
+      isNarrowDesktopCommentsFullscreen: isNarrowDesktop,
       workspaceContext: Map.from(state.workspaceContext)
         ..['postId'] = postId
         ..['commentsVisible'] = true,
@@ -298,6 +304,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = state.copyWith(
       isCommentsVisible: false,
       selectedPostId: null,
+      isNarrowDesktopCommentsFullscreen: false,
       workspaceContext: Map.from(state.workspaceContext)
         ..remove('postId')
         ..remove('commentsVisible'),

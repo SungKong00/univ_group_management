@@ -5,7 +5,6 @@ import org.castlekong.backend.entity.*
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.*
-import org.castlekong.backend.entity.ChannelRoleBinding
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -132,17 +131,18 @@ class GroupManagementService(
         return Triple(savedOwnerRole, savedProfessorRole, savedMemberRole)
     }
 
-
     @Transactional
     fun ensureDefaultChannelsIfNeeded(group: Group) {
         if (group.deletedAt != null) return
         if (group.defaultChannelsCreated) return
 
-        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER")
-            .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+        val ownerRole =
+            groupRoleRepository.findByGroupIdAndName(group.id, "OWNER")
+                .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
         val advisorRole = groupRoleRepository.findByGroupIdAndName(group.id, "ADVISOR").orElse(null)
-        val memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER")
-            .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+        val memberRole =
+            groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER")
+                .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         val wasCreated = channelInitializationService.ensureDefaultChannelsExist(group, ownerRole, advisorRole, memberRole)
 

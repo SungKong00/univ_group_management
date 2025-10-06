@@ -37,34 +37,38 @@ class RecruitmentService(
         request: CreateRecruitmentRequest,
         createdById: Long,
     ): RecruitmentResponse {
-        val group = groupRepository.findById(groupId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+        val group =
+            groupRepository.findById(groupId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
 
-        val createdBy = userRepository.findById(createdById)
-            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+        val createdBy =
+            userRepository.findById(createdById)
+                .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         // 기존 활성 모집이 있는지 확인
-        val existingRecruitment = groupRecruitmentRepository.findByGroupIdAndStatus(
-            groupId = groupId,
-            status = RecruitmentStatus.OPEN,
-            pageable = PageRequest.of(0, 1)
-        ).content.firstOrNull()
+        val existingRecruitment =
+            groupRecruitmentRepository.findByGroupIdAndStatus(
+                groupId = groupId,
+                status = RecruitmentStatus.OPEN,
+                pageable = PageRequest.of(0, 1),
+            ).content.firstOrNull()
 
         if (existingRecruitment != null) {
             throw BusinessException(ErrorCode.RECRUITMENT_ALREADY_EXISTS)
         }
 
-        val recruitment = GroupRecruitment(
-            group = group,
-            createdBy = createdBy,
-            title = request.title,
-            content = request.content,
-            maxApplicants = request.maxApplicants,
-            recruitmentEndDate = request.recruitmentEndDate,
-            autoApprove = request.autoApprove,
-            showApplicantCount = request.showApplicantCount,
-            applicationQuestions = request.applicationQuestions,
-        )
+        val recruitment =
+            GroupRecruitment(
+                group = group,
+                createdBy = createdBy,
+                title = request.title,
+                content = request.content,
+                maxApplicants = request.maxApplicants,
+                recruitmentEndDate = request.recruitmentEndDate,
+                autoApprove = request.autoApprove,
+                showApplicantCount = request.showApplicantCount,
+                applicationQuestions = request.applicationQuestions,
+            )
 
         val savedRecruitment = groupRecruitmentRepository.save(recruitment)
         logger.info("Created recruitment: ${savedRecruitment.id} for group: $groupId")
@@ -74,11 +78,12 @@ class RecruitmentService(
     }
 
     fun getActiveRecruitment(groupId: Long): RecruitmentResponse? {
-        val recruitment = groupRecruitmentRepository.findByGroupIdAndStatus(
-            groupId = groupId,
-            status = RecruitmentStatus.OPEN,
-            pageable = PageRequest.of(0, 1)
-        ).content.firstOrNull() ?: return null
+        val recruitment =
+            groupRecruitmentRepository.findByGroupIdAndStatus(
+                groupId = groupId,
+                status = RecruitmentStatus.OPEN,
+                pageable = PageRequest.of(0, 1),
+            ).content.firstOrNull() ?: return null
 
         val applicantCount = recruitmentApplicationRepository.countByRecruitmentId(recruitment.id)
         val groupMemberCount = groupMemberRepository.countByGroupId(groupId).toInt()
@@ -91,8 +96,9 @@ class RecruitmentService(
         request: UpdateRecruitmentRequest,
         userId: Long,
     ): RecruitmentResponse {
-        val recruitment = groupRecruitmentRepository.findByIdWithRelations(recruitmentId)
-            ?: throw BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND)
+        val recruitment =
+            groupRecruitmentRepository.findByIdWithRelations(recruitmentId)
+                ?: throw BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND)
 
         if (recruitment.status != RecruitmentStatus.OPEN) {
             throw BusinessException(ErrorCode.RECRUITMENT_NOT_ACTIVE)
@@ -115,9 +121,13 @@ class RecruitmentService(
     }
 
     @Transactional
-    fun closeRecruitment(recruitmentId: Long, userId: Long): RecruitmentResponse {
-        val recruitment = groupRecruitmentRepository.findByIdWithRelations(recruitmentId)
-            ?: throw BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND)
+    fun closeRecruitment(
+        recruitmentId: Long,
+        userId: Long,
+    ): RecruitmentResponse {
+        val recruitment =
+            groupRecruitmentRepository.findByIdWithRelations(recruitmentId)
+                ?: throw BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND)
 
         if (recruitment.status != RecruitmentStatus.OPEN) {
             throw BusinessException(ErrorCode.RECRUITMENT_NOT_ACTIVE)
@@ -136,9 +146,13 @@ class RecruitmentService(
     }
 
     @Transactional
-    fun deleteRecruitment(recruitmentId: Long, userId: Long) {
-        val recruitment = groupRecruitmentRepository.findByIdWithRelations(recruitmentId)
-            ?: throw BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND)
+    fun deleteRecruitment(
+        recruitmentId: Long,
+        userId: Long,
+    ) {
+        val recruitment =
+            groupRecruitmentRepository.findByIdWithRelations(recruitmentId)
+                ?: throw BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND)
 
         if (recruitment.status != RecruitmentStatus.OPEN) {
             throw BusinessException(ErrorCode.RECRUITMENT_NOT_ACTIVE)
@@ -162,11 +176,13 @@ class RecruitmentService(
         request: CreateApplicationRequest,
         applicantId: Long,
     ): ApplicationResponse {
-        val recruitment = groupRecruitmentRepository.findById(recruitmentId)
-            .orElseThrow { BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND) }
+        val recruitment =
+            groupRecruitmentRepository.findById(recruitmentId)
+                .orElseThrow { BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND) }
 
-        val applicant = userRepository.findById(applicantId)
-            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+        val applicant =
+            userRepository.findById(applicantId)
+                .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         // 모집 상태 확인
         if (recruitment.status != RecruitmentStatus.OPEN) {
@@ -200,13 +216,14 @@ class RecruitmentService(
             }
         }
 
-        val application = RecruitmentApplication(
-            recruitment = recruitment,
-            applicant = applicant,
-            motivation = request.motivation,
-            questionAnswers = request.questionAnswers,
-            status = if (recruitment.autoApprove) ApplicationStatus.APPROVED else ApplicationStatus.PENDING,
-        )
+        val application =
+            RecruitmentApplication(
+                recruitment = recruitment,
+                applicant = applicant,
+                motivation = request.motivation,
+                questionAnswers = request.questionAnswers,
+                status = if (recruitment.autoApprove) ApplicationStatus.APPROVED else ApplicationStatus.PENDING,
+            )
 
         val savedApplication = recruitmentApplicationRepository.save(application)
         logger.info("Created application: ${savedApplication.id} for recruitment: $recruitmentId")
@@ -228,8 +245,9 @@ class RecruitmentService(
     }
 
     fun getApplication(applicationId: Long): ApplicationResponse {
-        val application = recruitmentApplicationRepository.findById(applicationId)
-            .orElseThrow { BusinessException(ErrorCode.APPLICATION_NOT_FOUND) }
+        val application =
+            recruitmentApplicationRepository.findById(applicationId)
+                .orElseThrow { BusinessException(ErrorCode.APPLICATION_NOT_FOUND) }
 
         return recruitmentMapper.toApplicationResponse(application)
     }
@@ -240,29 +258,33 @@ class RecruitmentService(
         request: ReviewApplicationRequest,
         reviewerId: Long,
     ): ApplicationResponse {
-        val application = recruitmentApplicationRepository.findById(applicationId)
-            .orElseThrow { BusinessException(ErrorCode.APPLICATION_NOT_FOUND) }
+        val application =
+            recruitmentApplicationRepository.findById(applicationId)
+                .orElseThrow { BusinessException(ErrorCode.APPLICATION_NOT_FOUND) }
 
-        val reviewer = userRepository.findById(reviewerId)
-            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+        val reviewer =
+            userRepository.findById(reviewerId)
+                .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         if (application.status != ApplicationStatus.PENDING) {
             throw BusinessException(ErrorCode.APPLICATION_ALREADY_REVIEWED)
         }
 
-        val newStatus = when (request.action) {
-            "APPROVE" -> ApplicationStatus.APPROVED
-            "REJECT" -> ApplicationStatus.REJECTED
-            else -> throw BusinessException(ErrorCode.INVALID_ACTION)
-        }
+        val newStatus =
+            when (request.action) {
+                "APPROVE" -> ApplicationStatus.APPROVED
+                "REJECT" -> ApplicationStatus.REJECTED
+                else -> throw BusinessException(ErrorCode.INVALID_ACTION)
+            }
 
-        val reviewedApplication = application.copy(
-            status = newStatus,
-            reviewedBy = reviewer,
-            reviewedAt = LocalDateTime.now(),
-            reviewComment = request.reviewComment,
-            updatedAt = LocalDateTime.now(),
-        )
+        val reviewedApplication =
+            application.copy(
+                status = newStatus,
+                reviewedBy = reviewer,
+                reviewedAt = LocalDateTime.now(),
+                reviewComment = request.reviewComment,
+                updatedAt = LocalDateTime.now(),
+            )
 
         val savedApplication = recruitmentApplicationRepository.save(reviewedApplication)
 
@@ -276,9 +298,13 @@ class RecruitmentService(
     }
 
     @Transactional
-    fun withdrawApplication(applicationId: Long, applicantId: Long): ApplicationResponse {
-        val application = recruitmentApplicationRepository.findById(applicationId)
-            .orElseThrow { BusinessException(ErrorCode.APPLICATION_NOT_FOUND) }
+    fun withdrawApplication(
+        applicationId: Long,
+        applicantId: Long,
+    ): ApplicationResponse {
+        val application =
+            recruitmentApplicationRepository.findById(applicationId)
+                .orElseThrow { BusinessException(ErrorCode.APPLICATION_NOT_FOUND) }
 
         if (application.applicant.id != applicantId) {
             throw BusinessException(ErrorCode.ACCESS_DENIED)
@@ -293,10 +319,11 @@ class RecruitmentService(
             throw BusinessException(ErrorCode.APPLICATION_CANNOT_WITHDRAW)
         }
 
-        val withdrawnApplication = application.copy(
-            status = ApplicationStatus.WITHDRAWN,
-            updatedAt = LocalDateTime.now(),
-        )
+        val withdrawnApplication =
+            application.copy(
+                status = ApplicationStatus.WITHDRAWN,
+                updatedAt = LocalDateTime.now(),
+            )
 
         val savedApplication = recruitmentApplicationRepository.save(withdrawnApplication)
         logger.info("Withdrawn application: $applicationId")
@@ -306,33 +333,37 @@ class RecruitmentService(
 
     // 검색 및 조회 메서드
 
-    fun searchPublicRecruitments(
-        request: RecruitmentSearchRequest,
-    ): Page<RecruitmentSummaryResponse> {
+    fun searchPublicRecruitments(request: RecruitmentSearchRequest): Page<RecruitmentSummaryResponse> {
         val pageable = PageRequest.of(request.page, request.size)
 
-        val recruitments = if (request.keyword.isNullOrBlank()) {
-            groupRecruitmentRepository.findPublicActiveRecruitments(pageable = pageable)
-        } else {
-            groupRecruitmentRepository.searchActiveRecruitments(request.keyword, pageable = pageable)
-        }
+        val recruitments =
+            if (request.keyword.isNullOrBlank()) {
+                groupRecruitmentRepository.findPublicActiveRecruitments(pageable = pageable)
+            } else {
+                groupRecruitmentRepository.searchActiveRecruitments(request.keyword, pageable = pageable)
+            }
 
         return recruitments.map { recruitment ->
-            val applicantCount = if (recruitment.showApplicantCount) {
-                recruitmentApplicationRepository.countByRecruitmentId(recruitment.id).toInt()
-            } else {
-                null
-            }
+            val applicantCount =
+                if (recruitment.showApplicantCount) {
+                    recruitmentApplicationRepository.countByRecruitmentId(recruitment.id).toInt()
+                } else {
+                    null
+                }
             recruitmentMapper.toRecruitmentSummaryResponse(recruitment, applicantCount)
         }
     }
 
-    fun getArchivedRecruitments(groupId: Long, pageable: Pageable): Page<ArchivedRecruitmentResponse> {
-        val archivedRecruitments = groupRecruitmentRepository.findByGroupIdAndStatus(
-            groupId = groupId,
-            status = RecruitmentStatus.CLOSED,
-            pageable = pageable
-        )
+    fun getArchivedRecruitments(
+        groupId: Long,
+        pageable: Pageable,
+    ): Page<ArchivedRecruitmentResponse> {
+        val archivedRecruitments =
+            groupRecruitmentRepository.findByGroupIdAndStatus(
+                groupId = groupId,
+                status = RecruitmentStatus.CLOSED,
+                pageable = pageable,
+            )
 
         return archivedRecruitments.map { recruitment ->
             val stats = getRecruitmentStats(recruitment.id)
@@ -343,9 +374,21 @@ class RecruitmentService(
 
     fun getRecruitmentStats(recruitmentId: Long): RecruitmentStatsResponse {
         val totalApplications = recruitmentApplicationRepository.countByRecruitmentId(recruitmentId).toInt()
-        val pendingApplications = recruitmentApplicationRepository.countByRecruitmentIdAndStatus(recruitmentId, ApplicationStatus.PENDING).toInt()
-        val approvedApplications = recruitmentApplicationRepository.countByRecruitmentIdAndStatus(recruitmentId, ApplicationStatus.APPROVED).toInt()
-        val rejectedApplications = recruitmentApplicationRepository.countByRecruitmentIdAndStatus(recruitmentId, ApplicationStatus.REJECTED).toInt()
+        val pendingApplications =
+            recruitmentApplicationRepository.countByRecruitmentIdAndStatus(
+                recruitmentId,
+                ApplicationStatus.PENDING,
+            ).toInt()
+        val approvedApplications =
+            recruitmentApplicationRepository.countByRecruitmentIdAndStatus(
+                recruitmentId,
+                ApplicationStatus.APPROVED,
+            ).toInt()
+        val rejectedApplications =
+            recruitmentApplicationRepository.countByRecruitmentIdAndStatus(
+                recruitmentId,
+                ApplicationStatus.REJECTED,
+            ).toInt()
 
         return RecruitmentStatsResponse(
             totalApplications = totalApplications,
@@ -357,7 +400,10 @@ class RecruitmentService(
 
     // 헬퍼 메서드
 
-    private fun addUserToGroup(groupId: Long, userId: Long) {
+    private fun addUserToGroup(
+        groupId: Long,
+        userId: Long,
+    ) {
         try {
             groupMemberService.joinGroup(groupId, userId)
             logger.info("Successfully added user: $userId to group: $groupId")

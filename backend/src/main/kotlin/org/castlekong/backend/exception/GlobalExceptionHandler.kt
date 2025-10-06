@@ -6,10 +6,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.validation.FieldError
+import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import org.springframework.web.HttpRequestMethodNotSupportedException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -23,9 +23,11 @@ class GlobalExceptionHandler {
             when (e.errorCode) {
                 ErrorCode.UNAUTHORIZED,
                 ErrorCode.INVALID_TOKEN,
-                ErrorCode.EXPIRED_TOKEN, -> HttpStatus.UNAUTHORIZED
+                ErrorCode.EXPIRED_TOKEN,
+                -> HttpStatus.UNAUTHORIZED
                 ErrorCode.FORBIDDEN,
-                ErrorCode.SYSTEM_ROLE_IMMUTABLE -> HttpStatus.FORBIDDEN
+                ErrorCode.SYSTEM_ROLE_IMMUTABLE,
+                -> HttpStatus.FORBIDDEN
                 ErrorCode.USER_NOT_FOUND,
                 ErrorCode.GROUP_NOT_FOUND,
                 ErrorCode.GROUP_ROLE_NOT_FOUND,

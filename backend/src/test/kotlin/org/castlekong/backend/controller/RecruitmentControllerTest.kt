@@ -72,27 +72,30 @@ class RecruitmentControllerTest {
         val suffix = System.nanoTime().toString()
 
         // Create users
-        owner = userRepository.save(
-            TestDataFactory.createTestUser(
-                name = "그룹장",
-                email = "owner-recruit-ctrl+$suffix@example.com",
-                globalRole = GlobalRole.STUDENT
-            ).copy(profileCompleted = true)
-        )
+        owner =
+            userRepository.save(
+                TestDataFactory.createTestUser(
+                    name = "그룹장",
+                    email = "owner-recruit-ctrl+$suffix@example.com",
+                    globalRole = GlobalRole.STUDENT,
+                ).copy(profileCompleted = true),
+            )
 
-        member = userRepository.save(
-            TestDataFactory.createStudentUser(
-                name = "멤버",
-                email = "member-recruit-ctrl+$suffix@example.com"
-            ).copy(profileCompleted = true)
-        )
+        member =
+            userRepository.save(
+                TestDataFactory.createStudentUser(
+                    name = "멤버",
+                    email = "member-recruit-ctrl+$suffix@example.com",
+                ).copy(profileCompleted = true),
+            )
 
-        outsider = userRepository.save(
-            TestDataFactory.createStudentUser(
-                name = "외부인",
-                email = "outsider-recruit-ctrl+$suffix@example.com"
-            ).copy(profileCompleted = true)
-        )
+        outsider =
+            userRepository.save(
+                TestDataFactory.createStudentUser(
+                    name = "외부인",
+                    email = "outsider-recruit-ctrl+$suffix@example.com",
+                ).copy(profileCompleted = true),
+            )
 
         // Create group and roles
         group = createGroupWithRoles(owner)
@@ -104,8 +107,8 @@ class RecruitmentControllerTest {
             TestDataFactory.createTestGroupMember(
                 group = group,
                 user = member,
-                role = memberRole
-            )
+                role = memberRole,
+            ),
         )
 
         // Generate JWT tokens
@@ -115,12 +118,13 @@ class RecruitmentControllerTest {
     }
 
     private fun createGroupWithRoles(owner: User): Group {
-        val group = groupRepository.save(
-            TestDataFactory.createTestGroup(
-                name = "모집 테스트 그룹",
-                owner = owner
+        val group =
+            groupRepository.save(
+                TestDataFactory.createTestGroup(
+                    name = "모집 테스트 그룹",
+                    owner = owner,
+                ),
             )
-        )
 
         val ownerRole = groupRoleRepository.save(TestDataFactory.createOwnerRole(group))
         groupRoleRepository.save(TestDataFactory.createAdvisorRole(group))
@@ -130,19 +134,20 @@ class RecruitmentControllerTest {
             TestDataFactory.createTestGroupMember(
                 group = group,
                 user = owner,
-                role = ownerRole
-            )
+                role = ownerRole,
+            ),
         )
 
         return group
     }
 
     private fun generateToken(user: User): String {
-        val authentication = UsernamePasswordAuthenticationToken(
-            user.email,
-            null,
-            listOf(org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_${user.globalRole.name}"))
-        )
+        val authentication =
+            UsernamePasswordAuthenticationToken(
+                user.email,
+                null,
+                listOf(org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_${user.globalRole.name}")),
+            )
         return jwtTokenProvider.generateAccessToken(authentication)
     }
 
@@ -150,7 +155,7 @@ class RecruitmentControllerTest {
         group: Group,
         title: String = "2025 신입 모집",
         status: RecruitmentStatus = RecruitmentStatus.OPEN,
-        endDate: LocalDateTime = LocalDateTime.now().plusDays(10)
+        endDate: LocalDateTime = LocalDateTime.now().plusDays(10),
     ): GroupRecruitment {
         return groupRecruitmentRepository.save(
             GroupRecruitment(
@@ -164,15 +169,15 @@ class RecruitmentControllerTest {
                 recruitmentEndDate = endDate,
                 autoApprove = false,
                 showApplicantCount = true,
-                applicationQuestions = listOf("지원 동기?", "관련 경험?")
-            )
+                applicationQuestions = listOf("지원 동기?", "관련 경험?"),
+            ),
         )
     }
 
     private fun createApplication(
         recruitment: GroupRecruitment,
         applicant: User,
-        status: ApplicationStatus = ApplicationStatus.PENDING
+        status: ApplicationStatus = ApplicationStatus.PENDING,
     ): RecruitmentApplication {
         return recruitmentApplicationRepository.save(
             RecruitmentApplication(
@@ -180,8 +185,8 @@ class RecruitmentControllerTest {
                 applicant = applicant,
                 motivation = "지원 동기입니다",
                 questionAnswers = mapOf(0 to "답변1", 1 to "답변2"),
-                status = status
-            )
+                status = status,
+            ),
         )
     }
 
@@ -191,27 +196,27 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("모집 공고 생성 테스트")
     inner class CreateRecruitmentTest {
-
         @Test
         @DisplayName("POST /api/groups/{groupId}/recruitments - 모집 공고 생성 성공")
         fun createRecruitment_success() {
             // Given
-            val request = CreateRecruitmentRequest(
-                title = "2025 상반기 신입 모집",
-                content = "열정적인 동아리원을 모집합니다",
-                maxApplicants = 30,
-                recruitmentEndDate = LocalDateTime.now().plusDays(10),
-                autoApprove = false,
-                showApplicantCount = true,
-                applicationQuestions = listOf("자기소개", "지원동기")
-            )
+            val request =
+                CreateRecruitmentRequest(
+                    title = "2025 상반기 신입 모집",
+                    content = "열정적인 동아리원을 모집합니다",
+                    maxApplicants = 30,
+                    recruitmentEndDate = LocalDateTime.now().plusDays(10),
+                    autoApprove = false,
+                    showApplicantCount = true,
+                    applicationQuestions = listOf("자기소개", "지원동기"),
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/groups/${group.id}/recruitments")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isCreated)
@@ -226,22 +231,23 @@ class RecruitmentControllerTest {
         @DisplayName("POST /api/groups/{groupId}/recruitments - 권한 없는 멤버는 403")
         fun createRecruitment_forbiddenForMember() {
             // Given
-            val request = CreateRecruitmentRequest(
-                title = "모집",
-                content = "내용",
-                maxApplicants = 10,
-                recruitmentEndDate = LocalDateTime.now().plusDays(5),
-                autoApprove = false,
-                showApplicantCount = true,
-                applicationQuestions = emptyList()
-            )
+            val request =
+                CreateRecruitmentRequest(
+                    title = "모집",
+                    content = "내용",
+                    maxApplicants = 10,
+                    recruitmentEndDate = LocalDateTime.now().plusDays(5),
+                    autoApprove = false,
+                    showApplicantCount = true,
+                    applicationQuestions = emptyList(),
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/groups/${group.id}/recruitments")
                     .header("Authorization", "Bearer $memberToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -254,22 +260,23 @@ class RecruitmentControllerTest {
             // Given: 이미 활성 모집 존재
             createRecruitment(group, "기존 모집", RecruitmentStatus.OPEN)
 
-            val request = CreateRecruitmentRequest(
-                title = "새 모집",
-                content = "내용",
-                maxApplicants = 10,
-                recruitmentEndDate = LocalDateTime.now().plusDays(5),
-                autoApprove = false,
-                showApplicantCount = true,
-                applicationQuestions = emptyList()
-            )
+            val request =
+                CreateRecruitmentRequest(
+                    title = "새 모집",
+                    content = "내용",
+                    maxApplicants = 10,
+                    recruitmentEndDate = LocalDateTime.now().plusDays(5),
+                    autoApprove = false,
+                    showApplicantCount = true,
+                    applicationQuestions = emptyList(),
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/groups/${group.id}/recruitments")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isConflict)
@@ -281,7 +288,6 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("활성 모집 조회 테스트")
     inner class GetActiveRecruitmentTest {
-
         @Test
         @DisplayName("GET /api/groups/{groupId}/recruitments - 활성 모집 조회 성공")
         fun getActiveRecruitment_success() {
@@ -291,7 +297,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 get("/api/groups/${group.id}/recruitments")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -309,7 +315,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 get("/api/groups/${group.id}/recruitments")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -321,26 +327,26 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("모집 공고 수정 테스트")
     inner class UpdateRecruitmentTest {
-
         @Test
         @DisplayName("PUT /api/recruitments/{id} - 모집 공고 수정 성공")
         fun updateRecruitment_success() {
             // Given
             val recruitment = createRecruitment(group, "원래 제목", RecruitmentStatus.OPEN)
-            val request = UpdateRecruitmentRequest(
-                title = "수정된 제목",
-                content = "수정된 내용",
-                maxApplicants = 50,
-                recruitmentEndDate = LocalDateTime.now().plusDays(15),
-                showApplicantCount = false
-            )
+            val request =
+                UpdateRecruitmentRequest(
+                    title = "수정된 제목",
+                    content = "수정된 내용",
+                    maxApplicants = 50,
+                    recruitmentEndDate = LocalDateTime.now().plusDays(15),
+                    showApplicantCount = false,
+                )
 
             // When & Then
             mockMvc.perform(
                 put("/api/recruitments/${recruitment.id}")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -355,20 +361,21 @@ class RecruitmentControllerTest {
         fun updateRecruitment_forbiddenForMember() {
             // Given
             val recruitment = createRecruitment(group, "제목", RecruitmentStatus.OPEN)
-            val request = UpdateRecruitmentRequest(
-                title = "수정 시도",
-                content = "내용",
-                maxApplicants = 20,
-                recruitmentEndDate = LocalDateTime.now().plusDays(5),
-                showApplicantCount = true
-            )
+            val request =
+                UpdateRecruitmentRequest(
+                    title = "수정 시도",
+                    content = "내용",
+                    maxApplicants = 20,
+                    recruitmentEndDate = LocalDateTime.now().plusDays(5),
+                    showApplicantCount = true,
+                )
 
             // When & Then
             mockMvc.perform(
                 put("/api/recruitments/${recruitment.id}")
                     .header("Authorization", "Bearer $memberToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -380,20 +387,21 @@ class RecruitmentControllerTest {
         fun updateRecruitment_closedRecruitment() {
             // Given
             val recruitment = createRecruitment(group, "마감된 모집", RecruitmentStatus.CLOSED)
-            val request = UpdateRecruitmentRequest(
-                title = "수정 시도",
-                content = "내용",
-                maxApplicants = 20,
-                recruitmentEndDate = LocalDateTime.now().plusDays(5),
-                showApplicantCount = true
-            )
+            val request =
+                UpdateRecruitmentRequest(
+                    title = "수정 시도",
+                    content = "내용",
+                    maxApplicants = 20,
+                    recruitmentEndDate = LocalDateTime.now().plusDays(5),
+                    showApplicantCount = true,
+                )
 
             // When & Then
             mockMvc.perform(
                 put("/api/recruitments/${recruitment.id}")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isBadRequest)
@@ -405,7 +413,6 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("모집 조기 마감 테스트")
     inner class CloseRecruitmentTest {
-
         @Test
         @DisplayName("PATCH /api/recruitments/{id}/close - 조기 마감 성공")
         fun closeRecruitment_success() {
@@ -415,7 +422,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 patch("/api/recruitments/${recruitment.id}/close")
-                    .header("Authorization", "Bearer $ownerToken")
+                    .header("Authorization", "Bearer $ownerToken"),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -432,7 +439,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 patch("/api/recruitments/${recruitment.id}/close")
-                    .header("Authorization", "Bearer $memberToken")
+                    .header("Authorization", "Bearer $memberToken"),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -448,7 +455,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 patch("/api/recruitments/${recruitment.id}/close")
-                    .header("Authorization", "Bearer $ownerToken")
+                    .header("Authorization", "Bearer $ownerToken"),
             )
                 .andDo(print())
                 .andExpect(status().isBadRequest)
@@ -460,7 +467,6 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("모집 공고 삭제 테스트")
     inner class DeleteRecruitmentTest {
-
         @Test
         @DisplayName("DELETE /api/recruitments/{id} - 모집 삭제 성공")
         fun deleteRecruitment_success() {
@@ -470,7 +476,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/recruitments/${recruitment.id}")
-                    .header("Authorization", "Bearer $ownerToken")
+                    .header("Authorization", "Bearer $ownerToken"),
             )
                 .andDo(print())
                 .andExpect(status().isNoContent)
@@ -485,7 +491,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/recruitments/${recruitment.id}")
-                    .header("Authorization", "Bearer $memberToken")
+                    .header("Authorization", "Bearer $memberToken"),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -501,7 +507,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/recruitments/${recruitment.id}")
-                    .header("Authorization", "Bearer $ownerToken")
+                    .header("Authorization", "Bearer $ownerToken"),
             )
                 .andDo(print())
                 .andExpect(status().isBadRequest)
@@ -513,7 +519,6 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("아카이브 조회 테스트")
     inner class GetArchivedRecruitmentsTest {
-
         @Test
         @DisplayName("GET /api/groups/{groupId}/recruitments/archive - 아카이브 조회 성공")
         fun getArchivedRecruitments_success() {
@@ -527,7 +532,7 @@ class RecruitmentControllerTest {
                     .header("Authorization", "Bearer $ownerToken")
                     .param("page", "0")
                     .param("size", "20")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -548,7 +553,7 @@ class RecruitmentControllerTest {
                     .header("Authorization", "Bearer $memberToken")
                     .param("page", "0")
                     .param("size", "20")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -559,7 +564,6 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("공개 모집 검색 테스트")
     inner class SearchPublicRecruitmentsTest {
-
         @Test
         @DisplayName("GET /api/recruitments/public - 공개 모집 검색 성공")
         fun searchPublicRecruitments_success() {
@@ -573,7 +577,7 @@ class RecruitmentControllerTest {
                     .param("keyword", "AI")
                     .param("page", "0")
                     .param("size", "20")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -592,7 +596,7 @@ class RecruitmentControllerTest {
                 get("/api/recruitments/public")
                     .param("page", "0")
                     .param("size", "20")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -606,23 +610,23 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("지원서 제출 테스트")
     inner class SubmitApplicationTest {
-
         @Test
         @DisplayName("POST /api/recruitments/{id}/applications - 지원서 제출 성공")
         fun submitApplication_success() {
             // Given
             val recruitment = createRecruitment(group, "모집", RecruitmentStatus.OPEN)
-            val request = CreateApplicationRequest(
-                motivation = "성장하고 싶습니다",
-                questionAnswers = mapOf(0 to "답변1", 1 to "답변2")
-            )
+            val request =
+                CreateApplicationRequest(
+                    motivation = "성장하고 싶습니다",
+                    questionAnswers = mapOf(0 to "답변1", 1 to "답변2"),
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/recruitments/${recruitment.id}/applications")
                     .header("Authorization", "Bearer $outsiderToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isCreated)
@@ -638,17 +642,18 @@ class RecruitmentControllerTest {
             val recruitment = createRecruitment(group, "모집", RecruitmentStatus.OPEN)
             createApplication(recruitment, outsider, ApplicationStatus.PENDING)
 
-            val request = CreateApplicationRequest(
-                motivation = "또 지원합니다",
-                questionAnswers = mapOf(0 to "답변1", 1 to "답변2")
-            )
+            val request =
+                CreateApplicationRequest(
+                    motivation = "또 지원합니다",
+                    questionAnswers = mapOf(0 to "답변1", 1 to "답변2"),
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/recruitments/${recruitment.id}/applications")
                     .header("Authorization", "Bearer $outsiderToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isConflict)
@@ -661,17 +666,18 @@ class RecruitmentControllerTest {
         fun submitApplication_closedRecruitment() {
             // Given
             val recruitment = createRecruitment(group, "마감된 모집", RecruitmentStatus.CLOSED)
-            val request = CreateApplicationRequest(
-                motivation = "지원합니다",
-                questionAnswers = mapOf(0 to "답변1", 1 to "답변2")
-            )
+            val request =
+                CreateApplicationRequest(
+                    motivation = "지원합니다",
+                    questionAnswers = mapOf(0 to "답변1", 1 to "답변2"),
+                )
 
             // When & Then
             mockMvc.perform(
                 post("/api/recruitments/${recruitment.id}/applications")
                     .header("Authorization", "Bearer $outsiderToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isBadRequest)
@@ -683,7 +689,6 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("지원서 목록 조회 테스트")
     inner class GetApplicationsByRecruitmentTest {
-
         @Test
         @DisplayName("GET /api/recruitments/{id}/applications - 지원서 목록 조회 성공")
         fun getApplicationsByRecruitment_success() {
@@ -697,7 +702,7 @@ class RecruitmentControllerTest {
                     .header("Authorization", "Bearer $ownerToken")
                     .param("page", "0")
                     .param("size", "20")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -719,7 +724,7 @@ class RecruitmentControllerTest {
                     .header("Authorization", "Bearer $memberToken")
                     .param("page", "0")
                     .param("size", "20")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -730,7 +735,6 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("지원서 상세 조회 테스트")
     inner class GetApplicationTest {
-
         @Test
         @DisplayName("GET /api/applications/{id} - 본인 지원서 조회 성공")
         fun getApplication_successByApplicant() {
@@ -742,7 +746,7 @@ class RecruitmentControllerTest {
             mockMvc.perform(
                 get("/api/applications/${application.id}")
                     .header("Authorization", "Bearer $outsiderToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -762,7 +766,7 @@ class RecruitmentControllerTest {
             mockMvc.perform(
                 get("/api/applications/${application.id}")
                     .header("Authorization", "Bearer $ownerToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -781,7 +785,7 @@ class RecruitmentControllerTest {
             mockMvc.perform(
                 get("/api/applications/${application.id}")
                     .header("Authorization", "Bearer $memberToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -792,24 +796,24 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("지원서 심사 테스트")
     inner class ReviewApplicationTest {
-
         @Test
         @DisplayName("PATCH /api/applications/{id}/review - 지원서 승인 성공")
         fun reviewApplication_approve() {
             // Given
             val recruitment = createRecruitment(group, "모집", RecruitmentStatus.OPEN)
             val application = createApplication(recruitment, outsider, ApplicationStatus.PENDING)
-            val request = ReviewApplicationRequest(
-                action = "APPROVE",
-                reviewComment = "환영합니다"
-            )
+            val request =
+                ReviewApplicationRequest(
+                    action = "APPROVE",
+                    reviewComment = "환영합니다",
+                )
 
             // When & Then
             mockMvc.perform(
                 patch("/api/applications/${application.id}/review")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -823,17 +827,18 @@ class RecruitmentControllerTest {
             // Given
             val recruitment = createRecruitment(group, "모집", RecruitmentStatus.OPEN)
             val application = createApplication(recruitment, outsider, ApplicationStatus.PENDING)
-            val request = ReviewApplicationRequest(
-                action = "REJECT",
-                reviewComment = "다음 기회에"
-            )
+            val request =
+                ReviewApplicationRequest(
+                    action = "REJECT",
+                    reviewComment = "다음 기회에",
+                )
 
             // When & Then
             mockMvc.perform(
                 patch("/api/applications/${application.id}/review")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -847,17 +852,18 @@ class RecruitmentControllerTest {
             // Given
             val recruitment = createRecruitment(group, "모집", RecruitmentStatus.OPEN)
             val application = createApplication(recruitment, outsider, ApplicationStatus.PENDING)
-            val request = ReviewApplicationRequest(
-                action = "APPROVE",
-                reviewComment = "승인"
-            )
+            val request =
+                ReviewApplicationRequest(
+                    action = "APPROVE",
+                    reviewComment = "승인",
+                )
 
             // When & Then
             mockMvc.perform(
                 patch("/api/applications/${application.id}/review")
                     .header("Authorization", "Bearer $memberToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -870,17 +876,18 @@ class RecruitmentControllerTest {
             // Given
             val recruitment = createRecruitment(group, "모집", RecruitmentStatus.OPEN)
             val application = createApplication(recruitment, outsider, ApplicationStatus.APPROVED)
-            val request = ReviewApplicationRequest(
-                action = "REJECT",
-                reviewComment = "다시 거절"
-            )
+            val request =
+                ReviewApplicationRequest(
+                    action = "REJECT",
+                    reviewComment = "다시 거절",
+                )
 
             // When & Then
             mockMvc.perform(
                 patch("/api/applications/${application.id}/review")
                     .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
+                    .content(objectMapper.writeValueAsString(request)),
             )
                 .andDo(print())
                 .andExpect(status().isConflict)
@@ -892,7 +899,6 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("지원서 철회 테스트")
     inner class WithdrawApplicationTest {
-
         @Test
         @DisplayName("DELETE /api/applications/{id} - 지원서 철회 성공")
         fun withdrawApplication_success() {
@@ -903,7 +909,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/applications/${application.id}")
-                    .header("Authorization", "Bearer $outsiderToken")
+                    .header("Authorization", "Bearer $outsiderToken"),
             )
                 .andDo(print())
                 .andExpect(status().isNoContent)
@@ -919,7 +925,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/applications/${application.id}")
-                    .header("Authorization", "Bearer $memberToken")
+                    .header("Authorization", "Bearer $memberToken"),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)
@@ -936,7 +942,7 @@ class RecruitmentControllerTest {
             // When & Then
             mockMvc.perform(
                 delete("/api/applications/${application.id}")
-                    .header("Authorization", "Bearer $outsiderToken")
+                    .header("Authorization", "Bearer $outsiderToken"),
             )
                 .andDo(print())
                 .andExpect(status().isConflict)
@@ -948,7 +954,6 @@ class RecruitmentControllerTest {
     @Nested
     @DisplayName("모집 통계 조회 테스트")
     inner class GetRecruitmentStatsTest {
-
         @Test
         @DisplayName("GET /api/recruitments/{id}/stats - 통계 조회 성공")
         fun getRecruitmentStats_success() {
@@ -960,7 +965,7 @@ class RecruitmentControllerTest {
             mockMvc.perform(
                 get("/api/recruitments/${recruitment.id}/stats")
                     .header("Authorization", "Bearer $ownerToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -978,7 +983,7 @@ class RecruitmentControllerTest {
             mockMvc.perform(
                 get("/api/recruitments/${recruitment.id}/stats")
                     .header("Authorization", "Bearer $memberToken")
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON),
             )
                 .andDo(print())
                 .andExpect(status().isForbidden)

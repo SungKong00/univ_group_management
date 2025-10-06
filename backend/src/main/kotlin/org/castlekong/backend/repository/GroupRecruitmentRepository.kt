@@ -12,21 +12,25 @@ import java.time.LocalDateTime
 
 @Repository
 interface GroupRecruitmentRepository : JpaRepository<GroupRecruitment, Long> {
-
     // ID로 조회 (연관 엔티티 FETCH JOIN)
-    @Query("""
+    @Query(
+        """
         SELECT r FROM GroupRecruitment r
         JOIN FETCH r.group
         JOIN FETCH r.createdBy
         WHERE r.id = :id
-    """)
-    fun findByIdWithRelations(@Param("id") id: Long): GroupRecruitment?
+    """,
+    )
+    fun findByIdWithRelations(
+        @Param("id") id: Long,
+    ): GroupRecruitment?
 
     // 그룹별 모집 게시글 조회
     fun findByGroupId(groupId: Long): List<GroupRecruitment>
 
     // 그룹별 모집 게시글 페이징 조회
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT r FROM GroupRecruitment r
         JOIN FETCH r.group g
         JOIN FETCH r.createdBy
@@ -34,29 +38,35 @@ interface GroupRecruitmentRepository : JpaRepository<GroupRecruitment, Long> {
         AND r.status = :status
         ORDER BY r.createdAt DESC
     """,
-    countQuery = """
+        countQuery = """
         SELECT COUNT(DISTINCT r) FROM GroupRecruitment r
         WHERE r.group.id = :groupId
         AND r.status = :status
-    """)
+    """,
+    )
     fun findByGroupIdAndStatus(
         @Param("groupId") groupId: Long,
         @Param("status") status: RecruitmentStatus,
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<GroupRecruitment>
 
     // 활성 모집 게시글 조회 (현재 모집 중)
-    @Query("""
+    @Query(
+        """
         SELECT r FROM GroupRecruitment r
         WHERE r.status = 'OPEN'
         AND r.recruitmentStartDate <= :now
         AND (r.recruitmentEndDate IS NULL OR r.recruitmentEndDate > :now)
         ORDER BY r.createdAt DESC
-    """)
-    fun findActiveRecruitments(@Param("now") now: LocalDateTime = LocalDateTime.now()): List<GroupRecruitment>
+    """,
+    )
+    fun findActiveRecruitments(
+        @Param("now") now: LocalDateTime = LocalDateTime.now(),
+    ): List<GroupRecruitment>
 
     // 전체 모집 게시글 탐색 (공개)
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT r FROM GroupRecruitment r
         JOIN FETCH r.group g
         JOIN FETCH r.createdBy
@@ -65,14 +75,16 @@ interface GroupRecruitmentRepository : JpaRepository<GroupRecruitment, Long> {
         AND r.recruitmentStartDate <= :now
         AND (r.recruitmentEndDate IS NULL OR r.recruitmentEndDate > :now)
         ORDER BY r.createdAt DESC
-    """)
+    """,
+    )
     fun findPublicActiveRecruitments(
         @Param("now") now: LocalDateTime = LocalDateTime.now(),
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<GroupRecruitment>
 
     // 키워드 검색
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT r FROM GroupRecruitment r
         JOIN FETCH r.group g
         JOIN FETCH r.createdBy
@@ -86,25 +98,28 @@ interface GroupRecruitmentRepository : JpaRepository<GroupRecruitment, Long> {
             LOWER(g.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
         )
         ORDER BY r.createdAt DESC
-    """)
+    """,
+    )
     fun searchActiveRecruitments(
         @Param("keyword") keyword: String,
         @Param("now") now: LocalDateTime = LocalDateTime.now(),
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<GroupRecruitment>
 
     // 생성자별 모집 게시글 조회
     fun findByCreatedByIdOrderByCreatedAtDesc(createdById: Long): List<GroupRecruitment>
 
     // 마감 예정 모집 게시글 조회 (알림용)
-    @Query("""
+    @Query(
+        """
         SELECT r FROM GroupRecruitment r
         WHERE r.status = 'OPEN'
         AND r.recruitmentEndDate IS NOT NULL
         AND r.recruitmentEndDate BETWEEN :start AND :end
-    """)
+    """,
+    )
     fun findRecruitmentsDueSoon(
         @Param("start") start: LocalDateTime,
-        @Param("end") end: LocalDateTime
+        @Param("end") end: LocalDateTime,
     ): List<GroupRecruitment>
 }

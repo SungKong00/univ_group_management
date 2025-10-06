@@ -26,7 +26,7 @@ class AvatarPopupMenu extends StatelessWidget {
       builder: (context, value, child) {
         return Transform.scale(
           scale: 0.8 + (0.2 * value),
-          alignment: Alignment.centerLeft,
+          alignment: Alignment.topRight,
           child: Opacity(
             opacity: value,
             child: child,

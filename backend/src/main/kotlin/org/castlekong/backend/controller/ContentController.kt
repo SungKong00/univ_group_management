@@ -246,5 +246,4 @@ class ContentController(
         val payload = mapOf("permissions" to perms.map { it.name })
         return ApiResponse.success(payload)
     }
-
 }

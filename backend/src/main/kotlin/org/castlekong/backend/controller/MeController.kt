@@ -32,7 +32,7 @@ class MeController(
     @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "내 그룹 목록 조회",
-        description = "사용자가 속한 모든 그룹을 계층 레벨 순(level ASC), ID 순(id ASC)으로 조회합니다. 워크스페이스 자동 진입 시 최상위 그룹 선택에 사용됩니다."
+        description = "사용자가 속한 모든 그룹을 계층 레벨 순(level ASC), ID 순(id ASC)으로 조회합니다. 워크스페이스 자동 진입 시 최상위 그룹 선택에 사용됩니다.",
     )
     fun getMyGroups(authentication: Authentication): ApiResponse<List<MyGroupResponse>> {
         val user = getCurrentUser(authentication)

@@ -44,7 +44,7 @@
 ### `/docs/ui-ux/concepts/` - UI/UX 개념
 | 파일명 | 상태 | 마지막 동기화 | 관련 커밋 | 비고 |
 |--------|------|---------------|-----------|------|
-| `design-system.md` | ✅ 최신 | 2024-09-28 | `86b8cf6` | |
+| `design-system.md` | ✅ 최신 | 2025-10-06 | `현재` | 헤더 컴포넌트 가이드 추가 |
 | `color-guide.md` | ✅ 최신 | 2024-09-28 | `86b8cf6` | |
 | `responsive-design-guide.md` | ✅ 최신 | 2024-09-28 | `86b8cf6` | |
 | `form-and-interaction-components.md` | ✅ 최신 | 2024-09-28 | `86b8cf6` | |

@@ -2,9 +2,8 @@ package org.castlekong.backend.controller
 
 import jakarta.validation.Valid
 import org.castlekong.backend.dto.*
-import org.castlekong.backend.service.*
 import org.castlekong.backend.security.SecurityExpressionHelper
-import org.springframework.data.domain.Page
+import org.castlekong.backend.service.*
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -183,7 +182,6 @@ class GroupController(
         groupMemberService.removeMember(groupId, userId, user.id)
         return ApiResponse.success()
     }
-
 
     // Group Role 관련 엔드포인트
     @PostMapping("/{groupId}/roles")
@@ -365,8 +363,6 @@ class GroupController(
         return ApiResponse.success(response)
     }
 
-
-
     // === 워크스페이스 조회 (명세서 요구사항) ===
     @GetMapping("/{groupId}/workspace")
     @PreAuthorize("@security.isGroupMember(#groupId)")
@@ -406,9 +402,10 @@ class GroupController(
     fun checkBatchGroupMembership(
         @RequestBody groupIds: List<Long>,
     ): ApiResponse<Map<Long, Boolean>> {
-        val membershipMap = groupIds.associateWith { groupId ->
-            securityExpressionHelper.isGroupMember(groupId)
-        }
+        val membershipMap =
+            groupIds.associateWith { groupId ->
+                securityExpressionHelper.isGroupMember(groupId)
+            }
         return ApiResponse.success(membershipMap)
     }
 }

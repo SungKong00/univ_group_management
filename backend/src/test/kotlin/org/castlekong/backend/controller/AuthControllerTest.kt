@@ -20,7 +20,9 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.LocalDateTime
 
 @WebMvcTest(
@@ -215,16 +217,17 @@ class AuthControllerTest {
         @Test
         fun `should return new access token when refresh token valid`() {
             val requestBody = mapOf("refreshToken" to "valid.refresh.token")
-            every { authService.refreshAccessToken("valid.refresh.token") } returns RefreshTokenResponse(
-                accessToken = "new.access.token",
-                tokenType = "Bearer",
-                expiresIn = 86400000L,
-            )
+            every { authService.refreshAccessToken("valid.refresh.token") } returns
+                RefreshTokenResponse(
+                    accessToken = "new.access.token",
+                    tokenType = "Bearer",
+                    expiresIn = 86400000L,
+                )
 
             mockMvc.perform(
                 post("/api/auth/refresh")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestBody))
+                    .content(objectMapper.writeValueAsString(requestBody)),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -238,7 +241,7 @@ class AuthControllerTest {
             mockMvc.perform(
                 post("/api/auth/refresh")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestBody))
+                    .content(objectMapper.writeValueAsString(requestBody)),
             )
                 .andDo(print())
                 .andExpect(status().isBadRequest)
@@ -263,12 +266,13 @@ class AuthControllerTest {
                 )
             every { authService.verifyToken() } returns userResponse
 
+            // verify는 GET이지만 간혹 클라이언트 실수 방지: POST 호출 시 405 기대 가능
             mockMvc.perform(
-                post("/api/auth/verify") // verify는 GET이지만 간혹 클라이언트 실수 방지: POST 호출 시 405 기대 가능
+                post("/api/auth/verify"),
             ).andExpect(status().isMethodNotAllowed)
 
             mockMvc.perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/auth/verify")
+                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/auth/verify"),
             )
                 .andDo(print())
                 .andExpect(status().isOk)

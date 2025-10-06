@@ -180,14 +180,15 @@ class RecruitmentServiceIntegrationTest {
     fun submitApplication_Success() {
         val recruitmentId = createRecruitment()
 
-        val response = recruitmentService.submitApplication(
-            recruitmentId,
-            CreateApplicationRequest(
-                motivation = "열심히 활동하겠습니다",
-                questionAnswers = mapOf(0 to "답변"),
-            ),
-            applicant.id!!,
-        )
+        val response =
+            recruitmentService.submitApplication(
+                recruitmentId,
+                CreateApplicationRequest(
+                    motivation = "열심히 활동하겠습니다",
+                    questionAnswers = mapOf(0 to "답변"),
+                ),
+                applicant.id!!,
+            )
 
         assertThat(response.status).isEqualTo(ApplicationStatus.PENDING)
         assertThat(response.applicant.id).isEqualTo(applicant.id!!)
@@ -208,11 +209,12 @@ class RecruitmentServiceIntegrationTest {
             )
         val recruitmentId = recruitmentService.createRecruitment(group.id!!, request, owner.id!!).id
 
-        val response = recruitmentService.submitApplication(
-            recruitmentId,
-            CreateApplicationRequest(motivation = "자동 승인"),
-            applicant.id!!,
-        )
+        val response =
+            recruitmentService.submitApplication(
+                recruitmentId,
+                CreateApplicationRequest(motivation = "자동 승인"),
+                applicant.id!!,
+            )
 
         assertThat(response.status).isEqualTo(ApplicationStatus.APPROVED)
 

@@ -69,10 +69,14 @@ class _PostComposerState extends State<PostComposer> {
   @override
   Widget build(BuildContext context) {
     final isDisabled = !widget.canWrite || widget.isLoading || _isSending;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth <= 600;
     final hintText = widget.isLoading
         ? '권한 확인 중...'
         : widget.canWrite
-            ? '메시지를 입력하세요... (Shift+Enter: 줄바꿈)'
+            ? (isMobile
+                ? '메시지를 입력하세요...'
+                : '메시지를 입력하세요... (Shift+Enter: 줄바꿈)')
             : '쓰기 권한이 없습니다';
 
     return Container(

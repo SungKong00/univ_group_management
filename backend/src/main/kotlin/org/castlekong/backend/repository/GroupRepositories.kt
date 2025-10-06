@@ -125,15 +125,19 @@ interface GroupMemberRepository : JpaRepository<GroupMember, Long> {
     fun findByUserId(userId: Long): List<GroupMember>
 
     // 내 그룹 목록 조회 (워크스페이스 자동 진입용) - JOIN FETCH 최적화
-    @Query("""
+    @Query(
+        """
         SELECT gm FROM GroupMember gm
         JOIN FETCH gm.group g
         JOIN FETCH gm.role r
         LEFT JOIN FETCH r.permissions
         WHERE gm.user.id = :userId
         ORDER BY g.id ASC
-    """)
-    fun findByUserIdWithDetails(@Param("userId") userId: Long): List<GroupMember>
+    """,
+    )
+    fun findByUserIdWithDetails(
+        @Param("userId") userId: Long,
+    ): List<GroupMember>
 
     // 지도교수 관련 메소드 (특정 권한을 가진 멤버 조회)
     @Query("SELECT gm FROM GroupMember gm WHERE gm.group.id = :groupId AND gm.role.name = 'ADVISOR'")
@@ -229,7 +233,10 @@ interface GroupJoinRequestRepository : JpaRepository<GroupJoinRequest, Long> {
     fun findByGroupId(groupId: Long): List<GroupJoinRequest>
 
     // 추가: 상태별 개수 카운트
-    fun countByGroupIdAndStatus(groupId: Long, status: GroupJoinRequestStatus): Long
+    fun countByGroupIdAndStatus(
+        groupId: Long,
+        status: GroupJoinRequestStatus,
+    ): Long
 
     // 배치 삭제 메서드
     @Modifying
@@ -260,4 +267,3 @@ interface SubGroupRequestRepository : JpaRepository<SubGroupRequest, Long> {
         @Param("groupIds") groupIds: List<Long>,
     ): Int
 }
-

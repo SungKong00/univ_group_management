@@ -12,14 +12,14 @@ import org.castlekong.backend.entity.ChannelPermission
  */
 data class CreateChannelRoleBindingRequest(
     val groupRoleId: Long,
-    val permissions: Set<ChannelPermission> = emptySet()
+    val permissions: Set<ChannelPermission> = emptySet(),
 )
 
 /**
  * 채널 역할 바인딩 수정 요청
  */
 data class UpdateChannelRoleBindingRequest(
-    val permissions: Set<ChannelPermission>? = null
+    val permissions: Set<ChannelPermission>? = null,
 )
 
 /**
@@ -30,7 +30,7 @@ data class ChannelRoleBindingResponse(
     val channelId: Long,
     val groupRoleId: Long,
     val groupRoleName: String,
-    val permissions: Set<ChannelPermission>
+    val permissions: Set<ChannelPermission>,
 )
 
 /**
@@ -38,5 +38,5 @@ data class ChannelRoleBindingResponse(
  */
 data class PermissionCheckResponse(
     val hasPermission: Boolean,
-    val reason: String? = null
+    val reason: String? = null,
 )

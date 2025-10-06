@@ -10,9 +10,9 @@ import 'group_dropdown.dart';
 /// 일반 브레드크럼과 달리, 그룹 전환 드롭다운 기능을 지원합니다.
 ///
 /// **디자인 원칙 (Toss):**
-/// - Simplicity First: "워크스페이스" 제목 제거, 그룹명만 표시
-/// - Easy to Answer: 현재 위치를 즉시 파악 가능
-/// - Typography Hierarchy: headlineMedium (20px/600)으로 그룹명 강조
+/// - Explicit Title: 명시적으로 전달된 타이틀(예: "워크스페이스", "댓글")은 2단 계층 구조로 표시
+/// - Simplicity First: 타이틀이 없는 경우에는 기존처럼 그룹/채널 단일 행으로 간결하게 표시
+/// - Easy to Answer: 현재 위치를 즉시 파악 가능하도록 경로를 유지
 ///
 /// **구성:**
 /// - 그룹명: headlineMedium (20px/600/neutral900) + 드롭다운 아이콘
@@ -50,43 +50,72 @@ class WorkspaceHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Simplicity First: 제목 제거, 그룹명만 크고 굵게 표시
-    return _buildHeaderRow();
+    final trimmedTitle = breadcrumb.title.trim();
+
+    if (trimmedTitle.isNotEmpty) {
+      return _buildStructuredHeader(trimmedTitle);
+    }
+
+    return _buildLegacyHeader();
   }
 
-  /// 헤더 행 (그룹명 + 채널명)
-  Widget _buildHeaderRow() {
+  /// 명시적인 타이틀이 있는 경우 (예: "워크스페이스", "댓글")
+  Widget _buildStructuredHeader(String title) {
+    final pathSegments = _resolvePathSegments(title);
+
+    if (pathSegments.isEmpty) {
+      return Text(
+        title,
+        style: AppTheme.titleLarge.copyWith(
+          color: AppColors.neutral900,
+          height: 1.2,
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          title,
+          style: AppTheme.titleLarge.copyWith(
+            color: AppColors.neutral900,
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        _buildPathRow(pathSegments, useTitleStyleForGroup: false),
+      ],
+    );
+  }
+
+  /// 기존 그룹/채널 단일 행 렌더링 (명시적 타이틀 없음)
+  Widget _buildLegacyHeader() {
     if (!breadcrumb.hasPath || breadcrumb.path!.isEmpty) {
       return const SizedBox.shrink();
     }
 
     final path = breadcrumb.path!;
+    final isWorkspacePrefixed = path.first == '워크스페이스';
 
-    // 데스크톱: path = ["워크스페이스", "그룹명", "채널명"?]
-    // 모바일: path = ["그룹명", "채널명/기능명"?]
+    final groupName = isWorkspacePrefixed
+        ? (path.length > 1 ? path[1] : path.first)
+        : path.first;
 
-    // "워크스페이스"가 첫 항목인지 확인 (데스크톱)
-    final isDesktop = path.first == '워크스페이스';
+    final secondItem = isWorkspacePrefixed
+        ? (path.length > 2 ? path[2] : null)
+        : (path.length > 1 ? path[1] : null);
 
-    final groupName = isDesktop
-        ? (path.length > 1 ? path[1] : null)  // 데스크톱: 두 번째 항목
-        : path.first;                           // 모바일: 첫 번째 항목
-
-    final secondItem = isDesktop
-        ? (path.length > 2 ? path[2] : null)  // 데스크톱: 세 번째 항목
-        : (path.length > 1 ? path[1] : null); // 모바일: 두 번째 항목
-
-    if (groupName == null) {
+    if (groupName.isEmpty) {
       return const SizedBox.shrink();
     }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // 그룹명 섹션 (headlineMedium + 드롭다운)
-        _buildGroupNameSection(groupName),
-
-        // 채널명/기능명 (있을 경우만)
+        _buildGroupNameSection(groupName, useTitleStyle: true),
         if (secondItem != null) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -104,25 +133,78 @@ class WorkspaceHeader extends StatelessWidget {
     );
   }
 
+  /// 경로에서 타이틀과 중복되는 첫 항목 제거 후 세그먼트 반환
+  List<String> _resolvePathSegments(String resolvedTitle) {
+    if (!breadcrumb.hasPath) {
+      return const [];
+    }
+
+    final segments = List<String>.from(breadcrumb.path!);
+    if (segments.isNotEmpty && segments.first == resolvedTitle) {
+      segments.removeAt(0);
+    }
+
+    return segments;
+  }
+
+  /// 헤더 하단 경로 렌더링 (그룹 + 채널/기능)
+  Widget _buildPathRow(
+    List<String> segments, {
+    required bool useTitleStyleForGroup,
+  }) {
+    if (segments.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final groupName = segments.first;
+    final remainder = segments.length > 1 ? segments.sublist(1) : const <String>[];
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildGroupNameSection(groupName, useTitleStyle: useTitleStyleForGroup),
+        for (final segment in remainder) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Text(
+              '>',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppColors.neutral500,
+                height: 1.2,
+              ),
+            ),
+          ),
+          _buildChannelNameSection(segment),
+        ],
+      ],
+    );
+  }
+
   /// 그룹명 섹션 (headlineMedium + 드롭다운)
-  Widget _buildGroupNameSection(String groupName) {
-    // currentGroupId가 있으면 드롭다운 표시, 없으면 크고 굵은 텍스트
+  Widget _buildGroupNameSection(
+    String groupName, {
+    required bool useTitleStyle,
+  }) {
     if (currentGroupId != null) {
       return GroupDropdown(
         currentGroupId: currentGroupId!,
         currentGroupName: groupName,
-        channelBarWidth: channelBarWidth, // 반응형 너비 전달
+        channelBarWidth: channelBarWidth,
       );
     }
 
-    // Fallback: 드롭다운 없이 크고 굵은 텍스트만 표시
-    return Text(
-      groupName,
-      style: AppTheme.titleLarge.copyWith(
-        color: AppColors.neutral900,
-        height: 1.2,
-      ),
-    );
+    final textStyle = useTitleStyle
+        ? AppTheme.titleLarge.copyWith(
+            color: AppColors.neutral900,
+            height: 1.2,
+          )
+        : AppTheme.bodySmall.copyWith(
+            color: AppColors.neutral600,
+            height: 1.2,
+          );
+
+    return Text(groupName, style: textStyle);
   }
 
   /// 채널명 섹션 (향후 액션 버튼 추가 예정)

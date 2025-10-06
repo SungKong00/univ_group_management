@@ -34,5 +34,4 @@ enum class GroupPermission {
      * - 모집 관련 설정 관리
      */
     RECRUITMENT_MANAGE,
-
 }

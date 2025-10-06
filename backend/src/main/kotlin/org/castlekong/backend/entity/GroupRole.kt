@@ -9,7 +9,7 @@ import jakarta.persistence.*
  */
 enum class RoleType {
     OPERATIONAL,
-    SEGMENT
+    SEGMENT,
 }
 
 @Entity
@@ -23,24 +23,18 @@ class GroupRole(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     var group: Group,
-
     @Column(nullable = false, length = 50)
     var name: String,
-
     @Column(name = "is_system_role", nullable = false)
     var isSystemRole: Boolean = false,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "role_type", nullable = false, length = 20)
     var roleType: RoleType = RoleType.OPERATIONAL,
-
     @Column(nullable = false)
     var priority: Int = 0,
-
     @ElementCollection(targetClass = GroupPermission::class, fetch = FetchType.EAGER)
     @CollectionTable(name = "group_role_permissions", joinColumns = [JoinColumn(name = "group_role_id")])
     @Enumerated(EnumType.STRING)
