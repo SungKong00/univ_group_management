@@ -165,12 +165,16 @@ final breadcrumb = ref.watch(
 
 ### 게시글/댓글 시스템 (2025-10-05 추가)
 
+**핵심 동작 패턴 (2025-10-06 추가):**
+- **채팅형 스크롤**: 게시글 목록(`PostList`)은 `reverse: true`로 설정되어, 가장 최신 글이 화면 하단에 표시됩니다. 사용자는 위로 스크롤하여 이전 게시글을 동적으로 불러옵니다.
+- **스크롤 위치 유지**: 이전 게시글이 로드될 때, 사용자의 스크롤 위치가 자연스럽게 유지되어 끊김 없는 탐색 경험을 제공합니다.
+
 **핵심 컴포넌트 구조:**
 ```dart
 // 게시글 컴포넌트
 presentation/widgets/post/
 ├── post_card.dart        // 단일 게시글 카드
-├── post_list.dart        // 무한 스크롤 목록
+├── post_list.dart        // 채팅형 역방향 무한 스크롤 목록
 ├── post_composer.dart    // 작성 입력창
 ├── date_divider.dart     // 날짜 구분선
 └── post_skeleton.dart    // 로딩 스켈레톤

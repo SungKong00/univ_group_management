@@ -72,6 +72,14 @@ class _PostListState extends ConsumerState<PostList> {
   Future<void> _loadPosts() async {
     if (_isLoading || !_hasMore) return;
 
+    // 스크롤 위치 저장 (첫 로드가 아닐 때만)
+    double? savedScrollOffset;
+    double? savedMaxScrollExtent;
+    if (_currentPage > 0 && _scrollController.hasClients) {
+      savedScrollOffset = _scrollController.offset;
+      savedMaxScrollExtent = _scrollController.position.maxScrollExtent;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -84,17 +92,21 @@ class _PostListState extends ConsumerState<PostList> {
       );
 
       setState(() {
-        _posts.addAll(response.posts);
+        // reverse 모드를 위해 새로 추가되는 글을 앞에 삽입 (최신 글이 배열 끝에 유지)
+        _posts.insertAll(0, response.posts);
         _currentPage++;
         _hasMore = response.hasMore;
         _isLoading = false;
       });
 
-      // 첫 로드 후 자동으로 맨 아래로 스크롤
-      if (_currentPage == 1 && response.posts.isNotEmpty) {
+      // 스크롤 위치 복원 (첫 로드가 아닐 때만)
+      if (savedScrollOffset != null && savedMaxScrollExtent != null) {
+        final offset = savedScrollOffset;
+        final maxExtent = savedMaxScrollExtent;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
-            _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+            final delta = _scrollController.position.maxScrollExtent - maxExtent;
+            _scrollController.jumpTo(offset + delta);
           }
         });
       }
@@ -107,8 +119,9 @@ class _PostListState extends ConsumerState<PostList> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+    // reverse 모드에서는 상단(minScrollExtent)에 도달하면 이전 글 로드
+    if (_scrollController.position.pixels <=
+        _scrollController.position.minScrollExtent + 200) {
       _loadPosts();
     }
   }
@@ -131,10 +144,16 @@ class _PostListState extends ConsumerState<PostList> {
     }
 
     // 게시글 목록
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: _posts.length + (_isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ListView.builder(
+          controller: _scrollController,
+          reverse: true,
+          padding: EdgeInsets.only(
+            bottom: constraints.maxHeight * 0.3,
+          ),
+          itemCount: _posts.length + (_isLoading ? 1 : 0),
+          itemBuilder: (context, index) {
         // 로딩 인디케이터
         if (index == _posts.length) {
           return const Padding(
@@ -162,14 +181,17 @@ class _PostListState extends ConsumerState<PostList> {
           ],
         );
       },
+        );
+      },
     );
   }
 
   bool _shouldShowDateDivider(int index) {
-    if (index == 0) return true;
+    // reverse 모드에서는 마지막 아이템(최신)이 첫 날짜 구분선을 가짐
+    if (index == _posts.length - 1) return true;
 
     final currentPost = _posts[index];
-    final previousPost = _posts[index - 1];
+    final nextPost = _posts[index + 1]; // reverse 모드에서는 다음 아이템과 비교
 
     final currentDate = DateTime(
       currentPost.createdAt.year,
@@ -177,13 +199,13 @@ class _PostListState extends ConsumerState<PostList> {
       currentPost.createdAt.day,
     );
 
-    final previousDate = DateTime(
-      previousPost.createdAt.year,
-      previousPost.createdAt.month,
-      previousPost.createdAt.day,
+    final nextDate = DateTime(
+      nextPost.createdAt.year,
+      nextPost.createdAt.month,
+      nextPost.createdAt.day,
     );
 
-    return currentDate != previousDate;
+    return currentDate != nextDate;
   }
 
   Widget _buildEmptyState() {
