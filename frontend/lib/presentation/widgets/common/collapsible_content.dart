@@ -82,10 +82,12 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
     // context나 MediaQuery 접근으로 인한 예외를 방지
     if (!mounted) return;
 
-    final textStyle = widget.style ?? AppTheme.bodyMedium;
+    // 렌더링 시와 동일한 줄간격(height)을 적용하여 측정 일치
+    final base = widget.style ?? AppTheme.bodyMedium;
+    final measureStyle = base.copyWith(height: 1.5);
     final textSpan = TextSpan(
       text: widget.content,
-      style: textStyle,
+      style: measureStyle,
     );
 
     final textPainter = TextPainter(
@@ -137,7 +139,7 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
         );
       }
 
-      // 펼친 상태를 스크롤 가능한 영역(고정 높이)으로 제한
+      // 펼친 상태를 스크롤 가능한 영역(최대 높이 제한)으로 처리
       // 줄 높이 추정치 = fontSize * height
       final defaultStyle = DefaultTextStyle.of(context).style;
       final fontSize = effectiveTextStyle.fontSize ?? defaultStyle.fontSize ?? 14.0;
@@ -145,8 +147,11 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
       final lineHeightPx = fontSize * heightMultiplier;
       final maxVisibleHeight = lineHeightPx * widget.expandedMaxLines;
 
-      return SizedBox(
-        height: maxVisibleHeight,
+      return ConstrainedBox(
+        constraints: BoxConstraints(
+          // 내용이 더 짧으면 그만큼만, 길면 최대 10줄 높이까지 표시
+          maxHeight: maxVisibleHeight,
+        ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Text(
@@ -164,6 +169,7 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
         AnimatedSize(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
+          alignment: Alignment.topLeft,
           child: _isExpanded ? buildExpanded() : buildCollapsed(),
         ),
         if (_isOverflowing) ...[
