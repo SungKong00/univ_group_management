@@ -69,6 +69,10 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
 
   /// 텍스트가 maxLines를 초과하는지 확인
   void _checkOverflow() {
+    // 위젯이 이미 dispose된 경우 즉시 반환하여
+    // context나 MediaQuery 접근으로 인한 예외를 방지
+    if (!mounted) return;
+
     final textStyle = widget.style ?? AppTheme.bodyMedium;
     final textSpan = TextSpan(
       text: widget.content,
@@ -82,11 +86,20 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
     );
 
     // 현재 컨텍스트의 최대 너비로 레이아웃
-    textPainter.layout(maxWidth: context.size?.width ?? double.infinity);
+    // context.size가 null일 수 있으므로 안전하게 처리
+    final maxWidth = context.size?.width ?? MediaQuery.of(context).size.width;
+    textPainter.layout(maxWidth: maxWidth);
 
-    setState(() {
-      _isOverflowing = textPainter.didExceedMaxLines;
-    });
+    // 위젯이 이미 dispose된 경우 setState를 호출하면 예외가 발생하므로 검사
+    final didOverflow = textPainter.didExceedMaxLines;
+    if (!mounted) return;
+
+    // 상태가 실제로 바뀌는 경우에만 setState 호출하여 불필요한 rebuild를 방지
+    if (didOverflow != _isOverflowing) {
+      setState(() {
+        _isOverflowing = didOverflow;
+      });
+    }
   }
 
   @override
