@@ -31,6 +31,13 @@ class CollapsibleContent extends StatefulWidget {
   /// "접기" 버튼 텍스트 (기본값: "접기")
   final String collapseText;
 
+  /// 펼쳤을 때 스크롤 가능 영역으로 제한할지 여부 (기본값: false)
+  /// - true 인 경우, 펼쳤을 때 [expandedMaxLines] 줄 높이에 해당하는 영역 내에서 스크롤로 표시합니다.
+  final bool expandedScrollable;
+
+  /// [expandedScrollable] 이 true 일 때, 펼친 상태에서 보이는 최대 줄 수 (기본값: 10)
+  final int expandedMaxLines;
+
   const CollapsibleContent({
     super.key,
     required this.content,
@@ -38,6 +45,8 @@ class CollapsibleContent extends StatefulWidget {
     this.style,
     this.expandText = '더 보기',
     this.collapseText = '접기',
+    this.expandedScrollable = false,
+    this.expandedMaxLines = 10,
   });
 
   @override
@@ -104,7 +113,50 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = widget.style ?? AppTheme.bodyMedium;
+    final baseTextStyle = widget.style ?? AppTheme.bodyMedium;
+    final effectiveTextStyle = baseTextStyle.copyWith(
+      color: AppColors.neutral900,
+      height: 1.5,
+    );
+
+    Widget buildCollapsed() {
+      return Text(
+        widget.content,
+        style: effectiveTextStyle,
+        maxLines: widget.maxLines,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+
+    Widget buildExpanded() {
+      if (!widget.expandedScrollable) {
+        // 기존 전체 펼치기 동작
+        return Text(
+          widget.content,
+          style: effectiveTextStyle,
+        );
+      }
+
+      // 펼친 상태를 스크롤 가능한 영역(고정 높이)으로 제한
+      // 줄 높이 추정치 = fontSize * height
+      final defaultStyle = DefaultTextStyle.of(context).style;
+      final fontSize = effectiveTextStyle.fontSize ?? defaultStyle.fontSize ?? 14.0;
+      final heightMultiplier = effectiveTextStyle.height ?? defaultStyle.height ?? 1.0;
+      final lineHeightPx = fontSize * heightMultiplier;
+      final maxVisibleHeight = lineHeightPx * widget.expandedMaxLines;
+
+      return SizedBox(
+        height: maxVisibleHeight,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Text(
+            widget.content,
+            style: effectiveTextStyle,
+            softWrap: true,
+          ),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,15 +164,7 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
         AnimatedSize(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
-          child: Text(
-            widget.content,
-            style: textStyle.copyWith(
-              color: AppColors.neutral900,
-              height: 1.5,
-            ),
-            maxLines: _isExpanded ? null : widget.maxLines,
-            overflow: _isExpanded ? null : TextOverflow.ellipsis,
-          ),
+          child: _isExpanded ? buildExpanded() : buildCollapsed(),
         ),
         if (_isOverflowing) ...[
           const SizedBox(height: 8),

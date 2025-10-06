@@ -804,6 +804,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
                 content: _selectedPost!.content,
                 maxLines: 5,
                 style: AppTheme.bodyMedium,
+                expandedScrollable: true,
+                expandedMaxLines: 10,
               ),
             ),
           ],
