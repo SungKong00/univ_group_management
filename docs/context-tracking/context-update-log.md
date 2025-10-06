@@ -4,6 +4,34 @@
 
 ## 2025년 10월
 
+### 2025-10-06 - 댓글창 UX 개선 (게시글 미리보기 추가)
+**커밋**: 현재 세션
+**유형**: 기능 개선 + 문서 동기화
+**우선순위**: Medium
+**영향 범위**: 프론트엔드 (UI/UX)
+
+**구현 내용**:
+- 웹/모바일 댓글창 상단에 원본 게시글의 내용을 미리 보여주는 기능 추가.
+- 사용자가 댓글을 작성하거나 읽을 때 원본 게시글의 맥락을 잃지 않도록 UX 개선.
+- 긴 게시글 본문을 접고 펼 수 있는 `CollapsibleContent` 공통 위젯 추가 및 적용.
+- 웹 댓글 사이드바 레이아웃을 재구성하여 게시글 미리보기 영역을 추가.
+
+**동기화 완료 문서**:
+- ✅ `docs/ui-ux/pages/workspace-pages.md`: 웹/모바일 댓글 시스템 명세에 '게시글 미리보기' 기능 추가.
+- ✅ `docs/implementation/frontend-guide.md`: `CollapsibleContent` 공통 위젯에 대한 설명 추가.
+- ✅ `docs/implementation/frontend-implementation-status.md`: '게시글/댓글 시스템' 기능 현황에 댓글창 UX 개선 항목 추가 및 완료 처리.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+
+**수정된 파일**:
+- `frontend/lib/presentation/pages/workspace/workspace_page.dart`
+- `frontend/lib/presentation/widgets/post/post_item.dart`
+- `frontend/lib/presentation/widgets/workspace/mobile_post_comments_view.dart`
+- `frontend/lib/presentation/widgets/workspace/channel_navigation.dart`
+
+**메모**: 댓글 확인 시 게시글을 다시 찾아봐야 하는 불편함을 해소하여 사용성을 크게 향상시킴.
+
+---
+
 ### 2025-10-06 - 워크스페이스 헤더 구조 리팩토링
 **커밋**: 현재 세션
 **유형**: 코드 수정 + 문서 동기화

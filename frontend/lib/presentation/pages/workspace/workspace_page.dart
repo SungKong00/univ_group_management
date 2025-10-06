@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_framework/responsive_framework.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
@@ -19,6 +20,8 @@ import '../../widgets/comment/comment_list.dart';
 import '../../widgets/comment/comment_composer.dart';
 import '../../../core/services/post_service.dart';
 import '../../../core/services/comment_service.dart';
+import '../../../core/models/post_models.dart';
+import '../../widgets/common/collapsible_content.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
@@ -44,6 +47,12 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
   // 스크롤 위치 보존을 위한 ScrollController (선택사항)
   final ScrollController _postScrollController = ScrollController();
   final ScrollController _commentScrollController = ScrollController();
+
+  // 웹 댓글 사이드바용 게시글 데이터 상태
+  Post? _selectedPost;
+  bool _isLoadingPost = false;
+  String? _postErrorMessage;
+  String? _previousSelectedPostId; // 중복 로드 방지용 이전 게시글 ID
 
   @override
   void initState() {
@@ -150,8 +159,17 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
           if (isDesktop) {
             if (workspaceState.isCommentsVisible && !_isAnimatingOut) {
               _commentsAnimationController.forward();
+
+              // 웹 댓글 사이드바가 열릴 때 게시글 로드 (중복 방지)
+              final currentPostId = workspaceState.selectedPostId;
+              if (currentPostId != null && currentPostId != _previousSelectedPostId) {
+                _loadSelectedPost(currentPostId);
+                _previousSelectedPostId = currentPostId;
+              }
             } else if (!workspaceState.isCommentsVisible && !_isAnimatingOut) {
               _commentsAnimationController.reverse();
+              // 댓글창 닫힐 때 상태 초기화
+              _previousSelectedPostId = null;
             }
           }
         });
@@ -316,13 +334,35 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
                 ),
               ),
 
-            // 백드롭 레이어: 댓글창이 열려있을 때 외부 클릭 감지를 위한 반투명 오버레이
+            // 댓글 사이드바 (백드롭보다 먼저 렌더링하여 Z-index 최상위)
             if (showComments)
               Positioned(
                 top: 0,
                 bottom: 0,
-                left: leftInset, // 채널바 제외
                 right: 0,
+                // Narrow desktop: 전체 너비 사용, Wide desktop: commentBarWidth
+                width: isNarrowCommentFullscreen ? null : commentBarWidth,
+                // Narrow desktop 전체 화면: 채널바 옆에서 시작
+                left: isNarrowCommentFullscreen ? leftInset : null,
+                child: RepaintBoundary(
+                  child: SlideTransition(
+                    position: _commentsSlideAnimation,
+                    child: _buildCommentsSidebar(
+                      workspaceState,
+                      isNarrowCommentFullscreen ? null : commentBarWidth,
+                    ),
+                  ),
+                ),
+              ),
+
+            // 백드롭 레이어: Wide desktop에서만 댓글창을 제외한 영역 어둡게 처리
+            // Narrow desktop 전체 화면 모드에서는 백드롭 불필요 (댓글창이 전체 화면)
+            if (showComments && !isNarrowCommentFullscreen)
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: leftInset, // 채널바 제외
+                right: commentBarWidth, // 댓글창 제외
                 child: GestureDetector(
                   onTap: () {
                     // 백드롭 클릭 시 댓글창 닫기 (슬라이드 아웃 애니메이션)
@@ -332,26 +372,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
                     _commentsAnimationController.reverse();
                   },
                   child: Container(
-                    // withOpacity is deprecated; use Color.fromRGBO to express opacity precisely
                     color: const Color.fromRGBO(0, 0, 0, 0.12),
-                  ),
-                ),
-              ),
-
-            if (showComments)
-              Positioned(
-                top: 0,
-                bottom: 0,
-                // Narrow desktop 전체 화면: 채널바 옆에 배치
-                left: isNarrowCommentFullscreen ? leftInset : null,
-                right: isNarrowCommentFullscreen ? 0 : 0,
-                child: RepaintBoundary(
-                  child: SlideTransition(
-                    position: _commentsSlideAnimation,
-                    child: _buildCommentsSidebar(
-                      workspaceState,
-                      isNarrowCommentFullscreen ? null : commentBarWidth,
-                    ),
                   ),
                 ),
               ),
@@ -658,74 +679,223 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     final postId = postIdStr != null ? int.tryParse(postIdStr) : null;
     final canWrite = workspaceState.channelPermissions?.canWriteComment ?? false;
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // 댓글 헤더 (높이: 채널 네비게이션 그룹 선택창과 동일)
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: AppColors.neutral200, width: 1),
-              ),
-            ),
-            child: Row(
-              children: [
-                Text('댓글', style: AppTheme.titleLarge),
-                const Spacer(),
-                // IconButton 크기 제한하여 전체 높이를 그룹 선택창과 맞춤
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    iconSize: 20,
-                    onPressed: () {
-                      // 1. 슬라이드 아웃 애니메이션 시작
-                      setState(() {
-                        _isAnimatingOut = true;
-                      });
+    return Stack(
+      children: [
+        Column(
+          children: [
+            // 게시글 미리보기
+            _buildPostPreview(),
 
-                      // 2. reverse() 애니메이션 실행 (AnimationStatus 리스너가 완료 후 hideComments() 자동 호출)
-                      _commentsAnimationController.reverse();
-                    },
-                    icon: const Icon(Icons.close),
+            const Divider(height: 1, thickness: 1),
+
+            // 댓글 목록
+            if (postId != null)
+              Expanded(
+                child: CommentList(
+                  key: ValueKey('comment_list_${postId}_$_commentListKey'),
+                  postId: postId,
+                ),
+              )
+            else
+              Expanded(
+                child: Center(
+                  child: Text(
+                    '게시글을 선택해주세요',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppColors.neutral600,
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            // 댓글 입력창
+            if (postId != null)
+              Padding(
+                padding: EdgeInsets.all(AppSpacing.xs),
+                child: CommentComposer(
+                  canWrite: canWrite,
+                  isLoading: workspaceState.channelPermissions == null,
+                  onSubmit: (content) => _handleSubmitComment(context, ref, content),
+                ),
+              ),
+          ],
+        ),
+        // X 버튼 (우측 상단)
+        Positioned(
+          top: 12,
+          right: 12,
+          child: IconButton(
+            padding: const EdgeInsets.all(4),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            iconSize: 20,
+            onPressed: () {
+              // 1. 슬라이드 아웃 애니메이션 시작
+              setState(() {
+                _isAnimatingOut = true;
+              });
+
+              // 2. reverse() 애니메이션 실행 (AnimationStatus 리스너가 완료 후 hideComments() 자동 호출)
+              _commentsAnimationController.reverse();
+            },
+            icon: const Icon(Icons.close),
           ),
-          // 댓글 목록
-          if (postId != null)
-            Expanded(
-              child: CommentList(
-                key: ValueKey('comment_list_${postId}_$_commentListKey'),
-                postId: postId,
-              ),
-            )
-          else
-            Expanded(
-              child: Center(
+        ),
+      ],
+    );
+  }
+
+  /// 웹 댓글 사이드바 게시글 미리보기 빌드
+  Widget _buildPostPreview() {
+    // 로딩 중
+    if (_isLoadingPost) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // 에러 발생
+    if (_postErrorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Color.fromRGBO(244, 67, 54, 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.error_outline, color: AppColors.error, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Text(
-                  '게시글을 선택해주세요',
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: AppColors.neutral600,
+                  _postErrorMessage!,
+                  style: const TextStyle(
+                    color: AppColors.error,
+                    fontSize: 14,
                   ),
                 ),
               ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 게시글 로드 성공 - 박스 없이 요소만 표시
+    if (_selectedPost != null) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 헤더: 프로필 + 작성자 + 시간 (X 버튼 공간 확보를 위해 우측 패딩 추가)
+            Padding(
+              padding: const EdgeInsets.only(right: 40), // X 버튼 영역 확보
+              child: _buildPostHeader(_selectedPost!),
             ),
-          // 댓글 입력창
-          if (postId != null)
-            CommentComposer(
-              canWrite: canWrite,
-              isLoading: workspaceState.channelPermissions == null,
-              onSubmit: (content) => _handleSubmitComment(context, ref, content),
+            const SizedBox(height: 12),
+            // 본문 (펼치기/접기 가능)
+            Padding(
+              padding: const EdgeInsets.only(left: 52), // 프로필(40) + 간격(12) = 52
+              child: CollapsibleContent(
+                content: _selectedPost!.content,
+                maxLines: 5,
+                style: AppTheme.bodyMedium,
+              ),
             ),
-        ],
+          ],
+        ),
+      );
+    }
+
+    // 예상치 못한 상태 (빈 화면)
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildPostHeader(Post post) {
+    return Row(
+      children: [
+        // 프로필 이미지
+        _buildPostProfileImage(post),
+        const SizedBox(width: 12),
+        // 작성자 + 시간
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                post.authorName,
+                style: AppTheme.titleMedium.copyWith(
+                  color: AppColors.neutral900,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _formatPostDateTime(post.createdAt),
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppColors.neutral600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPostProfileImage(Post post) {
+    final hasImage = post.authorProfileUrl != null && post.authorProfileUrl!.isNotEmpty;
+
+    if (hasImage) {
+      return CircleAvatar(
+        radius: 20,
+        backgroundImage: NetworkImage(post.authorProfileUrl!),
+        backgroundColor: AppColors.neutral200,
+      );
+    }
+
+    // 기본 아바타 (이니셜)
+    final initial = post.authorName.isNotEmpty ? post.authorName[0].toUpperCase() : '?';
+
+    return CircleAvatar(
+      radius: 20,
+      backgroundColor: AppColors.brand,
+      child: Text(
+        initial,
+        style: AppTheme.titleMedium.copyWith(
+          color: Colors.white,
+        ),
       ),
     );
+  }
+
+  String _formatPostDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    // 오늘 날짜면 시간만 표시
+    if (difference.inDays == 0) {
+      final timeFormatter = DateFormat('a h:mm', 'ko_KR');
+      return timeFormatter.format(dateTime);
+    }
+
+    // 어제면 "어제" 표시
+    if (difference.inDays == 1) {
+      return '어제';
+    }
+
+    // 일주일 이내면 상대 시간
+    if (difference.inDays < 7) {
+      return '${difference.inDays}일 전';
+    }
+
+    // 그 외는 날짜 표시
+    final dateFormatter = DateFormat('M월 d일', 'ko_KR');
+    return dateFormatter.format(dateTime);
   }
 
   Widget _buildGroupHomeView() {
@@ -933,6 +1103,31 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         if (mounted) {
           context.go(AppConstants.workspaceRoute);
         }
+      });
+    }
+  }
+
+  /// 웹 댓글 사이드바용 게시글 로드
+  Future<void> _loadSelectedPost(String postId) async {
+    setState(() {
+      _isLoadingPost = true;
+      _postErrorMessage = null;
+      _selectedPost = null;
+    });
+
+    try {
+      final postIdInt = int.parse(postId);
+      final postService = PostService();
+      final post = await postService.getPost(postIdInt);
+
+      setState(() {
+        _selectedPost = post;
+        _isLoadingPost = false;
+      });
+    } catch (e) {
+      setState(() {
+        _postErrorMessage = '게시글을 불러올 수 없습니다.';
+        _isLoadingPost = false;
       });
     }
   }

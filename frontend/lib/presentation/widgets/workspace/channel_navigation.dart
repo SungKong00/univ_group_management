@@ -189,6 +189,20 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // 섹션 제목: 그룹 메뉴
+          Padding(
+            padding: const EdgeInsets.only(
+              left: AppSpacing.xxs,
+              bottom: AppSpacing.xxs,
+            ),
+            child: Text(
+              '그룹 메뉴',
+              style: AppTheme.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.neutral600,
+              ),
+            ),
+          ),
           _buildTopButton(
             icon: Icons.home_outlined,
             label: '그룹 홈',
@@ -243,24 +257,46 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
 
   Widget _buildChannelList() {
     return Expanded(
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
-        itemCount: widget.channels.length,
-        itemBuilder: (context, index) {
-          final channel = widget.channels[index];
-          final channelId = channel.id.toString();
-          final isSelected = widget.selectedChannelId == channelId;
-          final unreadCount = widget.unreadCounts[channelId] ?? 0;
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 섹션 제목: 채널
+          Padding(
+            padding: const EdgeInsets.only(
+              left: AppSpacing.sm,
+              top: AppSpacing.xs,
+              bottom: AppSpacing.xxs,
+            ),
+            child: Text(
+              '채널',
+              style: AppTheme.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.neutral600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+              itemCount: widget.channels.length,
+              itemBuilder: (context, index) {
+                final channel = widget.channels[index];
+                final channelId = channel.id.toString();
+                final isSelected = widget.selectedChannelId == channelId;
+                final unreadCount = widget.unreadCounts[channelId] ?? 0;
 
-          return ChannelItem(
-            channel: channel,
-            isSelected: isSelected,
-            unreadCount: unreadCount,
-            onTap: () {
-              ref.read(workspaceStateProvider.notifier).showChannel(channelId);
-            },
-          );
-        },
+                return ChannelItem(
+                  channel: channel,
+                  isSelected: isSelected,
+                  unreadCount: unreadCount,
+                  onTap: () {
+                    ref.read(workspaceStateProvider.notifier).showChannel(channelId);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

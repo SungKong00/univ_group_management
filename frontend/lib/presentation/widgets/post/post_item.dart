@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/post_models.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../common/collapsible_content.dart';
 
 /// 개별 게시글 아이템 위젯 (Slack 스타일)
 ///
@@ -128,8 +129,14 @@ class _PostItemState extends State<PostItem> {
   }
 
   Widget _buildContent() {
-    return Text(
-      widget.post.content,
+    // 반응형 maxLines 계산
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth <= 600; // 기존 브레이크포인트 유지
+    final maxLines = isMobile ? 10 : 20;
+
+    return CollapsibleContent(
+      content: widget.post.content,
+      maxLines: maxLines,
       style: AppTheme.bodyMedium.copyWith(
         color: AppColors.neutral900,
         height: 1.5,

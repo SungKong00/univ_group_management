@@ -113,23 +113,44 @@
 - `frontend/lib/presentation/widgets/post/date_divider.dart`
 - `frontend/lib/presentation/widgets/post/post_skeleton.dart`
 
-### 1.3. 댓글 시스템 (구현 완료 - 2025-10-05)
+### 1.3. 댓글 시스템 (UX 개선 - 2025-10-06)
+
+게시글에 대한 댓글을 확인하고 작성하는 시스템입니다. 웹과 모바일 환경 모두에서 사용자 편의성을 위해 **원본 게시글 미리보기** 기능을 제공합니다.
+
+**핵심 UX 개선**:
+-   사용자가 댓글을 확인할 때, 화면 상단에 원본 게시글의 내용(작성자, 본문 등)이 함께 표시됩니다. 이를 통해 사용자는 어떤 게시글에 대한 댓글을 보고 있는지 명확하게 인지할 수 있습니다.
 
 **구현된 컴포넌트**:
-- `CommentItem`: 단일 댓글 아이템
-- `CommentComposer`: 댓글 작성 입력창
+-   `CommentList`: 댓글 목록 (웹/모바일 공통)
+-   `CommentComposer`: 댓글 작성 입력창 (웹/모바일 공통)
+-   `PostPreviewCard`: 모바일 댓글 뷰 상단에 표시되는 게시글 미리보기 카드
+-   `CollapsibleContent`: 긴 게시글 본문을 '더보기/접기' 할 수 있는 공통 위젯
 
-**디자인 구조**:
-- 작성자 정보 (프로필 이미지, 닉네임, 시간)
-- 댓글 본문
-- 수정/삭제 버튼 (본인 댓글만)
+**플랫폼별 디자인 구조**:
+
+1.  **웹 (데스크톱) 댓글 사이드바**:
+    -   화면 우측에서 슬라이드되어 나타나는 사이드바 형태입니다.
+    -   **상단**: 원본 게시글 미리보기가 표시됩니다.
+        -   **헤더**: 작성자 프로필, 이름, 작성 시간을 보여줍니다.
+        -   **본문**: `CollapsibleContent` 위젯을 사용하여 긴 내용은 자동으로 접히고, '더보기'를 통해 펼쳐볼 수 있습니다.
+    -   **중단**: 댓글 목록(`CommentList`)이 시간순으로 표시됩니다.
+    -   **하단**: 댓글 작성창(`CommentComposer`)이 위치합니다.
+
+2.  **모바일 댓글 뷰**:
+    -   게시글의 댓글 버튼 클릭 시, 전체 화면 페이지로 전환됩니다.
+    -   **상단**: `PostPreviewCard` 위젯을 사용하여 원본 게시글을 카드로 명확하게 표시합니다.
+    -   **중단**: 그 아래로 댓글 목록(`CommentList`)이 이어집니다.
+    -   **하단**: 댓글 작성창(`CommentComposer`)이 위치합니다.
 
 **권한 제어**:
-- `COMMENT_WRITE` 권한이 있을 때만 댓글 작성 가능
+-   `COMMENT_WRITE` 권한이 있을 때만 댓글 작성창이 활성화됩니다.
 
 **구현 위치**:
-- `frontend/lib/presentation/widgets/comment/comment_item.dart`
-- `frontend/lib/presentation/widgets/comment/comment_composer.dart`
+-   `frontend/lib/presentation/pages/workspace/workspace_page.dart` (웹 사이드바)
+-   `frontend/lib/presentation/widgets/workspace/mobile_post_comments_view.dart` (모바일 뷰)
+-   `frontend/lib/presentation/widgets/post/post_preview_card.dart`
+-   `frontend/lib/presentation/widgets/common/collapsible_content.dart`
+-   `frontend/lib/presentation/widgets/comment/` (댓글 관련 위젯)
 
 ## 2. 그룹 홈 페이지
 

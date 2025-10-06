@@ -102,7 +102,21 @@ authService.tryAutoLogin().catchError((error) {
 - **비차단 인증**: tryAutoLogin으로 앱 시작 속도 개선
 - **반응형 최적화**: 화면 크기별 최적화된 레이아웃
 
-## 주요 컴포넌트 구현
+### 주요 컴포넌트 구현
+
+#### 공통 위젯 (Common Widgets) (2025-10-06 추가)
+
+**`CollapsibleContent`**
+
+-   **경로**: `presentation/widgets/common/collapsible_content.dart`
+-   **설명**: `maxLines` 속성으로 지정된 줄 수를 초과하는 긴 텍스트 콘텐츠를 자동으로 접고, "더보기" / "접기" 버튼을 통해 사용자가 전체 내용을 펼치거나 다시 접을 수 있도록 하는 재사용 가능한 위젯입니다.
+-   **주요 기능**:
+    -   텍스트가 `maxLines`를 초과하는지 자동으로 감지합니다.
+    -   상태(펼침/접힘)에 따라 "더보기" 또는 "접기" 텍스트 버튼을 표시합니다.
+    -   부드러운 UI 전환을 제공합니다.
+-   **사용 예시**:
+    -   `post_item.dart`: 게시글 목록에서 긴 본문을 간결하게 표시할 때 사용합니다.
+    -   `workspace_page.dart`: 웹 댓글 사이드바의 게시글 미리보기에서 긴 본문을 표시할 때 사용합니다.
 
 ### 테마 시스템 (theme.dart)
 ```dart

@@ -3,10 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme.dart';
 import '../comment/comment_list.dart';
 import '../comment/comment_composer.dart';
 import '../../../core/services/comment_service.dart';
+import '../../../core/services/post_service.dart';
 import '../../../core/models/channel_models.dart';
+import '../../../core/models/post_models.dart';
+import '../post/post_preview_card.dart';
 
 /// 모바일 댓글 뷰 (Step 3: 게시글 선택 후 댓글 목록)
 class MobilePostCommentsView extends ConsumerStatefulWidget {
@@ -32,13 +36,47 @@ class _MobilePostCommentsViewState
     extends ConsumerState<MobilePostCommentsView> {
   int _commentListKey = 0;
   final CommentService _commentService = CommentService();
+  final PostService _postService = PostService();
   final ScrollController _scrollController = ScrollController();
   bool _showScrollToTopButton = false;
+
+  // 게시글 데이터 상태
+  Post? _post;
+  bool _isLoadingPost = true;
+  String? _postErrorMessage;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _loadPost();
+  }
+
+  /// 게시글 데이터 로드
+  Future<void> _loadPost() async {
+    setState(() {
+      _isLoadingPost = true;
+      _postErrorMessage = null;
+    });
+
+    try {
+      final postIdInt = int.parse(widget.postId);
+      final post = await _postService.getPost(postIdInt);
+
+      setState(() {
+        _post = post;
+        _isLoadingPost = false;
+      });
+    } catch (e) {
+      setState(() {
+        _postErrorMessage = '게시글을 불러올 수 없습니다.';
+        _isLoadingPost = false;
+      });
+
+      if (kDebugMode) {
+        developer.log('게시글 로드 실패: $e', name: 'MobilePostCommentsView');
+      }
+    }
   }
 
   @override
@@ -69,12 +107,68 @@ class _MobilePostCommentsViewState
     );
   }
 
+  /// 게시글 미리보기 빌드 (로딩/에러/성공 상태별)
+  Widget _buildPostPreview() {
+    // 로딩 중
+    if (_isLoadingPost) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // 에러 발생
+    if (_postErrorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.error_outline, color: AppColors.error, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _postErrorMessage!,
+                  style: const TextStyle(
+                    color: AppColors.error,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 게시글 로드 성공
+    if (_post != null) {
+      return PostPreviewCard(
+        post: _post!,
+        maxLines: 5,
+      );
+    }
+
+    // 예상치 못한 상태 (빈 화면)
+    return const SizedBox.shrink();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Column(
           children: [
+            // 게시글 미리보기 (로딩/에러/성공 상태별 처리)
+            _buildPostPreview(),
+
             // 댓글 목록
             Expanded(
               child: CommentList(
@@ -87,6 +181,7 @@ class _MobilePostCommentsViewState
             // 댓글 작성 입력창
             if (widget.permissions?.canWriteComment ?? false)
               Container(
+                padding: EdgeInsets.all(AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(
