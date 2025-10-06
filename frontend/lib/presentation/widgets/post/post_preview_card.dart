@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/models/post_models.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -34,6 +35,10 @@ class PostPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 화면 크기로 모바일 여부 판단 (responsive_framework 토큰 사용)
+    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
+    final isMobile = !isDesktop;
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -57,6 +62,9 @@ class PostPreviewCard extends StatelessWidget {
               content: post.content,
               maxLines: maxLines,
               style: AppTheme.bodyMedium,
+              // 모바일에서는 펼쳤을 때 내부 스크롤을 허용하고 10줄까지 보이게 함
+              expandedScrollable: isMobile,
+              expandedMaxLines: isMobile ? 10 : 0,
             ),
           ),
         ],
