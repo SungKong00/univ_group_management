@@ -157,14 +157,17 @@ class GroupPermissionEvaluator(
 
 ### 권한 검증 레이어 설계 결정
 
-**핵심 결정: Security Layer에서 Repository 직접 사용**
+**핵심 결정: Security Layer에서 Repository 직접 사용 (채널 권한 캐시 도입 전)
+-> 현재: 캐시 우선 조회, 없을 시 Repository 접근**
 
-GroupPermissionEvaluator는 Spring Security의 일부로서 `@PreAuthorize` 어노테이션이 실행되는 시점에 동작합니다. 이는 Controller 메서드가 호출되기 **전**에 실행되므로, Service Layer를 우회하여 Repository를 직접 사용하는 것이 적절합니다.
+GroupPermissionEvaluator는 Spring Security의 일부로서 `@PreAuthorize` 어노테이션이 실행되는 시점에 동작합니다. 이는 Controller 메서드가 호출되기 **전**에 실행되므로, Service Layer를 우회하여 캐시 또는 Repository를 직접 사용하는 것이 적절합니다.
 
-**Option A (채택): Security → Repository 직접 호출**
+**Option A (채택): Security → Cache / Repository 직접 호출**
 ```
 @PreAuthorize 실행 → GroupPermissionEvaluator
                     ↓
+          CacheManager (채널 권한 캐시 조회)
+                    ↓ (캐시 없음)
                 Repository (직접)
                     ↓
                 결과 반환 → true/false
@@ -173,43 +176,24 @@ GroupPermissionEvaluator는 Spring Security의 일부로서 `@PreAuthorize` 어�
 ```
 
 **장점**:
-- 빠른 권한 검증 (Service Layer 우회)
+- 빠른 권한 검증 (캐시 적중 시 DB 접근 없음)
 - 순수한 권한 검증 로직 (비즈니스 로직과 분리)
 - 명확한 책임 분리: Security는 "접근 가능 여부만" 판단
-- 불필요한 데이터 로딩 방지 (권한 검증에 필요한 최소 데이터만)
 
 **Option B (기각): ChannelPermissionService 생성**
-```
-@PreAuthorize → GroupPermissionEvaluator
-                    ↓
-            ChannelPermissionService
-                    ↓
-                Repository
-```
-
-**기각 이유**:
-- 권한 검증은 비즈니스 로직이 아닌 인프라 관심사
-- Service Layer가 순수 권한 검증만 수행하면 역할이 모호해짐
-- 추가 레이어로 인한 복잡도 증가
-- 트랜잭션 경계 설정이 불필요 (읽기 전용 권한 체크)
-
-**구현 원칙**:
-1. **빠른 실패(Fail Fast)**: 조건 미충족 시 즉시 `false` 반환
-2. **최소 권한 원칙**: 필요한 데이터만 조회 (엔티티 전체 로딩 지양)
-3. **무상태(Stateless)**: 각 권한 검증은 독립적으로 실행
-4. **로깅**: 잘못된 권한 요청은 경고 로그 기록
+- 기각 이유는 이전과 동일 (인프라 관심사, 복잡도 증가 등)
 
 **검증 플로우 (채널 권한 예시)**:
-1. 채널 존재 확인 (`channelRepository.findById`)
-2. 그룹 멤버십 확인 (`groupMemberRepository.findByGroupIdAndUserId`)
-3. 역할-채널 바인딩 확인 (`channelRoleBindingRepository.findByChannelIdAndGroupRoleId`)
-4. 요청한 권한이 바인딩에 포함되어 있는지 확인
+1. `ChannelPermissionCacheManager`를 통해 캐시 조회
+2. 캐시 존재 시, 캐시된 버전과 권한으로 검증 후 반환
+3. 캐시 부재 시, DB에서 채널, 멤버, 역할-채널 바인딩 조회
+4. 요청한 권한이 바인딩에 포함되어 있는지 확인 후 결과를 캐시에 저장
 
 **그룹 권한 vs 채널 권한 차이**:
-- **그룹 권한**: PermissionService의 캐시를 활용 (복잡한 상속/오버라이드 로직)
-- **채널 권한**: Repository 직접 조회 (단순한 바인딩 매핑 확인)
+- **그룹 권한**: PermissionService의 인메모리 캐시를 활용 (복잡한 상속/오버라이드 로직)
+- **채널 권한**: `ChannelPermissionCacheManager`를 통해 Caffeine 캐시 활용 (버전 관리, 이벤트 기반 무효화)
 
-**참고**: 채널 권한은 PermissionService 캐시를 사용하지 않습니다. 채널별 권한 바인딩은 그룹 권한보다 단순하고, 캐시 무효화 복잡도를 피하기 위해 직접 조회를 선택했습니다.
+**참고**: 채널 권한은 이제 `ChannelPermissionCacheManager`를 통해 캐시됩니다. 이를 통해 반복적인 DB 조회를 최소화하고 성능을 향상시킵니다.
 
 ## 표준 응답 형식 (갱신)
 ```kotlin
@@ -258,14 +242,25 @@ FILE_UPLOAD:  OWNER(optional)
 ```
 
 ## 권한 캐시 무효화 패턴
+
+채널 권한 변경과 관련된 이벤트가 발생하면, Spring `ApplicationEventPublisher`를 통해 이벤트가 발행되고, `ChannelPermissionCacheManager`가 이를 수신하여 관련 캐시를 무효화합니다.
+
+**무효화 트리거 이벤트**:
+- `ChannelRoleBindingChangedEvent`: 채널-역할 바인딩 변경 시
+- `GroupRoleChangedEvent`: 그룹 역할 변경 시
+- `GroupMemberChangedEvent`: 그룹 멤버의 역할 변경 시
+
+**무효화 로직**:
+- `ChannelPermissionCacheManager`는 이벤트에 따라 특정 채널, 특정 사용자, 또는 전체 캐시를 선별적으로 무효화합니다.
+- 예: `channelPermissionCacheManager.evictChannelCache(channelId)`
+
 ```kotlin
-permissionService.invalidateGroup(groupId)      // 역할/바인딩 구조 변경 후
-authorityCache.invalidate(userId)              // (사용자 단위 캐시가 별도로 있을 경우)
+// 서비스 레이어에서 이벤트 발행 예시
+fun updateChannelRoleBinding(...) {
+    // ... 바인딩 정보 업데이트 ...
+    eventPublisher.publishEvent(ChannelRoleBindingChangedEvent(this, channelId))
+}
 ```
-무효화 트리거:
-- 역할 생성/수정/삭제
-- 멤버 역할 변경
-- 채널 권한 바인딩 추가/갱신/삭제
 
 ## 컨텐츠 삭제 벌크 순서 (Workspace/Channel)
 ```

@@ -1,15 +1,50 @@
 package org.castlekong.backend.controller
 
 import jakarta.validation.Valid
-import org.castlekong.backend.dto.*
+import org.castlekong.backend.dto.AdminStatsResponse
+import org.castlekong.backend.dto.ApiResponse
+import org.castlekong.backend.dto.CreateGroupRequest
+import org.castlekong.backend.dto.CreateGroupRoleRequest
+import org.castlekong.backend.dto.CreateSubGroupRequest
+import org.castlekong.backend.dto.GroupHierarchyNodeDto
+import org.castlekong.backend.dto.GroupJoinRequestResponse
+import org.castlekong.backend.dto.GroupMemberResponse
+import org.castlekong.backend.dto.GroupResponse
+import org.castlekong.backend.dto.GroupRoleResponse
+import org.castlekong.backend.dto.GroupSummaryResponse
+import org.castlekong.backend.dto.JoinGroupRequest
+import org.castlekong.backend.dto.PagedApiResponse
+import org.castlekong.backend.dto.PaginationInfo
+import org.castlekong.backend.dto.ReviewGroupJoinRequestRequest
+import org.castlekong.backend.dto.ReviewSubGroupRequestRequest
+import org.castlekong.backend.dto.SubGroupRequestResponse
+import org.castlekong.backend.dto.UpdateGroupRequest
+import org.castlekong.backend.dto.UpdateGroupRoleRequest
+import org.castlekong.backend.dto.UpdateMemberRoleRequest
+import org.castlekong.backend.dto.WorkspaceDto
 import org.castlekong.backend.security.SecurityExpressionHelper
-import org.castlekong.backend.service.*
+import org.castlekong.backend.service.AdminStatsService
+import org.castlekong.backend.service.GroupManagementService
+import org.castlekong.backend.service.GroupMemberService
+import org.castlekong.backend.service.GroupRequestService
+import org.castlekong.backend.service.GroupRoleService
+import org.castlekong.backend.service.UserService
+import org.castlekong.backend.service.WorkspaceManagementService
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/groups")
@@ -60,16 +95,32 @@ class GroupController(
         @RequestParam(required = false) college: String?,
         @RequestParam(required = false) department: String?,
         @RequestParam(required = false) q: String?,
-        @RequestParam(required = false) tags: String?, // comma-separated
+        // comma-separated
+        @RequestParam(required = false) tags: String?,
     ): PagedApiResponse<GroupSummaryResponse> {
-        val tagSet = tags?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet() ?: emptySet()
-        val response = groupManagementService.searchGroups(pageable, recruiting, visibility, groupType, university, college, department, q, tagSet)
+        val tagSet =
+            tags?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet() ?: emptySet()
+        val response =
+            groupManagementService.searchGroups(
+                pageable,
+                recruiting,
+                visibility,
+                groupType,
+                university,
+                college,
+                department,
+                q,
+                tagSet,
+            )
         val pagination = PaginationInfo.fromSpringPage(response)
         return PagedApiResponse.success(response.content, pagination)
     }
 
     @GetMapping("/hierarchy")
-    @io.swagger.v3.oas.annotations.Operation(summary = "전체 계열/학과 계층 구조 조회", description = "온보딩 시 계열/학과 선택 UI를 구성하기 위한 전체 그룹 목록을 반환합니다.")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "전체 계열/학과 계층 구조 조회",
+        description = "온보딩 시 계열/학과 선택 UI를 구성하기 위한 전체 그룹 목록을 반환합니다.",
+    )
     fun getGroupHierarchy(): ApiResponse<List<GroupHierarchyNodeDto>> {
         val groups = groupManagementService.getAllGroupsForHierarchy()
         return ApiResponse.success(groups)
@@ -369,7 +420,7 @@ class GroupController(
     fun getWorkspace(
         @PathVariable groupId: Long,
         authentication: Authentication,
-    ): ApiResponse<org.castlekong.backend.dto.WorkspaceDto> {
+    ): ApiResponse<WorkspaceDto> {
         val user = getUserByEmail(authentication.name)
         val response = workspaceManagementService.getWorkspace(groupId, user.id)
         return ApiResponse.success(response)

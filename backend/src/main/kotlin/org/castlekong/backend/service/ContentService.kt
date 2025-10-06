@@ -1,10 +1,38 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.dto.*
-import org.castlekong.backend.entity.*
+import org.castlekong.backend.dto.ChannelResponse
+import org.castlekong.backend.dto.CommentResponse
+import org.castlekong.backend.dto.CreateChannelRequest
+import org.castlekong.backend.dto.CreateCommentRequest
+import org.castlekong.backend.dto.CreatePostRequest
+import org.castlekong.backend.dto.CreateWorkspaceRequest
+import org.castlekong.backend.dto.PostResponse
+import org.castlekong.backend.dto.UpdateChannelRequest
+import org.castlekong.backend.dto.UpdateCommentRequest
+import org.castlekong.backend.dto.UpdatePostRequest
+import org.castlekong.backend.dto.UpdateWorkspaceRequest
+import org.castlekong.backend.dto.UserSummaryResponse
+import org.castlekong.backend.dto.WorkspaceResponse
+import org.castlekong.backend.entity.Channel
+import org.castlekong.backend.entity.ChannelPermission
+import org.castlekong.backend.entity.ChannelType
+import org.castlekong.backend.entity.Comment
+import org.castlekong.backend.entity.GroupPermission
+import org.castlekong.backend.entity.Post
+import org.castlekong.backend.entity.PostType
+import org.castlekong.backend.entity.User
+import org.castlekong.backend.entity.Workspace
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.ChannelRepository
+import org.castlekong.backend.repository.ChannelRoleBindingRepository
+import org.castlekong.backend.repository.CommentRepository
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.GroupRoleRepository
+import org.castlekong.backend.repository.PostRepository
+import org.castlekong.backend.repository.UserRepository
+import org.castlekong.backend.repository.WorkspaceRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -224,7 +252,9 @@ class ContentService(
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         // permission: group owner or role has CHANNEL_WRITE
         validateChannelManagePermission(group.id, creator.id)
-        val type = request.type?.let { runCatching { ChannelType.valueOf(it) }.getOrDefault(ChannelType.TEXT) } ?: ChannelType.TEXT
+        val type =
+            request.type?.let { runCatching { ChannelType.valueOf(it) }.getOrDefault(ChannelType.TEXT) }
+                ?: ChannelType.TEXT
         val channel =
             Channel(
                 group = group,
@@ -339,7 +369,9 @@ class ContentService(
             groupMemberRepository.findByGroupIdAndUserId(channel.group.id, author.id)
                 .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         ensureChannelPermission(channelId, author.id, ChannelPermission.POST_WRITE)
-        val type = request.type?.let { runCatching { PostType.valueOf(it) }.getOrDefault(PostType.GENERAL) } ?: PostType.GENERAL
+        val type =
+            request.type?.let { runCatching { PostType.valueOf(it) }.getOrDefault(PostType.GENERAL) }
+                ?: PostType.GENERAL
         val post =
             Post(
                 channel = channel,
@@ -492,7 +524,8 @@ class ContentService(
             name = channel.name,
             description = channel.description,
             type = channel.type.name,
-            isPrivate = false, // 권한은 ChannelRoleBinding으로 관리
+            // 권한은 ChannelRoleBinding으로 관리
+            isPrivate = false,
             displayOrder = channel.displayOrder,
             createdAt = channel.createdAt,
             updatedAt = channel.updatedAt,
@@ -545,8 +578,11 @@ class ContentService(
             groupRepository.findById(groupId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         if (group.owner.id == userId) return
-        val member = groupMemberRepository.findByGroupIdAndUserId(groupId, userId).orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
-        val rolePerms = if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val rolePerms =
+            if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions
         // MVP 단순화: 오버라이드 제거, 역할 권한만 확인
         if (!rolePerms.contains(GroupPermission.CHANNEL_MANAGE)) throw BusinessException(ErrorCode.FORBIDDEN)
     }
@@ -556,7 +592,7 @@ class ContentService(
 
 // removed compat response; using WorkspaceResponse
 
-private fun toUserSummaryResponse(user: org.castlekong.backend.entity.User): UserSummaryResponse {
+private fun toUserSummaryResponse(user: User): UserSummaryResponse {
     return UserSummaryResponse(
         id = user.id,
         name = user.name,

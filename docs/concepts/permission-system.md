@@ -60,10 +60,12 @@
 | UNAUTHORIZED / INVALID_TOKEN / EXPIRED_TOKEN | 인증/토큰 문제 | 401 |
 
 ## 권한 확인 방식
-1. 사용자 그룹 멤버십 조회
-2. 역할(시스템 또는 커스텀) 권한 집합 결정
-3. (채널 자원인 경우) ChannelRoleBinding 매핑으로 채널 수준 권한 결합
-4. PermissionService 캐시 조회 → 없으면 계산 후 캐시 저장
+1.  사용자 그룹 멤버십 조회
+2.  역할(시스템 또는 커스텀) 권한 집합 결정
+3.  (채널 자원인 경우) ChannelRoleBinding 매핑으로 채널 수준 권한 결합
+4.  **캐시 조회 및 저장**:
+    -   **그룹 권한**: `PermissionService`의 인메모리 캐시(`(groupId, userId)` 키)를 조회합니다. 캐시 부재 시 권한을 계산하고 저장합니다.
+    -   **채널 권한**: `ChannelPermissionCacheManager`를 통해 Caffeine 캐시를 조회합니다. 캐시 부재 시 DB에서 권한을 확인하고, 결과를 캐시에 저장하여 후속 요청의 성능을 향상시킵니다.
 
 ## Spring Security 통합
 
@@ -73,7 +75,7 @@ Spring Security의 `@PreAuthorize` 어노테이션과 통합하여 선언적 권
 **주요 역할**:
 - `PermissionEvaluator` 인터페이스 구현
 - 대상 리소스 타입(GROUP, CHANNEL, RECRUITMENT 등)별 권한 검증 라우팅
-- 2단계 권한 검증 플로우 실행
+- 캐시 우선 조회 후, 필요 시 DB를 통한 2단계 권한 검증 플로우 실행
 
 **지원하는 대상 타입**:
 - `GROUP`: 그룹 레벨 권한 검증 (예: GROUP_MANAGE, MEMBER_MANAGE)
@@ -92,39 +94,21 @@ fun createPost(channelId: Long, request: CreatePostRequest): PostDto
 
 ### 2단계 권한 검증 플로우 (채널 권한 예시)
 
-1. **그룹 멤버십 검증**
-   - 사용자가 채널이 속한 그룹의 멤버인지 확인
-   - 멤버가 아니면 즉시 `false` 반환 (403 Forbidden)
+채널 권한 검증은 캐시를 우선적으로 활용하여 DB 접근을 최소화합니다.
 
-2. **채널 권한 바인딩 검증**
-   - 사용자의 그룹 역할(GroupRole) 조회
-   - ChannelRoleBinding에서 (채널, 역할) 매핑 조회
-   - 바인딩에 요청한 ChannelPermission이 포함되어 있는지 확인
+1.  **캐시 조회 (Cache-First)**
+    -   `ChannelPermissionCacheManager`를 통해 `(channelId, userId, permission)`에 해당하는 권한이 캐시되어 있는지 확인합니다.
+    -   캐시가 존재하고 유효하면, 즉시 결과를 반환합니다.
 
-**구현 패턴**:
-```kotlin
-private fun checkChannelPermission(channelId: Long, userId: Long, permission: String): Boolean {
-    // 1단계: 채널 조회 및 그룹 멤버십 확인
-    val channel = channelRepository.findById(channelId).orElse(null) ?: return false
-    val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
-        .orElse(null) ?: return false
+2.  **DB 조회 (Cache Miss 시)**
+    -   **그룹 멤버십 검증**: 사용자가 채널이 속한 그룹의 멤버인지 확인합니다.
+    -   **채널 권한 바인딩 검증**: 사용자의 그룹 역할과 채널 ID를 기반으로 `ChannelRoleBinding`을 조회하여 요청된 권한이 있는지 확인합니다.
 
-    // 2단계: 채널 권한 바인딩 확인
-    val binding = channelRoleBindingRepository
-        .findByChannelIdAndGroupRoleId(channelId, member.role.id) ?: return false
-
-    return try {
-        val channelPermission = ChannelPermission.valueOf(permission)
-        binding.permissions.contains(channelPermission)
-    } catch (e: IllegalArgumentException) {
-        log.warn("Invalid channel permission: $permission", e)
-        false
-    }
-}
-```
+3.  **캐시 저장**
+    -   DB 조회 결과를 캐시에 저장하여 다음 요청 시 빠르게 응답할 수 있도록 합니다.
 
 **특징**:
-- Security Layer에서 Repository를 직접 사용 (Service Layer 우회)
+- Security Layer에서 캐시 및 Repository를 직접 사용 (Service Layer 우회)
 - 순수 권한 검증 로직만 수행 (비즈니스 로직 없음)
 - 빠른 실패(Fail Fast) 전략: 조건 미충족 시 즉시 `false` 반환
 - ADMIN 권한 사용자는 모든 검증 우회 (short-circuit)
@@ -135,10 +119,25 @@ private fun checkChannelPermission(channelId: Long, userId: Long, permission: St
 - 일관된 ApiResponse 에러 형식으로 변환
 
 ## 권한 캐싱 & 무효화 전략
-`PermissionService` 는 (groupId, userId) 단위 캐시를 유지하며 아래 이벤트에서 무효화:
-- 역할 생성 / 수정 / 삭제
-- 멤버 역할 변경
-- 채널 역할 바인딩 추가 / 수정 / 삭제
+
+### 그룹 권한 캐시 (`PermissionService`)
+-   **캐시 종류**: 인메모리 캐시 (Caffeine)
+-   **키**: `(groupId, userId)`
+-   **무효화**: 역할 변경, 멤버 역할 수정 등 그룹 구조에 변경이 있을 때 `permissionService.invalidateGroup(groupId)`를 직접 호출하여 해당 그룹의 모든 사용자 캐시를 무효화합니다.
+
+### 채널 권한 캐시 (`ChannelPermissionCacheManager`)
+-   **캐시 종류**: Caffeine 기반의 로컬 캐시. 두 종류의 캐시를 운영합니다.
+    1.  **채널 버전 캐시**: 채널별로 버전(`Long`)을 저장하여, 권한 구조 변경 시 버전을 올립니다. 이를 통해 오래된 캐시 사용을 방지합니다.
+    2.  **사용자 권한 캐시**: `(channelId:userId:permission:version)`을 키로 사용하여 각 사용자의 특정 권한 정보를 캐시합니다.
+-   **무효화 방식**: **이벤트 기반(Event-Driven) 무효화**
+    -   권한에 영향을 주는 변경(역할 수정, 멤버 변경, 바인딩 수정 등)이 발생하면, 서비스 레이어에서 Spring `ApplicationEvent`를 발행합니다.
+    -   `ChannelPermissionCacheManager`는 이벤트를 구독(`@EventListener`)하고, 이벤트 내용에 따라 관련 채널의 버전을 올리거나 특정 사용자의 캐시를 직접 무효화합니다.
+-   **주요 이벤트**:
+    -   `ChannelRoleBindingChangedEvent`: 채널-역할 바인딩 변경 시
+    -   `GroupRoleChangedEvent`: 그룹 역할의 권한 변경 시
+    -   `GroupMemberChangedEvent`: 멤버의 역할이 변경될 시
+
+이러한 이중 캐시 및 이벤트 기반 무효화 전략을 통해, 채널 권한 검증의 성능을 극대화하면서도 데이터 정합성을 유지합니다.
 
 ## 채널 권한 바인딩 기본값
 - (정책 2025-10-01 rev5) 그룹 생성 직후 생성되는 기본 2개 채널(공지사항 / 자유게시판)은 서비스 초기화 로직에서 템플릿 ChannelRoleBinding(OWNER, ADVISOR, MEMBER) 세트를 자동 부여.

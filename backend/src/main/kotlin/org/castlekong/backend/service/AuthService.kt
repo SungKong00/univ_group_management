@@ -19,8 +19,10 @@ import org.springframework.transaction.annotation.Transactional
 class AuthService(
     private val userService: UserService,
     private val jwtTokenProvider: JwtTokenProvider,
-    private val googleIdTokenVerifierPort: GoogleIdTokenVerifierPort, // 신규 포트 주입
-    private val googleUserInfoFetcherPort: GoogleUserInfoFetcherPort, // AccessToken 사용자 정보 조회 포트 추가
+    // 신규 포트 주입
+    private val googleIdTokenVerifierPort: GoogleIdTokenVerifierPort,
+    // AccessToken 사용자 정보 조회 포트 추가
+    private val googleUserInfoFetcherPort: GoogleUserInfoFetcherPort,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -61,7 +63,8 @@ class AuthService(
 
         return LoginResponse(
             accessToken = accessJwt,
-            tokenType = "Bearer", // tokenType은 Bearer 문자열 유지
+            // tokenType은 Bearer 문자열 유지
+            tokenType = "Bearer",
             expiresIn = 86400000L,
             user = userService.convertToUserResponse(user),
             firstLogin = !user.profileCompleted,
@@ -117,7 +120,8 @@ class AuthService(
         return RefreshTokenResponse(
             accessToken = newAccessToken,
             tokenType = "Bearer",
-            expiresIn = 86400000L, // 24시간
+            // 24시간
+            expiresIn = 86400000L,
         )
     }
 

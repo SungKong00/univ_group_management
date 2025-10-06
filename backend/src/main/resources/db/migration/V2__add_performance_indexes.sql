@@ -2,13 +2,13 @@
 -- 프로덕션 환경에서 사용할 인덱스들
 
 -- Groups 테이블 인덱스
-CREATE INDEX IF NOT EXISTS idx_groups_parent_id ON groups(parent_id);
-CREATE INDEX IF NOT EXISTS idx_groups_owner_id ON groups(owner_id);
-CREATE INDEX IF NOT EXISTS idx_groups_deleted_at ON groups(deleted_at);
-CREATE INDEX IF NOT EXISTS idx_groups_university_college_dept ON groups(university, college, department);
-CREATE INDEX IF NOT EXISTS idx_groups_visibility_recruiting ON groups(visibility, is_recruiting);
-CREATE INDEX IF NOT EXISTS idx_groups_group_type ON groups(group_type);
-CREATE INDEX IF NOT EXISTS idx_groups_created_at ON groups(created_at);
+CREATE INDEX IF NOT EXISTS idx_groups_parent_id ON groups (parent_id);
+CREATE INDEX IF NOT EXISTS idx_groups_owner_id ON groups (owner_id);
+CREATE INDEX IF NOT EXISTS idx_groups_deleted_at ON groups (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_groups_university_college_dept ON groups (university, college, department);
+CREATE INDEX IF NOT EXISTS idx_groups_visibility_recruiting ON groups (visibility, is_recruiting);
+CREATE INDEX IF NOT EXISTS idx_groups_group_type ON groups (group_type);
+CREATE INDEX IF NOT EXISTS idx_groups_created_at ON groups (created_at);
 
 -- Group Members 테이블 인덱스
 CREATE INDEX IF NOT EXISTS idx_group_members_group_user ON group_members(group_id, user_id);
@@ -74,7 +74,7 @@ CREATE INDEX IF NOT EXISTS idx_sub_group_requests_status ON sub_group_requests(s
 CREATE INDEX IF NOT EXISTS idx_sub_group_requests_created_at ON sub_group_requests(created_at);
 
 -- 복합 인덱스 (자주 함께 사용되는 컬럼들)
-CREATE INDEX IF NOT EXISTS idx_groups_deleted_type_visibility ON groups(deleted_at, group_type, visibility) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_groups_deleted_type_visibility ON groups (deleted_at, group_type, visibility) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_group_members_group_role_joined ON group_members(group_id, role_id, joined_at);
 CREATE INDEX IF NOT EXISTS idx_posts_channel_created_pinned ON posts(channel_id, created_at DESC, is_pinned DESC);
 CREATE INDEX IF NOT EXISTS idx_comments_post_created ON comments(post_id, created_at);

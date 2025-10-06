@@ -1,6 +1,7 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.event.*
+import org.castlekong.backend.event.RoleBindingChangedEvent
+import org.castlekong.backend.event.UserRoleChangedEvent
 import org.castlekong.backend.repository.ChannelRoleBindingRepository
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager

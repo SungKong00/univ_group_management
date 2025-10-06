@@ -1,11 +1,28 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.dto.*
-import org.castlekong.backend.entity.*
+import org.castlekong.backend.dto.ApplicationResponse
+import org.castlekong.backend.dto.ApplicationSummaryResponse
+import org.castlekong.backend.dto.ArchivedRecruitmentResponse
+import org.castlekong.backend.dto.CreateApplicationRequest
+import org.castlekong.backend.dto.CreateRecruitmentRequest
+import org.castlekong.backend.dto.RecruitmentResponse
+import org.castlekong.backend.dto.RecruitmentSearchRequest
+import org.castlekong.backend.dto.RecruitmentStatsResponse
+import org.castlekong.backend.dto.RecruitmentSummaryResponse
+import org.castlekong.backend.dto.ReviewApplicationRequest
+import org.castlekong.backend.dto.UpdateRecruitmentRequest
+import org.castlekong.backend.entity.ApplicationStatus
+import org.castlekong.backend.entity.GroupRecruitment
+import org.castlekong.backend.entity.RecruitmentApplication
+import org.castlekong.backend.entity.RecruitmentStatus
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.mapper.RecruitmentMapper
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRecruitmentRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.RecruitmentApplicationRepository
+import org.castlekong.backend.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -202,7 +219,8 @@ class RecruitmentService(
         }
 
         // 중복 지원 확인
-        val existingApplication = recruitmentApplicationRepository.findByRecruitmentIdAndApplicantId(recruitmentId, applicantId)
+        val existingApplication =
+            recruitmentApplicationRepository.findByRecruitmentIdAndApplicantId(recruitmentId, applicantId)
         if (existingApplication.isPresent) {
             throw BusinessException(ErrorCode.APPLICATION_ALREADY_EXISTS)
         }
@@ -240,7 +258,8 @@ class RecruitmentService(
         recruitmentId: Long,
         pageable: Pageable,
     ): Page<ApplicationSummaryResponse> {
-        val applications = recruitmentApplicationRepository.findByRecruitmentIdOrderByAppliedAtDesc(recruitmentId, pageable)
+        val applications =
+            recruitmentApplicationRepository.findByRecruitmentIdOrderByAppliedAtDesc(recruitmentId, pageable)
         return applications.map { recruitmentMapper.toApplicationSummaryResponse(it) }
     }
 

@@ -1,10 +1,30 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.dto.*
-import org.castlekong.backend.entity.*
+import org.castlekong.backend.dto.CreateGroupRequest
+import org.castlekong.backend.dto.GroupHierarchyNodeDto
+import org.castlekong.backend.dto.GroupResponse
+import org.castlekong.backend.dto.GroupSummaryResponse
+import org.castlekong.backend.dto.UpdateGroupRequest
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupMember
+import org.castlekong.backend.entity.GroupPermission
+import org.castlekong.backend.entity.GroupRole
+import org.castlekong.backend.entity.GroupType
+import org.castlekong.backend.entity.GroupVisibility
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.ChannelRepository
+import org.castlekong.backend.repository.ChannelRoleBindingRepository
+import org.castlekong.backend.repository.CommentRepository
+import org.castlekong.backend.repository.GroupJoinRequestRepository
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.GroupRoleRepository
+import org.castlekong.backend.repository.PostRepository
+import org.castlekong.backend.repository.SubGroupRequestRepository
+import org.castlekong.backend.repository.UserRepository
+import org.castlekong.backend.repository.WorkspaceRepository
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -101,7 +121,8 @@ class GroupManagementService(
                 group = group,
                 name = "ADVISOR",
                 isSystemRole = true,
-                permissions = GroupPermission.values().toSet().toMutableSet(), // preset refined in evaluator
+                // preset refined in evaluator
+                permissions = GroupPermission.values().toSet().toMutableSet(),
                 priority = 99,
             )
 
@@ -110,7 +131,8 @@ class GroupManagementService(
                 group = group,
                 name = "MEMBER",
                 isSystemRole = true,
-                permissions = emptySet<GroupPermission>().toMutableSet(), // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
+                // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
+                permissions = emptySet<GroupPermission>().toMutableSet(),
                 priority = 1,
             )
 
@@ -144,7 +166,8 @@ class GroupManagementService(
             groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
-        val wasCreated = channelInitializationService.ensureDefaultChannelsExist(group, ownerRole, advisorRole, memberRole)
+        val wasCreated =
+            channelInitializationService.ensureDefaultChannelsExist(group, ownerRole, advisorRole, memberRole)
 
         if (wasCreated) {
             groupRepository.save(group.copy(defaultChannelsCreated = true))
@@ -160,7 +183,8 @@ class GroupManagementService(
     }
 
     fun getGroups(pageable: Pageable): Page<GroupSummaryResponse> {
-        val sortedPageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, Sort.by(Sort.Direction.DESC, "createdAt", "id"))
+        val sortedPageable =
+            PageRequest.of(pageable.pageNumber, pageable.pageSize, Sort.by(Sort.Direction.DESC, "createdAt", "id"))
         return groupRepository.findByDeletedAtIsNull(sortedPageable)
             .map { group ->
                 val memberCount = getGroupMemberCountWithHierarchy(group)
@@ -199,6 +223,7 @@ class GroupManagementService(
                 // 대학교나 계열인 경우 하위 그룹 멤버들도 포함하여 집계
                 groupMemberRepository.countMembersWithHierarchy(group.id)
             }
+
             else -> {
                 // 학과나 기타 그룹인 경우 직접 가입 멤버만 집계
                 groupMemberRepository.countByGroupId(group.id)

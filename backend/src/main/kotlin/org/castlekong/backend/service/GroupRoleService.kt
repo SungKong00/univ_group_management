@@ -94,7 +94,8 @@ class GroupRoleService(
         request: UpdateGroupRoleRequest,
         userId: Long,
     ): GroupRoleResponse {
-        val role = groupRoleRepository.findById(roleId).orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+        val role =
+            groupRoleRepository.findById(roleId).orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
         if (role.group.id != groupId) throw BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND)
         if (role.group.owner.id != userId) throw BusinessException(ErrorCode.FORBIDDEN)
         if (role.isSystemRole) throw BusinessException(ErrorCode.SYSTEM_ROLE_IMMUTABLE)
@@ -119,7 +120,8 @@ class GroupRoleService(
         roleId: Long,
         userId: Long,
     ) {
-        val role = groupRoleRepository.findById(roleId).orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+        val role =
+            groupRoleRepository.findById(roleId).orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
         if (role.group.id != groupId) throw BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND)
         if (role.group.owner.id != userId) throw BusinessException(ErrorCode.FORBIDDEN)
         if (role.isSystemRole) throw BusinessException(ErrorCode.SYSTEM_ROLE_IMMUTABLE)

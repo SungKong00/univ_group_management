@@ -1,29 +1,35 @@
 package org.castlekong.backend.service
 
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.castlekong.backend.dto.ProfileUpdateRequest
 import org.castlekong.backend.entity.GlobalRole
 import org.castlekong.backend.entity.User
 import org.castlekong.backend.fixture.TestDataFactory
+import org.castlekong.backend.repository.GroupJoinRequestRepository
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.SubGroupRequestRepository
 import org.castlekong.backend.repository.UserRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.util.*
+import java.util.Optional
 
 @DisplayName("UserService 테스트")
 class UserServiceTest {
     private lateinit var userService: UserService
     private lateinit var userRepository: UserRepository
-    private lateinit var groupRepository: org.castlekong.backend.repository.GroupRepository
+    private lateinit var groupRepository: GroupRepository
     private lateinit var groupManagementService: GroupManagementService
     private lateinit var groupMemberService: GroupMemberService
-    private lateinit var groupJoinRequestRepository: org.castlekong.backend.repository.GroupJoinRequestRepository
-    private lateinit var subGroupRequestRepository: org.castlekong.backend.repository.SubGroupRequestRepository
-    private lateinit var groupMemberRepository: org.castlekong.backend.repository.GroupMemberRepository
+    private lateinit var groupJoinRequestRepository: GroupJoinRequestRepository
+    private lateinit var subGroupRequestRepository: SubGroupRequestRepository
+    private lateinit var groupMemberRepository: GroupMemberRepository
 
     @BeforeEach
     fun setUp() {

@@ -2,13 +2,13 @@
 -- 개발 환경에서 사용할 인덱스들
 
 -- Groups 테이블 인덱스
-CREATE INDEX IF NOT EXISTS idx_groups_parent_id ON groups(parent_id);
-CREATE INDEX IF NOT EXISTS idx_groups_owner_id ON groups(owner_id);
-CREATE INDEX IF NOT EXISTS idx_groups_deleted_at ON groups(deleted_at);
-CREATE INDEX IF NOT EXISTS idx_groups_university_college_dept ON groups(university, college, department);
-CREATE INDEX IF NOT EXISTS idx_groups_visibility_recruiting ON groups(visibility, is_recruiting);
-CREATE INDEX IF NOT EXISTS idx_groups_group_type ON groups(group_type);
-CREATE INDEX IF NOT EXISTS idx_groups_created_at ON groups(created_at);
+CREATE INDEX IF NOT EXISTS idx_groups_parent_id ON groups (parent_id);
+CREATE INDEX IF NOT EXISTS idx_groups_owner_id ON groups (owner_id);
+CREATE INDEX IF NOT EXISTS idx_groups_deleted_at ON groups (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_groups_university_college_dept ON groups (university, college, department);
+CREATE INDEX IF NOT EXISTS idx_groups_visibility_recruiting ON groups (visibility, is_recruiting);
+CREATE INDEX IF NOT EXISTS idx_groups_group_type ON groups (group_type);
+CREATE INDEX IF NOT EXISTS idx_groups_created_at ON groups (created_at);
 
 -- Group Members 테이블 인덱스
 CREATE INDEX IF NOT EXISTS idx_group_members_group_user ON group_members(group_id, user_id);

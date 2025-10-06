@@ -3,8 +3,10 @@ package org.castlekong.backend.dto
 import java.time.LocalDateTime
 
 data class GoogleLoginRequest(
-    val googleAuthToken: String? = null, // ID Token (권장)
-    val googleAccessToken: String? = null, // Web에서 ID Token 미제공 시 대안
+    // ID Token (권장)
+    val googleAuthToken: String? = null,
+    // Web에서 ID Token 미제공 시 대안
+    val googleAccessToken: String? = null,
 )
 
 data class LoginResponse(
@@ -49,7 +51,8 @@ data class SignupProfileRequest(
     val dept: String?,
     val studentNo: String?,
     val schoolEmail: String,
-    val role: String, // STUDENT | PROFESSOR
+    // STUDENT | PROFESSOR
+    val role: String,
 )
 
 // 닉네임 중복 응답

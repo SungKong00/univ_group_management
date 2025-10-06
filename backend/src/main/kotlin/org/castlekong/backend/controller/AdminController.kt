@@ -1,7 +1,15 @@
 package org.castlekong.backend.controller
 
-import org.castlekong.backend.dto.*
+import org.castlekong.backend.dto.ApiResponse
+import org.castlekong.backend.dto.CreateGroupRequest
+import org.castlekong.backend.dto.GroupJoinRequestResponse
+import org.castlekong.backend.dto.GroupSummaryResponse
+import org.castlekong.backend.dto.ReviewGroupJoinRequestRequest
+import org.castlekong.backend.dto.ReviewSubGroupRequestRequest
+import org.castlekong.backend.dto.SubGroupRequestResponse
+import org.castlekong.backend.dto.UserSummaryResponse
 import org.castlekong.backend.entity.GroupJoinRequestStatus
+import org.castlekong.backend.entity.GroupMember
 import org.castlekong.backend.entity.SubGroupRequestStatus
 import org.castlekong.backend.repository.GroupJoinRequestRepository
 import org.castlekong.backend.repository.GroupMemberRepository
@@ -10,7 +18,13 @@ import org.castlekong.backend.repository.GroupRoleRepository
 import org.castlekong.backend.repository.SubGroupRequestRepository
 import org.castlekong.backend.service.GroupManagementService
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDateTime
 
 @RestController
@@ -102,7 +116,7 @@ class AdminController(
                 groupRoleRepository.findByGroupIdAndName(r.group.id, "MEMBER")
                     .orElseThrow { IllegalArgumentException("역할 없음") }
             groupMemberRepository.save(
-                org.castlekong.backend.entity.GroupMember(
+                GroupMember(
                     group = r.group,
                     user = r.user,
                     role = memberRole,

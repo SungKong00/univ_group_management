@@ -14,8 +14,10 @@ import java.time.LocalDateTime
 
 @Repository
 interface ChannelRepository : JpaRepository<Channel, Long> {
+    @Suppress("FunctionNaming")
     fun findByGroup_Id(groupId: Long): List<Channel>
 
+    @Suppress("FunctionNaming")
     fun findByWorkspace_Id(workspaceId: Long): List<Channel>
 
     fun findByGroupIdAndType(
@@ -26,6 +28,7 @@ interface ChannelRepository : JpaRepository<Channel, Long> {
     fun findByGroupIdOrderByDisplayOrder(groupId: Long): List<Channel>
 
     // 추가: 채널 개수 카운트
+    @Suppress("FunctionNaming")
     fun countByGroup_Id(groupId: Long): Long
 
     // 배치 삭제 메서드
@@ -43,6 +46,7 @@ interface ChannelRepository : JpaRepository<Channel, Long> {
 
 @Repository
 interface PostRepository : JpaRepository<Post, Long> {
+    @Suppress("FunctionNaming")
     fun findByChannel_Id(channelId: Long): List<Post>
 
     @Query("SELECT p FROM Post p WHERE p.channel.id IN :channelIds ORDER BY p.createdAt DESC")
@@ -52,7 +56,12 @@ interface PostRepository : JpaRepository<Post, Long> {
 
     @Modifying
     @Query(
-        "UPDATE Post p SET p.commentCount = CASE WHEN :delta < 0 AND p.commentCount + :delta < 0 THEN 0 ELSE p.commentCount + :delta END, p.lastCommentedAt = :lastCommentedAt WHERE p.id = :postId",
+        """
+        UPDATE Post p
+        SET p.commentCount = CASE WHEN :delta < 0 AND p.commentCount + :delta < 0 THEN 0 ELSE p.commentCount + :delta END,
+            p.lastCommentedAt = :lastCommentedAt
+        WHERE p.id = :postId
+        """,
     )
     fun updateCommentStats(
         @Param("postId") postId: Long,
@@ -75,8 +84,10 @@ interface PostRepository : JpaRepository<Post, Long> {
 
 @Repository
 interface CommentRepository : JpaRepository<Comment, Long> {
+    @Suppress("FunctionNaming")
     fun findByPost_Id(postId: Long): List<Comment>
 
+    @Suppress("FunctionNaming")
     fun findTop1ByPost_IdOrderByCreatedAtDesc(postId: Long): Comment?
 
     // 배치 삭제 메서드
@@ -89,6 +100,7 @@ interface CommentRepository : JpaRepository<Comment, Long> {
 
 @Repository
 interface WorkspaceRepository : JpaRepository<Workspace, Long> {
+    @Suppress("FunctionNaming")
     fun findByGroup_Id(groupId: Long): List<Workspace>
 
     // 배치 삭제 메서드

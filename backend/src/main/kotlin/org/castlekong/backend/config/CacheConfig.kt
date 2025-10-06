@@ -28,7 +28,8 @@ class CacheConfig {
                 .maximumSize(10000L) // 최대 10,000개 항목
                 .expireAfterWrite(30, TimeUnit.MINUTES) // 30분 후 만료
                 .expireAfterAccess(10, TimeUnit.MINUTES) // 10분 접근 없으면 만료
-                .recordStats(), // 캐시 통계 수집
+                // 캐시 통계 수집
+                .recordStats(),
         )
 
         // 채널 권한 캐시는 별도 설정 적용

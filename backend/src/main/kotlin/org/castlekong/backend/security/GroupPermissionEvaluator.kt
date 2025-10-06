@@ -2,7 +2,13 @@ package org.castlekong.backend.security
 
 import org.castlekong.backend.entity.ChannelPermission
 import org.castlekong.backend.entity.GroupPermission
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.ChannelRepository
+import org.castlekong.backend.repository.ChannelRoleBindingRepository
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRecruitmentRepository
+import org.castlekong.backend.repository.PostRepository
+import org.castlekong.backend.repository.RecruitmentApplicationRepository
+import org.castlekong.backend.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.security.access.PermissionEvaluator
 import org.springframework.security.core.Authentication
@@ -116,9 +122,11 @@ class GroupPermissionEvaluator(
                 application.applicant.id == userId ||
                     checkGroupPermission(application.recruitment.group.id, userId, "RECRUITMENT_MANAGE")
             }
+
             "RECRUITMENT_MANAGE" -> {
                 checkGroupPermission(application.recruitment.group.id, userId, "RECRUITMENT_MANAGE")
             }
+
             else -> false
         }
     }

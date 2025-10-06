@@ -3,6 +3,12 @@ package org.castlekong.backend.fixture
 import org.castlekong.backend.dto.GoogleLoginRequest
 import org.castlekong.backend.dto.ProfileUpdateRequest
 import org.castlekong.backend.entity.GlobalRole
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupMember
+import org.castlekong.backend.entity.GroupPermission
+import org.castlekong.backend.entity.GroupRole
+import org.castlekong.backend.entity.GroupType
+import org.castlekong.backend.entity.GroupVisibility
 import org.castlekong.backend.entity.User
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
@@ -25,7 +31,8 @@ object TestDataFactory {
         id: Long = 0L,
         name: String = TEST_NAME,
         email: String = TEST_EMAIL,
-        password: String = "", // Google OAuth2 users don't have passwords
+        // Google OAuth2 users don't have passwords
+        password: String = "",
         globalRole: GlobalRole = GlobalRole.STUDENT,
         isActive: Boolean = true,
         createdAt: LocalDateTime = LocalDateTime.now(),
@@ -122,18 +129,18 @@ object TestDataFactory {
         id: Long = 0L,
         name: String = "테스트 그룹",
         description: String? = "테스트 그룹입니다",
-        owner: org.castlekong.backend.entity.User,
-        parent: org.castlekong.backend.entity.Group? = null,
+        owner: User,
+        parent: Group? = null,
         university: String? = null,
         college: String? = null,
         department: String? = null,
-        visibility: org.castlekong.backend.entity.GroupVisibility = org.castlekong.backend.entity.GroupVisibility.PUBLIC,
-        groupType: org.castlekong.backend.entity.GroupType = org.castlekong.backend.entity.GroupType.AUTONOMOUS,
+        visibility: GroupVisibility = GroupVisibility.PUBLIC,
+        groupType: GroupType = GroupType.AUTONOMOUS,
         isRecruiting: Boolean = false,
         maxMembers: Int? = null,
         tags: Set<String> = emptySet(),
-    ): org.castlekong.backend.entity.Group {
-        return org.castlekong.backend.entity.Group(
+    ): Group {
+        return Group(
             id = id,
             name = name,
             description = description,
@@ -152,13 +159,13 @@ object TestDataFactory {
 
     fun createTestGroupRole(
         id: Long = 0L,
-        group: org.castlekong.backend.entity.Group,
+        group: Group,
         name: String = "MEMBER",
         isSystemRole: Boolean = true,
-        permissions: Set<org.castlekong.backend.entity.GroupPermission> = emptySet(),
+        permissions: Set<GroupPermission> = emptySet(),
         priority: Int = 1,
-    ): org.castlekong.backend.entity.GroupRole {
-        return org.castlekong.backend.entity.GroupRole(
+    ): GroupRole {
+        return GroupRole(
             id = id,
             group = group,
             name = name,
@@ -170,12 +177,12 @@ object TestDataFactory {
 
     fun createTestGroupMember(
         id: Long = 0L,
-        group: org.castlekong.backend.entity.Group,
-        user: org.castlekong.backend.entity.User,
-        role: org.castlekong.backend.entity.GroupRole,
-        joinedAt: java.time.LocalDateTime = java.time.LocalDateTime.now(),
-    ): org.castlekong.backend.entity.GroupMember {
-        return org.castlekong.backend.entity.GroupMember(
+        group: Group,
+        user: User,
+        role: GroupRole,
+        joinedAt: LocalDateTime = LocalDateTime.now(),
+    ): GroupMember {
+        return GroupMember(
             id = id,
             group = group,
             user = user,
@@ -184,27 +191,27 @@ object TestDataFactory {
         )
     }
 
-    fun createOwnerRole(group: org.castlekong.backend.entity.Group): org.castlekong.backend.entity.GroupRole {
+    fun createOwnerRole(group: Group): GroupRole {
         return createTestGroupRole(
             group = group,
             name = "OWNER",
             isSystemRole = true,
-            permissions = org.castlekong.backend.entity.GroupPermission.values().toSet(),
+            permissions = GroupPermission.values().toSet(),
             priority = 100,
         )
     }
 
-    fun createAdvisorRole(group: org.castlekong.backend.entity.Group): org.castlekong.backend.entity.GroupRole {
+    fun createAdvisorRole(group: Group): GroupRole {
         return createTestGroupRole(
             group = group,
             name = "ADVISOR",
             isSystemRole = true,
-            permissions = org.castlekong.backend.entity.GroupPermission.values().toSet(),
+            permissions = GroupPermission.values().toSet(),
             priority = 99,
         )
     }
 
-    fun createMemberRole(group: org.castlekong.backend.entity.Group): org.castlekong.backend.entity.GroupRole {
+    fun createMemberRole(group: Group): GroupRole {
         return createTestGroupRole(
             group = group,
             name = "MEMBER",
@@ -218,7 +225,7 @@ object TestDataFactory {
         id: Long = 0L,
         name: String = "교수님",
         email: String = "professor@example.com",
-    ): org.castlekong.backend.entity.User {
+    ): User {
         return createTestUser(
             id = id,
             name = name,
@@ -231,7 +238,7 @@ object TestDataFactory {
         id: Long = 0L,
         name: String = "학생",
         email: String = "student@example.com",
-    ): org.castlekong.backend.entity.User {
+    ): User {
         return createTestUser(
             id = id,
             name = name,

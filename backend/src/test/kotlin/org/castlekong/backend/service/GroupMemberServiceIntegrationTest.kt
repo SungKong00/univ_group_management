@@ -1,11 +1,19 @@
 package org.castlekong.backend.service
 
-import org.assertj.core.api.Assertions.*
-import org.castlekong.backend.entity.*
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.castlekong.backend.entity.GlobalRole
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupPermission
+import org.castlekong.backend.entity.GroupType
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.fixture.TestDataFactory
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.GroupRoleRepository
+import org.castlekong.backend.repository.UserRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -236,7 +244,8 @@ class GroupMemberServiceIntegrationTest {
         // Given
         val group = createGroupWithRoles("테스트 그룹", owner)
         groupMemberService.joinGroup(group.id, student.id)
-        val anotherUser = userRepository.save(TestDataFactory.createStudentUser(name = "다른학생", email = "another@example.com"))
+        val anotherUser =
+            userRepository.save(TestDataFactory.createStudentUser(name = "다른학생", email = "another@example.com"))
         groupMemberService.joinGroup(group.id, anotherUser.id)
 
         // When & Then

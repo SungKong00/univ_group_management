@@ -2,10 +2,8 @@ package org.castlekong.backend.dto
 
 import org.castlekong.backend.entity.ChannelPermission
 
-/**
- * 채널 권한 관련 DTO들 (MVP 단순화 버전)
- * 개인 오버라이드 및 복잡한 템플릿 시스템 제거
- */
+// 채널 권한 관련 DTO들 (MVP 단순화 버전)
+// 개인 오버라이드 및 복잡한 템플릿 시스템 제거
 
 /**
  * 채널 역할 바인딩 생성 요청

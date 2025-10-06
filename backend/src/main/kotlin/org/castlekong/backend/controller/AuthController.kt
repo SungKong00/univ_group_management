@@ -4,10 +4,18 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.castlekong.backend.dto.*
+import org.castlekong.backend.dto.ApiResponse
+import org.castlekong.backend.dto.GoogleLoginRequest
+import org.castlekong.backend.dto.LoginResponse
+import org.castlekong.backend.dto.RefreshTokenResponse
+import org.castlekong.backend.dto.UserResponse
 import org.castlekong.backend.exception.ValidationException
 import org.castlekong.backend.service.AuthService
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 
 @RestController
@@ -32,8 +40,10 @@ class AuthController(
             when {
                 !googleLoginRequest.googleAuthToken.isNullOrBlank() ->
                     authService.authenticateWithGoogle(googleLoginRequest.googleAuthToken)
+
                 !googleLoginRequest.googleAccessToken.isNullOrBlank() ->
                     authService.authenticateWithGoogleAccessToken(googleLoginRequest.googleAccessToken)
+
                 else -> throw ValidationException("Google token is required")
             }
         return ApiResponse.success(loginResponse)

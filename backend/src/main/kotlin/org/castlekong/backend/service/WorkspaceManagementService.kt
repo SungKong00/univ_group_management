@@ -1,10 +1,15 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.dto.*
-import org.castlekong.backend.entity.*
+import org.castlekong.backend.dto.ChannelResponse
+import org.castlekong.backend.dto.PostResponse
+import org.castlekong.backend.dto.WorkspaceDto
+import org.castlekong.backend.entity.ChannelType
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.ChannelRepository
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.PostRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -72,7 +77,8 @@ class WorkspaceManagementService(
                         name = channel.name,
                         description = channel.description,
                         type = channel.type.name,
-                        isPrivate = false, // 권한은 ChannelRoleBinding으로 관리
+                        // 권한은 ChannelRoleBinding으로 관리
+                        isPrivate = false,
                         displayOrder = channel.displayOrder,
                         createdAt = channel.createdAt,
                         updatedAt = channel.updatedAt,

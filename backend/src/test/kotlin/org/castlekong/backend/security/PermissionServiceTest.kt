@@ -1,8 +1,14 @@
 package org.castlekong.backend.security
 
-import io.mockk.*
-import org.assertj.core.api.Assertions.*
-import org.castlekong.backend.entity.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupPermission
+import org.castlekong.backend.entity.GroupRole
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.fixture.TestDataFactory
@@ -11,7 +17,7 @@ import org.castlekong.backend.repository.GroupRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import java.util.*
+import java.util.Optional
 
 @DisplayName("PermissionService 단위 테스트")
 class PermissionServiceTest {
@@ -55,7 +61,10 @@ class PermissionServiceTest {
             )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
@@ -84,7 +93,10 @@ class PermissionServiceTest {
             )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
@@ -113,7 +125,10 @@ class PermissionServiceTest {
             )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
@@ -155,7 +170,10 @@ class PermissionServiceTest {
             )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { emptySet() }
 
@@ -213,7 +231,10 @@ class PermissionServiceTest {
             )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = {
             GroupPermission.entries.toSet()
@@ -242,7 +263,10 @@ class PermissionServiceTest {
             )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = {
             GroupPermission.entries.toSet()

@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.castlekong.backend.security.JwtTokenProvider
+import org.castlekong.backend.service.EmailVerificationService
 import org.castlekong.backend.service.UserService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
@@ -16,17 +18,22 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(controllers = [UserController::class])
-@org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc(addFilters = false)
 class UserNicknameCheckTest {
-    @Autowired lateinit var mockMvc: MockMvc
+    @Autowired
+    lateinit var mockMvc: MockMvc
 
-    @Autowired lateinit var objectMapper: ObjectMapper
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
 
-    @MockkBean lateinit var userService: UserService
+    @MockkBean
+    lateinit var userService: UserService
 
-    @MockkBean lateinit var emailVerificationService: org.castlekong.backend.service.EmailVerificationService
+    @MockkBean
+    lateinit var emailVerificationService: EmailVerificationService
 
-    @MockkBean lateinit var jwtTokenProvider: JwtTokenProvider
+    @MockkBean
+    lateinit var jwtTokenProvider: JwtTokenProvider
 
     @Test
     @WithMockUser

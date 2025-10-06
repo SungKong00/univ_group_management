@@ -3,7 +3,9 @@ package org.castlekong.backend.controller
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.castlekong.backend.dto.*
+import org.castlekong.backend.dto.ApiResponse
+import org.castlekong.backend.dto.EmailSendRequest
+import org.castlekong.backend.dto.EmailVerifyRequest
 import org.castlekong.backend.service.EmailVerificationService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

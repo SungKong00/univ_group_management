@@ -3,6 +3,7 @@ package org.castlekong.backend.controller
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import org.castlekong.backend.dto.GoogleLoginRequest
 import org.castlekong.backend.dto.LoginResponse
 import org.castlekong.backend.dto.RefreshTokenResponse
 import org.castlekong.backend.dto.UserResponse
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
@@ -121,7 +123,7 @@ class AuthControllerTest {
         fun `should return 200 when valid Google access token provided`() {
             // Given
             val googleLoginRequest =
-                org.castlekong.backend.dto.GoogleLoginRequest(
+                GoogleLoginRequest(
                     googleAuthToken = null,
                     googleAccessToken = "valid.google.access.token",
                 )
@@ -174,7 +176,7 @@ class AuthControllerTest {
         fun `should return 401 when invalid Google access token provided`() {
             // Given
             val invalidGoogleLoginRequest =
-                org.castlekong.backend.dto.GoogleLoginRequest(
+                GoogleLoginRequest(
                     googleAuthToken = null,
                     googleAccessToken = "invalid.google.access.token",
                 )
@@ -261,8 +263,8 @@ class AuthControllerTest {
                     bio = null,
                     profileCompleted = true,
                     emailVerified = true,
-                    createdAt = java.time.LocalDateTime.now(),
-                    updatedAt = java.time.LocalDateTime.now(),
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now(),
                 )
             every { authService.verifyToken() } returns userResponse
 
@@ -272,7 +274,7 @@ class AuthControllerTest {
             ).andExpect(status().isMethodNotAllowed)
 
             mockMvc.perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/auth/verify"),
+                get("/api/auth/verify"),
             )
                 .andDo(print())
                 .andExpect(status().isOk)

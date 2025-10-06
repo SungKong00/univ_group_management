@@ -1,6 +1,9 @@
 package org.castlekong.backend.dto
 
-import jakarta.validation.constraints.*
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
 import org.castlekong.backend.entity.ApplicationStatus
 import org.castlekong.backend.entity.RecruitmentStatus
 import java.time.LocalDateTime

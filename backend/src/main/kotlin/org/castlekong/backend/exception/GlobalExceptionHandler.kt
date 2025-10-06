@@ -25,9 +25,11 @@ class GlobalExceptionHandler {
                 ErrorCode.INVALID_TOKEN,
                 ErrorCode.EXPIRED_TOKEN,
                 -> HttpStatus.UNAUTHORIZED
+
                 ErrorCode.FORBIDDEN,
                 ErrorCode.SYSTEM_ROLE_IMMUTABLE,
                 -> HttpStatus.FORBIDDEN
+
                 ErrorCode.USER_NOT_FOUND,
                 ErrorCode.GROUP_NOT_FOUND,
                 ErrorCode.GROUP_ROLE_NOT_FOUND,
@@ -39,6 +41,7 @@ class GlobalExceptionHandler {
                 ErrorCode.APPLICATION_NOT_FOUND,
                 ErrorCode.REQUEST_NOT_FOUND,
                 -> HttpStatus.NOT_FOUND
+
                 ErrorCode.USER_ALREADY_EXISTS,
                 ErrorCode.GROUP_NAME_ALREADY_EXISTS,
                 ErrorCode.GROUP_ROLE_NAME_ALREADY_EXISTS,
@@ -49,6 +52,7 @@ class GlobalExceptionHandler {
                 ErrorCode.APPLICATION_CANNOT_WITHDRAW,
                 ErrorCode.REQUEST_ALREADY_EXISTS,
                 -> HttpStatus.CONFLICT
+
                 else -> HttpStatus.BAD_REQUEST
             }
 

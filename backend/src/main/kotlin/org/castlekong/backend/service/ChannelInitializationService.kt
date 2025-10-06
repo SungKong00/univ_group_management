@@ -1,6 +1,11 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.entity.*
+import org.castlekong.backend.entity.Channel
+import org.castlekong.backend.entity.ChannelPermission
+import org.castlekong.backend.entity.ChannelRoleBinding
+import org.castlekong.backend.entity.ChannelType
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.repository.ChannelRepository
 import org.castlekong.backend.repository.ChannelRoleBindingRepository
 import org.springframework.stereotype.Service

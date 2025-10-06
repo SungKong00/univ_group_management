@@ -1,10 +1,25 @@
 package org.castlekong.backend.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.castlekong.backend.dto.*
-import org.castlekong.backend.entity.*
+import org.castlekong.backend.dto.CreateApplicationRequest
+import org.castlekong.backend.dto.CreateRecruitmentRequest
+import org.castlekong.backend.dto.ReviewApplicationRequest
+import org.castlekong.backend.dto.UpdateRecruitmentRequest
+import org.castlekong.backend.entity.ApplicationStatus
+import org.castlekong.backend.entity.GlobalRole
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupRecruitment
+import org.castlekong.backend.entity.GroupRole
+import org.castlekong.backend.entity.RecruitmentApplication
+import org.castlekong.backend.entity.RecruitmentStatus
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.fixture.TestDataFactory
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRecruitmentRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.GroupRoleRepository
+import org.castlekong.backend.repository.RecruitmentApplicationRepository
+import org.castlekong.backend.repository.UserRepository
 import org.castlekong.backend.security.JwtTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -17,9 +32,14 @@ import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
@@ -99,8 +119,8 @@ class RecruitmentControllerTest {
 
         // Create group and roles
         group = createGroupWithRoles(owner)
-        ownerRole = groupRoleRepository.findByGroupIdAndName(group.id!!, "OWNER").get()
-        memberRole = groupRoleRepository.findByGroupIdAndName(group.id!!, "MEMBER").get()
+        ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").get()
+        memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").get()
 
         // Add member to group
         groupMemberRepository.save(

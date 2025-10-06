@@ -2,10 +2,8 @@ package org.castlekong.backend.event
 
 import org.springframework.context.ApplicationEvent
 
-/**
- * 채널 권한 관련 이벤트들
- * 캐시 무효화 트리거로 사용
- */
+// 채널 권한 관련 이벤트들
+// 캐시 무효화 트리거로 사용
 
 /**
  * 채널 역할 바인딩 변경 이벤트

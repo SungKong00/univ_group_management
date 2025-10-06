@@ -1,6 +1,11 @@
 package org.castlekong.backend.mapper
 
-import org.castlekong.backend.dto.*
+import org.castlekong.backend.dto.ApplicationResponse
+import org.castlekong.backend.dto.ApplicationSummaryResponse
+import org.castlekong.backend.dto.ArchivedRecruitmentResponse
+import org.castlekong.backend.dto.RecruitmentResponse
+import org.castlekong.backend.dto.RecruitmentStatsResponse
+import org.castlekong.backend.dto.RecruitmentSummaryResponse
 import org.castlekong.backend.entity.GroupRecruitment
 import org.castlekong.backend.entity.RecruitmentApplication
 import org.castlekong.backend.service.GroupMapper
@@ -93,7 +98,8 @@ class RecruitmentMapper(
             approvedApplications = stats.approvedApplications,
             rejectedApplications = stats.rejectedApplications,
             createdAt = recruitment.createdAt,
-            closedAt = recruitment.closedAt ?: recruitment.createdAt, // fallback to createdAt if closedAt is null
+            // fallback to createdAt if closedAt is null
+            closedAt = recruitment.closedAt ?: recruitment.createdAt,
         )
     }
 }

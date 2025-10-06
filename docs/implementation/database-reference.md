@@ -492,17 +492,47 @@ ORDER BY p.created_at DESC;
 
 ## 성능 최적화
 
-### 주요 인덱스 전략
+### 주요 인덱스 전략 (V2 마이그레이션 기준)
+
+`V2__add_performance_indexes.sql` 마이그레이션을 통해 대규모 인덱스가 추가되었습니다. 주요 전략은 다음과 같습니다.
+
+-   **외래 키 (FK) 인덱싱**: 대부분의 `*_id` 외래 키 컬럼에 인덱스를 추가하여 `JOIN` 성능을 향상시킵니다.
+-   **복합 인덱스**: `WHERE` 절에서 자주 함께 사용되는 컬럼들을 묶어 복합 인덱스를 생성합니다. (예: `group_members(group_id, user_id)`)
+-   **정렬 순서 고려**: `ORDER BY` 절에 사용되는 컬럼(특히 `created_at DESC`)에 대한 인덱스를 생성하여 정렬 성능을 최적화합니다.
+-   **소프트 삭제 고려**: `deleted_at IS NULL` 조건을 포함하는 부분 인덱스를 생성하여 활성 레코드 조회 속도를 높입니다.
+-   **조회 조건 최적화**: `visibility`, `is_recruiting`, `status` 등 조회 조건으로 자주 사용되는 컬럼에 인덱스를 추가합니다.
+
 ```sql
--- 복합 인덱스 (자주 함께 조회되는 컬럼)
-CREATE INDEX idx_group_members_composite ON group_members(group_id, user_id, joined_at);
+-- V2__add_performance_indexes.sql
 
--- 부분 인덱스 (조건부 인덱스)
-CREATE INDEX idx_active_groups ON groups(visibility, created_at)
-WHERE deleted_at IS NULL;
+-- Groups 테이블
+CREATE INDEX IF NOT EXISTS idx_groups_parent_id ON groups (parent_id);
+CREATE INDEX IF NOT EXISTS idx_groups_owner_id ON groups (owner_id);
+CREATE INDEX IF NOT EXISTS idx_groups_deleted_at ON groups (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_groups_university_college_dept ON groups (university, college, department);
+CREATE INDEX IF NOT EXISTS idx_groups_visibility_recruiting ON groups (visibility, is_recruiting);
+CREATE INDEX IF NOT EXISTS idx_groups_group_type ON groups (group_type);
+CREATE INDEX IF NOT EXISTS idx_groups_created_at ON groups (created_at);
 
--- 함수 기반 인덱스 (검색 최적화)
-CREATE INDEX idx_user_search ON users(LOWER(name), LOWER(nickname));
+-- Group Members 테이블
+CREATE INDEX IF NOT EXISTS idx_group_members_group_user ON group_members(group_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_group_members_user_id ON group_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_group_members_role_id ON group_members(role_id);
+CREATE INDEX IF NOT EXISTS idx_group_members_joined_at ON group_members(joined_at);
+
+-- Group Roles 테이블
+CREATE INDEX IF NOT EXISTS idx_group_roles_group_name ON group_roles(group_id, name);
+CREATE INDEX IF NOT EXISTS idx_group_roles_system_role ON group_roles(is_system_role);
+CREATE INDEX IF NOT EXISTS idx_group_roles_priority ON group_roles(priority DESC);
+
+-- Channels, Posts, Comments 등 다른 주요 테이블에도 유사한 전략의 인덱스가 추가되었습니다.
+-- 전체 목록은 V2 마이그레이션 스크립트를 참조하십시오.
+
+-- 복합 인덱스 (자주 함께 사용되는 컬럼들)
+CREATE INDEX IF NOT EXISTS idx_groups_deleted_type_visibility ON groups (deleted_at, group_type, visibility) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_group_members_group_role_joined ON group_members(group_id, role_id, joined_at);
+CREATE INDEX IF NOT EXISTS idx_posts_channel_created_pinned ON posts(channel_id, created_at DESC, is_pinned DESC);
+CREATE INDEX IF NOT EXISTS idx_comments_post_created ON comments(post_id, created_at);
 ```
 
 ### 페이징 최적화
@@ -536,6 +566,7 @@ VALUES
 ## 변경 이력 (발췌)
 | 날짜 | 변경 사항 |
 |------|-----------|
+| 2025-10-06 | **V2 마이그레이션**: 프로덕션 환경을 위한 대규모 성능 최적화 인덱스 추가. |
 | 2025-10-01 | GroupRole 비불변화(data class 제거), 시스템 역할 불변성 명시, ChannelRoleBinding 자동 생성 제거, ChannelRoleBinding 스키마/엔티티 추가, 삭제 Bulk 순서 추가 |
 
 ## 캘린더 시스템 테이블 (Calendar System)

@@ -1,6 +1,10 @@
 package org.castlekong.backend.dto
 
-import jakarta.validation.constraints.*
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotEmpty
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Size
 import org.castlekong.backend.entity.GroupType
 import org.castlekong.backend.entity.GroupVisibility
 import java.time.LocalDateTime
@@ -159,8 +163,9 @@ data class SubGroupRequestResponse(
 )
 
 data class ReviewSubGroupRequestRequest(
+    // "APPROVE" 또는 "REJECT"
     @field:NotBlank(message = "액션은 필수입니다")
-    val action: String, // "APPROVE" 또는 "REJECT"
+    val action: String,
     @field:Size(max = 500, message = "응답 메시지는 500자를 초과할 수 없습니다")
     val responseMessage: String? = null,
 )
@@ -180,8 +185,9 @@ data class GroupJoinRequestResponse(
 )
 
 data class ReviewGroupJoinRequestRequest(
+    // "APPROVE" 또는 "REJECT"
     @field:NotBlank(message = "액션은 필수입니다")
-    val action: String, // "APPROVE" 또는 "REJECT"
+    val action: String,
     @field:Size(max = 500, message = "응답 메시지는 500자를 초과할 수 없습니다")
     val responseMessage: String? = null,
 )
@@ -198,10 +204,13 @@ data class MyGroupResponse(
     val id: Long,
     val name: String,
     val type: GroupType,
-    val level: Int, // 계층 레벨 (0=최상위, 1=하위, ...)
+    // 계층 레벨 (0=최상위, 1=하위, ...)
+    val level: Int,
     val parentId: Long?,
-    val role: String, // OWNER, ADVISOR, MEMBER
-    val permissions: Set<String>, // GroupPermission 목록
+    // OWNER, ADVISOR, MEMBER
+    val role: String,
+    // GroupPermission 목록
+    val permissions: Set<String>,
     val profileImageUrl: String? = null,
     val visibility: GroupVisibility,
 )

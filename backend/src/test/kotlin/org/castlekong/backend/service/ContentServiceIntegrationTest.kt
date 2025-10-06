@@ -105,8 +105,8 @@ class ContentServiceIntegrationTest {
             )
 
         group = createGroupWithDefaultRoles(owner)
-        ownerRole = groupRoleRepository.findByGroupIdAndName(group.id!!, "OWNER").get()
-        memberRole = groupRoleRepository.findByGroupIdAndName(group.id!!, "MEMBER").get()
+        ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").get()
+        memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").get()
 
         groupMemberRepository.save(
             TestDataFactory.createTestGroupMember(
@@ -120,25 +120,25 @@ class ContentServiceIntegrationTest {
     @Test
     @DisplayName("그룹 조회 시 기본 워크스페이스가 자동 생성된다")
     fun getWorkspacesByGroup_CreatesDefaultWorkspace() {
-        val existing = workspaceRepository.findByGroup_Id(group.id!!)
+        val existing = workspaceRepository.findByGroup_Id(group.id)
         assertThat(existing).isEmpty()
 
-        val workspaces = contentService.getWorkspacesByGroup(group.id!!, owner.id)
+        val workspaces = contentService.getWorkspacesByGroup(group.id, owner.id)
 
         assertThat(workspaces).hasSize(1)
         assertThat(workspaces[0].name).isEqualTo("기본 워크스페이스")
-        assertThat(workspaceRepository.findByGroup_Id(group.id!!)).hasSize(1)
+        assertThat(workspaceRepository.findByGroup_Id(group.id)).hasSize(1)
     }
 
     @Test
     @DisplayName("그룹 워크스페이스 조회는 멱등적이며 단 하나만 존재한다")
     fun getWorkspacesByGroup_IdempotentSingle() {
-        val first = contentService.getWorkspacesByGroup(group.id!!, owner.id)
-        val second = contentService.getWorkspacesByGroup(group.id!!, owner.id)
+        val first = contentService.getWorkspacesByGroup(group.id, owner.id)
+        val second = contentService.getWorkspacesByGroup(group.id, owner.id)
         assertThat(first).hasSize(1)
         assertThat(second).hasSize(1)
         assertThat(first[0].id).isEqualTo(second[0].id)
-        assertThat(workspaceRepository.findByGroup_Id(group.id!!)).hasSize(1)
+        assertThat(workspaceRepository.findByGroup_Id(group.id)).hasSize(1)
     }
 
     @Test
@@ -150,7 +150,7 @@ class ContentServiceIntegrationTest {
             contentService.updateWorkspace(
                 workspace.id,
                 UpdateWorkspaceRequest(name = "수정됨"),
-                member.id!!,
+                member.id,
             )
         }
             .isInstanceOf(BusinessException::class.java)
@@ -171,7 +171,7 @@ class ContentServiceIntegrationTest {
             contentService.createChannel(
                 workspace.id,
                 CreateChannelRequest(name = "공지2", description = "추가 공지", type = "ANNOUNCEMENT"),
-                owner.id!!,
+                owner.id,
             )
         val bindings = channelRoleBindingRepository.findByChannelId(channel.id)
         assertThat(bindings).isEmpty()
@@ -186,7 +186,7 @@ class ContentServiceIntegrationTest {
             contentService.createChannel(
                 workspace.id,
                 CreateChannelRequest(name = "비밀"),
-                member.id!!,
+                member.id,
             )
         }
             .isInstanceOf(BusinessException::class.java)
@@ -197,9 +197,9 @@ class ContentServiceIntegrationTest {
     @DisplayName("워크스페이스 채널 목록은 멤버가 아닌 사용자에게 차단된다")
     fun getChannelsByWorkspace_ForbiddenForNonMember() {
         val workspace = ensureDefaultWorkspace()
-        contentService.createChannel(workspace.id, CreateChannelRequest(name = "정보"), owner.id!!)
+        contentService.createChannel(workspace.id, CreateChannelRequest(name = "정보"), owner.id)
 
-        assertThatThrownBy { contentService.getChannelsByWorkspace(workspace.id, outsider.id!!) }
+        assertThatThrownBy { contentService.getChannelsByWorkspace(workspace.id, outsider.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FORBIDDEN)
     }
@@ -208,10 +208,10 @@ class ContentServiceIntegrationTest {
     @DisplayName("그룹 ID로 채널 목록을 조회할 수 있다")
     fun getChannelsByGroup_Success() {
         val workspace = ensureDefaultWorkspace()
-        contentService.createChannel(workspace.id, CreateChannelRequest(name = "공지사항"), owner.id!!)
-        contentService.createChannel(workspace.id, CreateChannelRequest(name = "자유게시판"), owner.id!!)
+        contentService.createChannel(workspace.id, CreateChannelRequest(name = "공지사항"), owner.id)
+        contentService.createChannel(workspace.id, CreateChannelRequest(name = "자유게시판"), owner.id)
 
-        val channels = contentService.getChannelsByGroup(group.id!!, member.id!!)
+        val channels = contentService.getChannelsByGroup(group.id, member.id)
 
         assertThat(channels).hasSize(2)
         assertThat(channels.map { it.name }).contains("공지사항", "자유게시판")
@@ -221,9 +221,9 @@ class ContentServiceIntegrationTest {
     @DisplayName("그룹 채널 목록은 멤버가 아닌 사용자에게 차단된다")
     fun getChannelsByGroup_ForbiddenForNonMember() {
         val workspace = ensureDefaultWorkspace()
-        contentService.createChannel(workspace.id, CreateChannelRequest(name = "정보"), owner.id!!)
+        contentService.createChannel(workspace.id, CreateChannelRequest(name = "정보"), owner.id)
 
-        assertThatThrownBy { contentService.getChannelsByGroup(group.id!!, outsider.id!!) }
+        assertThatThrownBy { contentService.getChannelsByGroup(group.id, outsider.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FORBIDDEN)
     }
@@ -237,11 +237,11 @@ class ContentServiceIntegrationTest {
             contentService.createPost(
                 channel.id,
                 CreatePostRequest(content = "안녕하세요"),
-                member.id!!,
+                member.id,
             )
 
         assertThat(response.content).isEqualTo("안녕하세요")
-        assertThat(response.author.id).isEqualTo(member.id!!)
+        assertThat(response.author.id).isEqualTo(member.id)
 
         val saved = postRepository.findById(response.id)
         assertThat(saved).isPresent
@@ -256,7 +256,7 @@ class ContentServiceIntegrationTest {
             contentService.createPost(
                 channel.id,
                 CreatePostRequest(content = "외부인"),
-                outsider.id!!,
+                outsider.id,
             )
         }
             .isInstanceOf(BusinessException::class.java)
@@ -268,12 +268,12 @@ class ContentServiceIntegrationTest {
     fun updatePost_OnlyAuthorCanUpdate() {
         val channel = createDefaultChannel()
         grantFull(channel.id)
-        val post = contentService.createPost(channel.id, CreatePostRequest(content = "원본"), member.id!!)
+        val post = contentService.createPost(channel.id, CreatePostRequest(content = "원본"), member.id)
 
-        val updated = contentService.updatePost(post.id, UpdatePostRequest(content = "수정본"), member.id!!)
+        val updated = contentService.updatePost(post.id, UpdatePostRequest(content = "수정본"), member.id)
         assertThat(updated.content).isEqualTo("수정본")
 
-        assertThatThrownBy { contentService.updatePost(post.id, UpdatePostRequest(content = "다른사용자"), owner.id!!) }
+        assertThatThrownBy { contentService.updatePost(post.id, UpdatePostRequest(content = "다른사용자"), owner.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FORBIDDEN)
     }
@@ -283,9 +283,9 @@ class ContentServiceIntegrationTest {
     fun deletePost_ByOwnerWithAdminPermission() {
         val channel = createDefaultChannel()
         grantFull(channel.id)
-        val post = contentService.createPost(channel.id, CreatePostRequest(content = "삭제 대상"), member.id!!)
+        val post = contentService.createPost(channel.id, CreatePostRequest(content = "삭제 대상"), member.id)
 
-        contentService.deletePost(post.id, owner.id!!)
+        contentService.deletePost(post.id, owner.id)
 
         assertThat(postRepository.findById(post.id)).isNotPresent
     }
@@ -295,17 +295,17 @@ class ContentServiceIntegrationTest {
     fun createAndDeleteComment_Success() {
         val channel = createDefaultChannel()
         grantFull(channel.id)
-        val post = contentService.createPost(channel.id, CreatePostRequest(content = "댓글 테스트"), member.id!!)
+        val post = contentService.createPost(channel.id, CreatePostRequest(content = "댓글 테스트"), member.id)
 
         val comment =
             contentService.createComment(
                 post.id,
                 CreateCommentRequest(content = "첫 댓글"),
-                member.id!!,
+                member.id,
             )
         assertThat(comment.content).isEqualTo("첫 댓글")
 
-        contentService.deleteComment(comment.id, member.id!!)
+        contentService.deleteComment(comment.id, member.id)
 
         assertThat(commentRepository.findById(comment.id)).isNotPresent
     }
@@ -315,23 +315,23 @@ class ContentServiceIntegrationTest {
     fun deleteComment_NotAuthor_ThrowsForbidden() {
         val channel = createDefaultChannel()
         grantFull(channel.id)
-        val post = contentService.createPost(channel.id, CreatePostRequest(content = "댓글"), member.id!!)
-        val comment = contentService.createComment(post.id, CreateCommentRequest(content = "작성자"), member.id!!)
+        val post = contentService.createPost(channel.id, CreatePostRequest(content = "댓글"), member.id)
+        val comment = contentService.createComment(post.id, CreateCommentRequest(content = "작성자"), member.id)
 
-        assertThatThrownBy { contentService.deleteComment(comment.id, owner.id!!) }
+        assertThatThrownBy { contentService.deleteComment(comment.id, owner.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FORBIDDEN)
     }
 
     private fun ensureDefaultWorkspace(): WorkspaceResponse {
-        val existing = workspaceRepository.findByGroup_Id(group.id!!)
+        val existing = workspaceRepository.findByGroup_Id(group.id)
         return if (existing.isEmpty()) {
-            contentService.getWorkspacesByGroup(group.id!!, owner.id)[0]
+            contentService.getWorkspacesByGroup(group.id, owner.id)[0]
         } else {
             val workspace = existing[0]
             WorkspaceResponse(
                 id = workspace.id,
-                groupId = workspace.group.id!!,
+                groupId = workspace.group.id,
                 name = workspace.name,
                 description = workspace.description,
                 createdAt = workspace.createdAt,
@@ -344,7 +344,7 @@ class ContentServiceIntegrationTest {
         contentService.createChannel(
             ensureDefaultWorkspace().id,
             CreateChannelRequest(name = "토론"),
-            owner.id!!,
+            owner.id,
         )
 
     private fun createGroupWithDefaultRoles(owner: User): Group {
@@ -377,8 +377,8 @@ class ContentServiceIntegrationTest {
         memberPerms: Set<ChannelPermission>,
     ) {
         val channel = channelRepository.findById(channelId).get()
-        val ownerRole = groupRoleRepository.findByGroupIdAndName(channel.group.id!!, "OWNER").get()
-        val memberRole = groupRoleRepository.findByGroupIdAndName(channel.group.id!!, "MEMBER").get()
+        val ownerRole = groupRoleRepository.findByGroupIdAndName(channel.group.id, "OWNER").get()
+        val memberRole = groupRoleRepository.findByGroupIdAndName(channel.group.id, "MEMBER").get()
         channelRoleBindingRepository.save(ChannelRoleBinding.create(channel, ownerRole, ownerPerms))
         channelRoleBindingRepository.save(ChannelRoleBinding.create(channel, memberRole, memberPerms))
     }
