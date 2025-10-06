@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../providers/workspace_state_provider.dart';
 import 'channel_item.dart';
+import 'group_dropdown.dart';
 
 /// Mobile Channel List Widget
 ///
@@ -65,12 +66,12 @@ class MobileChannelList extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (currentGroupName != null) ...[
-            Text(
-              currentGroupName!,
-              style: AppTheme.headlineMedium.copyWith(
-                color: AppColors.neutral900,
-              ),
+          if (currentGroupName != null && currentGroupId != null) ...[
+            // 그룹 드롭다운 추가 (데스크톱과 동일한 기능)
+            GroupDropdown(
+              currentGroupId: currentGroupId!,
+              currentGroupName: currentGroupName!,
+              channelBarWidth: null, // 모바일은 전체 너비 사용
             ),
           ] else ...[
             Text(
@@ -122,19 +123,20 @@ class MobileChannelList extends ConsumerWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.button),
         child: Container(
-          // Touch-optimized height (min 44px)
-          constraints: const BoxConstraints(minHeight: 44),
+          // Mobile-optimized height (40px, still touch-friendly)
+          constraints: const BoxConstraints(minHeight: 40),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.sm,
-            vertical: AppSpacing.xs,
+            vertical: AppSpacing.xxs,
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(icon, size: 24, color: AppColors.neutral700),
+              Icon(icon, size: 20, color: AppColors.neutral700),
               const SizedBox(width: AppSpacing.xs),
               Text(
                 label,
-                style: AppTheme.bodyLarge.copyWith(
+                style: AppTheme.bodyMedium.copyWith(
                   color: AppColors.neutral900,
                 ),
               ),
@@ -148,7 +150,10 @@ class MobileChannelList extends ConsumerWidget {
   Widget _buildChannelList(WidgetRef ref) {
     return Expanded(
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.xxs,
+          horizontal: AppSpacing.sm,
+        ),
         itemCount: channels.length,
         itemBuilder: (context, index) {
           final channel = channels[index];

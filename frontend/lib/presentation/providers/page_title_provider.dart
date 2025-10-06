@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/page_breadcrumb.dart';
 import '../../core/navigation/navigation_config.dart';
 import 'workspace_state_provider.dart';
+import 'my_groups_provider.dart';
 
 /// 현재 페이지의 브레드크럼을 제공하는 Provider (경로 기반)
 ///
@@ -32,7 +33,21 @@ final pageBreadcrumbFromPathProvider =
 
     // 특수 케이스: 워크스페이스
     if (routePath.startsWith('/workspace')) {
-      return _buildWorkspaceBreadcrumb(workspaceState);
+      // 그룹 정보 가져오기
+      final groupsAsync = ref.watch(myGroupsProvider);
+      final groupName = groupsAsync.maybeWhen(
+        data: (groups) {
+          if (workspaceState.selectedGroupId == null) return null;
+          final currentGroup = groups.firstWhere(
+            (g) => g.id.toString() == workspaceState.selectedGroupId,
+            orElse: () => groups.first,
+          );
+          return currentGroup.name;
+        },
+        orElse: () => null,
+      );
+
+      return _buildWorkspaceBreadcrumb(workspaceState, groupName);
     }
 
     // 특수 케이스: 로그인/온보딩
@@ -57,27 +72,97 @@ final pageBreadcrumbFromPathProvider =
 /// 워크스페이스 브레드크럼 생성
 ///
 /// 워크스페이스 상태에 따라 동적으로 경로를 구성합니다.
-/// - 그룹만 선택: ["워크스페이스", "그룹명"]
-/// - 그룹 + 채널: ["워크스페이스", "그룹명", "채널명"]
-PageBreadcrumb _buildWorkspaceBreadcrumb(WorkspaceState state) {
+/// - 데스크톱: "워크스페이스 > 그룹명 (> 채널명)"
+/// - 모바일: 뷰 타입별 최적화된 표시 (channelList: "워크스페이스", channelPosts: "그룹명 > 채널명", postComments: "댓글")
+PageBreadcrumb _buildWorkspaceBreadcrumb(WorkspaceState state, String? groupName) {
+  // 그룹 이름 fallback
+  final displayGroupName = groupName ?? '그룹';
+
+  // 모바일 뷰인 경우: 뷰 타입별 최적화된 브레드크럼 생성
+  // _buildMobileBreadcrumb 내부에서 모든 모바일 뷰 타입을 처리하므로 조건 없이 호출
+  return _buildMobileBreadcrumb(state, displayGroupName);
+
+  // 데스크톱 뷰는 현재 구현되지 않음 (향후 확장 시 조건 추가 필요)
+  // return _buildDesktopBreadcrumb(state, displayGroupName);
+}
+
+/// 데스크톱 브레드크럼 생성: "워크스페이스 > 그룹명"
+PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceState state, String groupName) {
   final path = <String>['워크스페이스'];
 
-  // 그룹 이름 추가 (향후 그룹 Provider에서 실제 이름 가져오기)
+  // 그룹 이름 추가
   if (state.selectedGroupId != null) {
-    // TODO: 그룹 Provider 구현 후 실제 그룹 이름으로 대체
-    final groupName = state.workspaceContext['groupName'] as String? ?? '그룹';
     path.add(groupName);
   }
 
-  // 채널 이름 추가 (향후 채널 Provider에서 실제 이름 가져오기)
+  // 채널 이름 추가 (실제 채널 이름 가져오기)
   if (state.selectedChannelId != null) {
-    // TODO: 채널 Provider 구현 후 실제 채널 이름으로 대체
-    final channelName = state.workspaceContext['channelName'] as String? ?? '채널';
-    path.add(channelName);
+    final channelName = _getChannelName(state, state.selectedChannelId!);
+    if (channelName.isNotEmpty) {
+      path.add(channelName);
+    }
   }
 
   return PageBreadcrumb(
     title: '워크스페이스',
     path: path,
   );
+}
+
+/// 모바일 브레드크럼 생성: 화면별 최적화된 표시
+///
+/// - 채널 목록: "워크스페이스"
+/// - 게시글 목록: "그룹명 > 채널명/기능명"
+/// - 댓글 화면: "댓글"
+PageBreadcrumb _buildMobileBreadcrumb(WorkspaceState state, String groupName) {
+  // 현재 뷰 타입에 따라 브레드크럼 형식 결정
+  switch (state.mobileView) {
+    case MobileWorkspaceView.channelList:
+      // 채널 목록: "워크스페이스"만 표시
+      return const PageBreadcrumb(
+        title: '워크스페이스',
+        path: ['워크스페이스'],
+      );
+
+    case MobileWorkspaceView.channelPosts:
+      // 채널 게시글 목록: "그룹명 > 채널명/기능명"
+      final path = <String>[groupName];
+
+      if (state.currentView == WorkspaceView.groupHome) {
+        path.add('홈');
+      } else if (state.currentView == WorkspaceView.calendar) {
+        path.add('캘린더');
+      } else if (state.selectedChannelId != null) {
+        // 실제 채널 이름 가져오기
+        final channelName = _getChannelName(state, state.selectedChannelId!);
+        if (channelName.isNotEmpty) {
+          path.add(channelName);
+        }
+      }
+
+      return PageBreadcrumb(
+        title: '',
+        path: path,
+      );
+
+    case MobileWorkspaceView.postComments:
+      // 댓글 화면: "댓글"만 표시
+      return const PageBreadcrumb(
+        title: '댓글',
+        path: ['댓글'],
+      );
+  }
+}
+
+/// 채널 ID로 실제 채널 이름 가져오기
+String _getChannelName(WorkspaceState state, String channelId) {
+  try {
+    final channel = state.channels.firstWhere(
+      (ch) => ch.id.toString() == channelId,
+    );
+    return channel.name;
+  } catch (e) {
+    // 채널을 찾지 못한 경우 빈 문자열 반환 (경로에 추가되지 않음)
+    return '';
+  }
 }

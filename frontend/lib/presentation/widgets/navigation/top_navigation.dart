@@ -7,6 +7,7 @@ import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/layout_mode.dart';
 import '../../providers/page_title_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/workspace_state_provider.dart';
 import '../common/breadcrumb_widget.dart';
 import '../workspace/workspace_header.dart';
 
@@ -83,6 +84,29 @@ class TopNavigation extends ConsumerWidget {
   }
 
   void _handleBackNavigation(BuildContext context, WidgetRef ref) {
+    final currentRoute = GoRouterState.of(context).uri.path;
+    final isWorkspace = currentRoute.startsWith('/workspace');
+
+    // Workspace navigation handling
+    if (isWorkspace) {
+      final layoutMode = LayoutModeExtension.fromContext(context);
+      final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+
+      // Web: handle web-specific back navigation
+      if (layoutMode.isWide) {
+        final handled = workspaceNotifier.handleWebBack();
+        if (handled) return; // Internal navigation handled
+        // If not handled, continue to normal navigation (go home)
+      }
+      // Mobile: handle mobile-specific back navigation
+      else if (layoutMode.isCompact) {
+        final handled = workspaceNotifier.handleMobileBack();
+        if (handled) return; // Internal navigation handled
+        // If not handled (channelList), continue to normal navigation (go home)
+      }
+    }
+
+    // Default navigation handling
     final navigationController = ref.read(navigationControllerProvider.notifier);
     final previousRoute = navigationController.goBack();
 

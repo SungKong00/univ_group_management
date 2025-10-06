@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/theme.dart';
 import '../../../core/models/channel_models.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../post/post_list.dart';
@@ -34,60 +32,7 @@ class _MobileChannelPostsViewState
 
   @override
   Widget build(BuildContext context) {
-    final workspaceState = ref.watch(workspaceStateProvider);
-    final channels = workspaceState.channels;
-    final selectedChannel = channels.firstWhere(
-      (ch) => ch.id.toString() == widget.channelId,
-      orElse: () => Channel(
-        id: 0,
-        name: '채널',
-        description: '',
-        type: 'GENERAL',
-      ),
-    );
-
-    return Scaffold(
-      backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.neutral900),
-          onPressed: () {
-            // 뒤로가기: Step 2 → Step 1
-            ref
-                .read(workspaceStateProvider.notifier)
-                .setMobileView(MobileWorkspaceView.channelList);
-          },
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              selectedChannel.name,
-              style: AppTheme.titleLarge.copyWith(
-                color: AppColors.neutral900,
-              ),
-            ),
-            if (selectedChannel.description?.isNotEmpty ?? false)
-              Text(
-                selectedChannel.description ?? '',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.neutral500,
-                ),
-              ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: AppColors.neutral900),
-            onPressed: () {
-              // TODO: 채널 설정 메뉴
-            },
-          ),
-        ],
-      ),
-      body: Column(
+    return Column(
         children: [
           // 게시글 목록
           Expanded(
@@ -124,7 +69,6 @@ class _MobileChannelPostsViewState
               ),
             ),
         ],
-      ),
     );
   }
 

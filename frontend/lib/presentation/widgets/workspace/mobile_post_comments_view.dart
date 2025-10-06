@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/theme.dart';
-import '../../providers/workspace_state_provider.dart';
 import '../comment/comment_list.dart';
 import '../comment/comment_composer.dart';
 import '../../../core/services/comment_service.dart';
@@ -33,66 +30,92 @@ class _MobilePostCommentsViewState
     extends ConsumerState<MobilePostCommentsView> {
   int _commentListKey = 0;
   final CommentService _commentService = CommentService();
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollToTopButton = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // 스크롤 위치가 200px 이상이면 상단 이동 버튼 표시
+    if (_scrollController.offset > 200 && !_showScrollToTopButton) {
+      setState(() {
+        _showScrollToTopButton = true;
+      });
+    } else if (_scrollController.offset <= 200 && _showScrollToTopButton) {
+      setState(() {
+        _showScrollToTopButton = false;
+      });
+    }
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.neutral900),
-          onPressed: () {
-            // 뒤로가기: Step 3 → Step 2
-            ref.read(workspaceStateProvider.notifier).handleMobileBack();
-          },
-        ),
-        title: Text(
-          '댓글',
-          style: AppTheme.titleLarge.copyWith(
-            color: AppColors.neutral900,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: AppColors.neutral900),
-            onPressed: () {
-              // TODO: 댓글 옵션 메뉴
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 댓글 목록
-          Expanded(
-            child: CommentList(
-              key: ValueKey('mobile_comment_list_${widget.postId}_$_commentListKey'),
-              postId: int.parse(widget.postId),
+    return Stack(
+      children: [
+        Column(
+          children: [
+            // 댓글 목록
+            Expanded(
+              child: CommentList(
+                key: ValueKey('mobile_comment_list_${widget.postId}_$_commentListKey'),
+                postId: int.parse(widget.postId),
+                scrollController: _scrollController,
+              ),
             ),
-          ),
 
-          // 댓글 작성 입력창
-          if (widget.permissions?.canWriteComment ?? false)
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  top: BorderSide(
-                    color: AppColors.lightOutline,
-                    width: 1,
+            // 댓글 작성 입력창
+            if (widget.permissions?.canWriteComment ?? false)
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    top: BorderSide(
+                      color: AppColors.lightOutline,
+                      width: 1,
+                    ),
                   ),
                 ),
+                child: CommentComposer(
+                  canWrite: widget.permissions?.canWriteComment ?? false,
+                  isLoading: false,
+                  onSubmit: (content) => _handleSubmitComment(content),
+                ),
               ),
-              child: CommentComposer(
-                canWrite: widget.permissions?.canWriteComment ?? false,
-                isLoading: false,
-                onSubmit: (content) => _handleSubmitComment(content),
-              ),
+          ],
+        ),
+
+        // 상단 이동 FAB
+        if (_showScrollToTopButton)
+          Positioned(
+            right: 16,
+            bottom: widget.permissions?.canWriteComment ?? false ? 80 : 16,
+            child: FloatingActionButton.small(
+              onPressed: _scrollToTop,
+              backgroundColor: AppColors.brand,
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.arrow_upward, size: 20),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 

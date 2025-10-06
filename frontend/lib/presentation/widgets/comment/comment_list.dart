@@ -14,11 +14,13 @@ import 'comment_item.dart';
 class CommentList extends StatefulWidget {
   final int postId;
   final VoidCallback? onRefresh;
+  final ScrollController? scrollController;
 
   const CommentList({
     super.key,
     required this.postId,
     this.onRefresh,
+    this.scrollController,
   });
 
   @override
@@ -178,6 +180,7 @@ class _CommentListState extends State<CommentList> {
     // ListView.builder 사용 + RepaintBoundary로 성능 최적화
     // 댓글과 Divider를 합친 itemCount (댓글 N개 → 아이템 2N-1개)
     return ListView.builder(
+      controller: widget.scrollController,
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: _comments.length * 2 - 1,
       itemBuilder: (context, index) {

@@ -35,6 +35,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
   int _postListKey = 0;
   int _commentListKey = 0;
   bool _previousIsMobile = false;
+  bool _hasResponsiveLayoutInitialized = false;
   bool _isAnimatingOut = false; // 슬라이드 아웃 애니메이션 진행 중 플래그
   late AnimationController _commentsAnimationController;
   late Animation<Offset> _commentsSlideAnimation;
@@ -81,12 +82,18 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
   void didUpdateWidget(WorkspacePage oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // groupId가 변경되면 워크스페이스 재초기화
-    if (widget.groupId != oldWidget.groupId && widget.groupId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _initializeWorkspace();
-      });
-    }
+    // groupId 변경 감지 및 상태 관리
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.groupId != oldWidget.groupId) {
+        // groupId가 변경된 경우
+        if (widget.groupId != null) {
+          _initializeWorkspace();
+        } else {
+          // groupId가 null로 변경된 경우 상태 초기화
+          ref.read(workspaceStateProvider.notifier).exitWorkspace();
+        }
+      }
+    });
   }
 
   void _initializeWorkspace() {
@@ -158,6 +165,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
 
   /// 반응형 전환 핸들러: 웹 ↔ 모바일 전환 시 상태 보존
   void _handleResponsiveTransition(bool isMobile) {
+    // 초회 빌드에서는 전환이 아닌 초기 상태 설정만 수행한다.
+    if (!_hasResponsiveLayoutInitialized) {
+      _previousIsMobile = isMobile;
+      _hasResponsiveLayoutInitialized = true;
+      return;
+    }
+
     // 전환이 발생했는지 확인
     if (_previousIsMobile != isMobile) {
       final workspaceNotifier = ref.read(workspaceStateProvider.notifier);

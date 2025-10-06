@@ -44,13 +44,14 @@ class ChannelItem extends StatelessWidget {
             vertical: AppSpacing.xxs,
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(
                 _getChannelIcon(),
                 size: 20,
                 color: isSelected ? AppColors.action : AppColors.neutral600,
               ),
-              const SizedBox(width: AppSpacing.xxs),
+              const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
                   channel.name,

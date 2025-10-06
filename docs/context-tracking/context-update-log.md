@@ -4,6 +4,29 @@
 
 ## 2025년 10월
 
+### 2025-10-06 - 모바일 네비게이션 및 브레드크럼 시스템 구현
+**커밋**: 현재 세션
+**유형**: 기능 구현 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 프론트엔드 (모바일 UI/UX)
+
+**구현 내용**:
+- `WorkspaceState`의 `mobileView` 상태에 따라 동적으로 브레드크럼을 생성하는 `page_title_provider` 리팩토링
+- 뒤로가기 로직을 중앙화하고, 컨텍스트에 맞는 탐색을 지원하는 `handleWebBack`, `handleMobileBack` 메서드 구현
+- 모바일 채널 목록에 그룹 변경 드롭다운 추가 및 UI 개선
+- 신규 에이전트 가이드라인 `AGENTS.md` 추가
+
+**동기화 완료 문서**:
+- ✅ `docs/ui-ux/pages/navigation-and-page-flow.md`: 모바일 브레드크럼 규칙 명시
+- ✅ `docs/implementation/frontend-implementation-status.md`: 모바일 브레드크럼 구현 상태 업데이트
+- ✅ `docs/context-tracking/pending-updates.md`: 관련 항목 완료 처리
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가
+
+**핵심 변경사항**:
+- 모바일 환경에서 사용자가 현재 위치를 명확하게 인지하고, 일관된 탐색 경험을 할 수 있도록 개선했습니다.
+
+---
+
 ### 2025-10-06 - 캘린더 시스템 설계 결정사항 문서화
 **커밋**: 현재 세션
 **유형**: 문서 업데이트 (개념 설계 확정)

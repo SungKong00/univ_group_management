@@ -34,6 +34,7 @@ class WorkspaceState extends Equatable {
     this.errorMessage,
     this.channelPermissions,
     this.isLoadingPermissions = false,
+    this.channelHistory = const [],
   });
 
   final String? selectedGroupId;
@@ -51,6 +52,7 @@ class WorkspaceState extends Equatable {
   final String? errorMessage;
   final ChannelPermissions? channelPermissions;
   final bool isLoadingPermissions;
+  final List<String> channelHistory; // Web-only: channel navigation history
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -68,6 +70,7 @@ class WorkspaceState extends Equatable {
     String? errorMessage,
     ChannelPermissions? channelPermissions,
     bool? isLoadingPermissions,
+    List<String>? channelHistory,
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
@@ -85,6 +88,7 @@ class WorkspaceState extends Equatable {
       errorMessage: errorMessage,
       channelPermissions: channelPermissions ?? this.channelPermissions,
       isLoadingPermissions: isLoadingPermissions ?? this.isLoadingPermissions,
+      channelHistory: channelHistory ?? this.channelHistory,
     );
   }
 
@@ -109,6 +113,7 @@ class WorkspaceState extends Equatable {
         errorMessage,
         channelPermissions,
         isLoadingPermissions,
+        channelHistory,
       ];
 }
 
@@ -118,21 +123,29 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   final ChannelService _channelService = ChannelService();
 
   void enterWorkspace(String groupId, {String? channelId}) {
-    // Reset state when entering a new workspace
+    // 모바일 전용 상태 확인: mobileView만 체크 (웹 상태와 분리)
+    final hasMobileState = state.mobileView != MobileWorkspaceView.channelList;
+
+    // 상태 업데이트: 모바일 상태가 있으면 유지, 없으면 초기화
     state = state.copyWith(
       selectedGroupId: groupId,
-      selectedChannelId: null, // Will be set after channels load
-      isCommentsVisible: false,
-      selectedPostId: null,
+      selectedChannelId: hasMobileState ? state.selectedChannelId : null,
+      isCommentsVisible: hasMobileState ? state.isCommentsVisible : false,
+      selectedPostId: hasMobileState ? state.selectedPostId : null,
       currentView: WorkspaceView.channel,
+      mobileView: hasMobileState ? state.mobileView : MobileWorkspaceView.channelList,
+      channelHistory: hasMobileState ? state.channelHistory : [],
       workspaceContext: {
         'groupId': groupId,
+        if (hasMobileState && state.selectedChannelId != null)
+          'channelId': state.selectedChannelId,
       },
     );
 
-    // Load channels and membership info
-    // channelId will be auto-selected in loadChannels if not provided
-    loadChannels(groupId, autoSelectChannelId: channelId);
+    // 최초 진입 시에만 채널 로드 (탭 전환 복귀 시에는 기존 채널 유지)
+    if (!hasMobileState) {
+      loadChannels(groupId, autoSelectChannelId: channelId);
+    }
   }
 
   /// Load channels and membership information for a group
@@ -193,13 +206,33 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   void selectChannel(String channelId) {
+    // Record current channel in history (web-only)
+    final newHistory = List<String>.from(state.channelHistory);
+
+    // Add current channel to history if it exists and is different from new channel
+    if (state.selectedChannelId != null &&
+        state.selectedChannelId != channelId) {
+      // Remove if already exists (prevent duplicates)
+      newHistory.remove(state.selectedChannelId);
+      // Add to end of history
+      newHistory.add(state.selectedChannelId!);
+    }
+
+    // Find channel name from channels list
+    final selectedChannel = state.channels.firstWhere(
+      (channel) => channel.id.toString() == channelId,
+      orElse: () => state.channels.first,
+    );
+
     state = state.copyWith(
       selectedChannelId: channelId,
       isCommentsVisible: false,
       selectedPostId: null,
       currentView: WorkspaceView.channel,
+      channelHistory: newHistory,
       workspaceContext: Map.from(state.workspaceContext)
-        ..['channelId'] = channelId,
+        ..['channelId'] = channelId
+        ..['channelName'] = selectedChannel.name,
     );
 
     // Load permissions for the selected channel
@@ -337,13 +370,20 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   // 모바일에서 채널 선택 시 (Step 1 → Step 2)
   void selectChannelForMobile(String channelId) {
+    // Find channel name from channels list
+    final selectedChannel = state.channels.firstWhere(
+      (channel) => channel.id.toString() == channelId,
+      orElse: () => state.channels.first,
+    );
+
     state = state.copyWith(
       selectedChannelId: channelId,
       mobileView: MobileWorkspaceView.channelPosts,
       isCommentsVisible: false,
       selectedPostId: null,
       workspaceContext: Map.from(state.workspaceContext)
-        ..['channelId'] = channelId,
+        ..['channelId'] = channelId
+        ..['channelName'] = selectedChannel.name,
     );
 
     // Load permissions for the selected channel
@@ -389,6 +429,35 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         // Step 1: 채널 목록에서는 뒤로가기 허용 (홈으로 이동)
         return false;
     }
+  }
+
+  /// Web back navigation handling
+  /// Returns: true if handled internally, false if should navigate to home
+  bool handleWebBack() {
+    // If comments are visible, close them first
+    if (state.isCommentsVisible) {
+      hideComments();
+      return true;
+    }
+
+    // If channel history exists, go to previous channel
+    if (state.channelHistory.isNotEmpty) {
+      final newHistory = List<String>.from(state.channelHistory);
+      final previousChannelId = newHistory.removeLast();
+
+      state = state.copyWith(
+        selectedChannelId: previousChannelId,
+        channelHistory: newHistory,
+        workspaceContext: Map.from(state.workspaceContext)
+          ..['channelId'] = previousChannelId,
+      );
+
+      loadChannelPermissions(previousChannelId);
+      return true;
+    }
+
+    // No history - navigate to home
+    return false;
   }
 
   // 반응형 전환 핸들러: 웹 → 모바일

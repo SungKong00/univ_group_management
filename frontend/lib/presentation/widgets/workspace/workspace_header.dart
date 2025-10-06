@@ -61,9 +61,24 @@ class WorkspaceHeader extends StatelessWidget {
     }
 
     final path = breadcrumb.path!;
-    final groupName = path.first; // 첫 번째 항목이 그룹명
-    final hasChannel = path.length > 1;
-    final channelName = hasChannel ? path[1] : null;
+
+    // 데스크톱: path = ["워크스페이스", "그룹명", "채널명"?]
+    // 모바일: path = ["그룹명", "채널명/기능명"?]
+
+    // "워크스페이스"가 첫 항목인지 확인 (데스크톱)
+    final isDesktop = path.first == '워크스페이스';
+
+    final groupName = isDesktop
+        ? (path.length > 1 ? path[1] : null)  // 데스크톱: 두 번째 항목
+        : path.first;                           // 모바일: 첫 번째 항목
+
+    final secondItem = isDesktop
+        ? (path.length > 2 ? path[2] : null)  // 데스크톱: 세 번째 항목
+        : (path.length > 1 ? path[1] : null); // 모바일: 두 번째 항목
+
+    if (groupName == null) {
+      return const SizedBox.shrink();
+    }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -71,8 +86,8 @@ class WorkspaceHeader extends StatelessWidget {
         // 그룹명 섹션 (headlineMedium + 드롭다운)
         _buildGroupNameSection(groupName),
 
-        // 채널명 (있을 경우만)
-        if (hasChannel && channelName != null) ...[
+        // 채널명/기능명 (있을 경우만)
+        if (secondItem != null) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: Text(
@@ -83,7 +98,7 @@ class WorkspaceHeader extends StatelessWidget {
               ),
             ),
           ),
-          _buildChannelNameSection(channelName),
+          _buildChannelNameSection(secondItem),
         ],
       ],
     );

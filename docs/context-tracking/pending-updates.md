@@ -39,23 +39,6 @@
 
 ## ⚠️ 우선순위 중간 (Medium Priority)
 
-### 워크스페이스 모바일 반응형 구현 문서 동기화
-**상태**: 🔄 부분 완료
-**관련 커밋**:
-- a92c528 (2025-10-05) - 3단계 플로우 구현
-- 현재 세션 - 브레이크포인트 조정 (450px → 600px)
-**적용 문서**:
-- ✅ frontend-implementation-status.md: 브레이크포인트 명세 업데이트 완료
-- ❌ frontend-guide.md: 워크스페이스 반응형 3단계 플로우 패턴 추가 필요
-- ❌ responsive-design-guide.md: 구현 예시 추가 (WorkspacePage 사례)
-- ❌ workspace-pages.md: 모바일 뷰 컴포넌트 정보 추가 필요
-**변경 내용**:
-- MobileWorkspaceView enum (3단계 플로우)
-- 반응형 전환 핸들러 (웹↔모바일)
-- 뒤로가기 핸들링 패턴
-- 브레이크포인트 조정: MOBILE 0-450px → 0-600px
-**우선순위**: Medium (반응형 핵심 구현이지만 기존 문서 패턴 내 추가)
-
 ### 개발 워크플로우 문서 Git 전략 연동 검증
 **상태**: ❌ 검증 필요
 **파일**: development-flow.md
@@ -82,6 +65,7 @@
 ---
 
 ## ✅ 완료/제거된 항목 (History)
+- (완료 2025-10-06) 워크스페이스 모바일 반응형 및 브레드크럼 구현 (frontend-guide.md, responsive-design-guide.md, workspace-pages.md 등)
 - (완료 2025-10-06) 캘린더 시스템 설계 결정사항 문서화 (7개 문서 업데이트, 1개 신규 생성)
 - (완료 2025-10-06) 모집/워크스페이스 구현 동기화 (recruitment-system.md, frontend-implementation-status.md, workspace-pages.md)
 - (완료 2025-10-06) 컨트롤러 통합 테스트 패턴 문서화

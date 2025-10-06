@@ -28,6 +28,9 @@ class _PostItemState extends State<PostItem> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth <= 600;
+
     return InkWell(
       onTap: widget.onTapPost,
       hoverColor: AppColors.neutral100,
@@ -50,9 +53,9 @@ class _PostItemState extends State<PostItem> {
                   // 본문
                   _buildContent(),
                   const SizedBox(height: 12),
-                  // 댓글 버튼
+                  // 댓글 버튼 (모바일: 패딩 축소)
                   Padding(
-                    padding: const EdgeInsets.only(right: 64),
+                    padding: EdgeInsets.only(right: isMobile ? 8 : 64),
                     child: _buildCommentButton(),
                   ),
                 ],
@@ -159,10 +162,10 @@ class _PostItemState extends State<PostItem> {
         final isMobile = screenWidth <= 600;
 
         // 반응형 너비 계산
-        // 모바일: 부모(게시글 콘텐츠) 너비의 70%
+        // 모바일: 부모(게시글 콘텐츠) 너비의 85% (오버플로우 방지)
         // 웹: 최대 800px
         final buttonWidth = isMobile
-            ? constraints.maxWidth * 0.7
+            ? constraints.maxWidth * 0.85
             : 800.0;
 
         return MouseRegion(
@@ -187,27 +190,33 @@ class _PostItemState extends State<PostItem> {
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // 왼쪽: 아이콘 + 텍스트
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        size: 16,
-                        color: _isCommentHovered
-                            ? AppColors.brand
-                            : AppColors.neutral600,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        buttonText,
-                        style: AppTheme.bodySmall.copyWith(
+                  // 왼쪽: 아이콘 + 텍스트 (오버플로우 방지)
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 16,
                           color: _isCommentHovered
                               ? AppColors.brand
-                              : AppColors.neutral700,
+                              : AppColors.neutral600,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            buttonText,
+                            style: AppTheme.bodySmall.copyWith(
+                              color: _isCommentHovered
+                                  ? AppColors.brand
+                                  : AppColors.neutral700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   // 오른쪽: ">" 아이콘
                   Icon(

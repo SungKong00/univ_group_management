@@ -64,11 +64,19 @@ lib/
 - ✅ **반응형 레이아웃**: 웹(사이드바) ↔ 모바일(하단바) 자동 전환
 - ✅ **워크스페이스 축소/확장**: 애니메이션 기반 사이드바 토글
 - ✅ **복잡한 반응형 시나리오**: UI/UX 명세서 7장 완전 지원
+- ✅ **모바일 브레드크럼**: 화면별 최적화된 표시 (2025-10-06 추가)
 
 **구현 위치:**
 - `lib/presentation/providers/navigation_state_provider.dart`
 - `lib/presentation/services/navigation_history_service.dart`
 - `lib/presentation/widgets/navigation/`
+- `lib/presentation/providers/page_title_provider.dart`
+
+**모바일 브레드크럼 표시 규칙 (2025-10-06):**
+- 채널 목록 화면: "워크스페이스"
+- 게시글 목록 화면: "그룹명 > 채널명/기능명" (예: "컴퓨터공학과 > 공지사항")
+- 댓글 화면: "댓글"
+- 설계 의도: 사용자가 현재 위치를 즉시 파악할 수 있도록 화면별 최적화 (Easy to Answer 원칙)
 
 ### ✅ 레이아웃 시스템 (90% 완료)
 
