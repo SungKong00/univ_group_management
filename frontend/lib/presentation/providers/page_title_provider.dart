@@ -87,6 +87,8 @@ PageBreadcrumb _buildWorkspaceBreadcrumb(WorkspaceState state, String? groupName
 }
 
 /// 데스크톱 브레드크럼 생성: "워크스페이스 > 그룹명"
+/// 현재는 모바일 우선 구현이라 데스크톱 함수가 사용되지 않음
+// ignore: unused_element
 PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceState state, String groupName) {
   final path = <String>['워크스페이스'];
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../comment/comment_list.dart';
 import '../comment/comment_composer.dart';
@@ -135,7 +137,9 @@ class _MobilePostCommentsViewState
       });
     } catch (e) {
       // 에러 처리 (TODO: 사용자에게 에러 메시지 표시)
-      print('댓글 작성 실패: $e');
+      if (kDebugMode) {
+        developer.log('댓글 작성 실패: $e', name: 'MobilePostCommentsView');
+      }
     }
   }
 }

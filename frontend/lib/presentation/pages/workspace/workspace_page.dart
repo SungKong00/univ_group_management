@@ -147,7 +147,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         // 모바일에서 뒤로가기 핸들링 추가
         return PopScope(
           canPop: !isMobile || !_canHandleMobileBack(),
-          onPopInvoked: (didPop) {
+          // onPopInvoked was deprecated; use onPopInvokedWithResult which provides the pop result as well.
+          onPopInvokedWithResult: (didPop, result) {
             if (!didPop && isMobile) {
               _handleMobileBackPress();
             }
@@ -278,7 +279,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
                     _commentsAnimationController.reverse();
                   },
                   child: Container(
-                    color: Colors.black.withOpacity(0.12),
+                    // withOpacity is deprecated; use Color.fromRGBO to express opacity precisely
+                    color: const Color.fromRGBO(0, 0, 0, 0.12),
                   ),
                 ),
               ),

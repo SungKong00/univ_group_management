@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/models/channel_models.dart';
 import '../../providers/workspace_state_provider.dart';
@@ -87,7 +89,9 @@ class _MobileChannelPostsViewState
       });
     } catch (e) {
       // 에러 처리 (TODO: 사용자에게 에러 메시지 표시)
-      print('게시글 작성 실패: $e');
+      if (kDebugMode) {
+        developer.log('게시글 작성 실패: $e', name: 'MobileChannelPostsView');
+      }
     }
   }
 }
