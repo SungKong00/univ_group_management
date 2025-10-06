@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -56,10 +57,21 @@ class CollapsibleContent extends StatefulWidget {
 class _CollapsibleContentState extends State<CollapsibleContent> {
   bool _isExpanded = false;
   bool _isOverflowing = false;
+  // Controller used by the internal SingleChildScrollView. We always pass this
+  // to the scrollable, and only create the RawScrollbar after it has been
+  // attached (hasClients == true). This avoids the runtime warning.
+  late final ScrollController _controller;
+  final GlobalKey<RawScrollbarState> _rawScrollbarKey = GlobalKey<RawScrollbarState>();
+  // Flag and timer to briefly show the scrollbar thumb when content is expanded
+  bool _showThumb = false;
+  Timer? _hideThumbTimer;
+  // Whether we have created RawScrollbar with the controller attached
+  bool _attachScrollbar = false;
 
   @override
   void initState() {
     super.initState();
+    _controller = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkOverflow();
     });
@@ -74,6 +86,13 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
         _checkOverflow();
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _hideThumbTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
   }
 
   /// 텍스트가 maxLines를 초과하는지 확인
@@ -152,14 +171,43 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
           // 내용이 더 짧으면 그만큼만, 길면 최대 10줄 높이까지 표시
           maxHeight: maxVisibleHeight,
         ),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Text(
-            widget.content,
-            style: effectiveTextStyle,
-            softWrap: true,
-          ),
-        ),
+        child: Builder(builder: (ctx) {
+          // After this frame, if the controller is attached and we haven't yet
+          // attached the scrollbar, update state to create the RawScrollbar.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            if (!_attachScrollbar && _controller.hasClients) {
+              setState(() {
+                _attachScrollbar = true;
+              });
+            }
+          });
+
+          final scrollable = SingleChildScrollView(
+            controller: _controller,
+            physics: const BouncingScrollPhysics(),
+            child: Text(
+              widget.content,
+              style: effectiveTextStyle,
+              softWrap: true,
+            ),
+          );
+
+          if (!_attachScrollbar) {
+            return scrollable;
+          }
+
+          return RawScrollbar(
+            key: _rawScrollbarKey,
+            controller: _controller,
+            thumbVisibility: _showThumb,
+            radius: const Radius.circular(8),
+            thickness: 6,
+            crossAxisMargin: 2,
+            mainAxisMargin: 2,
+            child: scrollable,
+          );
+        }),
       );
     }
 
@@ -179,6 +227,29 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
               setState(() {
                 _isExpanded = !_isExpanded;
               });
+
+              // If the content becomes expanded, briefly show the scrollbar thumb.
+              // We avoid checking ScrollController.hasClients or passing a controller
+              // to RawScrollbar to eliminate the 'no ScrollPosition attached' warning.
+              if (_isExpanded) {
+                _hideThumbTimer?.cancel();
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  // If the controller is attached (or we've attached the scrollbar),
+                  // show the thumb briefly.
+                  if (_attachScrollbar || _controller.hasClients) {
+                    setState(() {
+                      _showThumb = true;
+                    });
+                    _hideThumbTimer = Timer(const Duration(milliseconds: 1500), () {
+                      if (!mounted) return;
+                      setState(() {
+                        _showThumb = false;
+                      });
+                    });
+                  }
+                });
+              }
             },
             borderRadius: BorderRadius.circular(4),
             child: Padding(
