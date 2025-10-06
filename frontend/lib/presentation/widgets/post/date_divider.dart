@@ -27,35 +27,46 @@ class DateDivider extends StatelessWidget {
       dateText = formatter.format(date);
     }
 
-    return Container(
-      // Sticky 시 배경색이 필요 (스크롤 시 컨텐츠가 뒤에 보이지 않도록)
-      color: Theme.of(context).scaffoldBackgroundColor,
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 1,
-              color: AppColors.neutral300,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: Text(
-              dateText,
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-                fontWeight: FontWeight.w500,
+    // 라이트 모드에서는 게시글 패딩 배경인 lightBackground(neutral100)를 사용하고,
+    // 다크 모드에서는 elevated surface를 사용하여 이질감이 없도록 처리합니다.
+    final bgColor = context.isDarkMode ? AppColors.darkElevated : AppColors.lightBackground;
+
+    // 구분선과 텍스트 색은 현재 테마의 outline/onSurface를 기반으로 선택
+    final outlineColor = Theme.of(context).colorScheme.outline;
+    final textColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.8);
+
+    return Material(
+      color: bgColor,
+      child: Container(
+        // 수직 패딩을 최소화하여 간격을 줄임
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                height: 1,
+                // 테마 outline 색 사용
+                color: outlineColor,
               ),
             ),
-          ),
-          Expanded(
-            child: Container(
-              height: 1,
-              color: AppColors.neutral300,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Text(
+                dateText,
+                style: AppTheme.bodySmall.copyWith(
+                  color: textColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: Container(
+                height: 1,
+                color: outlineColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
