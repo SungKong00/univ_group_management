@@ -546,12 +546,15 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      // 상단 패딩을 4px 줄여(16 -> 12) SizedBox와 합쳐 총 20px 감소
+      // 추가로 1px 더 줄여 상단 패딩을 11px로 설정 (총 21px 감소에 해당)
+      padding: const EdgeInsets.fromLTRB(16.0, 13.0, 16.0, 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(channelName, style: AppTheme.headlineMedium),
-          const SizedBox(height: 16),
+          // 하단 패딩을 20px 줄임 (원래 16px -> 0px)
+          const SizedBox(height: 0),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
