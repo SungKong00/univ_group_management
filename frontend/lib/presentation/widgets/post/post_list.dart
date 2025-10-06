@@ -42,6 +42,9 @@ class _PostListState extends ConsumerState<PostList> {
   int _currentPage = 0;
   String? _errorMessage;
 
+  // 최초 로드 직후 스크롤 정렬 과정에서 화면 점프가 보이지 않도록 잠시 숨김 처리
+  bool _isInitialAnchoring = false;
+
   @override
   void initState() {
     super.initState();
@@ -71,6 +74,7 @@ class _PostListState extends ConsumerState<PostList> {
       _currentPage = 0;
       _hasMore = true;
       _errorMessage = null;
+      _isInitialAnchoring = false;
     });
     _loadPosts();
   }
@@ -101,6 +105,9 @@ class _PostListState extends ConsumerState<PostList> {
       // Sort incoming page posts by createdAt ascending (oldest -> newest)
       response.posts.sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
+      // 첫 페이지 로드인지 사전 체크 (증가 전 기준)
+      final bool isFirstPageLoad = _currentPage == 0;
+
       setState(() {
         // 정상 스크롤: 새로 로드되는 과거 글을 앞에 추가
         _posts.insertAll(0, response.posts);
@@ -109,10 +116,15 @@ class _PostListState extends ConsumerState<PostList> {
         _currentPage++;
         _hasMore = response.hasMore;
         _isLoading = false;
+
+        // 첫 로드 직후에는 화면 점프가 보이지 않도록 잠시 숨김
+        if (isFirstPageLoad) {
+          _isInitialAnchoring = true;
+        }
       });
 
       // 첫 로드 시: 최신(마지막) 게시물을 화면 상단에 최대한 가깝게 보이도록 스크롤
-      if (_currentPage == 1) {
+      if (isFirstPageLoad) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           final ctx = _lastPostKey.currentContext;
           if (mounted && ctx != null) {
@@ -136,6 +148,15 @@ class _PostListState extends ConsumerState<PostList> {
               }
             });
           }
+
+          // 스크롤 정렬이 끝난 다음 프레임에 화면 표시
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _isInitialAnchoring = false;
+              });
+            }
+          });
         });
       }
       // 추가 로드 시 스크롤 위치 유지
@@ -152,11 +173,14 @@ class _PostListState extends ConsumerState<PostList> {
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _isInitialAnchoring = false;
       });
     }
   }
 
   void _onScroll() {
+    // 초기 정렬 중에는 스크롤 로딩을 막아 화면 점프 및 과도한 로드를 방지
+    if (_isInitialAnchoring) return;
     // 정상 스크롤: 상단에 도달하면 과거 글 로드
     if (_scrollController.position.pixels <= 200) {
       _loadPosts();
@@ -181,7 +205,7 @@ class _PostListState extends ConsumerState<PostList> {
     }
 
     // 게시글 목록 (날짜별 그룹화 + StickyHeader)
-    return LayoutBuilder(
+    final scrollView = LayoutBuilder(
       builder: (context, constraints) {
         // 날짜 키 리스트 (최신 날짜가 마지막)
         final dateKeys = _groupedPosts.keys.toList()..sort();
@@ -243,6 +267,20 @@ class _PostListState extends ConsumerState<PostList> {
           ],
         );
       },
+    );
+
+    // 초기 정렬 중에는 리스트를 투명하게 렌더링하여 점프를 숨기고, 스피너만 노출
+    return Stack(
+      children: [
+        Opacity(
+          opacity: _isInitialAnchoring ? 0.0 : 1.0,
+          child: scrollView,
+        ),
+        if (_isInitialAnchoring)
+          const Positioned.fill(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+      ],
     );
   }
 
