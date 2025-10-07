@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'package:flutter/rendering.dart';
+import 'dart:math' as math;
 import '../../../core/models/post_models.dart';
 import '../../../core/services/post_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -34,6 +36,8 @@ class _PostListState extends ConsumerState<PostList> {
 
   // 마지막(최신) 게시물을 상단 정렬하기 위한 키
   final GlobalKey _lastPostKey = GlobalKey();
+  // 최신 날짜의 헤더 높이를 측정하기 위한 키
+  final GlobalKey _lastDateHeaderKey = GlobalKey();
 
   List<Post> _posts = [];
   Map<DateTime, List<Post>> _groupedPosts = {};
@@ -123,41 +127,9 @@ class _PostListState extends ConsumerState<PostList> {
         }
       });
 
-      // 첫 로드 시: 최신(마지막) 게시물을 화면 상단에 최대한 가깝게 보이도록 스크롤
+      // 첫 로드 시: 최신(마지막) 게시물을 화면 상단에 정확히 정렬
       if (isFirstPageLoad) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          final ctx = _lastPostKey.currentContext;
-          if (mounted && ctx != null) {
-            // 상단 정렬 시도 (duration 0으로 즉시 적용)
-            Scrollable.ensureVisible(
-              ctx,
-              alignment: 0.0, // 0.0 = 상단 정렬
-              duration: Duration.zero,
-            );
-          } else if (_scrollController.hasClients) {
-            // 키를 아직 못 찾았으면 일단 하단으로 이동 후, 한 프레임 뒤에 다시 상단 정렬 재시도
-            _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              final ctx2 = _lastPostKey.currentContext;
-              if (mounted && ctx2 != null) {
-                Scrollable.ensureVisible(
-                  ctx2,
-                  alignment: 0.0,
-                  duration: Duration.zero,
-                );
-              }
-            });
-          }
-
-          // 스크롤 정렬이 끝난 다음 프레임에 화면 표시
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() {
-                _isInitialAnchoring = false;
-              });
-            }
-          });
-        });
+        _anchorLastPostAtTop();
       }
       // 추가 로드 시 스크롤 위치 유지
       else if (savedScrollOffset != null) {
@@ -176,6 +148,68 @@ class _PostListState extends ConsumerState<PostList> {
         _isInitialAnchoring = false;
       });
     }
+  }
+
+  // 최신(마지막) 게시물을 화면 상단에 정확히 오도록 스크롤하는 보조 함수
+  void _anchorLastPostAtTop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      try {
+        final lastPostContext = _lastPostKey.currentContext;
+        final lastHeaderContext = _lastDateHeaderKey.currentContext;
+
+        if (lastPostContext != null && _scrollController.hasClients) {
+          final lastPostRenderBox = lastPostContext.findRenderObject() as RenderBox;
+          // 마지막 게시물의 전역 Y 위치 (화면 상단 기준)
+          final lastPostGlobalOffset = lastPostRenderBox.localToGlobal(Offset.zero, ancestor: context.findRenderObject());
+          // 현재 스크롤된 거리
+          final currentScrollOffset = _scrollController.offset;
+
+          // 헤더 높이 측정 (없으면 0)
+          double headerHeight = 0;
+          if (lastHeaderContext != null) {
+            final headerRenderBox = lastHeaderContext.findRenderObject() as RenderBox;
+            headerHeight = headerRenderBox.size.height;
+          }
+
+          // 목표 스크롤 위치 계산:
+          // 현재 스크롤 위치 + (게시물 위치 - 헤더 높이)
+          // 이렇게 하면 게시물 상단이 헤더 바로 아래에 위치하게 됨
+          final targetOffset = currentScrollOffset + lastPostGlobalOffset.dy - headerHeight;
+
+          final clampedOffset = targetOffset.clamp(
+            _scrollController.position.minScrollExtent,
+            _scrollController.position.maxScrollExtent,
+          );
+
+          _scrollController.jumpTo(clampedOffset);
+
+          // 정렬 완료 후 다음 프레임에 화면 표시
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _isInitialAnchoring = false;
+              });
+            }
+          });
+          return;
+        }
+      } catch (e) {
+        // RenderObject가 준비되지 않는 등 예외 발생 시 폴백 로직으로 넘어감
+      }
+
+      // 키를 아직 못 찾았거나 예외 발생 시: 일단 하단으로 점프한 뒤 한 프레임 뒤 재시도
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        // 재시도 로직은 동일하게 유지
+        _anchorLastPostAtTop();
+      });
+    });
   }
 
   void _onScroll() {
@@ -230,7 +264,9 @@ class _PostListState extends ConsumerState<PostList> {
               final bool isLastDate = lastDate != null && date == lastDate;
 
               return SliverStickyHeader(
-                header: DateDivider(date: date),
+                header: isLastDate
+                    ? Container(key: _lastDateHeaderKey, child: DateDivider(date: date))
+                    : DateDivider(date: date),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -260,7 +296,7 @@ class _PostListState extends ConsumerState<PostList> {
                 ),
               );
             }),
-            // 하단 여백을 화면 높이만큼 확보하여 마지막 아이템을 상단에 붙일 수 있도록 함
+            // 하단 여백을 화면 높이의 일부만큼 확보하여 마지막 아이템을 상단에 붙일 수 있도록 함
             SliverPadding(
               padding: EdgeInsets.only(bottom: constraints.maxHeight * 0.3),
             ),
@@ -277,8 +313,8 @@ class _PostListState extends ConsumerState<PostList> {
           child: scrollView,
         ),
         if (_isInitialAnchoring)
-          const Positioned.fill(
-            child: Center(child: CircularProgressIndicator()),
+          Positioned.fill(
+            child: const Center(child: CircularProgressIndicator()),
           ),
       ],
     );

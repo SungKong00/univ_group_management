@@ -352,6 +352,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         return ChannelContentView(
           workspaceState: workspaceState,
           onSubmitPost: (content) => _handleSubmitPost(context, ref, content),
+          postReloadTick: _postListKey,
         );
     }
   }

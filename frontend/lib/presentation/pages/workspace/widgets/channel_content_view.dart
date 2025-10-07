@@ -15,11 +15,14 @@ import '../../../utils/responsive_layout_helper.dart';
 class ChannelContentView extends ConsumerStatefulWidget {
   final WorkspaceState workspaceState;
   final Future<void> Function(String content) onSubmitPost;
+  // 새 글 작성 후 목록 재초기화를 트리거하기 위한 키 (부모에서 증가시킴)
+  final int postReloadTick;
 
   const ChannelContentView({
     super.key,
     required this.workspaceState,
     required this.onSubmitPost,
+    this.postReloadTick = 0,
   });
 
   @override
@@ -102,7 +105,7 @@ class _ChannelContentViewState extends ConsumerState<ChannelContentView> {
 
                 return PostList(
                   key: ValueKey(
-                      'post_list_${widget.workspaceState.selectedChannelId}_$_postListKey'),
+                      'post_list_${widget.workspaceState.selectedChannelId}_${widget.postReloadTick}_$_postListKey'),
                   channelId: widget.workspaceState.selectedChannelId!,
                   canWrite: canWritePost,
                   onTapComment: (postId) {
