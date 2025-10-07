@@ -488,6 +488,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         return _buildGroupHomeView();
       case WorkspaceView.calendar:
         return _buildCalendarView();
+      case WorkspaceView.groupAdmin:
+        return _buildGroupAdminView();
       case WorkspaceView.channel:
         if (!workspaceState.hasSelectedChannel) {
           return _buildNoChannelSelected();
@@ -936,6 +938,28 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
           const SizedBox(height: 8),
           Text(
             '캘린더 (준비 중)',
+            style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupAdminView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.settings_outlined,
+            size: 64,
+            color: AppColors.brand,
+          ),
+          const SizedBox(height: 16),
+          Text('그룹 관리', style: AppTheme.displaySmall),
+          const SizedBox(height: 8),
+          Text(
+            '그룹 관리 페이지 (준비 중)',
             style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
           ),
         ],

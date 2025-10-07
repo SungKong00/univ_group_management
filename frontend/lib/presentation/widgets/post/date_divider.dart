@@ -33,7 +33,7 @@ class DateDivider extends StatelessWidget {
 
     // 구분선과 텍스트 색은 현재 테마의 outline/onSurface를 기반으로 선택
     final outlineColor = Theme.of(context).colorScheme.outline;
-    final textColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.8);
+    final textColor = Theme.of(context).colorScheme.onSurfaceVariant;
 
     return Material(
       color: bgColor,

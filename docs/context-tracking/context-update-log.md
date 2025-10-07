@@ -4,6 +4,40 @@
 
 ## 2025년 10월
 
+### 2025-10-07 - 그룹 관리 페이지 추가 및 문서 동기화
+**커밋**: 현재 세션
+**유형**: 기능 추가 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 프론트엔드 (UI/UX), 문서 (신규 가이드 추가)
+
+**구현 내용**:
+- **프론트엔드**:
+    - 워크스페이스에 '그룹 관리' 페이지를 추가하고, 해당 페이지로 이동하는 기능을 구현했습니다. 현재는 '준비 중' 상태를 표시하는 UI입니다.
+    - `WorkspaceView`에 `groupAdmin`을 추가하고, 이를 표시하는 `showGroupAdminPage` 상태 관리 로직을 구현했습니다.
+    - 채널 네비게이션 및 모바일 채널 목록의 '그룹 관리' 버튼 액션을 라우팅 방식에서 `showGroupAdminPage` 호출로 변경했습니다.
+- **문서**:
+    - 새로운 그룹 관리 권한 추가 시 따라야 할 체크리스트인 `group-management-permissions.md` 유지보수 가이드를 추가했습니다.
+
+**동기화 완료 문서**:
+- 🆕 `docs/ui-ux/pages/group-admin-page.md`: 그룹 관리 페이지에 대한 신규 UI/UX 명세서 생성.
+- 🆕 `docs/maintenance/group-management-permissions.md`: 그룹 관리 권한 추가 시 체크리스트 가이드 문서 생성.
+- ✅ `docs/ui-ux/pages/navigation-and-page-flow.md`: 채널 네비게이션의 '그룹 관리' 버튼 동작 방식을 상태 변경 호출로 수정.
+- ✅ `docs/ui-ux/pages/workspace-pages.md`: 워크스페이스 페이지 명세에 '그룹 관리 페이지' 섹션 추가.
+- ✅ `docs/implementation/frontend-implementation-status.md`: 페이지 구현 현황에 '그룹 관리' 페이지를 추가하고, 워크스페이스 기능에 '그룹 관리 페이지 (준비 중 UI)' 항목 추가.
+- ✅ `docs/context-tracking/sync-status.md`: 관련된 모든 문서의 상태를 `✅ 최신`으로 업데이트하고, 신규 문서를 추가.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+
+**수정된 파일**:
+- `frontend/lib/presentation/pages/workspace/workspace_page.dart`
+- `frontend/lib/presentation/providers/workspace_state_provider.dart`
+- `frontend/lib/presentation/widgets/workspace/channel_navigation.dart`
+- `frontend/lib/presentation/widgets/workspace/mobile_channel_list.dart`
+- `CLAUDE.md`
+
+**메모**: 향후 그룹 관리 기능 확장을 위한 기반 UI 및 상태 관리 로직이 마련되었습니다. 또한, 권한 추가 시 발생할 수 있는 실수를 방지하기 위한 유지보수 가이드가 추가되었습니다.
+
+---
+
 ### 2025-10-07 - 백엔드 데이터 초기화 리팩토링 및 프론트엔드 UI 개선
 **커밋**: 현재 세션
 **유형**: 리팩토링 + 기능 개선 + 문서 동기화

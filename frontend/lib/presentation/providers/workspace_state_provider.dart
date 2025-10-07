@@ -8,6 +8,7 @@ enum WorkspaceView {
   channel, // Channel content view
   groupHome, // Group home view
   calendar, // Calendar view
+  groupAdmin, // Group admin/management page view
 }
 
 /// Mobile Workspace View Type (3-step navigation flow)
@@ -281,6 +282,15 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   void showCalendar() {
     state = state.copyWith(
       currentView: WorkspaceView.calendar,
+      isCommentsVisible: false,
+      selectedPostId: null,
+    );
+  }
+
+  /// Show group admin/management page view
+  void showGroupAdminPage() {
+    state = state.copyWith(
+      currentView: WorkspaceView.groupAdmin,
       isCommentsVisible: false,
       selectedPostId: null,
     );

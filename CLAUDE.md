@@ -40,6 +40,9 @@
 - **컨텍스트 동기화**: [docs/agents/context-sync-agent.md](docs/agents/context-sync-agent.md)
 - **프론트엔드 개발**: [docs/agents/frontend-development-agent.md](docs/agents/frontend-development-agent.md)
 
+### 유지보수 가이드 (신규)
+- **그룹 관리 권한**: [docs/maintenance/group-management-permissions.md](docs/maintenance/group-management-permissions.md) - 권한 추가 시 체크리스트
+
 ### 문제 해결
 - **권한 에러**: [docs/troubleshooting/permission-errors.md](docs/troubleshooting/permission-errors.md)
 - **일반적 에러**: [docs/troubleshooting/common-errors.md](docs/troubleshooting/common-errors.md)

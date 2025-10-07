@@ -51,7 +51,7 @@ class MobileChannelList extends ConsumerWidget {
           const Divider(height: 1, thickness: 1),
           _buildChannelList(ref),
           if (hasAnyGroupPermission) ...[
-            _buildBottomSection(context),
+            _buildBottomSection(context, ref),
           ],
         ],
       ),
@@ -174,17 +174,14 @@ class MobileChannelList extends ConsumerWidget {
     );
   }
 
-  Widget _buildBottomSection(BuildContext context) {
+  Widget _buildBottomSection(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // TODO: Navigate to admin page
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('관리자 페이지 (준비 중)')),
-            );
+            ref.read(workspaceStateProvider.notifier).showGroupAdminPage();
           },
           borderRadius: BorderRadius.circular(AppRadius.button),
           child: Container(
