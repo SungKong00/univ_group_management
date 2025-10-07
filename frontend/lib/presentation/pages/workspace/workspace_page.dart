@@ -7,7 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/channel_models.dart';
 import '../../providers/workspace_state_provider.dart';
-import '../../providers/my_groups_provider.dart';
+import '../../providers/current_group_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../widgets/workspace/channel_navigation.dart';
 import '../../widgets/workspace/mobile_channel_list.dart';
@@ -18,7 +18,11 @@ import '../../widgets/post/post_composer.dart';
 import '../../widgets/comment/comment_list.dart';
 import '../../widgets/comment/comment_composer.dart';
 import '../../widgets/common/slide_panel.dart';
+import '../../utils/responsive_layout_helper.dart';
 import 'widgets/workspace_empty_state.dart';
+import 'widgets/workspace_state_view.dart';
+import 'widgets/desktop_workspace_layout.dart';
+import 'widgets/channel_content_view.dart';
 import 'widgets/post_preview_widget.dart';
 import 'providers/post_preview_notifier.dart';
 import 'providers/post_actions_provider.dart';
@@ -107,15 +111,14 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 문서 스펙: MOBILE(0-600px), TABLET(601-800px), DESKTOP(801px+)
-        // largerThan(MOBILE) = 601px 이상 = TABLET, DESKTOP, 4K
-        final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
-        final isMobile = !isDesktop;
-
-        // Narrow Desktop: 게시글 + 댓글 충돌 발생 구간 (601px~850px)
-        // 채널바(200px) + 여유있는 콘텐츠(350px) + 댓글바(300px) = 850px
-        // 사용자 요청: 850px 미만을 narrow desktop으로 간주
-        final isNarrowDesktop = isDesktop && constraints.maxWidth < 850;
+        // ResponsiveLayoutHelper로 반응형 계산 로직 중앙화
+        final responsive = ResponsiveLayoutHelper(
+          context: context,
+          constraints: constraints,
+        );
+        final isDesktop = responsive.isDesktop;
+        final isMobile = responsive.isMobile;
+        final isNarrowDesktop = responsive.isNarrowDesktop;
 
         // 반응형 전환 감지 및 상태 보존
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -228,112 +231,32 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   }
 
   Widget _buildDesktopWorkspace(WorkspaceState workspaceState, {bool isNarrowDesktop = false}) {
-    final bool showChannelNavigation = workspaceState.isInWorkspace;
-    final bool showComments = workspaceState.isCommentsVisible;
-
-    // Narrow desktop + 댓글 전체 화면 모드: 게시글 숨기고 댓글만 표시
-    final bool isNarrowCommentFullscreen = isNarrowDesktop && workspaceState.isNarrowDesktopCommentsFullscreen;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // MediaQuery를 한 번만 호출하여 성능 최적화
-        final double screenWidth = MediaQuery.of(context).size.width;
-        final double channelBarWidth = screenWidth >= 1200 ? 256.0 : 200.0;
-        final double commentBarWidth = screenWidth >= 1200 ? 390.0 : 300.0;
-
-        // Narrow desktop 댓글 전체 화면: 채널바만 표시, 우측은 전체 화면
-        final double leftInset = showChannelNavigation ? channelBarWidth : 0;
-        final double rightInset = (showComments && !isNarrowCommentFullscreen) ? commentBarWidth : 0;
-
-        return Stack(
-          children: [
-            // Narrow desktop 댓글 전체 화면: 게시글 숨김 (Visibility로 깜빡임 방지)
-            Positioned.fill(
-              left: leftInset,
-              right: rightInset,
-              child: Visibility(
-                visible: !isNarrowCommentFullscreen,
-                maintainState: true,
-                child: _buildMainContent(workspaceState),
-              ),
-            ),
-
-            if (showChannelNavigation)
-              Positioned(
-                top: 0,
-                bottom: 0,
-                left: 0,
-                child: Consumer(
-                  builder: (context, ref, _) {
-                    // 그룹 정보 가져오기
-                    final groupsAsync = ref.watch(myGroupsProvider);
-                    final currentGroupName = groupsAsync.maybeWhen(
-                      data: (groups) {
-                        final currentGroup = groups.firstWhere(
-                          (g) =>
-                              g.id.toString() == workspaceState.selectedGroupId,
-                          orElse: () => groups.first,
-                        );
-                        return currentGroup.name;
-                      },
-                      orElse: () => null,
-                    );
-
-                    return ChannelNavigation(
-                      width: channelBarWidth,
-                      channels: workspaceState.channels,
-                      selectedChannelId: workspaceState.selectedChannelId,
-                      hasAnyGroupPermission:
-                          workspaceState.hasAnyGroupPermission,
-                      unreadCounts: workspaceState.unreadCounts,
-                      isVisible: true,
-                      currentGroupId: workspaceState.selectedGroupId,
-                      currentGroupName: currentGroupName,
-                    );
-                  },
-                ),
-              ),
-
-            // 댓글 슬라이드 패널 (SlidePanel 위젯 사용)
-            if (showComments)
-              Positioned.fill(
-                left: leftInset, // 채널바 제외
-                child: SlidePanel(
-                  isVisible: workspaceState.isCommentsVisible,
-                  onDismiss: () => ref.read(workspaceStateProvider.notifier).hideComments(),
-                  showBackdrop: !isNarrowCommentFullscreen, // Narrow desktop 전체 화면에서는 백드롭 없음
-                  width: isNarrowCommentFullscreen ? null : commentBarWidth,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        left: BorderSide(color: AppColors.lightOutline, width: 1),
-                      ),
-                    ),
-                    child: _buildCommentsView(workspaceState),
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
+    return DesktopWorkspaceLayout(
+      workspaceState: workspaceState,
+      isNarrowDesktop: isNarrowDesktop,
+      mainContent: _buildMainContent(workspaceState),
+      commentsView: _buildCommentsView(workspaceState),
     );
   }
 
   Widget _buildMobileWorkspace(WorkspaceState workspaceState) {
     // 1. 로딩 상태 체크
     if (workspaceState.isLoadingWorkspace) {
-      return _buildLoadingState();
+      return const WorkspaceStateView(type: WorkspaceStateType.loading);
     }
 
     // 2. 에러 상태 체크
     if (workspaceState.errorMessage != null) {
-      return _buildErrorState(workspaceState.errorMessage!);
+      return WorkspaceStateView(
+        type: WorkspaceStateType.error,
+        errorMessage: workspaceState.errorMessage,
+        onRetry: _retryLoadWorkspace,
+      );
     }
 
     // 3. 워크스페이스 미진입 체크
     if (!workspaceState.isInWorkspace) {
-      return _buildEmptyState();
+      return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
     }
 
     // 4. 모바일 3단계 플로우에 따른 뷰 전환
@@ -380,18 +303,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   Widget _buildMobileChannelList(WorkspaceState workspaceState) {
     return Consumer(
       builder: (context, ref, _) {
-        // 그룹 정보 가져오기
-        final groupsAsync = ref.watch(myGroupsProvider);
-        final currentGroupName = groupsAsync.maybeWhen(
-          data: (groups) {
-            final currentGroup = groups.firstWhere(
-              (g) => g.id.toString() == workspaceState.selectedGroupId,
-              orElse: () => groups.first,
-            );
-            return currentGroup.name;
-          },
-          orElse: () => null,
-        );
+        // currentGroupNameProvider로 그룹 이름 가져오기
+        final currentGroupName = ref.watch(currentGroupNameProvider);
 
         return MobileChannelList(
           channels: workspaceState.channels,
@@ -408,16 +321,20 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   Widget _buildMainContent(WorkspaceState workspaceState) {
     // Show loading state
     if (workspaceState.isLoadingWorkspace) {
-      return _buildLoadingState();
+      return const WorkspaceStateView(type: WorkspaceStateType.loading);
     }
 
     // Show error state
     if (workspaceState.errorMessage != null) {
-      return _buildErrorState(workspaceState.errorMessage!);
+      return WorkspaceStateView(
+        type: WorkspaceStateType.error,
+        errorMessage: workspaceState.errorMessage,
+        onRetry: _retryLoadWorkspace,
+      );
     }
 
     if (!workspaceState.isInWorkspace) {
-      return _buildEmptyState();
+      return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
     }
 
     // Switch view based on currentView
@@ -432,116 +349,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         if (!workspaceState.hasSelectedChannel) {
           return const WorkspaceEmptyState(type: WorkspaceEmptyType.noChannelSelected);
         }
-        return _buildChannelView(workspaceState);
-    }
-  }
-
-  Widget _buildChannelView(WorkspaceState workspaceState) {
-    // 선택된 채널 찾기
-    Channel? selectedChannel;
-    try {
-      selectedChannel = workspaceState.channels.firstWhere(
-        (channel) => channel.id.toString() == workspaceState.selectedChannelId,
-      );
-    } catch (e) {
-      selectedChannel = null;
-    }
-
-    // 채널을 찾지 못한 경우 fallback
-    final channelName = selectedChannel?.name ?? '채널을 불러올 수 없습니다';
-    final channelPermissions = workspaceState.channelPermissions;
-    final canWritePost = channelPermissions?.canWritePost ?? false;
-
-    // 권한이 없는 경우 권한 에러 표시
-    if (channelPermissions != null && !channelPermissions.canViewChannel) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.lock_outline,
-                size: 64,
-                color: AppColors.neutral400,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '이 채널을 볼 권한이 없습니다',
-                style: AppTheme.headlineMedium.copyWith(
-                  color: AppColors.neutral900,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '권한 관리자에게 문의하세요',
-                style: AppTheme.bodyMedium.copyWith(
-                  color: AppColors.neutral600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      // 상단 패딩을 4px 줄여(16 -> 12) SizedBox와 합쳐 총 20px 감소
-      // 추가로 1px 더 줄여 상단 패딩을 11px로 설정 (총 21px 감소에 해당)
-      padding: const EdgeInsets.fromLTRB(16.0, 13.0, 16.0, 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(channelName, style: AppTheme.headlineMedium),
-          // 하단 패딩을 20px 줄임 (원래 16px -> 0px)
-          const SizedBox(height: 0),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // 반응형 기준과 동일하게 constraints.maxWidth 사용
-                final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
-                final isNarrowDesktop = isDesktop && constraints.maxWidth < 850;
-
-                return PostList(
-                  key: ValueKey('post_list_${workspaceState.selectedChannelId}_$_postListKey'),
-                  channelId: workspaceState.selectedChannelId!,
-                  canWrite: canWritePost,
-                  onTapComment: (postId) {
-                    ref.read(workspaceStateProvider.notifier).showComments(
-                      postId.toString(),
-                      isNarrowDesktop: isNarrowDesktop,
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          _buildMessageComposer(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageComposer() {
-    return Consumer(
-      builder: (context, ref, child) {
-        final workspaceState = ref.watch(workspaceStateProvider);
-        final channelPermissions = workspaceState.channelPermissions;
-        final isLoadingPermissions = workspaceState.isLoadingPermissions;
-
-        // Determine if user can write posts
-        final canWritePost = channelPermissions?.canWritePost ?? false;
-        final canUploadFile = channelPermissions?.canUploadFile ?? false;
-
-        return PostComposer(
-          canWrite: canWritePost,
-          canUploadFile: canUploadFile,
-          isLoading: isLoadingPermissions,
-          onSubmit: (content) => _handleSubmitPost(context, ref, content),
+        return ChannelContentView(
+          workspaceState: workspaceState,
+          onSubmitPost: (content) => _handleSubmitPost(context, ref, content),
         );
-      },
-    );
+    }
   }
+
 
   Future<void> _handleSubmitPost(
     BuildContext context,
@@ -671,138 +485,6 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
 
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.group_add_outlined,
-              size: 64,
-              color: AppColors.neutral600,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              '소속된 그룹이 없습니다',
-              style: AppTheme.displaySmall.copyWith(
-                color: AppColors.neutral900,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '홈에서 그룹을 탐색하고 가입해보세요',
-              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral700),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () => context.go(AppConstants.homeRoute),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.action,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(160, 48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                '그룹 탐색하기',
-                style: AppTheme.titleMedium.copyWith(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.brand),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            '워크스페이스를 불러오는 중...',
-            style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral700),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String errorMessage) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
-            const SizedBox(height: 24),
-            Text(
-              errorMessage,
-              style: AppTheme.displaySmall.copyWith(
-                color: AppColors.neutral900,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '문제가 지속되면 관리자에게 문의하세요',
-              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () => _retryLoadWorkspace(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.action,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(120, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    '다시 시도',
-                    style: AppTheme.titleMedium.copyWith(color: Colors.white),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                OutlinedButton(
-                  onPressed: () => context.go(AppConstants.homeRoute),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.action,
-                    side: const BorderSide(color: AppColors.action),
-                    minimumSize: const Size(120, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    '홈으로',
-                    style: AppTheme.titleMedium.copyWith(
-                      color: AppColors.action,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _retryLoadWorkspace() {
     // Clear error and try again
