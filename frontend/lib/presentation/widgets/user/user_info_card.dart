@@ -86,12 +86,14 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
               child: Container(color: Colors.transparent),
             ),
           ),
-          // 팝업 메뉴
+          // 팝업 메뉴: 아바타 오른쪽에 붙이고, 하단 높이 정렬
           Positioned(
             width: 240,
             child: CompositedTransformFollower(
               link: _layerLink,
-              offset: const Offset(60, -150), // 아바타 위쪽에 팝업 표시
+              targetAnchor: Alignment.bottomRight,
+              followerAnchor: Alignment.bottomLeft,
+              offset: const Offset(AppSpacing.xxs + 30, 0), // 경계선(1px) 보정하여 오른쪽으로 1px 추가 이동
               child: AvatarPopupMenu(
                 user: widget.user,
                 onLogout: () {
@@ -99,6 +101,7 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
                   _handleLogout();
                 },
                 onClose: _removePopup,
+                animationAlignment: Alignment.bottomLeft, // 왼쪽 하단에서 펼쳐지는 애니메이션
               ),
             ),
           ),

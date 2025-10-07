@@ -199,6 +199,30 @@ core/services/
 ```
 
 **권한 기반 UI 제어 패턴:**
+
+**프론트엔드 권한 유틸리티 (`permission_utils.dart`)**
+
+권한 체크 로직의 일관성과 가독성을 높이기 위해 `core/utils/permission_utils.dart` 헬퍼 클래스를 사용합니다.
+
+```dart
+// core/utils/permission_utils.dart
+class PermissionUtils {
+  static const List<String> groupManagementPermissions = [...];
+
+  static bool hasAnyGroupManagementPermission(List<String> permissions) {
+    return permissions.any((p) => groupManagementPermissions.contains(p));
+  }
+}
+
+// 위젯에서 사용 예시
+final hasAdminAccess = PermissionUtils.hasAnyGroupManagementPermission(user.permissions);
+if (hasAdminAccess) {
+  AdminButton(),
+}
+```
+
+**API를 통한 권한 확인:**
+
 ```dart
 // 채널 권한 조회
 final permissions = await ref.read(channelServiceProvider)

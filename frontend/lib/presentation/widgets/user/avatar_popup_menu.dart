@@ -9,12 +9,15 @@ class AvatarPopupMenu extends StatelessWidget {
   final UserInfo user;
   final VoidCallback onLogout;
   final VoidCallback onClose;
+  // 애니메이션 기준 정렬 (웹: bottomLeft, 모바일: topRight 기본)
+  final Alignment animationAlignment;
 
   const AvatarPopupMenu({
     super.key,
     required this.user,
     required this.onLogout,
     required this.onClose,
+    this.animationAlignment = Alignment.topRight,
   });
 
   @override
@@ -26,7 +29,7 @@ class AvatarPopupMenu extends StatelessWidget {
       builder: (context, value, child) {
         return Transform.scale(
           scale: 0.8 + (0.2 * value),
-          alignment: Alignment.topRight,
+          alignment: animationAlignment,
           child: Opacity(
             opacity: value,
             child: child,
