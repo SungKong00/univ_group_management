@@ -205,10 +205,8 @@ fun createPost(channelId: Long, request: CreatePostRequest): PostDto
 
 | 권한 | 설명 | 적용 범위 |
 |------|------|-----------|
-| `CALENDAR_VIEW` | 그룹 캘린더 조회 권한 | 모든 일정 조회 |
-| `CALENDAR_MANAGE` | 공식 일정 생성/수정/삭제 권한 | 공식 일정 전체 관리 |
+| `CALENDAR_MANAGE` | 공식 일정 및 비공식 일정에 대한 수정/삭제 권한 | 그룹 캘린더 전체 |
 | `PLACE_MANAGE` | 장소 등록 및 사용 그룹 승인 권한 | 관리 주체 그룹 전용 |
-| `PLACE_RESERVE` | 장소 예약 권한 | 사용 그룹 멤버 전용 |
 
 ### Permission-Centric 매트릭스
 
@@ -216,21 +214,18 @@ fun createPost(channelId: Long, request: CreatePostRequest): PostDto
 
 | 권한 | 허용 역할 목록 (기본 설정) | 비고 |
 |------|---------------------------|------|
-| CALENDAR_VIEW | OWNER, ADVISOR, MEMBER | 모든 멤버 조회 가능 |
-| CALENDAR_MANAGE | OWNER, ADVISOR | 운영진만 공식 일정 관리 |
+| CALENDAR_MANAGE | OWNER, ADVISOR | 운영진만 공식/비공식 일정 관리 |
 | PLACE_MANAGE | OWNER | 그룹장만 장소 관리 (관리 주체) |
-| PLACE_RESERVE | OWNER, ADVISOR, MEMBER | 사용 그룹 멤버 모두 예약 가능 |
 
 > 커스텀 역할에도 이 권한들을 부여할 수 있습니다. 예: CALENDAR_MANAGER 역할에 CALENDAR_MANAGE 권한 부여
 
 ### 권한 확인 플로우
 
-1. **일정 생성/수정/삭제**: `CALENDAR_MANAGE` 권한 확인
-2. **장소 등록**: `PLACE_MANAGE` 권한 확인
-3. **장소 예약**:
-   - 사용 그룹 멤버십 확인
-   - `PLACE_RESERVE` 권한 확인
-4. **일정 조회**: `CALENDAR_VIEW` 권한 확인
+1. **그룹 캘린더 조회**: 사용자가 그룹의 멤버인지 확인합니다.
+2. **공식 일정 생성/수정/삭제**: `CALENDAR_MANAGE` 권한을 확인합니다.
+3. **공식/비공식 일정 수정/삭제**: 작성자 본인인지 또는 `CALENDAR_MANAGE` 권한이 있는지 확인합니다.
+4. **장소 등록/관리**: `PLACE_MANAGE` 권한을 확인합니다.
+5. **장소 예약**: 사용자가 '장소 사용 그룹'의 멤버인지 확인합니다.
 
 ### 통합 배경
 

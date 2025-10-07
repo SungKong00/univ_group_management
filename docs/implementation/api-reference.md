@@ -635,56 +635,63 @@ context.go('/workspace/${topGroup.id}');
 
 ---
 
-## 캘린더 API (예정)
+## 캘린더 API (v1.3)
 
 > **개발 우선순위**: Phase 6 이후
-> **상태**: 스키마 및 엔드포인트 설계 예정
-> **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md) | [설계 결정사항](../concepts/calendar-design-decisions.md)
+> **상태**: 스키마 및 API 설계 완료, 구현 미착수
+> **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md)
 
-### 주요 엔드포인트 계획
+### 시간표 API (`/api/timetable`)
 
-#### 시간표 API (`/api/timetable`)
-- `GET /me`: 내 시간표 조회 (강의 + 개인 반복 일정)
-- `POST /courses`: 강의 추가
-- `POST /schedules`: 개인 반복 일정 추가
-- `DELETE /courses/{id}`: 강의 삭제
-- `DELETE /schedules/{id}`: 개인 일정 삭제
+개인의 고정/반복 일정을 관리합니다.
 
-#### 그룹 일정 API (`/api/groups/{groupId}/events`)
-- `GET /`: 그룹 캘린더 일정 목록 조회 (권한: `CALENDAR_VIEW`)
-- `POST /`: 일정 생성 (권한: `CALENDAR_MANAGE` for 공식 / 모든 멤버 for 비공식)
-- `PUT /{eventId}`: 일정 수정 ("이 일정만" / "반복 전체" 구분)
-- `DELETE /{eventId}`: 일정 삭제
-- `POST /{eventId}/participants`: 참여 상태 변경 (참여/불참/보류)
+- `GET /me`: 내 **시간표** 조회 (학교 강의 + 개인 반복 일정) (권한: `isAuthenticated()`)
+- `POST /me/courses`: 내 시간표에 강의 추가 (권한: `isAuthenticated()`)
+- `DELETE /me/courses/{userCourseTimetableId}`: 내 시간표에서 강의 삭제 (권한: `isAuthenticated()`)
+- `POST /me/schedules`: 내 시간표에 개인 반복 일정 추가 (권한: `isAuthenticated()`)
+- `PUT /me/schedules/{scheduleId}`: 개인 반복 일정 수정 (권한: `isAuthenticated()`)
+- `DELETE /me/schedules/{scheduleId}`: 개인 반복 일정 삭제 (권한: `isAuthenticated()`)
 
-#### 장소 API (`/api/places`)
-- `POST /`: 장소 등록 (권한: `CALENDAR_MANAGE`)
-- `GET /{placeId}/calendar`: 장소 캘린더 조회 (해당 장소 예약된 일정)
-- `POST /{placeId}/usage-groups`: 사용 그룹 신청
-- `PUT /{placeId}/usage-groups/{groupId}`: 사용 그룹 승인/거부 (권한: `PLACE_MANAGE`)
-- `POST /{placeId}/availability`: 예약 가능 시간 설정 (권한: `PLACE_MANAGE`)
+### 개인 캘린더 API (`/api/calendar`)
 
-#### 최적 시간 추천 API (`/api/groups/{groupId}/events/recommend-time`)
-- `POST /`: 최적 시간 추천 (대상자 필터, 분석 옵션 지정)
-- **요청 예시**:
-  ```json
-  {
-    "targetFilters": { "year": 1, "roleIds": [1, 2] },
-    "analyzeOptions": { "includeTimetable": true, "includePlaces": true }
-  }
-  ```
-- **응답 예시**:
-  ```json
-  {
-    "recommendations": [
-      { "startTime": "2025-10-10T14:00", "available": 25, "unavailable": 5 },
-      { "startTime": "2025-10-10T15:00", "available": 23, "unavailable": 7 }
-    ]
-  }
-  ```
+개인의 모든 유동적/확정적 일정을 통합 조회하고 관리합니다.
 
-### 다음 단계
-1. 엔티티 및 DTO 클래스 설계
-2. 권한 확인 로직 통합 (`@PreAuthorize` 적용)
-3. Repository 쿼리 최적화 (JOIN FETCH)
-4. 반복 일정 생성/수정 로직 구현
+- `GET /me/events?year=2025&month=11`: 특정 월의 내 **캘린더** 이벤트 조회 (권한: `isAuthenticated()`)
+- `POST /me/events`: 개인 이벤트 생성 (권한: `isAuthenticated()`)
+- `PUT /me/events/{eventId}`: 개인 이벤트 수정 (권한: `isAuthenticated()`)
+- `DELETE /me/events/{eventId}`: 개인 이벤트 삭제 (권한: `isAuthenticated()`)
+
+### 그룹 캘린더 API (`/api/groups/{groupId}/events`)
+
+그룹의 일정을 관리합니다.
+
+- `GET /`: 그룹 캘린더의 일정 목록 조회 (권한: **그룹 멤버**)
+- `POST /`: 그룹 일정 생성 (공식: **`CALENDAR_MANAGE`** / 비공식: **그룹 멤버**)
+- `GET /{eventId}`: 특정 그룹 일정 상세 조회 (권한: **그룹 멤버**)
+- `PUT /{eventId}`: 그룹 일정 수정 (공식: **`CALENDAR_MANAGE`** / 비공식: **작성자 or `CALENDAR_MANAGE`**)
+- `DELETE /{eventId}`: 그룹 일정 삭제 (공식: **`CALENDAR_MANAGE`** / 비공식: **작성자 or `CALENDAR_MANAGE`**)
+- `POST /{eventId}/participants`: 일정 참여 상태 변경 (권한: **그룹 멤버**)
+- `GET /{eventId}/participants`: 일정 참여자 목록 조회 (권한: **그룹 멤버**)
+
+### 최적 시간 추천 API (`/api/groups/{groupId}/recommend-time`)
+
+- `POST /`: 그룹 일정 생성을 위한 최적 시간 추천 (권한: **그룹 멤버**)
+
+### 장소 API (`/api/places`)
+
+장소 및 예약 관련 기능을 관리합니다.
+
+- `POST /`: 장소 등록 (권한: `PLACE_MANAGE`)
+- `GET /{placeId}`: 특정 장소 상세 정보 조회 (권한: `isAuthenticated()`)
+- `POST /{placeId}/usage-groups`: 장소 사용 그룹 신청 (권한: 그룹 관리자)
+- `GET /{placeId}/usage-groups`: 장소 사용 그룹 신청 목록 조회 (권한: `PLACE_MANAGE`)
+- `PATCH /{placeId}/usage-groups/{usageGroupId}`: 사용 그룹 신청 승인/거절 (권한: `PLACE_MANAGE`)
+
+- **장소 운영 규칙 관리 API**:
+    - `GET /{placeId}/availability`: 장소 운영 규칙 목록 조회 (권한: `PLACE_MANAGE`)
+    - `POST /{placeId}/availability`: 장소 운영 규칙 추가 (권한: `PLACE_MANAGE`)
+    - `PUT /availability/{availabilityId}`: 장소 운영 규칙 수정 (권한: `PLACE_MANAGE`)
+    - `DELETE /availability/{availabilityId}`: 장소 운영 규칙 삭제 (권한: `PLACE_MANAGE`)
+
+- **장소 예약 현황 조회 API**:
+    - `GET /{placeId}/available-slots?date=YYYY-MM-DD`: 특정 날짜의 **최종 예약 가능 시간 슬롯** 목록 조회 (권한: **`isAuthenticated()`**)

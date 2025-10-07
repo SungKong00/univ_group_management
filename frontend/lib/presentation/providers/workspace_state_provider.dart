@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
 import '../../core/models/channel_models.dart';
 import '../../core/services/channel_service.dart';
+import 'current_group_provider.dart';
 
 /// Workspace View Type
 enum WorkspaceView {
@@ -30,6 +31,8 @@ class WorkspaceState extends Equatable {
     this.currentView = WorkspaceView.channel,
     this.mobileView = MobileWorkspaceView.channelList,
     this.hasAnyGroupPermission = false,
+    this.currentGroupRole,
+    this.currentGroupPermissions,
     this.isLoadingChannels = false,
     this.isLoadingWorkspace = false,
     this.errorMessage,
@@ -49,6 +52,8 @@ class WorkspaceState extends Equatable {
   final WorkspaceView currentView;
   final MobileWorkspaceView mobileView;
   final bool hasAnyGroupPermission;
+  final String? currentGroupRole; // User's role in current group (e.g., "OWNER", "ADVISOR", "Custom Role")
+  final List<String>? currentGroupPermissions; // User's permissions in current group
   final bool isLoadingChannels;
   final bool isLoadingWorkspace;
   final String? errorMessage;
@@ -68,6 +73,8 @@ class WorkspaceState extends Equatable {
     WorkspaceView? currentView,
     MobileWorkspaceView? mobileView,
     bool? hasAnyGroupPermission,
+    String? currentGroupRole,
+    List<String>? currentGroupPermissions,
     bool? isLoadingChannels,
     bool? isLoadingWorkspace,
     String? errorMessage,
@@ -87,6 +94,8 @@ class WorkspaceState extends Equatable {
       currentView: currentView ?? this.currentView,
       mobileView: mobileView ?? this.mobileView,
       hasAnyGroupPermission: hasAnyGroupPermission ?? this.hasAnyGroupPermission,
+      currentGroupRole: currentGroupRole ?? this.currentGroupRole,
+      currentGroupPermissions: currentGroupPermissions ?? this.currentGroupPermissions,
       isLoadingChannels: isLoadingChannels ?? this.isLoadingChannels,
       isLoadingWorkspace: isLoadingWorkspace ?? this.isLoadingWorkspace,
       errorMessage: errorMessage,
@@ -113,6 +122,8 @@ class WorkspaceState extends Equatable {
         currentView,
         mobileView,
         hasAnyGroupPermission,
+        currentGroupRole,
+        currentGroupPermissions,
         isLoadingChannels,
         isLoadingWorkspace,
         errorMessage,
@@ -124,8 +135,9 @@ class WorkspaceState extends Equatable {
 }
 
 class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
-  WorkspaceStateNotifier() : super(const WorkspaceState());
+  WorkspaceStateNotifier(this._ref) : super(const WorkspaceState());
 
+  final Ref _ref;
   final ChannelService _channelService = ChannelService();
 
   void enterWorkspace(String groupId, {String? channelId}) {
@@ -161,15 +173,16 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
       state = state.copyWith(isLoadingChannels: true);
 
-      // Fetch channels and membership in parallel
-      final results = await Future.wait([
-        // Fetch channels directly by groupId
-        _channelService.getChannels(groupIdInt),
-        _channelService.getMyMembership(groupIdInt),
-      ]);
+      // Fetch channels
+      final channels = await _channelService.getChannels(groupIdInt);
 
-      final channels = results[0] as List<Channel>;
-      final membership = results[1] as MembershipInfo?;
+      // Get membership info from currentGroupProvider (already loaded by myGroupsProvider)
+      final currentGroup = _ref.read(currentGroupProvider);
+
+      // Extract permissions from currentGroup
+      final hasAnyPermission = currentGroup?.permissions.isNotEmpty ?? false;
+      final currentRole = currentGroup?.role;
+      final currentPermissions = currentGroup?.permissions.toList();
 
       // Generate dummy unread counts (for demonstration)
       final unreadCounts = <String, int>{};
@@ -188,12 +201,12 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         selectedChannelId = channels.first.id.toString();
       }
 
-      final hasGroupPerm = membership?.hasAnyGroupPermission ?? false;
-
       state = state.copyWith(
         channels: channels,
         unreadCounts: unreadCounts,
-        hasAnyGroupPermission: hasGroupPerm,
+        hasAnyGroupPermission: hasAnyPermission,
+        currentGroupRole: currentRole,
+        currentGroupPermissions: currentPermissions,
         isLoadingChannels: false,
         selectedChannelId: selectedChannelId,
         workspaceContext: Map.from(state.workspaceContext)
@@ -504,7 +517,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 }
 
 final workspaceStateProvider = StateNotifierProvider<WorkspaceStateNotifier, WorkspaceState>(
-  (ref) => WorkspaceStateNotifier(),
+  (ref) => WorkspaceStateNotifier(ref),
 );
 
 // 워크스페이스 컨텍스트 관련 유틸리티 Provider들

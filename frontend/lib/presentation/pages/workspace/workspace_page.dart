@@ -27,6 +27,7 @@ import 'widgets/post_preview_widget.dart';
 import 'providers/post_preview_notifier.dart';
 import 'providers/post_actions_provider.dart';
 import 'providers/comment_actions_provider.dart';
+import '../group/group_admin_page.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
@@ -344,7 +345,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       case WorkspaceView.calendar:
         return const WorkspaceEmptyState(type: WorkspaceEmptyType.calendar);
       case WorkspaceView.groupAdmin:
-        return const WorkspaceEmptyState(type: WorkspaceEmptyType.groupAdmin);
+        return const GroupAdminPage();
       case WorkspaceView.channel:
         if (!workspaceState.hasSelectedChannel) {
           return const WorkspaceEmptyState(type: WorkspaceEmptyType.noChannelSelected);

@@ -1,56 +1,448 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/workspace_state_provider.dart';
 
 /// 그룹 관리자 페이지
 ///
-/// 그룹 권한을 가진 사용자가 그룹 설정 및 관리 작업을 수행하는 페이지입니다.
-/// 현재는 기본 구조만 구현되어 있으며, 향후 그룹 관리 기능이 추가될 예정입니다.
-class GroupAdminPage extends StatelessWidget {
+/// 권한 기반 조건부 렌더링으로 관리 기능을 제공합니다.
+/// 토스 디자인 철학 적용:
+/// - Simplicity First: 한 화면에 한 가지 목적 (그룹 관리)
+/// - One Thing Per Page: 섹션별 명확한 분리
+/// - Title + Description 패턴: ActionCard로 직관적 네비게이션
+class GroupAdminPage extends ConsumerWidget {
   const GroupAdminPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.neutral100,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          '관리자 페이지',
-          style: AppTheme.headlineMedium.copyWith(
-            color: AppColors.neutral900,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.neutral900),
-          onPressed: () => Navigator.of(context).pop(),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+
+    // 권한 확인
+    if (user == null) {
+      return const _EmptyPermissionView(message: '로그인이 필요합니다.');
+    }
+
+    // Get permissions from workspace state (already loaded)
+    final workspaceState = ref.watch(workspaceStateProvider);
+    final permissions = workspaceState.currentGroupPermissions ?? [];
+
+    // globalRole ADMIN은 모든 권한 보유 (백엔드와 일치)
+    final isAdmin = user.globalRole == 'ADMIN';
+    final effectivePermissions = isAdmin
+        ? ['GROUP_MANAGE', 'ADMIN_MANAGE', 'CHANNEL_MANAGE', 'RECRUITMENT_MANAGE']
+        : permissions;
+
+    final hasAdminAccess = effectivePermissions.isNotEmpty;
+
+    if (!hasAdminAccess) {
+      return const _EmptyPermissionView(message: '그룹 관리 권한이 없습니다.');
+    }
+
+    // 반응형 레이아웃 결정
+    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
+
+    return Container(
+      color: AppColors.neutral100,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(isDesktop ? AppSpacing.lg : AppSpacing.sm),
+        child: _AdminContentView(
+          permissions: effectivePermissions,
+          isDesktop: isDesktop,
         ),
       ),
-      body: Center(
+    );
+  }
+}
+
+/// 권한 없음 안내 화면
+class _EmptyPermissionView extends StatelessWidget {
+  final String message;
+
+  const _EmptyPermissionView({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.neutral100,
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.settings_outlined,
+              Icons.lock_outline,
               size: 64,
               color: AppColors.neutral400,
             ),
-            SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.md),
             Text(
-              '관리자 페이지',
-              style: AppTheme.headlineMedium.copyWith(
-                color: AppColors.neutral900,
-              ),
-            ),
-            SizedBox(height: AppSpacing.sm),
-            Text(
-              '(준비 중)',
+              message,
               style: AppTheme.bodyLarge.copyWith(
                 color: AppColors.neutral600,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 관리 기능 콘텐츠 (권한별 조건부 렌더링)
+class _AdminContentView extends StatelessWidget {
+  final List<String> permissions;
+  final bool isDesktop;
+
+  const _AdminContentView({
+    required this.permissions,
+    required this.isDesktop,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Permission-Centric 접근: 각 권한별 섹션 생성
+    final sections = <Widget>[];
+
+    // 그룹 설정 섹션
+    if (permissions.contains('GROUP_MANAGE')) {
+      sections.add(_buildGroupSettingsSection(context));
+      sections.add(SizedBox(height: AppSpacing.md));
+    }
+
+    // 멤버 관리 섹션
+    if (permissions.contains('MEMBER_MANAGE')) {
+      sections.add(_buildMemberManagementSection(context));
+      sections.add(SizedBox(height: AppSpacing.md));
+    }
+
+    // 채널 관리 섹션
+    if (permissions.contains('CHANNEL_MANAGE')) {
+      sections.add(_buildChannelManagementSection(context));
+      sections.add(SizedBox(height: AppSpacing.md));
+    }
+
+    // 모집 관리 섹션
+    if (permissions.contains('RECRUITMENT_MANAGE')) {
+      sections.add(_buildRecruitmentSection(context));
+      sections.add(SizedBox(height: AppSpacing.md));
+    }
+
+    if (sections.isEmpty) {
+      return Center(
+        child: Text(
+          '사용 가능한 관리 기능이 없습니다.',
+          style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: sections,
+    );
+  }
+
+  Widget _buildGroupSettingsSection(BuildContext context) {
+    return _AdminSection(
+      title: '그룹 설정',
+      description: '그룹 정보 및 공개 범위 관리',
+      icon: Icons.settings_outlined,
+      actions: [
+        _ActionCard(
+          icon: Icons.edit_outlined,
+          title: '그룹 정보 수정',
+          description: '그룹 이름, 설명 등을 변경하세요',
+          onTap: () {
+            // TODO: 그룹 정보 수정 화면으로 이동
+            _showComingSoonDialog(context, '그룹 정보 수정');
+          },
+        ),
+        _ActionCard(
+          icon: Icons.public_outlined,
+          title: '공개 범위 설정',
+          description: '그룹의 공개 범위를 설정하세요',
+          onTap: () {
+            // TODO: 공개 범위 설정 화면으로 이동
+            _showComingSoonDialog(context, '공개 범위 설정');
+          },
+        ),
+        _ActionCard(
+          icon: Icons.delete_outline,
+          title: '그룹 삭제',
+          description: '그룹을 영구적으로 삭제합니다',
+          isDestructive: true,
+          onTap: () {
+            // TODO: 삭제 확인 다이얼로그
+            _showComingSoonDialog(context, '그룹 삭제');
+          },
+        ),
+      ],
+      isDesktop: isDesktop,
+    );
+  }
+
+  Widget _buildMemberManagementSection(BuildContext context) {
+    return _AdminSection(
+      title: '멤버 관리',
+      description: '그룹 멤버 초대 및 역할 관리',
+      icon: Icons.people_outline,
+      actions: [
+        _ActionCard(
+          icon: Icons.person_add_outlined,
+          title: '멤버 초대',
+          description: '새로운 멤버를 그룹에 초대하세요',
+          onTap: () {
+            _showComingSoonDialog(context, '멤버 초대');
+          },
+        ),
+        _ActionCard(
+          icon: Icons.list_alt_outlined,
+          title: '멤버 목록',
+          description: '그룹 멤버 조회 및 관리',
+          onTap: () {
+            _showComingSoonDialog(context, '멤버 목록');
+          },
+        ),
+        _ActionCard(
+          icon: Icons.admin_panel_settings_outlined,
+          title: '역할 관리',
+          description: '멤버의 역할과 권한을 설정하세요',
+          onTap: () {
+            _showComingSoonDialog(context, '역할 관리');
+          },
+        ),
+      ],
+      isDesktop: isDesktop,
+    );
+  }
+
+  Widget _buildChannelManagementSection(BuildContext context) {
+    return _AdminSection(
+      title: '채널 관리',
+      description: '워크스페이스 채널 생성 및 관리',
+      icon: Icons.tag_outlined,
+      actions: [
+        _ActionCard(
+          icon: Icons.add_outlined,
+          title: '채널 생성',
+          description: '새로운 채널을 만들어보세요',
+          onTap: () {
+            _showComingSoonDialog(context, '채널 생성');
+          },
+        ),
+        _ActionCard(
+          icon: Icons.list_outlined,
+          title: '채널 목록',
+          description: '모든 채널을 관리하세요',
+          onTap: () {
+            _showComingSoonDialog(context, '채널 목록');
+          },
+        ),
+        _ActionCard(
+          icon: Icons.lock_outline,
+          title: '채널 권한 설정',
+          description: '채널별 접근 권한을 설정하세요',
+          onTap: () {
+            _showComingSoonDialog(context, '채널 권한 설정');
+          },
+        ),
+      ],
+      isDesktop: isDesktop,
+    );
+  }
+
+  Widget _buildRecruitmentSection(BuildContext context) {
+    return _AdminSection(
+      title: '모집 관리',
+      description: '신규 멤버 모집 및 지원자 관리',
+      icon: Icons.campaign_outlined,
+      actions: [
+        _ActionCard(
+          icon: Icons.post_add_outlined,
+          title: '모집 공고 작성',
+          description: '새로운 모집 공고를 작성하세요',
+          onTap: () {
+            _showComingSoonDialog(context, '모집 공고 작성');
+          },
+        ),
+        _ActionCard(
+          icon: Icons.inbox_outlined,
+          title: '지원자 관리',
+          description: '지원자를 확인하고 승인하세요',
+          onTap: () {
+            _showComingSoonDialog(context, '지원자 관리');
+          },
+        ),
+      ],
+      isDesktop: isDesktop,
+    );
+  }
+
+  void _showComingSoonDialog(BuildContext context, String feature) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('준비 중', style: AppTheme.headlineSmall),
+        content: Text(
+          '$feature 기능은 현재 개발 중입니다.',
+          style: AppTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 관리 섹션 (헤더 + 액션 카드 그리드)
+class _AdminSection extends StatelessWidget {
+  final String title;
+  final String description;
+  final IconData icon;
+  final List<Widget> actions;
+  final bool isDesktop;
+
+  const _AdminSection({
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.actions,
+    required this.isDesktop,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 섹션 헤더
+          Row(
+            children: [
+              Icon(icon, color: AppColors.brand, size: AppComponents.actionCardIconSize),
+              SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTheme.headlineSmall.copyWith(
+                        color: AppColors.neutral900,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppColors.neutral600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppSpacing.md),
+          // 액션 카드 그리드
+          isDesktop
+              ? Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: actions,
+                )
+              : Column(
+                  children: actions
+                      .map((action) => Padding(
+                            padding: EdgeInsets.only(bottom: AppSpacing.sm),
+                            child: action,
+                          ))
+                      .toList(),
+                ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ActionCard: Title + Description 패턴 (토스 디자인)
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final VoidCallback onTap;
+  final bool isDestructive;
+
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.onTap,
+    this.isDestructive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cardColor = isDestructive ? AppColors.error.withValues(alpha: 0.05) : AppColors.neutral100;
+    final iconColor = isDestructive ? AppColors.error : AppColors.brand;
+    final titleColor = isDestructive ? AppColors.error : AppColors.neutral900;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.button),
+      child: Container(
+        padding: EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(AppRadius.button),
+          border: Border.all(
+            color: isDestructive ? AppColors.error.withValues(alpha: 0.2) : AppColors.neutral300,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 28),
+            SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTheme.titleLarge.copyWith(color: titleColor),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppColors.neutral600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: AppColors.neutral400, size: 20),
           ],
         ),
       ),

@@ -1,3 +1,5 @@
+import '../utils/permission_utils.dart';
+
 /// Channel model
 ///
 /// Represents a communication channel within a workspace.
@@ -93,18 +95,14 @@ class MembershipInfo {
 
   /// Check if user has any group-level permission
   /// Used to determine if admin page button should be shown
+  ///
+  /// Note: Uses PermissionUtils.groupManagementPermissions as single source of truth
   bool get hasAnyGroupPermission {
     if (permissions == null || permissions!.isEmpty) return false;
 
-    // Group management permissions that indicate admin access
-    const adminPermissions = [
-      'GROUP_MANAGE',
-      'WORKSPACE_MANAGE',
-      'ADMIN_MANAGE',
-      'RECRUITMENT_MANAGE',
-    ];
-
-    return permissions!.any((p) => adminPermissions.contains(p));
+    // Import required at top of file
+    // Use PermissionUtils to avoid duplication
+    return PermissionUtils.hasAnyGroupManagementPermission(permissions!);
   }
 
   @override

@@ -611,9 +611,38 @@ Place [1:N] PlaceUsageGroup [N:1] Group (사용 그룹)
 
 ---
 
-## 1. 학교 시간표 (School Timetable)
+## 1. 개인 캘린더 (Personal Calendar)
 
-### 1.1. Course 테이블 (과목 정보)
+### 1.1. PersonalEvent 테이블 (개인 이벤트)
+
+사용자가 개인 캘린더에 직접 추가하는 일회성 이벤트 정보입니다.
+
+```sql
+CREATE TABLE personal_events (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    location VARCHAR(100),
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL,
+    is_all_day BOOLEAN DEFAULT false,
+    color VARCHAR(7),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_personal_event_user ON personal_events(user_id);
+CREATE INDEX idx_personal_event_date ON personal_events(user_id, start_date, end_date);
+```
+
+---
+
+## 2. 학교 시간표 (School Timetable)
+
+### 2.1. Course 테이블 (과목 정보)
 
 관리자가 등록한 대학 강의 과목 정보입니다. 동일 과목의 여러 분반을 지원하기 위해 Course와 CourseTimetable을 분리합니다.
 
@@ -638,7 +667,7 @@ CREATE INDEX idx_course_semester ON courses(university, semester);
 CREATE INDEX idx_course_dept ON courses(department, semester);
 ```
 
-### 1.2. CourseTimetable 테이블 (분반별 시간표)
+### 2.2. CourseTimetable 테이블 (분반별 시간표)
 
 사용자가 자신의 시간표에 추가할 수 있는 강의 분반 정보입니다.
 
@@ -661,7 +690,7 @@ CREATE INDEX idx_timetable_course ON course_timetables(course_id);
 CREATE INDEX idx_timetable_time ON course_timetables(day_of_week, start_time);
 ```
 
-### 1.3. UserCourseTimetable 테이블 (사용자 수강 목록)
+### 2.3. UserCourseTimetable 테이블 (사용자 수강 목록)
 
 사용자가 선택한 강의 목록입니다. 사용자와 CourseTimetable의 다대다 관계를 나타냅니다.
 
@@ -683,7 +712,9 @@ CREATE INDEX idx_user_course_timetable ON user_course_timetables(course_timetabl
 
 ---
 
-## 2. 개인 일정 (Personal Schedule)
+## 3. 개인 시간표 (Personal Timetable)
+
+### 3.1. PersonalSchedule 테이블 (개인 반복 일정)
 
 사용자가 직접 생성한 반복 일정 (아르바이트, 근로장학생 등)입니다. **명시적 인스턴스 저장 방식**을 사용합니다.
 
@@ -786,7 +817,7 @@ enum class DayOfWeek {
 
 ---
 
-## 3. 그룹 일정 (Group Event)
+## 4. 그룹 일정 (Group Event)
 
 그룹 캘린더의 공식/비공식 일정입니다. 반복 일정 지원 및 채널 게시글 연동 기능이 포함됩니다.
 
@@ -906,7 +937,7 @@ class GroupEvent(
     @JoinColumn(name = "linked_channel_id")
     var linkedChannel: Channel? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAzy)
     @JoinColumn(name = "linked_post_id")
     var linkedPost: Post? = null,
 
@@ -932,7 +963,7 @@ enum class EventType {
 
 ---
 
-## 4. 일정 참여자 (Event Participant)
+## 5. 일정 참여자 (Event Participant)
 
 일정 참여자 정보 및 참여 상태를 추적합니다.
 
@@ -1006,7 +1037,7 @@ enum class ParticipantStatus {
 
 ---
 
-## 5. 반복 일정 예외 (Event Exception)
+## 6. 반복 일정 예외 (Event Exception)
 
 반복 일정 중 특정 날짜만 시간/장소가 다른 경우를 처리합니다.
 
@@ -1086,9 +1117,9 @@ class EventException(
 
 ---
 
-## 6. 장소 관리 (Place Management)
+## 7. 장소 관리 (Place Management)
 
-### 6.1. Place 테이블 (장소 정보)
+### 7.1. Place 테이블 (장소 정보)
 
 그룹이 등록한 장소(동아리방, 랩실, 회의실 등) 정보입니다.
 
@@ -1159,7 +1190,7 @@ class Place(
 }
 ```
 
-### 6.2. PlaceUsageGroup 테이블 (장소 사용 그룹)
+### 7.2. PlaceUsageGroup 테이블 (장소 사용 그룹)
 
 장소를 예약할 수 있는 승인된 그룹 목록입니다.
 
@@ -1229,7 +1260,7 @@ enum class UsageStatus {
 }
 ```
 
-### 6.3. PlaceReservation 테이블 (장소 예약)
+### 7.3. PlaceReservation 테이블 (장소 예약)
 
 일정에 연결된 장소 예약 정보입니다. GroupEvent와 1:1 관계를 가집니다.
 
