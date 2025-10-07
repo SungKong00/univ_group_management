@@ -145,7 +145,6 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
             const Divider(height: 1, thickness: 1),
             _buildChannelList(),
             if (widget.hasAnyGroupPermission) ...[
-              const Divider(height: 1, thickness: 1),
               _buildBottomSection(),
             ] else ...[
               const Padding(
@@ -249,9 +248,10 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
             vertical: AppSpacing.xxs,
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(icon, size: 20, color: AppColors.neutral700),
-              const SizedBox(width: AppSpacing.xxs),
+              const SizedBox(width: AppSpacing.xs),
               Text(
                 label,
                 style: AppTheme.bodyMedium.copyWith(
@@ -327,9 +327,10 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
               vertical: AppSpacing.xxs,
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Icon(Icons.settings_outlined, size: 20, color: AppColors.neutral700),
-                const SizedBox(width: AppSpacing.xxs),
+                const SizedBox(width: AppSpacing.xs),
                 Text(
                   '관리자 페이지',
                   style: AppTheme.bodyMedium.copyWith(

@@ -51,7 +51,6 @@ class MobileChannelList extends ConsumerWidget {
           const Divider(height: 1, thickness: 1),
           _buildChannelList(ref),
           if (hasAnyGroupPermission) ...[
-            const Divider(height: 1, thickness: 1),
             _buildBottomSection(context),
           ],
         ],
@@ -189,23 +188,24 @@ class MobileChannelList extends ConsumerWidget {
           },
           borderRadius: BorderRadius.circular(AppRadius.button),
           child: Container(
-            // Touch-optimized height (min 44px)
-            constraints: const BoxConstraints(minHeight: 44),
+            // Match top section buttons (40px height)
+            constraints: const BoxConstraints(minHeight: 40),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
+              vertical: AppSpacing.xxs,
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Icon(
                   Icons.settings_outlined,
-                  size: 24,
+                  size: 20,
                   color: AppColors.neutral700,
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   '관리자 페이지',
-                  style: AppTheme.bodyLarge.copyWith(
+                  style: AppTheme.bodyMedium.copyWith(
                     color: AppColors.neutral900,
                   ),
                 ),
