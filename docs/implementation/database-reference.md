@@ -578,33 +578,931 @@ INSERT INTO groups (id, name, owner_id, parent_id, ...) VALUES (2, 'AI/SW계열'
 ## 캘린더 시스템 테이블 (Calendar System)
 
 > **개발 우선순위**: Phase 6 이후 예정
-> **상태**: 스키마 설계 예정 (개념 설계 완료)
-> **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md) | [설계 결정사항](../concepts/calendar-design-decisions.md)
+> **상태**: 스키마 설계 완료 (2025-10-07), 구현 예정
+> **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md) | [설계 결정사항](../concepts/calendar-design-decisions.md) | [장소 관리](../concepts/calendar-place-management.md)
 
-캘린더 시스템은 6개 엔티티로 구성됩니다:
+캘린더 시스템은 학교 시간표, 개인 일정, 그룹 일정, 장소 예약을 관리하는 9개 엔티티로 구성됩니다.
 
-### 주요 엔티티 개요
+### 엔티티 관계 다이어그램
 
-1. **CourseTimetable**: 대학 강의 시간표 (사용자가 자신의 수강 과목 선택)
-2. **PersonalSchedule**: 사용자 정의 반복 일정 (아르바이트, 근로장학생 등)
-3. **GroupEvent**: 그룹 일정 (공식/비공식 구분, 반복 패턴 지원)
-4. **EventParticipant**: 일정 참여자 정보 (참여 상태, 불참 사유)
-5. **EventException**: 반복 일정 예외 (특정 날짜만 시간/장소 변경)
-6. **PlaceReservation**: 장소 예약 정보 (GroupEvent와 1:1 관계)
+```
+User [1:N] CourseTimetable
+User [1:N] PersonalSchedule
+User + Group [1:N] GroupEvent (creator + group)
 
-### 설계 특징
+GroupEvent [1:N] EventParticipant [N:1] User
+GroupEvent [1:N] EventException
+GroupEvent [0:1] PlaceReservation [N:1] Place
 
-- **반복 일정**: 명시적 인스턴스 저장 방식 (DD-CAL-002)
-- **예외 처리**: EventException 분리 관리 (DD-CAL-003)
-- **참여자 관리**: 독립 엔티티로 상태 추적 (DD-CAL-004)
-- **장소 예약**: GroupEvent 부속 정보 (DD-CAL-006)
+Place [N:1] Group (관리 주체)
+Place [1:N] PlaceUsageGroup [N:1] Group (사용 그룹)
+```
 
-### 다음 단계
+### 설계 원칙 및 주요 결정사항
 
-1. 각 엔티티의 상세 스키마 설계
-2. JPA 엔티티 클래스 작성 (Kotlin)
-3. Repository 및 Service 레이어 구현
-4. 캘린더 권한 확인 로직 통합
+- **DD-CAL-001**: 권한 통합 - RBAC 시스템에 4개 캘린더 권한 추가
+- **DD-CAL-002**: 반복 일정 명시적 인스턴스 저장 (범위 지정 필수)
+- **DD-CAL-003**: EventException 분리로 예외 관리
+- **DD-CAL-004**: EventParticipant 독립 엔티티로 상태 추적
+- **DD-CAL-005**: Course와 CourseTimetable 분리 (과목 vs 분반)
+- **DD-CAL-006**: PlaceReservation은 GroupEvent의 부속 (1:1)
+- **DD-CAL-007**: 최적 시간 추천 - 가능 인원 최대화 알고리즘
+- **DD-CAL-008**: 동시성 제어 - 낙관적 락 + 중복 검증
+
+---
+
+## 1. 학교 시간표 (School Timetable)
+
+### 1.1. Course 테이블 (과목 정보)
+
+관리자가 등록한 대학 강의 과목 정보입니다. 동일 과목의 여러 분반을 지원하기 위해 Course와 CourseTimetable을 분리합니다.
+
+```sql
+CREATE TABLE courses (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    university VARCHAR(100) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    semester VARCHAR(20) NOT NULL, -- 예: '2025-1', '2025-2'
+    course_code VARCHAR(20) NOT NULL, -- 과목 코드 (예: 'CS101')
+    course_name VARCHAR(100) NOT NULL,
+    credits INT NOT NULL,
+    professor_name VARCHAR(50),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_course (university, department, semester, course_code)
+);
+
+CREATE INDEX idx_course_semester ON courses(university, semester);
+CREATE INDEX idx_course_dept ON courses(department, semester);
+```
+
+### 1.2. CourseTimetable 테이블 (분반별 시간표)
+
+사용자가 자신의 시간표에 추가할 수 있는 강의 분반 정보입니다.
+
+```sql
+CREATE TABLE course_timetables (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    course_id BIGINT NOT NULL,
+    section_number VARCHAR(10) NOT NULL, -- 분반 번호 (예: '01', '02')
+    day_of_week ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY') NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    location VARCHAR(100), -- 강의실 위치
+    max_students INT, -- 수강 정원
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_timetable_course ON course_timetables(course_id);
+CREATE INDEX idx_timetable_time ON course_timetables(day_of_week, start_time);
+```
+
+### 1.3. UserCourseTimetable 테이블 (사용자 수강 목록)
+
+사용자가 선택한 강의 목록입니다. 사용자와 CourseTimetable의 다대다 관계를 나타냅니다.
+
+```sql
+CREATE TABLE user_course_timetables (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    course_timetable_id BIGINT NOT NULL,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_user_course (user_id, course_timetable_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (course_timetable_id) REFERENCES course_timetables(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_user_course_user ON user_course_timetables(user_id);
+CREATE INDEX idx_user_course_timetable ON user_course_timetables(course_timetable_id);
+```
+
+---
+
+## 2. 개인 일정 (Personal Schedule)
+
+사용자가 직접 생성한 반복 일정 (아르바이트, 근로장학생 등)입니다. **명시적 인스턴스 저장 방식**을 사용합니다.
+
+```sql
+CREATE TABLE personal_schedules (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    location VARCHAR(100),
+    day_of_week ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY') NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    is_all_day BOOLEAN DEFAULT false,
+    color VARCHAR(7), -- 색상 코드 (#RRGGBB)
+
+    -- 반복 패턴 정보 (원본 보존용)
+    series_id VARCHAR(50), -- 동일 반복 패턴 그룹화
+    recurrence_rule TEXT, -- RRULE 형식 또는 JSON
+    valid_from DATE NOT NULL, -- 유효 시작일
+    valid_until DATE, -- 유효 종료일 (NULL이면 무기한)
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_personal_user ON personal_schedules(user_id);
+CREATE INDEX idx_personal_series ON personal_schedules(series_id);
+CREATE INDEX idx_personal_day ON personal_schedules(user_id, day_of_week, start_time);
+CREATE INDEX idx_personal_date ON personal_schedules(user_id, valid_from, valid_until);
+```
+
+**JPA 엔티티 (PersonalSchedule.kt)**:
+
+```kotlin
+@Entity
+@Table(name = "personal_schedules")
+class PersonalSchedule(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    var user: User,
+
+    @Column(nullable = false, length = 200)
+    var title: String,
+
+    @Column(columnDefinition = "TEXT")
+    var description: String? = null,
+
+    @Column(length = 100)
+    var location: String? = null,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week", nullable = false)
+    var dayOfWeek: DayOfWeek,
+
+    @Column(name = "start_time", nullable = false)
+    var startTime: LocalTime,
+
+    @Column(name = "end_time", nullable = false)
+    var endTime: LocalTime,
+
+    @Column(name = "is_all_day", nullable = false)
+    var isAllDay: Boolean = false,
+
+    @Column(length = 7)
+    var color: String? = null,
+
+    // 반복 패턴 정보
+    @Column(name = "series_id", length = 50)
+    var seriesId: String? = null,
+
+    @Column(name = "recurrence_rule", columnDefinition = "TEXT")
+    var recurrenceRule: String? = null,
+
+    @Column(name = "valid_from", nullable = false)
+    var validFrom: LocalDate,
+
+    @Column(name = "valid_until")
+    var validUntil: LocalDate? = null,
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+) {
+    override fun equals(other: Any?) = other is PersonalSchedule && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
+}
+
+enum class DayOfWeek {
+    MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+}
+```
+
+---
+
+## 3. 그룹 일정 (Group Event)
+
+그룹 캘린더의 공식/비공식 일정입니다. 반복 일정 지원 및 채널 게시글 연동 기능이 포함됩니다.
+
+```sql
+CREATE TABLE group_events (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    group_id BIGINT NOT NULL,
+    creator_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    location VARCHAR(100),
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL,
+    is_all_day BOOLEAN DEFAULT false,
+
+    -- 일정 분류
+    is_official BOOLEAN DEFAULT false, -- 공식 일정 여부
+    event_type ENUM('GENERAL', 'TARGETED', 'RSVP') DEFAULT 'GENERAL',
+
+    -- 반복 패턴 정보
+    series_id VARCHAR(50), -- 동일 반복 패턴 그룹화
+    recurrence_rule TEXT, -- RRULE 형식 또는 JSON
+
+    -- 대상자 지정 (TARGETED 타입)
+    target_criteria JSON, -- 학년, 역할, 학번 등 조건 (예: {"year": [1, 2], "roles": ["MEMBER"]})
+
+    -- 참여 제한 (RSVP 타입)
+    max_participants INT, -- 참여 인원 제한 (NULL이면 무제한)
+    current_participants INT DEFAULT 0, -- 현재 참여자 수
+
+    -- 채널 연동
+    linked_channel_id BIGINT, -- 연동된 채널 ID
+    linked_post_id BIGINT, -- 자동 생성된 게시글 ID
+
+    -- 메타 정보
+    color VARCHAR(7), -- 색상 코드
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (creator_id) REFERENCES users(id),
+    FOREIGN KEY (linked_channel_id) REFERENCES channels(id) ON DELETE SET NULL,
+    FOREIGN KEY (linked_post_id) REFERENCES posts(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_event_group ON group_events(group_id);
+CREATE INDEX idx_event_creator ON group_events(creator_id);
+CREATE INDEX idx_event_date ON group_events(group_id, start_date, end_date);
+CREATE INDEX idx_event_series ON group_events(series_id);
+CREATE INDEX idx_event_official ON group_events(group_id, is_official, start_date);
+CREATE INDEX idx_event_type ON group_events(group_id, event_type);
+```
+
+**JPA 엔티티 (GroupEvent.kt)**:
+
+```kotlin
+@Entity
+@Table(name = "group_events")
+class GroupEvent(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", nullable = false)
+    var group: Group,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id", nullable = false)
+    var creator: User,
+
+    @Column(nullable = false, length = 200)
+    var title: String,
+
+    @Column(columnDefinition = "TEXT")
+    var description: String? = null,
+
+    @Column(length = 100)
+    var location: String? = null,
+
+    @Column(name = "start_date", nullable = false)
+    var startDate: LocalDateTime,
+
+    @Column(name = "end_date", nullable = false)
+    var endDate: LocalDateTime,
+
+    @Column(name = "is_all_day", nullable = false)
+    var isAllDay: Boolean = false,
+
+    // 일정 분류
+    @Column(name = "is_official", nullable = false)
+    var isOfficial: Boolean = false,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "event_type", nullable = false)
+    var eventType: EventType = EventType.GENERAL,
+
+    // 반복 패턴
+    @Column(name = "series_id", length = 50)
+    var seriesId: String? = null,
+
+    @Column(name = "recurrence_rule", columnDefinition = "TEXT")
+    var recurrenceRule: String? = null,
+
+    // 대상자 지정
+    @Column(name = "target_criteria", columnDefinition = "JSON")
+    var targetCriteria: String? = null, // JSON 문자열
+
+    // 참여 제한
+    @Column(name = "max_participants")
+    var maxParticipants: Int? = null,
+
+    @Column(name = "current_participants", nullable = false)
+    var currentParticipants: Int = 0,
+
+    // 채널 연동
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "linked_channel_id")
+    var linkedChannel: Channel? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "linked_post_id")
+    var linkedPost: Post? = null,
+
+    @Column(length = 7)
+    var color: String? = null,
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+) {
+    override fun equals(other: Any?) = other is GroupEvent && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
+}
+
+enum class EventType {
+    GENERAL,   // 대상 미지정
+    TARGETED,  // 대상자 지정
+    RSVP       // 참여자 신청
+}
+```
+
+---
+
+## 4. 일정 참여자 (Event Participant)
+
+일정 참여자 정보 및 참여 상태를 추적합니다.
+
+```sql
+CREATE TABLE event_participants (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    event_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    status ENUM('PENDING', 'ACCEPTED', 'DECLINED') DEFAULT 'PENDING',
+    decline_reason TEXT, -- 불참 사유
+    notification_sent BOOLEAN DEFAULT false, -- 알림 발송 여부
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_event_participant (event_id, user_id),
+    FOREIGN KEY (event_id) REFERENCES group_events(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_participant_event ON event_participants(event_id);
+CREATE INDEX idx_participant_user ON event_participants(user_id);
+CREATE INDEX idx_participant_status ON event_participants(user_id, status);
+```
+
+**JPA 엔티티 (EventParticipant.kt)**:
+
+```kotlin
+@Entity
+@Table(
+    name = "event_participants",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["event_id", "user_id"])]
+)
+class EventParticipant(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id", nullable = false)
+    var event: GroupEvent,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    var user: User,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    var status: ParticipantStatus = ParticipantStatus.PENDING,
+
+    @Column(name = "decline_reason", columnDefinition = "TEXT")
+    var declineReason: String? = null,
+
+    @Column(name = "notification_sent", nullable = false)
+    var notificationSent: Boolean = false,
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+) {
+    override fun equals(other: Any?) = other is EventParticipant && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
+}
+
+enum class ParticipantStatus {
+    PENDING,   // 대기 (초대됨)
+    ACCEPTED,  // 참여
+    DECLINED   // 불참
+}
+```
+
+---
+
+## 5. 반복 일정 예외 (Event Exception)
+
+반복 일정 중 특정 날짜만 시간/장소가 다른 경우를 처리합니다.
+
+```sql
+CREATE TABLE event_exceptions (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    parent_event_id BIGINT NOT NULL, -- 원본 반복 일정 ID
+    exception_date DATE NOT NULL, -- 예외 발생 날짜
+
+    -- 오버라이드할 필드 (NULL이면 원본 유지)
+    new_title VARCHAR(200),
+    new_description TEXT,
+    new_location VARCHAR(100),
+    new_start_time TIME,
+    new_end_time TIME,
+    is_cancelled BOOLEAN DEFAULT false, -- 이 날짜만 취소
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_exception (parent_event_id, exception_date),
+    FOREIGN KEY (parent_event_id) REFERENCES group_events(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_exception_parent ON event_exceptions(parent_event_id);
+CREATE INDEX idx_exception_date ON event_exceptions(parent_event_id, exception_date);
+```
+
+**JPA 엔티티 (EventException.kt)**:
+
+```kotlin
+@Entity
+@Table(
+    name = "event_exceptions",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["parent_event_id", "exception_date"])]
+)
+class EventException(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_event_id", nullable = false)
+    var parentEvent: GroupEvent,
+
+    @Column(name = "exception_date", nullable = false)
+    var exceptionDate: LocalDate,
+
+    // 오버라이드할 필드
+    @Column(name = "new_title", length = 200)
+    var newTitle: String? = null,
+
+    @Column(name = "new_description", columnDefinition = "TEXT")
+    var newDescription: String? = null,
+
+    @Column(name = "new_location", length = 100)
+    var newLocation: String? = null,
+
+    @Column(name = "new_start_time")
+    var newStartTime: LocalTime? = null,
+
+    @Column(name = "new_end_time")
+    var newEndTime: LocalTime? = null,
+
+    @Column(name = "is_cancelled", nullable = false)
+    var isCancelled: Boolean = false,
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+) {
+    override fun equals(other: Any?) = other is EventException && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
+}
+```
+
+---
+
+## 6. 장소 관리 (Place Management)
+
+### 6.1. Place 테이블 (장소 정보)
+
+그룹이 등록한 장소(동아리방, 랩실, 회의실 등) 정보입니다.
+
+```sql
+CREATE TABLE places (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    building VARCHAR(100) NOT NULL,
+    room_number VARCHAR(50) NOT NULL,
+    alias VARCHAR(100), -- 별칭 (예: 'AISC랩실')
+    description TEXT,
+    capacity INT, -- 수용 인원
+
+    -- 관리 주체
+    managing_group_id BIGINT NOT NULL, -- 현재 관리 주체 그룹
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_place (building, room_number),
+    FOREIGN KEY (managing_group_id) REFERENCES groups(id)
+);
+
+CREATE INDEX idx_place_managing ON places(managing_group_id);
+CREATE INDEX idx_place_building ON places(building);
+```
+
+**JPA 엔티티 (Place.kt)**:
+
+```kotlin
+@Entity
+@Table(
+    name = "places",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["building", "room_number"])]
+)
+class Place(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+
+    @Column(nullable = false, length = 100)
+    var building: String,
+
+    @Column(name = "room_number", nullable = false, length = 50)
+    var roomNumber: String,
+
+    @Column(length = 100)
+    var alias: String? = null,
+
+    @Column(columnDefinition = "TEXT")
+    var description: String? = null,
+
+    @Column
+    var capacity: Int? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "managing_group_id", nullable = false)
+    var managingGroup: Group,
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+) {
+    override fun equals(other: Any?) = other is Place && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
+
+    fun getFullName(): String = "$building-$roomNumber${alias?.let { "($it)" } ?: ""}"
+}
+```
+
+### 6.2. PlaceUsageGroup 테이블 (장소 사용 그룹)
+
+장소를 예약할 수 있는 승인된 그룹 목록입니다.
+
+```sql
+CREATE TABLE place_usage_groups (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    place_id BIGINT NOT NULL,
+    group_id BIGINT NOT NULL,
+    status ENUM('PENDING', 'APPROVED', 'REJECTED') DEFAULT 'PENDING',
+    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    approved_at TIMESTAMP,
+    approved_by BIGINT, -- 승인한 사용자 (관리 주체의 관리자)
+
+    UNIQUE KEY uk_place_group (place_id, group_id),
+    FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES users(id)
+);
+
+CREATE INDEX idx_usage_place ON place_usage_groups(place_id);
+CREATE INDEX idx_usage_group ON place_usage_groups(group_id);
+CREATE INDEX idx_usage_status ON place_usage_groups(place_id, status);
+```
+
+**JPA 엔티티 (PlaceUsageGroup.kt)**:
+
+```kotlin
+@Entity
+@Table(
+    name = "place_usage_groups",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["place_id", "group_id"])]
+)
+class PlaceUsageGroup(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id", nullable = false)
+    var place: Place,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", nullable = false)
+    var group: Group,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    var status: UsageStatus = UsageStatus.PENDING,
+
+    @Column(name = "requested_at", nullable = false, updatable = false)
+    var requestedAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "approved_at")
+    var approvedAt: LocalDateTime? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by")
+    var approvedBy: User? = null,
+) {
+    override fun equals(other: Any?) = other is PlaceUsageGroup && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
+}
+
+enum class UsageStatus {
+    PENDING,
+    APPROVED,
+    REJECTED
+}
+```
+
+### 6.3. PlaceReservation 테이블 (장소 예약)
+
+일정에 연결된 장소 예약 정보입니다. GroupEvent와 1:1 관계를 가집니다.
+
+```sql
+CREATE TABLE place_reservations (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    event_id BIGINT NOT NULL UNIQUE, -- 1:1 관계
+    place_id BIGINT NOT NULL,
+    reserved_by BIGINT NOT NULL, -- 예약한 사용자
+
+    -- 동시성 제어
+    version BIGINT DEFAULT 0, -- 낙관적 락
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (event_id) REFERENCES group_events(id) ON DELETE CASCADE,
+    FOREIGN KEY (place_id) REFERENCES places(id),
+    FOREIGN KEY (reserved_by) REFERENCES users(id)
+);
+
+CREATE INDEX idx_reservation_place ON place_reservations(place_id);
+CREATE INDEX idx_reservation_event ON place_reservations(event_id);
+CREATE INDEX idx_reservation_user ON place_reservations(reserved_by);
+```
+
+**JPA 엔티티 (PlaceReservation.kt)**:
+
+```kotlin
+@Entity
+@Table(name = "place_reservations")
+class PlaceReservation(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id", nullable = false, unique = true)
+    var event: GroupEvent,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id", nullable = false)
+    var place: Place,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reserved_by", nullable = false)
+    var reservedBy: User,
+
+    // 낙관적 락 (동시성 제어)
+    @Version
+    @Column(nullable = false)
+    var version: Long = 0,
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+) {
+    override fun equals(other: Any?) = other is PlaceReservation && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
+}
+```
+
+---
+
+## 주요 쿼리 패턴
+
+### 1. 사용자의 모든 일정 조회 (개인 캘린더)
+
+개인 캘린더는 학교 시간표 + 개인 일정 + 참여 중인 그룹 일정을 통합하여 보여줍니다.
+
+```kotlin
+// 1. 학교 시간표
+val courseTimetables = userCourseTimetableRepository.findByUserId(userId)
+
+// 2. 개인 일정
+val personalSchedules = personalScheduleRepository.findByUserIdAndDateRange(
+    userId, startDate, endDate
+)
+
+// 3. 참여 중인 그룹 일정
+val participatingEvents = eventParticipantRepository.findByUserIdAndStatusAndDateRange(
+    userId, ParticipantStatus.ACCEPTED, startDate, endDate
+)
+
+// 통합하여 반환
+```
+
+### 2. 그룹 캘린더 조회 (날짜 범위)
+
+```sql
+SELECT e.*
+FROM group_events e
+WHERE e.group_id = ?
+  AND e.start_date >= ?
+  AND e.end_date <= ?
+ORDER BY e.start_date;
+```
+
+### 3. 장소 예약 현황 조회 (충돌 검증)
+
+```sql
+SELECT r.*
+FROM place_reservations r
+JOIN group_events e ON r.event_id = e.id
+WHERE r.place_id = ?
+  AND e.start_date < ? -- 새 일정 종료 시간
+  AND e.end_date > ?   -- 새 일정 시작 시간
+FOR UPDATE; -- 비관적 락 (동시성 제어)
+```
+
+### 4. 최적 시간 추천 (가능 인원 계산)
+
+대상자 지정 일정 생성 시 참여 가능한 인원이 가장 많은 시간대를 찾습니다.
+
+```kotlin
+// 1. 대상자 목록 추출
+val targetUsers = groupMemberRepository.findByGroupIdAndCriteria(groupId, targetCriteria)
+
+// 2. 각 시간대별 불가능한 사용자 계산
+val unavailableUsers = mutableMapOf<TimeSlot, Set<Long>>()
+
+for (timeSlot in candidateTimeSlots) {
+    // 학교 시간표 충돌
+    val courseBusy = userCourseTimetableRepository.findUsersWithCourseAt(timeSlot)
+
+    // 개인 일정 충돌
+    val personalBusy = personalScheduleRepository.findUsersWithScheduleAt(timeSlot)
+
+    // 그룹 일정 충돌
+    val eventBusy = eventParticipantRepository.findUsersWithEventAt(timeSlot)
+
+    unavailableUsers[timeSlot] = (courseBusy + personalBusy + eventBusy).toSet()
+}
+
+// 3. 가능 인원이 가장 많은 시간대 선택
+val bestTimeSlot = candidateTimeSlots.maxByOrNull { timeSlot ->
+    targetUsers.size - unavailableUsers[timeSlot]!!.size
+}
+```
+
+---
+
+## 인덱스 전략 요약
+
+캘린더 시스템의 주요 조회 패턴을 고려한 인덱스 전략입니다.
+
+### 복합 인덱스 (조회 성능 최적화)
+
+1. **날짜 범위 조회**: `(group_id, start_date, end_date)`, `(user_id, valid_from, valid_until)`
+2. **참여자 필터링**: `(user_id, status)`, `(event_id, status)`
+3. **반복 일정 그룹화**: `(series_id)`, `(parent_event_id, exception_date)`
+4. **장소 예약 조회**: `(place_id, start_date)`, `(place_id, status)`
+5. **일정 타입별 조회**: `(group_id, is_official, start_date)`, `(group_id, event_type)`
+
+### 외래키 인덱스
+
+모든 외래키 컬럼에 인덱스를 생성하여 JOIN 성능을 최적화합니다.
+
+### 유니크 제약 조건
+
+- `(building, room_number)`: 장소 중복 방지
+- `(place_id, group_id)`: 사용 그룹 중복 방지
+- `(event_id, user_id)`: 참여자 중복 방지
+- `(parent_event_id, exception_date)`: 예외 중복 방지
+- `event_id` (PlaceReservation): 1:1 관계 보장
+
+---
+
+## 데이터 무결성 및 CASCADE 전략
+
+### CASCADE DELETE 적용
+
+| 부모 테이블 | 자식 테이블 | 정책 | 이유 |
+|------------|------------|------|------|
+| `groups` | `group_events` | CASCADE | 그룹 삭제 시 일정도 삭제 |
+| `group_events` | `event_participants` | CASCADE | 일정 삭제 시 참여자도 삭제 |
+| `group_events` | `event_exceptions` | CASCADE | 일정 삭제 시 예외도 삭제 |
+| `group_events` | `place_reservations` | CASCADE | 일정 삭제 시 예약도 삭제 |
+| `places` | `place_reservations` | NO ACTION | 장소 삭제 전 예약 확인 필요 |
+| `places` | `place_usage_groups` | CASCADE | 장소 삭제 시 사용 그룹도 삭제 |
+| `users` | `personal_schedules` | CASCADE | 사용자 삭제 시 개인 일정 삭제 |
+| `courses` | `course_timetables` | CASCADE | 과목 삭제 시 분반도 삭제 |
+
+### SET NULL 적용
+
+- `group_events.linked_channel_id`: 채널 삭제 시 NULL로 변경 (일정은 유지)
+- `group_events.linked_post_id`: 게시글 삭제 시 NULL로 변경
+
+---
+
+## 동시성 제어 전략
+
+### 낙관적 락 (Optimistic Lock)
+
+`PlaceReservation` 테이블에 `@Version` 컬럼을 추가하여 동시 예약 충돌을 방지합니다.
+
+**충돌 시나리오:**
+1. 사용자 A와 B가 동시에 같은 장소/시간 예약 시도
+2. 중복 검증 쿼리에서 둘 다 "예약 없음" 확인
+3. A가 먼저 INSERT 성공
+4. B가 INSERT 시도 시 version 충돌 발생 (OptimisticLockException)
+5. B에게 "이미 예약된 시간입니다" 에러 응답
+
+**구현 예시:**
+
+```kotlin
+@Transactional
+fun createReservation(request: CreateReservationRequest): PlaceReservationDto {
+    // 1. 중복 검증
+    val conflicts = placeReservationRepository.findConflicts(
+        request.placeId, request.startDate, request.endDate
+    )
+    if (conflicts.isNotEmpty()) {
+        throw BusinessException(ErrorCode.RESERVATION_CONFLICT)
+    }
+
+    // 2. 예약 생성 (낙관적 락 적용)
+    try {
+        val reservation = PlaceReservation(...)
+        return placeReservationRepository.save(reservation).toDto()
+    } catch (e: OptimisticLockException) {
+        throw BusinessException(ErrorCode.RESERVATION_CONFLICT)
+    }
+}
+```
+
+---
+
+## 다음 단계
+
+### 백엔드 구현 필요
+
+1. **Repository 레이어**
+   - 9개 엔티티의 Repository 인터페이스 작성
+   - 복잡한 조회 쿼리 (날짜 범위, 참여자 필터링 등)
+   - 최적 시간 추천 쿼리
+
+2. **Service 레이어**
+   - 일정 생성/수정/삭제 로직 (반복 일정 처리)
+   - 참여자 자동 생성 로직 (대상자 지정)
+   - 장소 예약 중복 검증
+   - 권한 확인 통합 (CALENDAR_MANAGE, PLACE_MANAGE 등)
+
+3. **Controller 레이어**
+   - REST API 엔드포인트 (CRUD + 최적 시간 추천)
+   - @PreAuthorize 어노테이션 적용
+   - ApiResponse 래퍼
+
+4. **테스트**
+   - 반복 일정 생성/수정/삭제 통합 테스트
+   - 동시성 제어 테스트 (낙관적 락)
+   - 권한 검증 테스트
+
+### 프론트엔드 구현 필요
+
+1. **캘린더 UI**
+   - 4가지 캘린더 뷰 (학교 시간표, 개인 일정, 그룹 캘린더, 장소 캘린더)
+   - 일정 생성/수정/삭제 플로우
+   - 반복 범위 설정 UI
+
+2. **게시글 연동**
+   - JSON 임베딩 렌더링
+   - 액션 버튼 (불참, 참여 신청)
+
+3. **최적 시간 추천**
+   - 시간대별 가능/불가능 인원 시각화
+
+### 권한 시스템 통합
+
+1. GroupRole 엔티티에 4개 권한 추가
+2. PermissionService 확장
+3. UI 권한 매트릭스에 캘린더 탭 추가
 
 ---
 

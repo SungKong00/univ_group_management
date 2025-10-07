@@ -108,12 +108,10 @@ lib/
 - `lib/presentation/pages/workspace/workspace_page.dart`
 - `lib/presentation/widgets/workspace/group_dropdown.dart`
 
-**애니메이션 상세 (2025-10-06):**
-- AnimationController: SingleTickerProviderStateMixin 사용
-- Duration: 160ms (디자인 시스템 표준)
-- Curve: easeOutCubic (디자인 시스템 표준)
-- SlideTransition: 오른쪽 → 왼쪽 (Offset(1.0, 0.0) → Offset.zero)
-- 상태 동기화: 애니메이션 완료 후 workspaceState.isCommentsVisible 업데이트
+**애니메이션 상세 (2025-10-07 리팩토링)**:
+- 댓글창 애니메이션은 재사용 가능한 `SlidePanel` 위젯으로 대체되었습니다.
+- `SlidePanel`이 슬라이드, 페이드, 백드롭 탭과 같은 모든 애니메이션과 상호작용을 내부적으로 처리합니다.
+- 이 리팩토링으로 `workspace_page.dart`에서 수동 `AnimationController` 관리가 제거되어 코드 복잡성이 감소했습니다.
 
 ### ✅ 테마 시스템 (95% 완료)
 

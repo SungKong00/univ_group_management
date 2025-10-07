@@ -411,6 +411,71 @@ final confirmed = await showConfirmDialog(
 -   **유지보수 용이성**: 디자인 변경 시 `WorkspaceEmptyState` 위젯 하나만 수정하면 모든 곳에 반영됩니다.
 -   **확장성**: 새로운 상태가 필요할 경우 `enum`에 한 줄, 위젯 내 `switch`문에 한 `case`만 추가하면 됩니다.
 
+### 패턴 5: 슬라이드 패널 컴포넌트 (SlidePanel Component)
+**적용 시점:** 화면 가장자리에서 부드럽게 나타나고 사라지는 사이드 패널(예: 댓글창, 상세 정보 뷰)이 필요할 때
+
+**구현:**
+```dart
+// presentation/widgets/common/slide_panel.dart
+class SlidePanel extends StatelessWidget {
+  final bool isVisible;
+  final VoidCallback onDismiss;
+  final Widget child;
+  final double? width;
+  final bool showBackdrop;
+
+  @override
+  Widget build(BuildContext context) {
+    // Stack과 Positioned를 사용하여 화면에 오버레이
+    // isVisible 값에 따라 AnimationController로 슬라이드 및 페이드 애니메이션 제어
+    // 백드롭(어두운 배경) 표시 및 클릭 시 onDismiss 호출 기능
+    return Visibility(
+        visible: isVisible,
+        child: Stack(
+            children: [
+                // ... Backdrop ...
+                // ... SlideTransition ...
+            ]
+        )
+    );
+  }
+}
+```
+**기대 효과:**
+- **애니메이션 로직 캡슐화**: 복잡한 `AnimationController` 관리를 위젯 내부로 숨겨 사용 편의성 증대.
+- **일관된 UX 제공**: 프로젝트 전체에 걸쳐 동일한 사이드 패널 애니메이션과 동작을 보장.
+- **코드 단순화**: `workspace_page.dart`에서처럼 패널을 사용하는 부모 위젯의 코드가 대폭 감소.
+
+### 패턴 6: 게시글 미리보기 위젯 (PostPreviewWidget)
+**적용 시점:** 댓글창과 같이 다른 컨텍스트 내에서 원본 게시글의 요약 정보를 보여줘야 할 때
+
+**구현:**
+```dart
+// presentation/widgets/workspace/post_preview_widget.dart
+class PostPreviewWidget extends ConsumerWidget {
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // postPreviewProvider를 사용하여 현재 선택된 게시글의 상태(로딩, 데이터, 에러)를 구독
+    final state = ref.watch(postPreviewProvider);
+
+    return state.when(
+      loading: () => CircularProgressIndicator(),
+      error: (error, stack) => Text('Error: $error'),
+      data: (post) {
+        // 게시글 헤더, 접고 펼 수 있는 본문 등 UI 표시
+        // onClose 콜백을 사용하는 닫기 버튼 포함
+      },
+    );
+  }
+}
+```
+**기대 효과:**
+- **관심사 분리**: 게시글 데이터를 가져오고 표시하는 로직을 부모 위젯(`workspace_page`)으로부터 완전히 분리.
+- **상태 관리 위임**: Riverpod Provider를 통해 비동기 데이터 로딩, 상태 업데이트, 에러 처리를 위임하여 위젯을 단순하게 유지.
+- **재사용성**: 게시글 미리보기가 필요한 어느 곳에서든 쉽게 재사용 가능.
+
 ## 🎨 디자인 토큰 활용
 
 ### 컬러 토큰화

@@ -4,6 +4,53 @@
 
 ## 2025년 10월
 
+### 2025-10-07 - 캘린더 DB 스키마 설계 및 동시성 제어 추가
+**커밋**: 현재 세션
+**유형**: 설계 구체화 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 백엔드 (DB), 문서 (구현 상세)
+
+**구현 내용**:
+- **DB 설계**:
+    - 캘린더 시스템의 전체 DB 스키마를 `database-reference.md`에 상세히 정의했습니다. 9개 테이블(`courses`, `course_timetables`, `user_course_timetables`, `personal_schedules`, `group_events`, `event_participants`, `event_exceptions`, `places`, `place_reservations`)의 SQL DDL, JPA 엔티티(Kotlin), 인덱스 전략, CASCADE 정책을 포함합니다.
+    - 장소 예약의 동시성 제어를 위해 `place_reservations` 테이블에 `version` 컬럼을 추가하여 낙관적 락을 적용하는 설계를 반영했습니다.
+- **설계 결정**:
+    - `calendar-design-decisions.md`에 동시성 제어 전략(`DD-CAL-008`)을 추가하여, 낙관적 락과 중복 검증 쿼리를 조합하는 방식을 공식화했습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/database-reference.md`: 캘린더 시스템의 전체 DB 스키마, JPA 엔티티, 인덱스 전략, 동시성 제어 등 구현에 필요한 모든 상세 정보를 대규모로 업데이트했습니다.
+- ✅ `docs/concepts/calendar-design-decisions.md`: 동시성 제어에 대한 설계 결정(`DD-CAL-008`)을 추가하고, 다음 단계에 동시성 테스트를 포함시켰습니다.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+
+**메모**: 백엔드 캘린더 기능 구현을 위한 구체적인 DB 설계가 완료되었습니다. 이 문서를 기반으로 실제 엔티티와 레포지토리 구현을 진행할 수 있습니다.
+
+---
+
+### 2025-10-07 - 댓글 사이드바 리팩토링 및 문서 동기화
+**커밋**: 현재 세션
+**유형**: 리팩토링 + 문서 동기화
+**우선순위**: Medium
+**영향 범위**: 프론트엔드 (UI/UX), 문서 (구현 가이드)
+
+**구현 내용**:
+- **프론트엔드**:
+    - `workspace_page.dart`의 댓글 사이드바 로직을 대대적으로 리팩토링했습니다.
+    - 수동으로 관리하던 `AnimationController`를 제거하고, 애니메이션, 백드롭, 상태 관리를 캡슐화한 재사용 위젯 `SlidePanel`을 도입했습니다.
+    - 댓글창에 표시될 게시글 미리보기 로직을 `PostPreviewWidget`과 `postPreviewProvider`로 분리하여 관심사를 분리하고 재사용성을 높였습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/ui-ux/pages/workspace-pages.md`: 댓글창 애니메이션 설명을 `AnimationController` 대신 재사용 위젯 `SlidePanel`을 사용하도록 수정했습니다.
+- ✅ `docs/implementation/frontend-implementation-status.md`: 워크스페이스 상태 관리의 애니메이션 상세 설명을 리팩토링된 내용으로 갱신했습니다.
+- ✅ `docs/implementation/component-reusability-guide.md`: 재사용 패턴 카탈로그에 `SlidePanel`과 `PostPreviewWidget`을 새로 추가했습니다.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+
+**수정된 파일**:
+- `frontend/lib/presentation/pages/workspace/workspace_page.dart`
+
+**메모**: 댓글 사이드바의 구현이 훨씬 간결해지고 유지보수성이 향상되었습니다. 또한, 새로운 재사용 위젯들이 문서화되어 향후 다른 기능 개발에 활용될 수 있습니다.
+
+---
+
 ### 2025-10-07 - 그룹 관리 페이지 추가 및 문서 동기화
 **커밋**: 현재 세션
 **유형**: 기능 추가 + 문서 동기화

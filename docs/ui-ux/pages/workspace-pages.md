@@ -41,12 +41,13 @@
 - 반응형 아이콘 크기: 폰트 크기에 따라 20px ↔ 16px 자동 조정
 - 구현 파일: `/frontend/lib/presentation/widgets/workspace/group_dropdown.dart`
 
-**워크스페이스 애니메이션 (2025-10-06)**
-- 댓글창 슬라이드 애니메이션: SlideTransition (오른쪽 → 왼쪽, 160ms, easeOutCubic)
-- AnimationController: SingleTickerProviderStateMixin 사용
-- 상태 동기화: 애니메이션 완료 후 workspaceState.isCommentsVisible 업데이트
-- 중복 실행 방지: `_isAnimatingOut` 플래그로 제어
-- 구현 파일: `/frontend/lib/presentation/pages/workspace/workspace_page.dart`
+**워크스페이스 애니메이션 (2025-10-07 리팩토링)**
+- 댓글창 슬라이드 애니메이션: 재사용 가능한 `SlidePanel` 위젯을 사용하여 구현.
+- `SlidePanel`은 애니메이션, 백드롭, 해제 제스처를 포함한 모든 사이드 패널 로직을 캡슐화.
+- 이를 통해 `workspace_page.dart`에서 수동 `AnimationController` 관리가 제거되어 코드가 간소화되고 유지보수성이 향상됨.
+- 구현 파일: 
+  - `/frontend/lib/presentation/widgets/common/slide_panel.dart` (재사용 위젯)
+  - `/frontend/lib/presentation/pages/workspace/workspace_page.dart` (위젯 사용)
 
 ### 향후 개선 사항
 

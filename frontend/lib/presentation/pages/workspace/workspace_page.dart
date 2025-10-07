@@ -5,7 +5,6 @@ import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/utils/date_formatter.dart';
 import '../../../core/models/channel_models.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../../providers/my_groups_provider.dart';
@@ -18,10 +17,10 @@ import '../../widgets/post/post_list.dart';
 import '../../widgets/post/post_composer.dart';
 import '../../widgets/comment/comment_list.dart';
 import '../../widgets/comment/comment_composer.dart';
-import '../../../core/services/post_service.dart';
-import '../../../core/models/post_models.dart';
-import '../../widgets/common/collapsible_content.dart';
+import '../../widgets/common/slide_panel.dart';
 import 'widgets/workspace_empty_state.dart';
+import 'widgets/post_preview_widget.dart';
+import 'providers/post_preview_notifier.dart';
 import 'providers/post_actions_provider.dart';
 import 'providers/comment_actions_provider.dart';
 
@@ -35,65 +34,23 @@ class WorkspacePage extends ConsumerStatefulWidget {
   ConsumerState<WorkspacePage> createState() => _WorkspacePageState();
 }
 
-class _WorkspacePageState extends ConsumerState<WorkspacePage>
-    with SingleTickerProviderStateMixin {
+class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   int _postListKey = 0;
   int _commentListKey = 0;
   bool _previousIsMobile = false;
   bool _previousIsNarrowDesktop = false; // Narrow desktop 상태 추적
   bool _hasResponsiveLayoutInitialized = false;
-  bool _isAnimatingOut = false; // 슬라이드 아웃 애니메이션 진행 중 플래그
-  late AnimationController _commentsAnimationController;
-  late Animation<double> _backdropFadeAnimation; // 백드롭 페이드 애니메이션
-  late Animation<Offset> _commentsSlideAnimation;
 
   // 스크롤 위치 보존을 위한 ScrollController (선택사항)
   final ScrollController _postScrollController = ScrollController();
   final ScrollController _commentScrollController = ScrollController();
 
-  // 웹 댓글 사이드바용 게시글 데이터 상태
-  Post? _selectedPost;
-  bool _isLoadingPost = false;
-  String? _postErrorMessage;
-  String? _previousSelectedPostId; // 중복 로드 방지용 이전 게시글 ID
+  // 중복 로드 방지용 이전 게시글 ID
+  String? _previousSelectedPostId;
 
   @override
   void initState() {
     super.initState();
-
-    // 댓글창 슬라이드 애니메이션 초기화
-    _commentsAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 160), // 디자인 시스템 표준 duration
-    );
-
-    _commentsSlideAnimation = Tween<Offset>(
-      begin: const Offset(1.0, 0.0), // 오른쪽 밖에서 시작
-      end: Offset.zero, // 제자리로 이동
-    ).animate(CurvedAnimation(
-      parent: _commentsAnimationController,
-      curve: Curves.easeOutCubic, // 디자인 시스템 표준 easing
-    ));
-
-    _backdropFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _commentsAnimationController,
-      curve: Curves.easeOutCubic, // 슬라이드와 동일한 easing
-    ));
-
-    // 애니메이션 상태 리스너: 슬라이드 아웃 완료 감지
-    _commentsAnimationController.addStatusListener((status) {
-      if (status == AnimationStatus.dismissed && _isAnimatingOut) {
-        // 애니메이션이 완전히 종료되면 플래그 해제하고 상태 동기화
-        setState(() {
-          _isAnimatingOut = false;
-        });
-        // ✅ 상태 동기화: 애니메이션 완료 후 workspaceState.isCommentsVisible를 false로 설정
-        ref.read(workspaceStateProvider.notifier).hideComments();
-      }
-    });
 
     // 워크스페이스 진입 시 상태 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -139,7 +96,6 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
 
   @override
   void dispose() {
-    _commentsAnimationController.dispose();
     _postScrollController.dispose();
     _commentScrollController.dispose();
     super.dispose();
@@ -165,23 +121,16 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _handleResponsiveTransition(isMobile, isNarrowDesktop);
 
-          // 데스크톱에서 댓글 가시성 변화에 따라 애니메이션 트리거
-          // ✅ _isAnimatingOut이 아닐 때만 forward 허용 (중복 실행 방지)
-          if (isDesktop) {
-            if (workspaceState.isCommentsVisible && !_isAnimatingOut) {
-              _commentsAnimationController.forward();
-
-              // 웹 댓글 사이드바가 열릴 때 게시글 로드 (중복 방지)
-              final currentPostId = workspaceState.selectedPostId;
-              if (currentPostId != null && currentPostId != _previousSelectedPostId) {
-                _loadSelectedPost(currentPostId);
-                _previousSelectedPostId = currentPostId;
-              }
-            } else if (!workspaceState.isCommentsVisible && !_isAnimatingOut) {
-              _commentsAnimationController.reverse();
-              // 댓글창 닫힐 때 상태 초기화
-              _previousSelectedPostId = null;
+          // 데스크톱에서 댓글창이 열릴 때 게시글 로드
+          if (isDesktop && workspaceState.isCommentsVisible) {
+            final currentPostId = workspaceState.selectedPostId;
+            if (currentPostId != null && currentPostId != _previousSelectedPostId) {
+              ref.read(postPreviewProvider.notifier).loadPost(currentPostId);
+              _previousSelectedPostId = currentPostId;
             }
+          } else if (isDesktop && !workspaceState.isCommentsVisible) {
+            // 댓글창 닫힐 때 상태 초기화
+            _previousSelectedPostId = null;
           }
         });
 
@@ -280,7 +229,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
 
   Widget _buildDesktopWorkspace(WorkspaceState workspaceState, {bool isNarrowDesktop = false}) {
     final bool showChannelNavigation = workspaceState.isInWorkspace;
-    final bool showComments = workspaceState.isCommentsVisible || _isAnimatingOut;
+    final bool showComments = workspaceState.isCommentsVisible;
 
     // Narrow desktop + 댓글 전체 화면 모드: 게시글 숨기고 댓글만 표시
     final bool isNarrowCommentFullscreen = isNarrowDesktop && workspaceState.isNarrowDesktopCommentsFullscreen;
@@ -345,48 +294,23 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
                 ),
               ),
 
-            // 백드롭 레이어: Wide desktop에서만 전체 영역 어둡게 처리
-            // Narrow desktop 전체 화면 모드에서는 백드롭 불필요 (댓글창이 전체 화면)
-            if (showComments && !isNarrowCommentFullscreen)
-              Positioned(
-                top: 0,
-                bottom: 0,
-                left: leftInset, // 채널바 제외
-                right: 0, // 전체 화면 커버 (댓글창은 상위 레이어에 렌더링됨)
-                child: FadeTransition(
-                  opacity: _backdropFadeAnimation,
-                  child: GestureDetector(
-                    onTap: () {
-                      // 백드롭 클릭 시 댓글창 닫기 (슬라이드 아웃 애니메이션)
-                      setState(() {
-                        _isAnimatingOut = true;
-                      });
-                      _commentsAnimationController.reverse();
-                    },
-                    child: Container(
-                      color: const Color.fromRGBO(0, 0, 0, 0.12),
-                    ),
-                  ),
-                ),
-              ),
-
-            // 댓글 사이드바 (백드롭 위에 렌더링하여 Z-index 최상위)
+            // 댓글 슬라이드 패널 (SlidePanel 위젯 사용)
             if (showComments)
-              Positioned(
-                top: 0,
-                bottom: 0,
-                right: 0,
-                // Narrow desktop: 전체 너비 사용, Wide desktop: commentBarWidth
-                width: isNarrowCommentFullscreen ? null : commentBarWidth,
-                // Narrow desktop 전체 화면: 채널바 옆에서 시작
-                left: isNarrowCommentFullscreen ? leftInset : null,
-                child: RepaintBoundary(
-                  child: SlideTransition(
-                    position: _commentsSlideAnimation,
-                    child: _buildCommentsSidebar(
-                      workspaceState,
-                      isNarrowCommentFullscreen ? null : commentBarWidth,
+              Positioned.fill(
+                left: leftInset, // 채널바 제외
+                child: SlidePanel(
+                  isVisible: workspaceState.isCommentsVisible,
+                  onDismiss: () => ref.read(workspaceStateProvider.notifier).hideComments(),
+                  showBackdrop: !isNarrowCommentFullscreen, // Narrow desktop 전체 화면에서는 백드롭 없음
+                  width: isNarrowCommentFullscreen ? null : commentBarWidth,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      border: Border(
+                        left: BorderSide(color: AppColors.lightOutline, width: 1),
+                      ),
                     ),
+                    child: _buildCommentsView(workspaceState),
                   ),
                 ),
               ),
@@ -680,18 +604,6 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     }
   }
 
-  Widget _buildCommentsSidebar(WorkspaceState workspaceState, double? width) {
-    return Container(
-      width: width, // null이면 전체 너비 사용
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          left: BorderSide(color: AppColors.lightOutline, width: 1),
-        ),
-      ),
-      child: _buildCommentsView(workspaceState),
-    );
-  }
 
   Widget _buildCommentsView(WorkspaceState workspaceState) {
     final postIdStr = workspaceState.selectedPostId;
@@ -703,7 +615,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         Column(
           children: [
             // 게시글 미리보기
-            _buildPostPreview(),
+            PostPreviewWidget(
+              onClose: () => ref.read(workspaceStateProvider.notifier).hideComments(),
+            ),
 
             const Divider(height: 1, thickness: 1),
 
@@ -746,15 +660,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
             padding: const EdgeInsets.all(4),
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 20,
-            onPressed: () {
-              // 1. 슬라이드 아웃 애니메이션 시작
-              setState(() {
-                _isAnimatingOut = true;
-              });
-
-              // 2. reverse() 애니메이션 실행 (AnimationStatus 리스너가 완료 후 hideComments() 자동 호출)
-              _commentsAnimationController.reverse();
-            },
+            onPressed: () => ref.read(workspaceStateProvider.notifier).hideComments(),
             icon: const Icon(Icons.close),
           ),
         ),
@@ -762,137 +668,6 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     );
   }
 
-  /// 웹 댓글 사이드바 게시글 미리보기 빌드
-  Widget _buildPostPreview() {
-    // 로딩 중
-    if (_isLoadingPost) {
-      return const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    // 에러 발생
-    if (_postErrorMessage != null) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Container(
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            color: Color.fromRGBO(244, 67, 54, 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.error_outline, color: AppColors.error, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  _postErrorMessage!,
-                  style: const TextStyle(
-                    color: AppColors.error,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // 게시글 로드 성공 - 박스 없이 요소만 표시
-    if (_selectedPost != null) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 헤더: 프로필 + 작성자 + 시간 (X 버튼 공간 확보를 위해 우측 패딩 추가)
-            Padding(
-              padding: const EdgeInsets.only(right: 40), // X 버튼 영역 확보
-              child: _buildPostHeader(_selectedPost!),
-            ),
-            const SizedBox(height: 12),
-            // 본문 (펼치기/접기 가능)
-            Padding(
-              padding: const EdgeInsets.only(left: 52), // 프로필(40) + 간격(12) = 52
-              child: CollapsibleContent(
-                content: _selectedPost!.content,
-                maxLines: 5,
-                style: AppTheme.bodyMedium,
-                expandedScrollable: true,
-                expandedMaxLines: 10,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // 예상치 못한 상태 (빈 화면)
-    return const SizedBox.shrink();
-  }
-
-  Widget _buildPostHeader(Post post) {
-    return Row(
-      children: [
-        // 프로필 이미지
-        _buildPostProfileImage(post),
-        const SizedBox(width: 12),
-        // 작성자 + 시간
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                post.authorName,
-                style: AppTheme.titleMedium.copyWith(
-                  color: AppColors.neutral900,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                DateFormatter.formatRelativeTime(post.createdAt),
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.neutral600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPostProfileImage(Post post) {
-    final hasImage = post.authorProfileUrl != null && post.authorProfileUrl!.isNotEmpty;
-
-    if (hasImage) {
-      return CircleAvatar(
-        radius: 20,
-        backgroundImage: NetworkImage(post.authorProfileUrl!),
-        backgroundColor: AppColors.neutral200,
-      );
-    }
-
-    // 기본 아바타 (이니셜)
-    final initial = post.authorName.isNotEmpty ? post.authorName[0].toUpperCase() : '?';
-
-    return CircleAvatar(
-      radius: 20,
-      backgroundColor: AppColors.brand,
-      child: Text(
-        initial,
-        style: AppTheme.titleMedium.copyWith(
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
 
 
 
@@ -1044,31 +819,6 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         if (mounted) {
           context.go(AppConstants.workspaceRoute);
         }
-      });
-    }
-  }
-
-  /// 웹 댓글 사이드바용 게시글 로드
-  Future<void> _loadSelectedPost(String postId) async {
-    setState(() {
-      _isLoadingPost = true;
-      _postErrorMessage = null;
-      _selectedPost = null;
-    });
-
-    try {
-      final postIdInt = int.parse(postId);
-      final postService = PostService();
-      final post = await postService.getPost(postIdInt);
-
-      setState(() {
-        _selectedPost = post;
-        _isLoadingPost = false;
-      });
-    } catch (e) {
-      setState(() {
-        _postErrorMessage = '게시글을 불러올 수 없습니다.';
-        _isLoadingPost = false;
       });
     }
   }
