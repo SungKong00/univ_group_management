@@ -327,6 +327,70 @@ Future<void> logout() async {
 - 메모리 효율적인 Provider 관리
 - 확장 가능한 중앙 집중식 구조
 
+### 액션/Mutation 처리 패턴 (비동기 작업)
+
+단순 데이터 조회를 넘어, 사용자의 액션(게시글/댓글 작성, 정보 수정 등)을 처리하고 서버에 변경을 요청하는 비동기 작업을 위한 Riverpod 패턴입니다. `.family` 수정자를 활용하여 액션에 필요한 파라미터를 전달하는 것이 핵심입니다.
+
+**핵심 Provider:**
+- `FutureProvider.family<반환타입, 파라미터타입>`
+
+**구현 단계:**
+
+1.  **파라미터 모델 정의**: 액션에 필요한 모든 데이터를 담는 별도의 클래스를 정의합니다. `freezed`를 사용하면 `copyWith`, `==`, `hashCode` 등을 자동으로 구현해주어 편리합니다.
+
+    ```dart
+    // presentation/pages/workspace/providers/post_actions_provider.dart
+    @freezed
+    class CreatePostParams with _$CreatePostParams {
+      const factory CreatePostParams({
+        required int channelId,
+        required String content,
+      }) = _CreatePostParams;
+    }
+    ```
+
+2.  **Provider 생성**: `.family`를 사용하여 파라미터 모델을 받는 `FutureProvider`를 정의합니다. 이 Provider는 실제 API 호출을 수행합니다.
+
+    ```dart
+    // presentation/pages/workspace/providers/post_actions_provider.dart
+    final createPostProvider = FutureProvider.autoDispose.family<void, CreatePostParams>((ref, params) async {
+      // 실제 서비스 로직 호출
+      final postService = ref.read(postServiceProvider);
+      await postService.createPost(params.channelId, params.content);
+      
+      // 성공 후 관련 데이터 새로고침 (옵션)
+      // ref.invalidate(postsProvider(params.channelId));
+    });
+    ```
+    - **`autoDispose`**: 액션이 완료된 후 Provider가 자동으로 메모리에서 해제되도록 하여 리소스를 절약합니다.
+
+3.  **UI에서 호출**: 위젯 내에서 `ref.read`를 사용하여 Provider를 호출하고, `.future`를 `await`하여 작업이 완료될 때까지 기다립니다.
+
+    ```dart
+    // presentation/pages/workspace/workspace_page.dart
+    
+    // 버튼 클릭 등 사용자 액션 발생 시
+    Future<void> _handleCreatePost(String content) async {
+      final channelId = ref.read(workspaceStateProvider).selectedChannelId;
+      if (channelId == null) return;
+
+      // 1. 파라미터 객체 생성
+      final params = CreatePostParams(channelId: channelId, content: content);
+      
+      // 2. Provider를 읽고 .future를 await
+      await ref.read(createPostProvider(params).future);
+
+      // 3. 성공 후 UI 상태 업데이트 (예: 목록 새로고침)
+      _refreshPostList();
+    }
+    ```
+
+이 패턴은 다음과 같은 장점을 가집니다.
+-   **관심사 분리**: UI 로직과 비즈니스 로직(API 호출)이 명확하게 분리됩니다.
+-   **재사용성**: 동일한 액션을 여러 위젯에서 쉽게 재사용할 수 있습니다.
+-   **테스트 용이성**: Provider를 재정의(override)하여 API 호출 없이 UI 로직을 테스트하기 용이합니다.
+-   **상태 관리 통합**: Riverpod의 생명주기 관리에 통합되어 메모리 누수를 방지합니다.
+
 ### 인증 상태 관리
 ```dart
 class AuthService {

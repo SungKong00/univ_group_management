@@ -319,6 +319,98 @@ final confirmed = await showConfirmDialog(
 );
 ```
 
+### 패턴 4: 상태 표시 컴포넌트 (State Display Component)
+**적용 시점:** "내용 없음", "준비 중", "로딩 중" 등 다양한 상태를 표시하는 UI가 여러 곳에서 반복될 때
+
+여러 페이지에 걸쳐 유사하지만 조금씩 다른 '상태 표시' UI(예: 아이콘과 텍스트 메시지)를 만들어야 할 때가 많습니다. 이를 각각 별도의 위젯으로 만들면 코드 중복이 발생하고 일관성을 유지하기 어렵습니다. `enum`과 단일 위젯을 결합하여 이 문제를 해결할 수 있습니다.
+
+**구현 단계:**
+
+1.  **상태 타입 정의 (`enum`)**: 표시할 모든 상태를 `enum`으로 정의합니다.
+
+    ```dart
+    // presentation/pages/workspace/widgets/workspace_empty_state.dart
+    enum WorkspaceEmptyType {
+      groupHome,
+      calendar,
+      groupAdmin,
+      noChannelSelected,
+    }
+    ```
+
+2.  **재사용 가능한 상태 표시 위젯 생성**: `enum` 값을 받아 그에 맞는 아이콘과 텍스트를 내부적으로 결정하여 표시하는 단일 위젯을 만듭니다.
+
+    ```dart
+    // presentation/pages/workspace/widgets/workspace_empty_state.dart
+    class WorkspaceEmptyState extends StatelessWidget {
+      final WorkspaceEmptyType type;
+      const WorkspaceEmptyState({super.key, required this.type});
+
+      @override
+      Widget build(BuildContext context) {
+        // type에 따라 아이콘, 제목, 설명을 선택
+        final IconData icon = _getIcon();
+        final String title = _getTitle();
+        final String description = _getDescription();
+
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 64, color: AppColors.brand),
+              const SizedBox(height: 16),
+              Text(title, style: AppTheme.displaySmall),
+              const SizedBox(height: 8),
+              Text(description, style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600)),
+            ],
+          ),
+        );
+      }
+
+      // 타입별 데이터를 반환하는 내부 헬퍼 메소드들
+      String _getTitle() {
+        switch (type) {
+          case WorkspaceEmptyType.groupHome: return '그룹 홈';
+          case WorkspaceEmptyType.calendar: return '캘린더';
+          // ... 나머지 케이스
+        }
+      }
+      // _getIcon(), _getDescription() 등도 유사하게 구현
+    }
+    ```
+
+3.  **UI에서 호출**: 각기 다른 위젯을 호출하는 대신, 새로운 `WorkspaceEmptyState` 위젯을 `type`만 바꿔서 재사용합니다.
+
+    ```dart
+    // ❌ 나쁜 예: 각 상태마다 별도의 위젯을 만들어 호출
+    // case WorkspaceView.groupHome:
+    //   return _buildGroupHomeView(); // 내부에 Icon, Text 등 중복 코드
+    // case WorkspaceView.calendar:
+    //   return _buildCalendarView(); // 여기도 중복 코드
+
+    // ✅ 좋은 예: 하나의 위젯을 재사용
+    // presentation/pages/workspace/workspace_page.dart
+    switch (workspaceState.currentView) {
+      case WorkspaceView.groupHome:
+        return const WorkspaceEmptyState(type: WorkspaceEmptyType.groupHome);
+      case WorkspaceView.calendar:
+        return const WorkspaceEmptyState(type: WorkspaceEmptyType.calendar);
+      case WorkspaceView.groupAdmin:
+        return const WorkspaceEmptyState(type: WorkspaceEmptyType.groupAdmin);
+      case WorkspaceView.channel:
+        if (!workspaceState.hasSelectedChannel) {
+          return const WorkspaceEmptyState(type: WorkspaceEmptyType.noChannelSelected);
+        }
+        // ...
+    }
+    ```
+
+**기대 효과:**
+-   **코드 중복 제거**: 수백 줄의 중복 코드를 단일 위젯으로 통합할 수 있습니다.
+-   **일관성 향상**: 모든 상태 표시 UI의 디자인(폰트, 색상, 간격 등)이 자동으로 통일됩니다.
+-   **유지보수 용이성**: 디자인 변경 시 `WorkspaceEmptyState` 위젯 하나만 수정하면 모든 곳에 반영됩니다.
+-   **확장성**: 새로운 상태가 필요할 경우 `enum`에 한 줄, 위젯 내 `switch`문에 한 `case`만 추가하면 됩니다.
+
 ## 🎨 디자인 토큰 활용
 
 ### 컬러 토큰화

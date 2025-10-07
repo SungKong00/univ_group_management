@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/date_formatter.dart';
 import '../../../core/models/channel_models.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../../providers/my_groups_provider.dart';
@@ -19,9 +19,11 @@ import '../../widgets/post/post_composer.dart';
 import '../../widgets/comment/comment_list.dart';
 import '../../widgets/comment/comment_composer.dart';
 import '../../../core/services/post_service.dart';
-import '../../../core/services/comment_service.dart';
 import '../../../core/models/post_models.dart';
 import '../../widgets/common/collapsible_content.dart';
+import 'widgets/workspace_empty_state.dart';
+import 'providers/post_actions_provider.dart';
+import 'providers/comment_actions_provider.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
@@ -497,14 +499,14 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     // Switch view based on currentView
     switch (workspaceState.currentView) {
       case WorkspaceView.groupHome:
-        return _buildGroupHomeView();
+        return const WorkspaceEmptyState(type: WorkspaceEmptyType.groupHome);
       case WorkspaceView.calendar:
-        return _buildCalendarView();
+        return const WorkspaceEmptyState(type: WorkspaceEmptyType.calendar);
       case WorkspaceView.groupAdmin:
-        return _buildGroupAdminView();
+        return const WorkspaceEmptyState(type: WorkspaceEmptyType.groupAdmin);
       case WorkspaceView.channel:
         if (!workspaceState.hasSelectedChannel) {
-          return _buildNoChannelSelected();
+          return const WorkspaceEmptyState(type: WorkspaceEmptyType.noChannelSelected);
         }
         return _buildChannelView(workspaceState);
     }
@@ -629,8 +631,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
       throw Exception('채널을 선택해주세요');
     }
 
-    final postService = PostService();
-    await postService.createPost(channelId, content);
+    final params = CreatePostParams(channelId: channelId, content: content);
+    await ref.read(createPostProvider(params).future);
 
     // 게시글 작성 성공 후 목록 새로고침
     setState(() {
@@ -660,8 +662,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     }
 
     final postId = int.parse(postIdStr);
-    final commentService = CommentService();
-    await commentService.createComment(postId, content);
+    final params = CreateCommentParams(postId: postId, content: content);
+    await ref.read(createCommentProvider(params).future);
 
     // 댓글 작성 성공 후 목록 새로고침
     setState(() {
@@ -854,7 +856,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
               ),
               const SizedBox(height: 2),
               Text(
-                _formatPostDateTime(post.createdAt),
+                DateFormatter.formatRelativeTime(post.createdAt),
                 style: AppTheme.bodySmall.copyWith(
                   color: AppColors.neutral600,
                 ),
@@ -892,92 +894,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     );
   }
 
-  String _formatPostDateTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
 
-    // 오늘 날짜면 시간만 표시
-    if (difference.inDays == 0) {
-      final timeFormatter = DateFormat('a h:mm', 'ko_KR');
-      return timeFormatter.format(dateTime);
-    }
-
-    // 어제면 "어제" 표시
-    if (difference.inDays == 1) {
-      return '어제';
-    }
-
-    // 일주일 이내면 상대 시간
-    if (difference.inDays < 7) {
-      return '${difference.inDays}일 전';
-    }
-
-    // 그 외는 날짜 표시
-    final dateFormatter = DateFormat('M월 d일', 'ko_KR');
-    return dateFormatter.format(dateTime);
-  }
-
-  Widget _buildGroupHomeView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.home_outlined, size: 64, color: AppColors.brand),
-          const SizedBox(height: 16),
-          Text('그룹 홈', style: AppTheme.displaySmall),
-          const SizedBox(height: 8),
-          Text(
-            '그룹 홈 (준비 중)',
-            style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCalendarView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.calendar_today_outlined,
-            size: 64,
-            color: AppColors.brand,
-          ),
-          const SizedBox(height: 16),
-          Text('캘린더', style: AppTheme.displaySmall),
-          const SizedBox(height: 8),
-          Text(
-            '캘린더 (준비 중)',
-            style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGroupAdminView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.settings_outlined,
-            size: 64,
-            color: AppColors.brand,
-          ),
-          const SizedBox(height: 16),
-          Text('그룹 관리', style: AppTheme.displaySmall),
-          const SizedBox(height: 8),
-          Text(
-            '그룹 관리 페이지 (준비 중)',
-            style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildEmptyState() {
     return Center(
@@ -1026,23 +943,6 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     );
   }
 
-  Widget _buildNoChannelSelected() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.tag, size: 48, color: AppColors.brand),
-          const SizedBox(height: 16),
-          Text('채널을 선택하세요', style: AppTheme.headlineMedium),
-          const SizedBox(height: 8),
-          Text(
-            '좌측에서 참여할 채널을 선택해주세요',
-            style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildLoadingState() {
     return Center(
