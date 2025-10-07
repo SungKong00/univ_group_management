@@ -34,7 +34,7 @@ class GroupAdminPage extends ConsumerWidget {
     // globalRole ADMIN은 모든 권한 보유 (백엔드와 일치)
     final isAdmin = user.globalRole == 'ADMIN';
     final effectivePermissions = isAdmin
-        ? ['GROUP_MANAGE', 'ADMIN_MANAGE', 'CHANNEL_MANAGE', 'RECRUITMENT_MANAGE']
+        ? ['GROUP_MANAGE', 'MEMBER_MANAGE', 'CHANNEL_MANAGE', 'RECRUITMENT_MANAGE']
         : permissions;
 
     final hasAdminAccess = effectivePermissions.isNotEmpty;

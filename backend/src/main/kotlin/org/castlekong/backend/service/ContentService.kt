@@ -416,7 +416,7 @@ class ContentService(
             // allow moderators with POST_DELETE_ANY
             val groupId = post.channel.group.id
             val perms = getEffectivePermissions(groupId, requesterId)
-            if (!perms.contains(GroupPermission.ADMIN_MANAGE)) {
+            if (!perms.contains(GroupPermission.MEMBER_MANAGE)) {
                 throw BusinessException(ErrorCode.FORBIDDEN)
             }
         }

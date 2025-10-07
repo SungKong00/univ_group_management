@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
-import 'package:flutter/rendering.dart';
-import 'dart:math' as math;
+
 import '../../../core/models/post_models.dart';
 import '../../../core/services/post_service.dart';
 import '../../../core/theme/app_colors.dart';

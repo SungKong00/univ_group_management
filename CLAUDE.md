@@ -15,6 +15,7 @@
 - **백엔드 개발**: [docs/implementation/backend-guide.md](docs/implementation/backend-guide.md)
 - **프론트엔드 개발**: [docs/implementation/frontend-guide.md](docs/implementation/frontend-guide.md)
 - **Workspace 리팩터링**: [docs/implementation/workspace-refactoring-status.md](docs/implementation/workspace-refactoring-status.md) - Phase 1-10 진행 상황
+- **그룹 관리자 페이지**: [docs/implementation/group-admin-page-status.md](docs/implementation/group-admin-page-status.md) - 구현 상태 및 다음 작업
 - **API 참조**: [docs/implementation/api-reference.md](docs/implementation/api-reference.md)
 - **데이터베이스**: [docs/implementation/database-reference.md](docs/implementation/database-reference.md)
 

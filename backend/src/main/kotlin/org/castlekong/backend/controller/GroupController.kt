@@ -184,7 +184,7 @@ class GroupController(
     }
 
     @GetMapping("/{groupId}/members")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun getGroupMembers(
         @PathVariable groupId: Long,
         pageable: Pageable,
@@ -208,7 +208,7 @@ class GroupController(
 
     // 멤버 역할 변경
     @PutMapping("/{groupId}/members/{userId}/role")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun updateMemberRole(
         @PathVariable groupId: Long,
         @PathVariable userId: Long,
@@ -222,7 +222,7 @@ class GroupController(
 
     // 멤버 강제 탈퇴
     @DeleteMapping("/{groupId}/members/{userId}")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun removeMember(
         @PathVariable groupId: Long,
@@ -236,7 +236,7 @@ class GroupController(
 
     // Group Role 관련 엔드포인트
     @PostMapping("/{groupId}/roles")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     @ResponseStatus(HttpStatus.CREATED)
     fun createGroupRole(
         @PathVariable groupId: Long,
@@ -249,7 +249,7 @@ class GroupController(
     }
 
     @GetMapping("/{groupId}/roles")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun getGroupRoles(
         @PathVariable groupId: Long,
     ): ApiResponse<List<GroupRoleResponse>> {
@@ -258,7 +258,7 @@ class GroupController(
     }
 
     @GetMapping("/{groupId}/roles/{roleId}")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun getGroupRole(
         @PathVariable groupId: Long,
         @PathVariable roleId: Long,
@@ -268,7 +268,7 @@ class GroupController(
     }
 
     @PutMapping("/{groupId}/roles/{roleId}")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun updateGroupRole(
         @PathVariable groupId: Long,
         @PathVariable roleId: Long,
@@ -281,7 +281,7 @@ class GroupController(
     }
 
     @DeleteMapping("/{groupId}/roles/{roleId}")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteGroupRole(
         @PathVariable groupId: Long,
@@ -296,7 +296,7 @@ class GroupController(
     // === 그룹 가입 신청 관리 ===
 
     @GetMapping("/{groupId}/join-requests")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun getGroupJoinRequests(
         @PathVariable groupId: Long,
     ): ApiResponse<List<GroupJoinRequestResponse>> {
@@ -305,7 +305,7 @@ class GroupController(
     }
 
     @PatchMapping("/{groupId}/join-requests/{requestId}")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun reviewGroupJoinRequest(
         @PathVariable groupId: Long,
         @PathVariable requestId: Long,

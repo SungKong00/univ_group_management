@@ -8,7 +8,7 @@ class PermissionUtils {
   /// 자세한 내용은 docs/maintenance/group-management-permissions.md 참조
   static const List<String> groupManagementPermissions = [
     'GROUP_MANAGE',      // 그룹 정보 수정, 그룹 삭제, 소유권 이전 등
-    'ADMIN_MANAGE',      // 멤버 역할 변경, 강제 탈퇴, 가입 신청 승인 등
+    'MEMBER_MANAGE',     // 멤버 역할 변경, 강제 탈퇴, 가입 신청 승인 등
     'CHANNEL_MANAGE',    // 채널 생성, 삭제, 설정 수정 등
     'RECRUITMENT_MANAGE', // 모집 공고 작성, 지원서 심사 등
   ];

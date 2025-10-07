@@ -73,6 +73,10 @@ class BottomNavigation extends ConsumerWidget {
         if (topGroup != null && context.mounted) {
           developer.log('Navigating to workspace/${topGroup.id}', name: 'BottomNav');
           ref.read(workspaceStateProvider.notifier).clearError();
+          ref.read(workspaceStateProvider.notifier).enterWorkspace(
+            topGroup.id.toString(),
+            membership: topGroup,
+          );
           context.go('/workspace/${topGroup.id}');
         } else if (context.mounted) {
           developer.log('No groups available', name: 'BottomNav');

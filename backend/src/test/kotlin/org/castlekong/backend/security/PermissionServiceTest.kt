@@ -150,7 +150,7 @@ class PermissionServiceTest {
     @DisplayName("커스텀 역할은 정의된 권한만 가진다")
     fun getEffective_CustomRole_HasDefinedPermissions() {
         // Given
-        val customPermissions = setOf(GroupPermission.CHANNEL_MANAGE, GroupPermission.ADMIN_MANAGE)
+        val customPermissions = setOf(GroupPermission.CHANNEL_MANAGE, GroupPermission.MEMBER_MANAGE)
         // copy 제거 → 팩토리 직접 사용하여 id 설정
         val customRole =
             TestDataFactory.createTestGroupRole(

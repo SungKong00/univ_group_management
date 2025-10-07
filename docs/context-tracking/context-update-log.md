@@ -4,6 +4,45 @@
 
 ## 2025년 10월
 
+### 2025-10-08 - 권한 이름 변경 및 워크스페이스 진입 로직 개선
+**커밋**: 현재 세션
+**유형**: 리팩토링 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 백엔드 (권한), 프론트엔드 (권한, 상태 관리), 문서 (API, UI/UX)
+
+**구현 내용**:
+- **백엔드/프론트엔드 권한 통일**:
+    - `ADMIN_MANAGE` 권한 이름을 `MEMBER_MANAGE`로 변경하여 역할의 의미를 명확히 했습니다.
+    - 영향받는 모든 백엔드 컨트롤러, 서비스, 테스트 코드 및 프론트엔드 유틸리티, 페이지의 권한을 업데이트했습니다.
+- **프론트엔드 워크스페이스 진입 로직 리팩토링**:
+    - `enterWorkspace` 메소드가 `GroupMembership` 객체를 직접 받도록 수정했습니다.
+    - 이를 통해 불필요한 Provider 조회를 제거하고, 워크스페이스 진입 시점의 정확한 사용자 권한을 즉시 활용할 수 있게 되어 안정성과 효율성이 향상되었습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/api-reference.md`: `ADMIN_MANAGE`를 `MEMBER_MANAGE`로 모두 수정하고, 중복된 API 설명을 제거했습니다.
+- ✅ `docs/ui-ux/pages/group-admin-page.md`: 접근 권한 명세에서 `ADMIN_MANAGE`를 `MEMBER_MANAGE`로 수정했습니다.
+- ✅ `docs/maintenance/group-management-permissions.md`: 권한 변경 이력을 추가하고, 권한 이름을 `MEMBER_MANAGE`로 업데이트했습니다.
+- ✅ `docs/implementation/frontend-implementation-status.md`: 워크스페이스 상태 관리 섹션에 '상태 진입 로직 리팩토링' 항목을 추가하여 변경 사항을 기록했습니다.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+
+**수정된 파일**:
+- `backend/src/main/kotlin/org/castlekong/backend/controller/GroupController.kt`
+- `backend/src/main/kotlin/org/castlekong/backend/entity/GroupPermission.kt`
+- `backend/src/main/kotlin/org/castlekong/backend/service/ContentService.kt`
+- `backend/src/test/kotlin/org/castlekong/backend/security/PermissionServiceTest.kt`
+- `frontend/lib/core/utils/permission_utils.dart`
+- `frontend/lib/presentation/pages/group/group_admin_page.dart`
+- `frontend/lib/presentation/pages/workspace/workspace_page.dart`
+- `frontend/lib/presentation/providers/workspace_state_provider.dart`
+- `frontend/lib/presentation/widgets/navigation/bottom_navigation.dart`
+- `frontend/lib/presentation/widgets/navigation/sidebar_navigation.dart`
+- `frontend/lib/presentation/widgets/workspace/group_dropdown.dart`
+- `CLAUDE.md`
+
+**메모**: 권한 이름의 일관성을 확보하고 프론트엔드 상태 관리 로직을 개선하여 시스템 안정성을 높였습니다.
+
+---
+
 ### 2025-10-07 - Workspace Page 리팩터링 완료 (Phase 1-10)
 **커밋**: 현재 세션
 **유형**: 리팩토링 + 문서화
@@ -11,7 +50,7 @@
 **영향 범위**: 프론트엔드 (아키텍처 개선), 문서 (신규 가이드)
 
 **구현 내용**:
-- **프론트엔드 리팩터링**:
+- **프론트엔드 리팩토링**:
     - `workspace_page.dart`를 1,176줄에서 507줄로 대폭 감소 (56.9% 코드 감소)
     - 13개의 재사용 가능한 컴포넌트 생성 (총 1,429줄)
     - Phase 1-4: 인프라 구축 및 초기 리팩터링 (351줄 감소)

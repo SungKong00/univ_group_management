@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
 import '../../core/models/channel_models.dart';
+import '../../core/models/group_models.dart';
 import '../../core/services/channel_service.dart';
+import '../../core/utils/permission_utils.dart';
 import 'current_group_provider.dart';
 
 /// Workspace View Type
@@ -140,7 +142,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   final Ref _ref;
   final ChannelService _channelService = ChannelService();
 
-  void enterWorkspace(String groupId, {String? channelId}) {
+  void enterWorkspace(String groupId, {String? channelId, GroupMembership? membership}) {
     // 모바일 전용 상태 확인: mobileView만 체크 (웹 상태와 분리)
     final hasMobileState = state.mobileView != MobileWorkspaceView.channelList;
 
@@ -162,12 +164,12 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
     // 최초 진입 시에만 채널 로드 (탭 전환 복귀 시에는 기존 채널 유지)
     if (!hasMobileState) {
-      loadChannels(groupId, autoSelectChannelId: channelId);
+      loadChannels(groupId, autoSelectChannelId: channelId, membership: membership);
     }
   }
 
   /// Load channels and membership information for a group
-  Future<void> loadChannels(String groupId, {String? autoSelectChannelId}) async {
+  Future<void> loadChannels(String groupId, {String? autoSelectChannelId, GroupMembership? membership}) async {
     try {
       final groupIdInt = int.parse(groupId);
 
@@ -176,13 +178,17 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       // Fetch channels
       final channels = await _channelService.getChannels(groupIdInt);
 
-      // Get membership info from currentGroupProvider (already loaded by myGroupsProvider)
-      final currentGroup = _ref.read(currentGroupProvider);
+      // Use provided membership or fallback to currentGroupProvider
+      final currentGroup = membership ?? _ref.read(currentGroupProvider);
 
       // Extract permissions from currentGroup
-      final hasAnyPermission = currentGroup?.permissions.isNotEmpty ?? false;
+      final hasAnyPermission = currentGroup?.permissions != null
+          ? PermissionUtils.hasAnyGroupManagementPermission(currentGroup!.permissions)
+          : false;
       final currentRole = currentGroup?.role;
       final currentPermissions = currentGroup?.permissions.toList();
+
+
 
       // Generate dummy unread counts (for demonstration)
       final unreadCounts = <String, int>{};

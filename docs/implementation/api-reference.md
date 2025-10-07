@@ -167,7 +167,7 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
 
 -   `POST /{groupId}/join`: 그룹 가입 신청
 -   `DELETE /{groupId}/leave`: 그룹 탈퇴
--   `GET /{groupId}/members`: 그룹 멤버 목록 조회 (`ADMIN_MANAGE` 권한 필요)
+-   `GET /{groupId}/members`: 그룹 멤버 목록 조회 (`MEMBER_MANAGE` 권한 필요)
 -   `GET /{groupId}/members/me`: 나의 그룹 내 멤버십 정보 조회
     - **설명**: 현재 로그인한 사용자의 특정 그룹 내 역할 및 그룹 수준 권한을 조회합니다.
     - **권한**: 그룹 멤버
@@ -190,7 +190,7 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
               "permissions": [
                 "GROUP_MANAGE",
                 "RECRUITMENT_MANAGE",
-                "ADMIN_MANAGE"
+                "MEMBER_MANAGE"
                 // ... 모든 그룹 권한
               ]
             },
@@ -201,23 +201,22 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
         ```
     - **참고**: 이전 버전의 평평한 구조(`userId`, `roleName` 등)에서 중첩된 `user`, `role` 객체 구조로 변경되었습니다. 프론트엔드에서는 이 구조에 맞춰 파싱해야 합니다.
 
--   `PUT /{groupId}/members/{userId}/role`: 멤버 역할 변경 (`ADMIN_MANAGE` 권한 필요)
--   `PUT /{groupId}/members/{userId}/role`: 멤버 역할 변경 (`ADMIN_MANAGE` 권한 필요)
--   `DELETE /{groupId}/members/{userId}`: 멤버 강제 탈퇴 (`ADMIN_MANAGE` 권한 필요)
+-   `PUT /{groupId}/members/{userId}/role`: 멤버 역할 변경 (`MEMBER_MANAGE` 권한 필요)
+-   `DELETE /{groupId}/members/{userId}`: 멤버 강제 탈퇴 (`MEMBER_MANAGE` 권한 필요)
 -   `POST /{groupId}/transfer-ownership/{newOwnerId}`: 그룹 소유권 이전 (`GROUP_MANAGE` 권한 필요)
 
 ### 3.3. 역할(Role) 관리
 
--   `POST /{groupId}/roles`: 그룹 내 역할 생성 (`ADMIN_MANAGE` 권한 필요)
--   `GET /{groupId}/roles`: 그룹 내 역할 목록 조회 (`ADMIN_MANAGE` 권한 필요)
--   `GET /{groupId}/roles/{roleId}`: 특정 역할 상세 조회 (`ADMIN_MANAGE` 권한 필요)
--   `PUT /{groupId}/roles/{roleId}`: 역할 정보 및 권한 수정 (`ADMIN_MANAGE` 권한 필요)
--   `DELETE /{groupId}/roles/{roleId}`: 역할 삭제 (`ADMIN_MANAGE` 권한 필요)
+-   `POST /{groupId}/roles`: 그룹 내 역할 생성 (`MEMBER_MANAGE` 권한 필요)
+-   `GET /{groupId}/roles`: 그룹 내 역할 목록 조회 (`MEMBER_MANAGE` 권한 필요)
+-   `GET /{groupId}/roles/{roleId}`: 특정 역할 상세 조회 (`MEMBER_MANAGE` 권한 필요)
+-   `PUT /{groupId}/roles/{roleId}`: 역할 정보 및 권한 수정 (`MEMBER_MANAGE` 권한 필요)
+-   `DELETE /{groupId}/roles/{roleId}`: 역할 삭제 (`MEMBER_MANAGE` 권한 필요)
 
 ### 3.4. 가입 및 생성 요청 관리
 
--   `GET /{groupId}/join-requests`: 그룹 가입 신청 목록 조회 (`ADMIN_MANAGE` 권한 필요)
--   `PATCH /{groupId}/join-requests/{requestId}`: 가입 신청 승인/거절 (`ADMIN_MANAGE` 권한 필요)
+-   `GET /{groupId}/join-requests`: 그룹 가입 신청 목록 조회 (`MEMBER_MANAGE` 권한 필요)
+-   `PATCH /{groupId}/join-requests/{requestId}`: 가입 신청 승인/거절 (`MEMBER_MANAGE` 권한 필요)
 -   `POST /{groupId}/sub-groups/requests`: 하위 그룹 생성 요청
 -   `GET /{groupId}/sub-groups/requests`: 하위 그룹 생성 요청 목록 조회 (`GROUP_MANAGE` 권한 필요)
 -   `PATCH /{groupId}/sub-groups/requests/{requestId}`: 하위 그룹 생성 요청 승인/거절 (`GROUP_MANAGE` 권한 필요)

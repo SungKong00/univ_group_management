@@ -10,7 +10,7 @@
 -   **경로**: `/group/{groupId}/admin` (개념적 경로, 실제 라우팅은 워크스페이스 내에서 처리)
 -   **진입점**:
     -   워크스페이스 좌측 채널 목록 하단의 "그룹 관리" 버튼
--   **접근 권한**: `GROUP_MANAGE`, `ADMIN_MANAGE`, `CHANNEL_MANAGE`, `RECRUITMENT_MANAGE` 권한 중 하나 이상을 보유한 사용자
+-   **접근 권한**: `GROUP_MANAGE`, `MEMBER_MANAGE`, `CHANNEL_MANAGE`, `RECRUITMENT_MANAGE` 권한 중 하나 이상을 보유한 사용자
 
 ## 2. 핵심 기능 (Phase 1 - 현재)
 

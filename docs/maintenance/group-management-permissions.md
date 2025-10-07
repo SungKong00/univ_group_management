@@ -7,7 +7,7 @@
 | 권한 이름 | 설명 | 주요 기능 |
 |---------|------|----------|
 | `GROUP_MANAGE` | 그룹 정보 관리 | 그룹 정보 수정, 삭제, 소유권 이전 |
-| `ADMIN_MANAGE` | 멤버 및 역할 관리 | 멤버 역할 변경, 강제 탈퇴, 역할 생성, 가입 승인 |
+| `MEMBER_MANAGE` | 멤버 및 역할 관리 | 멤버 역할 변경, 강제 탈퇴, 역할 생성, 가입 승인 |
 | `CHANNEL_MANAGE` | 채널 관리 | 채널 생성, 삭제, 설정 수정, 역할 바인딩 |
 | `RECRUITMENT_MANAGE` | 모집 관리 | 모집 공고 작성, 지원서 심사 |
 
@@ -19,7 +19,7 @@
    ```kotlin
    enum class GroupPermission {
        GROUP_MANAGE,
-       ADMIN_MANAGE,
+       MEMBER_MANAGE,
        CHANNEL_MANAGE,
        RECRUITMENT_MANAGE,
        NEW_PERMISSION, // 👈 추가
@@ -34,7 +34,7 @@
    ```dart
    static const List<String> groupManagementPermissions = [
      'GROUP_MANAGE',
-     'ADMIN_MANAGE',
+     'MEMBER_MANAGE',
      'CHANNEL_MANAGE',
      'RECRUITMENT_MANAGE',
      'NEW_PERMISSION', // 👈 추가
@@ -84,5 +84,6 @@
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2025-10-08 | 권한명 통일: ADMIN_MANAGE → MEMBER_MANAGE (백엔드-프론트엔드 동기화) |
 | 2025-10-08 | 권한 정보 중앙화: WorkspaceState에 currentGroupPermissions 추가, MembershipInfo 리팩토링 |
 | 2025-10-07 | 최초 작성 |

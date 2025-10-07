@@ -5,6 +5,7 @@ import '../../../core/models/group_models.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/my_groups_provider.dart';
+import '../../providers/workspace_state_provider.dart';
 
 /// 그룹 선택 드롭다운
 ///
@@ -219,6 +220,10 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
     return InkWell(
       onTap: () {
         if (!isSelected) {
+          ref.read(workspaceStateProvider.notifier).enterWorkspace(
+            group.id.toString(),
+            membership: group,
+          );
           context.go('/workspace/${group.id}');
         }
         _toggleDropdown();
