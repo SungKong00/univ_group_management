@@ -42,6 +42,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
   bool _hasResponsiveLayoutInitialized = false;
   bool _isAnimatingOut = false; // 슬라이드 아웃 애니메이션 진행 중 플래그
   late AnimationController _commentsAnimationController;
+  late Animation<double> _backdropFadeAnimation; // 백드롭 페이드 애니메이션
   late Animation<Offset> _commentsSlideAnimation;
 
   // 스크롤 위치 보존을 위한 ScrollController (선택사항)
@@ -70,6 +71,14 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     ).animate(CurvedAnimation(
       parent: _commentsAnimationController,
       curve: Curves.easeOutCubic, // 디자인 시스템 표준 easing
+    ));
+
+    _backdropFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _commentsAnimationController,
+      curve: Curves.easeOutCubic, // 슬라이드와 동일한 easing
     ));
 
     // 애니메이션 상태 리스너: 슬라이드 아웃 완료 감지
@@ -334,7 +343,32 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
                 ),
               ),
 
-            // 댓글 사이드바 (백드롭보다 먼저 렌더링하여 Z-index 최상위)
+            // 백드롭 레이어: Wide desktop에서만 전체 영역 어둡게 처리
+            // Narrow desktop 전체 화면 모드에서는 백드롭 불필요 (댓글창이 전체 화면)
+            if (showComments && !isNarrowCommentFullscreen)
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: leftInset, // 채널바 제외
+                right: 0, // 전체 화면 커버 (댓글창은 상위 레이어에 렌더링됨)
+                child: FadeTransition(
+                  opacity: _backdropFadeAnimation,
+                  child: GestureDetector(
+                    onTap: () {
+                      // 백드롭 클릭 시 댓글창 닫기 (슬라이드 아웃 애니메이션)
+                      setState(() {
+                        _isAnimatingOut = true;
+                      });
+                      _commentsAnimationController.reverse();
+                    },
+                    child: Container(
+                      color: const Color.fromRGBO(0, 0, 0, 0.12),
+                    ),
+                  ),
+                ),
+              ),
+
+            // 댓글 사이드바 (백드롭 위에 렌더링하여 Z-index 최상위)
             if (showComments)
               Positioned(
                 top: 0,
@@ -351,28 +385,6 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
                       workspaceState,
                       isNarrowCommentFullscreen ? null : commentBarWidth,
                     ),
-                  ),
-                ),
-              ),
-
-            // 백드롭 레이어: Wide desktop에서만 댓글창을 제외한 영역 어둡게 처리
-            // Narrow desktop 전체 화면 모드에서는 백드롭 불필요 (댓글창이 전체 화면)
-            if (showComments && !isNarrowCommentFullscreen)
-              Positioned(
-                top: 0,
-                bottom: 0,
-                left: leftInset, // 채널바 제외
-                right: commentBarWidth, // 댓글창 제외
-                child: GestureDetector(
-                  onTap: () {
-                    // 백드롭 클릭 시 댓글창 닫기 (슬라이드 아웃 애니메이션)
-                    setState(() {
-                      _isAnimatingOut = true;
-                    });
-                    _commentsAnimationController.reverse();
-                  },
-                  child: Container(
-                    color: const Color.fromRGBO(0, 0, 0, 0.12),
                   ),
                 ),
               ),
