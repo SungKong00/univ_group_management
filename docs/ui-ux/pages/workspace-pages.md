@@ -6,6 +6,14 @@
 
 ### 완료된 기능 (2025-10-04)
 
+**워크스페이스 헤더 개선 (2025-10-09)**
+- 워크스페이스 헤더에 현재 사용자의 그룹 내 역할(예: "그룹장", "멤버")을 표시하여 컨텍스트를 강화했습니다.
+- 이 변경은 `WorkspaceHeader` 위젯에 `currentGroupRole` 파라미터를 추가하여 구현되었습니다.
+- 상세한 디자인 가이드는 `docs/ui-ux/concepts/design-system.md`의 헤더 섹션을 참조하세요.
+- 구현 파일:
+  - `/frontend/lib/presentation/widgets/workspace/workspace_header.dart`
+  - `/frontend/lib/presentation/widgets/navigation/top_navigation.dart`
+
 **채널 네비게이션 시스템**
 - 채널 목록 API 연동 (`/workspaces/{workspaceId}/channels`)
 - 멤버십 권한 확인 API 연동 (`/groups/{groupId}/members/me`)

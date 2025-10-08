@@ -138,28 +138,39 @@
     -   페이지의 목적이 "워크스페이스", "댓글" 등 명확한 제목으로 정의될 경우, 이를 최상단에 `titleLarge`로 크게 표시하여 사용자가 현재 컨텍스트를 즉시 인지하도록 합니다.
     -   명시적인 제목이 없는 일반적인 경우에는, 기존처럼 그룹/채널 경로만 간결하게 표시하여 `Simplicity`를 유지합니다.
 
--   **구조: 2단 계층 구조**
-    1.  **제목 (Title)**: `titleLarge` (20px/600) 스타일로 페이지의 명시적 제목을 표시합니다. (예: "댓글")
-    2.  **경로 (Path)**: 제목 아래에 `bodySmall` (12px/400, `neutral600`) 스타일로 현재 위치 경로를 표시합니다. (예: "컴퓨터공학과 > 정기 회의")
+-   **구조: 2단 계층 구조 및 역할 표시**
+    1.  **제목 (Title)**: `titleLarge` (20px/600) 스타일로 페이지의 명시적 제목 또는 현재 그룹명을 표시합니다.
+    2.  **역할 (Role)**: 제목 옆에 `bodySmall` (12px/400, `neutral600`) 스타일로 현재 그룹 내 사용자의 역할(예: "(그룹장)")을 표시하여 컨텍스트를 보강합니다.
+    3.  **경로 (Path)**: 제목 아래에 `bodySmall` (12px/400, `neutral600`) 스타일로 현재 위치 경로를 표시합니다. (예: "컴퓨터공학과 > 정기 회의")
 
 -   **구현 예시 (Flutter - WorkspaceHeader):**
     ```dart
-    // breadcrumb.title이 있을 경우 (예: "댓글")
+    // breadcrumb.title이 "댓글"과 같이 명시적 제목을 가질 경우
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("댓글", style: AppTheme.titleLarge), // 1. 명시적 제목
+        // 1. 제목 + 2. 역할
+        Row(
+          children: [
+            Text("댓글", style: AppTheme.titleLarge),
+            SizedBox(width: 4),
+            Text("(그룹장)", style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600)),
+          ],
+        ),
         SizedBox(height: 4),
-        Text("컴퓨터공학과 > 정기 회의", style: AppTheme.bodySmall), // 2. 경로
+        // 3. 경로
+        Text("컴퓨터공학과 > 정기 회의", style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600)),
       ],
     )
 
-    // breadcrumb.title이 없을 경우
-    // 기존처럼 단일 행으로 그룹/채널 경로만 표시
+    // breadcrumb.title이 없는 일반적인 경우
+    // 단일 행으로 그룹/채널 경로와 역할 표시
     Row(
       children: [
         GroupDropdown(...),
-        Text(">"),
+        SizedBox(width: 4),
+        Text("(그룹장)", style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600)), // 역할
+        Text(" > "),
         Text("정기 회의"),
       ],
     )

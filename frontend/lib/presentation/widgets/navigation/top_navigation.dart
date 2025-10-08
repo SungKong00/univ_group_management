@@ -37,6 +37,10 @@ class TopNavigation extends ConsumerWidget {
     // 워크스페이스 여부 확인
     final isWorkspace = routePath.startsWith('/workspace');
 
+    // 워크스페이스 상태에서 그룹 역할 가져오기
+    final workspaceState = ref.watch(workspaceStateProvider);
+    final currentGroupRole = isWorkspace ? workspaceState.currentGroupRole : null;
+
     return Container(
       height: AppConstants.topNavigationHeight,
       decoration: const BoxDecoration(
@@ -69,7 +73,10 @@ class TopNavigation extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.only(left: 4.0),
               child: isWorkspace
-                  ? WorkspaceHeader(breadcrumb: breadcrumb)
+                  ? WorkspaceHeader(
+                      breadcrumb: breadcrumb,
+                      currentGroupRole: currentGroupRole,
+                    )
                   : BreadcrumbWidget(breadcrumb: breadcrumb),
             ),
           ),

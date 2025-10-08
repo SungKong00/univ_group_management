@@ -4,6 +4,32 @@
 
 ## 2025년 10월
 
+### 2025-10-09 - 워크스페이스 헤더 역할 표시 기능 추가
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 기능 추가 + 문서 동기화
+**우선순위**: Medium
+**영향 범위**: 프론트엔드 (UI), 문서 (디자인 시스템)
+
+**구현 내용**:
+- **프론트엔드 기능 추가**:
+    - 워크스페이스 헤더(`WorkspaceHeader`)에 현재 사용자의 그룹 내 역할(예: "그룹장")을 표시하는 기능을 추가했습니다.
+    - `top_navigation.dart`에서 `workspaceStateProvider`를 통해 역할 정보를 가져와 `WorkspaceHeader`에 전달합니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/ui-ux/concepts/design-system.md`: 헤더 컴포넌트 가이드에 역할 표시 관련 구조 및 예시 코드를 업데이트했습니다.
+- ✅ `docs/ui-ux/pages/workspace-pages.md`: 구현 현황에 워크스페이스 헤더 개선 사항을 추가했습니다.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+
+**수정된 파일**:
+- `frontend/lib/presentation/widgets/navigation/top_navigation.dart`
+- `frontend/lib/presentation/widgets/workspace/workspace_header.dart`
+- `docs/ui-ux/concepts/design-system.md`
+- `docs/ui-ux/pages/workspace-pages.md`
+
+**메모**: 사용자가 워크스페이스에서 자신의 역할을 명확히 인지할 수 있도록 하여 컨텍스트 이해를 돕습니다.
+
+---
+
 ### 2025-10-09 - 관리자 멤버 조회 기능 개선 및 프론트엔드 안정성 향상
 **커밋**: 현재 세션 (커밋 예정)
 **유형**: 기능 개선 + 버그 수정 + 문서 동기화

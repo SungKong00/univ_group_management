@@ -35,6 +35,7 @@ class WorkspaceHeader extends StatelessWidget {
     this.currentGroupId,
     this.onChannelActionTap,
     this.channelBarWidth,
+    this.currentGroupRole,
   });
 
   final PageBreadcrumb breadcrumb;
@@ -47,6 +48,9 @@ class WorkspaceHeader extends StatelessWidget {
 
   /// 채널바 너비 (그룹 드롭다운 반응형 스타일 결정에 사용)
   final double? channelBarWidth;
+
+  /// 현재 사용자의 그룹 역할명 (예: "그룹장", "교수", "멤버")
+  final String? currentGroupRole;
 
   @override
   Widget build(BuildContext context) {
@@ -64,18 +68,25 @@ class WorkspaceHeader extends StatelessWidget {
     final pathSegments = _resolvePathSegments(title);
 
     if (pathSegments.isEmpty) {
-      return Text(
-        title,
-        style: AppTheme.titleLarge.copyWith(
-          color: AppColors.neutral900,
-          height: 1.2,
-        ),
-      );
+      return _buildTitleWithRole(title);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildTitleWithRole(title),
+        const SizedBox(height: 4),
+        _buildPathRow(pathSegments, useTitleStyleForGroup: false),
+      ],
+    );
+  }
+
+  /// 타이틀과 역할명을 함께 표시하는 위젯
+  Widget _buildTitleWithRole(String title) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           title,
@@ -84,8 +95,16 @@ class WorkspaceHeader extends StatelessWidget {
             height: 1.2,
           ),
         ),
-        const SizedBox(height: 4),
-        _buildPathRow(pathSegments, useTitleStyleForGroup: false),
+        if (currentGroupRole != null) ...[
+          const SizedBox(width: 4),
+          Text(
+            '($currentGroupRole)',
+            style: AppTheme.bodySmall.copyWith(
+              color: AppColors.neutral600,
+              height: 1.2,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -116,6 +135,16 @@ class WorkspaceHeader extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildGroupNameSection(groupName, useTitleStyle: true),
+        if (currentGroupRole != null) ...[
+          const SizedBox(width: 4),
+          Text(
+            '($currentGroupRole)',
+            style: AppTheme.bodySmall.copyWith(
+              color: AppColors.neutral600,
+              height: 1.2,
+            ),
+          ),
+        ],
         if (secondItem != null) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
