@@ -40,7 +40,7 @@
 | `component-reusability-guide.md` | ✅ 최신 | 2025-10-07 | `현재` | SlidePanel, PostPreviewWidget 추가 |
 | `frontend-implementation-status.md` | ✅ 최신 | 2025-10-08 | `현재` | 워크스페이스 진입 로직 개선 반영 |
 | `workspace-refactoring-status.md` | ✅ 최신 | 2025-10-07 | `현재` | Phase 1-10 진행 상황 추적 문서 (신규) |
-| `api-reference.md` | ✅ 최신 | 2025-10-09 | `현재` | 신규 에러 코드 추가 |
+| `api-reference.md` | ✅ 최신 | 2025-10-09 | `현재` | UserSummaryResponse 명세 추가 |
 | `database-reference.md` | ✅ 최신 | 2025-10-07 | `현재` | 캘린더 DB 스키마 상세 추가 |
 
 ### `/docs/ui-ux/concepts/` - UI/UX 개념

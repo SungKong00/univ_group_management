@@ -139,6 +139,19 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
     -   **권한**: `isAuthenticated()`
     -   **파라미터**: `q` (String), `role` (String, Optional)
     -   **응답**: `List<UserSummaryResponse>`
+    -   **응답 구조**:
+        ```json
+        [
+          {
+            "id": 2,
+            "name": "사용자명",
+            "email": "user2@example.com",
+            "profileImageUrl": null,
+            "studentNo": "20250002",
+            "academicYear": 1
+          }
+        ]
+        ```
 
 -   `GET /me/join-requests`
     -   **설명**: 현재 사용자가 신청한 그룹 가입 요청 목록을 조회합니다.

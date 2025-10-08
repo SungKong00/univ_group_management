@@ -4,6 +4,34 @@
 
 ## 2025년 10월
 
+### 2025-10-09 - 관리자 멤버 조회 기능 개선 및 프론트엔드 안정성 향상
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 기능 개선 + 버그 수정 + 문서 동기화
+**우선순위**: Medium
+**영향 범위**: 백엔드 (DTO, 서비스), 프론트엔드 (위젯), 문서 (API 명세)
+
+**구현 내용**:
+- **백엔드 기능 개선**:
+    - 관리자가 그룹 멤버를 조회할 때 더 많은 정보를 볼 수 있도록 `UserSummaryResponse` DTO에 `studentNo`(학번)와 `academicYear`(학년) 필드를 추가했습니다.
+    - `GroupMapper`를 수정하여 사용자 엔티티의 해당 필드가 DTO로 매핑되도록 구현했습니다.
+- **프론트엔드 안정성 향상**:
+    - `post_list.dart` 위젯에서 비동기 작업 후 `setState`를 호출하기 전에 위젯이 여전히 마운트 상태인지 확인하는 `if (!mounted) return;` 구문을 추가했습니다.
+    - 이를 통해 위젯이 화면에서 사라진 후에 상태를 업데이트하려 할 때 발생하는 에러를 방지합니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/api-reference.md`: `GET /users/search` API의 응답 명세에 `UserSummaryResponse` 구조를 추가하고, 신규 필드(`studentNo`, `academicYear`)를 반영했습니다.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+
+**수정된 파일**:
+- `backend/src/main/kotlin/org/castlekong/backend/dto/GroupDto.kt`
+- `backend/src/main/kotlin/org/castlekong/backend/service/GroupMapper.kt`
+- `frontend/lib/presentation/widgets/post/post_list.dart`
+- `docs/implementation/api-reference.md`
+
+**메모**: 백엔드 API 응답이 풍부해졌고 프론트엔드의 잠재적 오류가 수정되었습니다. 관련 API 문서도 최신 상태로 업데이트되었습니다.
+
+---
+
 ### 2025-10-09 - 구글 최초 로그인 오류 해결 및 문서 동기화
 **커밋**: 현재 세션 (커밋 예정)
 **유형**: 버그 수정 + 문서 동기화

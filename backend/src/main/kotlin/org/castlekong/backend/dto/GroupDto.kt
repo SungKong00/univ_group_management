@@ -121,6 +121,9 @@ data class UserSummaryResponse(
     val name: String,
     val email: String,
     val profileImageUrl: String? = null,
+    // 학번/학년 정보 (관리자 멤버 조회 표시용)
+    val studentNo: String? = null,
+    val academicYear: Int? = null,
 )
 
 // 하위 그룹 생성 신청 DTO

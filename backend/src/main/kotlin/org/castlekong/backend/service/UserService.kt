@@ -181,16 +181,18 @@ class UserService(
 
             // 1. 학과를 선택했다면 학과 그룹을 우선으로 찾음
             if (!req.college.isNullOrBlank() && !req.dept.isNullOrBlank()) {
-                targetGroup = groupRepository
-                    .findByUniversityAndCollegeAndDepartment(university, req.college, req.dept)
-                    .firstOrNull()
+                targetGroup =
+                    groupRepository
+                        .findByUniversityAndCollegeAndDepartment(university, req.college, req.dept)
+                        .firstOrNull()
             }
 
             // 2. 학과 그룹을 못찾았거나, 학과를 선택하지 않았다면 계열 그룹을 찾음
             if (targetGroup == null && !req.college.isNullOrBlank()) {
-                targetGroup = groupRepository
-                    .findByUniversityAndCollegeAndDepartment(university, req.college, null)
-                    .firstOrNull { it.groupType == GroupType.COLLEGE }
+                targetGroup =
+                    groupRepository
+                        .findByUniversityAndCollegeAndDepartment(university, req.college, null)
+                        .firstOrNull { it.groupType == GroupType.COLLEGE }
             }
 
             if (targetGroup != null) {

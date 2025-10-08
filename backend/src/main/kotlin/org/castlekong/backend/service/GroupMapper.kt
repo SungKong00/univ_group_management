@@ -79,6 +79,8 @@ class GroupMapper {
             name = user.name,
             email = user.email,
             profileImageUrl = user.profileImageUrl,
+            studentNo = user.studentNo,
+            academicYear = user.academicYear,
         )
     }
 

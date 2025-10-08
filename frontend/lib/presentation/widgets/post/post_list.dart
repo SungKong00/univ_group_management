@@ -111,6 +111,7 @@ class _PostListState extends ConsumerState<PostList> {
       // 첫 페이지 로드인지 사전 체크 (증가 전 기준)
       final bool isFirstPageLoad = _currentPage == 0;
 
+      if (!mounted) return;
       setState(() {
         // 정상 스크롤: 새로 로드되는 과거 글을 앞에 추가
         _posts.insertAll(0, response.posts);
@@ -141,6 +142,7 @@ class _PostListState extends ConsumerState<PostList> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString().replaceAll('Exception: ', '');

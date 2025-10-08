@@ -14,7 +14,6 @@ import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.GroupRoleRepository
 import org.castlekong.backend.repository.UserRepository
-
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -32,7 +31,6 @@ class GroupMemberService(
     private val groupMapper: GroupMapper,
     private val groupRoleInitializationService: GroupRoleInitializationService,
 ) {
-
     @Transactional
     fun joinGroup(
         groupId: Long,
