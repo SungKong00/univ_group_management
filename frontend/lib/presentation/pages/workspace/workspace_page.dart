@@ -10,6 +10,7 @@ import '../../providers/workspace_state_provider.dart';
 import '../../providers/current_group_provider.dart';
 import '../../providers/my_groups_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
+import '../../../core/navigation/layout_mode.dart';
 
 import '../../widgets/workspace/mobile_channel_list.dart';
 import '../../widgets/workspace/mobile_channel_posts_view.dart';
@@ -156,24 +157,16 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           }
         });
 
-        // 뒤로가기 핸들링: 모바일 + Narrow Desktop + Wide Desktop
-        final canHandleBack = (isMobile && _canHandleMobileBack()) ||
-            (isNarrowDesktop && _canHandleNarrowDesktopBack()) ||
-            (!isMobile && !isNarrowDesktop && _canHandleWideDesktopBack());
+        // 뒤로가기 핸들링: LayoutMode 기반 통합 처리
+        final layoutMode = LayoutModeExtension.fromContext(context);
+        final canHandleBack = _canHandleBackForMode(layoutMode);
 
         return PopScope(
           canPop: !canHandleBack,
           // onPopInvoked was deprecated; use onPopInvokedWithResult which provides the pop result as well.
           onPopInvokedWithResult: (didPop, result) {
             if (!didPop) {
-              if (isMobile) {
-                _handleMobileBackPress();
-              } else if (isNarrowDesktop) {
-                _handleNarrowDesktopBackPress();
-              } else {
-                // Wide Desktop
-                _handleWideDesktopBackPress();
-              }
+              _handleBackPressForMode(layoutMode);
             }
           },
           child: Container(
@@ -322,6 +315,83 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     workspaceNotifier.handleWebBack();
   }
 
+  /// Tablet (MEDIUM) 뒤로가기 가능 여부 확인
+  bool _canHandleTabletBack() {
+    final workspaceState = ref.read(workspaceStateProvider);
+
+    // 1. 특수 뷰(groupAdmin, memberManagement 등)일 때
+    if (workspaceState.currentView != WorkspaceView.channel &&
+        workspaceState.previousView != null) {
+      return true;
+    }
+
+    // 2. 댓글이 열려있을 때
+    if (workspaceState.isCommentsVisible) {
+      return true;
+    }
+
+    // 3. 채널 히스토리가 있을 때
+    if (workspaceState.channelHistory.isNotEmpty) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Tablet (MEDIUM) 뒤로가기 처리
+  void _handleTabletBackPress() {
+    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+    // Wide Desktop과 동일한 로직 (사이드바는 항상 축소 상태)
+    workspaceNotifier.handleWebBack();
+  }
+
+  /// LayoutMode 기반 뒤로가기 가능 여부 확인
+  bool _canHandleBackForMode(LayoutMode mode) {
+    switch (mode) {
+      case LayoutMode.compact:
+        return _canHandleMobileBack();
+      case LayoutMode.medium:
+        return _canHandleTabletBack();
+      case LayoutMode.wide:
+        // Wide 모드 내에서는 ResponsiveLayoutHelper로 Narrow/Wide 구분
+        final responsive = ResponsiveLayoutHelper(
+          context: context,
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width,
+          ),
+        );
+        return responsive.isNarrowDesktop
+            ? _canHandleNarrowDesktopBack()
+            : _canHandleWideDesktopBack();
+    }
+  }
+
+  /// LayoutMode 기반 뒤로가기 처리
+  void _handleBackPressForMode(LayoutMode mode) {
+    switch (mode) {
+      case LayoutMode.compact:
+        _handleMobileBackPress();
+        break;
+      case LayoutMode.medium:
+        _handleTabletBackPress();
+        break;
+      case LayoutMode.wide:
+        // Wide 모드 내에서는 ResponsiveLayoutHelper로 Narrow/Wide 구분
+        final responsive = ResponsiveLayoutHelper(
+          context: context,
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width,
+          ),
+        );
+        if (responsive.isNarrowDesktop) {
+          _handleNarrowDesktopBackPress();
+        } else {
+          _handleWideDesktopBackPress();
+        }
+        break;
+    }
+  }
+
   Widget _buildDesktopWorkspace(WorkspaceState workspaceState, {bool isNarrowDesktop = false}) {
     return DesktopWorkspaceLayout(
       workspaceState: workspaceState,
@@ -351,7 +421,24 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
     }
 
-    // 4. 모바일 3단계 플로우에 따른 뷰 전환
+    // 4. 특수 뷰 우선 처리 (groupAdmin, memberManagement 등)
+    if (workspaceState.currentView != WorkspaceView.channel) {
+      switch (workspaceState.currentView) {
+        case WorkspaceView.groupHome:
+          return const WorkspaceEmptyState(type: WorkspaceEmptyType.groupHome);
+        case WorkspaceView.calendar:
+          return const WorkspaceEmptyState(type: WorkspaceEmptyType.calendar);
+        case WorkspaceView.groupAdmin:
+          return const GroupAdminPage();
+        case WorkspaceView.memberManagement:
+          return const MemberManagementPage();
+        case WorkspaceView.channel:
+          // Fall through to mobile view switch below
+          break;
+      }
+    }
+
+    // 5. 모바일 3단계 플로우에 따른 뷰 전환 (채널 관련)
     switch (workspaceState.mobileView) {
       case MobileWorkspaceView.channelList:
         // Step 1: 채널 목록
