@@ -1,5 +1,7 @@
 package org.castlekong.backend.dto
 
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 import java.time.LocalDateTime
 
 data class GoogleLoginRequest(
@@ -31,6 +33,7 @@ data class UserResponse(
     val professorStatus: String? = null,
     val department: String? = null,
     val studentNo: String? = null,
+    val academicYear: Int?,
     val schoolEmail: String? = null,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
@@ -49,7 +52,10 @@ data class SignupProfileRequest(
     val nickname: String,
     val college: String?,
     val dept: String?,
-    val studentNo: String?,
+    @field:NotBlank(message = "학번을 입력해주세요.")
+    val studentNo: String,
+    @field:NotNull(message = "학년을 입력해주세요.")
+    val academicYear: Int,
     val schoolEmail: String,
     // STUDENT | PROFESSOR
     val role: String,

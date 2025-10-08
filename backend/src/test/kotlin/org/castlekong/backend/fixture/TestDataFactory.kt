@@ -34,6 +34,8 @@ object TestDataFactory {
         password: String = "",
         globalRole: GlobalRole = GlobalRole.STUDENT,
         isActive: Boolean = true,
+        studentNo: String = "20201234",
+        academicYear: Int = 1,
         createdAt: LocalDateTime = LocalDateTime.now(),
         updatedAt: LocalDateTime = LocalDateTime.now(),
     ): User {
@@ -44,6 +46,8 @@ object TestDataFactory {
             password = password,
             globalRole = globalRole,
             isActive = isActive,
+            studentNo = studentNo,
+            academicYear = academicYear,
             createdAt = createdAt,
             updatedAt = updatedAt,
         )

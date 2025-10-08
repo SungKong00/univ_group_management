@@ -60,14 +60,14 @@ data class User(
     @Column(name = "department", length = 100)
     val department: String? = null, // 학과/학부
 
-    @Column(name = "student_no", length = 30)
-    val studentNo: String? = null, // 학번
+    @Column(name = "student_no", nullable = false, length = 30)
+    val studentNo: String, // 학번 (온보딩 시 필수 입력)
 
-    @Column(name = "school_email", length = 100)
-    val schoolEmail: String? = null, // 학교 이메일
+    @Column(name = "academic_email", nullable = false, length = 100)
+    val academicEmail: String, // 학교 이메일 (온보딩 시 필수 입력)
 
-    @Column(name = "academic_year")
-    val academicYear: Int? = null, // 학년
+    @Column(name = "academic_year", nullable = false)
+    val academicYear: Int, // 학년 (온보딩 시 필수 입력)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "professor_status")

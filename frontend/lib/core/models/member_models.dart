@@ -11,6 +11,8 @@ class GroupMember {
   final String userName;
   final String email;
   final String? profileImageUrl;
+  final String? studentNo;
+  final int? academicYear;
   final String roleName;
   final String roleId;
   final DateTime joinedAt;
@@ -22,6 +24,8 @@ class GroupMember {
     required this.userName,
     required this.email,
     this.profileImageUrl,
+    this.studentNo,
+    this.academicYear,
     required this.roleName,
     required this.roleId,
     required this.joinedAt,
@@ -35,6 +39,8 @@ class GroupMember {
       userName: json['userName'] as String,
       email: json['email'] as String,
       profileImageUrl: json['profileImageUrl'] as String?,
+      studentNo: json['studentNo'] as String?,
+      academicYear: (json['academicYear'] as num?)?.toInt(),
       roleName: json['roleName'] as String,
       roleId: json['roleId'] as String,
       joinedAt: DateTime.parse(json['joinedAt'] as String),
@@ -49,6 +55,8 @@ class GroupMember {
       'userName': userName,
       'email': email,
       'profileImageUrl': profileImageUrl,
+      'studentNo': studentNo,
+      'academicYear': academicYear,
       'roleName': roleName,
       'roleId': roleId,
       'joinedAt': joinedAt.toIso8601String(),
@@ -62,6 +70,8 @@ class GroupMember {
     String? userName,
     String? email,
     String? profileImageUrl,
+    String? studentNo,
+    int? academicYear,
     String? roleName,
     String? roleId,
     DateTime? joinedAt,
@@ -73,6 +83,8 @@ class GroupMember {
       userName: userName ?? this.userName,
       email: email ?? this.email,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      studentNo: studentNo ?? this.studentNo,
+      academicYear: academicYear ?? this.academicYear,
       roleName: roleName ?? this.roleName,
       roleId: roleId ?? this.roleId,
       joinedAt: joinedAt ?? this.joinedAt,

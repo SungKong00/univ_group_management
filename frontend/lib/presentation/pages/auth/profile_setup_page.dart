@@ -51,6 +51,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       <int, List<GroupHierarchyNode>>{};
   int? _selectedCollegeId;
   int? _selectedDepartmentId;
+  int? _selectedAcademicYear;
 
   Duration? _otpRemaining;
   Timer? _otpTimer;
@@ -415,11 +416,21 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     //   return;
     // }
 
-    final name = _nameController.text.trim();
-    final nickname = _nicknameController.text.trim();
     final studentNo = _studentNumberController.text.trim();
     final email = _schoolEmailController.text.trim();
 
+    if (_selectedAcademicYear == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('학년을 선택해주세요.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final name = _nameController.text.trim();
+    final nickname = _nicknameController.text.trim();
     final collegeName = _selectedCollegeId != null
         ? _nodesById[_selectedCollegeId!]?.name
         : null;
@@ -434,7 +445,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       schoolEmail: email,
       college: collegeName,
       department: departmentName,
-      studentNo: studentNo.isEmpty ? null : studentNo,
+      studentNo: studentNo,
+      academicYear: _selectedAcademicYear!,
     );
 
     setState(() {
@@ -581,7 +593,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
           const SizedBox(height: AppTheme.spacing24),
           _buildAffiliationSelectors(),
           const SizedBox(height: AppTheme.spacing24),
-          _buildStudentNumberField(),
+          _buildStudentInfoFields(),
           const SizedBox(height: AppTheme.spacing24),
           _buildRoleSelector(),
           const SizedBox(height: AppTheme.spacing24),
@@ -649,7 +661,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       NicknameStatus.unavailable =>
           _nicknameErrorMessage ?? '이미 사용 중인 닉네임입니다.',
       NicknameStatus.invalid => _nicknameErrorMessage ?? '닉네임을 확인해주세요.',
-      NicknameStatus.checking => '닉네임 중복을 확인하는 중...',
+      NicknameStatus.checking => '닉네임 중복을 확인하는 중...', 
       NicknameStatus.initial => '다른 사용자에게 표시될 이름이에요.',
     };
 
@@ -840,23 +852,54 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                         value: null,
                         child: Text('선택 안함'),
                       ),
-                      ...departmentOptions
-                          .map(
-                            (node) => DropdownMenuItem<int?>(
-                              value: node.id,
-                              child: Text(node.name),
-                            ),
-                          ),
-                    ],
-                    decoration: const InputDecoration(
-                      hintText: '학과 선택 (선택사항)',
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedDepartmentId = value;
-                      });
-                    },
-                  ),
+                                                ...departmentOptions
+                                                    .map(
+                                                      (node) => DropdownMenuItem<int?>(
+                                                        value: node.id,
+                                                        child: Text(node.name),
+                                                      ),
+                                                    ),
+                                            ],
+                                            decoration: const InputDecoration(
+                                              hintText: '학과 선택 (선택사항)',
+                                            ),
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _selectedDepartmentId = value;
+                                              });
+                                            },                  ),
+                ],
+              ),
+      ],
+    );
+  }
+
+  Widget _buildStudentInfoFields() {
+    final mediaQuery = MediaQuery.of(context);
+    final isWide = mediaQuery.size.width >= 768;
+
+    final studentNumberField = _buildStudentNumberField();
+    final academicYearField = _buildAcademicYearField();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('학적 정보', style: AppTheme.titleLarge),
+        const SizedBox(height: AppTheme.spacing12),
+        isWide
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: studentNumberField),
+                  const SizedBox(width: AppTheme.spacing16),
+                  Expanded(child: academicYearField),
+                ],
+              )
+            : Column(
+                children: [
+                  studentNumberField,
+                  const SizedBox(height: AppTheme.spacing24),
+                  academicYearField,
                 ],
               ),
       ],
@@ -864,36 +907,57 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   }
 
   Widget _buildStudentNumberField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('학번 (선택)', style: AppTheme.titleLarge),
-        const SizedBox(height: AppTheme.spacing12),
-        TextFormField(
-          controller: _studentNumberController,
-          decoration: const InputDecoration(
-            hintText: '예: 20251234',
-          ),
-          keyboardType: TextInputType.number,
-          maxLength: 10,
-          buildCounter: (_, {required currentLength, maxLength, required isFocused}) {
-            return const SizedBox.shrink();
-          },
-          validator: (value) {
-            final trimmed = value?.trim();
-            if (trimmed == null || trimmed.isEmpty) {
-              return null;
-            }
-            if (trimmed.length < 4 || trimmed.length > 10) {
-              return '학번은 4~10자리 숫자로 입력해주세요.';
-            }
-            if (int.tryParse(trimmed) == null) {
-              return '숫자만 입력할 수 있어요.';
-            }
-            return null;
-          },
-        ),
-      ],
+    return TextFormField(
+      controller: _studentNumberController,
+      decoration: const InputDecoration(
+        labelText: '학번',
+        hintText: '예: 20251234',
+      ),
+      keyboardType: TextInputType.number,
+      maxLength: 10,
+      buildCounter: (_, {required currentLength, maxLength, required isFocused}) {
+        return const SizedBox.shrink();
+      },
+      validator: (value) {
+        final trimmed = value?.trim();
+        if (trimmed == null || trimmed.isEmpty) {
+          return '학번을 입력해주세요.';
+        }
+        if (trimmed.length < 4 || trimmed.length > 10) {
+          return '학번은 4~10자리 숫자로 입력해주세요.';
+        }
+        if (int.tryParse(trimmed) == null) {
+          return '숫자만 입력할 수 있어요.';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildAcademicYearField() {
+    return DropdownButtonFormField<int>(
+      initialValue: _selectedAcademicYear,
+      items: [1, 2, 3, 4, 5]
+          .map((year) => DropdownMenuItem<int>(
+                value: year,
+                child: Text(year == 5 ? '4학년 이상' : '$year학년'),
+              ))
+          .toList(),
+      decoration: const InputDecoration(
+        labelText: '학년',
+        hintText: '학년 선택',
+      ),
+      validator: (value) {
+        if (value == null) {
+          return '학년을 선택해주세요.';
+        }
+        return null;
+      },
+      onChanged: (value) {
+        setState(() {
+          _selectedAcademicYear = value;
+        });
+      },
     );
   }
 

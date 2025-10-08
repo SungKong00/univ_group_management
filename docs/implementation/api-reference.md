@@ -102,6 +102,7 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
           "college": "AI/SW계열",
           "dept": "AI/SW학과",
           "studentNo": "20250001",
+          "academicYear": 1,
           "schoolEmail": "student@hanshin.ac.kr",
           "role": "STUDENT"
         }

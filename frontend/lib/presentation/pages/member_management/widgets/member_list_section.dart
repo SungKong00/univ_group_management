@@ -91,7 +91,18 @@ class MemberListSection extends ConsumerWidget {
                 const Expanded(
                   flex: 2,
                   child: Text(
-                    '이메일',
+                    '학번',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.neutral700,
+                    ),
+                  ),
+                ),
+                const Expanded(
+                  flex: 1,
+                  child: Text(
+                    '학년',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -195,13 +206,21 @@ class _MemberTableRow extends ConsumerWidget {
               avatarSize: 36,
             ),
           ),
-          // 이메일
+          // 학번
           Expanded(
             flex: 2,
             child: Text(
-              member.email,
+              member.studentNo ?? '-',
               style: const TextStyle(fontSize: 14, color: AppColors.neutral700),
               overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          // 학년
+          Expanded(
+            flex: 1,
+            child: Text(
+              member.academicYear != null ? '${member.academicYear}학년' : '-',
+              style: const TextStyle(fontSize: 14, color: AppColors.neutral700),
             ),
           ),
           // 역할 드롭다운
@@ -290,24 +309,63 @@ class _MemberCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          MemberAvatarWithName(
-            name: member.userName,
-            imageUrl: member.profileImageUrl,
-            subtitle: member.email,
-            avatarSize: 40,
+          // 이름과 역할
+          Row(
+            children: [
+              Expanded(
+                child: MemberAvatarWithName(
+                  name: member.userName,
+                  imageUrl: member.profileImageUrl,
+                  avatarSize: 40,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.brandLight,
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                ),
+                child: Text(
+                  member.roleName,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.brand,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
-          RoleDropdown(
-            currentRoleId: member.roleId,
-            availableRoles: roles,
-            onRoleChanged: (newRoleId) async {
-              // 역할 변경 로직
-            },
+          // 학번과 학년
+          Row(
+            children: [
+              const Icon(Icons.badge, size: 16, color: AppColors.neutral600),
+              const SizedBox(width: 6),
+              Text(
+                '학번: ${member.studentNo ?? '-'}',
+                style: const TextStyle(fontSize: 13, color: AppColors.neutral700),
+              ),
+              const SizedBox(width: 16),
+              const Icon(Icons.school, size: 16, color: AppColors.neutral600),
+              const SizedBox(width: 6),
+              Text(
+                '학년: ${member.academicYear != null ? '${member.academicYear}학년' : '-'}',
+                style: const TextStyle(fontSize: 13, color: AppColors.neutral700),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
-          Text(
-            '가입일: ${_formatDate(member.joinedAt)}',
-            style: const TextStyle(fontSize: 12, color: AppColors.neutral600),
+          // 가입일
+          Row(
+            children: [
+              const Icon(Icons.calendar_today, size: 16, color: AppColors.neutral600),
+              const SizedBox(width: 6),
+              Text(
+                '가입일: ${_formatDate(member.joinedAt)}',
+                style: const TextStyle(fontSize: 12, color: AppColors.neutral600),
+              ),
+            ],
           ),
         ],
       ),

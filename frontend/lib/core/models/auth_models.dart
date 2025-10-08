@@ -51,6 +51,7 @@ class UserInfo {
   final String? professorStatus;
   final String? department;
   final String? studentNo;
+  final int? academicYear;
   final String? schoolEmail;
   final String createdAt;
   final String updatedAt;
@@ -69,6 +70,7 @@ class UserInfo {
     this.professorStatus,
     this.department,
     this.studentNo,
+    this.academicYear,
     this.schoolEmail,
     required this.createdAt,
     required this.updatedAt,
@@ -88,6 +90,7 @@ class UserInfo {
     professorStatus: json['professorStatus'] as String?,
     department: json['department'] as String?,
     studentNo: json['studentNo'] as String?,
+    academicYear: json['academicYear'] as int?,
     schoolEmail: json['schoolEmail'] as String?,
     createdAt: json['createdAt'] as String,
     updatedAt: json['updatedAt'] as String,
@@ -107,6 +110,7 @@ class UserInfo {
     'professorStatus': professorStatus,
     'department': department,
     'studentNo': studentNo,
+    'academicYear': academicYear,
     'schoolEmail': schoolEmail,
     'createdAt': createdAt,
     'updatedAt': updatedAt,

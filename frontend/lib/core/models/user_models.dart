@@ -35,7 +35,8 @@ class SignupProfileRequest {
     required this.schoolEmail,
     this.college,
     this.department,
-    this.studentNo,
+    required this.studentNo,
+    required this.academicYear,
   });
 
   final String name;
@@ -44,7 +45,8 @@ class SignupProfileRequest {
   final String schoolEmail;
   final String? college;
   final String? department;
-  final String? studentNo;
+  final String studentNo;
+  final int academicYear;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -55,6 +57,7 @@ class SignupProfileRequest {
       'college': college,
       'dept': department,
       'studentNo': studentNo,
+      'academicYear': academicYear,
     };
   }
 }

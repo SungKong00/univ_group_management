@@ -148,7 +148,7 @@ interface GroupMemberRepository : JpaRepository<GroupMember, Long> {
         AND gm.role.name != '그룹장'
         AND gm.user.globalRole = 'STUDENT'
         ORDER BY gm.user.academicYear DESC NULLS LAST, gm.joinedAt ASC
-    """
+    """,
     )
     fun findSuccessionCandidates(groupId: Long): List<GroupMember>
 

@@ -62,6 +62,7 @@ class AuthServiceTest {
                     bio = user.bio,
                     profileCompleted = user.profileCompleted,
                     emailVerified = user.emailVerified,
+                    academicYear = 1,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 )
@@ -150,6 +151,7 @@ class AuthServiceTest {
                     bio = user.bio,
                     profileCompleted = user.profileCompleted,
                     emailVerified = user.emailVerified,
+                    academicYear = 1,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 )
@@ -201,6 +203,7 @@ class AuthServiceTest {
                     bio = user.bio,
                     profileCompleted = user.profileCompleted,
                     emailVerified = user.emailVerified,
+                    academicYear = 1,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 )
@@ -289,6 +292,7 @@ class AuthServiceTest {
                     bio = user.bio,
                     profileCompleted = user.profileCompleted,
                     emailVerified = user.emailVerified,
+                    academicYear = 1,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 )
@@ -347,6 +351,7 @@ class AuthServiceTest {
                     bio = user.bio,
                     profileCompleted = user.profileCompleted,
                     emailVerified = user.emailVerified,
+                    academicYear = 1,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 )

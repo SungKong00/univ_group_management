@@ -67,6 +67,7 @@ class AuthControllerTest {
                     bio = null,
                     profileCompleted = false,
                     emailVerified = false,
+                    academicYear = 1,
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now(),
                 )
@@ -139,6 +140,7 @@ class AuthControllerTest {
                     bio = "교수 소개",
                     profileCompleted = true,
                     emailVerified = true,
+                    academicYear = 1,
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now(),
                 )
@@ -263,6 +265,7 @@ class AuthControllerTest {
                     bio = null,
                     profileCompleted = true,
                     emailVerified = true,
+                    academicYear = 1,
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now(),
                 )
