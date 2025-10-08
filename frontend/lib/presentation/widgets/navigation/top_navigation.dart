@@ -96,7 +96,7 @@ class TopNavigation extends ConsumerWidget {
       final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
 
       // Web: handle web-specific back navigation
-      if (layoutMode.isWide) {
+      if (layoutMode.isWide || layoutMode.isMedium) {
         final handled = workspaceNotifier.handleWebBack();
         if (handled) return; // Internal navigation handled
         // If not handled, continue to normal navigation (go home)

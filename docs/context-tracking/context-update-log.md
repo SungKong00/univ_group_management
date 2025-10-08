@@ -4,6 +4,30 @@
 
 ## 2025년 10월
 
+### 2025-10-09 - 반응형 디자인 가이드 업데이트
+**커밋**: 현재 세션
+**유형**: 문서 동기화
+**우선순위**: Medium
+**영향 범위**: 문서 (UI/UX)
+
+**구현 내용**:
+- **프론트엔드 코드 변경**:
+    - `top_navigation.dart`에서 웹 뒤로가기 로직이 `medium` 레이아웃에도 적용되도록 `layoutMode.isMedium` 조건을 추가했습니다.
+- **문서 동기화**:
+    - `responsive-design-guide.md`에 Breakpoint 정의를 추가하고, `medium` 화면이 `wide` 화면과 동일한 탐색 로직을 공유함을 명시했습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/ui-ux/concepts/responsive-design-guide.md`: Breakpoint 및 `medium` 레이아웃 동작 정의 추가.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+
+**수정된 파일**:
+- `frontend/lib/presentation/widgets/navigation/top_navigation.dart`
+- `docs/ui-ux/concepts/responsive-design-guide.md`
+
+**메모**: 코드 변경에 맞춰 반응형 가이드 문서를 업데이트하여, 중간 크기 화면에서의 동작을 명확히 정의했습니다.
+
+---
+
 ### 2025-10-08 - 권한 이름 변경 및 워크스페이스 진입 로직 개선
 **커밋**: 현재 세션
 **유형**: 리팩토링 + 문서 동기화
