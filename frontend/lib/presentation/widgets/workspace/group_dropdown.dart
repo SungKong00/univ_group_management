@@ -313,17 +313,14 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
   @override
   Widget build(BuildContext context) {
     // 스마트 폰트 크기 결정 로직
-    // - 사용 가능한 너비 = channelBarWidth - 56px (패딩16 + 아이콘20 + 간격4 + 추가여백16)
-    // - bodyLarge(16px/600)로 렌더링 시 텍스트 너비 측정
-    // - 텍스트가 사용 가능한 너비를 초과할 경우에만 bodySmall(12px/600) 사용
-    //
     // **예시:**
     // - channelBarWidth: 200px
-    // - 사용 가능한 너비: 144px
+    // - 사용 가능한 너비: 128px (기존 144px에서 안전 마진 16px 추가)
     // - "컴퓨터공학과" bodyLarge 너비: ~120px → bodyLarge 유지
     // - "미디어영상광고홍보학과" bodyLarge 너비: ~200px → bodySmall 전환
+    // - "AI시스템반도체학과" bodyLarge 너비: ~180px → bodySmall 전환 + ellipsis
     final channelBarWidth = widget.channelBarWidth ?? 256;
-    final availableWidth = channelBarWidth - 56; // 패딩16 + 아이콘20 + 간격4 + 추가여백16
+    final availableWidth = channelBarWidth - 72; // 패딩16 + 아이콘20 + 간격4 + 안전마진32
 
     final largeTextStyle = AppTheme.bodyLarge.copyWith(
       fontWeight: FontWeight.w600,
