@@ -43,6 +43,7 @@ class WorkspaceState extends Equatable {
     this.isLoadingPermissions = false,
     this.channelHistory = const [],
     this.isNarrowDesktopCommentsFullscreen = false, // Narrow desktop: comments fullscreen mode
+    this.previousView, // Track previous view for back navigation
   });
 
   final String? selectedGroupId;
@@ -64,6 +65,7 @@ class WorkspaceState extends Equatable {
   final bool isLoadingPermissions;
   final List<String> channelHistory; // Web-only: channel navigation history
   final bool isNarrowDesktopCommentsFullscreen; // Narrow desktop: when true, hide posts and show only comments
+  final WorkspaceView? previousView; // Previous view for back navigation from special views (groupAdmin, memberManagement, etc.)
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -85,6 +87,7 @@ class WorkspaceState extends Equatable {
     bool? isLoadingPermissions,
     List<String>? channelHistory,
     bool? isNarrowDesktopCommentsFullscreen,
+    WorkspaceView? previousView,
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
@@ -106,6 +109,7 @@ class WorkspaceState extends Equatable {
       isLoadingPermissions: isLoadingPermissions ?? this.isLoadingPermissions,
       channelHistory: channelHistory ?? this.channelHistory,
       isNarrowDesktopCommentsFullscreen: isNarrowDesktopCommentsFullscreen ?? this.isNarrowDesktopCommentsFullscreen,
+      previousView: previousView ?? this.previousView,
     );
   }
 
@@ -134,6 +138,7 @@ class WorkspaceState extends Equatable {
         isLoadingPermissions,
         channelHistory,
         isNarrowDesktopCommentsFullscreen,
+        previousView,
       ];
 }
 
@@ -292,6 +297,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// Show group home view
   void showGroupHome() {
     state = state.copyWith(
+      previousView: state.currentView,
       currentView: WorkspaceView.groupHome,
       isCommentsVisible: false,
       selectedPostId: null,
@@ -301,6 +307,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// Show calendar view
   void showCalendar() {
     state = state.copyWith(
+      previousView: state.currentView,
       currentView: WorkspaceView.calendar,
       isCommentsVisible: false,
       selectedPostId: null,
@@ -310,6 +317,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// Show group admin/management page view
   void showGroupAdminPage() {
     state = state.copyWith(
+      previousView: state.currentView,
       currentView: WorkspaceView.groupAdmin,
       isCommentsVisible: false,
       selectedPostId: null,
@@ -448,6 +456,19 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   // 모바일 뒤로가기 핸들링
   bool handleMobileBack() {
+    // 1) 특수 뷰(그룹 관리자/멤버관리/그룹 홈/캘린더 등)에서 이전 뷰가 기록되어 있으면 우선 복원
+    if (state.currentView != WorkspaceView.channel && state.previousView != null) {
+      final prev = state.previousView!;
+      // memberManagement → groupAdmin → channel 순으로 복원되도록 previousView를 보정
+      final nextPrev = prev == WorkspaceView.groupAdmin ? WorkspaceView.channel : null;
+      state = state.copyWith(
+        currentView: prev,
+        previousView: nextPrev,
+      );
+      return true;
+    }
+
+    // 2) 모바일 3단계 플로우 처리
     switch (state.mobileView) {
       case MobileWorkspaceView.postComments:
         // Step 3 → Step 2: 댓글에서 게시글 목록으로
@@ -478,6 +499,17 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// Web back navigation handling
   /// Returns: true if handled internally, false if should navigate to home
   bool handleWebBack() {
+    // If in a special view (groupAdmin, memberManagement, etc.), return to previous view
+    if (state.currentView != WorkspaceView.channel && state.previousView != null) {
+      final prev = state.previousView!;
+      final nextPrev = prev == WorkspaceView.groupAdmin ? WorkspaceView.channel : null;
+      state = state.copyWith(
+        currentView: prev,
+        previousView: nextPrev,
+      );
+      return true;
+    }
+
     // If comments are visible, close them first
     if (state.isCommentsVisible) {
       hideComments();

@@ -112,6 +112,10 @@ class NavigationConfig {
   /// NavigationConfig.fromRoute('/unknown') // null
   /// ```
   static NavigationConfig? fromRoute(String route) {
+    // 특수 경로 매핑: 그룹 관리자 페이지는 워크스페이스 탭에 속하도록 처리
+    if (route.startsWith(AppConstants.groupAdminRoute)) {
+      return workspace;
+    }
     for (final item in items) {
       if (route.startsWith(item.route)) {
         return item;

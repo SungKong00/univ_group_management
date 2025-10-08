@@ -32,7 +32,9 @@ class DesktopWorkspaceLayout extends ConsumerWidget {
 
     // Narrow desktop + 댓글 전체 화면 모드: 게시글 숨기고 댓글만 표시
     final bool isNarrowCommentFullscreen =
-        isNarrowDesktop && workspaceState.isNarrowDesktopCommentsFullscreen;
+        isNarrowDesktop &&
+        workspaceState.isCommentsVisible &&
+        workspaceState.isNarrowDesktopCommentsFullscreen;
 
     return LayoutBuilder(
       builder: (context, constraints) {

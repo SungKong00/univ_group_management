@@ -156,9 +156,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           }
         });
 
-        // 뒤로가기 핸들링: 모바일 + Narrow Desktop
-        final canHandleBack = isMobile && _canHandleMobileBack() ||
-            (isNarrowDesktop && workspaceState.isNarrowDesktopCommentsFullscreen);
+        // 뒤로가기 핸들링: 모바일 + Narrow Desktop + Wide Desktop
+        final canHandleBack = (isMobile && _canHandleMobileBack()) ||
+            (isNarrowDesktop && _canHandleNarrowDesktopBack()) ||
+            (!isMobile && !isNarrowDesktop && _canHandleWideDesktopBack());
 
         return PopScope(
           canPop: !canHandleBack,
@@ -167,9 +168,11 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             if (!didPop) {
               if (isMobile) {
                 _handleMobileBackPress();
-              } else if (isNarrowDesktop && workspaceState.isNarrowDesktopCommentsFullscreen) {
-                // Narrow desktop에서 댓글 전체 화면 모드일 때 뒤로가기로 닫기
-                ref.read(workspaceStateProvider.notifier).hideComments();
+              } else if (isNarrowDesktop) {
+                _handleNarrowDesktopBackPress();
+              } else {
+                // Wide Desktop
+                _handleWideDesktopBackPress();
               }
             }
           },
@@ -236,6 +239,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   /// 모바일 뒤로가기 가능 여부 확인
   bool _canHandleMobileBack() {
     final workspaceState = ref.read(workspaceStateProvider);
+    // 특수 뷰(그룹 관리자, 멤버관리, 그룹 홈, 캘린더 등)에서는 내부적으로 뒤로가기를 처리
+    if (workspaceState.currentView != WorkspaceView.channel) {
+      return true;
+    }
     // channelList 상태에서는 뒤로가기를 허용 (홈으로 이동)
     // 나머지 상태에서는 내부적으로 처리
     return workspaceState.mobileView != MobileWorkspaceView.channelList;
@@ -247,6 +254,72 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     // handleMobileBack()이 true를 반환하면 내부적으로 처리됨
     // false를 반환하면 시스템 뒤로가기 허용
     workspaceNotifier.handleMobileBack();
+  }
+
+  /// Narrow Desktop 뒤로가기 가능 여부 확인
+  bool _canHandleNarrowDesktopBack() {
+    final workspaceState = ref.read(workspaceStateProvider);
+
+    // 1. 댓글 전체화면일 때
+    if (workspaceState.isNarrowDesktopCommentsFullscreen) {
+      return true;
+    }
+
+    // 2. 특수 뷰(groupAdmin, memberManagement 등)일 때
+    if (workspaceState.currentView != WorkspaceView.channel &&
+        workspaceState.previousView != null) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Narrow Desktop 뒤로가기 처리
+  void _handleNarrowDesktopBackPress() {
+    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+    final workspaceState = ref.read(workspaceStateProvider);
+
+    // 특수 뷰에서는 handleWebBack() 호출
+    if (workspaceState.currentView != WorkspaceView.channel) {
+      workspaceNotifier.handleWebBack();
+      return;
+    }
+
+    // 댓글 전체화면에서는 댓글 닫기
+    if (workspaceState.isNarrowDesktopCommentsFullscreen) {
+      workspaceNotifier.hideComments();
+    }
+  }
+
+  /// Wide Desktop 뒤로가기 가능 여부 확인
+  bool _canHandleWideDesktopBack() {
+    final workspaceState = ref.read(workspaceStateProvider);
+
+    // 1. 특수 뷰(groupAdmin, memberManagement 등)일 때
+    if (workspaceState.currentView != WorkspaceView.channel &&
+        workspaceState.previousView != null) {
+      return true;
+    }
+
+    // 2. 댓글이 열려있을 때
+    if (workspaceState.isCommentsVisible) {
+      return true;
+    }
+
+    // 3. 채널 히스토리가 있을 때
+    if (workspaceState.channelHistory.isNotEmpty) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Wide Desktop 뒤로가기 처리
+  void _handleWideDesktopBackPress() {
+    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+    // handleWebBack()이 모든 뒤로가기 로직을 처리함
+    // (특수 뷰 → 댓글 → 채널 히스토리 순서)
+    workspaceNotifier.handleWebBack();
   }
 
   Widget _buildDesktopWorkspace(WorkspaceState workspaceState, {bool isNarrowDesktop = false}) {

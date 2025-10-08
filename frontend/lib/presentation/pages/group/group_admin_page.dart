@@ -97,7 +97,7 @@ class _EmptyPermissionView extends StatelessWidget {
 }
 
 /// 관리 기능 콘텐츠 (권한별 조건부 렌더링)
-class _AdminContentView extends StatelessWidget {
+class _AdminContentView extends ConsumerWidget {
   final List<String> permissions;
   final bool isDesktop;
 
@@ -107,19 +107,19 @@ class _AdminContentView extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Permission-Centric 접근: 각 권한별 섹션 생성
     final sections = <Widget>[];
 
     // 그룹 설정 섹션
     if (permissions.contains('GROUP_MANAGE')) {
-      sections.add(_buildGroupSettingsSection(context));
+      sections.add(_buildGroupSettingsSection(context, ref));
       sections.add(SizedBox(height: AppSpacing.md));
     }
 
     // 멤버 관리 섹션
     if (permissions.contains('MEMBER_MANAGE')) {
-      sections.add(_buildMemberManagementSection(context));
+      sections.add(_buildMemberManagementSection(context, ref));
       sections.add(SizedBox(height: AppSpacing.md));
     }
 
@@ -150,7 +150,7 @@ class _AdminContentView extends StatelessWidget {
     );
   }
 
-  Widget _buildGroupSettingsSection(BuildContext context) {
+  Widget _buildGroupSettingsSection(BuildContext context, WidgetRef ref) {
     return _AdminSection(
       title: '그룹 설정',
       description: '그룹 정보 및 공개 범위 관리',
@@ -160,7 +160,7 @@ class _AdminContentView extends StatelessWidget {
           icon: Icons.edit_outlined,
           title: '그룹 정보 수정',
           description: '그룹 이름, 설명 등을 변경하세요',
-          onTap: () => _handleEditGroup(context),
+          onTap: () => _handleEditGroup(context, ref),
         ),
         ActionCard(
           icon: Icons.public_outlined,
@@ -186,7 +186,7 @@ class _AdminContentView extends StatelessWidget {
     );
   }
 
-  Widget _buildMemberManagementSection(BuildContext context) {
+  Widget _buildMemberManagementSection(BuildContext context, WidgetRef ref) {
     return _AdminSection(
       title: '멤버 관리',
       description: '그룹 멤버 초대 및 역할 관리',
@@ -204,7 +204,7 @@ class _AdminContentView extends StatelessWidget {
           icon: Icons.list_alt_outlined,
           title: '멤버 목록',
           description: '그룹 멤버 조회 및 관리',
-          onTap: () => _navigateToMemberManagement(context),
+          onTap: () => _navigateToMemberManagement(ref),
         ),
         ActionCard(
           icon: Icons.admin_panel_settings_outlined,
@@ -281,23 +281,20 @@ class _AdminContentView extends StatelessWidget {
     );
   }
 
-  void _navigateToMemberManagement(BuildContext context) {
-    final container = ProviderScope.containerOf(context);
-
+  void _navigateToMemberManagement(WidgetRef ref) {
     // 멤버 관리 페이지로 전환
-    // WorkspaceStateNotifier에서 내부적으로 state를 업데이트하는 메서드가 필요하지만,
-    // 현재는 직접 Provider를 invalidate하고 다시 읽는 방식 대신
-    // Consumer를 통해 업데이트합니다.
-    final currentState = container.read(workspaceStateProvider);
-    container.read(workspaceStateProvider.notifier).updateState(
-      currentState.copyWith(currentView: WorkspaceView.memberManagement),
+    final currentState = ref.read(workspaceStateProvider);
+    ref.read(workspaceStateProvider.notifier).updateState(
+      currentState.copyWith(
+        previousView: currentState.currentView,
+        currentView: WorkspaceView.memberManagement,
+      ),
     );
   }
 
-  void _handleEditGroup(BuildContext context) async {
+  void _handleEditGroup(BuildContext context, WidgetRef ref) async {
     // Get current group information from currentGroupProvider
-    final container = ProviderScope.containerOf(context);
-    final currentGroup = container.read(currentGroupProvider);
+    final currentGroup = ref.read(currentGroupProvider);
 
     if (currentGroup == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -323,8 +320,8 @@ class _AdminContentView extends StatelessWidget {
       );
 
       // Invalidate providers to reload group data
-      container.invalidate(myGroupsProvider);
-      container.invalidate(workspaceStateProvider);
+      ref.invalidate(myGroupsProvider);
+      ref.invalidate(workspaceStateProvider);
     }
   }
 
@@ -430,4 +427,3 @@ class _AdminSection extends StatelessWidget {
     );
   }
 }
-
