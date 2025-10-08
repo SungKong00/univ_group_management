@@ -1,103 +1,96 @@
 # 그룹 관리자 페이지 구현 상태
 
-> **현재 상태**: Phase 1 완료 (UI 스캐폴딩) → 디버깅 필요 → Phase 2 대기 (기능 구현)
+> **현재 상태**: Phase 2 진행 중 (핵심 기능 구현)
 
 ## 📊 진행률
 
 - [x] Phase 1: UI 스캐폴딩 (100%)
-- [ ] 디버깅: 버튼 표시 이슈 해결 (진행 중)
-- [ ] Phase 2: 각 기능 실제 구현 (0%)
+- [x] Phase 2: 핵심 기능 구현 (진행 중)
+  - [x] 그룹 정보 수정
+  - [x] 멤버 목록 페이지 연동
+  - [ ] 멤버 역할 및 권한 관리
+  - [ ] ...
 
 ---
 
-## ✅ 완료된 작업 (Phase 1)
+## ✅ 완료된 작업
 
-### 1. GroupAdminPage UI 구현
-- **파일**: `frontend/lib/presentation/pages/group/group_admin_page.dart` (452줄)
-- **구조**: 4개 관리 섹션 + 권한 기반 조건부 렌더링
-- **디자인**: ActionCard 패턴, Title + Description, 토스 디자인 철학
+### Phase 2 (진행 중)
 
-### 2. 4개 관리 섹션 구성
-| 섹션 | 필요 권한 | ActionCard 수 |
-|------|----------|--------------|
-| 그룹 설정 | GROUP_MANAGE | 3개 |
-| 멤버 및 역할 관리 | MEMBER_MANAGE | 3개 |
-| 채널 관리 | CHANNEL_MANAGE | 3개 |
-| 모집 관리 | RECRUITMENT_MANAGE | 3개 |
+#### 1. 그룹 정보 수정 기능 구현
+- **상태**: **완료**
+- **내용**:
+    - `showEditGroupDialog`를 통해 그룹 이름, 설명, 모집 여부, 태그를 수정하는 다이얼로그를 제공합니다.
+    - 백엔드 연동을 위해 `GroupService`에 `updateGroup` 메서드와 `UpdateGroupRequest` 모델을 추가했습니다. (`PUT /api/groups/{id}`)
+    - 수정 성공 시 `myGroupsProvider`를 invalidate하여 그룹 목록을 갱신합니다.
+- **파일**:
+    - `frontend/lib/presentation/widgets/dialogs/edit_group_dialog.dart` (신규)
+    - `frontend/lib/core/services/group_service.dart` (수정)
+    - `frontend/lib/core/models/group_models.dart` (수정)
 
-### 3. 권한 시스템 통합
-- WorkspaceState에 `currentGroupRole`, `currentGroupPermissions` 추가
-- PermissionUtils를 단일 진실 공급원으로 사용
-- MembershipInfo 리팩토링 (PermissionUtils 재사용)
-- 권한명 통일: `MEMBER_MANAGE` (백엔드와 일치)
+#### 2. 멤버 목록 페이지 연동
+- **상태**: **완료**
+- **내용**:
+    - '멤버 목록' 액션 카드 클릭 시, `WorkspaceState`를 변경하여 `MemberManagementPage`로 화면을 전환합니다.
+    - `WorkspaceView`에 `memberManagement`를 추가하여 새로운 페이지 뷰를 정의했습니다.
+- **파일**:
+    - `frontend/lib/presentation/pages/group/group_admin_page.dart` (수정)
+    - `frontend/lib/presentation/providers/workspace_state_provider.dart` (수정)
+    - `frontend/lib/presentation/pages/member_management/member_management_page.dart` (신규)
 
-### 4. 네비게이션 연결
-- workspace_page.dart에서 GroupAdminPage 렌더링
-- 상단바 중복 제거 (글로벌 상단바 사용)
+#### 3. `GroupVisibility` 개념 제거
+- **상태**: **완료**
+- **내용**:
+    - 백엔드 API 변경에 따라 프론트엔드 모델(`GroupMembership`) 및 관련 코드에서 `visibility` 속성을 제거했습니다.
+    - '공개 범위 설정' 기능은 UI에 남아있으나, 기능적으로 폐기될 예정입니다.
+
+#### 4. UI 리팩토링
+- **상태**: **완료**
+- **내용**:
+    - `group_admin_page.dart` 내부에 있던 `_ActionCard`를 `widgets/cards/action_card.dart` 공용 위젯으로 분리하여 재사용성을 높였습니다.
+    - `isDestructive` 속성을 추가하여 '삭제'와 같은 위험한 액션을 시각적으로 구분할 수 있도록 개선했습니다.
+
+### Phase 1
+
+- **GroupAdminPage UI 스캐폴딩**: 4개 관리 섹션(그룹 설정, 멤버, 채널, 모집)의 기본 구조와 권한 기반 렌더링을 구현했습니다.
 
 ---
 
-## ⚠️ 현재 문제 (디버깅 필요)
+## 🚀 다음 작업 (Phase 2 계속)
 
-### 증상
-- 채널 네비게이션의 채널 버튼 미표시
-- 관리자 페이지 버튼 미표시
+### 우선순위 1: 멤버 관리
+1. **멤버 목록 및 관리** (난이도: 상)
+   - 현재는 페이지 이동만 구현됨. 실제 멤버 목록 조회, 역할 변경 드롭다운, 강제 탈퇴 기능 구현 필요.
+2. **역할 관리 및 권한** (난이도: 상)
+   - 커스텀 역할 생성, Permission-Centric 매트릭스 UI 구현.
+3. **가입 신청 승인/거절** (난이도: 중)
+   - 대기 중인 신청 목록, 승인/거절 버튼.
 
-### 디버깅 체크리스트
-- [ ] WorkspaceState의 `currentGroupPermissions`가 정상 로드되는지 확인
-- [ ] `currentGroupProvider`가 null 반환하는지 확인
-- [ ] `myGroupsProvider` 로딩 상태 확인
-- [ ] 브라우저 콘솔 로그 확인
-- [ ] API 응답에서 권한 목록 확인 (`/api/me/groups`)
+### 우선순위 2: 그룹 설정
+4. **그룹 삭제** (난이도: 상)
+   - 확인 다이얼로그 + 유예 기간 또는 즉시 삭제 로직 구현.
+5. **~~그룹 공개 설정~~** (상태: `폐기됨`)
+   - `GroupVisibility` 개념 제거로 인해 해당 기능은 구현하지 않습니다.
 
----
-
-## 🚀 다음 작업 (Phase 2: 기능 구현)
-
-### 우선순위 1: 그룹 설정
-1. **그룹 정보 수정** (난이도: 중)
-   - 그룹명, 설명, 이미지 수정 폼
-   - PUT `/api/groups/{id}` 연동
-2. **그룹 공개 설정** (난이도: 하)
-   - 공개 범위 선택 UI
-3. **그룹 삭제** (난이도: 상)
-   - 확인 다이얼로그 + 30일 유예 기간 안내
-
-### 우선순위 2: 멤버 관리
-4. **멤버 목록 및 관리** (난이도: 상)
-   - 멤버 목록 테이블, 역할 변경 드롭다운, 강제 탈퇴
-5. **역할 관리 및 권한** (난이도: 상)
-   - 커스텀 역할 생성, Permission-Centric 매트릭스
-6. **가입 신청 승인/거절** (난이도: 중)
-   - 대기 중인 신청 목록, 승인/거절 버튼
-
-### 우선순위 3: 채널 관리
-7. **채널 생성** (난이도: 중)
-   - 채널명, 타입, 설명 입력 폼
-8. **채널 목록 및 설정** (난이도: 중)
-   - 채널 리스트, 수정/삭제
-9. **채널 권한 설정** (난이도: 상)
-   - 역할별 채널 접근 권한 매트릭스
-
-### 우선순위 4: 모집 관리
-10. **모집 공고 작성/수정** (난이도: 중)
-11. **지원서 확인/관리** (난이도: 중)
-12. **모집 통계 확인** (난이도: 하)
+### 우선순위 3: 채널 및 모집 관리
+- 채널 생성/목록/권한 설정
+- 모집 공고 작성/지원자 관리
+- (기존 계획과 동일)
 
 ---
 
 ## 📂 코드 위치
 
 - **메인 페이지**: `frontend/lib/presentation/pages/group/group_admin_page.dart`
-- **권한 유틸**: `frontend/lib/core/utils/permission_utils.dart`
+- **신규 위젯**: `frontend/lib/presentation/widgets/cards/action_card.dart`
+- **신규 다이얼로그**: `frontend/lib/presentation/widgets/dialogs/edit_group_dialog.dart`
+- **서비스**: `frontend/lib/core/services/group_service.dart`
 - **상태 관리**: `frontend/lib/presentation/providers/workspace_state_provider.dart`
-- **백엔드 권한**: `backend/src/main/kotlin/org/castlekong/backend/entity/GroupPermission.kt`
 
 ---
 
 ## 🔗 참고 자료
 
+- [그룹 관리 페이지 UI/UX 명세](../ui-ux/pages/group-admin-page.md)
 - [권한 시스템 개념](../concepts/permission-system.md)
-- [권한 추가 가이드](../maintenance/group-management-permissions.md)
 - [프론트엔드 가이드](../implementation/frontend-guide.md)
-- [디자인 시스템](../ui-ux/concepts/design-system.md)

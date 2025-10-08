@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.castlekong.backend.dto.CreateGroupRequest
 import org.castlekong.backend.entity.GlobalRole
-import org.castlekong.backend.entity.GroupVisibility
 import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
@@ -68,7 +67,6 @@ class GroupServiceIntegrationTest {
             CreateGroupRequest(
                 name = "테스트 그룹",
                 description = "테스트용 그룹입니다",
-                visibility = GroupVisibility.PUBLIC,
                 isRecruiting = true,
                 maxMembers = 50,
                 tags = setOf("스터디", "개발"),
@@ -82,7 +80,6 @@ class GroupServiceIntegrationTest {
         assertThat(response.name).isEqualTo("테스트 그룹")
         assertThat(response.description).isEqualTo("테스트용 그룹입니다")
         assertThat(response.owner.id).isEqualTo(testUser.id)
-        assertThat(response.visibility).isEqualTo(GroupVisibility.PUBLIC)
         assertThat(response.isRecruiting).isTrue()
         assertThat(response.maxMembers).isEqualTo(50)
         assertThat(response.tags).containsExactlyInAnyOrder("스터디", "개발")

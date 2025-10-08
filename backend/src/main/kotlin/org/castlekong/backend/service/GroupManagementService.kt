@@ -9,7 +9,6 @@ import org.castlekong.backend.entity.Group
 import org.castlekong.backend.entity.GroupMember
 import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.entity.GroupType
-import org.castlekong.backend.entity.GroupVisibility
 import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
@@ -81,7 +80,6 @@ class GroupManagementService(
                 university = request.university,
                 college = request.college,
                 department = request.department,
-                visibility = request.visibility,
                 groupType = request.groupType,
                 isRecruiting = request.isRecruiting,
                 maxMembers = request.maxMembers,
@@ -223,7 +221,6 @@ class GroupManagementService(
                 name = request.name ?: group.name,
                 description = request.description ?: group.description,
                 profileImageUrl = request.profileImageUrl ?: group.profileImageUrl,
-                visibility = request.visibility ?: group.visibility,
                 groupType = request.groupType ?: group.groupType,
                 isRecruiting = request.isRecruiting ?: group.isRecruiting,
                 maxMembers = request.maxMembers ?: group.maxMembers,
@@ -338,7 +335,6 @@ class GroupManagementService(
     fun searchGroups(
         pageable: Pageable,
         recruiting: Boolean?,
-        visibility: GroupVisibility?,
         groupType: GroupType?,
         university: String?,
         college: String?,
@@ -348,7 +344,6 @@ class GroupManagementService(
     ): Page<GroupSummaryResponse> {
         return groupRepository.search(
             recruiting,
-            visibility,
             groupType,
             university,
             college,

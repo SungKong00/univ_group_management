@@ -42,9 +42,6 @@ data class Group(
     @Column(name = "department", length = 100)
     val department: String? = null,
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    val visibility: GroupVisibility = GroupVisibility.PUBLIC,
-    @Enumerated(EnumType.STRING)
     @Column(name = "group_type", nullable = false, length = 20)
     val groupType: GroupType = GroupType.AUTONOMOUS,
     @Column(name = "is_recruiting", nullable = false)
@@ -65,12 +62,6 @@ data class Group(
     @Column(name = "deleted_at")
     val deletedAt: LocalDateTime? = null,
 )
-
-enum class GroupVisibility {
-    PUBLIC,
-    PRIVATE,
-    INVITE_ONLY,
-}
 
 enum class GroupType {
     AUTONOMOUS, // 자율그룹

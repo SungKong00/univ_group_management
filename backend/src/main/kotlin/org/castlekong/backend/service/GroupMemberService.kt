@@ -565,7 +565,6 @@ class GroupMemberService(
                 role = membership.role.name,
                 permissions = membership.role.permissions.map { it.name }.toSet(),
                 profileImageUrl = group.profileImageUrl,
-                visibility = group.visibility,
             )
         }.sortedWith(compareBy({ it.level }, { it.id }))
     }

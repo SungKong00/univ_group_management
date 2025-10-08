@@ -6,7 +6,6 @@ import org.castlekong.backend.entity.GroupJoinRequestStatus
 import org.castlekong.backend.entity.GroupMember
 import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.entity.GroupType
-import org.castlekong.backend.entity.GroupVisibility
 import org.castlekong.backend.entity.SubGroupRequest
 import org.castlekong.backend.entity.SubGroupRequestStatus
 import org.springframework.data.domain.Page
@@ -38,7 +37,6 @@ interface GroupRepository : JpaRepository<Group, Long> {
         LEFT JOIN g.tags t
         WHERE (g.deletedAt IS NULL)
         AND (:recruiting IS NULL OR g.isRecruiting = :recruiting)
-        AND (:visibility IS NULL OR g.visibility = :visibility)
         AND (:groupType IS NULL OR g.groupType = :groupType)
         AND (:university IS NULL OR g.university = :university)
         AND (:college IS NULL OR g.college = :college)
@@ -53,7 +51,6 @@ interface GroupRepository : JpaRepository<Group, Long> {
     )
     fun search(
         @Param("recruiting") recruiting: Boolean?,
-        @Param("visibility") visibility: GroupVisibility?,
         @Param("groupType") groupType: GroupType?,
         @Param("university") university: String?,
         @Param("college") college: String?,

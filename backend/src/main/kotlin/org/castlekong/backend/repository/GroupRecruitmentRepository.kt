@@ -71,7 +71,6 @@ interface GroupRecruitmentRepository : JpaRepository<GroupRecruitment, Long> {
         JOIN FETCH r.group g
         JOIN FETCH r.createdBy
         WHERE r.status = 'OPEN'
-        AND g.visibility = 'PUBLIC'
         AND r.recruitmentStartDate <= :now
         AND (r.recruitmentEndDate IS NULL OR r.recruitmentEndDate > :now)
         ORDER BY r.createdAt DESC
@@ -89,7 +88,6 @@ interface GroupRecruitmentRepository : JpaRepository<GroupRecruitment, Long> {
         JOIN FETCH r.group g
         JOIN FETCH r.createdBy
         WHERE r.status = 'OPEN'
-        AND g.visibility = 'PUBLIC'
         AND r.recruitmentStartDate <= :now
         AND (r.recruitmentEndDate IS NULL OR r.recruitmentEndDate > :now)
         AND (

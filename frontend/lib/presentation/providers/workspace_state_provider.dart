@@ -12,6 +12,7 @@ enum WorkspaceView {
   groupHome, // Group home view
   calendar, // Calendar view
   groupAdmin, // Group admin/management page view
+  memberManagement, // Member management page view
 }
 
 /// Mobile Workspace View Type (3-step navigation flow)
@@ -344,6 +345,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   void exitWorkspace() {
     state = const WorkspaceState();
+  }
+
+  /// Update workspace state (for view switching, etc.)
+  void updateState(WorkspaceState newState) {
+    state = newState;
   }
 
   void updateContext(Map<String, dynamic> context) {

@@ -596,8 +596,7 @@ DELETE /api/comments/{commentId}
       "parentId": null,
       "role": "MEMBER",
       "permissions": ["CHANNEL_READ", "POST_READ"],
-      "profileImageUrl": null,
-      "visibility": "PUBLIC"
+      "profileImageUrl": null
     },
     {
       "id": 2,
@@ -607,8 +606,7 @@ DELETE /api/comments/{commentId}
       "parentId": 1,
       "role": "MEMBER",
       "permissions": ["CHANNEL_READ", "POST_READ", "POST_WRITE"],
-      "profileImageUrl": null,
-      "visibility": "PUBLIC"
+      "profileImageUrl": null
     }
   ],
   "error": null

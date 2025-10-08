@@ -89,7 +89,6 @@ class GroupController(
     fun exploreGroups(
         pageable: Pageable,
         @RequestParam(required = false) recruiting: Boolean?,
-        @RequestParam(required = false) visibility: org.castlekong.backend.entity.GroupVisibility?,
         @RequestParam(required = false) groupType: org.castlekong.backend.entity.GroupType?,
         @RequestParam(required = false) university: String?,
         @RequestParam(required = false) college: String?,
@@ -104,7 +103,6 @@ class GroupController(
             groupManagementService.searchGroups(
                 pageable,
                 recruiting,
-                visibility,
                 groupType,
                 university,
                 college,

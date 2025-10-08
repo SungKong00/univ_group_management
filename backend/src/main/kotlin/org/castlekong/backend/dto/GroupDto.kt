@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
 import org.castlekong.backend.entity.GroupType
-import org.castlekong.backend.entity.GroupVisibility
 import java.time.LocalDateTime
 
 // 온보딩 시 계열/학과 선택용 DTO
@@ -31,7 +30,6 @@ data class CreateGroupRequest(
     val university: String? = null,
     val college: String? = null,
     val department: String? = null,
-    val visibility: GroupVisibility = GroupVisibility.PUBLIC,
     val groupType: GroupType = GroupType.AUTONOMOUS,
     val isRecruiting: Boolean = false,
     @field:Min(value = 1, message = "최대 멤버 수는 1 이상이어야 합니다")
@@ -43,7 +41,6 @@ data class UpdateGroupRequest(
     val name: String? = null,
     val description: String? = null,
     val profileImageUrl: String? = null,
-    val visibility: GroupVisibility? = null,
     val groupType: GroupType? = null,
     val isRecruiting: Boolean? = null,
     val maxMembers: Int? = null,
@@ -59,7 +56,6 @@ data class GroupResponse(
     val university: String? = null,
     val college: String? = null,
     val department: String? = null,
-    val visibility: GroupVisibility,
     val groupType: GroupType,
     val isRecruiting: Boolean,
     val maxMembers: Int? = null,
@@ -76,7 +72,6 @@ data class GroupSummaryResponse(
     val university: String? = null,
     val college: String? = null,
     val department: String? = null,
-    val visibility: GroupVisibility,
     val groupType: GroupType,
     val isRecruiting: Boolean,
     val memberCount: Int,
@@ -212,5 +207,4 @@ data class MyGroupResponse(
     // GroupPermission 목록
     val permissions: Set<String>,
     val profileImageUrl: String? = null,
-    val visibility: GroupVisibility,
 )

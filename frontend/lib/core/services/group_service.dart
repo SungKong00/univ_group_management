@@ -73,4 +73,38 @@ class GroupService {
     developer.log('Selected top-level group: ${selected.name} (id: ${selected.id}, level: ${selected.level})', name: 'GroupService');
     return selected;
   }
+
+  /// Update group information
+  ///
+  /// PUT /api/groups/{groupId}
+  /// Requires GROUP_MANAGE permission
+  Future<void> updateGroup(int groupId, UpdateGroupRequest request) async {
+    try {
+      developer.log('Updating group $groupId with request: ${request.toJson()}', name: 'GroupService');
+
+      final response = await _dioClient.put<Map<String, dynamic>>(
+        '/groups/$groupId',
+        data: request.toJson(),
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json,
+        );
+
+        if (apiResponse.success) {
+          developer.log('Successfully updated group $groupId', name: 'GroupService');
+        } else {
+          developer.log('Failed to update group: ${apiResponse.message}', name: 'GroupService', level: 900);
+          throw Exception(apiResponse.message ?? 'Failed to update group');
+        }
+      } else {
+        throw Exception('Empty response from server');
+      }
+    } catch (e) {
+      developer.log('Error updating group: $e', name: 'GroupService', level: 900);
+      rethrow;
+    }
+  }
 }

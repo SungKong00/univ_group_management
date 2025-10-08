@@ -53,7 +53,6 @@ class GroupMembership {
   final String role;
   final List<String> permissions;
   final String? profileImageUrl;
-  final String visibility;
 
   GroupMembership({
     required this.id,
@@ -64,7 +63,6 @@ class GroupMembership {
     required this.role,
     required this.permissions,
     this.profileImageUrl,
-    required this.visibility,
   });
 
   factory GroupMembership.fromJson(Map<String, dynamic> json) {
@@ -79,7 +77,39 @@ class GroupMembership {
           .map((e) => e as String)
           .toList(),
       profileImageUrl: json['profileImageUrl'] as String?,
-      visibility: json['visibility'] as String,
     );
+  }
+}
+
+/// UpdateGroupRequest model for PUT /api/groups/{id}
+class UpdateGroupRequest {
+  final String? name;
+  final String? description;
+  final String? profileImageUrl;
+  final String? groupType;
+  final bool? isRecruiting;
+  final int? maxMembers;
+  final Set<String>? tags;
+
+  UpdateGroupRequest({
+    this.name,
+    this.description,
+    this.profileImageUrl,
+    this.groupType,
+    this.isRecruiting,
+    this.maxMembers,
+    this.tags,
+  });
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> json = {};
+    if (name != null) json['name'] = name;
+    if (description != null) json['description'] = description;
+    if (profileImageUrl != null) json['profileImageUrl'] = profileImageUrl;
+    if (groupType != null) json['groupType'] = groupType;
+    if (isRecruiting != null) json['isRecruiting'] = isRecruiting;
+    if (maxMembers != null) json['maxMembers'] = maxMembers;
+    if (tags != null) json['tags'] = tags?.toList();
+    return json;
   }
 }

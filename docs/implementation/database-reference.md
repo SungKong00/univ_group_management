@@ -131,10 +131,6 @@ data class Group(
 
     // --- 그룹 속성 ---
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    val visibility: GroupVisibility = GroupVisibility.PUBLIC, // 공개 범위
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "group_type", nullable = false, length = 20)
     val groupType: GroupType = GroupType.AUTONOMOUS, // 그룹 유형
 
@@ -171,13 +167,6 @@ data class Group(
     @Column(name = "deleted_at")
     val deletedAt: LocalDateTime? = null, // Soft delete를 위한 필드
 )
-
-// 그룹 공개 범위 Enum
-enum class GroupVisibility {
-    PUBLIC,
-    PRIVATE,
-    INVITE_ONLY,
-}
 
 // 그룹 유형 Enum
 enum class GroupType {
@@ -438,7 +427,7 @@ CREATE TABLE group_join_requests (
 
 ```sql
 SELECT
-    g.id, g.name, g.visibility,
+    g.id, g.name,
     gr.name as role_name,
     gr.permissions as role_permissions
 FROM groups g
@@ -500,7 +489,7 @@ ORDER BY p.created_at DESC;
 -   **복합 인덱스**: `WHERE` 절에서 자주 함께 사용되는 컬럼들을 묶어 복합 인덱스를 생성합니다. (예: `group_members(group_id, user_id)`)
 -   **정렬 순서 고려**: `ORDER BY` 절에 사용되는 컬럼(특히 `created_at DESC`)에 대한 인덱스를 생성하여 정렬 성능을 최적화합니다.
 -   **소프트 삭제 고려**: `deleted_at IS NULL` 조건을 포함하는 부분 인덱스를 생성하여 활성 레코드 조회 속도를 높입니다.
--   **조회 조건 최적화**: `visibility`, `is_recruiting`, `status` 등 조회 조건으로 자주 사용되는 컬럼에 인덱스를 추가합니다.
+-   **조회 조건 최적화**: `is_recruiting`, `status` 등 조회 조건으로 자주 사용되는 컬럼에 인덱스를 추가합니다.
 
 ```sql
 -- V2__add_performance_indexes.sql
@@ -510,7 +499,7 @@ CREATE INDEX IF NOT EXISTS idx_groups_parent_id ON groups (parent_id);
 CREATE INDEX IF NOT EXISTS idx_groups_owner_id ON groups (owner_id);
 CREATE INDEX IF NOT EXISTS idx_groups_deleted_at ON groups (deleted_at);
 CREATE INDEX IF NOT EXISTS idx_groups_university_college_dept ON groups (university, college, department);
-CREATE INDEX IF NOT EXISTS idx_groups_visibility_recruiting ON groups (visibility, is_recruiting);
+CREATE INDEX IF NOT EXISTS idx_groups_is_recruiting ON groups (is_recruiting);
 CREATE INDEX IF NOT EXISTS idx_groups_group_type ON groups (group_type);
 CREATE INDEX IF NOT EXISTS idx_groups_created_at ON groups (created_at);
 
@@ -529,7 +518,7 @@ CREATE INDEX IF NOT EXISTS idx_group_roles_priority ON group_roles(priority DESC
 -- 전체 목록은 V2 마이그레이션 스크립트를 참조하십시오.
 
 -- 복합 인덱스 (자주 함께 사용되는 컬럼들)
-CREATE INDEX IF NOT EXISTS idx_groups_deleted_type_visibility ON groups (deleted_at, group_type, visibility) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_groups_deleted_type ON groups (deleted_at, group_type) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_group_members_group_role_joined ON group_members(group_id, role_id, joined_at);
 CREATE INDEX IF NOT EXISTS idx_posts_channel_created_pinned ON posts(channel_id, created_at DESC, is_pinned DESC);
 CREATE INDEX IF NOT EXISTS idx_comments_post_created ON comments(post_id, created_at);

@@ -8,7 +8,6 @@ import org.castlekong.backend.entity.GroupMember
 import org.castlekong.backend.entity.GroupPermission
 import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.entity.GroupType
-import org.castlekong.backend.entity.GroupVisibility
 import org.castlekong.backend.entity.User
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
@@ -134,7 +133,6 @@ object TestDataFactory {
         university: String? = null,
         college: String? = null,
         department: String? = null,
-        visibility: GroupVisibility = GroupVisibility.PUBLIC,
         groupType: GroupType = GroupType.AUTONOMOUS,
         isRecruiting: Boolean = false,
         maxMembers: Int? = null,
@@ -149,7 +147,6 @@ object TestDataFactory {
             university = university,
             college = college,
             department = department,
-            visibility = visibility,
             groupType = groupType,
             isRecruiting = isRecruiting,
             maxMembers = maxMembers,

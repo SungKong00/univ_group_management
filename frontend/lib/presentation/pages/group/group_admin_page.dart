@@ -6,6 +6,10 @@ import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/workspace_state_provider.dart';
+import '../../providers/current_group_provider.dart';
+import '../../providers/my_groups_provider.dart';
+import '../../widgets/dialogs/edit_group_dialog.dart';
+import '../../widgets/cards/action_card.dart';
 
 /// 그룹 관리자 페이지
 ///
@@ -152,16 +156,13 @@ class _AdminContentView extends StatelessWidget {
       description: '그룹 정보 및 공개 범위 관리',
       icon: Icons.settings_outlined,
       actions: [
-        _ActionCard(
+        ActionCard(
           icon: Icons.edit_outlined,
           title: '그룹 정보 수정',
           description: '그룹 이름, 설명 등을 변경하세요',
-          onTap: () {
-            // TODO: 그룹 정보 수정 화면으로 이동
-            _showComingSoonDialog(context, '그룹 정보 수정');
-          },
+          onTap: () => _handleEditGroup(context),
         ),
-        _ActionCard(
+        ActionCard(
           icon: Icons.public_outlined,
           title: '공개 범위 설정',
           description: '그룹의 공개 범위를 설정하세요',
@@ -170,7 +171,7 @@ class _AdminContentView extends StatelessWidget {
             _showComingSoonDialog(context, '공개 범위 설정');
           },
         ),
-        _ActionCard(
+        ActionCard(
           icon: Icons.delete_outline,
           title: '그룹 삭제',
           description: '그룹을 영구적으로 삭제합니다',
@@ -191,7 +192,7 @@ class _AdminContentView extends StatelessWidget {
       description: '그룹 멤버 초대 및 역할 관리',
       icon: Icons.people_outline,
       actions: [
-        _ActionCard(
+        ActionCard(
           icon: Icons.person_add_outlined,
           title: '멤버 초대',
           description: '새로운 멤버를 그룹에 초대하세요',
@@ -199,15 +200,13 @@ class _AdminContentView extends StatelessWidget {
             _showComingSoonDialog(context, '멤버 초대');
           },
         ),
-        _ActionCard(
+        ActionCard(
           icon: Icons.list_alt_outlined,
           title: '멤버 목록',
           description: '그룹 멤버 조회 및 관리',
-          onTap: () {
-            _showComingSoonDialog(context, '멤버 목록');
-          },
+          onTap: () => _navigateToMemberManagement(context),
         ),
-        _ActionCard(
+        ActionCard(
           icon: Icons.admin_panel_settings_outlined,
           title: '역할 관리',
           description: '멤버의 역할과 권한을 설정하세요',
@@ -226,7 +225,7 @@ class _AdminContentView extends StatelessWidget {
       description: '워크스페이스 채널 생성 및 관리',
       icon: Icons.tag_outlined,
       actions: [
-        _ActionCard(
+        ActionCard(
           icon: Icons.add_outlined,
           title: '채널 생성',
           description: '새로운 채널을 만들어보세요',
@@ -234,7 +233,7 @@ class _AdminContentView extends StatelessWidget {
             _showComingSoonDialog(context, '채널 생성');
           },
         ),
-        _ActionCard(
+        ActionCard(
           icon: Icons.list_outlined,
           title: '채널 목록',
           description: '모든 채널을 관리하세요',
@@ -242,7 +241,7 @@ class _AdminContentView extends StatelessWidget {
             _showComingSoonDialog(context, '채널 목록');
           },
         ),
-        _ActionCard(
+        ActionCard(
           icon: Icons.lock_outline,
           title: '채널 권한 설정',
           description: '채널별 접근 권한을 설정하세요',
@@ -261,7 +260,7 @@ class _AdminContentView extends StatelessWidget {
       description: '신규 멤버 모집 및 지원자 관리',
       icon: Icons.campaign_outlined,
       actions: [
-        _ActionCard(
+        ActionCard(
           icon: Icons.post_add_outlined,
           title: '모집 공고 작성',
           description: '새로운 모집 공고를 작성하세요',
@@ -269,7 +268,7 @@ class _AdminContentView extends StatelessWidget {
             _showComingSoonDialog(context, '모집 공고 작성');
           },
         ),
-        _ActionCard(
+        ActionCard(
           icon: Icons.inbox_outlined,
           title: '지원자 관리',
           description: '지원자를 확인하고 승인하세요',
@@ -280,6 +279,53 @@ class _AdminContentView extends StatelessWidget {
       ],
       isDesktop: isDesktop,
     );
+  }
+
+  void _navigateToMemberManagement(BuildContext context) {
+    final container = ProviderScope.containerOf(context);
+
+    // 멤버 관리 페이지로 전환
+    // WorkspaceStateNotifier에서 내부적으로 state를 업데이트하는 메서드가 필요하지만,
+    // 현재는 직접 Provider를 invalidate하고 다시 읽는 방식 대신
+    // Consumer를 통해 업데이트합니다.
+    final currentState = container.read(workspaceStateProvider);
+    container.read(workspaceStateProvider.notifier).updateState(
+      currentState.copyWith(currentView: WorkspaceView.memberManagement),
+    );
+  }
+
+  void _handleEditGroup(BuildContext context) async {
+    // Get current group information from currentGroupProvider
+    final container = ProviderScope.containerOf(context);
+    final currentGroup = container.read(currentGroupProvider);
+
+    if (currentGroup == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('그룹 정보를 불러올 수 없습니다')),
+      );
+      return;
+    }
+
+    // Show edit dialog with available information from GroupMembership
+    final success = await showEditGroupDialog(
+      context,
+      groupId: currentGroup.id,
+      currentName: currentGroup.name,
+      currentDescription: null, // GroupMembership에 description 필드 없음
+      currentIsRecruiting: false, // GroupMembership에 isRecruiting 필드 없음
+      currentTags: null, // GroupMembership에 tags 필드 없음
+    );
+
+    if (success && context.mounted) {
+      // 성공 시 피드백 및 상태 갱신
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('그룹 정보가 수정되었습니다')),
+      );
+
+      // Invalidate providers to reload group data
+      container.invalidate(myGroupsProvider);
+      container.invalidate(workspaceStateProvider);
+    }
   }
 
   void _showComingSoonDialog(BuildContext context, String feature) {
@@ -385,67 +431,3 @@ class _AdminSection extends StatelessWidget {
   }
 }
 
-/// ActionCard: Title + Description 패턴 (토스 디자인)
-class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-  final VoidCallback onTap;
-  final bool isDestructive;
-
-  const _ActionCard({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.onTap,
-    this.isDestructive = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cardColor = isDestructive ? AppColors.error.withValues(alpha: 0.05) : AppColors.neutral100;
-    final iconColor = isDestructive ? AppColors.error : AppColors.brand;
-    final titleColor = isDestructive ? AppColors.error : AppColors.neutral900;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.button),
-      child: Container(
-        padding: EdgeInsets.all(AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          border: Border.all(
-            color: isDestructive ? AppColors.error.withValues(alpha: 0.2) : AppColors.neutral300,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor, size: 28),
-            SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTheme.titleLarge.copyWith(color: titleColor),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppColors.neutral600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: AppColors.neutral400, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-}
