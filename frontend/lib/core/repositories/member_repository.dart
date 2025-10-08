@@ -30,6 +30,14 @@ class ApiMemberRepository implements MemberRepository {
         final apiResponse = ApiResponse.fromJson(
           response.data!,
           (json) {
+            // PagedApiResponse 구조 처리: data.content에 실제 리스트 존재
+            if (json is Map<String, dynamic> && json.containsKey('content')) {
+              final content = json['content'];
+              if (content is List) {
+                return content.map((item) => _parseGroupMember(item as Map<String, dynamic>)).toList();
+              }
+            }
+            // 일반 ApiResponse 구조 처리 (하위 호환성)
             if (json is List) {
               return json.map((item) => _parseGroupMember(item as Map<String, dynamic>)).toList();
             }
