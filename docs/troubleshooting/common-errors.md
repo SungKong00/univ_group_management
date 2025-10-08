@@ -78,6 +78,29 @@ data class CreateGroupRequest(
 
 ### 4. JPA 연관관계 에러
 
+#### DataIntegrityViolationException (ID 중복 또는 제약조건 위반)
+
+**증상:**
+```
+org.springframework.dao.DataIntegrityViolationException: could not execute statement; SQL [n/a]; constraint ["PRIMARY KEY ON ..."];
+... Caused by: org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
+```
+
+**주요 원인 및 해결:**
+
+1.  **H2 DB 시퀀스 불일치 (로컬 개발)**
+    -   **원인**: `data.sql`로 수동 삽입한 ID와 DB의 자동 증가(auto-increment) 카운터가 충돌.
+    -   **해결**: `data.sql` 마지막에 `ALTER TABLE ... RESTART WITH ...` 쿼리를 추가하여 다음 ID를 명시적으로 지정. 자세한 내용은 [백엔드 가이드 - H2 DB ID 충돌 해결](../implementation/backend-guide.md#h2-db-id-충돌-primary-key-violation-해결) 참조.
+
+2.  **사용자 동시 생성 (Concurrency Issue)**
+    -   **원인**: 여러 요청이 동시에 같은 이메일로 가입을 시도하여 DB의 `UNIQUE` 제약조건 위반.
+    -   **해결**: 사용자 생성 로직(`findOrCreateUser`)에서 `saveAndFlush`를 `try-catch`로 감싸고, `DataIntegrityViolationException` 발생 시 해당 사용자를 다시 조회하여 반환. 자세한 내용은 [백엔드 가이드 - 사용자 동시 생성 시 동시성 처리](../implementation/backend-guide.md#사용자-동시-생성-시-동시성-처리) 참조.
+
+3.  **잘못된 요청 본문 (Invalid Request Body)**
+    -   **증상**: `HttpMessageNotReadableException`이 발생하며, 서버 로그에 `FAIL_TO_PARSE`와 유사한 메시지 기록.
+    -   **원인**: 클라이언트가 보낸 JSON 요청의 형식이 잘못되었거나, 필수 필드가 누락됨.
+    -   **해결**: `GlobalExceptionHandler`에 `HttpMessageNotReadableException` 핸들러를 추가하여 400 Bad Request로 처리하고, 클라이언트에 명확한 에러 메시지("요청 본문을 읽을 수 없습니다. JSON 형식을 확인하세요.")를 반환하도록 개선.
+
 #### LazyInitializationException
 ```
 org.hibernate.LazyInitializationException: could not initialize proxy - no Session

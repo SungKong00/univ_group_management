@@ -22,6 +22,9 @@
 | UNAUTHORIZED | 401 | 인증 정보 없음 |
 | FORBIDDEN | 403 | 권한 부족 |
 | SYSTEM_ROLE_IMMUTABLE | 403 | 시스템 역할 수정/삭제 시도 |
+| INVALID_STATE | 400 | 잘못된 서버 설정 또는 상태 |
+| INVALID_REQUEST_BODY | 400 | 요청 본문 파싱 불가 (JSON 형식 오류) |
+| DATA_INTEGRITY_VIOLATION | 409 | 데이터 무결성 제약 조건 위반 (e.g., ID 중복) |
 | GROUP_ROLE_NAME_ALREADY_EXISTS | 409 | 역할명 중복 |
 | RECRUITMENT_ALREADY_OPEN | 409 | 그룹에 이미 활성 모집 존재 |
 | RECRUITMENT_CLOSED | 400 | 마감/취소된 모집 접근 |

@@ -14,6 +14,7 @@ import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.GroupRoleRepository
 import org.castlekong.backend.repository.UserRepository
+
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -31,6 +32,7 @@ class GroupMemberService(
     private val groupMapper: GroupMapper,
     private val groupRoleInitializationService: GroupRoleInitializationService,
 ) {
+
     @Transactional
     fun joinGroup(
         groupId: Long,
@@ -75,7 +77,9 @@ class GroupMemberService(
             groupRoleRepository.findByGroupIdAndName(group.id, "멤버").orElseGet {
                 // 그룹장 / 교수 기본 역할도 보장
                 ensureDefaultRoles(group)
-                groupRoleRepository.findByGroupIdAndName(group.id, "멤버").get()
+                groupRoleRepository.findByGroupIdAndName(group.id, "멤버").orElseThrow {
+                    IllegalStateException("Failed to create 멤버 role for group ${group.id}")
+                }
             }
 
         val groupMember =

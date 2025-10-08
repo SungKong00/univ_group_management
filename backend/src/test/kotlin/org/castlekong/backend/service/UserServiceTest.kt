@@ -108,6 +108,7 @@ class UserServiceTest {
             assertThat(result).isEqualTo(existingUser)
             verify { userRepository.findByEmail(googleUserInfo.email) }
             verify(exactly = 0) { userRepository.save(any()) }
+            verify(exactly = 0) { userRepository.saveAndFlush(any()) }
         }
 
         @Test
@@ -129,7 +130,7 @@ class UserServiceTest {
             val savedUser = newUser.copy(id = 1L)
 
             every { userRepository.findByEmail(googleUserInfo.email) } returns Optional.empty()
-            every { userRepository.save(any<User>()) } returns savedUser
+            every { userRepository.saveAndFlush(any<User>()) } returns savedUser
 
             // When
             val result = userService.findOrCreateUser(googleUserInfo)
@@ -142,7 +143,7 @@ class UserServiceTest {
             assertThat(result.password).isEmpty()
 
             verify { userRepository.findByEmail(googleUserInfo.email) }
-            verify { userRepository.save(any<User>()) }
+            verify { userRepository.saveAndFlush(any<User>()) }
         }
     }
 

@@ -20,6 +20,7 @@ import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.SubGroupRequestRepository
 import org.castlekong.backend.repository.UserRepository
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -60,7 +61,13 @@ class UserService(
                 globalRole = GlobalRole.STUDENT,
                 profileCompleted = false,
             )
-        return userRepository.save(user)
+        return try {
+            userRepository.saveAndFlush(user)
+        } catch (e: DataIntegrityViolationException) {
+            // 동시 생성으로 인한 제약 위반이면 기존 사용자 재조회 후 반환
+            findByEmail(email)
+                ?: throw e
+        }
     }
 
     @Transactional
@@ -70,11 +77,6 @@ class UserService(
 
         return if (existingUser != null) {
             // 기존 사용자 반환
-            logger.debug(
-                "Found existing user - email: {}, profileCompleted: {}",
-                existingUser.email,
-                existingUser.profileCompleted,
-            )
             existingUser
         } else {
             // 새 사용자 생성
@@ -88,13 +90,14 @@ class UserService(
                     // 명시적으로 false 설정
                     profileCompleted = false,
                 )
-            val savedUser = userRepository.save(user)
-            logger.debug(
-                "Created new user - email: {}, profileCompleted: {}",
-                savedUser.email,
-                savedUser.profileCompleted,
-            )
-            savedUser
+            try {
+                val savedUser = userRepository.saveAndFlush(user)
+                savedUser
+            } catch (e: DataIntegrityViolationException) {
+                // 제약 위반 발생 시 기존 사용자 재조회하여 반환 (로그인 성공으로 처리)
+                findByEmail(googleUserInfo.email)
+                    ?: throw e
+            }
         }
     }
 
@@ -178,18 +181,16 @@ class UserService(
 
             // 1. 학과를 선택했다면 학과 그룹을 우선으로 찾음
             if (!req.college.isNullOrBlank() && !req.dept.isNullOrBlank()) {
-                targetGroup =
-                    groupRepository
-                        .findByUniversityAndCollegeAndDepartment(university, req.college, req.dept)
-                        .firstOrNull()
+                targetGroup = groupRepository
+                    .findByUniversityAndCollegeAndDepartment(university, req.college, req.dept)
+                    .firstOrNull()
             }
 
             // 2. 학과 그룹을 못찾았거나, 학과를 선택하지 않았다면 계열 그룹을 찾음
             if (targetGroup == null && !req.college.isNullOrBlank()) {
-                targetGroup =
-                    groupRepository
-                        .findByUniversityAndCollegeAndDepartment(university, req.college, null)
-                        .firstOrNull { it.groupType == GroupType.COLLEGE }
+                targetGroup = groupRepository
+                    .findByUniversityAndCollegeAndDepartment(university, req.college, null)
+                    .firstOrNull { it.groupType == GroupType.COLLEGE }
             }
 
             if (targetGroup != null) {

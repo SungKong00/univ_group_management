@@ -4,6 +4,44 @@
 
 ## 2025년 10월
 
+### 2025-10-09 - 구글 최초 로그인 오류 해결 및 문서 동기화
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 버그 수정 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 백엔드 (인증, DB), 문서 (구현, 트러블슈팅)
+
+**구현 내용**:
+- **H2 DB ID 충돌 해결**:
+    - `data.sql`에 명시적으로 ID를 삽입한 후, H2의 `auto_increment` 시퀀스가 재설정되지 않아 발생하던 Primary Key 중복 오류를 해결했습니다.
+    - `data.sql` 마지막에 `ALTER TABLE ... RESTART WITH ...` 구문을 추가하여 시퀀스를 수동으로 동기화했습니다.
+- **사용자 생성 동시성 문제 해결**:
+    - 여러 요청이 동시에 사용자를 생성하려 할 때 `DataIntegrityViolationException`이 발생하던 문제를 해결했습니다.
+    - `UserService`의 `findOrCreateUser`, `ensureUserByEmail` 메서드에서 사용자 저장 로직을 `try-catch`로 감싸고, 예외 발생 시 이미 생성된 사용자를 다시 조회하여 반환하도록 수정했습니다.
+- **예외 처리 강화**:
+    - `GlobalExceptionHandler`에 `DataIntegrityViolationException`, `IllegalStateException`, `HttpMessageNotReadableException` 핸들러를 추가하여 API 안정성을 높이고 명확한 에러 응답을 제공하도록 개선했습니다.
+- **디버깅 로그 제거**:
+    - 문제 해결 과정에서 추가되었던 `UserService`, `GroupMemberService`, `ProfileSetupPage`의 디버깅용 로그를 모두 제거했습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/backend-guide.md`: '로컬 개발 환경 가이드' 섹션을 신설하여 H2 DB ID 충돌 해결 방법과 사용자 생성 시 동시성 처리 패턴을 상세히 설명했습니다.
+- ✅ `docs/troubleshooting/common-errors.md`: `DataIntegrityViolationException` 및 `HttpMessageNotReadableException`에 대한 원인과 해결 방법을 추가했습니다.
+- ✅ `docs/implementation/api-reference.md`: `INVALID_STATE`, `INVALID_REQUEST_BODY`, `DATA_INTEGRITY_VIOLATION` 등 새로운 표준 에러 코드를 추가했습니다.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+
+**수정된 파일**:
+- `backend/src/main/kotlin/org/castlekong/backend/service/UserService.kt`
+- `backend/src/main/kotlin/org/castlekong/backend/service/GroupMemberService.kt`
+- `backend/src/main/kotlin/org/castlekong/backend/exception/GlobalExceptionHandler.kt`
+- `backend/src/main/resources/data.sql`
+- `frontend/lib/presentation/pages/auth/profile_setup_page.dart`
+- `docs/implementation/backend-guide.md`
+- `docs/troubleshooting/common-errors.md`
+- `docs/implementation/api-reference.md`
+
+**메모**: 로컬 개발 환경의 안정성을 크게 향상시켰고, 관련 해결 방법을 문서화하여 팀 전체가 공유할 수 있도록 했습니다.
+
+---
+
 ### 2025-10-09 - 그룹 관리 페이지 Phase 2 완료 (역할 관리 및 가입 신청)
 **커밋**: 현재 세션 (디버깅 후 커밋 예정)
 **유형**: 기능 구현 + 문서 동기화

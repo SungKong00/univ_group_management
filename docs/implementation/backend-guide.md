@@ -1,13 +1,57 @@
 # 백엔드 구현 가이드 (Backend Implementation Guide)
 
-## 최근 업데이트 (2025-10-04)
+## 최근 업데이트 (2025-10-09)
+- **로컬 개발 환경 가이드** 추가: H2 DB ID 충돌 해결 및 동시성 처리 방안 명시
 - **내 그룹 목록 API** 추가: `GET /api/me/groups` 엔드포인트 구현 완료
 - 워크스페이스 자동 진입 기능 지원을 위한 계층 레벨 계산 로직 구현
 - JOIN FETCH 최적화를 통한 N+1 문제 방지
 
+## 로컬 개발 환경 가이드
+
+### H2 DB ID 충돌 (Primary Key Violation) 해결
+로컬 환경에서 `data.sql`을 통해 데이터를 직접 삽입할 때, `auto_increment` 시퀀스가 실제 데이터의 마지막 ID와 동기화되지 않아 ID 충돌이 발생할 수 있습니다.
+
+**해결책**: `data.sql` 파일 마지막에 다음 쿼리를 추가하여 각 테이블의 `auto_increment` 시작 값을 수동으로 재설정합니다.
+
+```sql
+-- data.sql
+
+-- ... (기존 데이터 삽입)
+
+-- H2 AUTO_INCREMENT 시퀀스 초기화
+-- Users 테이블: 마지막 ID가 1이면 다음 ID는 2부터 시작
+ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
+-- Groups 테이블: 마지막 ID가 13이면 다음 ID는 14부터 시작
+ALTER TABLE groups ALTER COLUMN id RESTART WITH 14;
+```
+이 작업을 통해, 애플리케이션이 새로운 데이터를 삽입할 때 `data.sql`에 명시된 ID와 충돌하는 것을 방지할 수 있습니다.
+
+### 사용자 동시 생성 시 동시성 처리
+여러 요청이 거의 동시에 같은 이메일로 사용자를 생성하려고 시도하면 `DataIntegrityViolationException`이 발생할 수 있습니다. 이는 데이터베이스의 `unique` 제약 조건을 위반하기 때문입니다.
+
+**해결책**: `findOrCreateUser` 또는 `ensureUserByEmail`과 같은 메서드에서 사용자 저장(`saveAndFlush`) 로직을 `try-catch` 블록으로 감쌉니다. 예외 발생 시, 해당 이메일로 사용자를 다시 한번 조회하여 이미 생성된 사용자를 반환하도록 처리합니다.
+
+```kotlin
+// UserService.kt
+@Transactional
+fun ensureUserByEmail(email: String): User {
+    findByEmail(email)?.let { return it }
+    val user = User(...) // 새 사용자 객체 생성
+    return try {
+        userRepository.saveAndFlush(user) // 즉시 DB에 반영
+    } catch (e: DataIntegrityViolationException) {
+        // 동시 생성으로 인한 제약 위반 시, 다시 조회하여 반환
+        findByEmail(email)
+            ?: throw e // 그래도 없으면 예외 재발생
+    }
+}
+```
+이 패턴은 불필요한 오류를 방지하고 안정적인 사용자 생성 및 조회를 보장합니다.
+
 ## 데이터 자동 초기화 (2025-10-07)
 
 기존 `data.sql`에 의존하던 복잡한 초기 데이터 생성 방식이 `GroupInitializationRunner`를 사용하는 방식으로 변경되었습니다. 이 변경으로 `data.sql`은 이제 최소한의 사용자 및 그룹 정보만 포함하며, 나머지(역할, 채널, 멤버십 등)는 애플리케이션 시작 시 동적으로 생성됩니다.
+
 
 **초기화 프로세스:**
 1.  애플리케이션이 시작되면 `GroupInitializationRunner`가 실행됩니다.

@@ -59,3 +59,13 @@ VALUES (13, 'AI/SW학과', 1, 2, '한신대학교', 'AI/SW계열', 'AI/SW학과'
 -- Note: Test posts removed to avoid foreign key constraint violations.
 -- Channels are created by GroupInitializationRunner after data.sql execution.
 -- To add test posts, use the REST API or create a separate initialization runner.
+
+-- =====================================================================
+-- H2 AUTO_INCREMENT Sequence Initialization
+-- =====================================================================
+-- Since we explicitly inserted IDs above, we must reset the sequence
+-- to avoid PRIMARY KEY violations when new rows are inserted.
+-- Users table: max ID = 1, so next ID should be 2
+-- Groups table: max ID = 13, so next ID should be 14
+ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
+ALTER TABLE groups ALTER COLUMN id RESTART WITH 14;
