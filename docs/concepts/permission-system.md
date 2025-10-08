@@ -25,17 +25,17 @@
 ## 기본 역할 (시스템 역할)
 모든 그룹에는 아래 3가지 시스템 역할이 자동 생성됩니다. 시스템 역할은 플랫폼 구조 안정성과 예측 가능한 보안/권한 모델 유지를 위해 **이름 / 우선순위 / 권한을 수정하거나 삭제할 수 없습니다.** 시도 시 `SYSTEM_ROLE_IMMUTABLE` (HTTP 403) 오류 반환.
 
-### Owner (그룹 오너)
+### 그룹장 (그룹 오너)
 - 모든 권한 보유
 - 소유권 이전 가능(추후 지원 로드맵)
 - 삭제/수정 불가 (시스템 역할)
 
-### Advisor (자문/지도)
-- MVP 단계: Owner 와 동일 권한 세트
+### 교수 (자문/지도)
+- MVP 단계: 그룹장 와 동일 권한 세트
 - 향후: 운영/정책상 일부 축소 예정 가능
 - 시스템 역할 → 수정/삭제 불가
 
-### Member (기본 멤버)
+### 멤버 (기본 멤버)
 - 기본 참여(워크스페이스 접근)
 - 채널별 실제 활동 권한은 채널 권한 바인딩으로 결정
 - 삭제/수정 불가 (시스템 역할)
@@ -44,7 +44,7 @@
 그룹장이 생성. 이름/우선순위/권한 변경 및 삭제 가능. 업무 세분화(예: MODERATOR, RECRUITMENT_MANAGER 등)에 사용.
 
 ### 시스템 역할 vs 커스텀 역할 비교
-| 구분 | 시스템 역할 (Owner/Advisor/Member) | 커스텀 역할 |
+| 구분 | 시스템 역할 (그룹장/교수/멤버) | 커스텀 역할 |
 |------|------------------------------------|-------------|
 | 생성 | 그룹 생성 시 자동 | 그룹장이 명시적으로 생성 |
 | 수정 | 불가 (`SYSTEM_ROLE_IMMUTABLE`) | 가능 |
@@ -140,12 +140,12 @@ fun createPost(channelId: Long, request: CreatePostRequest): PostDto
 이러한 이중 캐시 및 이벤트 기반 무효화 전략을 통해, 채널 권한 검증의 성능을 극대화하면서도 데이터 정합성을 유지합니다.
 
 ## 채널 권한 바인딩 기본값
-- (정책 2025-10-01 rev5) 그룹 생성 직후 생성되는 기본 2개 채널(공지사항 / 자유게시판)은 서비스 초기화 로직에서 템플릿 ChannelRoleBinding(OWNER, ADVISOR, MEMBER) 세트를 자동 부여.
-- 사용자(운영자)가 이후 생성하는 모든 추가 채널은 **권한 바인딩 0개** 로 시작 (OWNER 조차 CHANNEL_VIEW 없음) → UI 에서 즉시 권한 매트릭스 설정 필요.
+- (정책 2025-10-01 rev5) 그룹 생성 직후 생성되는 기본 2개 채널(공지사항 / 자유게시판)은 서비스 초기화 로직에서 템플릿 ChannelRoleBinding(그룹장, 교수, 멤버) 세트를 자동 부여.
+- 사용자(운영자)가 이후 생성하는 모든 추가 채널은 **권한 바인딩 0개** 로 시작 (그룹장 조차 CHANNEL_VIEW 없음) → UI 에서 즉시 권한 매트릭스 설정 필요.
 - 채널 생성 권한(CHANNEL_MANAGE 또는 그룹 소유자 권한)을 가진 사용자라도, 사용자 정의 채널에서 권한을 부여하기 전에는 읽기/쓰기 불가.
 - 기본 초기 채널을 삭제한 뒤 재생성한 채널은 "사용자 정의 채널" 규칙(0개 시작)을 따름.
 - 관리 권한은 "권한 구성 UI 진입" 과 "바인딩 추가/삭제" 만 허용하며 View / Read / Write 권한을 자동 부여하지 않음.
-- Owner / Advisor / Member 는 모두 동일한 방식으로 명시적 바인딩 필요(초기 2채널 제외).
+- 그룹장 / 교수 / 멤버 는 모두 동일한 방식으로 명시적 바인딩 필요(초기 2채널 제외).
 
 ### 권한 부여 모델 (Permission-Centric)
 권한 설정은 "역할 → 권한 집합" 이 아닌 **"권한별로 허용할 역할 리스트를 지정"** 하는 형태로 문서화합니다.
@@ -154,20 +154,20 @@ fun createPost(channelId: Long, request: CreatePostRequest): PostDto
 
 | 권한 (ChannelPermission) | 허용 역할 목록 예시 |
 |--------------------------|----------------------|
-| CHANNEL_VIEW             | OWNER, MEMBER        |
-| POST_READ                | OWNER, MEMBER        |
-| POST_WRITE               | OWNER                |
-| COMMENT_WRITE            | OWNER                |
-| FILE_UPLOAD              | (없음) / 필요 시 OWNER |
+| CHANNEL_VIEW             | 그룹장, 멤버        |
+| POST_READ                | 그룹장, 멤버        |
+| POST_WRITE               | 그룹장                |
+| COMMENT_WRITE            | 그룹장                |
+| FILE_UPLOAD              | (없음) / 필요 시 그룹장 |
 
 > 내부 구현은 (channel, role) 단위 바인딩에 permissions Set 을 유지하지만, 운영자는 UI 상에서 "권한별로 어떤 역할을 허용할지" 매트릭스를 채우는 사고방식으로 설정합니다.
 
 ### 초기 상태 요약
 | 항목 | 기본 초기 2채널 | 사용자 정의 채널 |
 |------|----------------|------------------|
-| ChannelRoleBinding | 3개(OWNER/ADVISOR/MEMBER 템플릿) | 0개 |
-| Owner 읽기/쓰기 | 템플릿 부여됨 | 없음 |
-| Member 읽기/쓰기 | 공지: READ/COMMENT / 자유: READ/WRITE/COMMENT | 없음 |
+| ChannelRoleBinding | 3개(그룹장/교수/멤버 템플릿) | 0개 |
+| 그룹장 읽기/쓰기 | 템플릿 부여됨 | 없음 |
+| 멤버 읽기/쓰기 | 공지: READ/COMMENT / 자유: READ/WRITE/COMMENT | 없음 |
 | 네비게이션 노출 | 즉시 노출 | CHANNEL_VIEW 권한 부여 후 |
 
 ### 권한 부여 절차 (사용자 정의 채널)
@@ -214,8 +214,8 @@ fun createPost(channelId: Long, request: CreatePostRequest): PostDto
 
 | 권한 | 허용 역할 목록 (기본 설정) | 비고 |
 |------|---------------------------|------|
-| CALENDAR_MANAGE | OWNER, ADVISOR | 운영진만 공식/비공식 일정 관리 |
-| PLACE_MANAGE | OWNER | 그룹장만 장소 관리 (관리 주체) |
+| CALENDAR_MANAGE | 그룹장, 교수 | 운영진만 공식/비공식 일정 관리 |
+| PLACE_MANAGE | 그룹장 | 그룹장만 장소 관리 (관리 주체) |
 
 > 커스텀 역할에도 이 권한들을 부여할 수 있습니다. 예: CALENDAR_MANAGER 역할에 CALENDAR_MANAGE 권한 부여
 

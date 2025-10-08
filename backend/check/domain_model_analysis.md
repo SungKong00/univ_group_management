@@ -19,7 +19,7 @@
 -   **역할**: 시스템에 로그인하는 개별 사용자입니다.
 -   **식별**: `email` 필드를 고유 식별자로 사용합니다. (Google OAuth2 기준)
 -   **주요 관계**:
-    -   `Group`의 소유자(Owner)가 될 수 있습니다. (`One-to-Many`)
+    -   `Group`의 소유자(그룹장)가 될 수 있습니다. (`One-to-Many`)
     -   여러 `Group`에 멤버로 참여할 수 있습니다. (`Many-to-Many`, `GroupMember` 통해 연결)
     -   `Post`, `Comment` 등 다양한 콘텐츠의 작성자(Author)가 됩니다. (`One-to-Many`)
 -   **주요 속성**:
@@ -31,7 +31,7 @@
 
 -   **역할**: 사용자들이 모여 활동하는 핵심 단위 공간(커뮤니티)입니다.
 -   **주요 관계**:
-    -   **소유자(Owner)**: 그룹을 최초 생성하고 최종 관리 권한을 가진 `User`. `Group`에서 `User`로의 `@ManyToOne` 관계이므로, **한 명의 사용자가 여러 그룹의 소유자가 될 수 있습니다.**
+    -   **소유자(그룹장)**: 그룹을 최초 생성하고 최종 관리 권한을 가진 `User`. `Group`에서 `User`로의 `@ManyToOne` 관계이므로, **한 명의 사용자가 여러 그룹의 소유자가 될 수 있습니다.**
     -   **멤버**: 여러 `User`를 멤버로 가집니다. (`One-to-Many` with `GroupMember`)
     -   **계층 구조 (Self-join)**: `parent` 필드를 통해 다른 `Group`을 부모로 가질 수 있습니다. 이를 통해 `대학교 > 단과대학 > 학과` 같은 트리 구조를 형성합니다.
     -   **콘텐츠 소유**: `Workspace`, `Channel` 등 하위 콘텐츠를 소유합니다. (`One-to-Many`)
@@ -49,7 +49,7 @@
 
 -   **`GroupRole`**: 그룹 내에서 사용되는 역할(e.g., "그룹장", "운영진", "신입생")을 정의합니다.
     -   `@ManyToOne` to `Group`: 각 그룹은 자신만의 커스텀 역할 세트를 가질 수 있습니다.
-    -   `isSystemRole`: `true`일 경우, 시스템이 기본으로 생성하는 역할(그룹장, 멤버 등)임을 의미합니다.
+    -   `isSystemRole`: `true`일 경우, 시스템이 기본으로 생성하는 역할(그룹장, 교수, 멤버 등)임을 의미합니다.
     -   **`permissions` (`@ElementCollection`)**: 이 역할이 어떤 그룹 레벨 권한(`GroupPermission`)들을 갖는지를 `Set<GroupPermission>` 형태로 저장합니다. **역할과 권한을 맵핑하는 핵심 부분입니다.**
 
 -   **`GroupPermission` (`enum`)**: 그룹 레벨에서 수행할 수 있는 동작들을 정의한 열거형입니다. (e.g., `GROUP_MANAGE`, `ADMIN_MANAGE`, `CHANNEL_MANAGE`)

@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional
  * Service for initializing default group roles and permissions.
  *
  * This service provides reusable methods for:
- * - Creating default roles (OWNER, ADVISOR, MEMBER)
+ * - Creating default roles (그룹장, 교수, 멤버)
  * - Mapping permissions to each role
  * - Ensuring idempotency (safe to call multiple times)
  *
@@ -31,9 +31,9 @@ class GroupRoleInitializationService(
      * Ensure default roles exist for the given group.
      *
      * Creates 3 system roles if they don't exist:
-     * - OWNER: All permissions (priority 100)
-     * - ADVISOR: All permissions (priority 99)
-     * - MEMBER: No group-level permissions (priority 1)
+     * - 그룹장: All permissions (priority 100)
+     * - 교수: All permissions (priority 99)
+     * - 멤버: No group-level permissions (priority 1)
      *
      * This method is idempotent - safe to call multiple times.
      *
@@ -48,23 +48,23 @@ class GroupRoleInitializationService(
         val advisorRole = getOrCreateAdvisorRole(group)
         val memberRole = getOrCreateMemberRole(group)
 
-        logger.info("Default roles ensured for group ${group.id}: OWNER, ADVISOR, MEMBER")
+        logger.info("Default roles ensured for group ${group.id}: 그룹장, 교수, 멤버")
 
         return listOf(ownerRole, advisorRole, memberRole)
     }
 
     /**
-     * Get or create OWNER role with all permissions.
+     * Get or create 그룹장 role with all permissions.
      */
     @Transactional
     fun getOrCreateOwnerRole(group: Group): GroupRole {
-        return groupRoleRepository.findByGroupIdAndName(group.id, "OWNER")
+        return groupRoleRepository.findByGroupIdAndName(group.id, "그룹장")
             .orElseGet {
-                logger.info("Creating OWNER role for group ${group.id}")
+                logger.info("Creating 그룹장 role for group ${group.id}")
                 groupRoleRepository.save(
                     GroupRole(
                         group = group,
-                        name = "OWNER",
+                        name = "그룹장",
                         isSystemRole = true,
                         permissions = GroupPermission.entries.toMutableSet(),
                         priority = 100,
@@ -74,17 +74,17 @@ class GroupRoleInitializationService(
     }
 
     /**
-     * Get or create ADVISOR role with all permissions.
+     * Get or create 교수 role with all permissions.
      */
     @Transactional
     fun getOrCreateAdvisorRole(group: Group): GroupRole {
-        return groupRoleRepository.findByGroupIdAndName(group.id, "ADVISOR")
+        return groupRoleRepository.findByGroupIdAndName(group.id, "교수")
             .orElseGet {
-                logger.info("Creating ADVISOR role for group ${group.id}")
+                logger.info("Creating 교수 role for group ${group.id}")
                 groupRoleRepository.save(
                     GroupRole(
                         group = group,
-                        name = "ADVISOR",
+                        name = "교수",
                         isSystemRole = true,
                         permissions = GroupPermission.entries.toMutableSet(),
                         priority = 99,
@@ -94,17 +94,17 @@ class GroupRoleInitializationService(
     }
 
     /**
-     * Get or create MEMBER role with no group-level permissions.
+     * Get or create 멤버 role with no group-level permissions.
      */
     @Transactional
     fun getOrCreateMemberRole(group: Group): GroupRole {
-        return groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER")
+        return groupRoleRepository.findByGroupIdAndName(group.id, "멤버")
             .orElseGet {
-                logger.info("Creating MEMBER role for group ${group.id}")
+                logger.info("Creating 멤버 role for group ${group.id}")
                 groupRoleRepository.save(
                     GroupRole(
                         group = group,
-                        name = "MEMBER",
+                        name = "멤버",
                         isSystemRole = true,
                         permissions = mutableSetOf(),
                         priority = 1,
@@ -114,22 +114,22 @@ class GroupRoleInitializationService(
     }
 
     /**
-     * Get all default roles for a group (OWNER, ADVISOR, MEMBER).
+     * Get all default roles for a group (그룹장, 교수, 멤버).
      *
      * @param group The group to get roles for
-     * @return List of 3 roles (OWNER, ADVISOR, MEMBER)
+     * @return List of 3 roles (그룹장, 교수, 멤버)
      * @throws IllegalStateException if roles don't exist
      */
     fun getDefaultRoles(group: Group): List<GroupRole> {
         val owner =
-            groupRoleRepository.findByGroupIdAndName(group.id, "OWNER")
-                .orElseThrow { IllegalStateException("OWNER role not found for group ${group.id}") }
+            groupRoleRepository.findByGroupIdAndName(group.id, "그룹장")
+                .orElseThrow { IllegalStateException("그룹장 role not found for group ${group.id}") }
         val advisor =
-            groupRoleRepository.findByGroupIdAndName(group.id, "ADVISOR")
-                .orElseThrow { IllegalStateException("ADVISOR role not found for group ${group.id}") }
+            groupRoleRepository.findByGroupIdAndName(group.id, "교수")
+                .orElseThrow { IllegalStateException("교수 role not found for group ${group.id}") }
         val member =
-            groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER")
-                .orElseThrow { IllegalStateException("MEMBER role not found for group ${group.id}") }
+            groupRoleRepository.findByGroupIdAndName(group.id, "멤버")
+                .orElseThrow { IllegalStateException("멤버 role not found for group ${group.id}") }
 
         return listOf(owner, advisor, member)
     }

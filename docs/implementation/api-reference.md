@@ -185,7 +185,7 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
             },
             "role": {
               "id": 1,
-              "name": "OWNER",
+              "name": "그룹장",
               "priority": 100,
               "permissions": [
                 "GROUP_MANAGE",
@@ -594,7 +594,7 @@ DELETE /api/comments/{commentId}
       "type": "UNIVERSITY",
       "level": 0,
       "parentId": null,
-      "role": "MEMBER",
+      "role": "멤버",
       "permissions": ["CHANNEL_READ", "POST_READ"],
       "profileImageUrl": null
     },
@@ -604,7 +604,7 @@ DELETE /api/comments/{commentId}
       "type": "DEPARTMENT",
       "level": 2,
       "parentId": 1,
-      "role": "MEMBER",
+      "role": "멤버",
       "permissions": ["CHANNEL_READ", "POST_READ", "POST_WRITE"],
       "profileImageUrl": null
     }

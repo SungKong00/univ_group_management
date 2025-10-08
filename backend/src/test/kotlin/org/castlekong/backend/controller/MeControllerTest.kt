@@ -198,7 +198,7 @@ class MeControllerTest {
                 .andExpect(jsonPath("$.data").isArray)
                 .andExpect(jsonPath("$.data[0].id").value(testGroup.id))
                 .andExpect(jsonPath("$.data[0].name").value(testGroup.name))
-                .andExpect(jsonPath("$.data[0].role").value("OWNER"))
+                .andExpect(jsonPath("$.data[0].role").value("그룹장"))
                 .andExpect(jsonPath("$.data[0].permissions").isArray)
         }
 

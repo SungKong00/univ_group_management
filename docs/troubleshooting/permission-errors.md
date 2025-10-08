@@ -16,7 +16,7 @@
 | INVALID_TOKEN | 401 | 토큰 위변조/형식 오류 | 잘못된 서명, Bearer 누락 |
 | EXPIRED_TOKEN | 401 | 토큰 만료 | Access Token 만료, 재발급 필요 |
 | FORBIDDEN | 403 | 권한 부족 | 역할에 필요한 권한 미보유 |
-| SYSTEM_ROLE_IMMUTABLE | 403 | 시스템 역할 변경 금지 | OWNER / ADVISOR / MEMBER 수정·삭제 시도 |
+| SYSTEM_ROLE_IMMUTABLE | 403 | 시스템 역할 변경 금지 | 그룹장 / 교수 / 멤버 수정·삭제 시도 |
 | GROUP_ROLE_NAME_ALREADY_EXISTS | 409 | 역할명 중복 | 동일 이름 역할 생성/변경 |
 | GROUP_ROLE_NOT_FOUND | 404 | 역할 없음 | 잘못된 roleId |
 | GROUP_MEMBER_NOT_FOUND | 404 | 멤버 아님 | 그룹 비회원 접근 |
@@ -76,7 +76,7 @@ HTTP/1.1 403 Forbidden
 - **강제 캐시 비우기**: 문제가 의심될 경우, 임시로 모든 채널 권한 캐시를 비우는 엔드포인트(필요 시 추가)를 호출하거나, 서버를 재시작하여 캐시를 초기화할 수 있습니다. `ChannelPermissionCacheManager`의 `evictAllPermissionCache()` 메서드를 노출하는 디버그용 API를 활용할 수 있습니다.
 
 ### (B) SYSTEM_ROLE_IMMUTABLE
-시스템 역할(OWNER/ADVISOR/MEMBER) 이름/우선순위/권한 변경, 삭제 시도.
+시스템 역할(그룹장/교수/멤버) 이름/우선순위/권한 변경, 삭제 시도.
 ```http
 HTTP/1.1 403 Forbidden
 {

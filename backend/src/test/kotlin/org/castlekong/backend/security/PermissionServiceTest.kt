@@ -50,7 +50,7 @@ class PermissionServiceTest {
     // === 권한 계산 테스트 ===
 
     @Test
-    @DisplayName("OWNER 역할은 모든 권한을 가진다")
+    @DisplayName("그룹장 역할은 모든 권한을 가진다")
     fun getEffective_OwnerRole_HasAllPermissions() {
         // Given
         val groupMember =
@@ -68,8 +68,8 @@ class PermissionServiceTest {
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
-                "OWNER" -> GroupPermission.entries.toSet()
-                "ADVISOR" -> GroupPermission.entries.toSet()
+                "그룹장" -> GroupPermission.entries.toSet()
+                "교수" -> GroupPermission.entries.toSet()
                 else -> emptySet()
             }
         }
@@ -82,7 +82,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    @DisplayName("ADVISOR 역할은 모든 권한을 가진다")
+    @DisplayName("교수 역할은 모든 권한을 가진다")
     fun getEffective_AdvisorRole_HasAllPermissions() {
         // Given
         val groupMember =
@@ -100,8 +100,8 @@ class PermissionServiceTest {
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
-                "OWNER" -> GroupPermission.entries.toSet()
-                "ADVISOR" -> GroupPermission.entries.toSet()
+                "그룹장" -> GroupPermission.entries.toSet()
+                "교수" -> GroupPermission.entries.toSet()
                 else -> emptySet()
             }
         }
@@ -114,7 +114,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    @DisplayName("MEMBER 역할은 기본 권한이 없다")
+    @DisplayName("멤버 역할은 기본 권한이 없다")
     fun getEffective_MemberRole_HasNoPermissions() {
         // Given
         val groupMember =
@@ -132,9 +132,9 @@ class PermissionServiceTest {
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
-                "OWNER" -> GroupPermission.entries.toSet()
-                "ADVISOR" -> GroupPermission.entries.toSet()
-                "MEMBER" -> emptySet()
+                "그룹장" -> GroupPermission.entries.toSet()
+                "교수" -> GroupPermission.entries.toSet()
+                "멤버" -> emptySet()
                 else -> emptySet()
             }
         }
@@ -309,7 +309,7 @@ class PermissionServiceTest {
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
-                "OWNER" -> GroupPermission.entries.toSet()
+                "그룹장" -> GroupPermission.entries.toSet()
                 else -> emptySet()
             }
         }

@@ -87,7 +87,7 @@ class GroupRequestServiceIntegrationTest {
             )
 
         parentGroup = createGroupWithDefaultRoles(owner)
-        memberRole = groupRoleRepository.findByGroupIdAndName(parentGroup.id, "MEMBER").get()
+        memberRole = groupRoleRepository.findByGroupIdAndName(parentGroup.id, "멤버").get()
     }
 
     @Test
@@ -214,7 +214,7 @@ class GroupRequestServiceIntegrationTest {
 
         val membership = groupMemberRepository.findByGroupIdAndUserId(parentGroup.id, applicant.id)
         assertThat(membership).isPresent
-        assertThat(membership.get().role.name).isEqualTo("MEMBER")
+        assertThat(membership.get().role.name).isEqualTo("멤버")
     }
 
     @Test

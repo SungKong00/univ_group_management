@@ -63,7 +63,7 @@ fun `그룹 관리 권한이 없으면 그룹 수정할 수 없다`() {
     val owner = createTestUser("owner@test.com")
     val member = createTestUser("member@test.com")
     val group = createTestGroup(owner)
-    joinGroup(member, group, "MEMBER")
+    joinGroup(member, group, "멤버")
 
     // When & Then
     assertThatThrownBy {
@@ -249,15 +249,15 @@ class GroupPermissionEvaluatorTest {
         // Given
         val user = createTestUser()
         val group = createTestGroup()
-        joinGroup(user, group, "MEMBER") // Member 역할 부여
+        joinGroup(user, group, "멤버") // 멤버 역할 부여
 
         // When & Then
-        // Member는 WORKSPACE_ACCESS 권한을 가져야 함
+        // 멤버는 WORKSPACE_ACCESS 권한을 가져야 함
         assertThat(
             permissionEvaluator.hasGroupPermission(group.id, "WORKSPACE_ACCESS", user.id!!)
         ).isTrue()
 
-        // Member는 GROUP_MANAGE 권한이 없어야 함
+        // 멤버는 GROUP_MANAGE 권한이 없어야 함
         assertThat(
             permissionEvaluator.hasGroupPermission(group.id, "GROUP_MANAGE", user.id!!)
         ).isFalse()
@@ -676,10 +676,10 @@ groupType = GroupType.AUTONOMOUS  // 또는 OFFICIAL, UNIVERSITY, COLLEGE, DEPAR
 #### 역할 이름 참조
 ```kotlin
 // ❌ 잘못된 예
-assertThat(roles.map { it.name }).containsExactlyInAnyOrder("OWNER", "PROFESSOR", "MEMBER")
+assertThat(roles.map { it.name }).containsExactlyInAnyOrder("그룹장", "PROFESSOR", "멤버")
 
 // ✅ 올바른 예 (시스템 역할 이름 확인 필수)
-assertThat(roles.map { role -> role.name }).containsExactlyInAnyOrder("OWNER", "ADVISOR", "MEMBER")
+assertThat(roles.map { role -> role.name }).containsExactlyInAnyOrder("그룹장", "교수", "멤버")
 ```
 
 ### 2. Service 리팩토링 주의사항

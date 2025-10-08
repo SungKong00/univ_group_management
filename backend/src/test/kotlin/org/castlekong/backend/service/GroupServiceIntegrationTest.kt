@@ -84,15 +84,15 @@ class GroupServiceIntegrationTest {
         assertThat(response.maxMembers).isEqualTo(50)
         assertThat(response.tags).containsExactlyInAnyOrder("스터디", "개발")
 
-        // 그룹 생성자가 OWNER 역할로 자동 추가되었는지 확인
+        // 그룹 생성자가 그룹장 역할로 자동 추가되었는지 확인
         val groupMember = groupMemberRepository.findByGroupIdAndUserId(response.id, testUser.id)
         assertThat(groupMember).isPresent
-        assertThat(groupMember.get().role.name).isEqualTo("OWNER")
+        assertThat(groupMember.get().role.name).isEqualTo("그룹장")
 
         // 기본 역할들이 생성되었는지 확인
         val roles = groupRoleRepository.findByGroupId(response.id)
         assertThat(roles).hasSize(3)
-        assertThat(roles.map { role -> role.name }).containsExactlyInAnyOrder("OWNER", "ADVISOR", "MEMBER")
+        assertThat(roles.map { role -> role.name }).containsExactlyInAnyOrder("그룹장", "교수", "멤버")
     }
 
     @Test
@@ -170,7 +170,7 @@ class GroupServiceIntegrationTest {
 
         // then
         assertThat(response.user.id).isEqualTo(newUser.id)
-        assertThat(response.role.name).isEqualTo("MEMBER")
+        assertThat(response.role.name).isEqualTo("멤버")
 
         // 데이터베이스에서 확인
         val groupMember = groupMemberRepository.findByGroupIdAndUserId(createdGroup.id, newUser.id)

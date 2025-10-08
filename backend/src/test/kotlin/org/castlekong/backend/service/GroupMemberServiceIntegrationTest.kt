@@ -90,7 +90,7 @@ class GroupMemberServiceIntegrationTest {
 
         // Then
         assertThat(response.user.id).isEqualTo(student.id)
-        assertThat(response.role.name).isEqualTo("MEMBER")
+        assertThat(response.role.name).isEqualTo("멤버")
 
         val member = groupMemberRepository.findByGroupIdAndUserId(group.id, student.id)
         assertThat(member).isPresent
@@ -295,12 +295,12 @@ class GroupMemberServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("OWNER 역할로 변경은 불가능하다")
+    @DisplayName("그룹장 역할로 변경은 불가능하다")
     fun updateMemberRole_ToOwner_ThrowsException() {
         // Given
         val group = createGroupWithRoles("테스트 그룹", owner)
         groupMemberService.joinGroup(group.id, student.id)
-        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").get()
+        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "그룹장").get()
 
         // When & Then
         assertThatThrownBy { groupMemberService.updateMemberRole(group.id, student.id, ownerRole.id, owner.id) }
@@ -320,7 +320,7 @@ class GroupMemberServiceIntegrationTest {
         val response = groupMemberService.assignProfessor(group.id, professor.id, owner.id)
 
         // Then
-        assertThat(response.role.name).isEqualTo("ADVISOR")
+        assertThat(response.role.name).isEqualTo("교수")
         assertThat(response.user.id).isEqualTo(professor.id)
     }
 
@@ -348,7 +348,7 @@ class GroupMemberServiceIntegrationTest {
 
         // Then
         val member = groupMemberRepository.findByGroupIdAndUserId(group.id, professor.id).get()
-        assertThat(member.role.name).isEqualTo("MEMBER")
+        assertThat(member.role.name).isEqualTo("멤버")
     }
 
     // === 그룹장 권한 위임 테스트 ===
@@ -364,12 +364,12 @@ class GroupMemberServiceIntegrationTest {
         val response = groupMemberService.transferOwnership(group.id, student.id, owner.id)
 
         // Then
-        assertThat(response.role.name).isEqualTo("OWNER")
+        assertThat(response.role.name).isEqualTo("그룹장")
         assertThat(response.user.id).isEqualTo(student.id)
 
         // 이전 그룹장은 일반 멤버로 강등
         val formerOwner = groupMemberRepository.findByGroupIdAndUserId(group.id, owner.id).get()
-        assertThat(formerOwner.role.name).isEqualTo("MEMBER")
+        assertThat(formerOwner.role.name).isEqualTo("멤버")
 
         // 그룹 엔티티의 owner도 변경되었는지 확인
         val updatedGroup = groupRepository.findById(group.id).get()
@@ -418,7 +418,7 @@ class GroupMemberServiceIntegrationTest {
         assertThat(response).isNotNull
         // 가장 먼저 가입한 멤버가 승계
         assertThat(response!!.user.id).isEqualTo(oldMember.id)
-        assertThat(response.role.name).isEqualTo("OWNER")
+        assertThat(response.role.name).isEqualTo("그룹장")
 
         // 그룹 엔티티의 owner도 변경되었는지 확인
         val updatedGroup = groupRepository.findById(group.id).get()

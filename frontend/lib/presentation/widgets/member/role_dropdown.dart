@@ -108,16 +108,16 @@ class RoleBadge extends StatelessWidget {
 
     // 시스템 역할별 색상 매핑
     if (isSystemRole) {
-      switch (roleName.toUpperCase()) {
-        case 'OWNER':
+      switch (roleName) {
+        case '그룹장':
           bgColor = AppColors.brand.withValues(alpha: 0.1);
           txtColor = AppColors.brand;
           break;
-        case 'ADVISOR':
+        case '교수':
           bgColor = AppColors.action.withValues(alpha: 0.1);
           txtColor = AppColors.action;
           break;
-        case 'MEMBER':
+        case '멤버':
           bgColor = AppColors.neutral200;
           txtColor = AppColors.neutral700;
           break;

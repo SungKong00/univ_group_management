@@ -105,8 +105,8 @@ class ContentServiceIntegrationTest {
             )
 
         group = createGroupWithDefaultRoles(owner)
-        ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").get()
-        memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").get()
+        ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "그룹장").get()
+        memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "멤버").get()
 
         groupMemberRepository.save(
             TestDataFactory.createTestGroupMember(
@@ -377,8 +377,8 @@ class ContentServiceIntegrationTest {
         memberPerms: Set<ChannelPermission>,
     ) {
         val channel = channelRepository.findById(channelId).get()
-        val ownerRole = groupRoleRepository.findByGroupIdAndName(channel.group.id, "OWNER").get()
-        val memberRole = groupRoleRepository.findByGroupIdAndName(channel.group.id, "MEMBER").get()
+        val ownerRole = groupRoleRepository.findByGroupIdAndName(channel.group.id, "그룹장").get()
+        val memberRole = groupRoleRepository.findByGroupIdAndName(channel.group.id, "멤버").get()
         channelRoleBindingRepository.save(ChannelRoleBinding.create(channel, ownerRole, ownerPerms))
         channelRoleBindingRepository.save(ChannelRoleBinding.create(channel, memberRole, memberPerms))
     }

@@ -79,7 +79,7 @@
 - [x] 권한 캐싱 ✅ `ChannelPermissionCacheManager.kt`
 
 ### ✅ 기본 역할 시스템
-- [x] Owner/Member 기본 역할 ✅ `GroupRole.kt`
+- [x] 그룹장/교수/멤버 기본 역할 ✅ `GroupRole.kt`
 - [x] 커스텀 역할 생성 ✅ `RoleController.kt`
 - [x] 권한 상속 방지 (그룹 독립성) ✅ 설계 문서 확인
 

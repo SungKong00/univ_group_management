@@ -21,7 +21,7 @@ import java.time.LocalDateTime
  * Execution flow:
  * 1. Find all groups where defaultChannelsCreated = false
  * 2. For each group:
- *    a. Create default roles (OWNER, ADVISOR, MEMBER) with permissions
+ *    a. Create default roles (그룹장, 교수, 멤버) with permissions
  *    b. Create default channels (ANNOUNCEMENT, TEXT)
  *    c. Create channel role bindings for each channel
  *    d. Set defaultChannelsCreated = true
@@ -80,18 +80,18 @@ class GroupInitializationRunner(
         // Step 1: Ensure default roles exist with permissions
         logger.info("[${group.id}] Step 1/3: Creating default roles...")
         val roles = groupRoleInitializationService.ensureDefaultRoles(group)
-        val ownerRole = roles.find { it.name == "OWNER" }!!
-        val advisorRole = roles.find { it.name == "ADVISOR" }
-        val memberRole = roles.find { it.name == "MEMBER" }!!
+        val ownerRole = roles.find { it.name == "그룹장" }!!
+        val advisorRole = roles.find { it.name == "교수" }
+        val memberRole = roles.find { it.name == "멤버" }!!
 
         logger.info(
-            "[${group.id}] Roles created - OWNER: ${ownerRole.permissions.size} permissions, " +
-                "ADVISOR: ${advisorRole?.permissions?.size ?: 0} permissions, " +
-                "MEMBER: ${memberRole.permissions.size} permissions",
+            "[${group.id}] Roles created - 그룹장: ${ownerRole.permissions.size} permissions, " +
+                "교수: ${advisorRole?.permissions?.size ?: 0} permissions, " +
+                "멤버: ${memberRole.permissions.size} permissions",
         )
 
-        // Step 1.5: Add group owner as OWNER role member
-        logger.info("[${group.id}] Step 1.5/4: Adding group owner as OWNER member...")
+        // Step 1.5: Add group owner as 그룹장 role member
+        logger.info("[${group.id}] Step 1.5/4: Adding group owner as 그룹장 member...")
         val existingMembership = groupMemberRepository.findByGroupIdAndUserId(group.id, group.owner.id)
         if (existingMembership.isEmpty) {
             val ownerMembership =
@@ -102,7 +102,7 @@ class GroupInitializationRunner(
                     joinedAt = LocalDateTime.now(),
                 )
             groupMemberRepository.save(ownerMembership)
-            logger.info("[${group.id}] Added owner ${group.owner.email} as OWNER role member")
+            logger.info("[${group.id}] Added owner ${group.owner.email} as 그룹장 role member")
         } else {
             logger.info("[${group.id}] Owner ${group.owner.email} already has membership")
         }

@@ -228,7 +228,7 @@ class GroupRequestService(
         // 승인 시 실제 그룹에 멤버 추가
         if (status == GroupJoinRequestStatus.APPROVED) {
             val memberRole =
-                groupRoleRepository.findByGroupIdAndName(request.group.id, "MEMBER")
+                groupRoleRepository.findByGroupIdAndName(request.group.id, "멤버")
                     .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
             val groupMember =

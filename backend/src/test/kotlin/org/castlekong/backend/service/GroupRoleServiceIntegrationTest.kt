@@ -138,7 +138,7 @@ class GroupRoleServiceIntegrationTest {
     @Test
     @DisplayName("다른 그룹의 역할을 조회하면 예외가 발생한다")
     fun getGroupRole_MismatchedGroup_ThrowsException() {
-        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").get()
+        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "그룹장").get()
 
         assertThatThrownBy { groupRoleService.getGroupRole(group.id + 999, ownerRole.id) }
             .isInstanceOf(BusinessException::class.java)
@@ -152,7 +152,7 @@ class GroupRoleServiceIntegrationTest {
 
         val roles = groupRoleService.getGroupRoles(group.id)
 
-        assertThat(roles.map { it.name }).contains("OWNER", "MEMBER", "COORDINATOR")
+        assertThat(roles.map { it.name }).contains("그룹장", "교수", "멤버", "COORDINATOR")
     }
 
     @Test
@@ -179,9 +179,9 @@ class GroupRoleServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("OWNER 또는 MEMBER 역할은 수정할 수 없다")
+    @DisplayName("그룹장 또는 멤버 역할은 수정할 수 없다")
     fun updateGroupRole_SystemRole_ThrowsForbidden() {
-        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").get()
+        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "그룹장").get()
 
         val request =
             UpdateGroupRoleRequest(
@@ -230,7 +230,7 @@ class GroupRoleServiceIntegrationTest {
     @Test
     @DisplayName("시스템 역할은 삭제할 수 없다")
     fun deleteGroupRole_SystemRole_ThrowsForbidden() {
-        val memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").get()
+        val memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "멤버").get()
 
         assertThatThrownBy { groupRoleService.deleteGroupRole(group.id, memberRole.id, owner.id) }
             .isInstanceOf(BusinessException::class.java)

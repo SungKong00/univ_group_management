@@ -215,7 +215,7 @@ data class GroupMember(
 
 ### GroupRole 엔티티 (JPA) {#GroupRole}
 *   **파일 위치**: `backend/src/main/kotlin/org/castlekong/backend/entity/GroupRole.kt`
-*   **설명**: 그룹 내 역할. 시스템 역할(OWNER / ADVISOR / MEMBER)은 불변(이름/우선순위/권한 수정 및 삭제 금지, ErrorCode.SYSTEM_ROLE_IMMUTABLE).
+*   **설명**: 그룹 내 역할. 시스템 역할(그룹장 / 교수 / 멤버)은 불변(이름/우선순위/권한 수정 및 삭제 금지, ErrorCode.SYSTEM_ROLE_IMMUTABLE).
 *   **변경 요약(2025-10-01)**: data class → 일반 class, id 기반 equals/hashCode, permissions: MutableSet.
 
 ```kotlin
@@ -831,7 +831,7 @@ CREATE TABLE group_events (
     recurrence_rule TEXT, -- RRULE 형식 또는 JSON
 
     -- 대상자 지정 (TARGETED 타입)
-    target_criteria JSON, -- 학년, 역할, 학번 등 조건 (예: {"year": [1, 2], "roles": ["MEMBER"]})
+    target_criteria JSON, -- 학년, 역할, 학번 등 조건 (예: {"year": [1, 2], "roles": ["멤버"]})
 
     -- 참여 제한 (RSVP 타입)
     max_participants INT, -- 참여 인원 제한 (NULL이면 무제한)

@@ -71,7 +71,7 @@
 > **참고**: 상세한 구현 현황은 [프론트엔드 구현 현황 문서](docs/implementation/frontend-implementation-status.md)에서 실시간으로 관리됩니다.
 
 ## 🆕 2025-10-01 권한 모델 개정 요약
-- 시스템 역할(OWNER / ADVISOR / MEMBER) 불변성 명시 (이름/우선순위/권한 수정 및 삭제 금지)
+- 시스템 역할(그룹장 / 교수 / 멤버) 불변성 명시 (이름/우선순위/권한 수정 및 삭제 금지)
 - GroupRole: data class → 일반 class, id 기반 equals/hashCode, MutableSet permissions
 - ChannelRoleBinding: (rev1~3) 모든 채널 0바인딩 모델 → (rev5) **하이브리드** 전환 (기본 2채널 템플릿 + 사용자 정의 채널 0바인딩)
 - 권한 문서화 관점: 역할→권한 나열 방식에서 권한별 허용 역할 Permission-Centric 매트릭스

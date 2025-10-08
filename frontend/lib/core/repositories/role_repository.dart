@@ -18,7 +18,7 @@ class MockRoleRepository implements RoleRepository {
     1: [
       GroupRole(
         id: 'owner',
-        name: 'Owner',
+        name: '그룹장',
         description: '그룹 소유자 (모든 권한)',
         isSystemRole: true,
         priority: 1,
@@ -32,7 +32,7 @@ class MockRoleRepository implements RoleRepository {
       ),
       GroupRole(
         id: 'advisor',
-        name: 'Advisor',
+        name: '교수',
         description: '자문 역할 (대부분의 권한)',
         isSystemRole: true,
         priority: 2,
@@ -46,7 +46,7 @@ class MockRoleRepository implements RoleRepository {
       ),
       GroupRole(
         id: 'member',
-        name: 'Member',
+        name: '멤버',
         description: '일반 멤버',
         isSystemRole: true,
         priority: 3,

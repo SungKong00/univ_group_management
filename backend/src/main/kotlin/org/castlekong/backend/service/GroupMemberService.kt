@@ -70,12 +70,12 @@ class GroupMemberService(
         group: Group,
         user: User,
     ): GroupMember {
-        // 기본 MEMBER 역할 확보 (없으면 생성)
+        // 기본 멤버 역할 확보 (없으면 생성)
         val memberRole =
-            groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").orElseGet {
-                // OWNER / ADVISOR 기본 역할도 보장
+            groupRoleRepository.findByGroupIdAndName(group.id, "멤버").orElseGet {
+                // 그룹장 / 교수 기본 역할도 보장
                 ensureDefaultRoles(group)
-                groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").get()
+                groupRoleRepository.findByGroupIdAndName(group.id, "멤버").get()
             }
 
         val groupMember =
@@ -145,9 +145,9 @@ class GroupMemberService(
     }
 
     private fun ensureMemberRole(group: Group): GroupRole {
-        return groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").orElseGet {
+        return groupRoleRepository.findByGroupIdAndName(group.id, "멤버").orElseGet {
             ensureDefaultRoles(group)
-            groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").get()
+            groupRoleRepository.findByGroupIdAndName(group.id, "멤버").get()
         }
     }
 
@@ -333,8 +333,8 @@ class GroupMemberService(
             throw BusinessException(ErrorCode.INVALID_REQUEST)
         }
 
-        // OWNER 역할 변경은 위임 API 사용
-        if (newRole.name == "OWNER") {
+        // 그룹장 역할 변경은 위임 API 사용
+        if (newRole.name == "그룹장") {
             throw BusinessException(ErrorCode.INVALID_REQUEST)
         }
 
@@ -371,7 +371,7 @@ class GroupMemberService(
         }
 
         val professorRole =
-            groupRoleRepository.findByGroupIdAndName(groupId, "ADVISOR")
+            groupRoleRepository.findByGroupIdAndName(groupId, "교수")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // 이미 그룹 멤버인지 확인
@@ -418,13 +418,13 @@ class GroupMemberService(
                 .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
 
         // 지도교수 역할인지 확인
-        if (groupMember.role.name != "ADVISOR") {
+        if (groupMember.role.name != "교수") {
             throw BusinessException(ErrorCode.INVALID_REQUEST)
         }
 
         // 일반 멤버로 역할 변경 (완전 제거하지 않음)
         val memberRole =
-            groupRoleRepository.findByGroupIdAndName(groupId, "MEMBER")
+            groupRoleRepository.findByGroupIdAndName(groupId, "멤버")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         val updated = groupMember.copy(role = memberRole)
@@ -467,11 +467,11 @@ class GroupMemberService(
                 .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
 
         val ownerRole =
-            groupRoleRepository.findByGroupIdAndName(groupId, "OWNER")
+            groupRoleRepository.findByGroupIdAndName(groupId, "그룹장")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         val memberRole =
-            groupRoleRepository.findByGroupIdAndName(groupId, "MEMBER")
+            groupRoleRepository.findByGroupIdAndName(groupId, "멤버")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // Group 엔티티의 owner 변경
@@ -512,7 +512,7 @@ class GroupMemberService(
 
         val successor = candidates.first()
         val ownerRole =
-            groupRoleRepository.findByGroupIdAndName(groupId, "OWNER")
+            groupRoleRepository.findByGroupIdAndName(groupId, "그룹장")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // Group 엔티티의 owner 변경
@@ -541,9 +541,9 @@ class GroupMemberService(
 
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> =
         when (roleName.uppercase()) {
-            "OWNER" -> GroupPermission.entries.toSet()
-            "ADVISOR" -> GroupPermission.entries.toSet() // MVP에서는 OWNER와 동일
-            "MEMBER" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
+            "그룹장" -> GroupPermission.entries.toSet()
+            "교수" -> GroupPermission.entries.toSet() // MVP에서는 그룹장와 동일
+            "멤버" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
             else -> emptySet()
         }
 

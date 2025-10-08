@@ -45,10 +45,10 @@ VALUES (13, 'AI/SW학과', 1, 2, '한신대학교', 'AI/SW계열', 'AI/SW학과'
 --
 -- For each group with defaultChannelsCreated = false:
 --   1. GroupRoleInitializationService creates 3 default roles:
---      - OWNER: All permissions (priority 100)
---      - ADVISOR: All permissions (priority 99)
---      - MEMBER: No group-level permissions (priority 1)
---   1.5. Add group.owner as OWNER role member (GroupMember)
+--      - 그룹장: All permissions (priority 100)
+--      - 교수: All permissions (priority 99)
+--      - 멤버: No group-level permissions (priority 1)
+--   1.5. Add group.owner as 그룹장 role member (GroupMember)
 --   2. ChannelInitializationService creates 2 default channels:
 --      - ANNOUNCEMENT channel (공지사항)
 --      - TEXT channel (자유게시판)

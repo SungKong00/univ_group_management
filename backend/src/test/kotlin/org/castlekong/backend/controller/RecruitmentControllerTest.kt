@@ -119,8 +119,8 @@ class RecruitmentControllerTest {
 
         // Create group and roles
         group = createGroupWithRoles(owner)
-        ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").get()
-        memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").get()
+        ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "그룹장").get()
+        memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "멤버").get()
 
         // Add member to group
         groupMemberRepository.save(

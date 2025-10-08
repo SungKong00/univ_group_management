@@ -157,7 +157,7 @@ object TestDataFactory {
     fun createTestGroupRole(
         id: Long = 0L,
         group: Group,
-        name: String = "MEMBER",
+        name: String = "멤버",
         isSystemRole: Boolean = true,
         permissions: Set<GroupPermission> = emptySet(),
         priority: Int = 1,
@@ -191,7 +191,7 @@ object TestDataFactory {
     fun createOwnerRole(group: Group): GroupRole {
         return createTestGroupRole(
             group = group,
-            name = "OWNER",
+            name = "그룹장",
             isSystemRole = true,
             permissions = GroupPermission.values().toSet(),
             priority = 100,
@@ -201,7 +201,7 @@ object TestDataFactory {
     fun createAdvisorRole(group: Group): GroupRole {
         return createTestGroupRole(
             group = group,
-            name = "ADVISOR",
+            name = "교수",
             isSystemRole = true,
             permissions = GroupPermission.values().toSet(),
             priority = 99,
@@ -211,7 +211,7 @@ object TestDataFactory {
     fun createMemberRole(group: Group): GroupRole {
         return createTestGroupRole(
             group = group,
-            name = "MEMBER",
+            name = "멤버",
             isSystemRole = true,
             permissions = emptySet(),
             priority = 1,

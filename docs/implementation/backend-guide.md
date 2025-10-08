@@ -13,8 +13,8 @@
 1.  애플리케이션이 시작되면 `GroupInitializationRunner`가 실행됩니다.
 2.  `defaultChannelsCreated` 플래그가 `false`인 모든 그룹을 찾습니다.
 3.  각 그룹에 대해 다음을 실행합니다.
-    -   `GroupRoleInitializationService`를 통해 OWNER, ADVISOR, MEMBER 기본 역할을 생성합니다.
-    -   그룹 생성자를 OWNER 역할의 멤버로 자동 추가합니다.
+    -   `GroupRoleInitializationService`를 통해 그룹장, 교수, 멤버 기본 역할을 생성합니다.
+    -   그룹 생성자를 그룹장 역할의 멤버로 자동 추가합니다.
     -   `ChannelInitializationService`를 통해 '공지사항'과 '자유게시판' 기본 채널 및 관련 권한 바인딩을 생성합니다.
     -   작업이 완료되면 그룹의 `defaultChannelsCreated` 플래그를 `true`로 업데이트하여 중복 실행을 방지합니다.
 
@@ -239,7 +239,7 @@ data class ErrorResponse(
 | GROUP_ROLE_NAME_ALREADY_EXISTS | 409 | 역할명 충돌 |
 
 ## 역할 & 권한 (System Role 불변성)
-- 시스템 역할: OWNER / ADVISOR / MEMBER
+- 시스템 역할: 그룹장 / 교수 / 멤버
 - 이름/우선순위/권한 수정 및 삭제 시도 → `SYSTEM_ROLE_IMMUTABLE`
 - 커스텀 역할만 CRUD 허용
 - GroupRole 엔티티: data class 제거, id 기반 equals/hashCode
@@ -248,15 +248,15 @@ data class ErrorResponse(
 - 새 채널 생성 시 ChannelRoleBinding 0개
 - 권한 단위(ChannelPermission) 별 허용 역할 리스트 지정
 - CHANNEL_VIEW 없으면 채널 네비게이션 미표시
-- Owner 도 매핑 없으면 읽기/쓰기 불가 (자동 상속 제거)
+- 그룹장 도 매핑 없으면 읽기/쓰기 불가 (자동 상속 제거)
 
 ### 권한 매트릭스 예시
 ```
-CHANNEL_VIEW: OWNER, MEMBER
-POST_READ:    OWNER, MEMBER
-POST_WRITE:   OWNER
-COMMENT_WRITE:OWNER
-FILE_UPLOAD:  OWNER(optional)
+CHANNEL_VIEW: 그룹장, 멤버
+POST_READ:    그룹장, 멤버
+POST_WRITE:   그룹장
+COMMENT_WRITE:그룹장
+FILE_UPLOAD:  그룹장(optional)
 ```
 
 ## 권한 캐시 무효화 패턴
@@ -290,7 +290,7 @@ ChannelRoleBinding → Comments → Posts → Channels
 ## 구현 주의사항 업데이트
 | 항목 | 이전 | 현재 |
 |------|------|------|
-| 채널 기본 권한 | Owner/Member 자동 부여 | 자동 없음 (수동 매핑 필요) |
+| 채널 기본 권한 | 그룹장/멤버 자동 부여 | 자동 없음 (수동 매핑 필요) |
 | 시스템 역할 수정 | 일부 허용 | 전면 금지 (SYSTEM_ROLE_IMMUTABLE) |
 | ApiResponse 실패 | message/errorCode 혼용 | error.code / error.message 고정 |
 | 삭제 로직 | 엔티티 순회 다중 delete | 벌크 순서 기반 배치 |

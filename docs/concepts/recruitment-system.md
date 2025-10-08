@@ -265,7 +265,7 @@ DRAFT --(OPEN 요청)--> OPEN --(마감일/조기마감)--> CLOSED
 ## 주요 검증 로직
 - 단일 활성 모집: `SELECT COUNT(*) WHERE group_id=? AND status='OPEN'` > 0 이면 생성/OPEN 전환 차단
 - 중복 지원: `applicationRepository.existsByRecruitmentIdAndApplicantIdAndStatusNotWithdrawn`
-- 승인 시 그룹 멤버십: 멤버가 아니면 GroupMember 생성 + 기본 역할(Member) 부여
+- 승인 시 그룹 멤버십: 멤버가 아니면 GroupMember 생성 + 기본 역할(멤버) 부여
 - 철회: 상태가 PENDING 아니면 409 반환
 
 ## 에러 코드 (추가 제안)

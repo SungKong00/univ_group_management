@@ -220,7 +220,7 @@ class RecruitmentServiceIntegrationTest {
 
         val membership = groupMemberRepository.findByGroupIdAndUserId(group.id, applicant.id)
         assertThat(membership).isPresent
-        assertThat(membership.get().role.name).isEqualTo("MEMBER")
+        assertThat(membership.get().role.name).isEqualTo("멤버")
     }
 
     @Test

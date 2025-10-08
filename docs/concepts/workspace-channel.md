@@ -26,7 +26,7 @@
 - **생명 연동**: 그룹이 사라지면 워크스페이스도 함께 사라짐
 
 (변경 사항) 기본 채널 권한 자동 부여 제거:
-- 더 이상 채널 생성 시 Owner / Member 에 대한 기본 읽기/쓰기 권한이 자동 부여되지 않음
+- 더 이상 채널 생성 시 그룹장 / 멤버 에 대한 기본 읽기/쓰기 권한이 자동 부여되지 않음
 - 새 채널은 "가시성/읽기/쓰기" 모두 0개의 ChannelRoleBinding 상태로 시작
 - 권한은 채널 생성 직후 관리자가 Permission-Centric 매트릭스(권한별 허용 역할 지정)로 수동 설정
 
@@ -70,16 +70,16 @@
 - 권한 부여 단위: ChannelPermission 별 허용 역할 목록
 - CHANNEL_VIEW 를 부여해야 네비게이션 표시
 - POST_READ 없으면 게시글/댓글 비가시
-- Owner 도 매핑 없으면 접근/읽기 불가 (자동 상속 없음)
+- 그룹장 도 매핑 없으면 접근/읽기 불가 (자동 상속 없음)
 
 ### 예시 매트릭스
 | 권한 | 예시 허용 역할 |
 |------|----------------|
-| CHANNEL_VIEW | OWNER, MEMBER |
-| POST_READ | OWNER, MEMBER |
-| POST_WRITE | OWNER |
-| COMMENT_WRITE | OWNER |
-| FILE_UPLOAD | OWNER (선택) |
+| CHANNEL_VIEW | 그룹장, 멤버 |
+| POST_READ | 그룹장, 멤버 |
+| POST_WRITE | 그룹장 |
+| COMMENT_WRITE | 그룹장 |
+| FILE_UPLOAD | 그룹장 (선택) |
 
 ## 채널 내 콘텐츠
 
@@ -157,7 +157,7 @@
 
 ### 자동으로 설정되던 항목 (과거) → 제거됨
 - 기본 권한 자동 설정 (삭제)
-- Owner/Member 기본 읽기 접근 (삭제)
+- 그룹장/멤버 기본 읽기 접근 (삭제)
 
 ## 삭제 시 컨텐츠 정리 (Bulk 순서)
 ChannelRoleBinding → Comments → Posts → Channels (트랜잭션 내 벌크) 로 수행하여 무결성과 성능 확보.

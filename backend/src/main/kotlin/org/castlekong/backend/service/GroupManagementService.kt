@@ -106,11 +106,11 @@ class GroupManagementService(
     ): Triple<GroupRole, GroupRole, GroupRole> {
         // Use GroupRoleInitializationService to create default roles
         val roles = groupRoleInitializationService.ensureDefaultRoles(group)
-        val ownerRole = roles.find { it.name == "OWNER" }!!
-        val advisorRole = roles.find { it.name == "ADVISOR" }!!
-        val memberRole = roles.find { it.name == "MEMBER" }!!
+        val ownerRole = roles.find { it.name == "그룹장" }!!
+        val advisorRole = roles.find { it.name == "교수" }!!
+        val memberRole = roles.find { it.name == "멤버" }!!
 
-        // 그룹 생성자를 OWNER로 추가
+        // 그룹 생성자를 그룹장으로 추가
         val groupMember =
             GroupMember(
                 group = group,
@@ -129,11 +129,11 @@ class GroupManagementService(
         if (group.defaultChannelsCreated) return
 
         val ownerRole =
-            groupRoleRepository.findByGroupIdAndName(group.id, "OWNER")
+            groupRoleRepository.findByGroupIdAndName(group.id, "그룹장")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
-        val advisorRole = groupRoleRepository.findByGroupIdAndName(group.id, "ADVISOR").orElse(null)
+        val advisorRole = groupRoleRepository.findByGroupIdAndName(group.id, "교수").orElse(null)
         val memberRole =
-            groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER")
+            groupRoleRepository.findByGroupIdAndName(group.id, "멤버")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         val wasCreated =

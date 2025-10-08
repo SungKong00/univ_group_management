@@ -38,7 +38,7 @@
 > **설계 결정**: [DD-CAL-001](calendar-design-decisions.md#dd-cal-001-권한-통합-방식) - RBAC 통합 방식 채택
 
 장소 관리 권한은 기존 RBAC 시스템에 통합됩니다:
-- `PLACE_MANAGE`: 장소 등록, 사용 그룹 승인, 예약 관리 (관리 주체 그룹의 OWNER)
+- `PLACE_MANAGE`: 장소 등록, 사용 그룹 승인, 예약 관리 (관리 주체 그룹의 그룹장)
 - `PLACE_RESERVE`: 장소 예약 권한 (사용 그룹 멤버)
 
 **채택 이유**:

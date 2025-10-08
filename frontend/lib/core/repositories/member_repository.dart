@@ -21,7 +21,7 @@ class MockMemberRepository implements MemberRepository {
         userName: '김철수',
         email: 'kim@example.com',
         profileImageUrl: null,
-        roleName: 'Owner',
+        roleName: '그룹장',
         roleId: 'owner',
         joinedAt: DateTime(2024, 1, 15),
       ),
@@ -31,7 +31,7 @@ class MockMemberRepository implements MemberRepository {
         userName: '이영희',
         email: 'lee@example.com',
         profileImageUrl: null,
-        roleName: 'Advisor',
+        roleName: '교수',
         roleId: 'advisor',
         joinedAt: DateTime(2024, 2, 20),
       ),
@@ -41,7 +41,7 @@ class MockMemberRepository implements MemberRepository {
         userName: '박민수',
         email: 'park@example.com',
         profileImageUrl: null,
-        roleName: 'Member',
+        roleName: '멤버',
         roleId: 'member',
         joinedAt: DateTime(2024, 3, 10),
       ),
@@ -51,7 +51,7 @@ class MockMemberRepository implements MemberRepository {
         userName: '최지혜',
         email: 'choi@example.com',
         profileImageUrl: null,
-        roleName: 'Member',
+        roleName: '멤버',
         roleId: 'member',
         joinedAt: DateTime(2024, 3, 15),
       ),
@@ -61,7 +61,7 @@ class MockMemberRepository implements MemberRepository {
         userName: '정우성',
         email: 'jung@example.com',
         profileImageUrl: null,
-        roleName: 'Member',
+        roleName: '멤버',
         roleId: 'member',
         joinedAt: DateTime(2024, 4, 1),
       ),
@@ -94,9 +94,9 @@ class MockMemberRepository implements MemberRepository {
 
     // 역할 이름 매핑 (간단한 구현)
     final roleNameMap = {
-      'owner': 'Owner',
-      'advisor': 'Advisor',
-      'member': 'Member',
+      'owner': '그룹장',
+      'advisor': '교수',
+      'member': '멤버',
     };
 
     final updatedMember = members[memberIndex].copyWith(

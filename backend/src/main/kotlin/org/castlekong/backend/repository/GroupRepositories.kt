@@ -137,7 +137,7 @@ interface GroupMemberRepository : JpaRepository<GroupMember, Long> {
     ): List<GroupMember>
 
     // 지도교수 관련 메소드 (특정 권한을 가진 멤버 조회)
-    @Query("SELECT gm FROM GroupMember gm WHERE gm.group.id = :groupId AND gm.role.name = 'ADVISOR'")
+    @Query("SELECT gm FROM GroupMember gm WHERE gm.group.id = :groupId AND gm.role.name = '교수'")
     fun findAdvisorsByGroupId(groupId: Long): List<GroupMember>
 
     // 그룹장 유고시 자동 승계를 위한 후보자 조회 (가입일 오래된 순, 학년 높은 순)
@@ -145,10 +145,10 @@ interface GroupMemberRepository : JpaRepository<GroupMember, Long> {
         """
         SELECT gm FROM GroupMember gm
         WHERE gm.group.id = :groupId
-        AND gm.role.name != 'OWNER'
+        AND gm.role.name != '그룹장'
         AND gm.user.globalRole = 'STUDENT'
         ORDER BY gm.user.academicYear DESC NULLS LAST, gm.joinedAt ASC
-    """,
+    """
     )
     fun findSuccessionCandidates(groupId: Long): List<GroupMember>
 

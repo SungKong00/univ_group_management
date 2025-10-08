@@ -149,9 +149,9 @@ class PermissionMatrixRow extends StatelessWidget {
   String _getRoleName(String roleId) {
     // 간단한 역할 이름 매핑 (실제로는 Provider에서 가져와야 함)
     final roleNames = {
-      'owner': 'Owner',
-      'advisor': 'Advisor',
-      'member': 'Member',
+      'owner': '그룹장',
+      'advisor': '교수',
+      'member': '멤버',
     };
     return roleNames[roleId] ?? roleId;
   }
