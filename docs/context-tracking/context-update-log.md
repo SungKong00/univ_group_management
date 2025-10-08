@@ -4,6 +4,48 @@
 
 ## 2025년 10월
 
+### 2025-10-09 - 그룹 관리 페이지 Phase 2 완료 (역할 관리 및 가입 신청)
+**커밋**: 현재 세션 (디버깅 후 커밋 예정)
+**유형**: 기능 구현 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 프론트엔드 (멤버 관리), 문서 (구현 상태)
+
+**구현 내용**:
+- **역할 관리 API 연동 완료**:
+    - `ApiRoleRepository` 구현 (역할 CRUD API 연동)
+    - 역할 생성 다이얼로그 (`create_role_dialog.dart`) 신규 구현
+    - 역할 수정 다이얼로그 (`edit_role_dialog.dart`) 신규 구현
+    - 4개 권한 체크박스 UI (GROUP_MANAGE, MEMBER_MANAGE, CHANNEL_MANAGE, RECRUITMENT_MANAGE)
+    - 시스템 역할 보호 로직 (수정/삭제 방지)
+- **가입 신청 관리 API 연동 완료**:
+    - `ApiJoinRequestRepository` 구현 (가입 신청 조회/승인/거절)
+    - 승인 시 역할 할당 기능
+    - 거절 기능
+- **기술적 결정사항**:
+    - API 파라미터 설계: userId 기반 호출 방식 채택 (복합 인덱스 최적화 완료, 성능 차이 무시 가능)
+    - 중복 구현 방지: 기존 UI 컴포넌트/Provider 패턴 유지
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/group-admin-page-status.md`: Phase 2 작업 내용 추가, 진행률 업데이트 (75%), 다음 작업 체크 표시
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가
+
+**수정/생성된 파일 (총 6개)**:
+- `frontend/lib/core/repositories/role_repository.dart` (수정 - ApiRoleRepository 추가)
+- `frontend/lib/core/repositories/join_request_repository.dart` (수정 - ApiJoinRequestRepository 추가)
+- `frontend/lib/core/repositories/repository_providers.dart` (수정 - Provider 전환)
+- `frontend/lib/presentation/widgets/dialogs/create_role_dialog.dart` (신규)
+- `frontend/lib/presentation/widgets/dialogs/edit_role_dialog.dart` (신규)
+- `frontend/lib/presentation/pages/member_management/widgets/role_management_section.dart` (수정)
+
+**Phase 1 파일 (기록용, 10-09 이전 완료)**:
+- `frontend/lib/core/repositories/member_repository.dart`
+- `frontend/lib/presentation/pages/member_management/providers/member_list_provider.dart`
+- `frontend/lib/presentation/pages/member_management/widgets/member_list_section.dart`
+
+**메모**: 멤버 관리의 핵심 기능(멤버 목록, 역할 관리, 가입 신청)이 모두 백엔드 API와 연동 완료되었습니다. 다음 우선순위는 그룹 삭제, 채널 관리, 모집 관리입니다.
+
+---
+
 ### 2025-10-09 - UI/UX 문서 정합성 개선 (1차)
 **커밋**: 현재 세션
 **유형**: 문서 리팩토링

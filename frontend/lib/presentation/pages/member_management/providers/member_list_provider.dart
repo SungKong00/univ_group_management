@@ -15,12 +15,12 @@ final memberListProvider = FutureProvider.family<List<GroupMember>, int>((ref, g
 /// .family를 사용하여 파라미터 전달
 class UpdateMemberRoleParams {
   final int groupId;
-  final int memberId;
-  final String roleId;
+  final String userId; // memberId → userId (String)
+  final int roleId; // roleId는 백엔드에서 Int로 기대
 
   UpdateMemberRoleParams({
     required this.groupId,
-    required this.memberId,
+    required this.userId,
     required this.roleId,
   });
 
@@ -30,11 +30,11 @@ class UpdateMemberRoleParams {
       other is UpdateMemberRoleParams &&
           runtimeType == other.runtimeType &&
           groupId == other.groupId &&
-          memberId == other.memberId &&
-          roleId == other.roleId;
+          userId == userId &&
+          roleId == roleId;
 
   @override
-  int get hashCode => Object.hash(groupId, memberId, roleId);
+  int get hashCode => Object.hash(groupId, userId, roleId);
 }
 
 final updateMemberRoleProvider = FutureProvider.autoDispose
@@ -42,7 +42,7 @@ final updateMemberRoleProvider = FutureProvider.autoDispose
   final repository = ref.watch(memberRepositoryProvider);
   return await repository.updateMemberRole(
     params.groupId,
-    params.memberId,
+    params.userId,
     params.roleId,
   );
 });
@@ -50,11 +50,11 @@ final updateMemberRoleProvider = FutureProvider.autoDispose
 /// 멤버 제거 Provider
 class RemoveMemberParams {
   final int groupId;
-  final int memberId;
+  final String userId; // memberId → userId (String)
 
   RemoveMemberParams({
     required this.groupId,
-    required this.memberId,
+    required this.userId,
   });
 
   @override
@@ -63,16 +63,16 @@ class RemoveMemberParams {
       other is RemoveMemberParams &&
           runtimeType == other.runtimeType &&
           groupId == other.groupId &&
-          memberId == other.memberId;
+          userId == userId;
 
   @override
-  int get hashCode => Object.hash(groupId, memberId);
+  int get hashCode => Object.hash(groupId, userId);
 }
 
 final removeMemberProvider = FutureProvider.autoDispose
     .family<void, RemoveMemberParams>((ref, params) async {
   final repository = ref.watch(memberRepositoryProvider);
-  await repository.removeMember(params.groupId, params.memberId);
+  await repository.removeMember(params.groupId, params.userId);
 
   // 성공 후 멤버 목록 새로고침
   ref.invalidate(memberListProvider(params.groupId));

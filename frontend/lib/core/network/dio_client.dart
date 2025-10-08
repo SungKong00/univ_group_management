@@ -166,4 +166,13 @@ class DioClient {
   }) async {
     return await _dio.delete<T>(path, data: data, queryParameters: queryParameters, options: options);
   }
+
+  Future<Response<T>> patch<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    return await _dio.patch<T>(path, data: data, queryParameters: queryParameters, options: options);
+  }
 }

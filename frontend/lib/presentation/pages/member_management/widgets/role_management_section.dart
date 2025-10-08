@@ -4,6 +4,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/models/member_models.dart';
 import '../providers/role_management_provider.dart';
+import '../../../widgets/dialogs/create_role_dialog.dart';
+import '../../../widgets/dialogs/edit_role_dialog.dart';
 
 /// 역할 관리 섹션
 ///
@@ -74,25 +76,39 @@ class RoleManagementSection extends ConsumerWidget {
     );
   }
 
-  void _showCreateRoleDialog(BuildContext context, WidgetRef ref) {
-    // TODO: 역할 생성 다이얼로그
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('커스텀 역할 생성'),
-        content: const Text('역할 생성 기능은 준비 중입니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
+  void _showCreateRoleDialog(BuildContext context, WidgetRef ref) async {
+    final success = await showCreateRoleDialog(
+      context,
+      groupId: groupId,
     );
+
+    if (success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('역할이 생성되었습니다'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      // Provider가 자동으로 새로고침됨
+    }
   }
 
-  void _showEditRoleDialog(BuildContext context, WidgetRef ref, GroupRole role) {
-    // TODO: 역할 수정 다이얼로그
+  void _showEditRoleDialog(BuildContext context, WidgetRef ref, GroupRole role) async {
+    final success = await showEditRoleDialog(
+      context,
+      groupId: groupId,
+      role: role,
+    );
+
+    if (success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('역할이 수정되었습니다'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      // Provider가 자동으로 새로고침됨
+    }
   }
 
   void _confirmDeleteRole(BuildContext context, WidgetRef ref, GroupRole role) {
@@ -114,8 +130,24 @@ class RoleManagementSection extends ConsumerWidget {
                   groupId: groupId,
                   roleId: role.id,
                 )).future);
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('역할이 삭제되었습니다'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
               } catch (e) {
-                // 에러 처리
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('역할 삭제 실패: ${e.toString().replaceAll('Exception: ', '')}'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
               }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),

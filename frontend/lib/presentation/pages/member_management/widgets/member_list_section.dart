@@ -230,7 +230,7 @@ class _MemberTableRow extends ConsumerWidget {
               currentRoleId: member.roleId,
               availableRoles: roles,
               onRoleChanged: (newRoleId) async {
-                await _handleRoleChange(ref, newRoleId);
+                await _handleRoleChange(context, ref, newRoleId);
               },
             ),
           ),
@@ -261,23 +261,120 @@ class _MemberTableRow extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleRoleChange(WidgetRef ref, String newRoleId) async {
+  Future<void> _handleRoleChange(BuildContext context, WidgetRef ref, String newRoleId) async {
     try {
+      // roleId를 int로 파싱
+      final roleIdInt = int.parse(newRoleId);
+
       await ref.read(updateMemberRoleProvider(UpdateMemberRoleParams(
         groupId: groupId,
-        memberId: member.id,
-        roleId: newRoleId,
+        userId: member.userId, // memberId → userId 사용
+        roleId: roleIdInt,
       )).future);
 
       // 성공 후 목록 새로고침
       ref.invalidate(memberListProvider(groupId));
+
+      // 성공 SnackBar 표시
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${member.userName}님의 역할이 변경되었습니다'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
     } catch (e) {
-      // 에러 처리 (SnackBar 등)
+      // 에러 SnackBar 표시
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('역할 변경에 실패했습니다: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
   void _showMemberMenu(BuildContext context, WidgetRef ref) {
-    // 멤버 메뉴 (제거 등)
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.person_remove, color: AppColors.error),
+              title: const Text(
+                '멤버 강제 탈퇴',
+                style: TextStyle(color: AppColors.error),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showRemoveMemberDialog(context, ref);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showRemoveMemberDialog(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('멤버 강제 탈퇴'),
+        content: Text(
+          '정말로 ${member.userName}님을 그룹에서 강제 탈퇴시키시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('강제 탈퇴'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await _handleRemoveMember(context, ref);
+    }
+  }
+
+  Future<void> _handleRemoveMember(BuildContext context, WidgetRef ref) async {
+    // context를 미리 저장 (async 중에 context 접근을 피하기 위해)
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    try {
+      await ref.read(removeMemberProvider(RemoveMemberParams(
+        groupId: groupId,
+        userId: member.userId, // userId 사용
+      )).future);
+
+      // 성공 SnackBar 표시
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('${member.userName}님을 그룹에서 제거했습니다'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      // 에러 SnackBar 표시
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('멤버 제거에 실패했습니다: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   String _formatDate(DateTime date) {
