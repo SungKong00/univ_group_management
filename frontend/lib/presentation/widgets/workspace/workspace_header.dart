@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/page_breadcrumb.dart';
+import '../../../core/navigation/layout_mode.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import 'group_dropdown.dart';
@@ -65,20 +66,31 @@ class WorkspaceHeader extends StatelessWidget {
 
   /// 명시적인 타이틀이 있는 경우 (예: "워크스페이스", "댓글")
   Widget _buildStructuredHeader(String title) {
-    final pathSegments = _resolvePathSegments(title);
+    return Builder(
+      builder: (context) {
+        final layoutMode = LayoutModeExtension.fromContext(context);
+        final pathSegments = _resolvePathSegments(title);
 
-    if (pathSegments.isEmpty) {
-      return _buildTitleWithRole(title);
-    }
+        // 모바일 모드: 그룹명 > 채널명 (역할명) 표시
+        if (layoutMode.isCompact) {
+          return _buildLegacyHeader();
+        }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildTitleWithRole(title),
-        const SizedBox(height: 4),
-        _buildPathRow(pathSegments, useTitleStyleForGroup: false),
-      ],
+        // 웹/태블릿 모드: "워크스페이스 (역할명)" 표시
+        if (pathSegments.isEmpty) {
+          return _buildTitleWithRole(title);
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildTitleWithRole(title),
+            const SizedBox(height: 4),
+            _buildPathRow(pathSegments, useTitleStyleForGroup: false),
+          ],
+        );
+      },
     );
   }
 
