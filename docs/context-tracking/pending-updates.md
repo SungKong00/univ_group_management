@@ -39,11 +39,6 @@
 
 ## ⚠️ 우선순위 중간 (Medium Priority)
 
-### UI/UX 전체 정합성 1차 패스
-**상태**: 보류
-**파일:** `docs/ui-ux/concepts/`, `docs/ui-ux/pages/`
-**목표:** 용어(채널/워크스페이스/역할) 일관성, 중복 제거
-
 ---
 
 ## 📋 우선순위 낮음 (Low Priority)
@@ -60,6 +55,7 @@
 ---
 
 ## ✅ 완료/제거된 항목 (History)
+- (완료 2025-10-09) UI/UX 전체 정합성 1차 패스 완료. color-guide와 design-system의 색상/Breakpoint 정의를 일원화하여 중복 및 불일치 해결.
 - (완료 2025-10-09) 개발 워크플로우 문서와 Git 전략 연동 검증 완료. 두 문서 간 내용 일관성 확인.
 - (완료 2025-10-06) 워크스페이스 모바일 반응형 및 브레드크럼 구현 (frontend-guide.md, responsive-design-guide.md, workspace-pages.md 등)
 - (완료 2025-10-06) 캘린더 시스템 설계 결정사항 문서화 (7개 문서 업데이트, 1개 신규 생성)
