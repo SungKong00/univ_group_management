@@ -39,11 +39,6 @@
 
 ## ⚠️ 우선순위 중간 (Medium Priority)
 
-### 개발 워크플로우 문서 Git 전략 연동 검증
-**상태**: ❌ 검증 필요
-**파일**: development-flow.md
-**추가 고려**: 문서 자동 검증 파이프라인 섹션 (추후)
-
 ### UI/UX 전체 정합성 1차 패스
 **상태**: 보류
 **파일:** `docs/ui-ux/concepts/`, `docs/ui-ux/pages/`
@@ -65,6 +60,7 @@
 ---
 
 ## ✅ 완료/제거된 항목 (History)
+- (완료 2025-10-09) 개발 워크플로우 문서와 Git 전략 연동 검증 완료. 두 문서 간 내용 일관성 확인.
 - (완료 2025-10-06) 워크스페이스 모바일 반응형 및 브레드크럼 구현 (frontend-guide.md, responsive-design-guide.md, workspace-pages.md 등)
 - (완료 2025-10-06) 캘린더 시스템 설계 결정사항 문서화 (7개 문서 업데이트, 1개 신규 생성)
 - (완료 2025-10-06) 모집/워크스페이스 구현 동기화 (recruitment-system.md, frontend-implementation-status.md, workspace-pages.md)
