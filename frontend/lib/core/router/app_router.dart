@@ -43,25 +43,21 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: AppConstants.homeRoute,
           name: 'home',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: HomePage(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: HomePage()),
         ),
         GoRoute(
           path: AppConstants.workspaceRoute,
           name: 'workspace',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: WorkspacePage(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: WorkspacePage()),
           routes: [
             GoRoute(
               path: '/:groupId',
               name: 'group-workspace',
               pageBuilder: (context, state) {
                 final groupId = state.pathParameters['groupId']!;
-                return NoTransitionPage(
-                  child: WorkspacePage(groupId: groupId),
-                );
+                return NoTransitionPage(child: WorkspacePage(groupId: groupId));
               },
               routes: [
                 GoRoute(
@@ -85,30 +81,26 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: AppConstants.calendarRoute,
           name: 'calendar',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: CalendarPage(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: CalendarPage()),
         ),
         GoRoute(
           path: AppConstants.activityRoute,
           name: 'activity',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: ActivityPage(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ActivityPage()),
         ),
         GoRoute(
           path: AppConstants.profileRoute,
           name: 'profile',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: ProfilePage(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ProfilePage()),
         ),
         GoRoute(
           path: AppConstants.groupAdminRoute,
           name: 'group-admin',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: GroupAdminPage(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: GroupAdminPage()),
         ),
       ],
     ),
@@ -118,7 +110,8 @@ final GoRouter appRouter = GoRouter(
     final currentPath = state.uri.path;
     final isLoginRoute = currentPath == AppConstants.loginRoute;
     final isOnboardingRoute = currentPath == AppConstants.onboardingRoute;
-    final isProfileCompleted = _authService.currentUser?.profileCompleted ?? false;
+    final isProfileCompleted =
+        _authService.currentUser?.profileCompleted ?? false;
 
     if (!isLoggedIn) {
       return isLoginRoute ? null : AppConstants.loginRoute;

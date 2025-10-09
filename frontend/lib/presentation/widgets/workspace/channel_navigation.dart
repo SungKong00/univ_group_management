@@ -62,14 +62,8 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
       vsync: this,
     );
 
-    _entranceOffset = Tween<double>(
-      begin: -widget.width,
-      end: 0,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: AppMotion.easing,
-      ),
+    _entranceOffset = Tween<double>(begin: -widget.width, end: 0).animate(
+      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
     );
 
     // 워크스페이스 진입 시 글로벌 네비게이션 축소와 동시에 등장하도록 대기한다.
@@ -142,16 +136,17 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
             _buildTopSection(),
             const Divider(height: 1, thickness: 1),
             _buildChannelList(),
-            if (widget.hasAnyGroupPermission) ...[
-              _buildBottomSection(),
-            ],
+            if (widget.hasAnyGroupPermission) ...[_buildBottomSection()],
           ],
         ),
       ),
     );
   }
 
-  void _handleNavigationChange(NavigationState? previous, NavigationState next) {
+  void _handleNavigationChange(
+    NavigationState? previous,
+    NavigationState next,
+  ) {
     if (!widget.isVisible) {
       return;
     }
@@ -185,7 +180,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
   Widget _buildTopSection() {
     return Consumer(
       builder: (context, ref, child) {
-        final state = ref.watch(workspaceStateProvider);
+        final currentView = ref.watch(workspaceCurrentViewProvider);
 
         return Padding(
           padding: const EdgeInsets.all(AppSpacing.sm),
@@ -212,7 +207,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
                 onTap: () {
                   ref.read(workspaceStateProvider.notifier).showGroupHome();
                 },
-                isSelected: state.currentView == WorkspaceView.groupHome,
+                isSelected: currentView == WorkspaceView.groupHome,
               ),
               const SizedBox(height: AppSpacing.xxs),
               _buildTopButton(
@@ -221,7 +216,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
                 onTap: () {
                   ref.read(workspaceStateProvider.notifier).showCalendar();
                 },
-                isSelected: state.currentView == WorkspaceView.calendar,
+                isSelected: currentView == WorkspaceView.calendar,
               ),
             ],
           ),
@@ -258,7 +253,9 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
               Text(
                 label,
                 style: AppTheme.bodyMedium.copyWith(
-                  color: isSelected ? AppColors.action : AppColors.lightOnSurface,
+                  color: isSelected
+                      ? AppColors.action
+                      : AppColors.lightOnSurface,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
@@ -272,7 +269,8 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
   Widget _buildChannelList() {
     return Consumer(
       builder: (context, ref, child) {
-        final state = ref.watch(workspaceStateProvider);
+        final currentView = ref.watch(workspaceCurrentViewProvider);
+        final selectedChannelId = ref.watch(currentChannelIdProvider);
 
         return Expanded(
           child: Column(
@@ -300,10 +298,9 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
                   itemBuilder: (context, index) {
                     final channel = widget.channels[index];
                     final channelId = channel.id.toString();
-                    final isChannelView =
-                        state.currentView == WorkspaceView.channel;
+                    final isChannelView = currentView == WorkspaceView.channel;
                     final isSelected =
-                        isChannelView && state.selectedChannelId == channelId;
+                        isChannelView && selectedChannelId == channelId;
                     final unreadCount = widget.unreadCounts[channelId] ?? 0;
 
                     return ChannelItem(
@@ -311,7 +308,9 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
                       isSelected: isSelected,
                       unreadCount: unreadCount,
                       onTap: () {
-                        ref.read(workspaceStateProvider.notifier).showChannel(channelId);
+                        ref
+                            .read(workspaceStateProvider.notifier)
+                            .showChannel(channelId);
                       },
                     );
                   },
@@ -327,7 +326,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
   Widget _buildBottomSection() {
     return Consumer(
       builder: (context, ref, child) {
-        final state = ref.watch(workspaceStateProvider);
+        final currentView = ref.watch(workspaceCurrentViewProvider);
 
         return Padding(
           padding: const EdgeInsets.all(AppSpacing.sm),
@@ -337,7 +336,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
             onTap: () {
               ref.read(workspaceStateProvider.notifier).showGroupAdminPage();
             },
-            isSelected: state.currentView == WorkspaceView.groupAdmin,
+            isSelected: currentView == WorkspaceView.groupAdmin,
           ),
         );
       },

@@ -69,7 +69,8 @@ class _PostItemState extends State<PostItem> {
   }
 
   Widget _buildProfileImage() {
-    final hasImage = widget.post.authorProfileUrl != null &&
+    final hasImage =
+        widget.post.authorProfileUrl != null &&
         widget.post.authorProfileUrl!.isNotEmpty;
 
     if (hasImage) {
@@ -90,9 +91,7 @@ class _PostItemState extends State<PostItem> {
       backgroundColor: AppColors.brand,
       child: Text(
         initial,
-        style: AppTheme.titleMedium.copyWith(
-          color: Colors.white,
-        ),
+        style: AppTheme.titleMedium.copyWith(color: Colors.white),
       ),
     );
   }
@@ -113,16 +112,12 @@ class _PostItemState extends State<PostItem> {
         const SizedBox(width: 8),
         Text(
           '•',
-          style: AppTheme.bodySmall.copyWith(
-            color: AppColors.neutral500,
-          ),
+          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
         ),
         const SizedBox(width: 8),
         Text(
           timeText,
-          style: AppTheme.bodySmall.copyWith(
-            color: AppColors.neutral600,
-          ),
+          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
         ),
       ],
     );
@@ -171,9 +166,7 @@ class _PostItemState extends State<PostItem> {
         // 반응형 너비 계산
         // 모바일: 부모(게시글 콘텐츠) 너비의 85% (오버플로우 방지)
         // 웹: 최대 800px
-        final buttonWidth = isMobile
-            ? constraints.maxWidth * 0.85
-            : 800.0;
+        final buttonWidth = isMobile ? constraints.maxWidth * 0.85 : 800.0;
 
         return MouseRegion(
           onEnter: (_) => setState(() => _isCommentHovered = true),

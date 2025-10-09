@@ -24,28 +24,41 @@ class GroupService {
       final response = await _dioClient.get<Map<String, dynamic>>('/me/groups');
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            if (json is List) {
-              return json.map((item) => GroupMembership.fromJson(item as Map<String, dynamic>)).toList();
-            }
-            return <GroupMembership>[];
-          },
-        );
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map(
+                  (item) =>
+                      GroupMembership.fromJson(item as Map<String, dynamic>),
+                )
+                .toList();
+          }
+          return <GroupMembership>[];
+        });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log('Successfully fetched ${apiResponse.data!.length} groups', name: 'GroupService');
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} groups',
+            name: 'GroupService',
+          );
           return apiResponse.data!;
         } else {
-          developer.log('Failed to fetch my groups: ${apiResponse.message}', name: 'GroupService', level: 900);
+          developer.log(
+            'Failed to fetch my groups: ${apiResponse.message}',
+            name: 'GroupService',
+            level: 900,
+          );
           return [];
         }
       }
 
       return [];
     } catch (e) {
-      developer.log('Error fetching my groups: $e', name: 'GroupService', level: 900);
+      developer.log(
+        'Error fetching my groups: $e',
+        name: 'GroupService',
+        level: 900,
+      );
       return [];
     }
   }
@@ -58,7 +71,10 @@ class GroupService {
   /// 3. Return null if no groups available
   GroupMembership? getTopLevelGroup(List<GroupMembership> groups) {
     if (groups.isEmpty) {
-      developer.log('No groups available for top-level selection', name: 'GroupService');
+      developer.log(
+        'No groups available for top-level selection',
+        name: 'GroupService',
+      );
       return null;
     }
 
@@ -70,7 +86,10 @@ class GroupService {
     topLevelGroups.sort((a, b) => a.id.compareTo(b.id));
     final selected = topLevelGroups.first;
 
-    developer.log('Selected top-level group: ${selected.name} (id: ${selected.id}, level: ${selected.level})', name: 'GroupService');
+    developer.log(
+      'Selected top-level group: ${selected.name} (id: ${selected.id}, level: ${selected.level})',
+      name: 'GroupService',
+    );
     return selected;
   }
 
@@ -80,7 +99,10 @@ class GroupService {
   /// Requires GROUP_MANAGE permission
   Future<void> updateGroup(int groupId, UpdateGroupRequest request) async {
     try {
-      developer.log('Updating group $groupId with request: ${request.toJson()}', name: 'GroupService');
+      developer.log(
+        'Updating group $groupId with request: ${request.toJson()}',
+        name: 'GroupService',
+      );
 
       final response = await _dioClient.put<Map<String, dynamic>>(
         '/groups/$groupId',
@@ -94,16 +116,27 @@ class GroupService {
         );
 
         if (apiResponse.success) {
-          developer.log('Successfully updated group $groupId', name: 'GroupService');
+          developer.log(
+            'Successfully updated group $groupId',
+            name: 'GroupService',
+          );
         } else {
-          developer.log('Failed to update group: ${apiResponse.message}', name: 'GroupService', level: 900);
+          developer.log(
+            'Failed to update group: ${apiResponse.message}',
+            name: 'GroupService',
+            level: 900,
+          );
           throw Exception(apiResponse.message ?? 'Failed to update group');
         }
       } else {
         throw Exception('Empty response from server');
       }
     } catch (e) {
-      developer.log('Error updating group: $e', name: 'GroupService', level: 900);
+      developer.log(
+        'Error updating group: $e',
+        name: 'GroupService',
+        level: 900,
+      );
       rethrow;
     }
   }

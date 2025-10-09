@@ -20,35 +20,50 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
   @override
   Future<List<JoinRequest>> getPendingRequests(int groupId) async {
     try {
-      developer.log('Fetching pending join requests for group $groupId', name: 'ApiJoinRequestRepository');
+      developer.log(
+        'Fetching pending join requests for group $groupId',
+        name: 'ApiJoinRequestRepository',
+      );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/join-requests',
       );
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            if (json is List) {
-              return json.map((item) => _parseJoinRequest(item as Map<String, dynamic>)).toList();
-            }
-            return <JoinRequest>[];
-          },
-        );
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map((item) => _parseJoinRequest(item as Map<String, dynamic>))
+                .toList();
+          }
+          return <JoinRequest>[];
+        });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log('Successfully fetched ${apiResponse.data!.length} join requests', name: 'ApiJoinRequestRepository');
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} join requests',
+            name: 'ApiJoinRequestRepository',
+          );
           return apiResponse.data!;
         } else {
-          developer.log('Failed to fetch join requests: ${apiResponse.message}', name: 'ApiJoinRequestRepository', level: 900);
-          throw Exception(apiResponse.message ?? 'Failed to fetch join requests');
+          developer.log(
+            'Failed to fetch join requests: ${apiResponse.message}',
+            name: 'ApiJoinRequestRepository',
+            level: 900,
+          );
+          throw Exception(
+            apiResponse.message ?? 'Failed to fetch join requests',
+          );
         }
       }
 
       throw Exception('Empty response from server');
     } catch (e) {
-      developer.log('Error fetching join requests: $e', name: 'ApiJoinRequestRepository', level: 900);
+      developer.log(
+        'Error fetching join requests: $e',
+        name: 'ApiJoinRequestRepository',
+        level: 900,
+      );
       rethrow;
     }
   }
@@ -56,7 +71,10 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
   @override
   Future<void> approveRequest(int groupId, int requestId, String roleId) async {
     try {
-      developer.log('Approving join request $requestId for group $groupId with role $roleId', name: 'ApiJoinRequestRepository');
+      developer.log(
+        'Approving join request $requestId for group $groupId with role $roleId',
+        name: 'ApiJoinRequestRepository',
+      );
 
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/groups/$groupId/join-requests/$requestId',
@@ -73,14 +91,27 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
         );
 
         if (apiResponse.success) {
-          developer.log('Successfully approved join request', name: 'ApiJoinRequestRepository');
+          developer.log(
+            'Successfully approved join request',
+            name: 'ApiJoinRequestRepository',
+          );
         } else {
-          developer.log('Failed to approve join request: ${apiResponse.message}', name: 'ApiJoinRequestRepository', level: 900);
-          throw Exception(apiResponse.message ?? 'Failed to approve join request');
+          developer.log(
+            'Failed to approve join request: ${apiResponse.message}',
+            name: 'ApiJoinRequestRepository',
+            level: 900,
+          );
+          throw Exception(
+            apiResponse.message ?? 'Failed to approve join request',
+          );
         }
       }
     } catch (e) {
-      developer.log('Error approving join request: $e', name: 'ApiJoinRequestRepository', level: 900);
+      developer.log(
+        'Error approving join request: $e',
+        name: 'ApiJoinRequestRepository',
+        level: 900,
+      );
       rethrow;
     }
   }
@@ -88,13 +119,14 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
   @override
   Future<void> rejectRequest(int groupId, int requestId) async {
     try {
-      developer.log('Rejecting join request $requestId for group $groupId', name: 'ApiJoinRequestRepository');
+      developer.log(
+        'Rejecting join request $requestId for group $groupId',
+        name: 'ApiJoinRequestRepository',
+      );
 
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/groups/$groupId/join-requests/$requestId',
-        data: {
-          'decision': 'REJECT',
-        },
+        data: {'decision': 'REJECT'},
       );
 
       if (response.data != null) {
@@ -104,14 +136,27 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
         );
 
         if (apiResponse.success) {
-          developer.log('Successfully rejected join request', name: 'ApiJoinRequestRepository');
+          developer.log(
+            'Successfully rejected join request',
+            name: 'ApiJoinRequestRepository',
+          );
         } else {
-          developer.log('Failed to reject join request: ${apiResponse.message}', name: 'ApiJoinRequestRepository', level: 900);
-          throw Exception(apiResponse.message ?? 'Failed to reject join request');
+          developer.log(
+            'Failed to reject join request: ${apiResponse.message}',
+            name: 'ApiJoinRequestRepository',
+            level: 900,
+          );
+          throw Exception(
+            apiResponse.message ?? 'Failed to reject join request',
+          );
         }
       }
     } catch (e) {
-      developer.log('Error rejecting join request: $e', name: 'ApiJoinRequestRepository', level: 900);
+      developer.log(
+        'Error rejecting join request: $e',
+        name: 'ApiJoinRequestRepository',
+        level: 900,
+      );
       rethrow;
     }
   }
@@ -190,7 +235,9 @@ class MockJoinRequestRepository implements JoinRequestRepository {
     await Future.delayed(const Duration(milliseconds: 250));
 
     final requests = _requestsByGroup[groupId] ?? [];
-    return requests.where((r) => r.status == JoinRequestStatus.pending).toList();
+    return requests
+        .where((r) => r.status == JoinRequestStatus.pending)
+        .toList();
   }
 
   @override

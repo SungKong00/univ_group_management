@@ -22,7 +22,8 @@ class SidebarNavigation extends ConsumerStatefulWidget {
   ConsumerState<SidebarNavigation> createState() => _SidebarNavigationState();
 }
 
-class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with TickerProviderStateMixin {
+class _SidebarNavigationState extends ConsumerState<SidebarNavigation>
+    with TickerProviderStateMixin {
   late AnimationController _collapseAnim; // 0 = expanded, 1 = collapsed
   bool _targetCollapsed = false;
   bool _firstSyncDone = false;
@@ -30,7 +31,10 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
   @override
   void initState() {
     super.initState();
-    _collapseAnim = AnimationController(vsync: this, duration: AppConstants.animationDuration);
+    _collapseAnim = AnimationController(
+      vsync: this,
+      duration: AppConstants.animationDuration,
+    );
   }
 
   @override
@@ -62,7 +66,9 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
     return AnimatedContainer(
       duration: AppConstants.animationDuration,
       curve: Curves.easeInOutCubic,
-      width: isCollapsed ? AppConstants.sidebarCollapsedWidth : AppConstants.sidebarWidth,
+      width: isCollapsed
+          ? AppConstants.sidebarCollapsedWidth
+          : AppConstants.sidebarWidth,
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -78,18 +84,12 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
             height: isCollapsed ? 16 : 24,
           ),
           // 네비게이션 아이템들
-          ...NavigationConfig.items.map((config) => _buildNavigationItem(
-                context,
-                ref,
-                config,
-                isCollapsed,
-              )),
+          ...NavigationConfig.items.map(
+            (config) => _buildNavigationItem(context, ref, config, isCollapsed),
+          ),
           const Spacer(),
           if (currentUser != null)
-            UserInfoCard(
-              user: currentUser,
-              isCompact: isCollapsed,
-            ),
+            UserInfoCard(user: currentUser, isCompact: isCollapsed),
         ],
       ),
     );
@@ -102,7 +102,10 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
     bool isCollapsed,
   ) {
     final currentLocation = GoRouterState.of(context).uri.path;
-    final isSelected = NavigationUtils.isRouteSelected(currentLocation, config.route);
+    final isSelected = NavigationUtils.isRouteSelected(
+      currentLocation,
+      config.route,
+    );
 
     return AnimatedContainer(
       duration: AppConstants.animationDuration,
@@ -113,7 +116,9 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
         vertical: isCollapsed ? 2 : 8,
       ),
       child: Material(
-        color: isSelected ? AppColors.action.withValues(alpha: 0.1) : Colors.transparent,
+        color: isSelected
+            ? AppColors.action.withValues(alpha: 0.1)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: () => _handleItemTap(context, ref, config),
@@ -133,7 +138,11 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
     );
   }
 
-  Widget _buildItemContent(NavigationConfig config, bool isSelected, bool isCollapsed) {
+  Widget _buildItemContent(
+    NavigationConfig config,
+    bool isSelected,
+    bool isCollapsed,
+  ) {
     const double iconSize = 24;
     const double gapFull = 16;
 
@@ -150,16 +159,28 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
             const double phaseSplit = 0.55; // 55% 구간까지 텍스트/갭 축소, 이후 아이콘 이동
 
             // 텍스트/갭 수축 진행도 (0=없음 1=완료)
-            final double shrinkProgress = (t <= phaseSplit) ? (t / phaseSplit) : 1.0;
+            final double shrinkProgress = (t <= phaseSplit)
+                ? (t / phaseSplit)
+                : 1.0;
             // 아이콘 이동 진행도 (0=왼쪽 1=중앙)
-            final double moveProgress = (t <= phaseSplit) ? 0.0 : ((t - phaseSplit) / (1 - phaseSplit));
+            final double moveProgress = (t <= phaseSplit)
+                ? 0.0
+                : ((t - phaseSplit) / (1 - phaseSplit));
 
             final double currentGap = gapFull * (1 - shrinkProgress); // 16 -> 0
-            final double textOpacity = (1 - shrinkProgress).clamp(0, 1); // 1 -> 0
-            final double textWidthFactor = (1 - shrinkProgress).clamp(0, 1); // 1 -> 0
-            final double iconDx = centerShift * moveProgress; // 0 -> centerShift
+            final double textOpacity = (1 - shrinkProgress).clamp(
+              0,
+              1,
+            ); // 1 -> 0
+            final double textWidthFactor = (1 - shrinkProgress).clamp(
+              0,
+              1,
+            ); // 1 -> 0
+            final double iconDx =
+                centerShift * moveProgress; // 0 -> centerShift
 
-            final bool showSelectionBar = isSelected && (textOpacity > 0.05); // 텍스트 거의 사라질 때 제거
+            final bool showSelectionBar =
+                isSelected && (textOpacity > 0.05); // 텍스트 거의 사라질 때 제거
 
             return Stack(
               children: [
@@ -176,7 +197,9 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
                         child: Icon(
                           config.icon,
                           size: iconSize,
-                          color: isSelected ? AppColors.action : AppColors.lightSecondary,
+                          color: isSelected
+                              ? AppColors.action
+                              : AppColors.lightSecondary,
                         ),
                       ),
                       SizedBox(width: currentGap),
@@ -195,12 +218,15 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
                                   ? const SizedBox.shrink()
                                   : Column(
                                       mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           config.title,
                                           style: AppTheme.titleMedium.copyWith(
-                                            color: isSelected ? AppColors.action : AppColors.lightOnSurface,
+                                            color: isSelected
+                                                ? AppColors.action
+                                                : AppColors.lightOnSurface,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -208,7 +234,11 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
                                         Text(
                                           config.description,
                                           style: AppTheme.bodySmall.copyWith(
-                                            color: isSelected ? AppColors.action.withValues(alpha: 0.8) : AppColors.lightSecondary,
+                                            color: isSelected
+                                                ? AppColors.action.withValues(
+                                                    alpha: 0.8,
+                                                  )
+                                                : AppColors.lightSecondary,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -239,8 +269,14 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
     );
   }
 
-  void _handleItemTap(BuildContext context, WidgetRef ref, NavigationConfig config) async {
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+  void _handleItemTap(
+    BuildContext context,
+    WidgetRef ref,
+    NavigationConfig config,
+  ) async {
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
 
     if (config.route == AppConstants.workspaceRoute) {
       navigationController.enterWorkspace();
@@ -261,12 +297,14 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
         final topGroup = groupService.getTopLevelGroup(myGroups);
 
         if (topGroup != null && context.mounted) {
-          developer.log('Navigating to workspace/${topGroup.id}', name: 'SidebarNav');
-          ref.read(workspaceStateProvider.notifier).clearError();
-          ref.read(workspaceStateProvider.notifier).enterWorkspace(
-            topGroup.id.toString(),
-            membership: topGroup,
+          developer.log(
+            'Navigating to workspace/${topGroup.id}',
+            name: 'SidebarNav',
           );
+          ref.read(workspaceStateProvider.notifier).clearError();
+          ref
+              .read(workspaceStateProvider.notifier)
+              .enterWorkspace(topGroup.id.toString(), membership: topGroup);
           context.go('/workspace/${topGroup.id}');
         } else if (context.mounted) {
           developer.log('No groups available', name: 'SidebarNav');
@@ -283,7 +321,9 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation> with Tick
         );
 
         if (context.mounted) {
-          ref.read(workspaceStateProvider.notifier).setError('워크스페이스를 불러올 수 없습니다');
+          ref
+              .read(workspaceStateProvider.notifier)
+              .setError('워크스페이스를 불러올 수 없습니다');
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

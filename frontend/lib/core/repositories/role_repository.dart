@@ -9,8 +9,19 @@ import '../network/dio_client.dart';
 /// Phase 2: API 연동 시 GroupService와 통합
 abstract class RoleRepository {
   Future<List<GroupRole>> getGroupRoles(int groupId);
-  Future<GroupRole> createRole(int groupId, String name, String description, List<String> permissions);
-  Future<GroupRole> updateRole(int groupId, String roleId, String name, String description, List<String> permissions);
+  Future<GroupRole> createRole(
+    int groupId,
+    String name,
+    String description,
+    List<String> permissions,
+  );
+  Future<GroupRole> updateRole(
+    int groupId,
+    String roleId,
+    String name,
+    String description,
+    List<String> permissions,
+  );
   Future<void> deleteRole(int groupId, String roleId);
 }
 
@@ -21,35 +32,48 @@ class ApiRoleRepository implements RoleRepository {
   @override
   Future<List<GroupRole>> getGroupRoles(int groupId) async {
     try {
-      developer.log('Fetching roles for group $groupId', name: 'ApiRoleRepository');
+      developer.log(
+        'Fetching roles for group $groupId',
+        name: 'ApiRoleRepository',
+      );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/roles',
       );
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            if (json is List) {
-              return json.map((item) => _parseGroupRole(item as Map<String, dynamic>)).toList();
-            }
-            return <GroupRole>[];
-          },
-        );
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map((item) => _parseGroupRole(item as Map<String, dynamic>))
+                .toList();
+          }
+          return <GroupRole>[];
+        });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log('Successfully fetched ${apiResponse.data!.length} roles', name: 'ApiRoleRepository');
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} roles',
+            name: 'ApiRoleRepository',
+          );
           return apiResponse.data!;
         } else {
-          developer.log('Failed to fetch roles: ${apiResponse.message}', name: 'ApiRoleRepository', level: 900);
+          developer.log(
+            'Failed to fetch roles: ${apiResponse.message}',
+            name: 'ApiRoleRepository',
+            level: 900,
+          );
           throw Exception(apiResponse.message ?? 'Failed to fetch roles');
         }
       }
 
       throw Exception('Empty response from server');
     } catch (e) {
-      developer.log('Error fetching roles: $e', name: 'ApiRoleRepository', level: 900);
+      developer.log(
+        'Error fetching roles: $e',
+        name: 'ApiRoleRepository',
+        level: 900,
+      );
       rethrow;
     }
   }
@@ -62,7 +86,10 @@ class ApiRoleRepository implements RoleRepository {
     List<String> permissions,
   ) async {
     try {
-      developer.log('Creating role in group $groupId: $name', name: 'ApiRoleRepository');
+      developer.log(
+        'Creating role in group $groupId: $name',
+        name: 'ApiRoleRepository',
+      );
 
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/groups/$groupId/roles',
@@ -83,14 +110,22 @@ class ApiRoleRepository implements RoleRepository {
           developer.log('Successfully created role', name: 'ApiRoleRepository');
           return apiResponse.data!;
         } else {
-          developer.log('Failed to create role: ${apiResponse.message}', name: 'ApiRoleRepository', level: 900);
+          developer.log(
+            'Failed to create role: ${apiResponse.message}',
+            name: 'ApiRoleRepository',
+            level: 900,
+          );
           throw Exception(apiResponse.message ?? 'Failed to create role');
         }
       }
 
       throw Exception('Empty response from server');
     } catch (e) {
-      developer.log('Error creating role: $e', name: 'ApiRoleRepository', level: 900);
+      developer.log(
+        'Error creating role: $e',
+        name: 'ApiRoleRepository',
+        level: 900,
+      );
       rethrow;
     }
   }
@@ -104,7 +139,10 @@ class ApiRoleRepository implements RoleRepository {
     List<String> permissions,
   ) async {
     try {
-      developer.log('Updating role $roleId in group $groupId', name: 'ApiRoleRepository');
+      developer.log(
+        'Updating role $roleId in group $groupId',
+        name: 'ApiRoleRepository',
+      );
 
       final response = await _dioClient.put<Map<String, dynamic>>(
         '/groups/$groupId/roles/$roleId',
@@ -125,14 +163,22 @@ class ApiRoleRepository implements RoleRepository {
           developer.log('Successfully updated role', name: 'ApiRoleRepository');
           return apiResponse.data!;
         } else {
-          developer.log('Failed to update role: ${apiResponse.message}', name: 'ApiRoleRepository', level: 900);
+          developer.log(
+            'Failed to update role: ${apiResponse.message}',
+            name: 'ApiRoleRepository',
+            level: 900,
+          );
           throw Exception(apiResponse.message ?? 'Failed to update role');
         }
       }
 
       throw Exception('Empty response from server');
     } catch (e) {
-      developer.log('Error updating role: $e', name: 'ApiRoleRepository', level: 900);
+      developer.log(
+        'Error updating role: $e',
+        name: 'ApiRoleRepository',
+        level: 900,
+      );
       rethrow;
     }
   }
@@ -140,7 +186,10 @@ class ApiRoleRepository implements RoleRepository {
   @override
   Future<void> deleteRole(int groupId, String roleId) async {
     try {
-      developer.log('Deleting role $roleId from group $groupId', name: 'ApiRoleRepository');
+      developer.log(
+        'Deleting role $roleId from group $groupId',
+        name: 'ApiRoleRepository',
+      );
 
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/groups/$groupId/roles/$roleId',
@@ -155,12 +204,20 @@ class ApiRoleRepository implements RoleRepository {
         if (apiResponse.success) {
           developer.log('Successfully deleted role', name: 'ApiRoleRepository');
         } else {
-          developer.log('Failed to delete role: ${apiResponse.message}', name: 'ApiRoleRepository', level: 900);
+          developer.log(
+            'Failed to delete role: ${apiResponse.message}',
+            name: 'ApiRoleRepository',
+            level: 900,
+          );
           throw Exception(apiResponse.message ?? 'Failed to delete role');
         }
       }
     } catch (e) {
-      developer.log('Error deleting role: $e', name: 'ApiRoleRepository', level: 900);
+      developer.log(
+        'Error deleting role: $e',
+        name: 'ApiRoleRepository',
+        level: 900,
+      );
       rethrow;
     }
   }
@@ -183,7 +240,8 @@ class ApiRoleRepository implements RoleRepository {
       description: json['description'] as String? ?? '',
       isSystemRole: json['isSystemRole'] as bool? ?? false,
       priority: (json['priority'] as num?)?.toInt() ?? 0,
-      permissions: (json['permissions'] as List<dynamic>?)
+      permissions:
+          (json['permissions'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],

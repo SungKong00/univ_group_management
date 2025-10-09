@@ -29,16 +29,13 @@ class HomePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '안녕하세요! 👋',
-                  style: AppTheme.displayMediumTheme(context),
-                ),
+                Text('안녕하세요! 👋', style: AppTheme.displayMediumTheme(context)),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   '오늘도 활발한 그룹 활동을 시작해보세요',
-                  style: AppTheme.bodyLargeTheme(context).copyWith(
-                    color: AppColors.neutral600,
-                  ),
+                  style: AppTheme.bodyLargeTheme(
+                    context,
+                  ).copyWith(color: AppColors.neutral600),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _buildQuickActions(context, isDesktop),
@@ -58,10 +55,7 @@ class HomePage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '빠른 실행',
-          style: AppTheme.headlineSmallTheme(context),
-        ),
+        Text('빠른 실행', style: AppTheme.headlineSmallTheme(context)),
         const SizedBox(height: AppSpacing.sm),
         isDesktop
             ? Row(
@@ -117,17 +111,11 @@ class HomePage extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '최근 활동 그룹',
-              style: AppTheme.headlineSmallTheme(context),
-            ),
+            Text('최근 활동 그룹', style: AppTheme.headlineSmallTheme(context)),
             Semantics(
               button: true,
               label: '전체 그룹 보기',
-              child: TextButton(
-                onPressed: () {},
-                child: const Text('전체 보기'),
-              ),
+              child: TextButton(onPressed: () {}, child: const Text('전체 보기')),
             ),
           ],
         ),
@@ -154,10 +142,7 @@ class HomePage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '최근 활동',
-          style: AppTheme.headlineSmallTheme(context),
-        ),
+        Text('최근 활동', style: AppTheme.headlineSmallTheme(context)),
         const SizedBox(height: AppSpacing.sm),
         Card(
           child: Padding(
@@ -202,9 +187,9 @@ class HomePage extends StatelessWidget {
                   ),
                   Text(
                     '${index + 1}시간 전',
-                    style: AppTheme.bodySmallTheme(context).copyWith(
-                      color: AppColors.neutral600,
-                    ),
+                    style: AppTheme.bodySmallTheme(
+                      context,
+                    ).copyWith(color: AppColors.neutral600),
                   ),
                 ],
               ),

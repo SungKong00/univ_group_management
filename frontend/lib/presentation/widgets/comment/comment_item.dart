@@ -48,7 +48,8 @@ class CommentItem extends StatelessWidget {
   }
 
   Widget _buildProfileImage() {
-    final hasImage = comment.authorProfileUrl != null &&
+    final hasImage =
+        comment.authorProfileUrl != null &&
         comment.authorProfileUrl!.isNotEmpty;
 
     if (hasImage) {
@@ -68,9 +69,7 @@ class CommentItem extends StatelessWidget {
       backgroundColor: AppColors.neutral400,
       child: Text(
         initial,
-        style: AppTheme.bodySmall.copyWith(
-          color: Colors.white,
-        ),
+        style: AppTheme.bodySmall.copyWith(color: Colors.white),
       ),
     );
   }
@@ -91,9 +90,7 @@ class CommentItem extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           timeText,
-          style: AppTheme.bodySmall.copyWith(
-            color: AppColors.neutral500,
-          ),
+          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
         ),
       ],
     );

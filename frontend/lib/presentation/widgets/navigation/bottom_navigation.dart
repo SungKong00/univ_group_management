@@ -50,7 +50,9 @@ class BottomNavigation extends ConsumerWidget {
 
   void _onTap(BuildContext context, WidgetRef ref, int index) async {
     final config = NavigationConfig.items[index];
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
 
     if (config.route == AppConstants.workspaceRoute) {
       navigationController.enterWorkspace();
@@ -71,12 +73,14 @@ class BottomNavigation extends ConsumerWidget {
         final topGroup = groupService.getTopLevelGroup(myGroups);
 
         if (topGroup != null && context.mounted) {
-          developer.log('Navigating to workspace/${topGroup.id}', name: 'BottomNav');
-          ref.read(workspaceStateProvider.notifier).clearError();
-          ref.read(workspaceStateProvider.notifier).enterWorkspace(
-            topGroup.id.toString(),
-            membership: topGroup,
+          developer.log(
+            'Navigating to workspace/${topGroup.id}',
+            name: 'BottomNav',
           );
+          ref.read(workspaceStateProvider.notifier).clearError();
+          ref
+              .read(workspaceStateProvider.notifier)
+              .enterWorkspace(topGroup.id.toString(), membership: topGroup);
           context.go('/workspace/${topGroup.id}');
         } else if (context.mounted) {
           developer.log('No groups available', name: 'BottomNav');
@@ -93,7 +97,9 @@ class BottomNavigation extends ConsumerWidget {
         );
 
         if (context.mounted) {
-          ref.read(workspaceStateProvider.notifier).setError('워크스페이스를 불러올 수 없습니다');
+          ref
+              .read(workspaceStateProvider.notifier)
+              .setError('워크스페이스를 불러올 수 없습니다');
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

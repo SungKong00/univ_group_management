@@ -23,10 +23,7 @@ enum WorkspaceEmptyType {
 class WorkspaceEmptyState extends StatelessWidget {
   final WorkspaceEmptyType type;
 
-  const WorkspaceEmptyState({
-    super.key,
-    required this.type,
-  });
+  const WorkspaceEmptyState({super.key, required this.type});
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +31,7 @@ class WorkspaceEmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            _getIcon(),
-            size: 64,
-            color: AppColors.brand,
-          ),
+          Icon(_getIcon(), size: 64, color: AppColors.brand),
           const SizedBox(height: 16),
           Text(_getTitle(), style: AppTheme.displaySmall),
           const SizedBox(height: 8),

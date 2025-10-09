@@ -310,10 +310,7 @@ class AppTheme {
       ),
 
       // ========== Divider Theme ==========
-      dividerTheme: DividerThemeData(
-        color: colorScheme.outline,
-        thickness: 1,
-      ),
+      dividerTheme: DividerThemeData(color: colorScheme.outline, thickness: 1),
 
       // ========== Progress Indicator Theme ==========
       progressIndicatorTheme: ProgressIndicatorThemeData(
@@ -352,9 +349,7 @@ class AppTheme {
       ),
       backgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.disabled)) {
-          return isDark
-              ? AppColors.disabledBgDark
-              : AppColors.disabledBgLight;
+          return isDark ? AppColors.disabledBgDark : AppColors.disabledBgLight;
         }
         if (states.contains(WidgetState.hovered)) {
           return AppColors.actionHover;
@@ -411,9 +406,7 @@ class AppTheme {
     ).copyWith(
       backgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.disabled)) {
-          return isDark
-              ? AppColors.disabledBgDark
-              : AppColors.disabledBgLight;
+          return isDark ? AppColors.disabledBgDark : AppColors.disabledBgLight;
         }
         return AppColors.brand;
       }),

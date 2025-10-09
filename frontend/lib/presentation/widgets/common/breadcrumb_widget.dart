@@ -29,10 +29,7 @@ import '../../../core/theme/theme.dart';
 /// )
 /// ```
 class BreadcrumbWidget extends StatelessWidget {
-  const BreadcrumbWidget({
-    super.key,
-    required this.breadcrumb,
-  });
+  const BreadcrumbWidget({super.key, required this.breadcrumb});
 
   final PageBreadcrumb breadcrumb;
 
@@ -91,9 +88,6 @@ class BreadcrumbWidget extends StatelessWidget {
       }
     }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: widgets,
-    );
+    return Row(mainAxisSize: MainAxisSize.min, children: widgets);
   }
 }

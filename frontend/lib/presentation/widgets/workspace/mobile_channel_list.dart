@@ -50,9 +50,7 @@ class MobileChannelList extends ConsumerWidget {
           _buildTopSection(ref),
           const Divider(height: 1, thickness: 1),
           _buildChannelList(ref),
-          if (hasAnyGroupPermission) ...[
-            _buildBottomSection(context, ref),
-          ],
+          if (hasAnyGroupPermission) ...[_buildBottomSection(context, ref)],
         ],
       ),
     );
@@ -166,7 +164,9 @@ class MobileChannelList extends ConsumerWidget {
             unreadCount: unreadCount,
             onTap: () {
               // 모바일에서는 selectChannelForMobile 사용 (Step 1 → Step 2)
-              ref.read(workspaceStateProvider.notifier).selectChannelForMobile(channelId);
+              ref
+                  .read(workspaceStateProvider.notifier)
+                  .selectChannelForMobile(channelId);
             },
           );
         },

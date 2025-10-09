@@ -16,7 +16,6 @@ import '../../widgets/workspace/mobile_channel_list.dart';
 import '../../widgets/workspace/mobile_channel_posts_view.dart';
 import '../../widgets/workspace/mobile_post_comments_view.dart';
 
-
 import '../../widgets/comment/comment_list.dart';
 import '../../widgets/comment/comment_composer.dart';
 
@@ -97,9 +96,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     final membership = groupsAsync.maybeWhen(
       data: (groups) {
         try {
-          return groups.firstWhere(
-            (g) => g.id.toString() == widget.groupId,
-          );
+          return groups.firstWhere((g) => g.id.toString() == widget.groupId);
         } catch (e) {
           return null;
         }
@@ -127,7 +124,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   @override
   Widget build(BuildContext context) {
-    final workspaceState = ref.watch(workspaceStateProvider);
+    final isCommentsVisible = ref.watch(isCommentsVisibleProvider);
+    final selectedPostId = ref.watch(workspaceSelectedPostIdProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -145,13 +143,14 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           _handleResponsiveTransition(isMobile, isNarrowDesktop);
 
           // 데스크톱에서 댓글창이 열릴 때 게시글 로드
-          if (isDesktop && workspaceState.isCommentsVisible) {
-            final currentPostId = workspaceState.selectedPostId;
-            if (currentPostId != null && currentPostId != _previousSelectedPostId) {
+          if (isDesktop && isCommentsVisible) {
+            final currentPostId = selectedPostId;
+            if (currentPostId != null &&
+                currentPostId != _previousSelectedPostId) {
               ref.read(postPreviewProvider.notifier).loadPost(currentPostId);
               _previousSelectedPostId = currentPostId;
             }
-          } else if (isDesktop && !workspaceState.isCommentsVisible) {
+          } else if (isDesktop && !isCommentsVisible) {
             // 댓글창 닫힐 때 상태 초기화
             _previousSelectedPostId = null;
           }
@@ -172,8 +171,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           child: Container(
             color: AppColors.lightBackground,
             child: isDesktop
-                ? _buildDesktopWorkspace(workspaceState, isNarrowDesktop: isNarrowDesktop)
-                : _buildMobileWorkspace(workspaceState),
+                ? _buildDesktopWorkspace(isNarrowDesktop: isNarrowDesktop)
+                : _buildMobileWorkspace(),
           ),
         );
       },
@@ -191,7 +190,11 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     }
 
     final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
-    final workspaceState = ref.read(workspaceStateProvider);
+    final isCommentsVisible = ref.read(isCommentsVisibleProvider);
+    final isNarrowFullscreen = ref.read(
+      workspaceIsNarrowDesktopCommentsFullscreenProvider,
+    );
+    final selectedPostId = ref.read(workspaceSelectedPostIdProvider);
 
     // 모바일 ↔ 웹 전환 처리
     if (_previousIsMobile != isMobile) {
@@ -209,19 +212,23 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     // Narrow Desktop ↔ Wide Desktop 전환 처리
     if (!isMobile && _previousIsNarrowDesktop != isNarrowDesktop) {
       // 댓글이 열려있는 경우 narrow desktop 상태 동기화
-      if (workspaceState.isCommentsVisible) {
-        if (isNarrowDesktop && !workspaceState.isNarrowDesktopCommentsFullscreen) {
+      if (isCommentsVisible) {
+        if (isNarrowDesktop && !isNarrowFullscreen) {
           // Wide → Narrow: 댓글을 전체 화면 모드로 전환
-          workspaceNotifier.showComments(
-            workspaceState.selectedPostId!,
-            isNarrowDesktop: true,
-          );
-        } else if (!isNarrowDesktop && workspaceState.isNarrowDesktopCommentsFullscreen) {
+          if (selectedPostId != null) {
+            workspaceNotifier.showComments(
+              selectedPostId,
+              isNarrowDesktop: true,
+            );
+          }
+        } else if (!isNarrowDesktop && isNarrowFullscreen) {
           // Narrow → Wide: 댓글을 사이드바 모드로 전환
-          workspaceNotifier.showComments(
-            workspaceState.selectedPostId!,
-            isNarrowDesktop: false,
-          );
+          if (selectedPostId != null) {
+            workspaceNotifier.showComments(
+              selectedPostId,
+              isNarrowDesktop: false,
+            );
+          }
         }
       }
 
@@ -231,14 +238,15 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   /// 모바일 뒤로가기 가능 여부 확인
   bool _canHandleMobileBack() {
-    final workspaceState = ref.read(workspaceStateProvider);
+    final currentView = ref.read(workspaceCurrentViewProvider);
+    final mobileView = ref.read(workspaceMobileViewProvider);
     // 특수 뷰(그룹 관리자, 멤버관리, 그룹 홈, 캘린더 등)에서는 내부적으로 뒤로가기를 처리
-    if (workspaceState.currentView != WorkspaceView.channel) {
+    if (currentView != WorkspaceView.channel) {
       return true;
     }
     // channelList 상태에서는 뒤로가기를 허용 (홈으로 이동)
     // 나머지 상태에서는 내부적으로 처리
-    return workspaceState.mobileView != MobileWorkspaceView.channelList;
+    return mobileView != MobileWorkspaceView.channelList;
   }
 
   /// 모바일 뒤로가기 처리
@@ -251,16 +259,19 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   /// Narrow Desktop 뒤로가기 가능 여부 확인
   bool _canHandleNarrowDesktopBack() {
-    final workspaceState = ref.read(workspaceStateProvider);
+    final isCommentFullscreen = ref.read(
+      workspaceIsNarrowDesktopCommentsFullscreenProvider,
+    );
+    final currentView = ref.read(workspaceCurrentViewProvider);
+    final previousView = ref.read(workspacePreviousViewProvider);
 
     // 1. 댓글 전체화면일 때
-    if (workspaceState.isNarrowDesktopCommentsFullscreen) {
+    if (isCommentFullscreen) {
       return true;
     }
 
     // 2. 특수 뷰(groupAdmin, memberManagement 등)일 때
-    if (workspaceState.currentView != WorkspaceView.channel &&
-        workspaceState.previousView != null) {
+    if (currentView != WorkspaceView.channel && previousView != null) {
       return true;
     }
 
@@ -270,37 +281,42 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   /// Narrow Desktop 뒤로가기 처리
   void _handleNarrowDesktopBackPress() {
     final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
-    final workspaceState = ref.read(workspaceStateProvider);
+    final currentView = ref.read(workspaceCurrentViewProvider);
+    final isCommentFullscreen = ref.read(
+      workspaceIsNarrowDesktopCommentsFullscreenProvider,
+    );
 
     // 특수 뷰에서는 handleWebBack() 호출
-    if (workspaceState.currentView != WorkspaceView.channel) {
+    if (currentView != WorkspaceView.channel) {
       workspaceNotifier.handleWebBack();
       return;
     }
 
     // 댓글 전체화면에서는 댓글 닫기
-    if (workspaceState.isNarrowDesktopCommentsFullscreen) {
+    if (isCommentFullscreen) {
       workspaceNotifier.hideComments();
     }
   }
 
   /// Wide Desktop 뒤로가기 가능 여부 확인
   bool _canHandleWideDesktopBack() {
-    final workspaceState = ref.read(workspaceStateProvider);
+    final currentView = ref.read(workspaceCurrentViewProvider);
+    final previousView = ref.read(workspacePreviousViewProvider);
+    final isCommentsVisible = ref.read(isCommentsVisibleProvider);
+    final channelHistory = ref.read(workspaceChannelHistoryProvider);
 
     // 1. 특수 뷰(groupAdmin, memberManagement 등)일 때
-    if (workspaceState.currentView != WorkspaceView.channel &&
-        workspaceState.previousView != null) {
+    if (currentView != WorkspaceView.channel && previousView != null) {
       return true;
     }
 
     // 2. 댓글이 열려있을 때
-    if (workspaceState.isCommentsVisible) {
+    if (isCommentsVisible) {
       return true;
     }
 
     // 3. 채널 히스토리가 있을 때
-    if (workspaceState.channelHistory.isNotEmpty) {
+    if (channelHistory.isNotEmpty) {
       return true;
     }
 
@@ -317,21 +333,23 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   /// Tablet (MEDIUM) 뒤로가기 가능 여부 확인
   bool _canHandleTabletBack() {
-    final workspaceState = ref.read(workspaceStateProvider);
+    final currentView = ref.read(workspaceCurrentViewProvider);
+    final previousView = ref.read(workspacePreviousViewProvider);
+    final isCommentsVisible = ref.read(isCommentsVisibleProvider);
+    final channelHistory = ref.read(workspaceChannelHistoryProvider);
 
     // 1. 특수 뷰(groupAdmin, memberManagement 등)일 때
-    if (workspaceState.currentView != WorkspaceView.channel &&
-        workspaceState.previousView != null) {
+    if (currentView != WorkspaceView.channel && previousView != null) {
       return true;
     }
 
     // 2. 댓글이 열려있을 때
-    if (workspaceState.isCommentsVisible) {
+    if (isCommentsVisible) {
       return true;
     }
 
     // 3. 채널 히스토리가 있을 때
-    if (workspaceState.channelHistory.isNotEmpty) {
+    if (channelHistory.isNotEmpty) {
       return true;
     }
 
@@ -392,38 +410,47 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     }
   }
 
-  Widget _buildDesktopWorkspace(WorkspaceState workspaceState, {bool isNarrowDesktop = false}) {
+  Widget _buildDesktopWorkspace({bool isNarrowDesktop = false}) {
     return DesktopWorkspaceLayout(
-      workspaceState: workspaceState,
       isNarrowDesktop: isNarrowDesktop,
-      mainContent: _buildMainContent(workspaceState),
-      commentsView: _buildCommentsView(workspaceState),
+      mainContent: _buildMainContent(),
+      commentsView: _buildCommentsView(),
     );
   }
 
-  Widget _buildMobileWorkspace(WorkspaceState workspaceState) {
+  Widget _buildMobileWorkspace() {
+    final isLoadingWorkspace = ref.watch(workspaceIsLoadingProvider);
+    final errorMessage = ref.watch(workspaceErrorMessageProvider);
+    final isInWorkspace = ref.watch(isInWorkspaceProvider);
+    final currentView = ref.watch(workspaceCurrentViewProvider);
+    final mobileView = ref.watch(workspaceMobileViewProvider);
+    final selectedChannelId = ref.watch(currentChannelIdProvider);
+    final selectedGroupId = ref.watch(currentGroupIdProvider);
+    final channelPermissions = ref.watch(workspaceChannelPermissionsProvider);
+    final selectedPostId = ref.watch(workspaceSelectedPostIdProvider);
+
     // 1. 로딩 상태 체크
-    if (workspaceState.isLoadingWorkspace) {
+    if (isLoadingWorkspace) {
       return const WorkspaceStateView(type: WorkspaceStateType.loading);
     }
 
     // 2. 에러 상태 체크
-    if (workspaceState.errorMessage != null) {
+    if (errorMessage != null) {
       return WorkspaceStateView(
         type: WorkspaceStateType.error,
-        errorMessage: workspaceState.errorMessage,
+        errorMessage: errorMessage,
         onRetry: _retryLoadWorkspace,
       );
     }
 
     // 3. 워크스페이스 미진입 체크
-    if (!workspaceState.isInWorkspace) {
+    if (!isInWorkspace) {
       return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
     }
 
     // 4. 특수 뷰 우선 처리 (groupAdmin, memberManagement 등)
-    if (workspaceState.currentView != WorkspaceView.channel) {
-      switch (workspaceState.currentView) {
+    if (currentView != WorkspaceView.channel) {
+      switch (currentView) {
         case WorkspaceView.groupHome:
           return const WorkspaceEmptyState(type: WorkspaceEmptyType.groupHome);
         case WorkspaceView.calendar:
@@ -439,85 +466,103 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     }
 
     // 5. 모바일 3단계 플로우에 따른 뷰 전환 (채널 관련)
-    switch (workspaceState.mobileView) {
+    switch (mobileView) {
       case MobileWorkspaceView.channelList:
         // Step 1: 채널 목록
-        return _buildMobileChannelList(workspaceState);
+        return _buildMobileChannelList();
 
       case MobileWorkspaceView.channelPosts:
         // Step 2: 선택된 채널의 게시글 목록
-        if (workspaceState.selectedChannelId == null) {
+        if (selectedChannelId == null) {
           // 채널이 선택되지 않았다면 채널 목록으로 폴백
-          return _buildMobileChannelList(workspaceState);
+          return _buildMobileChannelList();
         }
         return MobileChannelPostsView(
-          channelId: workspaceState.selectedChannelId!,
-          groupId: workspaceState.selectedGroupId!,
-          permissions: workspaceState.channelPermissions,
+          channelId: selectedChannelId,
+          groupId: selectedGroupId!,
+          permissions: channelPermissions,
         );
 
       case MobileWorkspaceView.postComments:
         // Step 3: 선택된 게시글의 댓글
-        if (workspaceState.selectedPostId == null ||
-            workspaceState.selectedChannelId == null) {
+        if (selectedPostId == null || selectedChannelId == null) {
           // 게시글이나 채널이 선택되지 않았다면 게시글 목록으로 폴백
-          if (workspaceState.selectedChannelId != null) {
+          if (selectedChannelId != null) {
             return MobileChannelPostsView(
-              channelId: workspaceState.selectedChannelId!,
-              groupId: workspaceState.selectedGroupId!,
-              permissions: workspaceState.channelPermissions,
+              channelId: selectedChannelId,
+              groupId: selectedGroupId!,
+              permissions: channelPermissions,
             );
           }
-          return _buildMobileChannelList(workspaceState);
+          return _buildMobileChannelList();
         }
         return MobilePostCommentsView(
-          postId: workspaceState.selectedPostId!,
-          channelId: workspaceState.selectedChannelId!,
-          groupId: workspaceState.selectedGroupId!,
-          permissions: workspaceState.channelPermissions,
+          postId: selectedPostId,
+          channelId: selectedChannelId,
+          groupId: selectedGroupId!,
+          permissions: channelPermissions,
         );
     }
   }
 
-  Widget _buildMobileChannelList(WorkspaceState workspaceState) {
+  Widget _buildMobileChannelList() {
+    final channels = ref.watch(workspaceChannelsProvider);
+    final selectedChannelId = ref.watch(currentChannelIdProvider);
+    final hasAnyGroupPermission = ref.watch(
+      workspaceHasAnyGroupPermissionProvider,
+    );
+    final unreadCounts = ref.watch(workspaceUnreadCountsProvider);
+    final currentGroupId = ref.watch(currentGroupIdProvider);
     return Consumer(
       builder: (context, ref, _) {
         // currentGroupNameProvider로 그룹 이름 가져오기
         final currentGroupName = ref.watch(currentGroupNameProvider);
 
         return MobileChannelList(
-          channels: workspaceState.channels,
-          selectedChannelId: workspaceState.selectedChannelId,
-          hasAnyGroupPermission: workspaceState.hasAnyGroupPermission,
-          unreadCounts: workspaceState.unreadCounts,
-          currentGroupId: workspaceState.selectedGroupId,
+          channels: channels,
+          selectedChannelId: selectedChannelId,
+          hasAnyGroupPermission: hasAnyGroupPermission,
+          unreadCounts: unreadCounts,
+          currentGroupId: currentGroupId,
           currentGroupName: currentGroupName,
         );
       },
     );
   }
 
-  Widget _buildMainContent(WorkspaceState workspaceState) {
+  Widget _buildMainContent() {
+    final isLoadingWorkspace = ref.watch(workspaceIsLoadingProvider);
+    final errorMessage = ref.watch(workspaceErrorMessageProvider);
+    final isInWorkspace = ref.watch(isInWorkspaceProvider);
+    final currentView = ref.watch(workspaceCurrentViewProvider);
+    final hasSelectedChannel = ref.watch(workspaceHasSelectedChannelProvider);
+    final channels = ref.watch(workspaceChannelsProvider);
+    final selectedChannelId = ref.watch(currentChannelIdProvider);
+    final channelPermissions = ref.watch(workspaceChannelPermissionsProvider);
+    final isLoadingPermissions = ref.watch(
+      workspaceIsLoadingPermissionsProvider,
+    );
+
     // Show loading state
-    if (workspaceState.isLoadingWorkspace) {
+    if (isLoadingWorkspace) {
       return const WorkspaceStateView(type: WorkspaceStateType.loading);
     }
 
     // Show error state
-    if (workspaceState.errorMessage != null) {
+    if (errorMessage != null) {
       return WorkspaceStateView(
         type: WorkspaceStateType.error,
-        errorMessage: workspaceState.errorMessage,
+        errorMessage: errorMessage,
         onRetry: _retryLoadWorkspace,
       );
     }
 
-    if (!workspaceState.isInWorkspace) {
+    if (!isInWorkspace) {
       return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
     }
 
     // Switch view based on currentView
-    switch (workspaceState.currentView) {
+    switch (currentView) {
       case WorkspaceView.groupHome:
         return const WorkspaceEmptyState(type: WorkspaceEmptyType.groupHome);
       case WorkspaceView.calendar:
@@ -527,25 +572,28 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       case WorkspaceView.memberManagement:
         return const MemberManagementPage();
       case WorkspaceView.channel:
-        if (!workspaceState.hasSelectedChannel) {
-          return const WorkspaceEmptyState(type: WorkspaceEmptyType.noChannelSelected);
+        if (!hasSelectedChannel) {
+          return const WorkspaceEmptyState(
+            type: WorkspaceEmptyType.noChannelSelected,
+          );
         }
         return ChannelContentView(
-          workspaceState: workspaceState,
+          channels: channels,
+          selectedChannelId: selectedChannelId!,
+          channelPermissions: channelPermissions,
+          isLoadingPermissions: isLoadingPermissions,
           onSubmitPost: (content) => _handleSubmitPost(context, ref, content),
           postReloadTick: _postListKey,
         );
     }
   }
 
-
   Future<void> _handleSubmitPost(
     BuildContext context,
     WidgetRef ref,
     String content,
   ) async {
-    final workspaceState = ref.read(workspaceStateProvider);
-    final channelId = workspaceState.selectedChannelId;
+    final channelId = ref.read(currentChannelIdProvider);
 
     if (channelId == null) {
       throw Exception('채널을 선택해주세요');
@@ -563,10 +611,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('게시글이 작성되었습니다'),
-           duration: Duration(milliseconds: 500),
-         ),
-       );
-     }
+          duration: Duration(milliseconds: 500),
+        ),
+      );
+    }
   }
 
   Future<void> _handleSubmitComment(
@@ -574,8 +622,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     WidgetRef ref,
     String content,
   ) async {
-    final workspaceState = ref.read(workspaceStateProvider);
-    final postIdStr = workspaceState.selectedPostId;
+    final postIdStr = ref.read(workspaceSelectedPostIdProvider);
 
     if (postIdStr == null) {
       throw Exception('게시글을 선택해주세요');
@@ -600,11 +647,14 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     }
   }
 
-
-  Widget _buildCommentsView(WorkspaceState workspaceState) {
-    final postIdStr = workspaceState.selectedPostId;
+  Widget _buildCommentsView() {
+    final postIdStr = ref.watch(workspaceSelectedPostIdProvider);
     final postId = postIdStr != null ? int.tryParse(postIdStr) : null;
-    final canWrite = workspaceState.channelPermissions?.canWriteComment ?? false;
+    final channelPermissions = ref.watch(workspaceChannelPermissionsProvider);
+    final canWrite = channelPermissions?.canWriteComment ?? false;
+    final isLoadingPermissions = ref.watch(
+      workspaceIsLoadingPermissionsProvider,
+    );
 
     return Stack(
       children: [
@@ -612,7 +662,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           children: [
             // 게시글 미리보기
             PostPreviewWidget(
-              onClose: () => ref.read(workspaceStateProvider.notifier).hideComments(),
+              onClose: () =>
+                  ref.read(workspaceStateProvider.notifier).hideComments(),
             ),
 
             const Divider(height: 1, thickness: 1),
@@ -642,8 +693,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
                 padding: EdgeInsets.all(AppSpacing.xs),
                 child: CommentComposer(
                   canWrite: canWrite,
-                  isLoading: workspaceState.channelPermissions == null,
-                  onSubmit: (content) => _handleSubmitComment(context, ref, content),
+                  isLoading: isLoadingPermissions,
+                  onSubmit: (content) =>
+                      _handleSubmitComment(context, ref, content),
                 ),
               ),
           ],
@@ -656,17 +708,14 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             padding: const EdgeInsets.all(4),
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 20,
-            onPressed: () => ref.read(workspaceStateProvider.notifier).hideComments(),
+            onPressed: () =>
+                ref.read(workspaceStateProvider.notifier).hideComments(),
             icon: const Icon(Icons.close),
           ),
         ),
       ],
     );
   }
-
-
-
-
 
   void _retryLoadWorkspace() {
     // Clear error and try again

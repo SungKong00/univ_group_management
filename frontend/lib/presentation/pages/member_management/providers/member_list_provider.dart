@@ -5,7 +5,10 @@ import '../../../../core/repositories/repository_providers.dart';
 /// 멤버 목록 Provider
 ///
 /// 특정 그룹의 멤버 목록을 제공합니다.
-final memberListProvider = FutureProvider.family<List<GroupMember>, int>((ref, groupId) async {
+final memberListProvider = FutureProvider.family<List<GroupMember>, int>((
+  ref,
+  groupId,
+) async {
   final repository = ref.watch(memberRepositoryProvider);
   return await repository.getGroupMembers(groupId);
 });
@@ -39,23 +42,20 @@ class UpdateMemberRoleParams {
 
 final updateMemberRoleProvider = FutureProvider.autoDispose
     .family<GroupMember, UpdateMemberRoleParams>((ref, params) async {
-  final repository = ref.watch(memberRepositoryProvider);
-  return await repository.updateMemberRole(
-    params.groupId,
-    params.userId,
-    params.roleId,
-  );
-});
+      final repository = ref.watch(memberRepositoryProvider);
+      return await repository.updateMemberRole(
+        params.groupId,
+        params.userId,
+        params.roleId,
+      );
+    });
 
 /// 멤버 제거 Provider
 class RemoveMemberParams {
   final int groupId;
   final String userId; // memberId → userId (String)
 
-  RemoveMemberParams({
-    required this.groupId,
-    required this.userId,
-  });
+  RemoveMemberParams({required this.groupId, required this.userId});
 
   @override
   bool operator ==(Object other) =>
@@ -71,9 +71,9 @@ class RemoveMemberParams {
 
 final removeMemberProvider = FutureProvider.autoDispose
     .family<void, RemoveMemberParams>((ref, params) async {
-  final repository = ref.watch(memberRepositoryProvider);
-  await repository.removeMember(params.groupId, params.userId);
+      final repository = ref.watch(memberRepositoryProvider);
+      await repository.removeMember(params.groupId, params.userId);
 
-  // 성공 후 멤버 목록 새로고침
-  ref.invalidate(memberListProvider(params.groupId));
-});
+      // 성공 후 멤버 목록 새로고침
+      ref.invalidate(memberListProvider(params.groupId));
+    });

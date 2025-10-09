@@ -32,7 +32,10 @@ void main() async {
 
     // Try auto login (non-blocking, 실패해도 앱은 계속 실행)
     authService.tryAutoLogin().catchError((error) {
-      developer.log('Auto login failed, continuing with manual login: $error', name: 'main');
+      developer.log(
+        'Auto login failed, continuing with manual login: $error',
+        name: 'main',
+      );
       return false; // Return false to indicate auto login failed
     });
   } catch (error) {
@@ -40,11 +43,7 @@ void main() async {
     // 초기화 실패해도 앱은 실행
   }
 
-  runApp(
-    const ProviderScope(
-      child: UniversityGroupApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: UniversityGroupApp()));
 }
 
 class UniversityGroupApp extends ConsumerWidget {

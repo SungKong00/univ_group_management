@@ -37,10 +37,7 @@ class JoinRequestSection extends ConsumerWidget {
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final request = requests[index];
-            return _JoinRequestCard(
-              request: request,
-              groupId: groupId,
-            );
+            return _JoinRequestCard(request: request, groupId: groupId);
           },
         );
       },
@@ -65,11 +62,7 @@ class JoinRequestSection extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.inbox_outlined,
-              size: 64,
-              color: AppColors.neutral400,
-            ),
+            Icon(Icons.inbox_outlined, size: 64, color: AppColors.neutral400),
             const SizedBox(height: 16),
             Text(
               '대기 중인 가입 신청이 없습니다',
@@ -87,10 +80,7 @@ class _JoinRequestCard extends ConsumerWidget {
   final JoinRequest request;
   final int groupId;
 
-  const _JoinRequestCard({
-    required this.request,
-    required this.groupId,
-  });
+  const _JoinRequestCard({required this.request, required this.groupId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -135,10 +125,7 @@ class _JoinRequestCard extends ConsumerWidget {
                 const SizedBox(height: 6),
                 Text(
                   request.message,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.neutral900,
-                  ),
+                  style: TextStyle(fontSize: 13, color: AppColors.neutral900),
                 ),
               ],
             ),
@@ -146,10 +133,7 @@ class _JoinRequestCard extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             '신청일: ${_formatDate(request.requestedAt)}',
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.neutral600,
-            ),
+            style: const TextStyle(fontSize: 12, color: AppColors.neutral600),
           ),
           const SizedBox(height: 16),
           // 액션 버튼
@@ -189,7 +173,11 @@ class _JoinRequestCard extends ConsumerWidget {
     );
   }
 
-  void _showApprovalDialog(BuildContext context, WidgetRef ref, List<GroupRole> roles) {
+  void _showApprovalDialog(
+    BuildContext context,
+    WidgetRef ref,
+    List<GroupRole> roles,
+  ) {
     String selectedRoleId = roles.first.id;
 
     showDialog(
@@ -248,13 +236,21 @@ class _JoinRequestCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleApprove(BuildContext context, WidgetRef ref, String roleId) async {
+  Future<void> _handleApprove(
+    BuildContext context,
+    WidgetRef ref,
+    String roleId,
+  ) async {
     try {
-      await ref.read(approveJoinRequestProvider(ApproveRequestParams(
-        groupId: groupId,
-        requestId: request.id,
-        roleId: roleId,
-      )).future);
+      await ref.read(
+        approveJoinRequestProvider(
+          ApproveRequestParams(
+            groupId: groupId,
+            requestId: request.id,
+            roleId: roleId,
+          ),
+        ).future,
+      );
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -298,16 +294,15 @@ class _JoinRequestCard extends ConsumerWidget {
 
     if (confirmed == true && context.mounted) {
       try {
-        await ref.read(rejectJoinRequestProvider(RejectRequestParams(
-          groupId: groupId,
-          requestId: request.id,
-        )).future);
+        await ref.read(
+          rejectJoinRequestProvider(
+            RejectRequestParams(groupId: groupId, requestId: request.id),
+          ).future,
+        );
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${request.userName}님의 가입 신청을 거절했습니다'),
-            ),
+            SnackBar(content: Text('${request.userName}님의 가입 신청을 거절했습니다')),
           );
         }
       } catch (e) {

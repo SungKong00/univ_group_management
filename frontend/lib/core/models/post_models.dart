@@ -139,13 +139,9 @@ class PostListResponse {
 class CreatePostRequest {
   final String content;
 
-  const CreatePostRequest({
-    required this.content,
-  });
+  const CreatePostRequest({required this.content});
 
   Map<String, dynamic> toJson() {
-    return {
-      'content': content,
-    };
+    return {'content': content};
   }
 }

@@ -17,10 +17,7 @@ import '../buttons/neutral_outlined_button.dart';
 class CreateRoleDialog extends ConsumerStatefulWidget {
   final int groupId;
 
-  const CreateRoleDialog({
-    super.key,
-    required this.groupId,
-  });
+  const CreateRoleDialog({super.key, required this.groupId});
 
   @override
   ConsumerState<CreateRoleDialog> createState() => _CreateRoleDialogState();
@@ -60,21 +57,13 @@ class _CreateRoleDialogState extends ConsumerState<CreateRoleDialog>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: AppMotion.easing,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.95,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: AppMotion.easing,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
+    );
 
     _animationController.forward();
   }
@@ -280,26 +269,10 @@ class _CreateRoleDialogState extends ConsumerState<CreateRoleDialog>
           ),
         ),
         const SizedBox(height: 8),
-        _buildPermissionCheckbox(
-          'GROUP_MANAGE',
-          '그룹 관리',
-          '그룹 정보 수정, 그룹 설정 변경',
-        ),
-        _buildPermissionCheckbox(
-          'MEMBER_MANAGE',
-          '멤버 관리',
-          '멤버 역할 변경, 멤버 추방',
-        ),
-        _buildPermissionCheckbox(
-          'CHANNEL_MANAGE',
-          '채널 관리',
-          '채널 생성, 수정, 삭제',
-        ),
-        _buildPermissionCheckbox(
-          'RECRUITMENT_MANAGE',
-          '모집 관리',
-          '가입 신청 승인/거부',
-        ),
+        _buildPermissionCheckbox('GROUP_MANAGE', '그룹 관리', '그룹 정보 수정, 그룹 설정 변경'),
+        _buildPermissionCheckbox('MEMBER_MANAGE', '멤버 관리', '멤버 역할 변경, 멤버 추방'),
+        _buildPermissionCheckbox('CHANNEL_MANAGE', '채널 관리', '채널 생성, 수정, 삭제'),
+        _buildPermissionCheckbox('RECRUITMENT_MANAGE', '모집 관리', '가입 신청 승인/거부'),
       ],
     );
   }
@@ -347,10 +320,7 @@ class _CreateRoleDialogState extends ConsumerState<CreateRoleDialog>
       ),
       child: Text(
         _errorMessage!,
-        style: const TextStyle(
-          fontSize: 13,
-          color: AppColors.error,
-        ),
+        style: const TextStyle(fontSize: 13, color: AppColors.error),
       ),
     );
   }
@@ -362,7 +332,9 @@ class _CreateRoleDialogState extends ConsumerState<CreateRoleDialog>
         Flexible(
           child: NeutralOutlinedButton(
             text: '취소',
-            onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
+            onPressed: _isLoading
+                ? null
+                : () => Navigator.of(context).pop(false),
             semanticsLabel: '역할 생성 취소',
           ),
         ),
@@ -390,9 +362,7 @@ Future<bool> showCreateRoleDialog(
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: true,
-    builder: (BuildContext context) => CreateRoleDialog(
-      groupId: groupId,
-    ),
+    builder: (BuildContext context) => CreateRoleDialog(groupId: groupId),
   );
 
   return result ?? false;

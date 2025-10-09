@@ -18,35 +18,48 @@ class ChannelService {
   /// GET /groups/{groupId}/channels
   Future<List<Channel>> getChannels(int groupId) async {
     try {
-      developer.log('Fetching channels for group: $groupId', name: 'ChannelService');
+      developer.log(
+        'Fetching channels for group: $groupId',
+        name: 'ChannelService',
+      );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/channels',
       );
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            if (json is List) {
-              return json.map((item) => Channel.fromJson(item as Map<String, dynamic>)).toList();
-            }
-            return <Channel>[];
-          },
-        );
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map((item) => Channel.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+          return <Channel>[];
+        });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log('Successfully fetched ${apiResponse.data!.length} channels', name: 'ChannelService');
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} channels',
+            name: 'ChannelService',
+          );
           return apiResponse.data!;
         } else {
-          developer.log('Failed to fetch channels: ${apiResponse.message}', name: 'ChannelService', level: 900);
+          developer.log(
+            'Failed to fetch channels: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
           return [];
         }
       }
 
       return [];
     } catch (e) {
-      developer.log('Error fetching channels: $e', name: 'ChannelService', level: 900);
+      developer.log(
+        'Error fetching channels: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
       return [];
     }
   }
@@ -56,7 +69,10 @@ class ChannelService {
   /// GET /groups/{groupId}/members/me
   Future<MembershipInfo?> getMyMembership(int groupId) async {
     try {
-      developer.log('Fetching membership info for group: $groupId', name: 'ChannelService');
+      developer.log(
+        'Fetching membership info for group: $groupId',
+        name: 'ChannelService',
+      );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/members/me',
@@ -69,17 +85,28 @@ class ChannelService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log('Successfully fetched membership info', name: 'ChannelService');
+          developer.log(
+            'Successfully fetched membership info',
+            name: 'ChannelService',
+          );
           return apiResponse.data!;
         } else {
-          developer.log('Failed to fetch membership: ${apiResponse.message}', name: 'ChannelService', level: 900);
+          developer.log(
+            'Failed to fetch membership: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
           return null;
         }
       }
 
       return null;
     } catch (e) {
-      developer.log('Error fetching membership: $e', name: 'ChannelService', level: 900);
+      developer.log(
+        'Error fetching membership: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
       return null;
     }
   }
@@ -89,7 +116,10 @@ class ChannelService {
   /// GET /channels/{channelId}/permissions/me
   Future<ChannelPermissions?> getMyPermissions(int channelId) async {
     try {
-      developer.log('Fetching permissions for channel: $channelId', name: 'ChannelService');
+      developer.log(
+        'Fetching permissions for channel: $channelId',
+        name: 'ChannelService',
+      );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/channels/$channelId/permissions/me',
@@ -102,17 +132,28 @@ class ChannelService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log('Successfully fetched channel permissions', name: 'ChannelService');
+          developer.log(
+            'Successfully fetched channel permissions',
+            name: 'ChannelService',
+          );
           return apiResponse.data!;
         } else {
-          developer.log('Failed to fetch channel permissions: ${apiResponse.message}', name: 'ChannelService', level: 900);
+          developer.log(
+            'Failed to fetch channel permissions: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
           return null;
         }
       }
 
       return null;
     } catch (e) {
-      developer.log('Error fetching channel permissions: $e', name: 'ChannelService', level: 900);
+      developer.log(
+        'Error fetching channel permissions: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
       return null;
     }
   }

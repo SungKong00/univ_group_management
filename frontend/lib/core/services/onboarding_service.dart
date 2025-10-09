@@ -14,25 +14,23 @@ class OnboardingService {
 
   Future<List<GroupHierarchyNode>> fetchGroupHierarchy() async {
     try {
-      final response = await _dioClient.get<Map<String, dynamic>>('/groups/hierarchy');
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/groups/hierarchy',
+      );
       final data = response.data;
       if (data == null) {
         throw Exception('계열/학과 정보를 불러오지 못했어요.');
       }
 
-      final apiResponse = ApiResponse.fromJson(
-        data,
-        (dynamic json) {
-          final list = json as List<dynamic>;
-          return list
-              .map(
-                (dynamic item) => GroupHierarchyNode.fromJson(
-                  item as Map<String, dynamic>,
-                ),
-              )
-              .toList();
-        },
-      );
+      final apiResponse = ApiResponse.fromJson(data, (dynamic json) {
+        final list = json as List<dynamic>;
+        return list
+            .map(
+              (dynamic item) =>
+                  GroupHierarchyNode.fromJson(item as Map<String, dynamic>),
+            )
+            .toList();
+      });
 
       if (apiResponse.success && apiResponse.data != null) {
         return apiResponse.data!;
@@ -58,7 +56,8 @@ class OnboardingService {
 
       final apiResponse = ApiResponse.fromJson(
         data,
-        (dynamic json) => NicknameCheckResult.fromJson(json as Map<String, dynamic>),
+        (dynamic json) =>
+            NicknameCheckResult.fromJson(json as Map<String, dynamic>),
       );
 
       if (apiResponse.success && apiResponse.data != null) {
@@ -88,7 +87,9 @@ class OnboardingService {
         throw Exception(apiResponse.message ?? '인증 코드를 전송하지 못했어요.');
       }
     } on DioException catch (error) {
-      throw Exception(_extractMessage(error, fallback: '인증 코드 전송 중 오류가 발생했습니다.'));
+      throw Exception(
+        _extractMessage(error, fallback: '인증 코드 전송 중 오류가 발생했습니다.'),
+      );
     }
   }
 
@@ -109,7 +110,9 @@ class OnboardingService {
         throw Exception(apiResponse.message ?? '인증 코드가 일치하지 않아요.');
       }
     } on DioException catch (error) {
-      throw Exception(_extractMessage(error, fallback: '인증 코드 확인 중 오류가 발생했습니다.'));
+      throw Exception(
+        _extractMessage(error, fallback: '인증 코드 확인 중 오류가 발생했습니다.'),
+      );
     }
   }
 

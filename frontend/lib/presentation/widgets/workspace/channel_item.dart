@@ -56,7 +56,9 @@ class ChannelItem extends StatelessWidget {
                 child: Text(
                   channel.name,
                   style: AppTheme.bodyMedium.copyWith(
-                    color: isSelected ? AppColors.action : AppColors.lightOnSurface,
+                    color: isSelected
+                        ? AppColors.action
+                        : AppColors.lightOnSurface,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   ),
                   overflow: TextOverflow.ellipsis,

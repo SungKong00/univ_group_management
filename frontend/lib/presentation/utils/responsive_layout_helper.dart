@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
-
 /// 워크스페이스 반응형 레이아웃 계산 헬퍼
 ///
 /// 반응형 브레이크포인트, 채널바/댓글바 너비, inset 계산 등을 중앙화

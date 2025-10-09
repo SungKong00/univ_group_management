@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/models/channel_models.dart';
 import '../../core/models/page_breadcrumb.dart';
 import '../../core/navigation/layout_mode.dart';
 import '../../core/navigation/navigation_config.dart';
@@ -53,59 +54,73 @@ class PageBreadcrumbRequest extends Equatable {
 /// );
 /// // PageBreadcrumb(title: "워크스페이스", path: ["워크스페이스", "컴퓨터공학과", "공지사항"])
 /// ```
-final pageBreadcrumbFromPathProvider =
-    Provider.autoDispose.family<PageBreadcrumb, PageBreadcrumbRequest>(
-  (ref, request) {
-    final routePath = request.routePath;
-    final layoutMode = request.layoutMode;
+final pageBreadcrumbFromPathProvider = Provider.autoDispose
+    .family<PageBreadcrumb, PageBreadcrumbRequest>((ref, request) {
+      final routePath = request.routePath;
+      final layoutMode = request.layoutMode;
 
-    // 경로가 비어있으면 기본값
-    if (routePath.isEmpty || routePath == '/') {
+      // 경로가 비어있으면 기본값
+      if (routePath.isEmpty || routePath == '/') {
+        return const PageBreadcrumb(title: '대학 그룹 관리');
+      }
+
+      // 특수 케이스: 워크스페이스
+      if (routePath.startsWith('/workspace')) {
+        final currentView = ref.watch(workspaceCurrentViewProvider);
+        final mobileView = ref.watch(workspaceMobileViewProvider);
+        final isNarrowCommentsFullscreen = ref.watch(
+          workspaceIsNarrowDesktopCommentsFullscreenProvider,
+        );
+        final selectedPostId = ref.watch(workspaceSelectedPostIdProvider);
+        final selectedChannelId = ref.watch(currentChannelIdProvider);
+        final channels = ref.watch(workspaceChannelsProvider);
+        final selectedGroupId = ref.watch(currentGroupIdProvider);
+
+        // 그룹 정보 가져오기
+        final groupsAsync = ref.watch(myGroupsProvider);
+        final groupName = groupsAsync.maybeWhen(
+          data: (groups) {
+            if (selectedGroupId == null) return null;
+            final currentGroup = groups.firstWhere(
+              (g) => g.id.toString() == selectedGroupId,
+              orElse: () => groups.first,
+            );
+            return currentGroup.name;
+          },
+          orElse: () => null,
+        );
+
+        return _buildWorkspaceBreadcrumb(
+          context: WorkspaceBreadcrumbContext(
+            currentView: currentView,
+            mobileView: mobileView,
+            isNarrowDesktopCommentsFullscreen: isNarrowCommentsFullscreen,
+            selectedPostId: selectedPostId,
+            selectedChannelId: selectedChannelId,
+            channels: channels,
+          ),
+          groupName: groupName,
+          layoutMode: layoutMode,
+        );
+      }
+
+      // 특수 케이스: 로그인/온보딩
+      if (routePath == '/login') {
+        return const PageBreadcrumb(title: '로그인');
+      }
+      if (routePath == '/onboarding') {
+        return const PageBreadcrumb(title: '프로필 설정');
+      }
+
+      // 일반 케이스: NavigationConfig에서 제목 가져오기
+      final config = NavigationConfig.fromRoute(routePath);
+      if (config != null) {
+        return PageBreadcrumb(title: config.title);
+      }
+
+      // 폴백: 기본 제목
       return const PageBreadcrumb(title: '대학 그룹 관리');
-    }
-
-    // 특수 케이스: 워크스페이스
-    if (routePath.startsWith('/workspace')) {
-      final workspaceState = ref.watch(workspaceStateProvider);
-      // 그룹 정보 가져오기
-      final groupsAsync = ref.watch(myGroupsProvider);
-      final groupName = groupsAsync.maybeWhen(
-        data: (groups) {
-          if (workspaceState.selectedGroupId == null) return null;
-          final currentGroup = groups.firstWhere(
-            (g) => g.id.toString() == workspaceState.selectedGroupId,
-            orElse: () => groups.first,
-          );
-          return currentGroup.name;
-        },
-        orElse: () => null,
-      );
-
-      return _buildWorkspaceBreadcrumb(
-        state: workspaceState,
-        groupName: groupName,
-        layoutMode: layoutMode,
-      );
-    }
-
-    // 특수 케이스: 로그인/온보딩
-    if (routePath == '/login') {
-      return const PageBreadcrumb(title: '로그인');
-    }
-    if (routePath == '/onboarding') {
-      return const PageBreadcrumb(title: '프로필 설정');
-    }
-
-    // 일반 케이스: NavigationConfig에서 제목 가져오기
-    final config = NavigationConfig.fromRoute(routePath);
-    if (config != null) {
-      return PageBreadcrumb(title: config.title);
-    }
-
-    // 폴백: 기본 제목
-    return const PageBreadcrumb(title: '대학 그룹 관리');
-  },
-);
+    });
 
 /// 워크스페이스 브레드크럼 생성
 ///
@@ -113,26 +128,27 @@ final pageBreadcrumbFromPathProvider =
 /// - 데스크톱: "워크스페이스 > 그룹명 (> 채널명)"
 /// - 모바일: 뷰 타입별 최적화된 표시 (channelList: "워크스페이스", channelPosts: "그룹명 > 채널명", postComments: "댓글")
 PageBreadcrumb _buildWorkspaceBreadcrumb({
-  required WorkspaceState state,
+  required WorkspaceBreadcrumbContext context,
   String? groupName,
   required LayoutMode layoutMode,
 }) {
   final displayGroupName = groupName ?? '그룹';
 
   if (layoutMode.isCompact) {
-    return _buildMobileBreadcrumb(state, displayGroupName);
+    return _buildMobileBreadcrumb(context, displayGroupName);
   }
 
-  return _buildDesktopBreadcrumb(state);
+  return _buildDesktopBreadcrumb(context);
 }
 
 /// 데스크톱 브레드크럼 생성: "워크스페이스 > 그룹명"
-PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceState state) {
-  if (state.isNarrowDesktopCommentsFullscreen && state.selectedPostId != null) {
+PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceBreadcrumbContext context) {
+  if (context.isNarrowDesktopCommentsFullscreen &&
+      context.selectedPostId != null) {
     return const PageBreadcrumb(title: '댓글');
   }
 
-  switch (state.currentView) {
+  switch (context.currentView) {
     case WorkspaceView.groupAdmin:
       return const PageBreadcrumb(title: '그룹 관리');
     case WorkspaceView.memberManagement:
@@ -151,55 +167,68 @@ PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceState state) {
 /// - 채널 목록: "워크스페이스"
 /// - 게시글 목록: "그룹명 > 채널명/기능명"
 /// - 댓글 화면: "댓글"
-PageBreadcrumb _buildMobileBreadcrumb(WorkspaceState state, String groupName) {
+PageBreadcrumb _buildMobileBreadcrumb(
+  WorkspaceBreadcrumbContext context,
+  String groupName,
+) {
   // 현재 뷰 타입에 따라 브레드크럼 형식 결정
-  switch (state.mobileView) {
+  switch (context.mobileView) {
     case MobileWorkspaceView.channelList:
       // 채널 목록: "워크스페이스"만 표시
-      return const PageBreadcrumb(
-        title: '워크스페이스',
-        path: ['워크스페이스'],
-      );
+      return const PageBreadcrumb(title: '워크스페이스', path: ['워크스페이스']);
 
     case MobileWorkspaceView.channelPosts:
       // 채널 게시글 목록: "그룹명 > 채널명/기능명"
       final path = <String>[groupName];
 
-      if (state.currentView == WorkspaceView.groupHome) {
+      if (context.currentView == WorkspaceView.groupHome) {
         path.add('홈');
-      } else if (state.currentView == WorkspaceView.calendar) {
+      } else if (context.currentView == WorkspaceView.calendar) {
         path.add('캘린더');
-      } else if (state.selectedChannelId != null) {
+      } else if (context.selectedChannelId != null) {
         // 실제 채널 이름 가져오기
-        final channelName = _getChannelName(state, state.selectedChannelId!);
+        final channelName = _getChannelName(
+          context.channels,
+          context.selectedChannelId!,
+        );
         if (channelName.isNotEmpty) {
           path.add(channelName);
         }
       }
 
-      return PageBreadcrumb(
-        title: '',
-        path: path,
-      );
+      return PageBreadcrumb(title: '', path: path);
 
     case MobileWorkspaceView.postComments:
       // 댓글 화면: "댓글"만 표시
-      return const PageBreadcrumb(
-        title: '댓글',
-        path: ['댓글'],
-      );
+      return const PageBreadcrumb(title: '댓글', path: ['댓글']);
   }
 }
 
 /// 채널 ID로 실제 채널 이름 가져오기
-String _getChannelName(WorkspaceState state, String channelId) {
+String _getChannelName(List<Channel> channels, String channelId) {
   try {
-    final channel = state.channels.firstWhere(
-      (ch) => ch.id.toString() == channelId,
-    );
+    final channel = channels.firstWhere((ch) => ch.id.toString() == channelId);
     return channel.name;
   } catch (e) {
     // 채널을 찾지 못한 경우 빈 문자열 반환 (경로에 추가되지 않음)
     return '';
   }
+}
+
+class WorkspaceBreadcrumbContext {
+  const WorkspaceBreadcrumbContext({
+    required this.currentView,
+    required this.mobileView,
+    required this.isNarrowDesktopCommentsFullscreen,
+    required this.selectedPostId,
+    required this.selectedChannelId,
+    required this.channels,
+  });
+
+  final WorkspaceView currentView;
+  final MobileWorkspaceView mobileView;
+  final bool isNarrowDesktopCommentsFullscreen;
+  final String? selectedPostId;
+  final String? selectedChannelId;
+  final List<Channel> channels;
 }

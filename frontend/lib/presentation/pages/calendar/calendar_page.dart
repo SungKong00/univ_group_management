@@ -19,16 +19,11 @@ class CalendarPage extends StatelessWidget {
               color: AppColors.brand,
             ),
             const SizedBox(height: 16),
-            Text(
-              '캠린더',
-              style: AppTheme.displaySmall,
-            ),
+            Text('캠린더', style: AppTheme.displaySmall),
             const SizedBox(height: 8),
             Text(
               '일정 관리 기능을 개발 예정입니다',
-              style: AppTheme.bodyLarge.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
             ),
           ],
         ),

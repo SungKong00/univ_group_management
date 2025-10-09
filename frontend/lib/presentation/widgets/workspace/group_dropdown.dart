@@ -135,9 +135,7 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
         padding: const EdgeInsets.all(16),
         child: Text(
           '소속된 그룹이 없습니다',
-          style: AppTheme.bodyMedium.copyWith(
-            color: AppColors.neutral600,
-          ),
+          style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
         ),
       );
     }
@@ -185,7 +183,9 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
   ///     - 컴퓨터공학과 (level 2, parent: 2)
   ///   - 다른학부 (level 1, parent: 1)
   ///     - 다른학과 (level 2, parent: 3)
-  List<GroupMembership> _sortGroupsHierarchically(List<GroupMembership> groups) {
+  List<GroupMembership> _sortGroupsHierarchically(
+    List<GroupMembership> groups,
+  ) {
     // 1. 부모별 자식 맵 생성
     final Map<int?, List<GroupMembership>> childrenByParent = {};
     for (var group in groups) {
@@ -220,10 +220,9 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
     return InkWell(
       onTap: () {
         if (!isSelected) {
-          ref.read(workspaceStateProvider.notifier).enterWorkspace(
-            group.id.toString(),
-            membership: group,
-          );
+          ref
+              .read(workspaceStateProvider.notifier)
+              .enterWorkspace(group.id.toString(), membership: group);
           context.go('/workspace/${group.id}');
         }
         _toggleDropdown();
@@ -261,11 +260,7 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
             ),
             // 현재 선택된 그룹 표시
             if (isSelected)
-              Icon(
-                Icons.check,
-                size: 20,
-                color: AppColors.action,
-              ),
+              Icon(Icons.check, size: 20, color: AppColors.action),
           ],
         ),
       ),
@@ -289,9 +284,7 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
           const SizedBox(width: 12),
           Text(
             '그룹 목록 불러오는 중...',
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppColors.neutral600,
-            ),
+            style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
           ),
         ],
       ),
@@ -303,9 +296,7 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
       padding: const EdgeInsets.all(16),
       child: Text(
         '그룹 목록을 불러올 수 없습니다',
-        style: AppTheme.bodyMedium.copyWith(
-          color: AppColors.error,
-        ),
+        style: AppTheme.bodyMedium.copyWith(color: AppColors.error),
       ),
     );
   }
@@ -326,10 +317,15 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
       fontWeight: FontWeight.w600,
       height: 1.2,
     );
-    final largeTextWidth = _calculateTextWidth(widget.currentGroupName, largeTextStyle);
+    final largeTextWidth = _calculateTextWidth(
+      widget.currentGroupName,
+      largeTextStyle,
+    );
 
     final shouldUseSmallFont = largeTextWidth > availableWidth;
-    final textStyle = shouldUseSmallFont ? AppTheme.bodySmall : AppTheme.bodyLarge;
+    final textStyle = shouldUseSmallFont
+        ? AppTheme.bodySmall
+        : AppTheme.bodyLarge;
     final iconSize = shouldUseSmallFont ? 16.0 : 20.0;
 
     return CompositedTransformTarget(

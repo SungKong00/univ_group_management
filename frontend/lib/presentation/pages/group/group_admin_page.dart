@@ -32,13 +32,18 @@ class GroupAdminPage extends ConsumerWidget {
     }
 
     // Get permissions from workspace state (already loaded)
-    final workspaceState = ref.watch(workspaceStateProvider);
-    final permissions = workspaceState.currentGroupPermissions ?? [];
+    final permissions =
+        ref.watch(workspaceCurrentGroupPermissionsProvider) ?? [];
 
     // globalRole ADMIN은 모든 권한 보유 (백엔드와 일치)
     final isAdmin = user.globalRole == 'ADMIN';
     final effectivePermissions = isAdmin
-        ? ['GROUP_MANAGE', 'MEMBER_MANAGE', 'CHANNEL_MANAGE', 'RECRUITMENT_MANAGE']
+        ? [
+            'GROUP_MANAGE',
+            'MEMBER_MANAGE',
+            'CHANNEL_MANAGE',
+            'RECRUITMENT_MANAGE',
+          ]
         : permissions;
 
     final hasAdminAccess = effectivePermissions.isNotEmpty;
@@ -77,17 +82,11 @@ class _EmptyPermissionView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.lock_outline,
-              size: 64,
-              color: AppColors.neutral400,
-            ),
+            Icon(Icons.lock_outline, size: 64, color: AppColors.neutral400),
             SizedBox(height: AppSpacing.md),
             Text(
               message,
-              style: AppTheme.bodyLarge.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
             ),
           ],
         ),
@@ -101,10 +100,7 @@ class _AdminContentView extends ConsumerWidget {
   final List<String> permissions;
   final bool isDesktop;
 
-  const _AdminContentView({
-    required this.permissions,
-    required this.isDesktop,
-  });
+  const _AdminContentView({required this.permissions, required this.isDesktop});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -152,10 +148,7 @@ class _AdminContentView extends ConsumerWidget {
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.md,
             children: sections
-                .map((section) => SizedBox(
-                      width: sectionWidth,
-                      child: section,
-                    ))
+                .map((section) => SizedBox(width: sectionWidth, child: section))
                 .toList(),
           );
         },
@@ -165,13 +158,11 @@ class _AdminContentView extends ConsumerWidget {
     // 모바일: 세로 배치
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: sections
-          .expand((section) => [
-                section,
-                SizedBox(height: AppSpacing.md),
-              ])
-          .toList()
-        ..removeLast(), // 마지막 SizedBox 제거
+      children:
+          sections
+              .expand((section) => [section, SizedBox(height: AppSpacing.md)])
+              .toList()
+            ..removeLast(), // 마지막 SizedBox 제거
     );
   }
 
@@ -309,12 +300,14 @@ class _AdminContentView extends ConsumerWidget {
   void _navigateToMemberManagement(WidgetRef ref) {
     // 멤버 관리 페이지로 전환
     final currentState = ref.read(workspaceStateProvider);
-    ref.read(workspaceStateProvider.notifier).updateState(
-      currentState.copyWith(
-        previousView: currentState.currentView,
-        currentView: WorkspaceView.memberManagement,
-      ),
-    );
+    ref
+        .read(workspaceStateProvider.notifier)
+        .updateState(
+          currentState.copyWith(
+            previousView: currentState.currentView,
+            currentView: WorkspaceView.memberManagement,
+          ),
+        );
   }
 
   void _handleEditGroup(BuildContext context, WidgetRef ref) async {
@@ -322,9 +315,9 @@ class _AdminContentView extends ConsumerWidget {
     final currentGroup = ref.read(currentGroupProvider);
 
     if (currentGroup == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('그룹 정보를 불러올 수 없습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('그룹 정보를 불러올 수 없습니다')));
       return;
     }
 
@@ -340,9 +333,9 @@ class _AdminContentView extends ConsumerWidget {
 
     if (success && context.mounted) {
       // 성공 시 피드백 및 상태 갱신
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('그룹 정보가 수정되었습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('그룹 정보가 수정되었습니다')));
 
       // Invalidate providers to reload group data
       ref.invalidate(myGroupsProvider);
@@ -355,10 +348,7 @@ class _AdminContentView extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('준비 중', style: AppTheme.headlineSmall),
-        content: Text(
-          '$feature 기능은 현재 개발 중입니다.',
-          style: AppTheme.bodyMedium,
-        ),
+        content: Text('$feature 기능은 현재 개발 중입니다.', style: AppTheme.bodyMedium),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -407,7 +397,11 @@ class _AdminSection extends StatelessWidget {
           // 섹션 헤더
           Row(
             children: [
-              Icon(icon, color: AppColors.brand, size: AppComponents.actionCardIconSize),
+              Icon(
+                icon,
+                color: AppColors.brand,
+                size: AppComponents.actionCardIconSize,
+              ),
               SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Column(
@@ -441,10 +435,12 @@ class _AdminSection extends StatelessWidget {
                 )
               : Column(
                   children: actions
-                      .map((action) => Padding(
-                            padding: EdgeInsets.only(bottom: AppSpacing.sm),
-                            child: action,
-                          ))
+                      .map(
+                        (action) => Padding(
+                          padding: EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: action,
+                        ),
+                      )
                       .toList(),
                 ),
         ],

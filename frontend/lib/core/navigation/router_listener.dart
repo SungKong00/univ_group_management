@@ -11,10 +11,7 @@ import 'navigation_controller.dart';
 class RouterListener extends ConsumerStatefulWidget {
   final Widget child;
 
-  const RouterListener({
-    super.key,
-    required this.child,
-  });
+  const RouterListener({super.key, required this.child});
 
   @override
   ConsumerState<RouterListener> createState() => _RouterListenerState();
@@ -46,7 +43,9 @@ class _RouterListenerState extends ConsumerState<RouterListener> {
   }
 
   void _syncNavigationState(String route) {
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
     final currentState = ref.read(navigationControllerProvider);
 
     // 현재 NavigationController의 라우트와 다른 경우에만 업데이트
@@ -92,17 +91,14 @@ class _RouterListenerState extends ConsumerState<RouterListener> {
 /// Go Router의 라우트 변경을 감지하는 Provider
 final routeListenerProvider = Provider<void>((ref) {
   // NavigationController 상태를 감시하여 디버그 정보 출력
-  ref.listen<NavigationState>(
-    navigationControllerProvider,
-    (previous, next) {
-      if (kDebugMode && previous?.currentRoute != next.currentRoute) {
-        developer.log(
-          'Navigation State Changed: ${previous?.currentRoute} → ${next.currentRoute}',
-          name: 'RouteListener',
-        );
-      }
-    },
-  );
+  ref.listen<NavigationState>(navigationControllerProvider, (previous, next) {
+    if (kDebugMode && previous?.currentRoute != next.currentRoute) {
+      developer.log(
+        'Navigation State Changed: ${previous?.currentRoute} → ${next.currentRoute}',
+        name: 'RouteListener',
+      );
+    }
+  });
 });
 
 /// 라우트 정보를 제공하는 Provider

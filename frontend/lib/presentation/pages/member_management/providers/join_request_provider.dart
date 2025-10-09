@@ -4,7 +4,10 @@ import '../../../../core/repositories/repository_providers.dart';
 import 'member_list_provider.dart';
 
 /// 가입 신청 목록 Provider
-final joinRequestListProvider = FutureProvider.family<List<JoinRequest>, int>((ref, groupId) async {
+final joinRequestListProvider = FutureProvider.family<List<JoinRequest>, int>((
+  ref,
+  groupId,
+) async {
   final repository = ref.watch(joinRequestRepositoryProvider);
   return await repository.getPendingRequests(groupId);
 });
@@ -36,27 +39,24 @@ class ApproveRequestParams {
 
 final approveJoinRequestProvider = FutureProvider.autoDispose
     .family<void, ApproveRequestParams>((ref, params) async {
-  final repository = ref.watch(joinRequestRepositoryProvider);
-  await repository.approveRequest(
-    params.groupId,
-    params.requestId,
-    params.roleId,
-  );
+      final repository = ref.watch(joinRequestRepositoryProvider);
+      await repository.approveRequest(
+        params.groupId,
+        params.requestId,
+        params.roleId,
+      );
 
-  // 성공 후 신청 목록 및 멤버 목록 새로고침
-  ref.invalidate(joinRequestListProvider(params.groupId));
-  ref.invalidate(memberListProvider(params.groupId));
-});
+      // 성공 후 신청 목록 및 멤버 목록 새로고침
+      ref.invalidate(joinRequestListProvider(params.groupId));
+      ref.invalidate(memberListProvider(params.groupId));
+    });
 
 /// 가입 신청 거절 Provider
 class RejectRequestParams {
   final int groupId;
   final int requestId;
 
-  RejectRequestParams({
-    required this.groupId,
-    required this.requestId,
-  });
+  RejectRequestParams({required this.groupId, required this.requestId});
 
   @override
   bool operator ==(Object other) =>
@@ -72,9 +72,9 @@ class RejectRequestParams {
 
 final rejectJoinRequestProvider = FutureProvider.autoDispose
     .family<void, RejectRequestParams>((ref, params) async {
-  final repository = ref.watch(joinRequestRepositoryProvider);
-  await repository.rejectRequest(params.groupId, params.requestId);
+      final repository = ref.watch(joinRequestRepositoryProvider);
+      await repository.rejectRequest(params.groupId, params.requestId);
 
-  // 성공 후 신청 목록 새로고침
-  ref.invalidate(joinRequestListProvider(params.groupId));
-});
+      // 성공 후 신청 목록 새로고침
+      ref.invalidate(joinRequestListProvider(params.groupId));
+    });

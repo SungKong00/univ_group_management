@@ -74,10 +74,8 @@ class _PostComposerState extends State<PostComposer> {
     final hintText = widget.isLoading
         ? '권한 확인 중...'
         : widget.canWrite
-            ? (isMobile
-                ? '메시지를 입력하세요...'
-                : '메시지를 입력하세요... (Shift+Enter: 줄바꿈)')
-            : '쓰기 권한이 없습니다';
+        ? (isMobile ? '메시지를 입력하세요...' : '메시지를 입력하세요... (Shift+Enter: 줄바꿈)')
+        : '쓰기 권한이 없습니다';
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -99,9 +97,7 @@ class _PostComposerState extends State<PostComposer> {
                     : () {
                         // TODO: 파일 첨부 기능 (백엔드 구현 후)
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('파일 첨부 기능은 준비 중입니다'),
-                          ),
+                          const SnackBar(content: Text('파일 첨부 기능은 준비 중입니다')),
                         );
                       },
                 icon: const Icon(Icons.attach_file),

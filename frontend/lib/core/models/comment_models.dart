@@ -99,10 +99,7 @@ class CreateCommentRequest {
   final String content;
   final int? parentCommentId;
 
-  const CreateCommentRequest({
-    required this.content,
-    this.parentCommentId,
-  });
+  const CreateCommentRequest({required this.content, this.parentCommentId});
 
   Map<String, dynamic> toJson() {
     return {

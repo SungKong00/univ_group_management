@@ -56,10 +56,12 @@ class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
 
     // 초기 값 설정
     _nameController = TextEditingController(text: widget.currentName);
-    _descriptionController =
-        TextEditingController(text: widget.currentDescription ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.currentDescription ?? '',
+    );
     _tagsController = TextEditingController(
-        text: widget.currentTags?.join(', ') ?? '');
+      text: widget.currentTags?.join(', ') ?? '',
+    );
     _isRecruiting = widget.currentIsRecruiting;
 
     // 진입 애니메이션
@@ -68,21 +70,13 @@ class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: AppMotion.easing,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.95,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: AppMotion.easing,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
+    );
 
     _animationController.forward();
   }
@@ -112,7 +106,11 @@ class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
       final tagsText = _tagsController.text.trim();
       final tags = tagsText.isEmpty
           ? <String>{}
-          : tagsText.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
+          : tagsText
+                .split(',')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toSet();
 
       final request = UpdateGroupRequest(
         name: trimmedName != widget.currentName ? trimmedName : null,
@@ -342,10 +340,7 @@ class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
       ),
       child: Text(
         _errorMessage!,
-        style: const TextStyle(
-          fontSize: 13,
-          color: AppColors.error,
-        ),
+        style: const TextStyle(fontSize: 13, color: AppColors.error),
       ),
     );
   }
@@ -357,7 +352,9 @@ class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
         Flexible(
           child: NeutralOutlinedButton(
             text: '취소',
-            onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
+            onPressed: _isLoading
+                ? null
+                : () => Navigator.of(context).pop(false),
             semanticsLabel: '그룹 정보 수정 취소',
           ),
         ),

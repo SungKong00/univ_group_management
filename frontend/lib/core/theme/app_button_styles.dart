@@ -44,9 +44,7 @@ class AppButtonStyles {
       ),
       backgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.disabled)) {
-          return isDark
-              ? AppColors.disabledBgDark
-              : AppColors.disabledBgLight;
+          return isDark ? AppColors.disabledBgDark : AppColors.disabledBgLight;
         }
         if (states.contains(WidgetState.hovered)) {
           return AppColors.actionHover;
@@ -187,9 +185,7 @@ class AppButtonStyles {
     ).copyWith(
       backgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.disabled)) {
-          return isDark
-              ? AppColors.disabledBgDark
-              : AppColors.disabledBgLight;
+          return isDark ? AppColors.disabledBgDark : AppColors.disabledBgLight;
         }
         return AppColors.error;
       }),
@@ -228,23 +224,27 @@ class AppButtonStyles {
     final isDark = colorScheme.brightness == Brightness.dark;
 
     return OutlinedButton.styleFrom(
-      foregroundColor: isDark ? ColorTokens.googleTextDark : ColorTokens.googleTextLight,
+      foregroundColor: isDark
+          ? ColorTokens.googleTextDark
+          : ColorTokens.googleTextLight,
       backgroundColor: isDark ? ColorTokens.googleBgDark : Colors.white,
       minimumSize: const Size.fromHeight(AppComponents.buttonHeight),
       padding: const EdgeInsets.only(
-        left: AppSpacing.xs,   // 12px (Google 가이드라인)
-        right: AppSpacing.xs,  // 12px
+        left: AppSpacing.xs, // 12px (Google 가이드라인)
+        right: AppSpacing.xs, // 12px
         top: AppSpacing.xs,
         bottom: AppSpacing.xs,
       ),
       textStyle: GoogleFonts.roboto(
         fontSize: 16,
-        fontWeight: FontWeight.w500,  // Medium
+        fontWeight: FontWeight.w500, // Medium
         height: 1.4,
         letterSpacing: 0.25,
       ),
       side: BorderSide(
-        color: isDark ? ColorTokens.googleBorderDark : ColorTokens.googleBorderLight,
+        color: isDark
+            ? ColorTokens.googleBorderDark
+            : ColorTokens.googleBorderLight,
         width: 1,
       ),
       shape: RoundedRectangleBorder(
@@ -269,7 +269,9 @@ class AppButtonStyles {
           return const BorderSide(color: AppColors.focusRing, width: 2);
         }
         return BorderSide(
-          color: isDark ? ColorTokens.googleBorderDark : ColorTokens.googleBorderLight,
+          color: isDark
+              ? ColorTokens.googleBorderDark
+              : ColorTokens.googleBorderLight,
           width: 1,
         );
       }),
@@ -280,7 +282,9 @@ class AppButtonStyles {
   /// 중립적인 보조 액션에 사용
   static ButtonStyle neutralOutlined(ColorScheme colorScheme) {
     final isDark = colorScheme.brightness == Brightness.dark;
-    final neutralColor = isDark ? AppColors.darkSecondary : AppColors.lightSecondary;
+    final neutralColor = isDark
+        ? AppColors.darkSecondary
+        : AppColors.lightSecondary;
 
     return OutlinedButton.styleFrom(
       foregroundColor: neutralColor,

@@ -169,11 +169,7 @@ class MemberListSection extends ConsumerWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final member = members[index];
-        return _MemberCard(
-          member: member,
-          roles: roles,
-          groupId: groupId,
-        );
+        return _MemberCard(member: member, roles: roles, groupId: groupId);
       },
     );
   }
@@ -261,16 +257,24 @@ class _MemberTableRow extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleRoleChange(BuildContext context, WidgetRef ref, String newRoleId) async {
+  Future<void> _handleRoleChange(
+    BuildContext context,
+    WidgetRef ref,
+    String newRoleId,
+  ) async {
     try {
       // roleId를 int로 파싱
       final roleIdInt = int.parse(newRoleId);
 
-      await ref.read(updateMemberRoleProvider(UpdateMemberRoleParams(
-        groupId: groupId,
-        userId: member.userId, // memberId → userId 사용
-        roleId: roleIdInt,
-      )).future);
+      await ref.read(
+        updateMemberRoleProvider(
+          UpdateMemberRoleParams(
+            groupId: groupId,
+            userId: member.userId, // memberId → userId 사용
+            roleId: roleIdInt,
+          ),
+        ).future,
+      );
 
       // 성공 후 목록 새로고침
       ref.invalidate(memberListProvider(groupId));
@@ -322,7 +326,10 @@ class _MemberTableRow extends ConsumerWidget {
     );
   }
 
-  Future<void> _showRemoveMemberDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showRemoveMemberDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -354,10 +361,14 @@ class _MemberTableRow extends ConsumerWidget {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
-      await ref.read(removeMemberProvider(RemoveMemberParams(
-        groupId: groupId,
-        userId: member.userId, // userId 사용
-      )).future);
+      await ref.read(
+        removeMemberProvider(
+          RemoveMemberParams(
+            groupId: groupId,
+            userId: member.userId, // userId 사용
+          ),
+        ).future,
+      );
 
       // 성공 SnackBar 표시
       scaffoldMessenger.showSnackBar(
@@ -417,7 +428,10 @@ class _MemberCard extends ConsumerWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.brandLight,
                   borderRadius: BorderRadius.circular(AppRadius.button),
@@ -441,14 +455,20 @@ class _MemberCard extends ConsumerWidget {
               const SizedBox(width: 6),
               Text(
                 '학번: ${member.studentNo ?? '-'}',
-                style: const TextStyle(fontSize: 13, color: AppColors.neutral700),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.neutral700,
+                ),
               ),
               const SizedBox(width: 16),
               const Icon(Icons.school, size: 16, color: AppColors.neutral600),
               const SizedBox(width: 6),
               Text(
                 '학년: ${member.academicYear != null ? '${member.academicYear}학년' : '-'}',
-                style: const TextStyle(fontSize: 13, color: AppColors.neutral700),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.neutral700,
+                ),
               ),
             ],
           ),
@@ -456,11 +476,18 @@ class _MemberCard extends ConsumerWidget {
           // 가입일
           Row(
             children: [
-              const Icon(Icons.calendar_today, size: 16, color: AppColors.neutral600),
+              const Icon(
+                Icons.calendar_today,
+                size: 16,
+                color: AppColors.neutral600,
+              ),
               const SizedBox(width: 6),
               Text(
                 '가입일: ${_formatDate(member.joinedAt)}',
-                style: const TextStyle(fontSize: 12, color: AppColors.neutral600),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.neutral600,
+                ),
               ),
             ],
           ),

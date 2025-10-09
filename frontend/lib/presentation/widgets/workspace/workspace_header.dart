@@ -198,7 +198,9 @@ class WorkspaceHeader extends StatelessWidget {
     }
 
     final groupName = segments.first;
-    final remainder = segments.length > 1 ? segments.sublist(1) : const <String>[];
+    final remainder = segments.length > 1
+        ? segments.sublist(1)
+        : const <String>[];
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -236,14 +238,8 @@ class WorkspaceHeader extends StatelessWidget {
     }
 
     final textStyle = useTitleStyle
-        ? AppTheme.titleLarge.copyWith(
-            color: AppColors.neutral900,
-            height: 1.2,
-          )
-        : AppTheme.bodySmall.copyWith(
-            color: AppColors.neutral600,
-            height: 1.2,
-          );
+        ? AppTheme.titleLarge.copyWith(color: AppColors.neutral900, height: 1.2)
+        : AppTheme.bodySmall.copyWith(color: AppColors.neutral600, height: 1.2);
 
     return Text(groupName, style: textStyle);
   }

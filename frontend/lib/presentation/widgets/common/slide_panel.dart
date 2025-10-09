@@ -74,26 +74,17 @@ class _SlidePanelState extends State<SlidePanel>
   }
 
   void _initializeAnimations() {
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(1.0, 0.0), // 오른쪽 밖에서 시작
       end: Offset.zero, // 제자리로 이동
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: widget.curve,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
 
     _backdropAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: widget.curve,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
 
     // 애니메이션 완료 리스너
     _controller.addStatusListener(_onAnimationStatusChanged);
@@ -125,7 +116,8 @@ class _SlidePanelState extends State<SlidePanel>
     }
 
     // 애니메이션 설정 변경 감지
-    if (widget.duration != oldWidget.duration || widget.curve != oldWidget.curve) {
+    if (widget.duration != oldWidget.duration ||
+        widget.curve != oldWidget.curve) {
       _controller.dispose();
       _initializeAnimations();
     }
@@ -160,9 +152,7 @@ class _SlidePanelState extends State<SlidePanel>
             },
             child: FadeTransition(
               opacity: _backdropAnimation,
-              child: Container(
-                color: Colors.black54,
-              ),
+              child: Container(color: Colors.black54),
             ),
           ),
 
@@ -172,10 +162,7 @@ class _SlidePanelState extends State<SlidePanel>
           child: SlideTransition(
             position: _slideAnimation,
             child: widget.width != null
-                ? SizedBox(
-                    width: widget.width,
-                    child: widget.child,
-                  )
+                ? SizedBox(width: widget.width, child: widget.child)
                 : widget.child,
           ),
         ),

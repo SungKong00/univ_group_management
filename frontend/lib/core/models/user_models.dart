@@ -1,13 +1,11 @@
 class NicknameCheckResult {
-  NicknameCheckResult({
-    required this.available,
-    this.suggestions = const [],
-  });
+  NicknameCheckResult({required this.available, this.suggestions = const []});
 
   factory NicknameCheckResult.fromJson(Map<String, dynamic> json) {
     return NicknameCheckResult(
       available: json['available'] as bool? ?? false,
-      suggestions: (json['suggestions'] as List<dynamic>?)
+      suggestions:
+          (json['suggestions'] as List<dynamic>?)
               ?.map((dynamic item) => item.toString())
               .toList() ??
           const [],
@@ -71,16 +69,13 @@ class EmailSendRequest {
 }
 
 class EmailVerifyRequest {
-  EmailVerifyRequest({
-    required this.email,
-    required this.code,
-  });
+  EmailVerifyRequest({required this.email, required this.code});
 
   final String email;
   final String code;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'email': email,
-        'code': code,
-      };
+    'email': email,
+    'code': code,
+  };
 }

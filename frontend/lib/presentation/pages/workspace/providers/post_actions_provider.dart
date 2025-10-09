@@ -7,10 +7,7 @@ class CreatePostParams {
   final String channelId;
   final String content;
 
-  const CreatePostParams({
-    required this.channelId,
-    required this.content,
-  });
+  const CreatePostParams({required this.channelId, required this.content});
 }
 
 /// 게시글 작성 Provider
@@ -19,12 +16,11 @@ class CreatePostParams {
 /// ```dart
 /// final result = await ref.read(createPostProvider(params).future);
 /// ```
-final createPostProvider = FutureProvider.autoDispose.family<Post, CreatePostParams>(
-  (ref, params) async {
-    final postService = ref.read(postServiceProvider);
-    return await postService.createPost(params.channelId, params.content);
-  },
-);
+final createPostProvider = FutureProvider.autoDispose
+    .family<Post, CreatePostParams>((ref, params) async {
+      final postService = ref.read(postServiceProvider);
+      return await postService.createPost(params.channelId, params.content);
+    });
 
 /// 게시글 단일 조회 Provider
 ///
@@ -37,9 +33,10 @@ final createPostProvider = FutureProvider.autoDispose.family<Post, CreatePostPar
 ///   error: (err, stack) => ...,
 /// );
 /// ```
-final fetchSinglePostProvider = FutureProvider.autoDispose.family<Post, int>(
-  (ref, postId) async {
-    final postService = ref.read(postServiceProvider);
-    return await postService.getPost(postId);
-  },
-);
+final fetchSinglePostProvider = FutureProvider.autoDispose.family<Post, int>((
+  ref,
+  postId,
+) async {
+  final postService = ref.read(postServiceProvider);
+  return await postService.getPost(postId);
+});

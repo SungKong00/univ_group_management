@@ -19,16 +19,11 @@ class ActivityPage extends StatelessWidget {
               color: AppColors.brand,
             ),
             const SizedBox(height: 16),
-            Text(
-              '나의 활동',
-              style: AppTheme.displaySmall,
-            ),
+            Text('나의 활동', style: AppTheme.displaySmall),
             const SizedBox(height: 8),
             Text(
               '내 참여 기록을 확인할 수 있습니다',
-              style: AppTheme.bodyLarge.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
             ),
           ],
         ),

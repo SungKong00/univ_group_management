@@ -15,10 +15,7 @@ class PostPreviewWidget extends ConsumerWidget {
   /// X 버튼 클릭 시 호출될 콜백
   final VoidCallback onClose;
 
-  const PostPreviewWidget({
-    super.key,
-    required this.onClose,
-  });
+  const PostPreviewWidget({super.key, required this.onClose});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,9 +46,7 @@ class PostPreviewWidget extends ConsumerWidget {
     if (state.isLoading) {
       return const Padding(
         padding: EdgeInsets.all(16.0),
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -85,10 +80,7 @@ class PostPreviewWidget extends ConsumerWidget {
             Expanded(
               child: Text(
                 errorMessage,
-                style: const TextStyle(
-                  color: AppColors.error,
-                  fontSize: 14,
-                ),
+                style: const TextStyle(color: AppColors.error, fontSize: 14),
               ),
             ),
           ],
@@ -125,9 +117,7 @@ class PostPreviewWidget extends ConsumerWidget {
             padding: const EdgeInsets.only(left: 52),
             child: Text(
               DateFormatter.formatFullDate(post.createdAt),
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral500,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
             ),
           ),
         ],
@@ -156,9 +146,7 @@ class PostPreviewWidget extends ConsumerWidget {
               const SizedBox(height: 2),
               Text(
                 DateFormatter.formatRelativeTime(post.createdAt),
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.neutral600,
-                ),
+                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
               ),
             ],
           ),
@@ -180,17 +168,16 @@ class PostPreviewWidget extends ConsumerWidget {
     }
 
     // 기본 아바타 (이니셜)
-    final initial =
-        post.authorName.isNotEmpty ? post.authorName[0].toUpperCase() : '?';
+    final initial = post.authorName.isNotEmpty
+        ? post.authorName[0].toUpperCase()
+        : '?';
 
     return CircleAvatar(
       radius: 20,
       backgroundColor: AppColors.brand,
       child: Text(
         initial,
-        style: AppTheme.titleMedium.copyWith(
-          color: Colors.white,
-        ),
+        style: AppTheme.titleMedium.copyWith(color: Colors.white),
       ),
     );
   }

@@ -28,10 +28,7 @@ class RoleDropdown extends StatelessWidget {
       decoration: BoxDecoration(
         color: enabled ? AppColors.neutral100 : AppColors.neutral200,
         borderRadius: BorderRadius.circular(AppRadius.button),
-        border: Border.all(
-          color: AppColors.neutral300,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.neutral300, width: 1),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -62,7 +59,10 @@ class RoleDropdown extends StatelessWidget {
                   if (role.isSystemRole) ...[
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.neutral200,
                         borderRadius: BorderRadius.circular(4),

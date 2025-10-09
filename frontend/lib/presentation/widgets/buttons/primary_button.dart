@@ -155,4 +155,3 @@ class _PrimaryButtonChild extends StatelessWidget {
     );
   }
 }
-

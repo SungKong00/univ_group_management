@@ -35,42 +35,39 @@ class _MobileChannelPostsViewState
   @override
   Widget build(BuildContext context) {
     return Column(
-        children: [
-          // 게시글 목록
-          Expanded(
-            child: PostList(
-              key: ValueKey('mobile_post_list_${widget.channelId}_$_postListKey'),
-              channelId: widget.channelId,
+      children: [
+        // 게시글 목록
+        Expanded(
+          child: PostList(
+            key: ValueKey('mobile_post_list_${widget.channelId}_$_postListKey'),
+            channelId: widget.channelId,
+            canWrite: widget.permissions?.canWritePost ?? false,
+            onTapComment: (postId) {
+              // 댓글 버튼 클릭: Step 2 → Step 3
+              ref
+                  .read(workspaceStateProvider.notifier)
+                  .showCommentsForMobile(postId.toString());
+            },
+          ),
+        ),
+
+        // 게시글 작성 입력창
+        if (widget.permissions?.canWritePost ?? false)
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(color: AppColors.lightOutline, width: 1),
+              ),
+            ),
+            child: PostComposer(
               canWrite: widget.permissions?.canWritePost ?? false,
-              onTapComment: (postId) {
-                // 댓글 버튼 클릭: Step 2 → Step 3
-                ref
-                    .read(workspaceStateProvider.notifier)
-                    .showCommentsForMobile(postId.toString());
-              },
+              canUploadFile: widget.permissions?.canUploadFile ?? false,
+              isLoading: false,
+              onSubmit: (content) => _handleSubmitPost(content),
             ),
           ),
-
-          // 게시글 작성 입력창
-          if (widget.permissions?.canWritePost ?? false)
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  top: BorderSide(
-                    color: AppColors.lightOutline,
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: PostComposer(
-                canWrite: widget.permissions?.canWritePost ?? false,
-                canUploadFile: widget.permissions?.canUploadFile ?? false,
-                isLoading: false,
-                onSubmit: (content) => _handleSubmitPost(content),
-              ),
-            ),
-        ],
+      ],
     );
   }
 

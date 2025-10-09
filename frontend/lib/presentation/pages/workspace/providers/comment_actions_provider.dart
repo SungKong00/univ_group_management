@@ -27,16 +27,15 @@ class CreateCommentParams {
 /// final params = CreateCommentParams(postId: 123, content: '댓글 내용');
 /// final result = await ref.read(createCommentProvider(params).future);
 /// ```
-final createCommentProvider = FutureProvider.autoDispose.family<Comment, CreateCommentParams>(
-  (ref, params) async {
-    final commentService = ref.read(commentServiceProvider);
-    return await commentService.createComment(
-      params.postId,
-      params.content,
-      parentCommentId: params.parentCommentId,
-    );
-  },
-);
+final createCommentProvider = FutureProvider.autoDispose
+    .family<Comment, CreateCommentParams>((ref, params) async {
+      final commentService = ref.read(commentServiceProvider);
+      return await commentService.createComment(
+        params.postId,
+        params.content,
+        parentCommentId: params.parentCommentId,
+      );
+    });
 
 /// 댓글 목록 조회 Provider
 ///
@@ -44,9 +43,8 @@ final createCommentProvider = FutureProvider.autoDispose.family<Comment, CreateC
 /// ```dart
 /// final commentsAsync = ref.watch(fetchCommentsProvider(postId));
 /// ```
-final fetchCommentsProvider = FutureProvider.autoDispose.family<List<Comment>, int>(
-  (ref, postId) async {
-    final commentService = ref.read(commentServiceProvider);
-    return await commentService.fetchComments(postId);
-  },
-);
+final fetchCommentsProvider = FutureProvider.autoDispose
+    .family<List<Comment>, int>((ref, postId) async {
+      final commentService = ref.read(commentServiceProvider);
+      return await commentService.fetchComments(postId);
+    });

@@ -42,7 +42,8 @@ class WorkspaceState extends Equatable {
     this.channelPermissions,
     this.isLoadingPermissions = false,
     this.channelHistory = const [],
-    this.isNarrowDesktopCommentsFullscreen = false, // Narrow desktop: comments fullscreen mode
+    this.isNarrowDesktopCommentsFullscreen =
+        false, // Narrow desktop: comments fullscreen mode
     this.previousView, // Track previous view for back navigation
   });
 
@@ -56,16 +57,20 @@ class WorkspaceState extends Equatable {
   final WorkspaceView currentView;
   final MobileWorkspaceView mobileView;
   final bool hasAnyGroupPermission;
-  final String? currentGroupRole; // User's role in current group (e.g., "OWNER", "ADVISOR", "Custom Role")
-  final List<String>? currentGroupPermissions; // User's permissions in current group
+  final String?
+  currentGroupRole; // User's role in current group (e.g., "OWNER", "ADVISOR", "Custom Role")
+  final List<String>?
+  currentGroupPermissions; // User's permissions in current group
   final bool isLoadingChannels;
   final bool isLoadingWorkspace;
   final String? errorMessage;
   final ChannelPermissions? channelPermissions;
   final bool isLoadingPermissions;
   final List<String> channelHistory; // Web-only: channel navigation history
-  final bool isNarrowDesktopCommentsFullscreen; // Narrow desktop: when true, hide posts and show only comments
-  final WorkspaceView? previousView; // Previous view for back navigation from special views (groupAdmin, memberManagement, etc.)
+  final bool
+  isNarrowDesktopCommentsFullscreen; // Narrow desktop: when true, hide posts and show only comments
+  final WorkspaceView?
+  previousView; // Previous view for back navigation from special views (groupAdmin, memberManagement, etc.)
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -99,16 +104,20 @@ class WorkspaceState extends Equatable {
       unreadCounts: unreadCounts ?? this.unreadCounts,
       currentView: currentView ?? this.currentView,
       mobileView: mobileView ?? this.mobileView,
-      hasAnyGroupPermission: hasAnyGroupPermission ?? this.hasAnyGroupPermission,
+      hasAnyGroupPermission:
+          hasAnyGroupPermission ?? this.hasAnyGroupPermission,
       currentGroupRole: currentGroupRole ?? this.currentGroupRole,
-      currentGroupPermissions: currentGroupPermissions ?? this.currentGroupPermissions,
+      currentGroupPermissions:
+          currentGroupPermissions ?? this.currentGroupPermissions,
       isLoadingChannels: isLoadingChannels ?? this.isLoadingChannels,
       isLoadingWorkspace: isLoadingWorkspace ?? this.isLoadingWorkspace,
       errorMessage: errorMessage,
       channelPermissions: channelPermissions ?? this.channelPermissions,
       isLoadingPermissions: isLoadingPermissions ?? this.isLoadingPermissions,
       channelHistory: channelHistory ?? this.channelHistory,
-      isNarrowDesktopCommentsFullscreen: isNarrowDesktopCommentsFullscreen ?? this.isNarrowDesktopCommentsFullscreen,
+      isNarrowDesktopCommentsFullscreen:
+          isNarrowDesktopCommentsFullscreen ??
+          this.isNarrowDesktopCommentsFullscreen,
       previousView: previousView ?? this.previousView,
     );
   }
@@ -119,27 +128,27 @@ class WorkspaceState extends Equatable {
 
   @override
   List<Object?> get props => [
-        selectedGroupId,
-        selectedChannelId,
-        isCommentsVisible,
-        selectedPostId,
-        workspaceContext,
-        channels,
-        unreadCounts,
-        currentView,
-        mobileView,
-        hasAnyGroupPermission,
-        currentGroupRole,
-        currentGroupPermissions,
-        isLoadingChannels,
-        isLoadingWorkspace,
-        errorMessage,
-        channelPermissions,
-        isLoadingPermissions,
-        channelHistory,
-        isNarrowDesktopCommentsFullscreen,
-        previousView,
-      ];
+    selectedGroupId,
+    selectedChannelId,
+    isCommentsVisible,
+    selectedPostId,
+    workspaceContext,
+    channels,
+    unreadCounts,
+    currentView,
+    mobileView,
+    hasAnyGroupPermission,
+    currentGroupRole,
+    currentGroupPermissions,
+    isLoadingChannels,
+    isLoadingWorkspace,
+    errorMessage,
+    channelPermissions,
+    isLoadingPermissions,
+    channelHistory,
+    isNarrowDesktopCommentsFullscreen,
+    previousView,
+  ];
 }
 
 class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
@@ -148,7 +157,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   final Ref _ref;
   final ChannelService _channelService = ChannelService();
 
-  void enterWorkspace(String groupId, {String? channelId, GroupMembership? membership}) {
+  void enterWorkspace(
+    String groupId, {
+    String? channelId,
+    GroupMembership? membership,
+  }) {
     // 모바일 전용 상태 확인: mobileView만 체크 (웹 상태와 분리)
     final hasMobileState = state.mobileView != MobileWorkspaceView.channelList;
 
@@ -159,7 +172,9 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       isCommentsVisible: hasMobileState ? state.isCommentsVisible : false,
       selectedPostId: hasMobileState ? state.selectedPostId : null,
       currentView: WorkspaceView.channel,
-      mobileView: hasMobileState ? state.mobileView : MobileWorkspaceView.channelList,
+      mobileView: hasMobileState
+          ? state.mobileView
+          : MobileWorkspaceView.channelList,
       channelHistory: hasMobileState ? state.channelHistory : [],
       workspaceContext: {
         'groupId': groupId,
@@ -170,12 +185,20 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
     // 최초 진입 시에만 채널 로드 (탭 전환 복귀 시에는 기존 채널 유지)
     if (!hasMobileState) {
-      loadChannels(groupId, autoSelectChannelId: channelId, membership: membership);
+      loadChannels(
+        groupId,
+        autoSelectChannelId: channelId,
+        membership: membership,
+      );
     }
   }
 
   /// Load channels and membership information for a group
-  Future<void> loadChannels(String groupId, {String? autoSelectChannelId, GroupMembership? membership}) async {
+  Future<void> loadChannels(
+    String groupId, {
+    String? autoSelectChannelId,
+    GroupMembership? membership,
+  }) async {
     try {
       final groupIdInt = int.parse(groupId);
 
@@ -189,12 +212,12 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
       // Extract permissions from currentGroup
       final hasAnyPermission = currentGroup?.permissions != null
-          ? PermissionUtils.hasAnyGroupManagementPermission(currentGroup!.permissions)
+          ? PermissionUtils.hasAnyGroupManagementPermission(
+              currentGroup!.permissions,
+            )
           : false;
       final currentRole = currentGroup?.role;
       final currentPermissions = currentGroup?.permissions.toList();
-
-
 
       // Generate dummy unread counts (for demonstration)
       final unreadCounts = <String, int>{};
@@ -376,10 +399,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   /// Set error message
   void setError(String message) {
-    state = state.copyWith(
-      errorMessage: message,
-      isLoadingWorkspace: false,
-    );
+    state = state.copyWith(errorMessage: message, isLoadingWorkspace: false);
   }
 
   /// Clear error message
@@ -460,14 +480,14 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   // 모바일 뒤로가기 핸들링
   bool handleMobileBack() {
     // 1) 특수 뷰(그룹 관리자/멤버관리/그룹 홈/캘린더 등)에서 이전 뷰가 기록되어 있으면 우선 복원
-    if (state.currentView != WorkspaceView.channel && state.previousView != null) {
+    if (state.currentView != WorkspaceView.channel &&
+        state.previousView != null) {
       final prev = state.previousView!;
       // memberManagement → groupAdmin → channel 순으로 복원되도록 previousView를 보정
-      final nextPrev = prev == WorkspaceView.groupAdmin ? WorkspaceView.channel : null;
-      state = state.copyWith(
-        currentView: prev,
-        previousView: nextPrev,
-      );
+      final nextPrev = prev == WorkspaceView.groupAdmin
+          ? WorkspaceView.channel
+          : null;
+      state = state.copyWith(currentView: prev, previousView: nextPrev);
       return true;
     }
 
@@ -503,13 +523,13 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// Returns: true if handled internally, false if should navigate to home
   bool handleWebBack() {
     // If in a special view (groupAdmin, memberManagement, etc.), return to previous view
-    if (state.currentView != WorkspaceView.channel && state.previousView != null) {
+    if (state.currentView != WorkspaceView.channel &&
+        state.previousView != null) {
       final prev = state.previousView!;
-      final nextPrev = prev == WorkspaceView.groupAdmin ? WorkspaceView.channel : null;
-      state = state.copyWith(
-        currentView: prev,
-        previousView: nextPrev,
-      );
+      final nextPrev = prev == WorkspaceView.groupAdmin
+          ? WorkspaceView.channel
+          : null;
+      state = state.copyWith(currentView: prev, previousView: nextPrev);
       return true;
     }
 
@@ -563,23 +583,128 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 }
 
-final workspaceStateProvider = StateNotifierProvider<WorkspaceStateNotifier, WorkspaceState>(
-  (ref) => WorkspaceStateNotifier(ref),
-);
+final workspaceStateProvider =
+    StateNotifierProvider<WorkspaceStateNotifier, WorkspaceState>(
+      (ref) => WorkspaceStateNotifier(ref),
+    );
 
 // 워크스페이스 컨텍스트 관련 유틸리티 Provider들
 final currentGroupIdProvider = Provider<String?>((ref) {
-  return ref.watch(workspaceStateProvider.select((state) => state.selectedGroupId));
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.selectedGroupId),
+  );
 });
 
 final currentChannelIdProvider = Provider<String?>((ref) {
-  return ref.watch(workspaceStateProvider.select((state) => state.selectedChannelId));
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.selectedChannelId),
+  );
 });
 
 final isInWorkspaceProvider = Provider<bool>((ref) {
-  return ref.watch(workspaceStateProvider.select((state) => state.isInWorkspace));
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.isInWorkspace),
+  );
 });
 
 final isCommentsVisibleProvider = Provider<bool>((ref) {
-  return ref.watch(workspaceStateProvider.select((state) => state.isCommentsVisible));
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.isCommentsVisible),
+  );
+});
+
+final workspaceCurrentViewProvider = Provider<WorkspaceView>((ref) {
+  return ref.watch(workspaceStateProvider.select((state) => state.currentView));
+});
+
+final workspaceMobileViewProvider = Provider<MobileWorkspaceView>((ref) {
+  return ref.watch(workspaceStateProvider.select((state) => state.mobileView));
+});
+
+final workspaceIsLoadingProvider = Provider<bool>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.isLoadingWorkspace),
+  );
+});
+
+final workspaceErrorMessageProvider = Provider<String?>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.errorMessage),
+  );
+});
+
+final workspaceChannelsProvider = Provider<List<Channel>>((ref) {
+  return ref.watch(workspaceStateProvider.select((state) => state.channels));
+});
+
+final workspaceUnreadCountsProvider = Provider<Map<String, int>>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.unreadCounts),
+  );
+});
+
+final workspaceHasAnyGroupPermissionProvider = Provider<bool>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.hasAnyGroupPermission),
+  );
+});
+
+final workspaceChannelPermissionsProvider = Provider<ChannelPermissions?>((
+  ref,
+) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.channelPermissions),
+  );
+});
+
+final workspaceIsLoadingPermissionsProvider = Provider<bool>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.isLoadingPermissions),
+  );
+});
+
+final workspaceSelectedPostIdProvider = Provider<String?>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.selectedPostId),
+  );
+});
+
+final workspaceIsNarrowDesktopCommentsFullscreenProvider = Provider<bool>((
+  ref,
+) {
+  return ref.watch(
+    workspaceStateProvider.select(
+      (state) => state.isNarrowDesktopCommentsFullscreen,
+    ),
+  );
+});
+
+final workspaceHasSelectedChannelProvider = Provider<bool>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.hasSelectedChannel),
+  );
+});
+
+final workspacePreviousViewProvider = Provider<WorkspaceView?>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.previousView),
+  );
+});
+
+final workspaceChannelHistoryProvider = Provider<List<String>>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.channelHistory),
+  );
+});
+
+final workspaceCurrentGroupRoleProvider = Provider<String?>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.currentGroupRole),
+  );
+});
+
+final workspaceCurrentGroupPermissionsProvider = Provider<List<String>?>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.currentGroupPermissions),
+  );
 });

@@ -120,7 +120,8 @@ class GroupRole {
       description: json['description'] as String? ?? '',
       isSystemRole: json['isSystemRole'] as bool? ?? false,
       priority: (json['priority'] as num?)?.toInt() ?? 0,
-      permissions: (json['permissions'] as List<dynamic>?)
+      permissions:
+          (json['permissions'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
@@ -243,15 +244,9 @@ class ProcessJoinRequestRequest {
   final bool approved;
   final String? roleId; // 승인 시 부여할 역할
 
-  ProcessJoinRequestRequest({
-    required this.approved,
-    this.roleId,
-  });
+  ProcessJoinRequestRequest({required this.approved, this.roleId});
 
   Map<String, dynamic> toJson() {
-    return {
-      'approved': approved,
-      if (roleId != null) 'roleId': roleId,
-    };
+    return {'approved': approved, if (roleId != null) 'roleId': roleId};
   }
 }

@@ -62,10 +62,7 @@ class MemberAvatar extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: badgeColor ?? AppColors.success,
-                border: Border.all(
-                  color: Colors.white,
-                  width: 2,
-                ),
+                border: Border.all(color: Colors.white, width: 2),
               ),
             ),
           ),
@@ -83,7 +80,9 @@ class MemberAvatar extends StatelessWidget {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     } else {
       // 한 단어: 처음 두 글자 (또는 한 글자)
-      return name.length >= 2 ? name.substring(0, 2).toUpperCase() : name[0].toUpperCase();
+      return name.length >= 2
+          ? name.substring(0, 2).toUpperCase()
+          : name[0].toUpperCase();
     }
   }
 }
@@ -107,11 +106,7 @@ class MemberAvatarWithName extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        MemberAvatar(
-          name: name,
-          imageUrl: imageUrl,
-          size: avatarSize,
-        ),
+        MemberAvatar(name: name, imageUrl: imageUrl, size: avatarSize),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -131,10 +126,7 @@ class MemberAvatarWithName extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.neutral600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppColors.neutral600),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

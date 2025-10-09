@@ -70,27 +70,41 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
 
       if (kDebugMode) {
-        developer.log('✅ Google 계정 로그인 성공: ${account.email}', name: 'GoogleSignIn');
+        developer.log(
+          '✅ Google 계정 로그인 성공: ${account.email}',
+          name: 'GoogleSignIn',
+        );
       }
       final auth = await account.authentication;
       final idToken = auth.idToken;
       final accessToken = auth.accessToken;
 
       if (kDebugMode) {
-        developer.log('🔑 ID Token 길이: ${idToken?.length ?? 0}', name: 'GoogleSignIn');
-        developer.log('🔑 Access Token 길이: ${accessToken?.length ?? 0}', name: 'GoogleSignIn');
+        developer.log(
+          '🔑 ID Token 길이: ${idToken?.length ?? 0}',
+          name: 'GoogleSignIn',
+        );
+        developer.log(
+          '🔑 Access Token 길이: ${accessToken?.length ?? 0}',
+          name: 'GoogleSignIn',
+        );
       }
 
-      if ((idToken == null || idToken.isEmpty) && (accessToken == null || accessToken.isEmpty)) {
+      if ((idToken == null || idToken.isEmpty) &&
+          (accessToken == null || accessToken.isEmpty)) {
         throw Exception(
           'Google에서 인증 토큰을 반환하지 않았습니다. OAuth 클라이언트 설정을 다시 확인해주세요.',
         );
       }
 
-      final loginResponse = await ref.read(authProvider.notifier).loginWithGoogle(
-        idToken: (idToken != null && idToken.isNotEmpty) ? idToken : null,
-        accessToken: (accessToken != null && accessToken.isNotEmpty) ? accessToken : null,
-      );
+      final loginResponse = await ref
+          .read(authProvider.notifier)
+          .loginWithGoogle(
+            idToken: (idToken != null && idToken.isNotEmpty) ? idToken : null,
+            accessToken: (accessToken != null && accessToken.isNotEmpty)
+                ? accessToken
+                : null,
+          );
 
       if (!mounted) {
         return;
@@ -128,7 +142,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final loginResponse = await ref.read(authProvider.notifier).loginWithTestAccount();
+      final loginResponse = await ref
+          .read(authProvider.notifier)
+          .loginWithTestAccount();
 
       if (!mounted) {
         return;
@@ -156,8 +172,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     // 디버깅을 위한 로그
     if (kDebugMode) {
-      developer.log('🔧 Platform Client ID: $platformClientId', name: 'GoogleSignIn');
-      developer.log('🔧 Google Web Client ID from env: ${AppConstants.googleWebClientId}', name: 'GoogleSignIn');
+      developer.log(
+        '🔧 Platform Client ID: $platformClientId',
+        name: 'GoogleSignIn',
+      );
+      developer.log(
+        '🔧 Google Web Client ID from env: ${AppConstants.googleWebClientId}',
+        name: 'GoogleSignIn',
+      );
       developer.log('🔧 Is Web Platform: $kIsWeb', name: 'GoogleSignIn');
     }
 
@@ -273,7 +295,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                             const SizedBox(height: AppTheme.spacing12),
                             AdminLoginButton(
-                              onPressed: _isLoading ? null : _handleTestAccountLogin,
+                              onPressed: _isLoading
+                                  ? null
+                                  : _handleTestAccountLogin,
                               isLoading: _isLoading,
                               width: double.infinity,
                               variant: ButtonVariant.tonal,
@@ -314,10 +338,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildHeadline(BuildContext context) {
     return Text(
       '대학 그룹 관리',
-      style: AppTheme.displaySmallTheme(context).copyWith(
-        fontWeight: FontWeight.w700,
-        color: AppColors.neutral900,
-      ),
+      style: AppTheme.displaySmallTheme(
+        context,
+      ).copyWith(fontWeight: FontWeight.w700, color: AppColors.neutral900),
       textAlign: TextAlign.center,
     );
   }
@@ -357,10 +380,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             Expanded(
               child: Text(
                 '개발 단계에서는 관리자 계정으로 테스트해보세요.',
-                style: AppTheme.bodySmallTheme(context).copyWith(
-                  color: AppColors.neutral600,
-                  height: 1.5,
-                ),
+                style: AppTheme.bodySmallTheme(
+                  context,
+                ).copyWith(color: AppColors.neutral600, height: 1.5),
               ),
             ),
           ],

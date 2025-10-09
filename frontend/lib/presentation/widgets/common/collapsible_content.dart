@@ -61,7 +61,8 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
   // to the scrollable, and only create the RawScrollbar after it has been
   // attached (hasClients == true). This avoids the runtime warning.
   late final ScrollController _controller;
-  final GlobalKey<RawScrollbarState> _rawScrollbarKey = GlobalKey<RawScrollbarState>();
+  final GlobalKey<RawScrollbarState> _rawScrollbarKey =
+      GlobalKey<RawScrollbarState>();
   // Flag and timer to briefly show the scrollbar thumb when content is expanded
   bool _showThumb = false;
   Timer? _hideThumbTimer;
@@ -104,10 +105,7 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
     // 렌더링 시와 동일한 줄간격(height)을 적용하여 측정 일치
     final base = widget.style ?? AppTheme.bodyMedium;
     final measureStyle = base.copyWith(height: 1.5);
-    final textSpan = TextSpan(
-      text: widget.content,
-      style: measureStyle,
-    );
+    final textSpan = TextSpan(text: widget.content, style: measureStyle);
 
     final textPainter = TextPainter(
       text: textSpan,
@@ -152,17 +150,16 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
     Widget buildExpanded() {
       if (!widget.expandedScrollable) {
         // 기존 전체 펼치기 동작
-        return Text(
-          widget.content,
-          style: effectiveTextStyle,
-        );
+        return Text(widget.content, style: effectiveTextStyle);
       }
 
       // 펼친 상태를 스크롤 가능한 영역(최대 높이 제한)으로 처리
       // 줄 높이 추정치 = fontSize * height
       final defaultStyle = DefaultTextStyle.of(context).style;
-      final fontSize = effectiveTextStyle.fontSize ?? defaultStyle.fontSize ?? 14.0;
-      final heightMultiplier = effectiveTextStyle.height ?? defaultStyle.height ?? 1.0;
+      final fontSize =
+          effectiveTextStyle.fontSize ?? defaultStyle.fontSize ?? 14.0;
+      final heightMultiplier =
+          effectiveTextStyle.height ?? defaultStyle.height ?? 1.0;
       final lineHeightPx = fontSize * heightMultiplier;
       final maxVisibleHeight = lineHeightPx * widget.expandedMaxLines;
 
@@ -171,43 +168,45 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
           // 내용이 더 짧으면 그만큼만, 길면 최대 10줄 높이까지 표시
           maxHeight: maxVisibleHeight,
         ),
-        child: Builder(builder: (ctx) {
-          // After this frame, if the controller is attached and we haven't yet
-          // attached the scrollbar, update state to create the RawScrollbar.
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            if (!_attachScrollbar && _controller.hasClients) {
-              setState(() {
-                _attachScrollbar = true;
-              });
+        child: Builder(
+          builder: (ctx) {
+            // After this frame, if the controller is attached and we haven't yet
+            // attached the scrollbar, update state to create the RawScrollbar.
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              if (!_attachScrollbar && _controller.hasClients) {
+                setState(() {
+                  _attachScrollbar = true;
+                });
+              }
+            });
+
+            final scrollable = SingleChildScrollView(
+              controller: _controller,
+              physics: const BouncingScrollPhysics(),
+              child: Text(
+                widget.content,
+                style: effectiveTextStyle,
+                softWrap: true,
+              ),
+            );
+
+            if (!_attachScrollbar) {
+              return scrollable;
             }
-          });
 
-          final scrollable = SingleChildScrollView(
-            controller: _controller,
-            physics: const BouncingScrollPhysics(),
-            child: Text(
-              widget.content,
-              style: effectiveTextStyle,
-              softWrap: true,
-            ),
-          );
-
-          if (!_attachScrollbar) {
-            return scrollable;
-          }
-
-          return RawScrollbar(
-            key: _rawScrollbarKey,
-            controller: _controller,
-            thumbVisibility: _showThumb,
-            radius: const Radius.circular(8),
-            thickness: 6,
-            crossAxisMargin: 2,
-            mainAxisMargin: 2,
-            child: scrollable,
-          );
-        }),
+            return RawScrollbar(
+              key: _rawScrollbarKey,
+              controller: _controller,
+              thumbVisibility: _showThumb,
+              radius: const Radius.circular(8),
+              thickness: 6,
+              crossAxisMargin: 2,
+              mainAxisMargin: 2,
+              child: scrollable,
+            );
+          },
+        ),
       );
     }
 
@@ -241,12 +240,15 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
                     setState(() {
                       _showThumb = true;
                     });
-                    _hideThumbTimer = Timer(const Duration(milliseconds: 1500), () {
-                      if (!mounted) return;
-                      setState(() {
-                        _showThumb = false;
-                      });
-                    });
+                    _hideThumbTimer = Timer(
+                      const Duration(milliseconds: 1500),
+                      () {
+                        if (!mounted) return;
+                        setState(() {
+                          _showThumb = false;
+                        });
+                      },
+                    );
                   }
                 });
               }

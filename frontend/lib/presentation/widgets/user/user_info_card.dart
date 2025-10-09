@@ -93,7 +93,10 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
               link: _layerLink,
               targetAnchor: Alignment.bottomRight,
               followerAnchor: Alignment.bottomLeft,
-              offset: const Offset(AppSpacing.xxs + 30, 0), // 경계선(1px) 보정하여 오른쪽으로 1px 추가 이동
+              offset: const Offset(
+                AppSpacing.xxs + 30,
+                0,
+              ), // 경계선(1px) 보정하여 오른쪽으로 1px 추가 이동
               child: AvatarPopupMenu(
                 user: widget.user,
                 onLogout: () {
@@ -148,77 +151,77 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
               mainAxisAlignment: MainAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-              // Avatar: Transform으로 위치 애니메이션
-              CompositedTransformTarget(
-                link: _layerLink,
-                child: Transform.translate(
-                  offset: Offset(avatarDx, 0),
-                  child: _AvatarSection(
-                    user: widget.user,
-                    isCompact: widget.isCompact,
-                    onTap: widget.isCompact ? _showPopup : null,
-                  ),
-                ),
-              ),
-
-              // 확장 상태 콘텐츠 (지연 렌더링)
-              if (shouldShowContent) ...[
-                const SizedBox(width: AppSpacing.xs),
-                // Info Section (닉네임 + 이메일/학과)
-                Expanded(
-                  child: Opacity(
-                    opacity: contentOpacity,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Primary (닉네임/이름)
-                        Text(
-                          widget.user.nickname ?? widget.user.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.neutral900,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        // Secondary (email)
-                        Text(
-                          widget.user.email,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            color: AppColors.neutral600,
-                            height: 1.2,
-                          ),
-                        ),
-                        if (widget.user.department != null) ...[
-                          const SizedBox(height: 2),
-                          _Tag(widget.user.department!),
-                        ],
-                      ],
+                // Avatar: Transform으로 위치 애니메이션
+                CompositedTransformTarget(
+                  link: _layerLink,
+                  child: Transform.translate(
+                    offset: Offset(avatarDx, 0),
+                    child: _AvatarSection(
+                      user: widget.user,
+                      isCompact: widget.isCompact,
+                      onTap: widget.isCompact ? _showPopup : null,
                     ),
                   ),
                 ),
 
-                // Actions (로그아웃)
-                if (widget.showLogout) ...[
+                // 확장 상태 콘텐츠 (지연 렌더링)
+                if (shouldShowContent) ...[
                   const SizedBox(width: AppSpacing.xs),
-                  Opacity(
-                    opacity: contentOpacity,
-                    child: _ActionsSection(
-                      isLoading: _isLoggingOut,
-                      onLogoutTap: _isLoggingOut ? null : _handleLogout,
+                  // Info Section (닉네임 + 이메일/학과)
+                  Expanded(
+                    child: Opacity(
+                      opacity: contentOpacity,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Primary (닉네임/이름)
+                          Text(
+                            widget.user.nickname ?? widget.user.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.neutral900,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          // Secondary (email)
+                          Text(
+                            widget.user.email,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.neutral600,
+                              height: 1.2,
+                            ),
+                          ),
+                          if (widget.user.department != null) ...[
+                            const SizedBox(height: 2),
+                            _Tag(widget.user.department!),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
+
+                  // Actions (로그아웃)
+                  if (widget.showLogout) ...[
+                    const SizedBox(width: AppSpacing.xs),
+                    Opacity(
+                      opacity: contentOpacity,
+                      child: _ActionsSection(
+                        isLoading: _isLoggingOut,
+                        onLogoutTap: _isLoggingOut ? null : _handleLogout,
+                      ),
+                    ),
+                  ],
                 ],
               ],
-            ],
             ),
           ),
         );
@@ -239,9 +242,7 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
             vertical: 10,
           ),
           decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.outline, width: 1),
-            ),
+            border: Border(top: BorderSide(color: AppColors.outline, width: 1)),
           ),
           child: child,
         ),
@@ -299,7 +300,10 @@ class _AvatarSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.brandContainerLight,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: AppColors.brand.withValues(alpha: 0.18), width: 1),
+        border: Border.all(
+          color: AppColors.brand.withValues(alpha: 0.18),
+          width: 1,
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: _buildImageOrInitials(size),
@@ -308,10 +312,7 @@ class _AvatarSection extends StatelessWidget {
     if (onTap != null) {
       return MouseRegion(
         cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onTap,
-          child: avatar,
-        ),
+        child: GestureDetector(onTap: onTap, child: avatar),
       );
     }
 
@@ -323,7 +324,8 @@ class _AvatarSection extends StatelessWidget {
       return Image.network(
         user.profileImageUrl!,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _Initials(user: user, isCompact: isCompact),
+        errorBuilder: (_, __, ___) =>
+            _Initials(user: user, isCompact: isCompact),
       );
     }
     return _Initials(user: user, isCompact: isCompact);
@@ -428,7 +430,11 @@ class _LogoutButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(6),
             border: Border.all(color: AppColors.neutral400, width: 1),
           ),
-          child: const Icon(Icons.logout, size: 14, color: AppColors.neutral600),
+          child: const Icon(
+            Icons.logout,
+            size: 14,
+            color: AppColors.neutral600,
+          ),
         ),
       ),
     );

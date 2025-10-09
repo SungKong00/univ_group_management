@@ -18,10 +18,7 @@ import 'package:equatable/equatable.dart';
 /// )
 /// ```
 class PageBreadcrumb extends Equatable {
-  const PageBreadcrumb({
-    required this.title,
-    this.path,
-  });
+  const PageBreadcrumb({required this.title, this.path});
 
   /// 페이지의 주제목 (상단바 좌측에 크게 표시)
   final String title;
@@ -37,14 +34,8 @@ class PageBreadcrumb extends Equatable {
   /// 예: "워크스페이스 > 컴퓨터공학과 > 공지사항"
   String get pathString => path?.join(' > ') ?? '';
 
-  PageBreadcrumb copyWith({
-    String? title,
-    List<String>? path,
-  }) {
-    return PageBreadcrumb(
-      title: title ?? this.title,
-      path: path ?? this.path,
-    );
+  PageBreadcrumb copyWith({String? title, List<String>? path}) {
+    return PageBreadcrumb(title: title ?? this.title, path: path ?? this.path);
   }
 
   @override

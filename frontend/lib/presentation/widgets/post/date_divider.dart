@@ -9,10 +9,7 @@ import '../../../core/theme/app_theme.dart';
 class DateDivider extends StatelessWidget {
   final DateTime date;
 
-  const DateDivider({
-    super.key,
-    required this.date,
-  });
+  const DateDivider({super.key, required this.date});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +26,9 @@ class DateDivider extends StatelessWidget {
 
     // 라이트 모드에서는 게시글 패딩 배경인 lightBackground(neutral100)를 사용하고,
     // 다크 모드에서는 elevated surface를 사용하여 이질감이 없도록 처리합니다.
-    final bgColor = context.isDarkMode ? AppColors.darkElevated : AppColors.lightBackground;
+    final bgColor = context.isDarkMode
+        ? AppColors.darkElevated
+        : AppColors.lightBackground;
 
     // 구분선과 텍스트 색은 현재 테마의 outline/onSurface를 기반으로 선택
     final outlineColor = Theme.of(context).colorScheme.outline;
@@ -67,10 +66,7 @@ class DateDivider extends StatelessWidget {
               Expanded(
                 child: Align(
                   alignment: Alignment.bottomCenter,
-                  child: Container(
-                    height: 1,
-                    color: outlineColor,
-                  ),
+                  child: Container(height: 1, color: outlineColor),
                 ),
               ),
             ],

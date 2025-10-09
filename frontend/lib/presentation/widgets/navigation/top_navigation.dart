@@ -29,22 +29,21 @@ class TopNavigation extends ConsumerWidget {
 
     final breadcrumb = ref.watch(
       pageBreadcrumbFromPathProvider(
-        PageBreadcrumbRequest(
-          routePath: routePath,
-          layoutMode: layoutMode,
-        ),
+        PageBreadcrumbRequest(routePath: routePath, layoutMode: layoutMode),
       ),
     );
 
-    final canGoBack = navigationState.canGoBackInCurrentTab ||
+    final canGoBack =
+        navigationState.canGoBackInCurrentTab ||
         navigationState.currentTab != NavigationTab.home;
 
     // 워크스페이스 여부 확인
     final isWorkspace = routePath.startsWith('/workspace');
 
     // 워크스페이스 상태에서 그룹 역할 가져오기
-    final workspaceState = ref.watch(workspaceStateProvider);
-    final currentGroupRole = isWorkspace ? workspaceState.currentGroupRole : null;
+    final currentGroupRole = isWorkspace
+        ? ref.watch(workspaceCurrentGroupRoleProvider)
+        : null;
 
     return Container(
       height: AppConstants.topNavigationHeight,
@@ -122,7 +121,9 @@ class TopNavigation extends ConsumerWidget {
     }
 
     // Default navigation handling
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
     final previousRoute = navigationController.goBack();
 
     if (previousRoute != null) {

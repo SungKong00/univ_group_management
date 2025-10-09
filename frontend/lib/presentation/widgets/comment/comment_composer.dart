@@ -67,8 +67,8 @@ class _CommentComposerState extends State<CommentComposer> {
     final hintText = widget.isLoading
         ? '권한 확인 중...'
         : widget.canWrite
-            ? '댓글을 입력하세요...'
-            : '댓글 작성 권한이 없습니다';
+        ? '댓글을 입력하세요...'
+        : '댓글 작성 권한이 없습니다';
 
     return Container(
       padding: const EdgeInsets.all(12),

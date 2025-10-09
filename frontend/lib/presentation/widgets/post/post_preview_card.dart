@@ -27,11 +27,7 @@ class PostPreviewCard extends StatelessWidget {
   /// 본문 미리보기 최대 줄 수 (기본값: 5)
   final int maxLines;
 
-  const PostPreviewCard({
-    super.key,
-    required this.post,
-    this.maxLines = 5,
-  });
+  const PostPreviewCard({super.key, required this.post, this.maxLines = 5});
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +40,7 @@ class PostPreviewCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.lightOutline,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.lightOutline, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,9 +86,7 @@ class PostPreviewCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 _formatDateTime(post.createdAt),
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.neutral600,
-                ),
+                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
               ),
             ],
           ),
@@ -117,17 +108,16 @@ class PostPreviewCard extends StatelessWidget {
     }
 
     // 기본 아바타 (이니셜)
-    final initial =
-        post.authorName.isNotEmpty ? post.authorName[0].toUpperCase() : '?';
+    final initial = post.authorName.isNotEmpty
+        ? post.authorName[0].toUpperCase()
+        : '?';
 
     return CircleAvatar(
       radius: 20,
       backgroundColor: AppColors.brand,
       child: Text(
         initial,
-        style: AppTheme.titleMedium.copyWith(
-          color: Colors.white,
-        ),
+        style: AppTheme.titleMedium.copyWith(color: Colors.white),
       ),
     );
   }

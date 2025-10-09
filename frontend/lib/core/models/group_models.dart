@@ -1,9 +1,4 @@
-enum GroupNodeType {
-  university,
-  college,
-  department,
-  other,
-}
+enum GroupNodeType { university, college, department, other }
 
 class GroupHierarchyNode {
   GroupHierarchyNode({

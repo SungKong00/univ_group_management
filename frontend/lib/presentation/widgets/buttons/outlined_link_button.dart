@@ -31,31 +31,29 @@ class OutlinedLinkButton extends StatelessWidget {
 
     final button = switch (variant) {
       ButtonVariant.outlined => OutlinedButton(
-          style: AppButtonStyles.outlined(colorScheme),
-          onPressed: isEnabled ? onPressed : null,
-          child: _OutlinedChild(
-            text: text,
-            icon: icon,
-            isLoading: isLoading,
-            textStyle: AppTheme.bodyMediumTheme(context).copyWith(
-              color: AppColors.brand,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+        style: AppButtonStyles.outlined(colorScheme),
+        onPressed: isEnabled ? onPressed : null,
+        child: _OutlinedChild(
+          text: text,
+          icon: icon,
+          isLoading: isLoading,
+          textStyle: AppTheme.bodyMediumTheme(
+            context,
+          ).copyWith(color: AppColors.brand, fontWeight: FontWeight.w500),
         ),
+      ),
       ButtonVariant.tonal => FilledButton(
-          style: AppButtonStyles.tonal(colorScheme),
-          onPressed: isEnabled ? onPressed : null,
-          child: _OutlinedChild(
-            text: text,
-            icon: icon,
-            isLoading: isLoading,
-            textStyle: AppTheme.bodyMediumTheme(context).copyWith(
-              color: AppColors.brand,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+        style: AppButtonStyles.tonal(colorScheme),
+        onPressed: isEnabled ? onPressed : null,
+        child: _OutlinedChild(
+          text: text,
+          icon: icon,
+          isLoading: isLoading,
+          textStyle: AppTheme.bodyMediumTheme(
+            context,
+          ).copyWith(color: AppColors.brand, fontWeight: FontWeight.w500),
         ),
+      ),
     };
 
     return Semantics(

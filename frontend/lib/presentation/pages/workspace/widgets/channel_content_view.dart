@@ -13,14 +13,20 @@ import '../../../utils/responsive_layout_helper.dart';
 /// 선택된 채널의 게시글 목록과 작성 폼을 표시합니다.
 /// 권한 에러 처리와 빈 상태 표시를 담당합니다.
 class ChannelContentView extends ConsumerStatefulWidget {
-  final WorkspaceState workspaceState;
+  final List<Channel> channels;
+  final String selectedChannelId;
+  final ChannelPermissions? channelPermissions;
+  final bool isLoadingPermissions;
   final Future<void> Function(String content) onSubmitPost;
   // 새 글 작성 후 목록 재초기화를 트리거하기 위한 키 (부모에서 증가시킴)
   final int postReloadTick;
 
   const ChannelContentView({
     super.key,
-    required this.workspaceState,
+    required this.channels,
+    required this.selectedChannelId,
+    required this.channelPermissions,
+    required this.isLoadingPermissions,
     required this.onSubmitPost,
     this.postReloadTick = 0,
   });
@@ -37,9 +43,8 @@ class _ChannelContentViewState extends ConsumerState<ChannelContentView> {
     // 선택된 채널 찾기
     Channel? selectedChannel;
     try {
-      selectedChannel = widget.workspaceState.channels.firstWhere(
-        (channel) =>
-            channel.id.toString() == widget.workspaceState.selectedChannelId,
+      selectedChannel = widget.channels.firstWhere(
+        (channel) => channel.id.toString() == widget.selectedChannelId,
       );
     } catch (e) {
       selectedChannel = null;
@@ -47,7 +52,7 @@ class _ChannelContentViewState extends ConsumerState<ChannelContentView> {
 
     // 채널을 찾지 못한 경우 fallback
     final channelName = selectedChannel?.name ?? '채널을 불러올 수 없습니다';
-    final channelPermissions = widget.workspaceState.channelPermissions;
+    final channelPermissions = widget.channelPermissions;
     final canWritePost = channelPermissions?.canWritePost ?? false;
 
     // 권한이 없는 경우 권한 에러 표시
@@ -58,11 +63,7 @@ class _ChannelContentViewState extends ConsumerState<ChannelContentView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.lock_outline,
-                size: 64,
-                color: AppColors.neutral400,
-              ),
+              Icon(Icons.lock_outline, size: 64, color: AppColors.neutral400),
               const SizedBox(height: 16),
               Text(
                 '이 채널을 볼 권한이 없습니다',
@@ -105,11 +106,14 @@ class _ChannelContentViewState extends ConsumerState<ChannelContentView> {
 
                 return PostList(
                   key: ValueKey(
-                      'post_list_${widget.workspaceState.selectedChannelId}_${widget.postReloadTick}_$_postListKey'),
-                  channelId: widget.workspaceState.selectedChannelId!,
+                    'post_list_${widget.selectedChannelId}_${widget.postReloadTick}_$_postListKey',
+                  ),
+                  channelId: widget.selectedChannelId,
                   canWrite: canWritePost,
                   onTapComment: (postId) {
-                    ref.read(workspaceStateProvider.notifier).showComments(
+                    ref
+                        .read(workspaceStateProvider.notifier)
+                        .showComments(
                           postId.toString(),
                           isNarrowDesktop: isNarrowDesktop,
                         );
@@ -125,8 +129,8 @@ class _ChannelContentViewState extends ConsumerState<ChannelContentView> {
   }
 
   Widget _buildMessageComposer() {
-    final channelPermissions = widget.workspaceState.channelPermissions;
-    final isLoadingPermissions = widget.workspaceState.isLoadingPermissions;
+    final channelPermissions = widget.channelPermissions;
+    final isLoadingPermissions = widget.isLoadingPermissions;
 
     // Determine if user can write posts
     final canWritePost = channelPermissions?.canWritePost ?? false;

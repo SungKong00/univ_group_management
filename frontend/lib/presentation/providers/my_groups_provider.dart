@@ -11,7 +11,9 @@ import '../../core/services/group_service.dart';
 ///
 /// autoDispose를 사용하여 사용하지 않을 때 자동으로 메모리에서 해제됩니다.
 /// 로그아웃 시에는 core/providers/provider_reset.dart에서 명시적으로 invalidate됩니다.
-final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref) async {
+final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((
+  ref,
+) async {
   final groupService = GroupService();
   return await groupService.getMyGroups();
 });

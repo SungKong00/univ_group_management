@@ -9,19 +9,11 @@ class AuthState {
   final bool isLoading;
   final String? error;
 
-  const AuthState({
-    this.user,
-    this.isLoading = false,
-    this.error,
-  });
+  const AuthState({this.user, this.isLoading = false, this.error});
 
   bool get isLoggedIn => user != null;
 
-  AuthState copyWith({
-    UserInfo? user,
-    bool? isLoading,
-    String? error,
-  }) {
+  AuthState copyWith({UserInfo? user, bool? isLoading, String? error}) {
     return AuthState(
       user: user,
       isLoading: isLoading ?? this.isLoading,
@@ -30,19 +22,11 @@ class AuthState {
   }
 
   AuthState clearError() {
-    return AuthState(
-      user: user,
-      isLoading: isLoading,
-      error: null,
-    );
+    return AuthState(user: user, isLoading: isLoading, error: null);
   }
 
   AuthState clearUser() {
-    return const AuthState(
-      user: null,
-      isLoading: false,
-      error: null,
-    );
+    return const AuthState(user: null, isLoading: false, error: null);
   }
 }
 
@@ -90,17 +74,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         accessToken: accessToken,
       );
 
-      state = state.copyWith(
-        user: response.user,
-        isLoading: false,
-      );
+      state = state.copyWith(user: response.user, isLoading: false);
 
       return response;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -111,17 +89,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final response = await _authService.loginWithTestAccount();
 
-      state = state.copyWith(
-        user: response.user,
-        isLoading: false,
-      );
+      state = state.copyWith(user: response.user, isLoading: false);
 
       return response;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -136,7 +108,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       resetAllUserDataProviders(_ref);
 
       // NavigationController 초기화 (홈으로 리셋)
-      final navigationController = _ref.read(navigationControllerProvider.notifier);
+      final navigationController = _ref.read(
+        navigationControllerProvider.notifier,
+      );
       navigationController.resetToHome();
 
       state = state.clearUser();
@@ -154,9 +128,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _authService.updateCurrentUser(updatedUser);
       state = state.copyWith(user: updatedUser);
     } catch (e) {
-      state = state.copyWith(
-        error: 'User update failed: ${e.toString()}',
-      );
+      state = state.copyWith(error: 'User update failed: ${e.toString()}');
       rethrow;
     }
   }

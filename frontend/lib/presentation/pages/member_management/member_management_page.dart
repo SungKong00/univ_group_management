@@ -18,7 +18,8 @@ class MemberManagementPage extends ConsumerStatefulWidget {
   const MemberManagementPage({super.key});
 
   @override
-  ConsumerState<MemberManagementPage> createState() => _MemberManagementPageState();
+  ConsumerState<MemberManagementPage> createState() =>
+      _MemberManagementPageState();
 }
 
 class _MemberManagementPageState extends ConsumerState<MemberManagementPage>
@@ -39,8 +40,7 @@ class _MemberManagementPageState extends ConsumerState<MemberManagementPage>
 
   @override
   Widget build(BuildContext context) {
-    final workspaceState = ref.watch(workspaceStateProvider);
-    final groupIdStr = workspaceState.selectedGroupId;
+    final groupIdStr = ref.watch(currentGroupIdProvider);
 
     if (groupIdStr == null) {
       return _buildEmptyState('그룹을 선택해주세요');
@@ -62,18 +62,12 @@ class _MemberManagementPageState extends ConsumerState<MemberManagementPage>
               unselectedLabelColor: AppColors.neutral600,
               indicatorColor: AppColors.brand,
               tabs: const [
-                Tab(
-                  icon: Icon(Icons.people_outline, size: 20),
-                  text: '멤버 목록',
-                ),
+                Tab(icon: Icon(Icons.people_outline, size: 20), text: '멤버 목록'),
                 Tab(
                   icon: Icon(Icons.admin_panel_settings_outlined, size: 20),
                   text: '역할 관리',
                 ),
-                Tab(
-                  icon: Icon(Icons.inbox_outlined, size: 20),
-                  text: '가입 신청',
-                ),
+                Tab(icon: Icon(Icons.inbox_outlined, size: 20), text: '가입 신청'),
               ],
             ),
           ),
@@ -84,7 +78,9 @@ class _MemberManagementPageState extends ConsumerState<MemberManagementPage>
               children: [
                 // 멤버 목록 탭
                 SingleChildScrollView(
-                  padding: EdgeInsets.all(isDesktop ? AppSpacing.lg : AppSpacing.sm),
+                  padding: EdgeInsets.all(
+                    isDesktop ? AppSpacing.lg : AppSpacing.sm,
+                  ),
                   child: MemberListSection(
                     groupId: groupId,
                     isDesktop: isDesktop,
@@ -92,7 +88,9 @@ class _MemberManagementPageState extends ConsumerState<MemberManagementPage>
                 ),
                 // 역할 관리 탭
                 SingleChildScrollView(
-                  padding: EdgeInsets.all(isDesktop ? AppSpacing.lg : AppSpacing.sm),
+                  padding: EdgeInsets.all(
+                    isDesktop ? AppSpacing.lg : AppSpacing.sm,
+                  ),
                   child: RoleManagementSection(
                     groupId: groupId,
                     isDesktop: isDesktop,
@@ -100,7 +98,9 @@ class _MemberManagementPageState extends ConsumerState<MemberManagementPage>
                 ),
                 // 가입 신청 탭
                 SingleChildScrollView(
-                  padding: EdgeInsets.all(isDesktop ? AppSpacing.lg : AppSpacing.sm),
+                  padding: EdgeInsets.all(
+                    isDesktop ? AppSpacing.lg : AppSpacing.sm,
+                  ),
                   child: JoinRequestSection(
                     groupId: groupId,
                     isDesktop: isDesktop,
@@ -121,17 +121,11 @@ class _MemberManagementPageState extends ConsumerState<MemberManagementPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.people_outline,
-              size: 64,
-              color: AppColors.neutral400,
-            ),
+            Icon(Icons.people_outline, size: 64, color: AppColors.neutral400),
             const SizedBox(height: 16),
             Text(
               message,
-              style: AppTheme.bodyLarge.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
             ),
           ],
         ),

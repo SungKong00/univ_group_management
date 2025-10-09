@@ -30,32 +30,28 @@ class PostService {
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/channels/$channelId/posts',
-        queryParameters: {
-          'page': page,
-          'size': size,
-        },
+        queryParameters: {'page': page, 'size': size},
       );
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            // Backend returns List<PostResponse> directly, not paginated
-            if (json is List) {
-              final posts = json.map((item) => Post.fromJson(item as Map<String, dynamic>)).toList();
-              // Create simple PostListResponse without pagination info
-              return PostListResponse(
-                posts: posts,
-                totalPages: 1,
-                currentPage: 0,
-                totalElements: posts.length,
-                hasMore: false,
-              );
-            }
-            // If backend returns paginated structure in the future
-            return PostListResponse.fromJson(json as Map<String, dynamic>);
-          },
-        );
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          // Backend returns List<PostResponse> directly, not paginated
+          if (json is List) {
+            final posts = json
+                .map((item) => Post.fromJson(item as Map<String, dynamic>))
+                .toList();
+            // Create simple PostListResponse without pagination info
+            return PostListResponse(
+              posts: posts,
+              totalPages: 1,
+              currentPage: 0,
+              totalElements: posts.length,
+              hasMore: false,
+            );
+          }
+          // If backend returns paginated structure in the future
+          return PostListResponse.fromJson(json as Map<String, dynamic>);
+        });
 
         if (apiResponse.success && apiResponse.data != null) {
           developer.log(
@@ -126,11 +122,7 @@ class PostService {
 
       throw Exception('Empty response from server');
     } catch (e) {
-      developer.log(
-        'Error creating post: $e',
-        name: 'PostService',
-        level: 900,
-      );
+      developer.log('Error creating post: $e', name: 'PostService', level: 900);
       rethrow;
     }
   }
@@ -171,11 +163,7 @@ class PostService {
 
       throw Exception('Empty response from server');
     } catch (e) {
-      developer.log(
-        'Error fetching post: $e',
-        name: 'PostService',
-        level: 900,
-      );
+      developer.log('Error fetching post: $e', name: 'PostService', level: 900);
       rethrow;
     }
   }
@@ -219,11 +207,7 @@ class PostService {
 
       throw Exception('Empty response from server');
     } catch (e) {
-      developer.log(
-        'Error updating post: $e',
-        name: 'PostService',
-        level: 900,
-      );
+      developer.log('Error updating post: $e', name: 'PostService', level: 900);
       rethrow;
     }
   }
@@ -264,11 +248,7 @@ class PostService {
 
       throw Exception('Empty response from server');
     } catch (e) {
-      developer.log(
-        'Error deleting post: $e',
-        name: 'PostService',
-        level: 900,
-      );
+      developer.log('Error deleting post: $e', name: 'PostService', level: 900);
       rethrow;
     }
   }

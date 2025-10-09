@@ -19,7 +19,10 @@ class DateFormatter {
   /// - 어제: "어제"
   /// - 1주일 이내: "N일 전"
   /// - 그 외: "M월 d일"
-  static String formatRelativeTime(DateTime dateTime, {bool includeMinutes = false}) {
+  static String formatRelativeTime(
+    DateTime dateTime, {
+    bool includeMinutes = false,
+  }) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 

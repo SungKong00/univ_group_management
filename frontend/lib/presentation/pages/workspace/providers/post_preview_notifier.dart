@@ -47,10 +47,7 @@ class PostPreviewNotifier extends StateNotifier<PostPreviewState> {
       return;
     }
 
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-    );
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
       final postIdInt = int.parse(postId);
@@ -87,9 +84,9 @@ final postServiceProvider = Provider<PostService>((ref) {
 
 /// 게시글 미리보기 Provider (autoDispose)
 final postPreviewProvider =
-    StateNotifierProvider.autoDispose<PostPreviewNotifier, PostPreviewState>(
-  (ref) {
-    final postService = ref.watch(postServiceProvider);
-    return PostPreviewNotifier(postService);
-  },
-);
+    StateNotifierProvider.autoDispose<PostPreviewNotifier, PostPreviewState>((
+      ref,
+    ) {
+      final postService = ref.watch(postServiceProvider);
+      return PostPreviewNotifier(postService);
+    });

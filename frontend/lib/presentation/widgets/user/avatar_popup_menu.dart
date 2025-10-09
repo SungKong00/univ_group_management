@@ -30,10 +30,7 @@ class AvatarPopupMenu extends StatelessWidget {
         return Transform.scale(
           scale: 0.8 + (0.2 * value),
           alignment: animationAlignment,
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
+          child: Opacity(opacity: value, child: child),
         );
       },
       child: Material(
@@ -143,11 +140,7 @@ class AvatarPopupMenu extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.logout,
-                  size: 16,
-                  color: AppColors.neutral700,
-                ),
+                const Icon(Icons.logout, size: 16, color: AppColors.neutral700),
                 const SizedBox(width: 8),
                 Text(
                   '로그아웃',

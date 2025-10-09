@@ -102,24 +102,16 @@ class _CommentListState extends State<CommentList> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 48,
-              color: AppColors.error,
-            ),
+            const Icon(Icons.error_outline, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               '댓글을 불러올 수 없습니다',
-              style: AppTheme.titleMedium.copyWith(
-                color: AppColors.neutral900,
-              ),
+              style: AppTheme.titleMedium.copyWith(color: AppColors.neutral900),
             ),
             const SizedBox(height: 8),
             Text(
               _errorMessage ?? '알 수 없는 오류가 발생했습니다',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -157,18 +149,12 @@ class _CommentListState extends State<CommentList> {
             SizedBox(height: 16),
             Text(
               '아직 댓글이 없습니다',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.neutral600,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.neutral600),
             ),
             SizedBox(height: 8),
             Text(
               '첫 번째 댓글을 작성해보세요',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.neutral500,
-              ),
+              style: TextStyle(fontSize: 12, color: AppColors.neutral500),
             ),
           ],
         ),

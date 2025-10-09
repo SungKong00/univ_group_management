@@ -2,10 +2,7 @@ class LoginRequest {
   final String? googleAuthToken;
   final String? googleAccessToken;
 
-  LoginRequest({
-    this.googleAuthToken,
-    this.googleAccessToken,
-  });
+  LoginRequest({this.googleAuthToken, this.googleAccessToken});
 
   Map<String, dynamic> toJson() => {
     if (googleAuthToken != null) 'googleAuthToken': googleAuthToken,
@@ -123,12 +120,7 @@ class ApiResponse<T> {
   final String? message;
   final String? errorCode;
 
-  ApiResponse({
-    required this.success,
-    this.data,
-    this.message,
-    this.errorCode,
-  });
+  ApiResponse({required this.success, this.data, this.message, this.errorCode});
 
   factory ApiResponse.fromJson(
     Map<String, dynamic> json,

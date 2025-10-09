@@ -28,10 +28,7 @@ class PermissionToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppColors.neutral300,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.neutral300, width: 1),
       ),
       child: Row(
         children: [
@@ -44,16 +41,15 @@ class PermissionToggle extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: disabled ? AppColors.neutral500 : AppColors.neutral900,
+                    color: disabled
+                        ? AppColors.neutral500
+                        : AppColors.neutral900,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   permissionDescription,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.neutral600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppColors.neutral600),
                 ),
               ],
             ),
@@ -131,7 +127,9 @@ class PermissionMatrixRow extends StatelessWidget {
                 selectedColor: isDisabled
                     ? AppColors.neutral300
                     : AppColors.brand.withValues(alpha: 0.1),
-                checkmarkColor: isDisabled ? AppColors.neutral500 : AppColors.brand,
+                checkmarkColor: isDisabled
+                    ? AppColors.neutral500
+                    : AppColors.brand,
                 side: BorderSide(
                   color: hasPermission
                       ? (isDisabled ? AppColors.neutral400 : AppColors.brand)
@@ -148,11 +146,7 @@ class PermissionMatrixRow extends StatelessWidget {
 
   String _getRoleName(String roleId) {
     // 간단한 역할 이름 매핑 (실제로는 Provider에서 가져와야 함)
-    final roleNames = {
-      'owner': '그룹장',
-      'advisor': '교수',
-      'member': '멤버',
-    };
+    final roleNames = {'owner': '그룹장', 'advisor': '교수', 'member': '멤버'};
     return roleNames[roleId] ?? roleId;
   }
 }

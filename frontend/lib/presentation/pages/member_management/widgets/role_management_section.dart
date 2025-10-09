@@ -58,7 +58,11 @@ class RoleManagementSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildRoleList(BuildContext context, WidgetRef ref, List<GroupRole> roles) {
+  Widget _buildRoleList(
+    BuildContext context,
+    WidgetRef ref,
+    List<GroupRole> roles,
+  ) {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -69,18 +73,19 @@ class RoleManagementSection extends ConsumerWidget {
         return _RoleCard(
           role: role,
           groupId: groupId,
-          onEdit: role.isSystemRole ? null : () => _showEditRoleDialog(context, ref, role),
-          onDelete: role.isSystemRole ? null : () => _confirmDeleteRole(context, ref, role),
+          onEdit: role.isSystemRole
+              ? null
+              : () => _showEditRoleDialog(context, ref, role),
+          onDelete: role.isSystemRole
+              ? null
+              : () => _confirmDeleteRole(context, ref, role),
         );
       },
     );
   }
 
   void _showCreateRoleDialog(BuildContext context, WidgetRef ref) async {
-    final success = await showCreateRoleDialog(
-      context,
-      groupId: groupId,
-    );
+    final success = await showCreateRoleDialog(context, groupId: groupId);
 
     if (success && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +98,11 @@ class RoleManagementSection extends ConsumerWidget {
     }
   }
 
-  void _showEditRoleDialog(BuildContext context, WidgetRef ref, GroupRole role) async {
+  void _showEditRoleDialog(
+    BuildContext context,
+    WidgetRef ref,
+    GroupRole role,
+  ) async {
     final success = await showEditRoleDialog(
       context,
       groupId: groupId,
@@ -126,10 +135,11 @@ class RoleManagementSection extends ConsumerWidget {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await ref.read(deleteRoleProvider(DeleteRoleParams(
-                  groupId: groupId,
-                  roleId: role.id,
-                )).future);
+                await ref.read(
+                  deleteRoleProvider(
+                    DeleteRoleParams(groupId: groupId, roleId: role.id),
+                  ).future,
+                );
 
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -143,7 +153,9 @@ class RoleManagementSection extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('역할 삭제 실패: ${e.toString().replaceAll('Exception: ', '')}'),
+                      content: Text(
+                        '역할 삭제 실패: ${e.toString().replaceAll('Exception: ', '')}',
+                      ),
                       backgroundColor: AppColors.error,
                     ),
                   );
@@ -204,7 +216,10 @@ class _RoleCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         if (role.isSystemRole)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.neutral200,
                               borderRadius: BorderRadius.circular(4),
@@ -250,7 +265,9 @@ class _RoleCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              ...role.permissions.map((permission) => _PermissionChip(permission: permission)),
+              ...role.permissions.map(
+                (permission) => _PermissionChip(permission: permission),
+              ),
               _InfoChip(label: '멤버 ${role.memberCount}명'),
             ],
           ),

@@ -26,12 +26,7 @@ class Channel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'type': type,
-      'description': description,
-    };
+    return {'id': id, 'name': name, 'type': type, 'description': description};
   }
 
   @override
@@ -122,15 +117,14 @@ class MembershipInfo {
 class ChannelPermissions {
   final List<String> permissions;
 
-  const ChannelPermissions({
-    required this.permissions,
-  });
+  const ChannelPermissions({required this.permissions});
 
   factory ChannelPermissions.fromJson(Map<String, dynamic> json) {
     return ChannelPermissions(
-      permissions: (json['permissions'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
+      permissions:
+          (json['permissions'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
           [],
     );
   }

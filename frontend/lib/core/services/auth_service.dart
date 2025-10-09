@@ -38,9 +38,7 @@ class AuthService {
       // 백엔드에서는 test 토큰을 받으면 castlekong1019@gmail.com 계정으로 로그인 처리
       final response = await _dioClient!.post<Map<String, dynamic>>(
         '/auth/google/callback',
-        data: {
-          'id_token': 'mock_google_token_for_castlekong1019',
-        },
+        data: {'id_token': 'mock_google_token_for_castlekong1019'},
       );
 
       if (response.data != null) {
@@ -66,19 +64,27 @@ class AuthService {
         throw Exception('No response data');
       }
     } catch (e) {
-      developer.log('Test login error details: $e', name: 'AuthService', level: 900);
+      developer.log(
+        'Test login error details: $e',
+        name: 'AuthService',
+        level: 900,
+      );
       throw Exception('테스트 로그인 실패: ${e.toString()}');
     }
   }
 
   /// Google OAuth 토큰으로 로그인 (ID Token 또는 Access Token)
-  Future<LoginResponse> loginWithGoogle({String? idToken, String? accessToken}) async {
+  Future<LoginResponse> loginWithGoogle({
+    String? idToken,
+    String? accessToken,
+  }) async {
     // DioClient가 초기화되지 않은 경우 자동 초기화
     if (_dioClient == null) {
       initialize();
     }
 
-    if ((idToken == null || idToken.isEmpty) && (accessToken == null || accessToken.isEmpty)) {
+    if ((idToken == null || idToken.isEmpty) &&
+        (accessToken == null || accessToken.isEmpty)) {
       throw Exception('ID 토큰 또는 Access 토큰이 필요합니다.');
     }
 
@@ -135,7 +141,10 @@ class AuthService {
       final userDataJson = await _storage.getUserData();
 
       if (accessToken == null || userDataJson == null) {
-        developer.log('No stored token or user data found', name: 'AuthService');
+        developer.log(
+          'No stored token or user data found',
+          name: 'AuthService',
+        );
         return false;
       }
 
@@ -144,11 +153,16 @@ class AuthService {
         initialize();
       }
 
-      developer.log('Attempting auto login with stored token', name: 'AuthService');
+      developer.log(
+        'Attempting auto login with stored token',
+        name: 'AuthService',
+      );
 
       // 토큰 유효성 검증 API 호출
       try {
-        final response = await _dioClient!.get<Map<String, dynamic>>('/auth/verify');
+        final response = await _dioClient!.get<Map<String, dynamic>>(
+          '/auth/verify',
+        );
 
         if (response.statusCode == 200 && response.data != null) {
           // API 응답에서 사용자 정보 파싱
@@ -162,16 +176,25 @@ class AuthService {
             // 최신 사용자 정보로 로컬 스토리지 업데이트
             await _saveUserInfo(_currentUser!);
 
-            developer.log('Auto login successful: ${_currentUser!.email}', name: 'AuthService');
+            developer.log(
+              'Auto login successful: ${_currentUser!.email}',
+              name: 'AuthService',
+            );
             return true;
           } else {
-            throw Exception('Token verification failed: ${apiResponse.message}');
+            throw Exception(
+              'Token verification failed: ${apiResponse.message}',
+            );
           }
         } else {
           throw Exception('Invalid response from verification endpoint');
         }
       } catch (e) {
-        developer.log('Token verification failed: $e', name: 'AuthService', level: 900);
+        developer.log(
+          'Token verification failed: $e',
+          name: 'AuthService',
+          level: 900,
+        );
 
         // 토큰 검증 실패 시 로컬 데이터 삭제 (만료된 토큰)
         await _clearTokens();
@@ -199,7 +222,11 @@ class AuthService {
       // 서버에 로그아웃 요청
       await _dioClient!.post('/auth/logout');
     } catch (e) {
-      developer.log('Server logout failed: $e', name: 'AuthService', level: 900);
+      developer.log(
+        'Server logout failed: $e',
+        name: 'AuthService',
+        level: 900,
+      );
       // 서버 로그아웃 실패해도 로컬 토큰은 삭제
     }
 
@@ -213,7 +240,10 @@ class AuthService {
 
   /// 토큰 저장
   Future<void> _saveTokens(String accessToken, String refreshToken) async {
-    await _storage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
+    await _storage.saveTokens(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
   }
 
   /// 사용자 정보 저장

@@ -9,10 +9,7 @@ import '../../../core/theme/app_colors.dart';
 class UnreadBadge extends StatelessWidget {
   final int count;
 
-  const UnreadBadge({
-    super.key,
-    required this.count,
-  });
+  const UnreadBadge({super.key, required this.count});
 
   @override
   Widget build(BuildContext context) {

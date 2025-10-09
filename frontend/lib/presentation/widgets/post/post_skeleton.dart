@@ -108,10 +108,8 @@ class PostListSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       itemCount: count,
-      separatorBuilder: (context, index) => const Divider(
-        height: 1,
-        color: AppColors.neutral200,
-      ),
+      separatorBuilder: (context, index) =>
+          const Divider(height: 1, color: AppColors.neutral200),
       itemBuilder: (context, index) => const PostSkeleton(),
     );
   }

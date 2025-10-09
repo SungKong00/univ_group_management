@@ -12,14 +12,12 @@ import '../../../utils/responsive_layout_helper.dart';
 /// Stack 기반으로 채널 네비게이션, 메인 콘텐츠, 댓글 패널을 조합합니다.
 /// Narrow/Wide desktop 모드를 처리합니다.
 class DesktopWorkspaceLayout extends ConsumerWidget {
-  final WorkspaceState workspaceState;
   final bool isNarrowDesktop;
   final Widget mainContent;
   final Widget commentsView;
 
   const DesktopWorkspaceLayout({
     super.key,
-    required this.workspaceState,
     required this.isNarrowDesktop,
     required this.mainContent,
     required this.commentsView,
@@ -27,14 +25,15 @@ class DesktopWorkspaceLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bool showChannelNavigation = workspaceState.isInWorkspace;
-    final bool showComments = workspaceState.isCommentsVisible;
+    final bool showChannelNavigation = ref.watch(isInWorkspaceProvider);
+    final bool showComments = ref.watch(isCommentsVisibleProvider);
+    final bool isCommentFullscreen = ref.watch(
+      workspaceIsNarrowDesktopCommentsFullscreenProvider,
+    );
 
     // Narrow desktop + 댓글 전체 화면 모드: 게시글 숨기고 댓글만 표시
     final bool isNarrowCommentFullscreen =
-        isNarrowDesktop &&
-        workspaceState.isCommentsVisible &&
-        workspaceState.isNarrowDesktopCommentsFullscreen;
+        isNarrowDesktop && showComments && isCommentFullscreen;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -84,17 +83,20 @@ class DesktopWorkspaceLayout extends ConsumerWidget {
               Positioned.fill(
                 left: leftInset, // 채널바 제외
                 child: SlidePanel(
-                  isVisible: workspaceState.isCommentsVisible,
+                  isVisible: showComments,
                   onDismiss: () =>
                       ref.read(workspaceStateProvider.notifier).hideComments(),
-                  showBackdrop: !isNarrowCommentFullscreen, // Narrow desktop 전체 화면에서는 백드롭 없음
+                  showBackdrop:
+                      !isNarrowCommentFullscreen, // Narrow desktop 전체 화면에서는 백드롭 없음
                   width: isNarrowCommentFullscreen ? null : commentBarWidth,
                   child: Container(
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       border: Border(
                         left: BorderSide(
-                            color: AppColors.lightOutline, width: 1),
+                          color: AppColors.lightOutline,
+                          width: 1,
+                        ),
                       ),
                     ),
                     child: commentsView,
@@ -114,15 +116,22 @@ class DesktopWorkspaceLayout extends ConsumerWidget {
   }) {
     // currentGroupNameProvider로 그룹 이름 가져오기
     final currentGroupName = ref.watch(currentGroupNameProvider);
+    final channels = ref.watch(workspaceChannelsProvider);
+    final selectedChannelId = ref.watch(currentChannelIdProvider);
+    final hasAnyGroupPermission = ref.watch(
+      workspaceHasAnyGroupPermissionProvider,
+    );
+    final unreadCounts = ref.watch(workspaceUnreadCountsProvider);
+    final currentGroupId = ref.watch(currentGroupIdProvider);
 
     return ChannelNavigation(
       width: channelBarWidth,
-      channels: workspaceState.channels,
-      selectedChannelId: workspaceState.selectedChannelId,
-      hasAnyGroupPermission: workspaceState.hasAnyGroupPermission,
-      unreadCounts: workspaceState.unreadCounts,
+      channels: channels,
+      selectedChannelId: selectedChannelId,
+      hasAnyGroupPermission: hasAnyGroupPermission,
+      unreadCounts: unreadCounts,
       isVisible: true,
-      currentGroupId: workspaceState.selectedGroupId,
+      currentGroupId: currentGroupId,
       currentGroupName: currentGroupName,
     );
   }

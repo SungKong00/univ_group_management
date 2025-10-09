@@ -113,9 +113,7 @@ class _MobilePostCommentsViewState
     if (_isLoadingPost) {
       return const Padding(
         padding: EdgeInsets.all(16.0),
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -136,10 +134,7 @@ class _MobilePostCommentsViewState
               Expanded(
                 child: Text(
                   _postErrorMessage!,
-                  style: const TextStyle(
-                    color: AppColors.error,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: AppColors.error, fontSize: 14),
                 ),
               ),
             ],
@@ -150,10 +145,7 @@ class _MobilePostCommentsViewState
 
     // 게시글 로드 성공
     if (_post != null) {
-      return PostPreviewCard(
-        post: _post!,
-        maxLines: 5,
-      );
+      return PostPreviewCard(post: _post!, maxLines: 5);
     }
 
     // 예상치 못한 상태 (빈 화면)
@@ -172,7 +164,9 @@ class _MobilePostCommentsViewState
             // 댓글 목록
             Expanded(
               child: CommentList(
-                key: ValueKey('mobile_comment_list_${widget.postId}_$_commentListKey'),
+                key: ValueKey(
+                  'mobile_comment_list_${widget.postId}_$_commentListKey',
+                ),
                 postId: int.parse(widget.postId),
                 scrollController: _scrollController,
               ),
@@ -185,10 +179,7 @@ class _MobilePostCommentsViewState
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(
-                    top: BorderSide(
-                      color: AppColors.lightOutline,
-                      width: 1,
-                    ),
+                    top: BorderSide(color: AppColors.lightOutline, width: 1),
                   ),
                 ),
                 child: CommentComposer(

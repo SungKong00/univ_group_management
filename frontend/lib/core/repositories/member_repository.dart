@@ -20,51 +20,75 @@ class ApiMemberRepository implements MemberRepository {
   @override
   Future<List<GroupMember>> getGroupMembers(int groupId) async {
     try {
-      developer.log('Fetching members for group $groupId', name: 'ApiMemberRepository');
+      developer.log(
+        'Fetching members for group $groupId',
+        name: 'ApiMemberRepository',
+      );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/members',
       );
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            // PagedApiResponse 구조 처리: data.content에 실제 리스트 존재
-            if (json is Map<String, dynamic> && json.containsKey('content')) {
-              final content = json['content'];
-              if (content is List) {
-                return content.map((item) => _parseGroupMember(item as Map<String, dynamic>)).toList();
-              }
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          // PagedApiResponse 구조 처리: data.content에 실제 리스트 존재
+          if (json is Map<String, dynamic> && json.containsKey('content')) {
+            final content = json['content'];
+            if (content is List) {
+              return content
+                  .map(
+                    (item) => _parseGroupMember(item as Map<String, dynamic>),
+                  )
+                  .toList();
             }
-            // 일반 ApiResponse 구조 처리 (하위 호환성)
-            if (json is List) {
-              return json.map((item) => _parseGroupMember(item as Map<String, dynamic>)).toList();
-            }
-            return <GroupMember>[];
-          },
-        );
+          }
+          // 일반 ApiResponse 구조 처리 (하위 호환성)
+          if (json is List) {
+            return json
+                .map((item) => _parseGroupMember(item as Map<String, dynamic>))
+                .toList();
+          }
+          return <GroupMember>[];
+        });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log('Successfully fetched ${apiResponse.data!.length} members', name: 'ApiMemberRepository');
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} members',
+            name: 'ApiMemberRepository',
+          );
           return apiResponse.data!;
         } else {
-          developer.log('Failed to fetch members: ${apiResponse.message}', name: 'ApiMemberRepository', level: 900);
+          developer.log(
+            'Failed to fetch members: ${apiResponse.message}',
+            name: 'ApiMemberRepository',
+            level: 900,
+          );
           throw Exception(apiResponse.message ?? 'Failed to fetch members');
         }
       }
 
       throw Exception('Empty response from server');
     } catch (e) {
-      developer.log('Error fetching members: $e', name: 'ApiMemberRepository', level: 900);
+      developer.log(
+        'Error fetching members: $e',
+        name: 'ApiMemberRepository',
+        level: 900,
+      );
       rethrow;
     }
   }
 
   @override
-  Future<GroupMember> updateMemberRole(int groupId, String userId, int roleId) async {
+  Future<GroupMember> updateMemberRole(
+    int groupId,
+    String userId,
+    int roleId,
+  ) async {
     try {
-      developer.log('Updating role for user $userId in group $groupId to role $roleId', name: 'ApiMemberRepository');
+      developer.log(
+        'Updating role for user $userId in group $groupId to role $roleId',
+        name: 'ApiMemberRepository',
+      );
 
       final response = await _dioClient.put<Map<String, dynamic>>(
         '/groups/$groupId/members/$userId/role',
@@ -78,17 +102,30 @@ class ApiMemberRepository implements MemberRepository {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log('Successfully updated member role', name: 'ApiMemberRepository');
+          developer.log(
+            'Successfully updated member role',
+            name: 'ApiMemberRepository',
+          );
           return apiResponse.data!;
         } else {
-          developer.log('Failed to update member role: ${apiResponse.message}', name: 'ApiMemberRepository', level: 900);
-          throw Exception(apiResponse.message ?? 'Failed to update member role');
+          developer.log(
+            'Failed to update member role: ${apiResponse.message}',
+            name: 'ApiMemberRepository',
+            level: 900,
+          );
+          throw Exception(
+            apiResponse.message ?? 'Failed to update member role',
+          );
         }
       }
 
       throw Exception('Empty response from server');
     } catch (e) {
-      developer.log('Error updating member role: $e', name: 'ApiMemberRepository', level: 900);
+      developer.log(
+        'Error updating member role: $e',
+        name: 'ApiMemberRepository',
+        level: 900,
+      );
       rethrow;
     }
   }
@@ -96,7 +133,10 @@ class ApiMemberRepository implements MemberRepository {
   @override
   Future<void> removeMember(int groupId, String userId) async {
     try {
-      developer.log('Removing user $userId from group $groupId', name: 'ApiMemberRepository');
+      developer.log(
+        'Removing user $userId from group $groupId',
+        name: 'ApiMemberRepository',
+      );
 
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/groups/$groupId/members/$userId',
@@ -109,14 +149,25 @@ class ApiMemberRepository implements MemberRepository {
         );
 
         if (apiResponse.success) {
-          developer.log('Successfully removed member', name: 'ApiMemberRepository');
+          developer.log(
+            'Successfully removed member',
+            name: 'ApiMemberRepository',
+          );
         } else {
-          developer.log('Failed to remove member: ${apiResponse.message}', name: 'ApiMemberRepository', level: 900);
+          developer.log(
+            'Failed to remove member: ${apiResponse.message}',
+            name: 'ApiMemberRepository',
+            level: 900,
+          );
           throw Exception(apiResponse.message ?? 'Failed to remove member');
         }
       }
     } catch (e) {
-      developer.log('Error removing member: $e', name: 'ApiMemberRepository', level: 900);
+      developer.log(
+        'Error removing member: $e',
+        name: 'ApiMemberRepository',
+        level: 900,
+      );
       rethrow;
     }
   }
@@ -254,11 +305,7 @@ class MockMemberRepository implements MemberRepository {
     }
 
     // 역할 이름 매핑 (간단한 구현)
-    final roleNameMap = {
-      '1': '그룹장',
-      '2': '교수',
-      '3': '멤버',
-    };
+    final roleNameMap = {'1': '그룹장', '2': '교수', '3': '멤버'};
 
     final updatedMember = members[memberIndex].copyWith(
       roleId: roleId.toString(),
@@ -278,6 +325,8 @@ class MockMemberRepository implements MemberRepository {
       throw Exception('Group not found');
     }
 
-    _membersByGroup[groupId] = members.where((m) => m.userId != userId).toList();
+    _membersByGroup[groupId] = members
+        .where((m) => m.userId != userId)
+        .toList();
   }
 }

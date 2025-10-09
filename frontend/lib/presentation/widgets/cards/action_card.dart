@@ -83,16 +83,16 @@ class ActionCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppTheme.titleLargeTheme(context).copyWith(
-                        color: titleColor,
-                      ),
+                      style: AppTheme.titleLargeTheme(
+                        context,
+                      ).copyWith(color: titleColor),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       description,
-                      style: AppTheme.bodySmallTheme(context).copyWith(
-                        color: AppColors.neutral600,
-                      ),
+                      style: AppTheme.bodySmallTheme(
+                        context,
+                      ).copyWith(color: AppColors.neutral600),
                     ),
                   ],
                 ),

@@ -34,10 +34,7 @@ class GoogleLogo extends StatelessWidget {
       height: size,
       fit: BoxFit.contain,
       excludeFromSemantics: excludeFromSemantics,
-      placeholderBuilder: (context) => SizedBox(
-        width: size,
-        height: size,
-      ),
+      placeholderBuilder: (context) => SizedBox(width: size, height: size),
     );
   }
 }

@@ -18,22 +18,24 @@ class CommentService {
   /// GET /posts/{postId}/comments
   Future<List<Comment>> fetchComments(int postId) async {
     try {
-      developer.log('Fetching comments for post: $postId', name: 'CommentService');
+      developer.log(
+        'Fetching comments for post: $postId',
+        name: 'CommentService',
+      );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/posts/$postId/comments',
       );
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            if (json is List) {
-              return json.map((item) => Comment.fromJson(item as Map<String, dynamic>)).toList();
-            }
-            return <Comment>[];
-          },
-        );
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map((item) => Comment.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+          return <Comment>[];
+        });
 
         if (apiResponse.success && apiResponse.data != null) {
           developer.log(

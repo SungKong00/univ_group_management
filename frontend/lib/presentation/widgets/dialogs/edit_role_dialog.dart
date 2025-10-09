@@ -22,11 +22,7 @@ class EditRoleDialog extends ConsumerStatefulWidget {
   final int groupId;
   final GroupRole role;
 
-  const EditRoleDialog({
-    super.key,
-    required this.groupId,
-    required this.role,
-  });
+  const EditRoleDialog({super.key, required this.groupId, required this.role});
 
   @override
   ConsumerState<EditRoleDialog> createState() => _EditRoleDialogState();
@@ -73,21 +69,31 @@ class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
         duration: AppMotion.quick,
         vsync: this,
       );
-      _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
-      _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(_animationController);
+      _fadeAnimation = Tween<double>(
+        begin: 0.0,
+        end: 1.0,
+      ).animate(_animationController);
+      _scaleAnimation = Tween<double>(
+        begin: 0.95,
+        end: 1.0,
+      ).animate(_animationController);
       return;
     }
 
     // 기존 값으로 초기화
     _nameController = TextEditingController(text: widget.role.name);
-    _descriptionController = TextEditingController(text: widget.role.description);
+    _descriptionController = TextEditingController(
+      text: widget.role.description,
+    );
 
     // 기존 권한으로 초기화
     _permissions = {
       'GROUP_MANAGE': widget.role.permissions.contains('GROUP_MANAGE'),
       'MEMBER_MANAGE': widget.role.permissions.contains('MEMBER_MANAGE'),
       'CHANNEL_MANAGE': widget.role.permissions.contains('CHANNEL_MANAGE'),
-      'RECRUITMENT_MANAGE': widget.role.permissions.contains('RECRUITMENT_MANAGE'),
+      'RECRUITMENT_MANAGE': widget.role.permissions.contains(
+        'RECRUITMENT_MANAGE',
+      ),
     };
 
     // 진입 애니메이션
@@ -96,21 +102,13 @@ class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: AppMotion.easing,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.95,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: AppMotion.easing,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
+    );
 
     _animationController.forward();
   }
@@ -322,26 +320,10 @@ class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
           ),
         ),
         const SizedBox(height: 8),
-        _buildPermissionCheckbox(
-          'GROUP_MANAGE',
-          '그룹 관리',
-          '그룹 정보 수정, 그룹 설정 변경',
-        ),
-        _buildPermissionCheckbox(
-          'MEMBER_MANAGE',
-          '멤버 관리',
-          '멤버 역할 변경, 멤버 추방',
-        ),
-        _buildPermissionCheckbox(
-          'CHANNEL_MANAGE',
-          '채널 관리',
-          '채널 생성, 수정, 삭제',
-        ),
-        _buildPermissionCheckbox(
-          'RECRUITMENT_MANAGE',
-          '모집 관리',
-          '가입 신청 승인/거부',
-        ),
+        _buildPermissionCheckbox('GROUP_MANAGE', '그룹 관리', '그룹 정보 수정, 그룹 설정 변경'),
+        _buildPermissionCheckbox('MEMBER_MANAGE', '멤버 관리', '멤버 역할 변경, 멤버 추방'),
+        _buildPermissionCheckbox('CHANNEL_MANAGE', '채널 관리', '채널 생성, 수정, 삭제'),
+        _buildPermissionCheckbox('RECRUITMENT_MANAGE', '모집 관리', '가입 신청 승인/거부'),
       ],
     );
   }
@@ -389,10 +371,7 @@ class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
       ),
       child: Text(
         _errorMessage!,
-        style: const TextStyle(
-          fontSize: 13,
-          color: AppColors.error,
-        ),
+        style: const TextStyle(fontSize: 13, color: AppColors.error),
       ),
     );
   }
@@ -404,7 +383,9 @@ class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
         Flexible(
           child: NeutralOutlinedButton(
             text: '취소',
-            onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
+            onPressed: _isLoading
+                ? null
+                : () => Navigator.of(context).pop(false),
             semanticsLabel: '역할 수정 취소',
           ),
         ),
@@ -433,10 +414,8 @@ Future<bool> showEditRoleDialog(
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: true,
-    builder: (BuildContext context) => EditRoleDialog(
-      groupId: groupId,
-      role: role,
-    ),
+    builder: (BuildContext context) =>
+        EditRoleDialog(groupId: groupId, role: role),
   );
 
   return result ?? false;

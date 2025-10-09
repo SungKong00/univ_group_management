@@ -14,10 +14,7 @@ import '../../providers/auth_provider.dart';
 class MainLayout extends ConsumerWidget {
   final Widget child;
 
-  const MainLayout({
-    super.key,
-    required this.child,
-  });
+  const MainLayout({super.key, required this.child});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,9 +38,7 @@ class MainLayout extends ConsumerWidget {
           body: Column(
             children: [
               const TopNavigation(),
-              Expanded(
-                child: _buildLayoutForMode(layoutMode, navigationState),
-              ),
+              Expanded(child: _buildLayoutForMode(layoutMode, navigationState)),
             ],
           ),
           bottomNavigationBar: layoutMode.usesBottomNavigation
@@ -56,7 +51,9 @@ class MainLayout extends ConsumerWidget {
 
   /// 레이아웃 모드 전환 처리
   void _handleLayoutModeTransition(WidgetRef ref, LayoutMode newMode) {
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
     navigationController.updateLayoutMode(newMode);
   }
 
@@ -73,10 +70,7 @@ class MainLayout extends ConsumerWidget {
 
   /// COMPACT 모드: 모바일 레이아웃 (하단 네비게이션)
   Widget _buildCompactLayout() {
-    return Container(
-      color: AppColors.lightBackground,
-      child: child,
-    );
+    return Container(color: AppColors.lightBackground, child: child);
   }
 
   /// MEDIUM/WIDE 모드: 사이드바 레이아웃

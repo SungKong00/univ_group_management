@@ -136,7 +136,9 @@ class _PostListState extends ConsumerState<PostList> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
             // 새 콘텐츠 높이만큼 스크롤 위치 조정
-            final delta = _scrollController.position.maxScrollExtent - (savedMaxScrollExtent ?? 0);
+            final delta =
+                _scrollController.position.maxScrollExtent -
+                (savedMaxScrollExtent ?? 0);
             _scrollController.jumpTo(savedScrollOffset! + delta);
           }
         });
@@ -161,23 +163,29 @@ class _PostListState extends ConsumerState<PostList> {
         final lastHeaderContext = _lastDateHeaderKey.currentContext;
 
         if (lastPostContext != null && _scrollController.hasClients) {
-          final lastPostRenderBox = lastPostContext.findRenderObject() as RenderBox;
+          final lastPostRenderBox =
+              lastPostContext.findRenderObject() as RenderBox;
           // 마지막 게시물의 전역 Y 위치 (화면 상단 기준)
-          final lastPostGlobalOffset = lastPostRenderBox.localToGlobal(Offset.zero, ancestor: context.findRenderObject());
+          final lastPostGlobalOffset = lastPostRenderBox.localToGlobal(
+            Offset.zero,
+            ancestor: context.findRenderObject(),
+          );
           // 현재 스크롤된 거리
           final currentScrollOffset = _scrollController.offset;
 
           // 헤더 높이 측정 (없으면 0)
           double headerHeight = 0;
           if (lastHeaderContext != null) {
-            final headerRenderBox = lastHeaderContext.findRenderObject() as RenderBox;
+            final headerRenderBox =
+                lastHeaderContext.findRenderObject() as RenderBox;
             headerHeight = headerRenderBox.size.height;
           }
 
           // 목표 스크롤 위치 계산:
           // 현재 스크롤 위치 + (게시물 위치 - 헤더 높이)
           // 이렇게 하면 게시물 상단이 헤더 바로 아래에 위치하게 됨
-          final targetOffset = currentScrollOffset + lastPostGlobalOffset.dy - headerHeight;
+          final targetOffset =
+              currentScrollOffset + lastPostGlobalOffset.dy - headerHeight;
 
           final clampedOffset = targetOffset.clamp(
             _scrollController.position.minScrollExtent,
@@ -254,9 +262,7 @@ class _PostListState extends ConsumerState<PostList> {
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
               ),
             // 날짜별 게시글 그룹
@@ -266,34 +272,36 @@ class _PostListState extends ConsumerState<PostList> {
 
               return SliverStickyHeader(
                 header: isLastDate
-                    ? Container(key: _lastDateHeaderKey, child: DateDivider(date: date))
+                    ? Container(
+                        key: _lastDateHeaderKey,
+                        child: DateDivider(date: date),
+                      )
                     : DateDivider(date: date),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final post = postsInDate[index];
-                      final bool isLastItem = isLastDate && index == postsInDate.length - 1;
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final post = postsInDate[index];
+                    final bool isLastItem =
+                        isLastDate && index == postsInDate.length - 1;
 
-                      final child = Column(
-                        children: [
-                          PostItem(
-                            post: post,
-                            onTapComment: () => widget.onTapComment?.call(post.id),
-                            onTapPost: () {
-                              // TODO: 게시글 상세 보기 (나중에 구현)
-                            },
-                          ),
-                          const Divider(height: 1, color: AppColors.neutral200),
-                        ],
-                      );
+                    final child = Column(
+                      children: [
+                        PostItem(
+                          post: post,
+                          onTapComment: () =>
+                              widget.onTapComment?.call(post.id),
+                          onTapPost: () {
+                            // TODO: 게시글 상세 보기 (나중에 구현)
+                          },
+                        ),
+                        const Divider(height: 1, color: AppColors.neutral200),
+                      ],
+                    );
 
-                      // 최신 날짜의 마지막 게시물에 키 부여
-                      return isLastItem
-                          ? Container(key: _lastPostKey, child: child)
-                          : child;
-                    },
-                    childCount: postsInDate.length,
-                  ),
+                    // 최신 날짜의 마지막 게시물에 키 부여
+                    return isLastItem
+                        ? Container(key: _lastPostKey, child: child)
+                        : child;
+                  }, childCount: postsInDate.length),
                 ),
               );
             }),
@@ -309,10 +317,7 @@ class _PostListState extends ConsumerState<PostList> {
     // 초기 정렬 중에는 리스트를 투명하게 렌더링하여 점프를 숨기고, 스피너만 노출
     return Stack(
       children: [
-        Opacity(
-          opacity: _isInitialAnchoring ? 0.0 : 1.0,
-          child: scrollView,
-        ),
+        Opacity(opacity: _isInitialAnchoring ? 0.0 : 1.0, child: scrollView),
         if (_isInitialAnchoring)
           Positioned.fill(
             child: const Center(child: CircularProgressIndicator()),
@@ -369,11 +374,7 @@ class _PostListState extends ConsumerState<PostList> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
+            Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               '게시글을 불러올 수 없습니다',
@@ -384,9 +385,7 @@ class _PostListState extends ConsumerState<PostList> {
             const SizedBox(height: 8),
             Text(
               _errorMessage ?? '알 수 없는 오류가 발생했습니다',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -402,9 +401,7 @@ class _PostListState extends ConsumerState<PostList> {
               ),
               child: Text(
                 '다시 시도',
-                style: AppTheme.titleMedium.copyWith(
-                  color: Colors.white,
-                ),
+                style: AppTheme.titleMedium.copyWith(color: Colors.white),
               ),
             ),
           ],
