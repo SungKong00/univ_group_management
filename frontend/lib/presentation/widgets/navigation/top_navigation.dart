@@ -28,7 +28,12 @@ class TopNavigation extends ConsumerWidget {
     final routePath = currentRoute.uri.path;
 
     final breadcrumb = ref.watch(
-      pageBreadcrumbFromPathProvider(routePath),
+      pageBreadcrumbFromPathProvider(
+        PageBreadcrumbRequest(
+          routePath: routePath,
+          layoutMode: layoutMode,
+        ),
+      ),
     );
 
     final canGoBack = navigationState.canGoBackInCurrentTab ||
