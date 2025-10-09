@@ -111,11 +111,6 @@ class _AdminContentView extends ConsumerWidget {
     // Permission-Centric 접근: 각 권한별 섹션 생성
     final sections = <Widget>[];
 
-    // 그룹 설정 섹션
-    if (permissions.contains('GROUP_MANAGE')) {
-      sections.add(_buildGroupSettingsSection(context, ref));
-    }
-
     // 멤버 관리 섹션
     if (permissions.contains('MEMBER_MANAGE')) {
       sections.add(_buildMemberManagementSection(context, ref));
@@ -129,6 +124,11 @@ class _AdminContentView extends ConsumerWidget {
     // 모집 관리 섹션
     if (permissions.contains('RECRUITMENT_MANAGE')) {
       sections.add(_buildRecruitmentSection(context));
+    }
+
+    // 그룹 설정 섹션
+    if (permissions.contains('GROUP_MANAGE')) {
+      sections.add(_buildGroupSettingsSection(context, ref));
     }
 
     if (sections.isEmpty) {
