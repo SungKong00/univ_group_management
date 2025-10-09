@@ -127,9 +127,100 @@ data class Group(
 )
 ```
 
+### 5. 트랜잭션 롤백 에러 (2025-10-09 추가) {#트랜잭션롤백}
+
+#### UnexpectedRollbackException
+
+**증상:**
+```
+org.springframework.transaction.UnexpectedRollbackException: Transaction silently rolled back because it has been marked as rollback-only
+```
+
+**원인:**
+- `@Transactional` 메서드 내부에서 **unchecked exception**(RuntimeException)이 발생하면 Spring은 트랜잭션을 rollback-only로 마킹
+- 예외를 `try-catch`로 잡아서 처리해도 트랜잭션은 이미 rollback-only 상태
+- 메서드가 정상 종료되어 커밋을 시도하면 `UnexpectedRollbackException` 발생
+
+**예시 시나리오:**
+```kotlin
+@Transactional
+fun submitSignupProfile(userId: Long, req: SignupProfileRequest): User {
+    val user = userRepository.save(updatedUser)
+
+    // ❌ 문제: joinGroup()에서 BusinessException 발생 시 트랜잭션 롤백
+    try {
+        groupMemberService.joinGroup(groupId, userId)  // @Transactional 메서드
+    } catch (e: Exception) {
+        logger.warn("Failed to join group: ${e.message}")
+        // 예외를 잡아서 로깅만 하지만, 트랜잭션은 이미 rollback-only!
+    }
+
+    return user  // 정상 종료 시도 → UnexpectedRollbackException 발생
+}
+```
+
+**해결 방법:**
+
+**1. 사전 체크로 예외 발생 방지 (권장)**
+```kotlin
+@Transactional
+fun submitSignupProfile(userId: Long, req: SignupProfileRequest): User {
+    val user = userRepository.save(updatedUser)
+
+    // ✅ 해결: 예외가 발생하기 전에 사전 체크
+    val alreadyMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId).isPresent
+    if (!alreadyMember) {
+        try {
+            groupMemberService.joinGroup(groupId, userId)
+        } catch (e: Exception) {
+            logger.warn("Failed to join group: ${e.message}")
+        }
+    }
+
+    return user
+}
+```
+
+**2. 별도 트랜잭션으로 분리**
+```kotlin
+@Transactional
+fun submitSignupProfile(userId: Long, req: SignupProfileRequest): User {
+    val user = userRepository.save(updatedUser)
+
+    // ✅ 해결: 자동 가입을 별도 트랜잭션으로 실행
+    autoJoinGroupInSeparateTransaction(groupId, userId)
+
+    return user
+}
+
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+protected open fun autoJoinGroupInSeparateTransaction(groupId: Long, userId: Long) {
+    try {
+        groupMemberService.joinGroup(groupId, userId)
+    } catch (e: Exception) {
+        logger.warn("Auto-join failed: ${e.message}")
+        // 별도 트랜잭션이므로 외부 트랜잭션에 영향 없음
+    }
+}
+```
+
+**3. noRollbackFor 사용 (비권장)**
+```kotlin
+// ⚠️ 주의: 특정 예외는 롤백하지 않도록 설정 가능하나,
+// 비즈니스 로직에 따라 데이터 정합성 문제 발생 가능
+@Transactional(noRollbackFor = [BusinessException::class])
+fun submitSignupProfile(...): User {
+    // ...
+}
+```
+
+**관련 문서:**
+- [백엔드 가이드 - 트랜잭션 전파 레벨](../implementation/backend-guide.md#트랜잭션-전파-레벨)
+- [백엔드 가이드 - 예외 처리 전략](../implementation/backend-guide.md#예외-처리)
+
 ## 프론트엔드 에러
 
-### 5. Flutter Web 포트 관련 에러
+### 6. Flutter Web 포트 관련 에러
 
 #### 포트 충돌 문제 {#포트충돌}
 ```
@@ -145,7 +236,7 @@ flutter run -d chrome --web-port 3000
 flutter run -d chrome --web-hostname localhost --web-port 5173
 ```
 
-### 6. CORS 에러
+### 7. CORS 에러
 
 #### 증상
 ```
@@ -167,7 +258,7 @@ class WebConfig : WebMvcConfigurer {
 }
 ```
 
-### 7. 상태 관리 에러
+### 8. 상태 관리 에러
 
 #### Provider 에러 (Flutter)
 ```
@@ -289,7 +380,7 @@ final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref)
 
 ## API 통신 에러
 
-### 8. 네트워크 연결 에러
+### 9. 네트워크 연결 에러
 
 #### 타임아웃 에러
 ```
@@ -315,7 +406,7 @@ SocketException: Connection refused
 - [ ] 포트 번호가 올바른가? (8080)
 - [ ] 방화벽이 차단하고 있는가?
 
-### 9. JSON 파싱 에러
+### 10. JSON 파싱 에러
 
 #### 예상치 못한 응답 형식
 ```
@@ -336,7 +427,7 @@ if (response.statusCode == 200) {
 
 ## 인증 관련 에러
 
-### 10. Google OAuth 설정 에러 {#인증}
+### 11. Google OAuth 설정 에러 {#인증}
 
 #### Invalid client error
 ```
@@ -368,7 +459,7 @@ fun completeProfile(userId: Long, request: ProfileRequest) {
 
 ## 성능 관련 문제
 
-### 11. N+1 쿼리 문제
+### 12. N+1 쿼리 문제
 
 #### 증상
 ```sql
@@ -389,7 +480,7 @@ SELECT COUNT(*) FROM group_members WHERE group_id = 2;
 fun findGroupsWithMemberCount(): List<GroupWithMemberCount>
 ```
 
-### 12. 메모리 누수 (Flutter)
+### 13. 메모리 누수 (Flutter)
 
 #### 증상
 앱 사용 중 메모리 사용량이 계속 증가
@@ -411,7 +502,7 @@ class _MyWidgetState extends State<MyWidget> {
 
 ## 개발 환경 문제
 
-### 13. Gradle 빌드 에러
+### 14. Gradle 빌드 에러
 
 #### Out of memory error
 ```
@@ -433,7 +524,7 @@ Could not resolve dependencies for configuration ':runtimeClasspath'
 
 해결: `./gradlew dependencies` 로 의존성 트리 확인 후 버전 통일
 
-### 14. IDE 관련 문제
+### 15. IDE 관련 문제
 
 #### IntelliJ 인덱싱 문제
 증상: 자동완성이 안 되고 빨간 줄이 표시됨
@@ -453,7 +544,7 @@ Could not resolve dependencies for configuration ':runtimeClasspath'
 
 ## 배포 관련 에러
 
-### 15. 빌드 에러
+### 16. 빌드 에러
 
 #### Flutter Web 빌드 실패
 ```

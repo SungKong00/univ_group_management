@@ -199,15 +199,19 @@ class UserService(
                 // 선택한 그룹과 모든 상위 그룹에 자동 가입
                 val groupsToJoin = collectAncestorGroups(targetGroup)
                 groupsToJoin.forEach { group ->
-                    runCatching { groupMemberService.joinGroup(group.id, saved.id) }
-                        .onFailure { e ->
-                            logger.warn(
-                                "Auto-join failed for user {} to group {}: {}",
-                                saved.id,
-                                group.id,
-                                e.message,
-                            )
-                        }
+                    // 이미 멤버인지 사전 체크하여 불필요한 예외 발생 방지
+                    val alreadyMember = groupMemberRepository.findByGroupIdAndUserId(group.id, saved.id).isPresent
+                    if (!alreadyMember) {
+                        runCatching { groupMemberService.joinGroup(group.id, saved.id) }
+                            .onFailure { e ->
+                                logger.warn(
+                                    "Auto-join failed for user {} to group {}: {}",
+                                    saved.id,
+                                    group.id,
+                                    e.message,
+                                )
+                            }
+                    }
                 }
             }
         } catch (e: Exception) {

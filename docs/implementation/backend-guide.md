@@ -331,6 +331,194 @@ ChannelRoleBinding → Comments → Posts → Channels
 - N+1 및 TransientObjectException 방지
 - Post/Comment 삭제는 ID 집합 기반 bulk query 활용
 
+## 트랜잭션 관리 (2025-10-09 추가) {#트랜잭션-전파-레벨}
+
+### 기본 트랜잭션 패턴
+
+**서비스 레이어 기본 설정:**
+```kotlin
+@Service
+@Transactional(readOnly = true)  // 클래스 레벨: 읽기 전용
+class UserService(...) {
+
+    @Transactional  // 메서드 레벨: 읽기/쓰기
+    fun createUser(request: CreateUserRequest): User {
+        // 사용자 생성 로직
+    }
+}
+```
+
+### 트랜잭션 전파 레벨 (Propagation)
+
+Spring의 트랜잭션 전파 레벨을 이해하고 적절히 사용하는 것이 중요합니다.
+
+**주요 전파 레벨:**
+
+| 전파 레벨 | 설명 | 사용 시나리오 |
+|-----------|------|---------------|
+| **REQUIRED** (기본) | 기존 트랜잭션이 있으면 참여, 없으면 새로 생성 | 일반적인 비즈니스 로직 |
+| **REQUIRES_NEW** | 항상 새로운 트랜잭션 생성, 기존 트랜잭션은 일시 중단 | Best-effort 작업, 감사 로그 |
+| **NESTED** | 기존 트랜잭션 내에 중첩 트랜잭션 생성 (Savepoint 사용) | 부분 롤백이 필요한 경우 |
+| **SUPPORTS** | 기존 트랜잭션이 있으면 참여, 없어도 트랜잭션 없이 실행 | 읽기 전용 조회 |
+| **NOT_SUPPORTED** | 트랜잭션 없이 실행 (기존 트랜잭션 일시 중단) | 트랜잭션이 필요 없는 작업 |
+
+### Best-Effort 패턴 (권장)
+
+**문제 상황:**
+- 메인 작업(예: 사용자 생성)은 반드시 성공해야 함
+- 부가 작업(예: 자동 그룹 가입)은 실패해도 메인 작업에 영향을 주면 안 됨
+
+**해결: REQUIRES_NEW 사용**
+```kotlin
+@Service
+class UserService(
+    private val userRepository: UserRepository,
+    private val groupMemberService: GroupMemberService,
+    private val groupMemberRepository: GroupMemberRepository
+) {
+    @Transactional
+    fun submitSignupProfile(userId: Long, req: SignupProfileRequest): User {
+        // 메인 작업: 사용자 프로필 업데이트
+        val user = userRepository.save(updatedUser)
+
+        // Best-effort: 자동 그룹 가입 (실패해도 사용자 생성은 성공)
+        autoJoinGroups(user, req)
+
+        return user
+    }
+
+    private fun autoJoinGroups(user: User, req: SignupProfileRequest) {
+        try {
+            val targetGroup = findTargetGroup(req)
+            if (targetGroup != null) {
+                val groupsToJoin = collectAncestorGroups(targetGroup)
+                groupsToJoin.forEach { group ->
+                    // ✅ 사전 체크로 예외 발생 방지
+                    val alreadyMember = groupMemberRepository
+                        .findByGroupIdAndUserId(group.id, user.id).isPresent
+                    if (!alreadyMember) {
+                        runCatching {
+                            groupMemberService.joinGroup(group.id, user.id)
+                        }.onFailure { e ->
+                            logger.warn("Auto-join failed: ${e.message}")
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            logger.warn("Auto-join process failed: ${e.message}")
+            // 예외를 다시 던지지 않음 - Best-effort
+        }
+    }
+}
+```
+
+**대안: 별도 트랜잭션으로 완전 분리**
+```kotlin
+@Transactional
+fun submitSignupProfile(userId: Long, req: SignupProfileRequest): User {
+    val user = userRepository.save(updatedUser)
+
+    // 별도 트랜잭션으로 실행 (실패해도 외부 트랜잭션에 영향 없음)
+    autoJoinGroupsInSeparateTransaction(user.id, req)
+
+    return user
+}
+
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+protected open fun autoJoinGroupsInSeparateTransaction(
+    userId: Long,
+    req: SignupProfileRequest
+) {
+    try {
+        // 자동 가입 로직
+    } catch (e: Exception) {
+        logger.warn("Auto-join failed: ${e.message}")
+        // 별도 트랜잭션이므로 외부에 영향 없음
+    }
+}
+```
+
+**⚠️ 주의사항:**
+- `REQUIRES_NEW`를 사용할 때는 메서드가 `protected open`이어야 함 (프록시 기반 AOP)
+- 또는 별도 서비스 클래스로 분리 가능
+- `private` 메서드는 트랜잭션 AOP가 적용되지 않음
+
+### 예외 처리 전략 {#예외-처리}
+
+**UnexpectedRollbackException 방지:**
+
+Spring은 `@Transactional` 메서드 내에서 **unchecked exception**(RuntimeException)이 발생하면 트랜잭션을 자동으로 rollback-only로 마킹합니다.
+
+**❌ 잘못된 패턴:**
+```kotlin
+@Transactional
+fun submitSignupProfile(...): User {
+    val user = userRepository.save(updatedUser)
+
+    // 문제: joinGroup()에서 BusinessException 발생 시 트랜잭션 롤백
+    try {
+        groupMemberService.joinGroup(groupId, userId)
+    } catch (e: Exception) {
+        logger.warn("Failed: ${e.message}")
+        // 예외를 잡아도 트랜잭션은 이미 rollback-only!
+    }
+
+    return user  // UnexpectedRollbackException 발생
+}
+```
+
+**✅ 올바른 패턴:**
+```kotlin
+@Transactional
+fun submitSignupProfile(...): User {
+    val user = userRepository.save(updatedUser)
+
+    // 해결 1: 사전 체크로 예외 발생 방지
+    val alreadyMember = groupMemberRepository
+        .findByGroupIdAndUserId(groupId, userId).isPresent
+    if (!alreadyMember) {
+        try {
+            groupMemberService.joinGroup(groupId, userId)
+        } catch (e: Exception) {
+            logger.warn("Failed: ${e.message}")
+        }
+    }
+
+    return user
+}
+```
+
+**noRollbackFor 사용 (비권장):**
+```kotlin
+// ⚠️ 주의: 데이터 정합성 문제 발생 가능
+@Transactional(noRollbackFor = [BusinessException::class])
+fun submitSignupProfile(...): User {
+    // ...
+}
+```
+
+### 트랜잭션 디버깅
+
+**로그 설정으로 트랜잭션 동작 확인:**
+```yaml
+# application-dev.yml
+logging:
+  level:
+    org.springframework.transaction: DEBUG
+    org.springframework.orm.jpa: DEBUG
+```
+
+**로그 예시:**
+```
+DEBUG o.s.t.s.TransactionAspectSupport: Creating new transaction with name [UserService.submitSignupProfile]
+DEBUG o.s.t.s.TransactionAspectSupport: Completing transaction for [UserService.submitSignupProfile]
+```
+
+### 관련 문서
+- [트러블슈팅 - UnexpectedRollbackException](../troubleshooting/common-errors.md#트랜잭션롤백)
+- [동시성 처리](#사용자-동시-생성-시-동시성-처리)
+
 ## 구현 주의사항 업데이트
 | 항목 | 이전 | 현재 |
 |------|------|------|
