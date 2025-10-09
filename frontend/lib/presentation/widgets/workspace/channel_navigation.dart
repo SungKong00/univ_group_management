@@ -183,42 +183,50 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
   }
 
   Widget _buildTopSection() {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 섹션 제목: 그룹 메뉴
-          Padding(
-            padding: const EdgeInsets.only(
-              left: AppSpacing.xxs,
-              bottom: AppSpacing.xxs,
-            ),
-            child: Text(
-              '그룹 메뉴',
-              style: AppTheme.bodySmall.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.neutral600,
+    return Consumer(
+      builder: (context, ref, child) {
+        final state = ref.watch(workspaceStateProvider);
+
+        return Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 섹션 제목: 그룹 메뉴
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.xxs,
+                  bottom: AppSpacing.xxs,
+                ),
+                child: Text(
+                  '그룹 메뉴',
+                  style: AppTheme.bodySmall.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.neutral600,
+                  ),
+                ),
               ),
-            ),
+              _buildTopButton(
+                icon: Icons.home_outlined,
+                label: '그룹 홈',
+                onTap: () {
+                  ref.read(workspaceStateProvider.notifier).showGroupHome();
+                },
+                isSelected: state.currentView == WorkspaceView.groupHome,
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              _buildTopButton(
+                icon: Icons.calendar_today_outlined,
+                label: '캘린더',
+                onTap: () {
+                  ref.read(workspaceStateProvider.notifier).showCalendar();
+                },
+                isSelected: state.currentView == WorkspaceView.calendar,
+              ),
+            ],
           ),
-          _buildTopButton(
-            icon: Icons.home_outlined,
-            label: '그룹 홈',
-            onTap: () {
-              ref.read(workspaceStateProvider.notifier).showGroupHome();
-            },
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          _buildTopButton(
-            icon: Icons.calendar_today_outlined,
-            label: '캘린더',
-            onTap: () {
-              ref.read(workspaceStateProvider.notifier).showCalendar();
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -226,9 +234,10 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    required bool isSelected,
   }) {
     return Material(
-      color: Colors.transparent,
+      color: isSelected ? AppColors.actionTonalBg : Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.button),
@@ -240,12 +249,17 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(icon, size: 20, color: AppColors.neutral700),
+              Icon(
+                icon,
+                size: 20,
+                color: isSelected ? AppColors.action : AppColors.neutral700,
+              ),
               const SizedBox(width: AppSpacing.xs),
               Text(
                 label,
                 style: AppTheme.bodyMedium.copyWith(
-                  color: AppColors.lightOnSurface,
+                  color: isSelected ? AppColors.action : AppColors.lightOnSurface,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ],
@@ -256,82 +270,77 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
   }
 
   Widget _buildChannelList() {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 섹션 제목: 채널
-          Padding(
-            padding: const EdgeInsets.only(
-              left: AppSpacing.sm,
-              top: AppSpacing.xs,
-              bottom: AppSpacing.xxs,
-            ),
-            child: Text(
-              '채널',
-              style: AppTheme.bodySmall.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.neutral600,
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
-              itemCount: widget.channels.length,
-              itemBuilder: (context, index) {
-                final channel = widget.channels[index];
-                final channelId = channel.id.toString();
-                final isSelected = widget.selectedChannelId == channelId;
-                final unreadCount = widget.unreadCounts[channelId] ?? 0;
+    return Consumer(
+      builder: (context, ref, child) {
+        final state = ref.watch(workspaceStateProvider);
 
-                return ChannelItem(
-                  channel: channel,
-                  isSelected: isSelected,
-                  unreadCount: unreadCount,
-                  onTap: () {
-                    ref.read(workspaceStateProvider.notifier).showChannel(channelId);
+        return Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 섹션 제목: 채널
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.sm,
+                  top: AppSpacing.xs,
+                  bottom: AppSpacing.xxs,
+                ),
+                child: Text(
+                  '채널',
+                  style: AppTheme.bodySmall.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.neutral600,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+                  itemCount: widget.channels.length,
+                  itemBuilder: (context, index) {
+                    final channel = widget.channels[index];
+                    final channelId = channel.id.toString();
+                    final isChannelView =
+                        state.currentView == WorkspaceView.channel;
+                    final isSelected =
+                        isChannelView && state.selectedChannelId == channelId;
+                    final unreadCount = widget.unreadCounts[channelId] ?? 0;
+
+                    return ChannelItem(
+                      channel: channel,
+                      isSelected: isSelected,
+                      unreadCount: unreadCount,
+                      onTap: () {
+                        ref.read(workspaceStateProvider.notifier).showChannel(channelId);
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildBottomSection() {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            ref.read(workspaceStateProvider.notifier).showGroupAdminPage();
-          },
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xs,
-              vertical: AppSpacing.xxs,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Icon(Icons.settings_outlined, size: 20, color: AppColors.neutral700),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  '관리자 페이지',
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: AppColors.lightOnSurface,
-                  ),
-                ),
-              ],
-            ),
+    return Consumer(
+      builder: (context, ref, child) {
+        final state = ref.watch(workspaceStateProvider);
+
+        return Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: _buildTopButton(
+            icon: Icons.settings_outlined,
+            label: '관리자 페이지',
+            onTap: () {
+              ref.read(workspaceStateProvider.notifier).showGroupAdminPage();
+            },
+            isSelected: state.currentView == WorkspaceView.groupAdmin,
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

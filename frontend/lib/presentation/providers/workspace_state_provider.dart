@@ -299,6 +299,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.groupHome,
+      selectedChannelId: null,
       isCommentsVisible: false,
       selectedPostId: null,
     );
@@ -309,6 +310,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.calendar,
+      selectedChannelId: null,
       isCommentsVisible: false,
       selectedPostId: null,
     );
@@ -319,6 +321,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.groupAdmin,
+      selectedChannelId: null,
       isCommentsVisible: false,
       selectedPostId: null,
     );
