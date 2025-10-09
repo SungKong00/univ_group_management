@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.castlekong.backend.dto.ProfileUpdateRequest
 import org.castlekong.backend.entity.GlobalRole
+import org.castlekong.backend.entity.GroupType
 import org.castlekong.backend.entity.User
 import org.castlekong.backend.fixture.TestDataFactory
 import org.castlekong.backend.repository.GroupJoinRequestRepository
@@ -232,6 +233,168 @@ class UserServiceTest {
 
             verify { userRepository.findById(userId) }
             verify(exactly = 0) { userRepository.save(any()) }
+        }
+    }
+
+    @Nested
+    @DisplayName("submitSignupProfile 테스트")
+    inner class SubmitSignupProfileTest {
+        @Test
+        fun `should join user to department, college, and university groups`() {
+            // Given
+            val userId = 1L
+            val user = TestDataFactory.createTestUser(id = userId)
+            val owner = TestDataFactory.createTestUser(id = 99L, email = "owner@test.com")
+
+            // 그룹 계층 구조: 한신대학교 -> AI/SW계열 -> AI/SW학과
+            val university = TestDataFactory.createTestGroup(
+                id = 1L,
+                name = "한신대학교",
+                owner = owner,
+                university = "한신대학교",
+                groupType = GroupType.UNIVERSITY,
+            )
+            val college = TestDataFactory.createTestGroup(
+                id = 2L,
+                name = "AI/SW계열",
+                owner = owner,
+                parent = university,
+                university = "한신대학교",
+                college = "AI/SW계열",
+                groupType = GroupType.COLLEGE,
+            )
+            val department = TestDataFactory.createTestGroup(
+                id = 3L,
+                name = "AI/SW학과",
+                owner = owner,
+                parent = college,
+                university = "한신대학교",
+                college = "AI/SW계열",
+                department = "AI/SW학과",
+                groupType = GroupType.DEPARTMENT,
+            )
+
+            val request = org.castlekong.backend.dto.SignupProfileRequest(
+                name = "테스트 사용자",
+                nickname = "닉네임",
+                college = "AI/SW계열",
+                dept = "AI/SW학과",
+                studentNo = "20201234",
+                academicYear = 1,
+                schoolEmail = "test@handshin.ac.kr",
+                role = "STUDENT",
+            )
+
+            val updatedUser = user.copy(
+                name = request.name,
+                nickname = request.nickname,
+                college = request.college,
+                department = request.dept,
+                studentNo = request.studentNo,
+                academicYear = request.academicYear,
+                schoolEmail = request.schoolEmail,
+                globalRole = GlobalRole.STUDENT,
+                profileCompleted = true,
+            )
+
+            every { userRepository.findById(userId) } returns Optional.of(user)
+            every { userRepository.existsByNicknameIgnoreCase(request.nickname) } returns false
+            every { userRepository.save(any<User>()) } returns updatedUser
+            every {
+                groupRepository.findByUniversityAndCollegeAndDepartment(
+                    "한신대학교",
+                    "AI/SW계열",
+                    "AI/SW학과",
+                )
+            } returns listOf(department)
+            every { groupMemberService.joinGroup(3L, userId) } returns mockk()
+            every { groupMemberService.joinGroup(2L, userId) } returns mockk()
+            every { groupMemberService.joinGroup(1L, userId) } returns mockk()
+
+            // When
+            val result = userService.submitSignupProfile(userId, request)
+
+            // Then
+            assertThat(result.profileCompleted).isTrue()
+            assertThat(result.nickname).isEqualTo(request.nickname)
+            assertThat(result.college).isEqualTo(request.college)
+            assertThat(result.department).isEqualTo(request.dept)
+
+            // 3개 그룹(학과, 계열, 대학교) 모두 가입 확인
+            verify { groupMemberService.joinGroup(3L, userId) } // 학과
+            verify { groupMemberService.joinGroup(2L, userId) } // 계열
+            verify { groupMemberService.joinGroup(1L, userId) } // 대학교
+        }
+
+        @Test
+        fun `should handle college-only selection`() {
+            // Given
+            val userId = 1L
+            val user = TestDataFactory.createTestUser(id = userId)
+            val owner = TestDataFactory.createTestUser(id = 99L, email = "owner@test.com")
+
+            val university = TestDataFactory.createTestGroup(
+                id = 1L,
+                name = "한신대학교",
+                owner = owner,
+                university = "한신대학교",
+                groupType = GroupType.UNIVERSITY,
+            )
+            val college = TestDataFactory.createTestGroup(
+                id = 2L,
+                name = "AI/SW계열",
+                owner = owner,
+                parent = university,
+                university = "한신대학교",
+                college = "AI/SW계열",
+                groupType = GroupType.COLLEGE,
+            )
+
+            val request = org.castlekong.backend.dto.SignupProfileRequest(
+                name = "테스트 사용자",
+                nickname = "닉네임",
+                college = "AI/SW계열",
+                dept = null,
+                studentNo = "20201234",
+                academicYear = 1,
+                schoolEmail = "test@handshin.ac.kr",
+                role = "STUDENT",
+            )
+
+            val updatedUser = user.copy(
+                name = request.name,
+                nickname = request.nickname,
+                college = request.college,
+                department = request.dept,
+                studentNo = request.studentNo,
+                academicYear = request.academicYear,
+                schoolEmail = request.schoolEmail,
+                globalRole = GlobalRole.STUDENT,
+                profileCompleted = true,
+            )
+
+            every { userRepository.findById(userId) } returns Optional.of(user)
+            every { userRepository.existsByNicknameIgnoreCase(request.nickname) } returns false
+            every { userRepository.save(any<User>()) } returns updatedUser
+            every {
+                groupRepository.findByUniversityAndCollegeAndDepartment(
+                    "한신대학교",
+                    "AI/SW계열",
+                    null,
+                )
+            } returns listOf(college)
+            every { groupMemberService.joinGroup(2L, userId) } returns mockk()
+            every { groupMemberService.joinGroup(1L, userId) } returns mockk()
+
+            // When
+            val result = userService.submitSignupProfile(userId, request)
+
+            // Then
+            assertThat(result.profileCompleted).isTrue()
+
+            // 2개 그룹(계열, 대학교) 가입 확인
+            verify { groupMemberService.joinGroup(2L, userId) } // 계열
+            verify { groupMemberService.joinGroup(1L, userId) } // 대학교
         }
     }
 

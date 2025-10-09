@@ -174,7 +174,7 @@ class UserService(
 
         val saved = userRepository.save(updated)
 
-        // [수정] 사용자가 선택한 학과 또는 계열에 자동 가입
+        // [수정] 사용자가 선택한 학과 또는 계열에 자동 가입 (상위 그룹 포함)
         try {
             val university = "한신대학교" // 이 부분은 향후 확장 가능
             var targetGroup: Group? = null
@@ -196,15 +196,19 @@ class UserService(
             }
 
             if (targetGroup != null) {
-                runCatching { groupMemberService.joinGroup(targetGroup.id, saved.id) }
-                    .onFailure { e ->
-                        logger.warn(
-                            "Auto-join failed for user {} to group {}: {}",
-                            saved.id,
-                            targetGroup.id,
-                            e.message,
-                        )
-                    }
+                // 선택한 그룹과 모든 상위 그룹에 자동 가입
+                val groupsToJoin = collectAncestorGroups(targetGroup)
+                groupsToJoin.forEach { group ->
+                    runCatching { groupMemberService.joinGroup(group.id, saved.id) }
+                        .onFailure { e ->
+                            logger.warn(
+                                "Auto-join failed for user {} to group {}: {}",
+                                saved.id,
+                                group.id,
+                                e.message,
+                            )
+                        }
+                }
             }
         } catch (e: Exception) {
             // 개발 중 자동 가입 실패는 에러를 발생시키지 않음
@@ -212,6 +216,20 @@ class UserService(
         }
 
         return saved
+    }
+
+    /**
+     * 주어진 그룹부터 최상위 그룹까지 모든 상위 그룹을 수집합니다.
+     * 예: AI/SW학과 → [AI/SW학과, AI/SW계열, 한신대학교]
+     */
+    private fun collectAncestorGroups(group: Group): List<Group> {
+        val groups = mutableListOf(group)
+        var current = group.parent
+        while (current != null) {
+            groups.add(current)
+            current = current.parent
+        }
+        return groups
     }
 
     fun convertToUserResponse(user: User): UserResponse {
