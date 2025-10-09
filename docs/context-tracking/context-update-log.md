@@ -833,6 +833,30 @@
 4. **로그 업데이트** → 이 파일에 자동 기록
 5. **알림 생성** → 필요한 업데이트 작업 알림
 
+### 2025-10-10 - 워크스페이스 & 네비게이션 구현 가이드 정리
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 문서 추가 + 에이전트 가이드 동기화
+**우선순위**: Medium
+**영향 범위**: 프론트엔드 가이드라인, 에이전트 워크플로우, 컨텍스트 트래킹
+
+**구현 내용**:
+- 신규 문서 `docs/implementation/frontend-workspace-guide.md` 추가
+    - 레이아웃/반응형 패턴
+    - 상태 관리/파생 Provider 사용 규칙
+    - 브레드크럼/뒤로가기 핸들링 지침
+    - 채널 네비게이션 및 코멘트 패널 패턴
+- `.claude/agents/frontend-specialist.md`, `.claude/agents/frontend-debugger.md`에 가이드 참조 문구 추가
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/frontend-workspace-guide.md` (신규)
+- ✅ `.claude/agents/frontend-specialist.md`
+- ✅ `.claude/agents/frontend-debugger.md`
+- ✅ `CLAUDE.md`
+- ✅ `docs/context-tracking/context-update-log.md`
+- ✅ `docs/context-tracking/sync-status.md`
+
+**메모**: Workspace 관련 기능 개발 시 참고할 수 있는 단일 진입점 확보. 에이전트들이 일관된 패턴을 따르도록 가이드 업데이트.
+
 ## 관련 파일
 - [대기 중인 업데이트 목록](pending-updates.md)
 - [동기화 상태](sync-status.md)
