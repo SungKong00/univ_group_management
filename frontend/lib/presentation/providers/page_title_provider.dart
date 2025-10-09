@@ -143,8 +143,12 @@ PageBreadcrumb _buildWorkspaceBreadcrumb({
 
 /// 데스크톱 브레드크럼 생성: "워크스페이스 > 그룹명"
 PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceBreadcrumbContext context) {
-  if (context.isNarrowDesktopCommentsFullscreen &&
-      context.selectedPostId != null) {
+  final isCommentOverlayActive =
+      context.isNarrowDesktopCommentsFullscreen &&
+      context.selectedPostId != null &&
+      context.currentView == WorkspaceView.channel;
+
+  if (isCommentOverlayActive) {
     return const PageBreadcrumb(title: '댓글');
   }
 

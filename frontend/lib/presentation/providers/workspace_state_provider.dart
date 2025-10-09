@@ -325,6 +325,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       selectedChannelId: null,
       isCommentsVisible: false,
       selectedPostId: null,
+      isNarrowDesktopCommentsFullscreen: false,
     );
   }
 
@@ -336,6 +337,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       selectedChannelId: null,
       isCommentsVisible: false,
       selectedPostId: null,
+      isNarrowDesktopCommentsFullscreen: false,
     );
   }
 
@@ -347,6 +349,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       selectedChannelId: null,
       isCommentsVisible: false,
       selectedPostId: null,
+      isNarrowDesktopCommentsFullscreen: false,
     );
   }
 

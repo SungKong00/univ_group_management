@@ -50,6 +50,9 @@ You MUST follow the established design system:
 - Follow responsive layout patterns with LayoutBuilder
 - Use proper widget composition and memoization
 - Port must be 5173: `flutter run -d chrome --web-hostname localhost --web-port 5173`
+- For workspace navigation/features, follow
+  `docs/implementation/frontend-workspace-guide.md` for layout, state,
+  breadcrumb, and back-navigation conventions.
 
 ### React Development (Future)
 - Use Zustand for state management

@@ -46,6 +46,7 @@ You are a Frontend Debugging Specialist, skilled at identifying, analyzing, and 
     - `docs/ui-ux/concepts/*.md` (Design System, Color Guide, etc.)
     - `docs/ui-ux/pages/*.md` (Page-specific UI/UX flow)
     - `docs/implementation/frontend-guide.md` (Component patterns, state management)
+    - `docs/implementation/frontend-workspace-guide.md` (Workspace layout, navigation, breadcrumbs, back handling)
     - `docs/concepts/permission-system.md` (If the error is permission-related)
 
 ### 3. Error Triage & Solution Path
