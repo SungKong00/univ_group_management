@@ -114,25 +114,21 @@ class _AdminContentView extends ConsumerWidget {
     // 그룹 설정 섹션
     if (permissions.contains('GROUP_MANAGE')) {
       sections.add(_buildGroupSettingsSection(context, ref));
-      sections.add(SizedBox(height: AppSpacing.md));
     }
 
     // 멤버 관리 섹션
     if (permissions.contains('MEMBER_MANAGE')) {
       sections.add(_buildMemberManagementSection(context, ref));
-      sections.add(SizedBox(height: AppSpacing.md));
     }
 
     // 채널 관리 섹션
     if (permissions.contains('CHANNEL_MANAGE')) {
       sections.add(_buildChannelManagementSection(context));
-      sections.add(SizedBox(height: AppSpacing.md));
     }
 
     // 모집 관리 섹션
     if (permissions.contains('RECRUITMENT_MANAGE')) {
       sections.add(_buildRecruitmentSection(context));
-      sections.add(SizedBox(height: AppSpacing.md));
     }
 
     if (sections.isEmpty) {
@@ -144,9 +140,38 @@ class _AdminContentView extends ConsumerWidget {
       );
     }
 
+    // 반응형 레이아웃: 데스크톱에서 섹션을 2열로 배치
+    if (isDesktop) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          // 실제 사용 가능한 너비(사이드바 제외)를 기준으로 계산
+          final availableWidth = constraints.maxWidth;
+          final sectionWidth = (availableWidth - AppSpacing.md) / 2;
+
+          return Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.md,
+            children: sections
+                .map((section) => SizedBox(
+                      width: sectionWidth,
+                      child: section,
+                    ))
+                .toList(),
+          );
+        },
+      );
+    }
+
+    // 모바일: 세로 배치
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: sections,
+      children: sections
+          .expand((section) => [
+                section,
+                SizedBox(height: AppSpacing.md),
+              ])
+          .toList()
+        ..removeLast(), // 마지막 SizedBox 제거
     );
   }
 

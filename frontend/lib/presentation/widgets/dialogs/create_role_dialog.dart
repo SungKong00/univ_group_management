@@ -92,18 +92,11 @@ class _CreateRoleDialogState extends ConsumerState<CreateRoleDialog>
       return;
     }
 
-    // 권한 최소 1개 체크 검증
+    // 선택된 권한 수집 (0개도 허용)
     final selectedPermissions = _permissions.entries
         .where((entry) => entry.value)
         .map((entry) => entry.key)
         .toList();
-
-    if (selectedPermissions.isEmpty) {
-      setState(() {
-        _errorMessage = '최소 1개 이상의 권한을 선택해주세요';
-      });
-      return;
-    }
 
     setState(() {
       _isLoading = true;

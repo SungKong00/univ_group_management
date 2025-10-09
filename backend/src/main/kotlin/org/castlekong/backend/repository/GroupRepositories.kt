@@ -114,6 +114,8 @@ interface GroupMemberRepository : JpaRepository<GroupMember, Long> {
 
     fun countByGroupId(groupId: Long): Long
 
+    fun countByRoleId(roleId: Long): Long
+
     fun findByGroupId(
         groupId: Long,
         pageable: Pageable,

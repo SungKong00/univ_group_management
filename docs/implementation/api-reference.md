@@ -225,7 +225,27 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
 ### 3.3. 역할(Role) 관리
 
 -   `POST /{groupId}/roles`: 그룹 내 역할 생성 (`MEMBER_MANAGE` 권한 필요)
+    -   **요청**: `CreateGroupRoleRequest`
+        ```json
+        {
+          "name": "역할이름",
+          "permissions": [], // 권한이 없어도 생성 가능
+          "priority": 0
+        }
+        ```
 -   `GET /{groupId}/roles`: 그룹 내 역할 목록 조회 (`MEMBER_MANAGE` 권한 필요)
+    -   **응답**: `List<GroupRoleResponse>`
+        ```json
+        [
+          {
+            "id": 1,
+            "name": "그룹장",
+            "permissions": ["GROUP_MANAGE", "MEMBER_MANAGE", ...],
+            "priority": 100,
+            "memberCount": 1
+          }
+        ]
+        ```
 -   `GET /{groupId}/roles/{roleId}`: 특정 역할 상세 조회 (`MEMBER_MANAGE` 권한 필요)
 -   `PUT /{groupId}/roles/{roleId}`: 역할 정보 및 권한 수정 (`MEMBER_MANAGE` 권한 필요)
 -   `DELETE /{groupId}/roles/{roleId}`: 역할 삭제 (`MEMBER_MANAGE` 권한 필요)

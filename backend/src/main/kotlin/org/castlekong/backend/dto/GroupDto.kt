@@ -94,13 +94,14 @@ data class GroupRoleResponse(
     val name: String,
     val permissions: Set<String>,
     val priority: Int,
+    val memberCount: Int = 0,
 )
 
 data class CreateGroupRoleRequest(
     @field:NotBlank(message = "역할 이름은 필수입니다")
     @field:Size(min = 1, max = 50, message = "역할 이름은 1자 이상 50자 이하여야 합니다")
     val name: String,
-    @field:NotEmpty(message = "권한은 최소 하나 이상 선택해야 합니다")
+    @field:NotNull(message = "권한은 null일 수 없습니다")
     val permissions: Set<String>,
     val priority: Int = 0,
 )

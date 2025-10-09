@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional
 class GroupRoleService(
     private val groupRepository: GroupRepository,
     private val groupRoleRepository: GroupRoleRepository,
+    private val groupMemberRepository: org.castlekong.backend.repository.GroupMemberRepository,
     private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
     @Transactional
@@ -130,11 +131,13 @@ class GroupRoleService(
     }
 
     private fun toGroupRoleResponse(groupRole: GroupRole): GroupRoleResponse {
+        val memberCount = groupMemberRepository.countByRoleId(groupRole.id).toInt()
         return GroupRoleResponse(
             id = groupRole.id,
             name = groupRole.name,
             permissions = groupRole.permissions.map { it.name }.toSet(),
             priority = groupRole.priority,
+            memberCount = memberCount,
         )
     }
 }

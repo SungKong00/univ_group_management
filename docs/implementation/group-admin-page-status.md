@@ -88,7 +88,7 @@
         - 역할 이름 TextField (필수, 50자 제한)
         - 설명 TextField (선택, 200자 제한)
         - 4개 권한 체크박스 (GROUP_MANAGE, MEMBER_MANAGE, CHANNEL_MANAGE, RECRUITMENT_MANAGE)
-        - 유효성 검증 (이름 빈 값, 권한 최소 1개 선택)
+        - 유효성 검증 (이름 빈 값 체크. 권한은 0개여도 허용)
         - createRoleProvider 연동
         - 성공/실패 SnackBar 표시
     - **역할 수정 다이얼로그 구현** (신규 파일: `edit_role_dialog.dart`)
@@ -129,6 +129,7 @@
 - **내용**:
     - `group_admin_page.dart` 내부에 있던 `_ActionCard`를 `widgets/cards/action_card.dart` 공용 위젯으로 분리하여 재사용성을 높였습니다.
     - `isDestructive` 속성을 추가하여 '삭제'와 같은 위험한 액션을 시각적으로 구분할 수 있도록 개선했습니다.
+    - 데스크톱 화면에서 2열로 표시되는 반응형 레이아웃을 적용하여 넓은 화면의 공간 활용도를 높였습니다.
 
 ### Phase 1
 
