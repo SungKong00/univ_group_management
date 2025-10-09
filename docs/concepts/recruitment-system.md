@@ -11,12 +11,15 @@
 - **마감일 설정**: 모집 생성 시 마감일을 지정할 수 있음 (선택사항)
 - **조기 마감**: 권한자가 마감일 전에 모집을 조기 마감할 수 있음
 - **지원자 수 공개**: 현재 지원자 수를 공개할지 선택 가능
+- **수정 정책**: 모집 공고 수정 시, 기존 지원자에게는 영향을 주지 않음
+- **삭제 정책**: 지원자가 있는 모집 공고는 논리적(soft-delete)으로 삭제 처리되어, 기존 지원자의 기록에는 '삭제된 공고'로 표시됨
 
 ### 지원서 관리
-- **중복 지원 방지**: 동일한 모집에 대해 한 번만 지원 가능
-- **지원서 상태**: PENDING, APPROVED, REJECTED, WITHDRAWN
-- **지원자 철회**: 지원자가 직접 지원서를 철회할 수 있음
+- **중복 지원 방지**: 동일한 모집에 대해 한 번만 지원 가능 (철회 시 재지원 가능)
+- **지원서 상태**: APPLICATION_COMPLETE, APPROVED, DENIED, WITHDRAWN
+- **지원자 철회**: 지원자는 심사(승인/반려)가 완료되지 않은 지원서를 직접 철회할 수 있음
 - **자동 그룹 가입**: 지원서 승인 시 해당 그룹에 자동으로 가입됨
+- **심사 의견 확인**: '반려' 상태일 경우, 지원자는 심사 의견(사유)을 확인할 수 있음
 
 ### 아카이브 시스템
 - **마감된 모집**: 마감된 모집 게시글은 자동으로 아카이브로 이동
@@ -50,24 +53,22 @@ RECRUITMENT_MANAGE 권한자:
 | 항목 | 구현 여부 | 비고 |
 |------|-----------|------|
 | 단일 활성 모집 제한 | ✅ | 그룹당 OPEN 1개 검사 로직 존재 |
-| 모집 CRUD | ✅ | DRAFT → OPEN → CLOSED 전환 지원 |
+| 모집 CRUD | ✅ | OPEN → CLOSED 전환 지원 (DRAFT 제외) |
 | 조기 마감 | ✅ | PATCH /close 엔드포인트 |
 | 지원서 제출/조회 | ✅ | 중복 제출 방지 검사 |
-| 지원서 심사(승인/거절) | ✅ | 승인 시 그룹 자동 가입 처리 |
-| 지원서 철회 | ✅ | 지원자 본인만 삭제(철회) |
+| 지원서 심사(승인/반려) | ✅ | 승인 시 그룹 자동 가입 처리 |
 | 아카이브 조회 | ✅ | CLOSED 상태 포함 목록 (`/archive`) |
 | JPA Dirty Checking 최적화 | ✅ | data class → class 전환, var 필드 직접 수정 |
 | N+1 문제 해결 | ✅ | FETCH JOIN 쿼리 추가 (findByIdWithRelations) |
-| 통계 엔드포인트 | ⏳ | `/stats` 설계만 존재 (집계 로직 미구현) |
+| 통계 엔드포인트 | ✅ | MVP 범위에 포함. 집계 로직 구현 필요 |
 | 자동 마감 배치 | ⏳ | 예약 작업 설계 예정 (Quartz/스케줄러) |
 | 알림 시스템 연동 | ❌ | Notification 모듈 미구현 |
-| 자동 승인(autoApprove) | ⏳ | 필드 존재 / 로직 단순화(미사용) |
+| 자동 승인(autoApprove) | ❌ | MVP 기능에서 제외 |
 
 ## 향후 계획
-- 통계: 지원자 수, 승인율, 평균 처리 시간 계산 캐시 (Redis 예정)
+- 통계: 실시간 집계 기능 우선 구현. 추후 성능 요구사항에 따라 캐시 적용 검토
 - 자동 마감: 마감일 도달 시 상태 전환 + 통계 스냅샷
 - 알림: 생성/지원/심사/마감 이벤트 기반 푸시
-- 질문 템플릿: 그룹별 자주 쓰는 질문 Preset 저장/재사용
 
 ## 권한 체계 요약 (정리)
 | 기능 | 필요 권한 | 추가 조건 |
@@ -77,7 +78,7 @@ RECRUITMENT_MANAGE 권한자:
 | 지원서 제출 | (없음) | 이미 멤버면 불가 |
 | 지원서 목록/심사 | RECRUITMENT_MANAGE | 해당 그룹 소속 |
 | 지원서 상세 | RECRUITMENT_MANAGE 또는 본인 |  |
-| 지원서 철회 | 본인 | 상태 PENDING 일 때 |
+| 지원서 철회 | 본인 | 상태가 APPLICATION_COMPLETE일 때 |
 | 아카이브 조회 | RECRUITMENT_MANAGE |  |
 
 ## 데이터 모델
@@ -94,7 +95,6 @@ class GroupRecruitment(
     val recruitmentStartDate: LocalDateTime, // 모집 시작일 (불변)
     var recruitmentEndDate: LocalDateTime?,  // 모집 마감일 (수정 가능)
     var status: RecruitmentStatus,       // 모집 상태 (수정 가능)
-    var autoApprove: Boolean,            // 자동 승인 여부 (수정 가능)
     var showApplicantCount: Boolean,     // 지원자 수 공개 여부 (수정 가능)
     var applicationQuestions: List<String>, // 지원서 질문 (수정 가능)
     val createdAt: LocalDateTime,
@@ -103,7 +103,6 @@ class GroupRecruitment(
 )
 
 enum class RecruitmentStatus {
-    DRAFT,      // 임시저장
     OPEN,       // 모집 중
     CLOSED,     // 모집 마감
     CANCELLED   // 모집 취소
@@ -114,23 +113,23 @@ enum class RecruitmentStatus {
 ```kotlin
 data class RecruitmentApplication(
     val id: Long,
-    val recruitment: GroupRecruitment,   // 모집 게시글
-    val applicant: User,                 // 지원자
-    val motivation: String?,             // 지원 동기
-    val questionAnswers: Map<Int, String>, // 질문별 답변
-    val status: ApplicationStatus,       // 지원서 상태
-    val reviewedBy: User?,              // 심사자
-    val reviewedAt: LocalDateTime?,     // 심사 시점
-    val reviewComment: String?,         // 심사 코멘트
-    val appliedAt: LocalDateTime,       // 지원 시점
-    val updatedAt: LocalDateTime
+    val recruitment: GroupRecruitment,
+    val applicant: User,
+    val motivation: String?,
+    val questionAnswers: Map<Int, String>,
+    var status: ApplicationStatus,       // 지원서 상태 (수정 가능)
+    var reviewedBy: User?,
+    var reviewedAt: LocalDateTime?,
+    var reviewComment: String?,
+    val appliedAt: LocalDateTime,
+    var updatedAt: LocalDateTime
 )
 
 enum class ApplicationStatus {
-    PENDING,    // 검토 대기
-    APPROVED,   // 승인됨 (그룹 가입)
-    REJECTED,   // 거부됨
-    WITHDRAWN   // 지원자가 철회
+    APPLICATION_COMPLETE, // 신청 완료
+    APPROVED,             // 승인됨 (그룹 가입)
+    DENIED,               // 반려됨
+    WITHDRAWN             // 지원자가 철회
 }
 ```
 
@@ -169,11 +168,11 @@ DELETE /api/applications/{applicationId}                 # 지원서 철회
 1. **모집 상태 확인**: 모집이 활성 상태인지 확인
 2. **중복 지원 확인**: 동일한 모집에 이미 지원했는지 확인
 3. **마감일 확인**: 현재 시점이 마감일 이전인지 확인
-4. **지원서 저장**: PENDING 상태로 지원서 생성
+4. **지원서 저장**: APPLICATION_COMPLETE 상태로 지원서 생성
 
 ### 지원서 심사 플로우
 1. **권한 확인**: RECRUITMENT_MANAGE 권한 검증
-2. **상태 변경**: APPROVED 또는 REJECTED로 상태 업데이트
+2. **상태 변경**: APPROVED 또는 DENIED로 상태 업데이트
 3. **심사 정보 기록**: 심사자, 심사 시점, 코멘트 저장
 4. **자동 그룹 가입**: 승인 시 해당 그룹에 자동 가입 처리
 
@@ -190,6 +189,8 @@ DELETE /api/applications/{applicationId}                 # 지원서 철회
 - 마감된 모집의 지원서는 수정 불가
 - 아카이브 데이터는 90일간 보관 후 삭제
 - 이미 그룹 멤버인 유저는 해당 그룹에 지원 불가
+- 지원서 철회 후 동일 모집에 재지원 가능
+- 사용자의 최대 가입 가능 그룹 수 제한은 없는 것으로 간주
 
 ### 기술적 제약
 - 지원서 첨부파일: 5MB 이하
@@ -258,15 +259,63 @@ DELETE /api/applications/{applicationId}                 # 지원서 철회
 
 ## 상태 전이 다이어그램 (개요)
 ```
-DRAFT --(OPEN 요청)--> OPEN --(마감일/조기마감)--> CLOSED
+(생성) --(OPEN 요청)--> OPEN --(마감일/조기마감)--> CLOSED
                          └--(삭제)--> (제거)
 ```
 
 ## 주요 검증 로직
-- 단일 활성 모집: `SELECT COUNT(*) WHERE group_id=? AND status='OPEN'` > 0 이면 생성/OPEN 전환 차단
-- 중복 지원: `applicationRepository.existsByRecruitmentIdAndApplicantIdAndStatusNotWithdrawn`
-- 승인 시 그룹 멤버십: 멤버가 아니면 GroupMember 생성 + 기본 역할(멤버) 부여
-- 철회: 상태가 PENDING 아니면 409 반환
+
+### A. 모집 공고 생성/수정 시
+
+1.  **권한 검증**:
+    -   **내용**: 공고를 생성/수정/삭제하려는 사용자가 해당 그룹의 `RECRUITMENT_MANAGE` 권한을 가졌는지 확인합니다.
+    -   **실패 시**: `403 Forbidden` (권한 없음) 에러를 반환합니다.
+
+2.  **활성 공고 중복 검증**:
+    -   **내용**: 공고를 생성하거나 `OPEN` 상태로 변경할 때, 해당 그룹에 이미 `OPEN` 상태인 다른 공고가 있는지 확인합니다.
+    -   **실패 시**: `409 Conflict` (이미 모집이 진행 중) 에러를 반환합니다.
+
+3.  **데이터 유효성 검증**:
+    -   **내용**: 모집 제목이 비어있는지, 마감일이 시작일보다 빠른 것은 아닌지 등 데이터의 기본 형식을 검증합니다.
+    -   **실패 시**: `400 Bad Request` (잘못된 요청) 에러를 반환합니다.
+
+### B. 지원서 제출 시
+
+1.  **모집 상태 검증**:
+    -   **내용**: 지원하려는 모집 공고가 현재 `OPEN` 상태인지 확인합니다.
+    -   **실패 시**: `400 Bad Request` ("모집이 마감되었거나 진행 중이 아닙니다.") 에러를 반환합니다.
+
+2.  **그룹 멤버 여부 검증**:
+    -   **내용**: 지원자가 이미 해당 그룹의 멤버인지 확인합니다.
+    -   **실패 시**: `409 Conflict` ("이미 가입된 그룹입니다.") 에러를 반환합니다.
+
+3.  **재지원/중복 지원 검증**:
+    -   **내용**: 지원자가 해당 모집에 대해 **`철회(WITHDRAWN)` 상태가 아닌 지원서**(`신청 완료`, `승인`, `반려` 상태)를 이미 가지고 있는지 확인합니다. 철회 기록이 있더라도 이 조건에 해당하지 않으면 신규 지원이 가능하며, 이때 새로운 지원서 데이터가 생성됩니다.
+    -   **실패 시**: `409 Conflict` ("이미 지원했거나 처리된 지원서가 존재합니다.") 에러를 반환합니다.
+
+4.  **필수 답변 검증**:
+    -   **내용**: 모집 공고에 설정된 모든 필수 질문에 대해 지원자가 답변을 제출했는지 확인합니다.
+    -   **실패 시**: `400 Bad Request` ("필수 질문에 모두 답변해야 합니다.") 에러를 반환합니다.
+
+### C. 지원서 심사 시 (승인/반려)
+
+1.  **권한 검증**:
+    -   **내용**: 심사를 진행하는 사용자가 해당 그룹의 `RECRUITMENT_MANAGE` 권한을 가졌는지 확인합니다.
+    -   **실패 시**: `403 Forbidden` 에러를 반환합니다.
+
+2.  **지원서 상태 검증**:
+    -   **내용**: 심사하려는 지원서의 상태가 `신청 완료(APPLICATION_COMPLETE)`인지 확인합니다.
+    -   **실패 시**: `409 Conflict` ("이미 처리되었거나 철회된 지원서입니다.") 에러를 반환합니다.
+
+### D. 지원서 철회 시
+
+1.  **소유권 검증**:
+    -   **내용**: 철회를 요청한 사용자가 해당 지원서를 작성한 본인인지 확인합니다.
+    -   **실패 시**: `403 Forbidden` 에러를 반환합니다.
+
+2.  **지원서 상태 검증**:
+    -   **내용**: 철회하려는 지원서의 상태가 `신청 완료(APPLICATION_COMPLETE)`인지 확인합니다.
+    -   **실패 시**: `409 Conflict` ("이미 심사가 완료되어 철회할 수 없습니다.") 에러를 반환합니다.
 
 ## 에러 코드 (추가 제안)
 | 코드 | 상황 | HTTP |
@@ -293,15 +342,14 @@ DRAFT --(OPEN 요청)--> OPEN --(마감일/조기마감)--> CLOSED
 | /applications/{id} | DELETE | 지원서 철회 | - | - | 본인 |
 | /recruitments/{id}/stats | GET | 통계 조회 | - | RecruitmentStatsResponse | RECRUITMENT_MANAGE |
 
-## 통계 응답(예시, 예정)
+## 통계 응답(예시, MVP)
 ```json
 {
   "recruitmentId": 12,
-  "total": 20,
-  "approved": 8,
-  "rejected": 5,
-  "pending": 7,
-  "averageReviewTimeSeconds": 86400
+  "totalApplicants": 20,
+  "approvedCount": 8,
+  "deniedCount": 5,
+  "approvalRate": 0.4
 }
 ```
 
