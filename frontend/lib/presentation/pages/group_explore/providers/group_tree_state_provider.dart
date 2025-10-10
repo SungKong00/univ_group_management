@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/models/group_tree_node.dart';
 import '../../../../core/models/group_models.dart';
-import '../../../../core/services/group_explore_service.dart';
+import '../../../../core/services/group_service.dart';
 
 /// Group Tree State
 class GroupTreeState extends Equatable {
@@ -40,7 +40,7 @@ class GroupTreeState extends Equatable {
 class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
   GroupTreeStateNotifier() : super(const GroupTreeState());
 
-  final GroupExploreService _service = GroupExploreService();
+  final GroupService _groupService = GroupService();
 
   /// Load full hierarchy
   Future<void> loadHierarchy() async {
@@ -49,17 +49,11 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // Fetch all groups (we'll build tree from flat list)
-      // TODO: If backend provides /api/groups/hierarchy endpoint, use that instead
-      final groups = await _service.exploreGroups(
-        query: null,
-        filters: null,
-        page: 0,
-        size: 1000, // Large enough to get all groups
-      );
+      // Fetch hierarchy from backend (uses /api/groups/hierarchy)
+      final hierarchyNodes = await _groupService.getHierarchy();
 
-      // Build tree structure from flat list
-      final tree = _buildTreeFromFlatList(groups);
+      // Build tree structure from hierarchy nodes
+      final tree = _buildTreeFromHierarchyNodes(hierarchyNodes);
 
       state = state.copyWith(
         rootNodes: tree,
@@ -88,173 +82,79 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
     loadHierarchy();
   }
 
-  /// Build tree structure from flat list of groups
-  List<GroupTreeNode> _buildTreeFromFlatList(List<GroupSummaryResponse> groups) {
-    // Apply filters (University groups are always shown)
-    final filteredGroups = _applyFilters(groups);
+  /// Build tree structure from hierarchy nodes (with parentId)
+  List<GroupTreeNode> _buildTreeFromHierarchyNodes(List<GroupHierarchyNode> nodes) {
+    if (nodes.isEmpty) return [];
 
-    // Group by type to create pseudo-hierarchy
-    final universities = <GroupTreeNode>[];
-    final colleges = <GroupTreeNode>[];
-    final departments = <GroupTreeNode>[];
-    final others = <GroupTreeNode>[];
+    // Find root nodes (nodes with no parent)
+    final rootNodes = nodes.where((n) => n.parentId == null).toList();
 
-    for (final group in filteredGroups) {
-      final node = GroupTreeNode.fromGroupSummary(
-        group,
-        level: _getDepthFromType(group.groupType),
+    // Build tree recursively from each root
+    return rootNodes.map((root) => _buildNodeRecursive(root, nodes)).toList();
+  }
+
+  /// Recursively build a tree node with its children
+  GroupTreeNode _buildNodeRecursive(GroupHierarchyNode node, List<GroupHierarchyNode> allNodes) {
+    // Find direct children of this node
+    final children = allNodes.where((n) => n.parentId == node.id).toList();
+
+    // Calculate level (depth in tree)
+    final level = _calculateLevel(node, allNodes);
+
+    // Recursively build children
+    final childNodes = children.map((child) => _buildNodeRecursive(child, allNodes)).toList();
+
+    // Convert to GroupTreeNode
+    return GroupTreeNode(
+      id: node.id,
+      name: node.name,
+      groupType: _convertNodeTypeToGroupType(node.type),
+      memberCount: 0, // Hierarchy API doesn't provide member count
+      isRecruiting: false, // Hierarchy API doesn't provide recruiting status
+      level: level,
+      parentId: node.parentId,
+      children: childNodes,
+      isExpanded: false,
+    );
+  }
+
+  /// Calculate the level (depth) of a node in the tree
+  int _calculateLevel(GroupHierarchyNode node, List<GroupHierarchyNode> allNodes) {
+    int level = 0;
+    int? currentParentId = node.parentId;
+
+    // Traverse up the tree to count depth
+    while (currentParentId != null) {
+      level++;
+      final parent = allNodes.firstWhere(
+        (n) => n.id == currentParentId,
+        orElse: () => GroupHierarchyNode(
+          id: -1,
+          parentId: null,
+          name: '',
+          type: GroupNodeType.other,
+        ),
       );
-
-      switch (group.groupType) {
-        case GroupType.university:
-          universities.add(node);
-          break;
-        case GroupType.college:
-          colleges.add(node);
-          break;
-        case GroupType.department:
-          departments.add(node);
-          break;
-        default:
-          others.add(node);
-      }
+      currentParentId = parent.parentId;
     }
 
-    // Create hierarchical structure
-    // University (level 0) → College (level 1) → Department (level 2) → Others (level 3)
-    final result = <GroupTreeNode>[];
-
-    if (universities.isNotEmpty) {
-      for (final uni in universities) {
-        final uniColleges = colleges.where((c) =>
-          c.name.contains(uni.name) || _isRelated(c, uni)
-        ).toList();
-
-        final uniWithChildren = uni.copyWith(
-          level: 0,
-          children: uniColleges.map((college) {
-            final collegeDepts = departments.where((d) =>
-              d.name.contains(college.name) || _isRelated(d, college)
-            ).toList();
-
-            return college.copyWith(
-              level: 1,
-              parentId: uni.id,
-              children: collegeDepts.map((dept) {
-                final deptGroups = others.where((o) =>
-                  o.name.contains(dept.name) || _isRelated(o, dept)
-                ).toList();
-
-                return dept.copyWith(
-                  level: 2,
-                  parentId: college.id,
-                  children: deptGroups.map((group) => group.copyWith(
-                    level: 3,
-                    parentId: dept.id,
-                  )).toList(),
-                );
-              }).toList(),
-            );
-          }).toList(),
-        );
-
-        result.add(uniWithChildren);
-      }
-    } else {
-      // Fallback: if no hierarchy, just show all groups at root level
-      result.addAll(colleges.map((c) => c.copyWith(
-        level: 0,
-        children: departments.where((d) => _isRelated(d, c)).map((dept) =>
-          dept.copyWith(
-            level: 1,
-            parentId: c.id,
-            children: others.where((o) => _isRelated(o, dept)).map((group) =>
-              group.copyWith(level: 2, parentId: dept.id)
-            ).toList(),
-          )
-        ).toList(),
-      )));
-
-      // Add remaining items
-      if (result.isEmpty) {
-        result.addAll(groups.map((g) => GroupTreeNode.fromGroupSummary(g, level: 0)));
-      }
-    }
-
-    return result;
+    return level;
   }
 
-  /// Apply filters to groups list
-  /// University groups (대학교, 단과대, 학과) are always shown (always-on)
-  List<GroupSummaryResponse> _applyFilters(List<GroupSummaryResponse> groups) {
-    final showRecruiting = state.filters['showRecruiting'] == true;
-    final showAutonomous = state.filters['showAutonomous'] == true;
-    final showOfficial = state.filters['showOfficial'] == true;
-
-    // If no filters are active, show all groups
-    if (!showRecruiting && !showAutonomous && !showOfficial) {
-      return groups;
-    }
-
-    return groups.where((group) {
-      // University groups (대학교, 단과대, 학과) are always shown
-      final isUniversityGroup = group.groupType == GroupType.university ||
-          group.groupType == GroupType.college ||
-          group.groupType == GroupType.department;
-
-      if (isUniversityGroup) {
-        return true;
-      }
-
-      // Apply recruiting filter for non-university groups
-      if (showRecruiting && !group.isRecruiting) {
-        return false;
-      }
-
-      // Apply group type filters for non-university groups
-      if (showAutonomous && group.groupType != GroupType.autonomous) {
-        return false;
-      }
-
-      if (showOfficial && group.groupType != GroupType.official) {
-        return false;
-      }
-
-      // If no specific type filter is active but recruiting filter is on
-      if (showRecruiting && !showAutonomous && !showOfficial) {
-        return true;
-      }
-
-      // If type filter is active, show matching groups
-      if (showAutonomous || showOfficial) {
-        return true;
-      }
-
-      return false;
-    }).toList();
-  }
-
-  /// Simple heuristic to check if two groups are related
-  bool _isRelated(GroupTreeNode child, GroupTreeNode parent) {
-    // This is a placeholder - in real implementation, use actual parent-child relationship
-    return child.name.toLowerCase().contains(parent.name.toLowerCase());
-  }
-
-  /// Get depth from group type
-  int _getDepthFromType(GroupType type) {
-    switch (type) {
-      case GroupType.university:
-        return 0;
-      case GroupType.college:
-        return 1;
-      case GroupType.department:
-        return 2;
-      case GroupType.lab:
-        return 3;
-      default:
-        return 4;
+  /// Convert GroupNodeType to GroupType
+  GroupType _convertNodeTypeToGroupType(GroupNodeType nodeType) {
+    switch (nodeType) {
+      case GroupNodeType.university:
+        return GroupType.university;
+      case GroupNodeType.college:
+        return GroupType.college;
+      case GroupNodeType.department:
+        return GroupType.department;
+      case GroupNodeType.other:
+        return GroupType.autonomous; // Default to autonomous for unknown types
     }
   }
+
 
   /// Recursively update a node's expansion state
   List<GroupTreeNode> _updateNodeRecursive(List<GroupTreeNode> nodes, int targetId) {

@@ -93,6 +93,56 @@ class GroupService {
     return selected;
   }
 
+  /// Get group hierarchy
+  ///
+  /// GET /api/groups/hierarchy
+  /// Returns all groups with parent-child relationships
+  Future<List<GroupHierarchyNode>> getHierarchy() async {
+    try {
+      developer.log('Fetching group hierarchy', name: 'GroupService');
+
+      final response = await _dioClient.get<Map<String, dynamic>>('/groups/hierarchy');
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map(
+                  (item) =>
+                      GroupHierarchyNode.fromJson(item as Map<String, dynamic>),
+                )
+                .toList();
+          }
+          return <GroupHierarchyNode>[];
+        });
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} hierarchy nodes',
+            name: 'GroupService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch hierarchy: ${apiResponse.message}',
+            name: 'GroupService',
+            level: 900,
+          );
+          return [];
+        }
+      }
+
+      return [];
+    } catch (e) {
+      developer.log(
+        'Error fetching hierarchy: $e',
+        name: 'GroupService',
+        level: 900,
+      );
+      return [];
+    }
+  }
+
   /// Update group information
   ///
   /// PUT /api/groups/{groupId}
