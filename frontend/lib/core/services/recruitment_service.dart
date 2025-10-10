@@ -349,10 +349,10 @@ class RecruitmentService {
 
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
-          // Backend returns PagedApiResponse with 'items' field
-          if (json is Map<String, dynamic> && json.containsKey('items')) {
-            final items = json['items'] as List<dynamic>;
-            return items
+          // Backend returns PagedApiResponse with 'content' field inside 'data'
+          if (json is Map<String, dynamic> && json.containsKey('content')) {
+            final content = json['content'] as List<dynamic>;
+            return content
                 .map((item) => ArchivedRecruitmentResponse.fromJson(
                       item as Map<String, dynamic>,
                     ))

@@ -4,7 +4,6 @@ import '../../core/models/channel_models.dart';
 import '../../core/models/group_models.dart';
 import '../../core/services/channel_service.dart';
 import '../../core/utils/permission_utils.dart';
-import 'current_group_provider.dart';
 import 'my_groups_provider.dart';
 
 /// Workspace View Type
