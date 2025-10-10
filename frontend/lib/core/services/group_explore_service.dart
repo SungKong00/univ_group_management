@@ -49,7 +49,7 @@ class GroupExploreService {
       if (filters != null) {
         // Multi-select group types (comma-separated)
         if (filters['groupTypes'] != null && (filters['groupTypes'] as List).isNotEmpty) {
-          queryParams['groupType'] = (filters['groupTypes'] as List).join(',');
+          queryParams['groupTypes'] = (filters['groupTypes'] as List).join(',');
         }
         // Recruiting filter (use 'recruiting' parameter name)
         if (filters['recruiting'] != null) {
@@ -60,6 +60,11 @@ class GroupExploreService {
           queryParams['tags'] = (filters['tags'] as List).join(',');
         }
       }
+
+      developer.log(
+        'API Request - Query Params: $queryParams',
+        name: 'GroupExploreService',
+      );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/explore',

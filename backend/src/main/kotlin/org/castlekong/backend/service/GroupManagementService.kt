@@ -309,11 +309,16 @@ class GroupManagementService(
         return groupRepository.findAll()
             .filter { it.deletedAt == null }
             .map { group ->
+                val memberCount = getGroupMemberCountWithHierarchy(group)
+                val isRecruiting = groupMapper.isGroupActuallyRecruiting(group)
+
                 GroupHierarchyNodeDto(
                     id = group.id,
                     parentId = group.parent?.id,
                     name = group.name,
                     type = group.groupType,
+                    isRecruiting = isRecruiting,
+                    memberCount = memberCount.toInt(),
                 )
             }
     }
@@ -335,7 +340,7 @@ class GroupManagementService(
     fun searchGroups(
         pageable: Pageable,
         recruiting: Boolean?,
-        groupType: GroupType?,
+        groupTypes: List<GroupType>,
         university: String?,
         college: String?,
         department: String?,
@@ -344,13 +349,16 @@ class GroupManagementService(
     ): Page<GroupSummaryResponse> {
         return groupRepository.search(
             recruiting,
-            groupType,
+            groupTypes,
+            groupTypes.size,
             university,
             college,
             department,
             q,
             tags,
             tags.size,
+            // 현재 시각 전달
+            LocalDateTime.now(),
             pageable,
         ).map { g ->
             val memberCount = getGroupMemberCountWithHierarchy(g)

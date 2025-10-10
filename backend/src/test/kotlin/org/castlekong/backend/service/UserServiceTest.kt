@@ -247,55 +247,60 @@ class UserServiceTest {
             val owner = TestDataFactory.createTestUser(id = 99L, email = "owner@test.com")
 
             // 그룹 계층 구조: 한신대학교 -> AI/SW계열 -> AI/SW학과
-            val university = TestDataFactory.createTestGroup(
-                id = 1L,
-                name = "한신대학교",
-                owner = owner,
-                university = "한신대학교",
-                groupType = GroupType.UNIVERSITY,
-            )
-            val college = TestDataFactory.createTestGroup(
-                id = 2L,
-                name = "AI/SW계열",
-                owner = owner,
-                parent = university,
-                university = "한신대학교",
-                college = "AI/SW계열",
-                groupType = GroupType.COLLEGE,
-            )
-            val department = TestDataFactory.createTestGroup(
-                id = 3L,
-                name = "AI/SW학과",
-                owner = owner,
-                parent = college,
-                university = "한신대학교",
-                college = "AI/SW계열",
-                department = "AI/SW학과",
-                groupType = GroupType.DEPARTMENT,
-            )
+            val university =
+                TestDataFactory.createTestGroup(
+                    id = 1L,
+                    name = "한신대학교",
+                    owner = owner,
+                    university = "한신대학교",
+                    groupType = GroupType.UNIVERSITY,
+                )
+            val college =
+                TestDataFactory.createTestGroup(
+                    id = 2L,
+                    name = "AI/SW계열",
+                    owner = owner,
+                    parent = university,
+                    university = "한신대학교",
+                    college = "AI/SW계열",
+                    groupType = GroupType.COLLEGE,
+                )
+            val department =
+                TestDataFactory.createTestGroup(
+                    id = 3L,
+                    name = "AI/SW학과",
+                    owner = owner,
+                    parent = college,
+                    university = "한신대학교",
+                    college = "AI/SW계열",
+                    department = "AI/SW학과",
+                    groupType = GroupType.DEPARTMENT,
+                )
 
-            val request = org.castlekong.backend.dto.SignupProfileRequest(
-                name = "테스트 사용자",
-                nickname = "닉네임",
-                college = "AI/SW계열",
-                dept = "AI/SW학과",
-                studentNo = "20201234",
-                academicYear = 1,
-                schoolEmail = "test@handshin.ac.kr",
-                role = "STUDENT",
-            )
+            val request =
+                org.castlekong.backend.dto.SignupProfileRequest(
+                    name = "테스트 사용자",
+                    nickname = "닉네임",
+                    college = "AI/SW계열",
+                    dept = "AI/SW학과",
+                    studentNo = "20201234",
+                    academicYear = 1,
+                    schoolEmail = "test@handshin.ac.kr",
+                    role = "STUDENT",
+                )
 
-            val updatedUser = user.copy(
-                name = request.name,
-                nickname = request.nickname,
-                college = request.college,
-                department = request.dept,
-                studentNo = request.studentNo,
-                academicYear = request.academicYear,
-                schoolEmail = request.schoolEmail,
-                globalRole = GlobalRole.STUDENT,
-                profileCompleted = true,
-            )
+            val updatedUser =
+                user.copy(
+                    name = request.name,
+                    nickname = request.nickname,
+                    college = request.college,
+                    department = request.dept,
+                    studentNo = request.studentNo,
+                    academicYear = request.academicYear,
+                    schoolEmail = request.schoolEmail,
+                    globalRole = GlobalRole.STUDENT,
+                    profileCompleted = true,
+                )
 
             every { userRepository.findById(userId) } returns Optional.of(user)
             every { userRepository.existsByNicknameIgnoreCase(request.nickname) } returns false
@@ -333,45 +338,49 @@ class UserServiceTest {
             val user = TestDataFactory.createTestUser(id = userId)
             val owner = TestDataFactory.createTestUser(id = 99L, email = "owner@test.com")
 
-            val university = TestDataFactory.createTestGroup(
-                id = 1L,
-                name = "한신대학교",
-                owner = owner,
-                university = "한신대학교",
-                groupType = GroupType.UNIVERSITY,
-            )
-            val college = TestDataFactory.createTestGroup(
-                id = 2L,
-                name = "AI/SW계열",
-                owner = owner,
-                parent = university,
-                university = "한신대학교",
-                college = "AI/SW계열",
-                groupType = GroupType.COLLEGE,
-            )
+            val university =
+                TestDataFactory.createTestGroup(
+                    id = 1L,
+                    name = "한신대학교",
+                    owner = owner,
+                    university = "한신대학교",
+                    groupType = GroupType.UNIVERSITY,
+                )
+            val college =
+                TestDataFactory.createTestGroup(
+                    id = 2L,
+                    name = "AI/SW계열",
+                    owner = owner,
+                    parent = university,
+                    university = "한신대학교",
+                    college = "AI/SW계열",
+                    groupType = GroupType.COLLEGE,
+                )
 
-            val request = org.castlekong.backend.dto.SignupProfileRequest(
-                name = "테스트 사용자",
-                nickname = "닉네임",
-                college = "AI/SW계열",
-                dept = null,
-                studentNo = "20201234",
-                academicYear = 1,
-                schoolEmail = "test@handshin.ac.kr",
-                role = "STUDENT",
-            )
+            val request =
+                org.castlekong.backend.dto.SignupProfileRequest(
+                    name = "테스트 사용자",
+                    nickname = "닉네임",
+                    college = "AI/SW계열",
+                    dept = null,
+                    studentNo = "20201234",
+                    academicYear = 1,
+                    schoolEmail = "test@handshin.ac.kr",
+                    role = "STUDENT",
+                )
 
-            val updatedUser = user.copy(
-                name = request.name,
-                nickname = request.nickname,
-                college = request.college,
-                department = request.dept,
-                studentNo = request.studentNo,
-                academicYear = request.academicYear,
-                schoolEmail = request.schoolEmail,
-                globalRole = GlobalRole.STUDENT,
-                profileCompleted = true,
-            )
+            val updatedUser =
+                user.copy(
+                    name = request.name,
+                    nickname = request.nickname,
+                    college = request.college,
+                    department = request.dept,
+                    studentNo = request.studentNo,
+                    academicYear = request.academicYear,
+                    schoolEmail = request.schoolEmail,
+                    globalRole = GlobalRole.STUDENT,
+                    profileCompleted = true,
+                )
 
             every { userRepository.findById(userId) } returns Optional.of(user)
             every { userRepository.existsByNicknameIgnoreCase(request.nickname) } returns false

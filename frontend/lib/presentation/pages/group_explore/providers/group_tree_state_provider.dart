@@ -109,8 +109,8 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
       id: node.id,
       name: node.name,
       groupType: _convertNodeTypeToGroupType(node.type),
-      memberCount: 0, // Hierarchy API doesn't provide member count
-      isRecruiting: false, // Hierarchy API doesn't provide recruiting status
+      memberCount: node.memberCount, // 실제 백엔드 데이터 사용
+      isRecruiting: node.isRecruiting, // 실제 백엔드 데이터 사용
       level: level,
       parentId: node.parentId,
       children: childNodes,
@@ -208,3 +208,73 @@ final treeErrorMessageProvider = Provider<String?>((ref) {
 final treeFiltersProvider = Provider<Map<String, dynamic>>((ref) {
   return ref.watch(groupTreeStateProvider.select((s) => s.filters));
 });
+
+/// Filtered root nodes provider - 필터를 적용한 트리 노드 제공
+final filteredTreeRootNodesProvider = Provider<List<GroupTreeNode>>((ref) {
+  final rootNodes = ref.watch(treeRootNodesProvider);
+  final filters = ref.watch(treeFiltersProvider);
+
+  // 필터가 모두 비활성화된 경우 전체 트리 반환
+  final showRecruiting = filters['showRecruiting'] == true;
+  final showAutonomous = filters['showAutonomous'] == true;
+  final showOfficial = filters['showOfficial'] == true;
+
+  if (!showRecruiting && !showAutonomous && !showOfficial) {
+    return rootNodes;
+  }
+
+  // 필터 적용: 재귀적으로 노드 필터링
+  return rootNodes.map((node) => _filterNodeRecursive(node, filters)).where((node) => node != null).cast<GroupTreeNode>().toList();
+});
+
+/// 재귀적으로 노드와 자식 노드를 필터링
+GroupTreeNode? _filterNodeRecursive(GroupTreeNode node, Map<String, dynamic> filters) {
+  final showRecruiting = filters['showRecruiting'] == true;
+  final showAutonomous = filters['showAutonomous'] == true;
+  final showOfficial = filters['showOfficial'] == true;
+
+  // 대학 그룹(UNIVERSITY, COLLEGE, DEPARTMENT)은 항상 표시
+  final isUniversityGroup = node.groupType == GroupType.university ||
+      node.groupType == GroupType.college ||
+      node.groupType == GroupType.department;
+
+  if (isUniversityGroup) {
+    // 대학 그룹은 항상 표시하지만 자식 노드는 필터링
+    final filteredChildren = node.children
+        .map((child) => _filterNodeRecursive(child, filters))
+        .where((child) => child != null)
+        .cast<GroupTreeNode>()
+        .toList();
+
+    return node.copyWith(children: filteredChildren);
+  }
+
+  // 자율/공식 그룹은 필터 적용
+  bool shouldShow = false;
+
+  if (showRecruiting && node.isRecruiting) {
+    shouldShow = true;
+  }
+
+  if (showAutonomous && node.groupType == GroupType.autonomous) {
+    shouldShow = true;
+  }
+
+  if (showOfficial && node.groupType == GroupType.official) {
+    shouldShow = true;
+  }
+
+  // 필터에 맞지 않으면 null 반환 (제외)
+  if (!shouldShow) {
+    return null;
+  }
+
+  // 자식 노드도 재귀적으로 필터링
+  final filteredChildren = node.children
+      .map((child) => _filterNodeRecursive(child, filters))
+      .where((child) => child != null)
+      .cast<GroupTreeNode>()
+      .toList();
+
+  return node.copyWith(children: filteredChildren);
+}

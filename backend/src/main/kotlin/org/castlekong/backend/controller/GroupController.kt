@@ -89,7 +89,8 @@ class GroupController(
     fun exploreGroups(
         pageable: Pageable,
         @RequestParam(required = false) recruiting: Boolean?,
-        @RequestParam(required = false) groupType: org.castlekong.backend.entity.GroupType?,
+        // 쉼표로 구분된 그룹 타입 목록 (예: "UNIVERSITY,COLLEGE,DEPARTMENT")
+        @RequestParam(required = false) groupTypes: String?,
         @RequestParam(required = false) university: String?,
         @RequestParam(required = false) college: String?,
         @RequestParam(required = false) department: String?,
@@ -97,13 +98,24 @@ class GroupController(
         // comma-separated
         @RequestParam(required = false) tags: String?,
     ): PagedApiResponse<GroupSummaryResponse> {
+        // Parse comma-separated groupTypes into List<GroupType>
+        val groupTypeList =
+            groupTypes?.split(',')
+                ?.mapNotNull { typeString ->
+                    try {
+                        org.castlekong.backend.entity.GroupType.valueOf(typeString.trim().uppercase())
+                    } catch (e: IllegalArgumentException) {
+                        null // Ignore invalid group types
+                    }
+                } ?: emptyList()
+
         val tagSet =
             tags?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet() ?: emptySet()
         val response =
             groupManagementService.searchGroups(
                 pageable,
                 recruiting,
-                groupType,
+                groupTypeList,
                 university,
                 college,
                 department,

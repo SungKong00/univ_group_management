@@ -13,10 +13,29 @@ import org.castlekong.backend.entity.GroupMember
 import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.entity.SubGroupRequest
 import org.castlekong.backend.entity.User
+import org.castlekong.backend.repository.GroupRecruitmentRepository
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 
 @Component
-class GroupMapper {
+class GroupMapper(
+    private val groupRecruitmentRepository: GroupRecruitmentRepository,
+) {
+    /**
+     * 그룹의 실제 모집 중 상태를 확인
+     * - 활성 모집 공고가 존재하는지 확인
+     * - 모집 공고 상태가 OPEN
+     * - 현재 시각이 모집 기간 내
+     */
+    fun isGroupActuallyRecruiting(group: Group): Boolean {
+        val now = LocalDateTime.now()
+        return groupRecruitmentRepository.findByGroupId(group.id).any { recruitment ->
+            recruitment.status == org.castlekong.backend.entity.RecruitmentStatus.OPEN &&
+                recruitment.recruitmentStartDate <= now &&
+                (recruitment.recruitmentEndDate == null || recruitment.recruitmentEndDate!! > now)
+        }
+    }
+
     fun toGroupResponse(group: Group): GroupResponse {
         return GroupResponse(
             id = group.id,
@@ -28,7 +47,8 @@ class GroupMapper {
             college = group.college,
             department = group.department,
             groupType = group.groupType,
-            isRecruiting = group.isRecruiting,
+            // 실제 모집 상태 확인
+            isRecruiting = isGroupActuallyRecruiting(group),
             maxMembers = group.maxMembers,
             tags = group.tags,
             createdAt = group.createdAt,
@@ -49,7 +69,8 @@ class GroupMapper {
             college = group.college,
             department = group.department,
             groupType = group.groupType,
-            isRecruiting = group.isRecruiting,
+            // 실제 모집 상태 확인
+            isRecruiting = isGroupActuallyRecruiting(group),
             memberCount = memberCount,
             tags = group.tags,
         )

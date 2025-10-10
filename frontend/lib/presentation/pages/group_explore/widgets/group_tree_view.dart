@@ -28,7 +28,7 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
 
   @override
   Widget build(BuildContext context) {
-    final rootNodes = ref.watch(treeRootNodesProvider);
+    final filteredNodes = ref.watch(filteredTreeRootNodesProvider); // 필터링된 노드 사용
     final isLoading = ref.watch(treeIsLoadingProvider);
     final errorMessage = ref.watch(treeErrorMessageProvider);
 
@@ -67,7 +67,7 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
       );
     }
 
-    if (rootNodes.isEmpty) {
+    if (filteredNodes.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -79,7 +79,7 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              '표시할 그룹이 없습니다',
+              '필터 조건에 맞는 그룹이 없습니다',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.neutral600,
                   ),
@@ -119,19 +119,13 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
               const GroupTreeFilterChipBar(),
               const SizedBox(height: AppSpacing.md),
 
-              // Tree Structure
-              ...rootNodes.map((node) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: GroupTreeNodeWidget(
-                    node: node,
-                    depth: 0,
-                    onToggle: (nodeId) {
-                      ref.read(groupTreeStateProvider.notifier).toggleNode(nodeId);
-                    },
-                  ),
-                );
-              }),
+              // Tree View
+              ...filteredNodes.map((node) => GroupTreeNodeWidget(
+                node: node,
+                onToggle: (nodeId) {
+                  ref.read(groupTreeStateProvider.notifier).toggleNode(nodeId);
+                },
+              )),
             ],
           ),
         );

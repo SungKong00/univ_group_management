@@ -15,6 +15,8 @@ class GroupHierarchyNode {
     required this.name,
     required this.type,
     this.parentId,
+    this.isRecruiting = false,
+    this.memberCount = 0,
   });
 
   factory GroupHierarchyNode.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,8 @@ class GroupHierarchyNode {
       parentId: (json['parentId'] as num?)?.toInt(),
       name: json['name'] as String? ?? '',
       type: _parseType(typeString),
+      isRecruiting: json['isRecruiting'] as bool? ?? false,
+      memberCount: (json['memberCount'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -32,6 +36,8 @@ class GroupHierarchyNode {
   final int? parentId;
   final String name;
   final GroupNodeType type;
+  final bool isRecruiting;
+  final int memberCount;
 
   static GroupNodeType _parseType(String value) {
     switch (value) {

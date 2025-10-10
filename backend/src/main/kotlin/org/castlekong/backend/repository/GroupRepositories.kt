@@ -35,9 +35,17 @@ interface GroupRepository : JpaRepository<Group, Long> {
         """
         SELECT DISTINCT g FROM Group g
         LEFT JOIN g.tags t
+        LEFT JOIN GroupRecruitment r ON r.group.id = g.id 
+            AND r.status = 'OPEN' 
+            AND r.recruitmentStartDate <= :now
+            AND (r.recruitmentEndDate IS NULL OR r.recruitmentEndDate > :now)
         WHERE (g.deletedAt IS NULL)
-        AND (:recruiting IS NULL OR g.isRecruiting = :recruiting)
-        AND (:groupType IS NULL OR g.groupType = :groupType)
+        AND (
+            :recruiting IS NULL 
+            OR (:recruiting = true AND r.id IS NOT NULL)
+            OR (:recruiting = false AND r.id IS NULL)
+        )
+        AND (:groupTypesSize = 0 OR g.groupType IN :groupTypes)
         AND (:university IS NULL OR g.university = :university)
         AND (:college IS NULL OR g.college = :college)
         AND (:department IS NULL OR g.department = :department)
@@ -51,13 +59,15 @@ interface GroupRepository : JpaRepository<Group, Long> {
     )
     fun search(
         @Param("recruiting") recruiting: Boolean?,
-        @Param("groupType") groupType: GroupType?,
+        @Param("groupTypes") groupTypes: List<GroupType>,
+        @Param("groupTypesSize") groupTypesSize: Int,
         @Param("university") university: String?,
         @Param("college") college: String?,
         @Param("department") department: String?,
         @Param("q") q: String?,
         @Param("tags") tags: Set<String>,
         @Param("tagsSize") tagsSize: Int,
+        @Param("now") now: java.time.LocalDateTime,
         pageable: Pageable,
     ): Page<Group>
 
