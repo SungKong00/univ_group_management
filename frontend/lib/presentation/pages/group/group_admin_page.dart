@@ -119,7 +119,7 @@ class _AdminContentView extends ConsumerWidget {
 
     // 모집 관리 섹션
     if (permissions.contains('RECRUITMENT_MANAGE')) {
-      sections.add(_buildRecruitmentSection(context));
+      sections.add(_buildRecruitmentSection(context, ref));
     }
 
     // 그룹 설정 섹션
@@ -288,7 +288,7 @@ class _AdminContentView extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecruitmentSection(BuildContext context) {
+  Widget _buildRecruitmentSection(BuildContext context, WidgetRef ref) {
     return _AdminSection(
       title: '모집 관리',
       description: '신규 멤버 모집 및 지원자 관리',
@@ -296,11 +296,10 @@ class _AdminContentView extends ConsumerWidget {
       actions: [
         ActionCard(
           icon: Icons.post_add_outlined,
-          title: '모집 공고 작성',
-          description: '새로운 모집 공고를 작성하세요',
-          onTap: () {
-            _showComingSoonDialog(context, '모집 공고 작성');
-          },
+          title: '모집 공고 관리',
+          description: '활성 공고를 확인하고 새 공고를 등록하세요',
+          onTap: () =>
+              ref.read(workspaceStateProvider.notifier).showRecruitmentManagementPage(),
         ),
         ActionCard(
           icon: Icons.inbox_outlined,
