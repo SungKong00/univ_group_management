@@ -138,7 +138,6 @@ object TestDataFactory {
         college: String? = null,
         department: String? = null,
         groupType: GroupType = GroupType.AUTONOMOUS,
-        isRecruiting: Boolean = false,
         maxMembers: Int? = null,
         tags: Set<String> = emptySet(),
     ): Group {
@@ -152,7 +151,6 @@ object TestDataFactory {
             college = college,
             department = department,
             groupType = groupType,
-            isRecruiting = isRecruiting,
             maxMembers = maxMembers,
             tags = tags,
         )

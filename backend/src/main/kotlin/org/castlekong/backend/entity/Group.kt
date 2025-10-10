@@ -44,8 +44,6 @@ data class Group(
     @Enumerated(EnumType.STRING)
     @Column(name = "group_type", nullable = false, length = 20)
     val groupType: GroupType = GroupType.AUTONOMOUS,
-    @Column(name = "is_recruiting", nullable = false)
-    val isRecruiting: Boolean = false,
     @Column(name = "max_members")
     val maxMembers: Int? = null,
     @Column(name = "default_channels_created", nullable = false)

@@ -1,5 +1,9 @@
 # 모집 중 상태 판단 로직 수정
 
+> **⚠️ DEPRECATED (2025-10-11)**: 이 문서에서 설명하는 `is_recruiting` / `isRecruiting` 필드는 프로젝트에서 완전히 제거되었습니다.
+> 모집 상태는 이제 `GroupRecruitment` 엔티티의 상태만으로 판단합니다.
+> 이 문서는 과거 문제 해결 기록으로만 보관됩니다.
+
 ## 날짜
 2025-10-11
 
@@ -262,4 +266,3 @@ fun updateRecruitingStatus() {
 
 ## 작성자
 GitHub Copilot (AI Assistant)
-

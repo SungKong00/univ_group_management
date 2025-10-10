@@ -81,7 +81,6 @@ class GroupManagementService(
                 college = request.college,
                 department = request.department,
                 groupType = request.groupType,
-                isRecruiting = request.isRecruiting,
                 maxMembers = request.maxMembers,
                 tags = request.tags,
             )
@@ -222,7 +221,6 @@ class GroupManagementService(
                 description = request.description ?: group.description,
                 profileImageUrl = request.profileImageUrl ?: group.profileImageUrl,
                 groupType = request.groupType ?: group.groupType,
-                isRecruiting = request.isRecruiting ?: group.isRecruiting,
                 maxMembers = request.maxMembers ?: group.maxMembers,
                 tags = request.tags ?: group.tags,
                 updatedAt = LocalDateTime.now(),

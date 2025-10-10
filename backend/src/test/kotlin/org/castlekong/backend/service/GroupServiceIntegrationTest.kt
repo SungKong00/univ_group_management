@@ -67,7 +67,6 @@ class GroupServiceIntegrationTest {
             CreateGroupRequest(
                 name = "테스트 그룹",
                 description = "테스트용 그룹입니다",
-                isRecruiting = true,
                 maxMembers = 50,
                 tags = setOf("스터디", "개발"),
             )
@@ -80,7 +79,7 @@ class GroupServiceIntegrationTest {
         assertThat(response.name).isEqualTo("테스트 그룹")
         assertThat(response.description).isEqualTo("테스트용 그룹입니다")
         assertThat(response.owner.id).isEqualTo(testUser.id)
-        assertThat(response.isRecruiting).isTrue()
+        // isRecruiting은 실제 모집 공고로 판단되므로 테스트에서 제외
         assertThat(response.maxMembers).isEqualTo(50)
         assertThat(response.tags).containsExactlyInAnyOrder("스터디", "개발")
 

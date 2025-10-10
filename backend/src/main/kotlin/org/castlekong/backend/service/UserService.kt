@@ -33,6 +33,7 @@ class UserService(
     private val groupJoinRequestRepository: GroupJoinRequestRepository,
     private val subGroupRequestRepository: SubGroupRequestRepository,
     private val groupMemberRepository: GroupMemberRepository,
+    private val groupMapper: GroupMapper, // GroupMapper 추가
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -305,46 +306,7 @@ class UserService(
             }
         return requests.map { r ->
             val memberCount = groupMemberRepository.countByGroupId(r.group.id).toInt()
-            val grp = r.group
-            GroupJoinRequestResponse(
-                id = r.id,
-                group =
-                    GroupSummaryResponse(
-                        id = grp.id,
-                        name = grp.name,
-                        description = grp.description,
-                        profileImageUrl = grp.profileImageUrl,
-                        university = grp.university,
-                        college = grp.college,
-                        department = grp.department,
-                        groupType = grp.groupType,
-                        isRecruiting = grp.isRecruiting,
-                        memberCount = memberCount,
-                        tags = grp.tags,
-                    ),
-                user =
-                    UserSummaryResponse(
-                        id = r.user.id,
-                        name = r.user.name,
-                        email = r.user.email,
-                        profileImageUrl = r.user.profileImageUrl,
-                    ),
-                requestMessage = r.requestMessage,
-                status = r.status.name,
-                responseMessage = r.responseMessage,
-                reviewedBy =
-                    r.reviewedBy?.let { rb ->
-                        UserSummaryResponse(
-                            id = rb.id,
-                            name = rb.name,
-                            email = rb.email,
-                            profileImageUrl = rb.profileImageUrl,
-                        )
-                    },
-                reviewedAt = r.reviewedAt,
-                createdAt = r.createdAt,
-                updatedAt = r.updatedAt,
-            )
+            groupMapper.toGroupJoinRequestResponse(r, memberCount)
         }
     }
 
@@ -369,52 +331,7 @@ class UserService(
             }
         return requests.map { r ->
             val memberCount = groupMemberRepository.countByGroupId(r.parentGroup.id).toInt()
-            val pg = r.parentGroup
-            SubGroupRequestResponse(
-                id = r.id,
-                requester =
-                    UserSummaryResponse(
-                        id = r.requester.id,
-                        name = r.requester.name,
-                        email = r.requester.email,
-                        profileImageUrl = r.requester.profileImageUrl,
-                    ),
-                parentGroup =
-                    GroupSummaryResponse(
-                        id = pg.id,
-                        name = pg.name,
-                        description = pg.description,
-                        profileImageUrl = pg.profileImageUrl,
-                        university = pg.university,
-                        college = pg.college,
-                        department = pg.department,
-                        groupType = pg.groupType,
-                        isRecruiting = pg.isRecruiting,
-                        memberCount = memberCount,
-                        tags = pg.tags,
-                    ),
-                requestedGroupName = r.requestedGroupName,
-                requestedGroupDescription = r.requestedGroupDescription,
-                requestedUniversity = r.requestedUniversity,
-                requestedCollege = r.requestedCollege,
-                requestedDepartment = r.requestedDepartment,
-                requestedGroupType = r.requestedGroupType,
-                requestedMaxMembers = r.requestedMaxMembers,
-                status = r.status.name,
-                responseMessage = r.responseMessage,
-                reviewedBy =
-                    r.reviewedBy?.let { rb ->
-                        UserSummaryResponse(
-                            id = rb.id,
-                            name = rb.name,
-                            email = rb.email,
-                            profileImageUrl = rb.profileImageUrl,
-                        )
-                    },
-                reviewedAt = r.reviewedAt,
-                createdAt = r.createdAt,
-                updatedAt = r.updatedAt,
-            )
+            groupMapper.toSubGroupRequestResponse(r, memberCount)
         }
     }
 

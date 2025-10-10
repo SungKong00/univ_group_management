@@ -148,9 +148,6 @@ data class Group(
     val department: String? = null,
 
     // --- 운영 정보 ---
-    @Column(name = "is_recruiting", nullable = false)
-    val isRecruiting: Boolean = false, // 모집중 여부
-
     @Column(name = "max_members")
     val maxMembers: Int? = null, // 최대 멤버 수
 
@@ -489,7 +486,6 @@ ORDER BY p.created_at DESC;
 -   **복합 인덱스**: `WHERE` 절에서 자주 함께 사용되는 컬럼들을 묶어 복합 인덱스를 생성합니다. (예: `group_members(group_id, user_id)`)
 -   **정렬 순서 고려**: `ORDER BY` 절에 사용되는 컬럼(특히 `created_at DESC`)에 대한 인덱스를 생성하여 정렬 성능을 최적화합니다.
 -   **소프트 삭제 고려**: `deleted_at IS NULL` 조건을 포함하는 부분 인덱스를 생성하여 활성 레코드 조회 속도를 높입니다.
--   **조회 조건 최적화**: `is_recruiting`, `status` 등 조회 조건으로 자주 사용되는 컬럼에 인덱스를 추가합니다.
 
 ```sql
 -- V2__add_performance_indexes.sql
@@ -499,7 +495,6 @@ CREATE INDEX IF NOT EXISTS idx_groups_parent_id ON groups (parent_id);
 CREATE INDEX IF NOT EXISTS idx_groups_owner_id ON groups (owner_id);
 CREATE INDEX IF NOT EXISTS idx_groups_deleted_at ON groups (deleted_at);
 CREATE INDEX IF NOT EXISTS idx_groups_university_college_dept ON groups (university, college, department);
-CREATE INDEX IF NOT EXISTS idx_groups_is_recruiting ON groups (is_recruiting);
 CREATE INDEX IF NOT EXISTS idx_groups_group_type ON groups (group_type);
 CREATE INDEX IF NOT EXISTS idx_groups_created_at ON groups (created_at);
 

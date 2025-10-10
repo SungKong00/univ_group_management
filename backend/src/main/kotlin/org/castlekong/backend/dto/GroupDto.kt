@@ -32,7 +32,6 @@ data class CreateGroupRequest(
     val college: String? = null,
     val department: String? = null,
     val groupType: GroupType = GroupType.AUTONOMOUS,
-    val isRecruiting: Boolean = false,
     @field:Min(value = 1, message = "최대 멤버 수는 1 이상이어야 합니다")
     val maxMembers: Int? = null,
     val tags: Set<String> = emptySet(),
@@ -43,7 +42,6 @@ data class UpdateGroupRequest(
     val description: String? = null,
     val profileImageUrl: String? = null,
     val groupType: GroupType? = null,
-    val isRecruiting: Boolean? = null,
     val maxMembers: Int? = null,
     val tags: Set<String>? = null,
 )
