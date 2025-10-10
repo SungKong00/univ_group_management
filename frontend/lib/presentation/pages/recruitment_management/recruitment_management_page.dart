@@ -673,28 +673,30 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
                   child: const Text('취소'),
                 ),
               const Spacer(),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _handleSubmit,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.brand,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.xs,
+              Flexible(
+                child: FilledButton(
+                  onPressed: _isSubmitting ? null : _handleSubmit,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.brand,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
                   ),
-                ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
-                        ),
-                      )
-                    : Text(widget.submitLabel),
+                        )
+                      : Text(widget.submitLabel),
+                ),
               ),
             ],
           ),
