@@ -7,11 +7,13 @@ import '../../group_explore/providers/group_explore_state_provider.dart';
 import '../../group_explore/widgets/group_search_bar.dart';
 import '../../group_explore/widgets/group_filter_chip_bar.dart';
 import '../../group_explore/widgets/group_explore_list.dart';
+import '../../group_explore/widgets/group_tree_view.dart';
 
 /// Group Explore Content Widget
 ///
-/// Displays group exploration interface (search, filters, list) without AppBar.
-/// Used within HomePage as a view state.
+/// Displays group exploration interface with two tabs:
+/// - List View: Search, filters, and flat list of groups
+/// - Tree View: Hierarchical tree structure of groups
 class GroupExploreContentWidget extends ConsumerStatefulWidget {
   const GroupExploreContentWidget({super.key});
 
@@ -21,10 +23,14 @@ class GroupExploreContentWidget extends ConsumerStatefulWidget {
 }
 
 class _GroupExploreContentWidgetState
-    extends ConsumerState<GroupExploreContentWidget> {
+    extends ConsumerState<GroupExploreContentWidget>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+
     // Initialize state: load first page of groups
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(groupExploreStateProvider.notifier).initialize();
@@ -32,67 +38,131 @@ class _GroupExploreContentWidgetState
   }
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
     final errorMessage = ref.watch(exploreErrorMessageProvider);
 
-    return SingleChildScrollView(
-      // Use SingleChildScrollView for consistent behavior with HomePage
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? AppSpacing.lg : AppSpacing.md,
-          vertical: isDesktop ? AppSpacing.offsetMax : AppSpacing.offsetMin,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar
-            const GroupSearchBar(),
-            const SizedBox(height: AppSpacing.sm),
-
-            // Filter Chips
-            const GroupFilterChipBar(),
-            const SizedBox(height: AppSpacing.sm),
-
-            // Error Banner (if any)
-            if (errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppRadius.button),
-                  border: Border.all(color: AppColors.error.withOpacity(0.3)),
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? AppSpacing.lg : AppSpacing.md,
+        vertical: isDesktop ? AppSpacing.md : AppSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Tab Bar
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.neutral100,
+              borderRadius: BorderRadius.circular(AppRadius.button),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppRadius.button),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              labelColor: AppColors.brand,
+              unselectedLabelColor: AppColors.neutral600,
+              labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+              tabs: const [
+                Tab(
+                  icon: Icon(Icons.view_list),
+                  text: '리스트',
                 ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      color: AppColors.error,
-                      size: 20,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: Text(
-                        errorMessage,
-                        style: AppTheme.bodyMediumTheme(context).copyWith(
-                          color: AppColors.error,
-                        ),
+                Tab(
+                  icon: Icon(Icons.account_tree),
+                  text: '계층 구조',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // Tab View
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // List View
+                _buildListView(context, isDesktop, errorMessage),
+
+                // Tree View
+                const GroupTreeView(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListView(BuildContext context, bool isDesktop, String? errorMessage) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Search Bar
+          const GroupSearchBar(),
+          const SizedBox(height: AppSpacing.sm),
+
+          // Filter Chips
+          const GroupFilterChipBar(),
+          const SizedBox(height: AppSpacing.sm),
+
+          // Error Banner (if any)
+          if (errorMessage != null) ...[
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppRadius.button),
+                border: Border.all(color: AppColors.error.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: AppColors.error,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      errorMessage,
+                      style: AppTheme.bodyMediumTheme(context).copyWith(
+                        color: AppColors.error,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-
-            // Group List (with infinite scroll)
-            // Note: Wrapped in SizedBox with fixed height for scrolling within SingleChildScrollView
-            SizedBox(
-              height: MediaQuery.of(context).size.height - 300,
-              child: const GroupExploreList(),
             ),
+            const SizedBox(height: AppSpacing.sm),
           ],
-        ),
+
+          // Group List (with infinite scroll)
+          SizedBox(
+            height: MediaQuery.of(context).size.height - 350,
+            child: const GroupExploreList(),
+          ),
+        ],
       ),
     );
   }

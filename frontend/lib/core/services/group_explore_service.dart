@@ -65,6 +65,17 @@ class GroupExploreService {
 
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          // API returns { content: [], pagination: {} }
+          if (json is Map<String, dynamic> && json.containsKey('content')) {
+            final content = json['content'];
+            if (content is List) {
+              return content
+                  .map((item) =>
+                      GroupSummaryResponse.fromJson(item as Map<String, dynamic>))
+                  .toList();
+            }
+          }
+          // Fallback for direct array response
           if (json is List) {
             return json
                 .map((item) =>
