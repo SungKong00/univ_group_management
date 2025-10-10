@@ -22,15 +22,6 @@ class GroupTreeFilterChipBar extends ConsumerWidget {
           spacing: AppSpacing.xxs,
           runSpacing: AppSpacing.xxs,
           children: [
-            // Recruiting Filter
-            _buildFilterChip(
-              context,
-              ref,
-              label: '모집중',
-              filterKey: 'showRecruiting',
-              isSelected: filters['showRecruiting'] == true,
-            ),
-
             // Autonomous Group Filter
             _buildFilterChip(
               context,

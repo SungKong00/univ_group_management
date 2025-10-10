@@ -81,22 +81,44 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
 
   // 🆕 사용자가 속한 그룹과 그 상위 그룹들을 자동으로 펼치는 함수
   List<GroupTreeNode> _expandUserGroups(List<GroupTreeNode> nodes, Set<int> userGroupIds) {
-    return nodes.map((node) => _expandNodeIfNeeded(node, userGroupIds)).toList();
+    // 🆕 동일 계층에서 사용자 그룹을 우선 표시
+    final sortedNodes = _sortNodesByUserPriority(nodes, userGroupIds);
+    return sortedNodes.map((node) => _expandNodeIfNeeded(node, userGroupIds)).toList();
+  }
+
+  // 🆕 동일 계층 내에서 사용자 그룹을 우선 표시하도록 정렬
+  List<GroupTreeNode> _sortNodesByUserPriority(List<GroupTreeNode> nodes, Set<int> userGroupIds) {
+    final userGroups = <GroupTreeNode>[];
+    final otherGroups = <GroupTreeNode>[];
+
+    for (final node in nodes) {
+      if (userGroupIds.contains(node.id)) {
+        userGroups.add(node);
+      } else {
+        otherGroups.add(node);
+      }
+    }
+
+    // 사용자 그룹을 먼저, 나머지는 원래 순서대로
+    return [...userGroups, ...otherGroups];
   }
 
   // 🆕 노드와 그 자식들을 재귀적으로 확인하여 펼칠지 결정
   GroupTreeNode _expandNodeIfNeeded(GroupTreeNode node, Set<int> userGroupIds) {
-    // 자식 노드들을 먼저 처리
+    // 자식 노드들을 먼저 처리 (재귀)
     final expandedChildren = node.children
         .map((child) => _expandNodeIfNeeded(child, userGroupIds))
         .toList();
+
+    // 🆕 자식 노드들도 사용자 그룹 우선으로 정렬
+    final sortedChildren = _sortNodesByUserPriority(expandedChildren, userGroupIds);
 
     // 현재 노드 또는 자손 노드 중 하나라도 사용자가 속한 그룹이 있는지 확인
     final shouldExpand = userGroupIds.contains(node.id) ||
                         _hasUserGroupInDescendants(node, userGroupIds);
 
     return node.copyWith(
-      children: expandedChildren,
+      children: sortedChildren,
       isExpanded: shouldExpand,
     );
   }
