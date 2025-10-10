@@ -142,15 +142,33 @@ class _AdminContentView extends ConsumerWidget {
         builder: (context, constraints) {
           // 실제 사용 가능한 너비(사이드바 제외)를 기준으로 계산
           final availableWidth = constraints.maxWidth;
-          final sectionWidth = (availableWidth - AppSpacing.md) / 2;
 
-          return Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.md,
-            children: sections
-                .map((section) => SizedBox(width: sectionWidth, child: section))
-                .toList(),
-          );
+          // 너비가 충분할 때만 2열, 좁아지면 1열로 전환
+          // 각 섹션의 최소 너비를 500px로 설정 (카드들이 제대로 보이기 위한 최소 공간)
+          const minSectionWidth = 325.0;
+          final shouldUseDoubleColumn = availableWidth >= (minSectionWidth * 2 + AppSpacing.md);
+
+          if (shouldUseDoubleColumn) {
+            // 2열 레이아웃
+            final sectionWidth = (availableWidth - AppSpacing.md) / 2;
+            return Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+              children: sections
+                  .map((section) => SizedBox(width: sectionWidth, child: section))
+                  .toList(),
+            );
+          } else {
+            // 1열 레이아웃 (너비가 좁을 때)
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children:
+                  sections
+                      .expand((section) => [section, SizedBox(height: AppSpacing.md)])
+                      .toList()
+                    ..removeLast(), // 마지막 SizedBox 제거
+            );
+          }
         },
       );
     }
