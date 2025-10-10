@@ -10,6 +10,8 @@ import '../../../core/navigation/back_button_handler.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/services/group_service.dart';
 import '../../providers/workspace_state_provider.dart';
+import '../../../core/models/group_models.dart';
+import '../../providers/my_groups_provider.dart';
 
 class BottomNavigation extends ConsumerWidget {
   const BottomNavigation({super.key});
@@ -53,38 +55,53 @@ class BottomNavigation extends ConsumerWidget {
     final navigationController = ref.read(
       navigationControllerProvider.notifier,
     );
+    final navigationState = ref.read(navigationControllerProvider);
 
     if (config.route == AppConstants.workspaceRoute) {
       navigationController.enterWorkspace();
 
-      try {
-        developer.log('Workspace tab clicked', name: 'BottomNav');
+      final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+      final targetGroupId = _resolveLastWorkspaceGroupId(
+        navigationState,
+        workspaceNotifier.lastGroupId,
+      );
 
-        // Set loading state
+      if (targetGroupId != null) {
+        workspaceNotifier.clearError();
+        NavigationHelper.navigateWithSync(
+          context,
+          ref,
+          '/workspace/$targetGroupId',
+        );
+        return;
+      }
+
+      try {
         ref.read(workspaceStateProvider.notifier).setLoadingState(true);
 
-        developer.log('Fetching user groups...', name: 'BottomNav');
-
-        // Fetch top-level group and navigate
+        final groupsAsync = ref.read(myGroupsProvider);
         final groupService = GroupService();
-        final myGroups = await groupService.getMyGroups();
+        GroupMembership? topGroup;
 
-        developer.log('Groups fetched: ${myGroups.length}', name: 'BottomNav');
-        final topGroup = groupService.getTopLevelGroup(myGroups);
+        groupsAsync.whenOrNull(
+          data: (groups) {
+            topGroup = groupService.getTopLevelGroup(groups);
+          },
+        );
+
+        topGroup ??= groupService.getTopLevelGroup(
+          await groupService.getMyGroups(),
+        );
 
         if (topGroup != null && context.mounted) {
-          developer.log(
-            'Navigating to workspace/${topGroup.id}',
-            name: 'BottomNav',
+          workspaceNotifier.clearError();
+          NavigationHelper.navigateWithSync(
+            context,
+            ref,
+            '/workspace/${topGroup!.id}',
           );
-          ref.read(workspaceStateProvider.notifier).clearError();
-          ref
-              .read(workspaceStateProvider.notifier)
-              .enterWorkspace(topGroup.id.toString(), membership: topGroup);
-          context.go('/workspace/${topGroup.id}');
         } else if (context.mounted) {
-          developer.log('No groups available', name: 'BottomNav');
-          ref.read(workspaceStateProvider.notifier).setError('소속된 그룹이 없습니다');
+          workspaceNotifier.setError('소속된 그룹이 없습니다');
           NavigationHelper.navigateWithSync(context, ref, config.route);
         }
       } catch (e, stackTrace) {
@@ -121,5 +138,35 @@ class BottomNavigation extends ConsumerWidget {
       navigationController.exitWorkspace();
       NavigationHelper.navigateWithSync(context, ref, config.route);
     }
+  }
+
+  String? _resolveLastWorkspaceGroupId(
+    NavigationState navigationState,
+    String? cachedGroupId,
+  ) {
+    final history = navigationState.tabHistories[NavigationTab.workspace] ?? [];
+    if (history.isNotEmpty) {
+      final groupId = _parseGroupId(history.last.route);
+      if (groupId != null) {
+        return groupId;
+      }
+    }
+
+    if (navigationState.currentTab == NavigationTab.workspace) {
+      final groupId = _parseGroupId(navigationState.currentRoute);
+      if (groupId != null) {
+        return groupId;
+      }
+    }
+
+    return cachedGroupId;
+  }
+
+  String? _parseGroupId(String route) {
+    final segments = Uri.parse(route).pathSegments;
+    if (segments.length >= 2 && segments.first == 'workspace') {
+      return segments[1];
+    }
+    return null;
   }
 }

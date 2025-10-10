@@ -12,6 +12,8 @@ import '../../../core/navigation/back_button_handler.dart';
 import '../../../core/services/group_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/workspace_state_provider.dart';
+import '../../../core/models/group_models.dart';
+import '../../providers/my_groups_provider.dart';
 import '../user/user_info_card.dart';
 
 // 기존 ConsumerWidget -> 애니메이션(AnimatedSize 등) 제어 위해 Stateful 로 변경
@@ -277,38 +279,54 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation>
     final navigationController = ref.read(
       navigationControllerProvider.notifier,
     );
+    final navigationState = ref.read(navigationControllerProvider);
 
     if (config.route == AppConstants.workspaceRoute) {
       navigationController.enterWorkspace();
 
       try {
-        developer.log('Workspace tab clicked', name: 'SidebarNav');
-
-        // Set loading state
         ref.read(workspaceStateProvider.notifier).setLoadingState(true);
 
-        developer.log('Fetching user groups...', name: 'SidebarNav');
+        final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+        final targetGroupId = _resolveLastWorkspaceGroupId(
+          navigationState,
+          workspaceNotifier.lastGroupId,
+        );
 
-        // Fetch top-level group and navigate
+        if (targetGroupId != null && context.mounted) {
+          workspaceNotifier.clearError();
+          NavigationHelper.navigateWithSync(
+            context,
+            ref,
+            '/workspace/$targetGroupId',
+          );
+          return;
+        }
+
+        final groupsAsync = ref.read(myGroupsProvider);
         final groupService = GroupService();
-        final myGroups = await groupService.getMyGroups();
+        GroupMembership? topGroup;
 
-        developer.log('Groups fetched: ${myGroups.length}', name: 'SidebarNav');
-        final topGroup = groupService.getTopLevelGroup(myGroups);
+        groupsAsync.maybeWhen(
+          data: (groups) {
+            topGroup = groupService.getTopLevelGroup(groups);
+          },
+          orElse: () {},
+        );
+
+        topGroup ??= groupService.getTopLevelGroup(
+          await groupService.getMyGroups(),
+        );
 
         if (topGroup != null && context.mounted) {
-          developer.log(
-            'Navigating to workspace/${topGroup.id}',
-            name: 'SidebarNav',
+          workspaceNotifier.clearError();
+          NavigationHelper.navigateWithSync(
+            context,
+            ref,
+            '/workspace/${topGroup!.id}',
           );
-          ref.read(workspaceStateProvider.notifier).clearError();
-          ref
-              .read(workspaceStateProvider.notifier)
-              .enterWorkspace(topGroup.id.toString(), membership: topGroup);
-          context.go('/workspace/${topGroup.id}');
         } else if (context.mounted) {
-          developer.log('No groups available', name: 'SidebarNav');
-          ref.read(workspaceStateProvider.notifier).setError('소속된 그룹이 없습니다');
+          workspaceNotifier.setError('소속된 그룹이 없습니다');
           NavigationHelper.navigateWithSync(context, ref, config.route);
         }
       } catch (e, stackTrace) {
@@ -345,5 +363,35 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation>
       navigationController.exitWorkspace();
       NavigationHelper.navigateWithSync(context, ref, config.route);
     }
+  }
+
+  String? _resolveLastWorkspaceGroupId(
+    NavigationState navigationState,
+    String? cachedGroupId,
+  ) {
+    final history = navigationState.tabHistories[NavigationTab.workspace] ?? [];
+    if (history.isNotEmpty) {
+      final groupId = _parseGroupId(history.last.route);
+      if (groupId != null) {
+        return groupId;
+      }
+    }
+
+    if (navigationState.currentTab == NavigationTab.workspace) {
+      final groupId = _parseGroupId(navigationState.currentRoute);
+      if (groupId != null) {
+        return groupId;
+      }
+    }
+
+    return cachedGroupId;
+  }
+
+  String? _parseGroupId(String route) {
+    final segments = Uri.parse(route).pathSegments;
+    if (segments.length >= 2 && segments.first == 'workspace') {
+      return segments[1];
+    }
+    return null;
   }
 }

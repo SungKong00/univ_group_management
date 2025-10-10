@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/models/group_models.dart';
+import '../../../core/navigation/back_button_handler.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/my_groups_provider.dart';
@@ -223,7 +223,11 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
           ref
               .read(workspaceStateProvider.notifier)
               .enterWorkspace(group.id.toString(), membership: group);
-          context.go('/workspace/${group.id}');
+          NavigationHelper.navigateWithSync(
+            context,
+            ref,
+            '/workspace/${group.id}',
+          );
         }
         _toggleDropdown();
       },

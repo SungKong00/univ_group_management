@@ -179,6 +179,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   final Ref _ref;
   final ChannelService _channelService = ChannelService();
   final Map<String, WorkspaceSnapshot> _workspaceSnapshots = {};
+  String? _lastGroupId;
+
+  String? get lastGroupId => _lastGroupId;
+  WorkspaceSnapshot? get lastSnapshot =>
+      _lastGroupId != null ? _workspaceSnapshots[_lastGroupId!] : null;
 
   void _saveCurrentWorkspaceSnapshot() {
     final groupId = state.selectedGroupId;
@@ -195,6 +200,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       previousView: state.previousView,
       channelHistory: List<String>.from(state.channelHistory),
     );
+
+    _lastGroupId = groupId;
   }
 
   WorkspaceSnapshot? _getSnapshot(String groupId) {
@@ -242,6 +249,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
           snapshot.isNarrowDesktopCommentsFullscreen,
       previousView: snapshot.previousView,
     );
+
+    _lastGroupId = state.selectedGroupId;
   }
 
   void cacheCurrentWorkspaceState() {
@@ -254,15 +263,15 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     GroupMembership? membership,
   }) {
     final isSameGroup = state.selectedGroupId == groupId;
+    _lastGroupId = groupId;
 
     if (!isSameGroup && state.selectedGroupId != null) {
       _saveCurrentWorkspaceSnapshot();
     }
 
     final snapshot = channelId != null ? null : _getSnapshot(groupId);
-    final shouldRestoreExistingState = isSameGroup &&
-        channelId == null &&
-        state.channels.isNotEmpty;
+    final shouldRestoreExistingState =
+        isSameGroup && channelId == null && state.channels.isNotEmpty;
 
     if (shouldRestoreExistingState) {
       if (snapshot != null) {
@@ -281,8 +290,9 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       isCommentsVisible: hasMobileState
           ? state.isCommentsVisible
           : (snapshot?.isCommentsVisible ?? false),
-      selectedPostId:
-          hasMobileState ? state.selectedPostId : snapshot?.selectedPostId,
+      selectedPostId: hasMobileState
+          ? state.selectedPostId
+          : snapshot?.selectedPostId,
       currentView: snapshot?.view ?? WorkspaceView.channel,
       mobileView: hasMobileState
           ? state.mobileView
