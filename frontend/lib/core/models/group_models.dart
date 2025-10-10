@@ -1,6 +1,13 @@
 enum GroupNodeType { university, college, department, other }
 
-enum GroupType { department, club, society, studyGroup, project }
+enum GroupType {
+  autonomous, // AUTONOMOUS
+  official, // OFFICIAL
+  university, // UNIVERSITY
+  college, // COLLEGE
+  department, // DEPARTMENT
+  lab, // LAB
+}
 
 class GroupHierarchyNode {
   GroupHierarchyNode({

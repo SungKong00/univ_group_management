@@ -100,6 +100,15 @@ final applicationListProvider = FutureProvider.family<
   return await service.getApplications(recruitmentId);
 });
 
+/// Recruitment Detail Provider
+///
+/// Fetches detailed information about a specific recruitment.
+final recruitmentDetailProvider =
+    FutureProvider.family<RecruitmentResponse, int>((ref, recruitmentId) async {
+  final service = RecruitmentService();
+  return await service.getRecruitment(recruitmentId);
+});
+
 /// Application Detail Provider
 ///
 /// Fetches detailed information about a specific application.

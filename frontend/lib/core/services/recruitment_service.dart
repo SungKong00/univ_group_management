@@ -69,6 +69,56 @@ class RecruitmentService {
     }
   }
 
+  /// Get a specific recruitment by ID
+  ///
+  /// GET /api/recruitments/{recruitmentId}
+  /// Returns detailed recruitment information
+  Future<RecruitmentResponse> getRecruitment(int recruitmentId) async {
+    try {
+      developer.log(
+        'Fetching recruitment: $recruitmentId',
+        name: 'RecruitmentService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/recruitments/$recruitmentId',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => RecruitmentResponse.fromJson(json as Map<String, dynamic>),
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched recruitment: $recruitmentId',
+            name: 'RecruitmentService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch recruitment: ${apiResponse.message}',
+            name: 'RecruitmentService',
+            level: 900,
+          );
+          throw Exception(
+            apiResponse.message ?? 'Failed to fetch recruitment',
+          );
+        }
+      }
+
+      throw Exception('Empty response from server');
+    } catch (e) {
+      developer.log(
+        'Error fetching recruitment: $e',
+        name: 'RecruitmentService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
   /// Get active recruitment for a group
   ///
   /// GET /api/groups/{groupId}/recruitments
