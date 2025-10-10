@@ -17,12 +17,12 @@ abstract class RoleRepository {
   );
   Future<GroupRole> updateRole(
     int groupId,
-    String roleId,
+    int roleId,
     String name,
     String description,
     List<String> permissions,
   );
-  Future<void> deleteRole(int groupId, String roleId);
+  Future<void> deleteRole(int groupId, int roleId);
 }
 
 /// API 구현체
@@ -133,7 +133,7 @@ class ApiRoleRepository implements RoleRepository {
   @override
   Future<GroupRole> updateRole(
     int groupId,
-    String roleId,
+    int roleId,
     String name,
     String description,
     List<String> permissions,
@@ -184,7 +184,7 @@ class ApiRoleRepository implements RoleRepository {
   }
 
   @override
-  Future<void> deleteRole(int groupId, String roleId) async {
+  Future<void> deleteRole(int groupId, int roleId) async {
     try {
       developer.log(
         'Deleting role $roleId from group $groupId',
@@ -235,7 +235,7 @@ class ApiRoleRepository implements RoleRepository {
   /// }
   GroupRole _parseGroupRole(Map<String, dynamic> json) {
     return GroupRole(
-      id: (json['id'] as num).toString(), // id를 문자열로 변환
+      id: (json['id'] as num).toInt(), // id를 int로 변환
       name: json['name'] as String,
       description: json['description'] as String? ?? '',
       isSystemRole: json['isSystemRole'] as bool? ?? false,
@@ -256,7 +256,7 @@ class MockRoleRepository implements RoleRepository {
   final Map<int, List<GroupRole>> _rolesByGroup = {
     1: [
       GroupRole(
-        id: 'owner',
+        id: 1,
         name: '그룹장',
         description: '그룹 소유자 (모든 권한)',
         isSystemRole: true,
@@ -270,7 +270,7 @@ class MockRoleRepository implements RoleRepository {
         memberCount: 1,
       ),
       GroupRole(
-        id: 'advisor',
+        id: 2,
         name: '교수',
         description: '자문 역할 (대부분의 권한)',
         isSystemRole: true,
@@ -284,7 +284,7 @@ class MockRoleRepository implements RoleRepository {
         memberCount: 1,
       ),
       GroupRole(
-        id: 'member',
+        id: 3,
         name: '멤버',
         description: '일반 멤버',
         isSystemRole: true,
@@ -313,7 +313,7 @@ class MockRoleRepository implements RoleRepository {
     await Future.delayed(const Duration(milliseconds: 300));
 
     final newRole = GroupRole(
-      id: 'role_${_nextRoleId++}',
+      id: _nextRoleId++,
       name: name,
       description: description,
       isSystemRole: false,
@@ -333,7 +333,7 @@ class MockRoleRepository implements RoleRepository {
   @override
   Future<GroupRole> updateRole(
     int groupId,
-    String roleId,
+    int roleId,
     String name,
     String description,
     List<String> permissions,
@@ -366,7 +366,7 @@ class MockRoleRepository implements RoleRepository {
   }
 
   @override
-  Future<void> deleteRole(int groupId, String roleId) async {
+  Future<void> deleteRole(int groupId, int roleId) async {
     await Future.delayed(const Duration(milliseconds: 200));
 
     final roles = _rolesByGroup[groupId];

@@ -14,7 +14,7 @@ class GroupMember {
   final String? studentNo;
   final int? academicYear;
   final String roleName;
-  final String roleId;
+  final int roleId;
   final DateTime joinedAt;
   final bool isActive;
 
@@ -42,7 +42,7 @@ class GroupMember {
       studentNo: json['studentNo'] as String?,
       academicYear: (json['academicYear'] as num?)?.toInt(),
       roleName: json['roleName'] as String,
-      roleId: json['roleId'] as String,
+      roleId: (json['roleId'] as num).toInt(),
       joinedAt: DateTime.parse(json['joinedAt'] as String),
       isActive: json['isActive'] as bool? ?? true,
     );
@@ -73,7 +73,7 @@ class GroupMember {
     String? studentNo,
     int? academicYear,
     String? roleName,
-    String? roleId,
+    int? roleId,
     DateTime? joinedAt,
     bool? isActive,
   }) {
@@ -95,7 +95,7 @@ class GroupMember {
 
 /// 그룹 역할 정보
 class GroupRole {
-  final String id;
+  final int id;
   final String name;
   final String description;
   final bool isSystemRole;
@@ -115,7 +115,7 @@ class GroupRole {
 
   factory GroupRole.fromJson(Map<String, dynamic> json) {
     return GroupRole(
-      id: json['id'] as String,
+      id: (json['id'] as num).toInt(),
       name: json['name'] as String,
       description: json['description'] as String? ?? '',
       isSystemRole: json['isSystemRole'] as bool? ?? false,
@@ -142,7 +142,7 @@ class GroupRole {
   }
 
   GroupRole copyWith({
-    String? id,
+    int? id,
     String? name,
     String? description,
     bool? isSystemRole,
@@ -230,7 +230,7 @@ enum JoinRequestStatus {
 
 /// 멤버 역할 변경 요청
 class UpdateMemberRoleRequest {
-  final String roleId;
+  final int roleId;
 
   UpdateMemberRoleRequest({required this.roleId});
 

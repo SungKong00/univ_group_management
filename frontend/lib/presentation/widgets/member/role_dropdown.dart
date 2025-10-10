@@ -8,9 +8,9 @@ import '../../../core/models/member_models.dart';
 /// 멤버의 역할을 변경할 때 사용합니다.
 /// 시스템 역할은 수정 불가 표시를 합니다.
 class RoleDropdown extends StatelessWidget {
-  final String currentRoleId;
+  final int currentRoleId;
   final List<GroupRole> availableRoles;
-  final Function(String roleId) onRoleChanged;
+  final Function(int roleId) onRoleChanged;
   final bool enabled;
 
   const RoleDropdown({
@@ -31,7 +31,7 @@ class RoleDropdown extends StatelessWidget {
         border: Border.all(color: AppColors.neutral300, width: 1),
       ),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
+        child: DropdownButton<int>(
           value: currentRoleId,
           isDense: true,
           icon: Icon(
@@ -44,14 +44,14 @@ class RoleDropdown extends StatelessWidget {
             color: enabled ? AppColors.neutral900 : AppColors.neutral500,
           ),
           onChanged: enabled
-              ? (String? newValue) {
+              ? (int? newValue) {
                   if (newValue != null && newValue != currentRoleId) {
                     onRoleChanged(newValue);
                   }
                 }
               : null,
-          items: availableRoles.map<DropdownMenuItem<String>>((GroupRole role) {
-            return DropdownMenuItem<String>(
+          items: availableRoles.map<DropdownMenuItem<int>>((GroupRole role) {
+            return DropdownMenuItem<int>(
               value: role.id,
               child: Row(
                 children: [

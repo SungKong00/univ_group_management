@@ -58,7 +58,7 @@ final createRoleProvider = FutureProvider.autoDispose
 /// 역할 수정 Provider
 class UpdateRoleParams {
   final int groupId;
-  final String roleId;
+  final int roleId;
   final String name;
   final String description;
   final List<String> permissions;
@@ -107,7 +107,7 @@ final updateRoleProvider = FutureProvider.autoDispose
 /// 역할 삭제 Provider
 class DeleteRoleParams {
   final int groupId;
-  final String roleId;
+  final int roleId;
 
   DeleteRoleParams({required this.groupId, required this.roleId});
 

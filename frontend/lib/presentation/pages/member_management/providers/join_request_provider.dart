@@ -16,7 +16,7 @@ final joinRequestListProvider = FutureProvider.family<List<JoinRequest>, int>((
 class ApproveRequestParams {
   final int groupId;
   final int requestId;
-  final String roleId;
+  final int roleId;
 
   ApproveRequestParams({
     required this.groupId,

@@ -9,7 +9,7 @@ import '../network/dio_client.dart';
 /// Phase 2: API 연동 시 GroupService와 통합
 abstract class JoinRequestRepository {
   Future<List<JoinRequest>> getPendingRequests(int groupId);
-  Future<void> approveRequest(int groupId, int requestId, String roleId);
+  Future<void> approveRequest(int groupId, int requestId, int roleId);
   Future<void> rejectRequest(int groupId, int requestId);
 }
 
@@ -69,7 +69,7 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
   }
 
   @override
-  Future<void> approveRequest(int groupId, int requestId, String roleId) async {
+  Future<void> approveRequest(int groupId, int requestId, int roleId) async {
     try {
       developer.log(
         'Approving join request $requestId for group $groupId with role $roleId',
@@ -80,7 +80,7 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
         '/groups/$groupId/join-requests/$requestId',
         data: {
           'decision': 'APPROVE',
-          'assignedRoleId': int.parse(roleId), // roleId를 정수로 변환
+          'assignedRoleId': roleId, // roleId를 직접 전달
         },
       );
 
@@ -241,7 +241,7 @@ class MockJoinRequestRepository implements JoinRequestRepository {
   }
 
   @override
-  Future<void> approveRequest(int groupId, int requestId, String roleId) async {
+  Future<void> approveRequest(int groupId, int requestId, int roleId) async {
     await Future.delayed(const Duration(milliseconds: 200));
 
     final requests = _requestsByGroup[groupId];

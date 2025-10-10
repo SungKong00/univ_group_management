@@ -225,7 +225,7 @@ class _MemberTableRow extends ConsumerWidget {
             child: RoleDropdown(
               currentRoleId: member.roleId,
               availableRoles: roles,
-              onRoleChanged: (newRoleId) async {
+              onRoleChanged: (int newRoleId) async {
                 await _handleRoleChange(context, ref, newRoleId);
               },
             ),
@@ -260,18 +260,15 @@ class _MemberTableRow extends ConsumerWidget {
   Future<void> _handleRoleChange(
     BuildContext context,
     WidgetRef ref,
-    String newRoleId,
+    int newRoleId,
   ) async {
     try {
-      // roleId를 int로 파싱
-      final roleIdInt = int.parse(newRoleId);
-
       await ref.read(
         updateMemberRoleProvider(
           UpdateMemberRoleParams(
             groupId: groupId,
             userId: member.userId, // memberId → userId 사용
-            roleId: roleIdInt,
+            roleId: newRoleId,
           ),
         ).future,
       );

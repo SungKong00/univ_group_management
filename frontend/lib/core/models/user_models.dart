@@ -79,3 +79,43 @@ class EmailVerifyRequest {
     'code': code,
   };
 }
+
+class UserSummaryResponse {
+  UserSummaryResponse({
+    required this.id,
+    required this.name,
+    required this.email,
+    this.profileImageUrl,
+    this.studentNo,
+    this.academicYear,
+  });
+
+  factory UserSummaryResponse.fromJson(Map<String, dynamic> json) {
+    return UserSummaryResponse(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      email: json['email'] as String,
+      profileImageUrl: json['profileImageUrl'] as String?,
+      studentNo: json['studentNo'] as String?,
+      academicYear: (json['academicYear'] as num?)?.toInt(),
+    );
+  }
+
+  final int id;
+  final String name;
+  final String email;
+  final String? profileImageUrl;
+  final String? studentNo;
+  final int? academicYear;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'id': id,
+      'name': name,
+      'email': email,
+      'profileImageUrl': profileImageUrl,
+      'studentNo': studentNo,
+      'academicYear': academicYear,
+    };
+  }
+}

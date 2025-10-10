@@ -178,7 +178,7 @@ class _JoinRequestCard extends ConsumerWidget {
     WidgetRef ref,
     List<GroupRole> roles,
   ) {
-    String selectedRoleId = roles.first.id;
+    int selectedRoleId = roles.first.id;
 
     showDialog(
       context: context,
@@ -194,7 +194,7 @@ class _JoinRequestCard extends ConsumerWidget {
                 style: AppTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<int>(
                 initialValue: selectedRoleId,
                 decoration: const InputDecoration(
                   labelText: '역할 선택',
@@ -239,7 +239,7 @@ class _JoinRequestCard extends ConsumerWidget {
   Future<void> _handleApprove(
     BuildContext context,
     WidgetRef ref,
-    String roleId,
+    int roleId,
   ) async {
     try {
       await ref.read(

@@ -205,7 +205,7 @@ class ApiMemberRepository implements MemberRepository {
       studentNo: user['studentNo'] as String?,
       academicYear: (user['academicYear'] as num?)?.toInt(),
       roleName: role['name'] as String,
-      roleId: (role['id'] as num).toString(), // roleId는 백엔드의 role.id를 문자열로
+      roleId: (role['id'] as num).toInt(), // roleId는 백엔드의 role.id
       joinedAt: DateTime.parse(json['joinedAt'] as String),
       isActive: true,
     );
@@ -226,7 +226,7 @@ class MockMemberRepository implements MemberRepository {
         studentNo: '2020123456',
         academicYear: 4,
         roleName: '그룹장',
-        roleId: 'owner',
+        roleId: 1,
         joinedAt: DateTime(2024, 1, 15),
       ),
       GroupMember(
@@ -238,7 +238,7 @@ class MockMemberRepository implements MemberRepository {
         studentNo: null,
         academicYear: null,
         roleName: '교수',
-        roleId: 'advisor',
+        roleId: 2,
         joinedAt: DateTime(2024, 2, 20),
       ),
       GroupMember(
@@ -250,7 +250,7 @@ class MockMemberRepository implements MemberRepository {
         studentNo: '2021234567',
         academicYear: 3,
         roleName: '멤버',
-        roleId: 'member',
+        roleId: 3,
         joinedAt: DateTime(2024, 3, 10),
       ),
       GroupMember(
@@ -262,7 +262,7 @@ class MockMemberRepository implements MemberRepository {
         studentNo: '2022345678',
         academicYear: 2,
         roleName: '멤버',
-        roleId: 'member',
+        roleId: 3,
         joinedAt: DateTime(2024, 3, 15),
       ),
       GroupMember(
@@ -274,7 +274,7 @@ class MockMemberRepository implements MemberRepository {
         studentNo: '2023456789',
         academicYear: 1,
         roleName: '멤버',
-        roleId: 'member',
+        roleId: 3,
         joinedAt: DateTime(2024, 4, 1),
       ),
     ],
@@ -305,11 +305,11 @@ class MockMemberRepository implements MemberRepository {
     }
 
     // 역할 이름 매핑 (간단한 구현)
-    final roleNameMap = {'1': '그룹장', '2': '교수', '3': '멤버'};
+    final roleNameMap = {1: '그룹장', 2: '교수', 3: '멤버'};
 
     final updatedMember = members[memberIndex].copyWith(
-      roleId: roleId.toString(),
-      roleName: roleNameMap[roleId.toString()] ?? 'Unknown',
+      roleId: roleId,
+      roleName: roleNameMap[roleId] ?? 'Unknown',
     );
 
     _membersByGroup[groupId]![memberIndex] = updatedMember;
