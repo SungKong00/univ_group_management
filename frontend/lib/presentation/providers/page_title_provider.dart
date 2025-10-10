@@ -4,6 +4,7 @@ import '../../core/models/channel_models.dart';
 import '../../core/models/page_breadcrumb.dart';
 import '../../core/navigation/layout_mode.dart';
 import '../../core/navigation/navigation_config.dart';
+import 'home_state_provider.dart';
 import 'my_groups_provider.dart';
 import 'workspace_state_provider.dart';
 
@@ -62,6 +63,21 @@ final pageBreadcrumbFromPathProvider = Provider.autoDispose
       // 경로가 비어있으면 기본값
       if (routePath.isEmpty || routePath == '/') {
         return const PageBreadcrumb(title: '대학 그룹 관리');
+      }
+
+      // 특수 케이스: 홈
+      if (routePath == '/home') {
+        final homeView = ref.watch(currentHomeViewProvider);
+
+        switch (homeView) {
+          case HomeView.dashboard:
+            return const PageBreadcrumb(title: '홈');
+          case HomeView.groupExplore:
+            return const PageBreadcrumb(
+              title: '홈 > 그룹탐색',
+              path: ['홈', '그룹탐색'],
+            );
+        }
       }
 
       // 특수 케이스: 워크스페이스

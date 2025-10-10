@@ -8,6 +8,7 @@ import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/layout_mode.dart';
 import '../../providers/page_title_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/home_state_provider.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../common/breadcrumb_widget.dart';
 import '../workspace/workspace_header.dart';
@@ -33,9 +34,14 @@ class TopNavigation extends ConsumerWidget {
       ),
     );
 
-    final canGoBack =
-        navigationState.canGoBackInCurrentTab ||
-        navigationState.currentTab != NavigationTab.home;
+    // 홈 페이지의 경우, 현재 뷰가 그룹 탐색이면 뒤로가기 표시
+    final isHome = routePath == '/home';
+    final homeView = isHome ? ref.watch(currentHomeViewProvider) : null;
+
+    final canGoBack = isHome
+        ? (homeView == HomeView.groupExplore) // 홈: 그룹 탐색일 때만
+        : (navigationState.canGoBackInCurrentTab ||
+            navigationState.currentTab != NavigationTab.home);
 
     // 워크스페이스 여부 확인
     final isWorkspace = routePath.startsWith('/workspace');
@@ -99,10 +105,17 @@ class TopNavigation extends ConsumerWidget {
 
   void _handleBackNavigation(BuildContext context, WidgetRef ref) {
     final currentRoute = GoRouterState.of(context).uri.path;
-    final isWorkspace = currentRoute.startsWith('/workspace');
+
+    // Home navigation handling (priority)
+    if (currentRoute == '/home') {
+      final homeNotifier = ref.read(homeStateProvider.notifier);
+      final handled = homeNotifier.handleBack();
+      if (handled) return; // Internal navigation handled
+      // If not handled (dashboard), continue to normal navigation
+    }
 
     // Workspace navigation handling
-    if (isWorkspace) {
+    if (currentRoute.startsWith('/workspace')) {
       final layoutMode = LayoutModeExtension.fromContext(context);
       final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
 

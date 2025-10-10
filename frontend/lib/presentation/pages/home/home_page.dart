@@ -1,57 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../providers/home_state_provider.dart';
 import '../../widgets/cards/action_card.dart';
 import '../../widgets/cards/group_card.dart';
+import 'widgets/group_explore_content_widget.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // 문서 스펙: TABLET(451px) 이상을 데스크톱 레이아웃으로 간주
-    // largerThan(MOBILE) = 451px 이상 = TABLET, DESKTOP, 4K
-    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentView = ref.watch(currentHomeViewProvider);
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       body: SafeArea(
-        child: FocusTraversalGroup(
-          policy: OrderedTraversalPolicy(),
-          child: SingleChildScrollView(
-            // 문서 스펙: 모바일 96px, 데스크톱 120px 수직 여백
-            // 수평 여백은 기존대로 lg/md 사용
-            padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? AppSpacing.lg : AppSpacing.md,
-              vertical: isDesktop ? AppSpacing.offsetMax : AppSpacing.offsetMin,
+        child: _buildViewForCurrentState(context, ref, currentView),
+      ),
+    );
+  }
+
+  Widget _buildViewForCurrentState(
+    BuildContext context,
+    WidgetRef ref,
+    HomeView currentView,
+  ) {
+    switch (currentView) {
+      case HomeView.dashboard:
+        return _buildDashboardView(context, ref);
+      case HomeView.groupExplore:
+        return const GroupExploreContentWidget();
+    }
+  }
+
+  Widget _buildDashboardView(BuildContext context, WidgetRef ref) {
+    // 문서 스펙: TABLET(451px) 이상을 데스크톱 레이아웃으로 간주
+    // largerThan(MOBILE) = 451px 이상 = TABLET, DESKTOP, 4K
+    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
+
+    return FocusTraversalGroup(
+      policy: OrderedTraversalPolicy(),
+      child: SingleChildScrollView(
+        // 문서 스펙: 모바일 96px, 데스크톱 120px 수직 여백
+        // 수평 여백은 기존대로 lg/md 사용
+        padding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? AppSpacing.lg : AppSpacing.md,
+          vertical: isDesktop ? AppSpacing.offsetMax : AppSpacing.offsetMin,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('안녕하세요! 👋', style: AppTheme.displayMediumTheme(context)),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              '오늘도 활발한 그룹 활동을 시작해보세요',
+              style: AppTheme.bodyLargeTheme(
+                context,
+              ).copyWith(color: AppColors.neutral600),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('안녕하세요! 👋', style: AppTheme.displayMediumTheme(context)),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  '오늘도 활발한 그룹 활동을 시작해보세요',
-                  style: AppTheme.bodyLargeTheme(
-                    context,
-                  ).copyWith(color: AppColors.neutral600),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                _buildQuickActions(context, isDesktop),
-                const SizedBox(height: AppSpacing.lg),
-                _buildRecentGroups(context),
-                const SizedBox(height: AppSpacing.lg),
-                _buildRecentActivity(context),
-              ],
-            ),
-          ),
+            const SizedBox(height: AppSpacing.lg),
+            _buildQuickActions(context, ref, isDesktop),
+            const SizedBox(height: AppSpacing.lg),
+            _buildRecentGroups(context),
+            const SizedBox(height: AppSpacing.lg),
+            _buildRecentActivity(context),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, bool isDesktop) {
+  Widget _buildQuickActions(BuildContext context, WidgetRef ref, bool isDesktop) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -75,7 +97,7 @@ class HomePage extends StatelessWidget {
                       icon: Icons.search,
                       title: '그룹 탐색',
                       description: '관심있는 그룹을 찾아보세요',
-                      onTap: () {},
+                      onTap: () => ref.read(homeStateProvider.notifier).showGroupExplore(),
                       semanticsLabel: '그룹 탐색 버튼',
                     ),
                   ),
@@ -95,7 +117,7 @@ class HomePage extends StatelessWidget {
                     icon: Icons.search,
                     title: '그룹 탐색',
                     description: '관심있는 그룹을 찾아보세요',
-                    onTap: () {},
+                    onTap: () => ref.read(homeStateProvider.notifier).showGroupExplore(),
                     semanticsLabel: '그룹 탐색 버튼',
                   ),
                 ],
