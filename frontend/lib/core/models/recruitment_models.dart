@@ -410,3 +410,55 @@ class ApplicationSummaryResponse {
     };
   }
 }
+
+// ==================== Archive DTOs ====================
+
+class ArchivedRecruitmentResponse {
+  ArchivedRecruitmentResponse({
+    required this.id,
+    required this.group,
+    required this.title,
+    required this.totalApplications,
+    required this.approvedApplications,
+    required this.rejectedApplications,
+    required this.createdAt,
+    required this.closedAt,
+  });
+
+  factory ArchivedRecruitmentResponse.fromJson(Map<String, dynamic> json) {
+    return ArchivedRecruitmentResponse(
+      id: (json['id'] as num).toInt(),
+      group: GroupSummaryResponse.fromJson(
+        json['group'] as Map<String, dynamic>,
+      ),
+      title: json['title'] as String,
+      totalApplications: (json['totalApplications'] as num).toInt(),
+      approvedApplications: (json['approvedApplications'] as num).toInt(),
+      rejectedApplications: (json['rejectedApplications'] as num).toInt(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      closedAt: DateTime.parse(json['closedAt'] as String),
+    );
+  }
+
+  final int id;
+  final GroupSummaryResponse group;
+  final String title;
+  final int totalApplications;
+  final int approvedApplications;
+  final int rejectedApplications;
+  final DateTime createdAt;
+  final DateTime closedAt;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'id': id,
+      'group': group.toJson(),
+      'title': title,
+      'totalApplications': totalApplications,
+      'approvedApplications': approvedApplications,
+      'rejectedApplications': rejectedApplications,
+      'createdAt': createdAt.toIso8601String(),
+      'closedAt': closedAt.toIso8601String(),
+    };
+  }
+}

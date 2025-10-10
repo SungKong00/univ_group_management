@@ -86,7 +86,7 @@ final activeRecruitmentProvider =
 ///
 /// Fetches the list of past/closed recruitments for a specific group.
 final archivedRecruitmentsProvider = FutureProvider.family<
-    List<RecruitmentSummaryResponse>, int>((ref, groupId) async {
+    List<ArchivedRecruitmentResponse>, int>((ref, groupId) async {
   final service = RecruitmentService();
   return await service.getArchivedRecruitments(groupId);
 });
@@ -166,6 +166,26 @@ final closeRecruitmentProvider = FutureProvider.autoDispose
   ref.invalidate(archivedRecruitmentsProvider(result.group.id));
 
   return result;
+});
+
+/// Delete Recruitment Provider
+///
+/// Deletes a recruitment post.
+/// Automatically refreshes both active and archived recruitment providers.
+final deleteRecruitmentProvider = FutureProvider.autoDispose
+    .family<void, int>((ref, recruitmentId) async {
+  final service = RecruitmentService();
+
+  // First get the recruitment to know its groupId for cache invalidation
+  final recruitment = await service.getRecruitment(recruitmentId);
+  final groupId = recruitment.group.id;
+
+  // Delete the recruitment
+  await service.deleteRecruitment(recruitmentId);
+
+  // Refresh related providers
+  ref.invalidate(activeRecruitmentProvider(groupId));
+  ref.invalidate(archivedRecruitmentsProvider(groupId));
 });
 
 /// Review Application Provider

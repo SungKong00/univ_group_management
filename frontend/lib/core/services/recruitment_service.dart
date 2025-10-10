@@ -333,7 +333,8 @@ class RecruitmentService {
   ///
   /// GET /api/groups/{groupId}/recruitments/archive
   /// Requires RECRUITMENT_MANAGE permission
-  Future<List<RecruitmentSummaryResponse>> getArchivedRecruitments(
+  /// Returns paginated list of archived recruitments
+  Future<List<ArchivedRecruitmentResponse>> getArchivedRecruitments(
     int groupId,
   ) async {
     try {
@@ -348,14 +349,24 @@ class RecruitmentService {
 
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
-          if (json is List) {
-            return json
-                .map((item) => RecruitmentSummaryResponse.fromJson(
+          // Backend returns PagedApiResponse with 'items' field
+          if (json is Map<String, dynamic> && json.containsKey('items')) {
+            final items = json['items'] as List<dynamic>;
+            return items
+                .map((item) => ArchivedRecruitmentResponse.fromJson(
                       item as Map<String, dynamic>,
                     ))
                 .toList();
           }
-          return <RecruitmentSummaryResponse>[];
+          // Fallback for direct list response
+          if (json is List) {
+            return json
+                .map((item) => ArchivedRecruitmentResponse.fromJson(
+                      item as Map<String, dynamic>,
+                    ))
+                .toList();
+          }
+          return <ArchivedRecruitmentResponse>[];
         });
 
         if (apiResponse.success && apiResponse.data != null) {

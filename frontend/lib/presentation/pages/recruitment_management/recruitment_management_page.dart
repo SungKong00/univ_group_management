@@ -6,7 +6,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../../core/models/recruitment_models.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme.dart';
 import '../../providers/recruitment_providers.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../workspace/widgets/workspace_state_view.dart';
@@ -22,11 +22,209 @@ class RecruitmentManagementPage extends ConsumerStatefulWidget {
 
 class _RecruitmentManagementPageState
     extends ConsumerState<RecruitmentManagementPage> {
-  Future<void> _showPendingActionMessage(String action) async {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action 기능은 다음 단계에서 연결됩니다.')),
+  /// Shows a confirmation dialog for destructive actions
+  Future<bool> _showConfirmationDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required Color confirmColor,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('취소'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: confirmColor,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(confirmLabel),
+            ),
+          ],
+        );
+      },
     );
+    return result ?? false;
+  }
+
+  /// Handles recruitment creation with validation and error handling
+  Future<void> _handleCreateRecruitment(
+    int groupId,
+    RecruitmentFormData data,
+  ) async {
+    try {
+      // 1. Validate input
+      final validationError = data.validate();
+      if (validationError != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(validationError),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      // 2. Convert to DTO
+      final request = data.toCreateRequest();
+
+      // 3. Call API via Provider
+      final params = CreateRecruitmentParams(groupId: groupId, request: request);
+      await ref.read(createRecruitmentProvider(params).future);
+
+      // 4. Success feedback
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('모집 공고가 성공적으로 생성되었습니다.'),
+          backgroundColor: AppColors.brand,
+        ),
+      );
+    } catch (e) {
+      // 5. Error handling
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('모집 공고 생성 실패: $e'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
+  /// Handles recruitment update with validation and error handling
+  Future<void> _handleUpdateRecruitment(
+    RecruitmentResponse recruitment,
+    RecruitmentFormData data,
+  ) async {
+    try {
+      // 1. Validate input
+      final validationError = data.validate();
+      if (validationError != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(validationError),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      // 2. Convert to DTO
+      final request = data.toUpdateRequest();
+
+      // 3. Call API via Provider
+      final params = UpdateRecruitmentParams(
+        recruitmentId: recruitment.id,
+        request: request,
+      );
+      await ref.read(updateRecruitmentProvider(params).future);
+
+      // 4. Success feedback
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('모집 공고가 성공적으로 수정되었습니다.'),
+          backgroundColor: AppColors.brand,
+        ),
+      );
+    } catch (e) {
+      // 5. Error handling
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('모집 공고 수정 실패: $e'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
+  /// Handles recruitment closure with confirmation and error handling
+  Future<void> _handleCloseRecruitment(RecruitmentResponse recruitment) async {
+    // 1. Confirm action
+    final confirmed = await _showConfirmationDialog(
+      title: '모집 종료',
+      message: '정말로 모집을 종료하시겠습니까? 종료 후에는 새로운 지원을 받을 수 없습니다.',
+      confirmLabel: '모집 종료',
+      confirmColor: AppColors.neutral600,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      // 2. Call API via Provider
+      await ref.read(closeRecruitmentProvider(recruitment.id).future);
+
+      // 3. Success feedback
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('모집이 성공적으로 종료되었습니다.'),
+          backgroundColor: AppColors.brand,
+        ),
+      );
+    } catch (e) {
+      // 4. Error handling
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('모집 종료 실패: $e'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
+  /// Handles recruitment deletion with confirmation and error handling
+  Future<void> _handleDeleteRecruitment(RecruitmentResponse recruitment) async {
+    // 1. Confirm action
+    final confirmed = await _showConfirmationDialog(
+      title: '모집 삭제',
+      message: '정말로 모집 공고를 삭제하시겠습니까? 이 작업은 취소할 수 없으며, 모든 지원서도 함께 삭제됩니다.',
+      confirmLabel: '삭제',
+      confirmColor: AppColors.error,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      // 2. Call API via Provider
+      await ref.read(deleteRecruitmentProvider(recruitment.id).future);
+
+      // 3. Success feedback
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('모집 공고가 성공적으로 삭제되었습니다.'),
+          backgroundColor: AppColors.brand,
+        ),
+      );
+    } catch (e) {
+      // 4. Error handling
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('모집 공고 삭제 실패: $e'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
   }
 
   @override
@@ -83,13 +281,10 @@ class _RecruitmentManagementPageState
             ActiveRecruitmentSection(
               groupId: groupId,
               activeRecruitment: activeRecruitmentAsync,
-              onCreate: (data) => _showPendingActionMessage('모집 공고 생성'),
-              onUpdate: (recruitment, data) =>
-                  _showPendingActionMessage('모집 공고 수정'),
-              onClose: (recruitment) =>
-                  _showPendingActionMessage('모집 공고 종료'),
-              onDelete: (recruitment) =>
-                  _showPendingActionMessage('모집 공고 삭제'),
+              onCreate: (data) => _handleCreateRecruitment(groupId, data),
+              onUpdate: _handleUpdateRecruitment,
+              onClose: _handleCloseRecruitment,
+              onDelete: _handleDeleteRecruitment,
             ),
             SizedBox(height: AppSpacing.lg),
             ArchivedRecruitmentSection(
@@ -147,7 +342,10 @@ class _ActiveRecruitmentSectionState
       isEmphasized: true,
       child: widget.activeRecruitment.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, __) => _ErrorMessage(message: '$error'),
+        error: (error, __) => _ErrorMessage(
+          message: '활성 모집 공고를 불러오는 중 오류가 발생했습니다: $error',
+          onRetry: () => ref.invalidate(activeRecruitmentProvider(widget.groupId)),
+        ),
         data: (recruitment) {
           if (recruitment == null || _isEditing) {
             return RecruitmentForm(
@@ -156,7 +354,7 @@ class _ActiveRecruitmentSectionState
               submitLabel: recruitment == null ? '모집 공고 생성' : '변경 사항 저장',
               onSubmit: recruitment == null
                   ? widget.onCreate
-                  : (data) => widget.onUpdate(recruitment!, data),
+                  : (data) => widget.onUpdate(recruitment, data),
               onCancel: recruitment != null
                   ? () => _toggleEditMode(false)
                   : null,
@@ -343,6 +541,112 @@ class RecruitmentFormData {
   final DateTime? recruitmentEndDate;
   final bool showApplicantCount;
   final List<String> applicationQuestions;
+
+  /// Validates all fields and returns error message if invalid
+  /// Returns null if all validations pass
+  String? validate() {
+    // 1. Title validation
+    final trimmedTitle = title.trim();
+    if (trimmedTitle.isEmpty) {
+      return '모집 제목을 입력해주세요.';
+    }
+    if (trimmedTitle.length < 2) {
+      return '모집 제목은 최소 2자 이상이어야 합니다.';
+    }
+    if (trimmedTitle.length > 100) {
+      return '모집 제목은 100자를 초과할 수 없습니다.';
+    }
+
+    // 2. Content validation (optional but has max length)
+    if (content != null) {
+      final trimmedContent = content!.trim();
+      if (trimmedContent.isNotEmpty && trimmedContent.length > 2000) {
+        return '모집 상세 내용은 2000자를 초과할 수 없습니다.';
+      }
+    }
+
+    // 3. Max applicants validation (optional but must be positive)
+    if (maxApplicants != null) {
+      if (maxApplicants! <= 0) {
+        return '모집 인원은 1명 이상이어야 합니다.';
+      }
+      if (maxApplicants! > 10000) {
+        return '모집 인원은 10,000명을 초과할 수 없습니다.';
+      }
+    }
+
+    // 4. Recruitment end date validation (optional but must be in future)
+    if (recruitmentEndDate != null) {
+      final now = DateTime.now();
+      if (recruitmentEndDate!.isBefore(now)) {
+        return '모집 마감일은 현재 시각 이후로 설정해야 합니다.';
+      }
+      final maxEndDate = now.add(const Duration(days: 365 * 2));
+      if (recruitmentEndDate!.isAfter(maxEndDate)) {
+        return '모집 마감일은 2년 이내로 설정해야 합니다.';
+      }
+    }
+
+    // 5. Application questions validation
+    if (applicationQuestions.length > 20) {
+      return '지원서 질문은 최대 20개까지 등록할 수 있습니다.';
+    }
+    for (var i = 0; i < applicationQuestions.length; i++) {
+      final question = applicationQuestions[i].trim();
+      if (question.isEmpty) {
+        return '질문 ${i + 1}번이 비어있습니다. 빈 질문은 삭제해주세요.';
+      }
+      if (question.length > 500) {
+        return '질문 ${i + 1}번은 500자를 초과할 수 없습니다.';
+      }
+    }
+
+    // All validations passed
+    return null;
+  }
+
+  /// Converts validated form data to CreateRecruitmentRequest
+  /// IMPORTANT: Call validate() before using this method
+  CreateRecruitmentRequest toCreateRequest() {
+    final trimmedContent = content?.trim();
+    final cleanedQuestions = applicationQuestions
+        .map((q) => q.trim())
+        .where((q) => q.isNotEmpty)
+        .toList();
+
+    return CreateRecruitmentRequest(
+      title: title.trim(),
+      content: trimmedContent != null && trimmedContent.isNotEmpty
+          ? trimmedContent
+          : null,
+      maxApplicants: maxApplicants,
+      recruitmentEndDate: recruitmentEndDate,
+      autoApprove: false, // Default to manual approval
+      showApplicantCount: showApplicantCount,
+      applicationQuestions: cleanedQuestions,
+    );
+  }
+
+  /// Converts validated form data to UpdateRecruitmentRequest
+  /// IMPORTANT: Call validate() before using this method
+  UpdateRecruitmentRequest toUpdateRequest() {
+    final trimmedContent = content?.trim();
+    final cleanedQuestions = applicationQuestions
+        .map((q) => q.trim())
+        .where((q) => q.isNotEmpty)
+        .toList();
+
+    return UpdateRecruitmentRequest(
+      title: title.trim(),
+      content: trimmedContent != null && trimmedContent.isNotEmpty
+          ? trimmedContent
+          : null,
+      maxApplicants: maxApplicants,
+      recruitmentEndDate: recruitmentEndDate,
+      showApplicantCount: showApplicantCount,
+      applicationQuestions: cleanedQuestions,
+    );
+  }
 }
 
 class RecruitmentForm extends ConsumerStatefulWidget {
@@ -712,7 +1016,7 @@ class ArchivedRecruitmentSection extends ConsumerStatefulWidget {
     required this.archivedRecruitments,
   });
 
-  final AsyncValue<List<RecruitmentSummaryResponse>> archivedRecruitments;
+  final AsyncValue<List<ArchivedRecruitmentResponse>> archivedRecruitments;
 
   @override
   ConsumerState<ArchivedRecruitmentSection> createState() =>
@@ -787,7 +1091,19 @@ class _ArchivedRecruitmentSectionState
             SizedBox(height: AppSpacing.md),
             widget.archivedRecruitments.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, __) => _ErrorMessage(message: '$error'),
+              error: (error, __) => _ErrorMessage(
+                message: '아카이브 목록을 불러오는 중 오류가 발생했습니다: $error',
+                onRetry: () {
+                  // Invalidate the provider to trigger a refresh
+                  final groupIdStr = ref.read(currentGroupIdProvider);
+                  if (groupIdStr != null) {
+                    final groupId = int.tryParse(groupIdStr);
+                    if (groupId != null) {
+                      ref.invalidate(archivedRecruitmentsProvider(groupId));
+                    }
+                  }
+                },
+              ),
               data: (recruitments) {
                 if (recruitments.isEmpty) {
                   return Padding(
@@ -834,7 +1150,7 @@ class _ArchivedRecruitmentSectionState
 class _ArchivedRecruitmentTile extends ConsumerWidget {
   const _ArchivedRecruitmentTile({required this.recruitment});
 
-  final RecruitmentSummaryResponse recruitment;
+  final ArchivedRecruitmentResponse recruitment;
 
   void _showDetailModal(BuildContext context, WidgetRef ref) {
     showDialog(
@@ -879,38 +1195,36 @@ class _ArchivedRecruitmentTile extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                _StatusBadge(status: recruitment.status),
+                _StatusBadge(status: RecruitmentStatus.closed),
               ],
             ),
-            if (recruitment.content != null &&
-                recruitment.content!.trim().isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xs),
-                child: Text(
-                  recruitment.content!,
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppColors.neutral600,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: Text(
+                '${recruitment.group.name} · ${_formatDate(recruitment.createdAt)} 시작 · ${_formatDate(recruitment.closedAt)} 종료',
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppColors.neutral600,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
+            ),
             SizedBox(height: AppSpacing.xs),
             Wrap(
               spacing: AppSpacing.sm,
               runSpacing: 4,
               children: [
                 _ChipText(
-                  icon: Icons.calendar_today_outlined,
-                  text: recruitment.recruitmentEndDate != null
-                      ? '마감 ${_formatDate(recruitment.recruitmentEndDate!)}'
-                      : '마감일 미설정',
+                  icon: Icons.article_outlined,
+                  text: '총 ${recruitment.totalApplications}건 지원',
                 ),
                 _ChipText(
-                  icon: Icons.people_outline,
-                  text: recruitment.showApplicantCount
-                      ? '지원자 ${recruitment.currentApplicantCount ?? 0}명'
-                      : '지원자 비공개',
+                  icon: Icons.check_circle_outline,
+                  text: '승인 ${recruitment.approvedApplications}건',
+                ),
+                _ChipText(
+                  icon: Icons.cancel_outlined,
+                  text: '거부 ${recruitment.rejectedApplications}건',
                 ),
                 _ChipText(
                   icon: Icons.info_outline,
@@ -1423,9 +1737,13 @@ class _StatusBadge extends StatelessWidget {
 }
 
 class _ErrorMessage extends StatelessWidget {
-  const _ErrorMessage({required this.message});
+  const _ErrorMessage({
+    required this.message,
+    this.onRetry,
+  });
 
   final String message;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -1436,9 +1754,37 @@ class _ErrorMessage extends StatelessWidget {
         color: AppColors.error.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadius.card / 2),
       ),
-      child: Text(
-        message,
-        style: AppTheme.bodySmall.copyWith(color: AppColors.error),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.error_outline, color: AppColors.error, size: 20),
+              SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  message,
+                  style: AppTheme.bodySmall.copyWith(color: AppColors.error),
+                ),
+              ),
+            ],
+          ),
+          if (onRetry != null) ...[
+            SizedBox(height: AppSpacing.xs),
+            TextButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('다시 시도'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.error,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xs,
+                  vertical: 4,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
