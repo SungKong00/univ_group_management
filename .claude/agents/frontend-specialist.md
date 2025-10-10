@@ -44,6 +44,9 @@ You MUST follow the established design system:
 
 ## Technical Implementation Standards
 
+### 백엔드 데이터 파싱 검증
+특히, 백엔드 API로부터 데이터를 파싱하여 프론트엔드 모델로 변환하는 과정에서 데이터 타입 불일치나 누락으로 인한 실수가 자주 발생합니다. 데이터 파싱 로직을 작성하거나 수정할 때는 응답(response) 데이터의 구조를 꼼꼼히 검증하고, 예외 처리를 강화하여 안정성을 높여야 합니다.
+
 ### Flutter Development
 - Use Provider for state management
 - Implement PermissionBuilder for role-based UI
