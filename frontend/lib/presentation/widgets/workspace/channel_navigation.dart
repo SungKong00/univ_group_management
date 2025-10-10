@@ -336,7 +336,8 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
             onTap: () {
               ref.read(workspaceStateProvider.notifier).showGroupAdminPage();
             },
-            isSelected: currentView == WorkspaceView.groupAdmin,
+            isSelected: currentView == WorkspaceView.groupAdmin ||
+                currentView == WorkspaceView.memberManagement,
           ),
         );
       },

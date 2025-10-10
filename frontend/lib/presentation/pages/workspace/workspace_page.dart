@@ -117,6 +117,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   @override
   void dispose() {
+    ref.read(workspaceStateProvider.notifier).cacheCurrentWorkspaceState();
     _postScrollController.dispose();
     _commentScrollController.dispose();
     super.dispose();

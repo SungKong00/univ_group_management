@@ -151,46 +151,166 @@ class WorkspaceState extends Equatable {
   ];
 }
 
+class WorkspaceSnapshot {
+  const WorkspaceSnapshot({
+    required this.view,
+    required this.mobileView,
+    this.selectedChannelId,
+    this.selectedPostId,
+    this.isCommentsVisible = false,
+    this.isNarrowDesktopCommentsFullscreen = false,
+    this.previousView,
+    this.channelHistory = const [],
+  });
+
+  final WorkspaceView view;
+  final MobileWorkspaceView mobileView;
+  final String? selectedChannelId;
+  final String? selectedPostId;
+  final bool isCommentsVisible;
+  final bool isNarrowDesktopCommentsFullscreen;
+  final WorkspaceView? previousView;
+  final List<String> channelHistory;
+}
+
 class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   WorkspaceStateNotifier(this._ref) : super(const WorkspaceState());
 
   final Ref _ref;
   final ChannelService _channelService = ChannelService();
+  final Map<String, WorkspaceSnapshot> _workspaceSnapshots = {};
+
+  void _saveCurrentWorkspaceSnapshot() {
+    final groupId = state.selectedGroupId;
+    if (groupId == null) return;
+
+    _workspaceSnapshots[groupId] = WorkspaceSnapshot(
+      view: state.currentView,
+      mobileView: state.mobileView,
+      selectedChannelId: state.selectedChannelId,
+      selectedPostId: state.selectedPostId,
+      isCommentsVisible: state.isCommentsVisible,
+      isNarrowDesktopCommentsFullscreen:
+          state.isNarrowDesktopCommentsFullscreen,
+      previousView: state.previousView,
+      channelHistory: List<String>.from(state.channelHistory),
+    );
+  }
+
+  WorkspaceSnapshot? _getSnapshot(String groupId) {
+    return _workspaceSnapshots[groupId];
+  }
+
+  void _applySnapshot(WorkspaceSnapshot snapshot) {
+    final updatedContext = Map<String, dynamic>.from(state.workspaceContext);
+
+    if (snapshot.selectedChannelId != null) {
+      updatedContext['channelId'] = snapshot.selectedChannelId;
+    } else {
+      updatedContext.remove('channelId');
+      updatedContext.remove('channelName');
+    }
+
+    if (snapshot.selectedPostId != null) {
+      updatedContext['postId'] = snapshot.selectedPostId;
+      updatedContext['commentsVisible'] = snapshot.isCommentsVisible;
+    } else {
+      updatedContext.remove('postId');
+      updatedContext.remove('commentsVisible');
+    }
+
+    state = WorkspaceState(
+      selectedGroupId: state.selectedGroupId,
+      selectedChannelId: snapshot.selectedChannelId,
+      isCommentsVisible: snapshot.isCommentsVisible,
+      selectedPostId: snapshot.selectedPostId,
+      workspaceContext: updatedContext,
+      channels: state.channels,
+      unreadCounts: state.unreadCounts,
+      currentView: snapshot.view,
+      mobileView: snapshot.mobileView,
+      hasAnyGroupPermission: state.hasAnyGroupPermission,
+      currentGroupRole: state.currentGroupRole,
+      currentGroupPermissions: state.currentGroupPermissions,
+      isLoadingChannels: state.isLoadingChannels,
+      isLoadingWorkspace: state.isLoadingWorkspace,
+      errorMessage: state.errorMessage,
+      channelPermissions: state.channelPermissions,
+      isLoadingPermissions: state.isLoadingPermissions,
+      channelHistory: snapshot.channelHistory,
+      isNarrowDesktopCommentsFullscreen:
+          snapshot.isNarrowDesktopCommentsFullscreen,
+      previousView: snapshot.previousView,
+    );
+  }
+
+  void cacheCurrentWorkspaceState() {
+    _saveCurrentWorkspaceSnapshot();
+  }
 
   void enterWorkspace(
     String groupId, {
     String? channelId,
     GroupMembership? membership,
   }) {
-    // 모바일 전용 상태 확인: mobileView만 체크 (웹 상태와 분리)
+    final isSameGroup = state.selectedGroupId == groupId;
+
+    if (!isSameGroup && state.selectedGroupId != null) {
+      _saveCurrentWorkspaceSnapshot();
+    }
+
+    final snapshot = channelId != null ? null : _getSnapshot(groupId);
+    final shouldRestoreExistingState = isSameGroup &&
+        channelId == null &&
+        state.channels.isNotEmpty;
+
+    if (shouldRestoreExistingState) {
+      if (snapshot != null) {
+        _applySnapshot(snapshot);
+      }
+      return;
+    }
+
     final hasMobileState = state.mobileView != MobileWorkspaceView.channelList;
 
-    // 상태 업데이트: 모바일 상태가 있으면 유지, 없으면 초기화
     state = state.copyWith(
       selectedGroupId: groupId,
-      selectedChannelId: hasMobileState ? state.selectedChannelId : null,
-      isCommentsVisible: hasMobileState ? state.isCommentsVisible : false,
-      selectedPostId: hasMobileState ? state.selectedPostId : null,
-      currentView: WorkspaceView.channel,
+      selectedChannelId: hasMobileState
+          ? state.selectedChannelId
+          : snapshot?.selectedChannelId,
+      isCommentsVisible: hasMobileState
+          ? state.isCommentsVisible
+          : (snapshot?.isCommentsVisible ?? false),
+      selectedPostId:
+          hasMobileState ? state.selectedPostId : snapshot?.selectedPostId,
+      currentView: snapshot?.view ?? WorkspaceView.channel,
       mobileView: hasMobileState
           ? state.mobileView
-          : MobileWorkspaceView.channelList,
+          : snapshot?.mobileView ?? MobileWorkspaceView.channelList,
       channelHistory: hasMobileState ? state.channelHistory : [],
+      isNarrowDesktopCommentsFullscreen: hasMobileState
+          ? state.isNarrowDesktopCommentsFullscreen
+          : (snapshot?.isNarrowDesktopCommentsFullscreen ?? false),
       workspaceContext: {
         'groupId': groupId,
-        if (hasMobileState && state.selectedChannelId != null)
-          'channelId': state.selectedChannelId,
+        if ((hasMobileState && state.selectedChannelId != null) ||
+            (!hasMobileState && snapshot?.selectedChannelId != null))
+          'channelId': hasMobileState
+              ? state.selectedChannelId
+              : snapshot?.selectedChannelId,
       },
     );
 
-    // 최초 진입 시에만 채널 로드 (탭 전환 복귀 시에는 기존 채널 유지)
-    if (!hasMobileState) {
-      loadChannels(
-        groupId,
-        autoSelectChannelId: channelId,
-        membership: membership,
-      );
-    }
+    loadChannels(
+      groupId,
+      autoSelectChannelId: channelId ?? snapshot?.selectedChannelId,
+      membership: membership,
+    ).then((_) {
+      final restoredSnapshot = _getSnapshot(groupId);
+      if (restoredSnapshot != null) {
+        _applySnapshot(restoredSnapshot);
+      }
+    });
   }
 
   /// Load channels and membership information for a group
@@ -381,6 +501,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   void exitWorkspace() {
+    _saveCurrentWorkspaceSnapshot();
     state = const WorkspaceState();
   }
 

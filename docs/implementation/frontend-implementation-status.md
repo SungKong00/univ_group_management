@@ -1,7 +1,7 @@
 # 프론트엔드 구현 현황 (Frontend Implementation Status)
 
-> **최종 업데이트**: 2025-10-06
-> **현재 상태**: 댓글창 UX 개선, 게시글/댓글 시스템 구현 완료, 워크스페이스 애니메이션 추가, 그룹 드롭다운 최적화
+> **최종 업데이트**: 2025-10-10
+> **현재 상태**: 댓글창 UX 개선, 게시글/댓글 시스템 구현 완료, 워크스페이스 애니메이션 추가, 그룹 드롭다운 최적화, 모집 공고 시스템 개발 준비 완료
 
 ## 📊 전체 진행률
 
@@ -263,6 +263,65 @@ final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref)
 - [캘린더 시스템 개념](../concepts/calendar-system.md)
 - [장소 관리 시스템](../concepts/calendar-place-management.md)
 - [워크스페이스 UI 명세](../ui-ux/pages/workspace-pages.md)
+
+### ❌ 모집 공고 시스템 (0% 완료) - MVP 개발 대기 중
+
+**개발 우선순위**: 게시글/댓글 → **모집 공고** → 캘린더
+
+**현재 상태:**
+- ❌ 백엔드 API 구현 완료 (2025-10-06), 프론트엔드 미구현
+- ❌ 데이터 모델 미구현 (GroupRecruitment, RecruitmentApplication)
+- ❌ API 연동 없음
+- ❌ UI 미구현
+
+**MVP 범위 (합의된 기능):**
+- ✅ 모집 공고 CRUD (생성/수정/삭제/조회)
+- ✅ 지원서 제출 및 심사 (승인/반려)
+- ✅ 관리자 메뉴 통합 (탭 기반: 모집 공고 관리 | 지원자 관리)
+- ✅ 반응형 레이아웃 (데스크톱 테이블 / 모바일 카드)
+- ✅ 질문 입력 UI (최대 5개, 동적 추가/삭제)
+- ❌ 통계 기능 (MVP 제외, 향후 구현)
+- ❌ 파일 첨부 (MVP 제외, 향후 구현)
+
+**구현 예정 구조:**
+```
+lib/core/models/recruitment_models.dart
+├── GroupRecruitmentDto
+├── RecruitmentApplicationDto
+├── CreateRecruitmentRequest
+└── ApplicationCreateRequest
+
+lib/core/services/recruitment_service.dart
+├── createRecruitment(groupId, request)
+├── getActiveRecruitment(groupId)
+├── submitApplication(recruitmentId, request)
+└── reviewApplication(applicationId, decision)
+
+lib/presentation/pages/recruitment/
+├── recruitment_management_page.dart    # 관리자 메인 (탭 기반)
+├── recruitment_list_tab.dart           # 탭 1: 모집 공고 관리
+├── applicants_management_tab.dart      # 탭 2: 지원자 관리
+└── widgets/
+    ├── recruitment_form.dart           # 모집 공고 작성 폼
+    ├── question_input_list.dart        # 질문 입력 (최대 5개)
+    └── applicant_card.dart             # 지원자 카드
+```
+
+**UI 패턴 (멤버 관리 페이지 참고):**
+- `TabController` 기반 탭 구조
+- 반응형 분기: `ResponsiveBreakpoints.of(context).largerThan(MOBILE)` (768px)
+- 데스크톱: 테이블 레이아웃 (`Expanded(flex)`, `Divider` 구분선)
+- 모바일: 카드 레이아웃 (패딩 16px, 간격 12px)
+
+**선행 작업 필요:**
+- API 서비스 클래스 생성 (RecruitmentService)
+- DTO 모델 정의 (Dart ↔ JSON 변환)
+- 관리자 메뉴 라우팅 추가 (admin_menu → recruitment_management)
+
+**관련 문서:**
+- [모집 시스템 개념](../concepts/recruitment-system.md)
+- [모집 페이지 UI 명세](../ui-ux/pages/recruitment-pages.md)
+- [백엔드 API 참조](./api-reference.md#모집-api)
 
 ### ❌ 고급 기능 (0% 완료)
 - ❌ 알림 시스템

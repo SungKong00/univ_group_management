@@ -60,7 +60,7 @@ RECRUITMENT_MANAGE 권한자:
 | 아카이브 조회 | ✅ | CLOSED 상태 포함 목록 (`/archive`) |
 | JPA Dirty Checking 최적화 | ✅ | data class → class 전환, var 필드 직접 수정 |
 | N+1 문제 해결 | ✅ | FETCH JOIN 쿼리 추가 (findByIdWithRelations) |
-| 통계 엔드포인트 | ✅ | MVP 범위에 포함. 집계 로직 구현 필요 |
+| 통계 엔드포인트 | ❌ | MVP 범위에서 제외. 향후 구현 예정 |
 | 자동 마감 배치 | ⏳ | 예약 작업 설계 예정 (Quartz/스케줄러) |
 | 알림 시스템 연동 | ❌ | Notification 모듈 미구현 |
 | 자동 승인(autoApprove) | ❌ | MVP 기능에서 제외 |
@@ -193,6 +193,7 @@ DELETE /api/applications/{applicationId}                 # 지원서 철회
 - 사용자의 최대 가입 가능 그룹 수 제한은 없는 것으로 간주
 
 ### 기술적 제약
+- 지원서 질문: 최대 5개
 - 지원서 첨부파일: 5MB 이하
 - 모집 게시글 내용: 10,000자 이하
 - 지원서 답변: 각 질문당 1,000자 이하
@@ -213,9 +214,8 @@ DELETE /api/applications/{applicationId}                 # 지원서 철회
   "content": "활동 소개 ...",
   "maxApplicants": 30,
   "recruitmentEndDate": "2025-11-15T23:59:59",
-  "autoApprove": false,
   "showApplicantCount": true,
-  "applicationQuestions": ["지원 동기?", "관련 경험?"]
+  "applicationQuestions": ["지원 동기?", "관련 경험?", "활동 가능 시간?"]
 }
 
 // 모집 응답 (RecruitmentResponse)
@@ -340,18 +340,7 @@ DELETE /api/applications/{applicationId}                 # 지원서 철회
 | /applications/{id} | GET | 지원서 상세 | - | ApplicationResponse | 권한자/본인 |
 | /applications/{id}/review | PATCH | 지원서 심사 | ApplicationReviewRequest | ApplicationResponse | RECRUITMENT_MANAGE |
 | /applications/{id} | DELETE | 지원서 철회 | - | - | 본인 |
-| /recruitments/{id}/stats | GET | 통계 조회 | - | RecruitmentStatsResponse | RECRUITMENT_MANAGE |
-
-## 통계 응답(예시, MVP)
-```json
-{
-  "recruitmentId": 12,
-  "totalApplicants": 20,
-  "approvedCount": 8,
-  "deniedCount": 5,
-  "approvalRate": 0.4
-}
-```
+| /recruitments/{id}/stats | GET | 통계 조회 (MVP 제외) | - | RecruitmentStatsResponse | RECRUITMENT_MANAGE |
 
 ## 관련 문서
 
