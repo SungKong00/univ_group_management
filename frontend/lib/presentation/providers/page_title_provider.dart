@@ -157,6 +157,8 @@ PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceBreadcrumbContext context) {
       return const PageBreadcrumb(title: '그룹 관리');
     case WorkspaceView.memberManagement:
       return const PageBreadcrumb(title: '멤버 관리');
+    case WorkspaceView.recruitmentManagement:
+      return const PageBreadcrumb(title: '모집 관리');
     case WorkspaceView.calendar:
       return const PageBreadcrumb(title: '캘린더');
     case WorkspaceView.groupHome:
@@ -175,6 +177,17 @@ PageBreadcrumb _buildMobileBreadcrumb(
   WorkspaceBreadcrumbContext context,
   String groupName,
 ) {
+  // 특수 뷰(관리자/멤버/모집 관리)는 전용 타이틀을 우선 표시
+  if (context.currentView == WorkspaceView.groupAdmin) {
+    return const PageBreadcrumb(title: '그룹 관리', path: ['그룹 관리']);
+  }
+  if (context.currentView == WorkspaceView.memberManagement) {
+    return const PageBreadcrumb(title: '멤버 관리', path: ['멤버 관리']);
+  }
+  if (context.currentView == WorkspaceView.recruitmentManagement) {
+    return const PageBreadcrumb(title: '모집 관리', path: ['모집 관리']);
+  }
+
   // 현재 뷰 타입에 따라 브레드크럼 형식 결정
   switch (context.mobileView) {
     case MobileWorkspaceView.channelList:

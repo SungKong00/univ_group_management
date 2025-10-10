@@ -29,6 +29,7 @@ import 'providers/post_actions_provider.dart';
 import 'providers/comment_actions_provider.dart';
 import '../group/group_admin_page.dart';
 import '../member_management/member_management_page.dart';
+import '../recruitment_management/recruitment_management_page.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
@@ -445,6 +446,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           return const GroupAdminPage();
         case WorkspaceView.memberManagement:
           return const MemberManagementPage();
+        case WorkspaceView.recruitmentManagement:
+          return const RecruitmentManagementPage();
         case WorkspaceView.channel:
           // Fall through to mobile view switch below
           break;
@@ -557,6 +560,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         return const GroupAdminPage();
       case WorkspaceView.memberManagement:
         return const MemberManagementPage();
+      case WorkspaceView.recruitmentManagement:
+        return const RecruitmentManagementPage();
       case WorkspaceView.channel:
         if (!hasSelectedChannel) {
           return const WorkspaceEmptyState(

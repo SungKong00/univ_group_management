@@ -14,6 +14,7 @@ enum WorkspaceView {
   calendar, // Calendar view
   groupAdmin, // Group admin/management page view
   memberManagement, // Member management page view
+  recruitmentManagement, // Recruitment management page view
 }
 
 /// Mobile Workspace View Type (3-step navigation flow)
@@ -519,6 +520,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.groupAdmin,
+      selectedChannelId: null,
+      isCommentsVisible: false,
+      selectedPostId: null,
+      isNarrowDesktopCommentsFullscreen: false,
+    );
+  }
+
+  /// Show recruitment management page view
+  void showRecruitmentManagementPage() {
+    state = state.copyWith(
+      previousView: state.currentView,
+      currentView: WorkspaceView.recruitmentManagement,
       selectedChannelId: null,
       isCommentsVisible: false,
       selectedPostId: null,

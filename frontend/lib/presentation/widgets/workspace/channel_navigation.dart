@@ -337,7 +337,8 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
               ref.read(workspaceStateProvider.notifier).showGroupAdminPage();
             },
             isSelected: currentView == WorkspaceView.groupAdmin ||
-                currentView == WorkspaceView.memberManagement,
+                currentView == WorkspaceView.memberManagement ||
+                currentView == WorkspaceView.recruitmentManagement,
           ),
         );
       },
