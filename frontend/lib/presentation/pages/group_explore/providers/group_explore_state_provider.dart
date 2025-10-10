@@ -89,6 +89,32 @@ class GroupExploreStateNotifier extends StateNotifier<GroupExploreState> {
     _loadGroups(reset: true);
   }
 
+  /// Toggle group type (multi-select)
+  void toggleGroupType(String type) {
+    final newFilters = Map<String, dynamic>.from(state.filters);
+    final groupTypes = List<String>.from((newFilters['groupTypes'] as List<String>?) ?? []);
+
+    if (groupTypes.contains(type)) {
+      groupTypes.remove(type);
+    } else {
+      groupTypes.add(type);
+    }
+
+    if (groupTypes.isEmpty) {
+      newFilters.remove('groupTypes');
+    } else {
+      newFilters['groupTypes'] = groupTypes;
+    }
+
+    state = state.copyWith(
+      filters: newFilters,
+      currentPage: 0,
+      groups: [],
+      hasMore: true,
+    );
+    _loadGroups(reset: true);
+  }
+
   /// Load groups (with pagination)
   Future<void> _loadGroups({bool reset = false}) async {
     if (state.isLoading) return;

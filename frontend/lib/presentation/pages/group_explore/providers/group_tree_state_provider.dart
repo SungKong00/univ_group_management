@@ -10,26 +10,30 @@ class GroupTreeState extends Equatable {
     this.rootNodes = const [],
     this.isLoading = false,
     this.errorMessage,
+    this.filters = const {},
   });
 
   final List<GroupTreeNode> rootNodes;
   final bool isLoading;
   final String? errorMessage;
+  final Map<String, dynamic> filters; // showRecruiting, showAutonomous, showOfficial
 
   GroupTreeState copyWith({
     List<GroupTreeNode>? rootNodes,
     bool? isLoading,
     String? errorMessage,
+    Map<String, dynamic>? filters,
   }) {
     return GroupTreeState(
       rootNodes: rootNodes ?? this.rootNodes,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
+      filters: filters ?? this.filters,
     );
   }
 
   @override
-  List<Object?> get props => [rootNodes, isLoading, errorMessage];
+  List<Object?> get props => [rootNodes, isLoading, errorMessage, filters];
 }
 
 /// Group Tree State Notifier
@@ -75,10 +79,19 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
     state = state.copyWith(rootNodes: updatedNodes);
   }
 
+  /// Toggle filter
+  void toggleFilter(String filterKey) {
+    final newFilters = Map<String, dynamic>.from(state.filters);
+    newFilters[filterKey] = !(newFilters[filterKey] == true);
+    state = state.copyWith(filters: newFilters);
+    // Reload with filters
+    loadHierarchy();
+  }
+
   /// Build tree structure from flat list of groups
   List<GroupTreeNode> _buildTreeFromFlatList(List<GroupSummaryResponse> groups) {
-    // For now, create a simple flat tree
-    // TODO: Implement proper parent-child relationship when backend provides parentId
+    // Apply filters (University groups are always shown)
+    final filteredGroups = _applyFilters(groups);
 
     // Group by type to create pseudo-hierarchy
     final universities = <GroupTreeNode>[];
@@ -86,7 +99,7 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
     final departments = <GroupTreeNode>[];
     final others = <GroupTreeNode>[];
 
-    for (final group in groups) {
+    for (final group in filteredGroups) {
       final node = GroupTreeNode.fromGroupSummary(
         group,
         level: _getDepthFromType(group.groupType),
@@ -171,6 +184,56 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
     return result;
   }
 
+  /// Apply filters to groups list
+  /// University groups (대학교, 단과대, 학과) are always shown (always-on)
+  List<GroupSummaryResponse> _applyFilters(List<GroupSummaryResponse> groups) {
+    final showRecruiting = state.filters['showRecruiting'] == true;
+    final showAutonomous = state.filters['showAutonomous'] == true;
+    final showOfficial = state.filters['showOfficial'] == true;
+
+    // If no filters are active, show all groups
+    if (!showRecruiting && !showAutonomous && !showOfficial) {
+      return groups;
+    }
+
+    return groups.where((group) {
+      // University groups (대학교, 단과대, 학과) are always shown
+      final isUniversityGroup = group.groupType == GroupType.university ||
+          group.groupType == GroupType.college ||
+          group.groupType == GroupType.department;
+
+      if (isUniversityGroup) {
+        return true;
+      }
+
+      // Apply recruiting filter for non-university groups
+      if (showRecruiting && !group.isRecruiting) {
+        return false;
+      }
+
+      // Apply group type filters for non-university groups
+      if (showAutonomous && group.groupType != GroupType.autonomous) {
+        return false;
+      }
+
+      if (showOfficial && group.groupType != GroupType.official) {
+        return false;
+      }
+
+      // If no specific type filter is active but recruiting filter is on
+      if (showRecruiting && !showAutonomous && !showOfficial) {
+        return true;
+      }
+
+      // If type filter is active, show matching groups
+      if (showAutonomous || showOfficial) {
+        return true;
+      }
+
+      return false;
+    }).toList();
+  }
+
   /// Simple heuristic to check if two groups are related
   bool _isRelated(GroupTreeNode child, GroupTreeNode parent) {
     // This is a placeholder - in real implementation, use actual parent-child relationship
@@ -240,4 +303,8 @@ final treeIsLoadingProvider = Provider<bool>((ref) {
 
 final treeErrorMessageProvider = Provider<String?>((ref) {
   return ref.watch(groupTreeStateProvider.select((s) => s.errorMessage));
+});
+
+final treeFiltersProvider = Provider<Map<String, dynamic>>((ref) {
+  return ref.watch(groupTreeStateProvider.select((s) => s.filters));
 });

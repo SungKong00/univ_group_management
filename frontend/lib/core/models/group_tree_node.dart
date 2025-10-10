@@ -1,9 +1,10 @@
+import 'package:equatable/equatable.dart';
 import 'group_models.dart';
 
 /// GroupTreeNode - Tree structure for hierarchical group view
 ///
 /// Supports up to 8 levels of nesting with expand/collapse state.
-class GroupTreeNode {
+class GroupTreeNode extends Equatable {
   final int id;
   final String name;
   final String? profileImageUrl;
@@ -89,21 +90,26 @@ class GroupTreeNode {
     };
   }
 
-  factory GroupTreeNode.fromJson(Map<String, dynamic> json) {
+  factory GroupTreeNode.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      throw ArgumentError('Cannot create GroupTreeNode from null JSON');
+    }
+
     return GroupTreeNode(
-      id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      name: json['name'] as String? ?? 'Unknown',
       profileImageUrl: json['profileImageUrl'] as String?,
-      memberCount: (json['memberCount'] as num).toInt(),
-      isRecruiting: json['isRecruiting'] as bool,
+      memberCount: (json['memberCount'] as num?)?.toInt() ?? 0,
+      isRecruiting: json['isRecruiting'] as bool? ?? false,
       groupType: GroupType.values.firstWhere(
         (e) => e.name == json['groupType'],
         orElse: () => GroupType.autonomous,
       ),
       parentId: (json['parentId'] as num?)?.toInt(),
-      level: (json['level'] as num).toInt(),
+      level: (json['level'] as num?)?.toInt() ?? 0,
       children: (json['children'] as List<dynamic>?)
-              ?.map((e) => GroupTreeNode.fromJson(e as Map<String, dynamic>))
+              ?.where((e) => e != null && e is Map<String, dynamic>)
+              .map((e) => GroupTreeNode.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       isExpanded: json['isExpanded'] as bool? ?? false,
@@ -130,4 +136,18 @@ class GroupTreeNode {
       }).toList(),
     );
   }
+
+  @override
+  List<Object?> get props => [
+        id,
+        name,
+        profileImageUrl,
+        memberCount,
+        isRecruiting,
+        groupType,
+        parentId,
+        level,
+        children,
+        isExpanded,
+      ];
 }

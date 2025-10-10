@@ -14,6 +14,7 @@ class GroupFilterChipBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(exploreFiltersProvider);
+    final groupTypes = (filters['groupTypes'] as List<String>?) ?? [];
 
     return Wrap(
       spacing: AppSpacing.xxs,
@@ -22,10 +23,10 @@ class GroupFilterChipBar extends ConsumerWidget {
         // Recruiting Filter
         FilterChip(
           label: const Text('모집중'),
-          selected: filters['isRecruiting'] == true,
+          selected: filters['recruiting'] == true,
           onSelected: (selected) {
             ref.read(groupExploreStateProvider.notifier).updateFilter(
-                  'isRecruiting',
+                  'recruiting',
                   selected ? true : null,
                 );
           },
@@ -33,14 +34,64 @@ class GroupFilterChipBar extends ConsumerWidget {
           checkmarkColor: AppColors.brand,
           backgroundColor: AppColors.neutral100,
           labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: filters['isRecruiting'] == true
+                color: filters['recruiting'] == true
                     ? AppColors.brand
                     : AppColors.neutral700,
               ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.button),
             side: BorderSide(
-              color: filters['isRecruiting'] == true
+              color: filters['recruiting'] == true
+                  ? AppColors.brand
+                  : AppColors.neutral300,
+            ),
+          ),
+        ),
+
+        // University Group Filter (includes UNIVERSITY, COLLEGE, DEPARTMENT)
+        FilterChip(
+          label: const Text('대학그룹'),
+          selected: groupTypes.contains('UNIVERSITY') ||
+              groupTypes.contains('COLLEGE') ||
+              groupTypes.contains('DEPARTMENT'),
+          onSelected: (selected) {
+            // Toggle all three types together
+            final newFilters = Map<String, dynamic>.from(ref.read(exploreFiltersProvider));
+            final currentTypes = List<String>.from((newFilters['groupTypes'] as List<String>?) ?? []);
+
+            if (selected) {
+              // Add all university-related types
+              if (!currentTypes.contains('UNIVERSITY')) currentTypes.add('UNIVERSITY');
+              if (!currentTypes.contains('COLLEGE')) currentTypes.add('COLLEGE');
+              if (!currentTypes.contains('DEPARTMENT')) currentTypes.add('DEPARTMENT');
+            } else {
+              // Remove all university-related types
+              currentTypes.removeWhere((type) =>
+                  type == 'UNIVERSITY' || type == 'COLLEGE' || type == 'DEPARTMENT');
+            }
+
+            newFilters['groupTypes'] = currentTypes;
+            ref.read(groupExploreStateProvider.notifier).updateFilter(
+                  'groupTypes',
+                  currentTypes.isEmpty ? null : currentTypes,
+                );
+          },
+          selectedColor: AppColors.brandLight,
+          checkmarkColor: AppColors.brand,
+          backgroundColor: AppColors.neutral100,
+          labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: (groupTypes.contains('UNIVERSITY') ||
+                        groupTypes.contains('COLLEGE') ||
+                        groupTypes.contains('DEPARTMENT'))
+                    ? AppColors.brand
+                    : AppColors.neutral700,
+              ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.button),
+            side: BorderSide(
+              color: (groupTypes.contains('UNIVERSITY') ||
+                      groupTypes.contains('COLLEGE') ||
+                      groupTypes.contains('DEPARTMENT'))
                   ? AppColors.brand
                   : AppColors.neutral300,
             ),
@@ -48,61 +99,51 @@ class GroupFilterChipBar extends ConsumerWidget {
         ),
 
         // Autonomous Group Filter
-        FilterChip(
-          label: const Text('자율그룹'),
-          selected: filters['groupType'] == 'AUTONOMOUS',
-          onSelected: (selected) {
-            ref.read(groupExploreStateProvider.notifier).updateFilter(
-                  'groupType',
-                  selected ? 'AUTONOMOUS' : null,
-                );
-          },
-          selectedColor: AppColors.brandLight,
-          checkmarkColor: AppColors.brand,
-          backgroundColor: AppColors.neutral100,
-          labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: filters['groupType'] == 'AUTONOMOUS'
-                    ? AppColors.brand
-                    : AppColors.neutral700,
-              ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.button),
-            side: BorderSide(
-              color: filters['groupType'] == 'AUTONOMOUS'
-                  ? AppColors.brand
-                  : AppColors.neutral300,
-            ),
-          ),
+        _buildGroupTypeChip(
+          context,
+          ref,
+          label: '자율그룹',
+          type: 'AUTONOMOUS',
+          isSelected: groupTypes.contains('AUTONOMOUS'),
         ),
 
         // Official Group Filter
-        FilterChip(
-          label: const Text('공식그룹'),
-          selected: filters['groupType'] == 'OFFICIAL',
-          onSelected: (selected) {
-            ref.read(groupExploreStateProvider.notifier).updateFilter(
-                  'groupType',
-                  selected ? 'OFFICIAL' : null,
-                );
-          },
-          selectedColor: AppColors.brandLight,
-          checkmarkColor: AppColors.brand,
-          backgroundColor: AppColors.neutral100,
-          labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: filters['groupType'] == 'OFFICIAL'
-                    ? AppColors.brand
-                    : AppColors.neutral700,
-              ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.button),
-            side: BorderSide(
-              color: filters['groupType'] == 'OFFICIAL'
-                  ? AppColors.brand
-                  : AppColors.neutral300,
-            ),
-          ),
+        _buildGroupTypeChip(
+          context,
+          ref,
+          label: '공식그룹',
+          type: 'OFFICIAL',
+          isSelected: groupTypes.contains('OFFICIAL'),
         ),
       ],
+    );
+  }
+
+  Widget _buildGroupTypeChip(
+    BuildContext context,
+    WidgetRef ref, {
+    required String label,
+    required String type,
+    required bool isSelected,
+  }) {
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        ref.read(groupExploreStateProvider.notifier).toggleGroupType(type);
+      },
+      selectedColor: AppColors.brandLight,
+      checkmarkColor: AppColors.brand,
+      backgroundColor: AppColors.neutral100,
+      labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: isSelected ? AppColors.brand : AppColors.neutral700,
+          ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.button),
+        side: BorderSide(
+          color: isSelected ? AppColors.brand : AppColors.neutral300,
+        ),
+      ),
     );
   }
 }

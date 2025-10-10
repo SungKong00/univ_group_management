@@ -47,12 +47,15 @@ class GroupExploreService {
 
       // Add filters
       if (filters != null) {
-        if (filters['groupType'] != null) {
-          queryParams['groupType'] = filters['groupType'];
+        // Multi-select group types (comma-separated)
+        if (filters['groupTypes'] != null && (filters['groupTypes'] as List).isNotEmpty) {
+          queryParams['groupType'] = (filters['groupTypes'] as List).join(',');
         }
-        if (filters['isRecruiting'] != null) {
-          queryParams['isRecruiting'] = filters['isRecruiting'];
+        // Recruiting filter (use 'recruiting' parameter name)
+        if (filters['recruiting'] != null) {
+          queryParams['recruiting'] = filters['recruiting'];
         }
+        // Tags filter
         if (filters['tags'] != null && (filters['tags'] as List).isNotEmpty) {
           queryParams['tags'] = (filters['tags'] as List).join(',');
         }

@@ -4,6 +4,7 @@ import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/group_tree_state_provider.dart';
 import 'group_tree_node_widget.dart';
+import 'group_tree_filter_chip_bar.dart';
 
 /// GroupTreeView - Hierarchical group browser
 ///
@@ -112,6 +113,10 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
                       color: AppColors.neutral600,
                     ),
               ),
+              const SizedBox(height: AppSpacing.md),
+
+              // Filter Chips
+              const GroupTreeFilterChipBar(),
               const SizedBox(height: AppSpacing.md),
 
               // Tree Structure
