@@ -31,6 +31,7 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
     final filteredNodes = ref.watch(filteredTreeRootNodesProvider); // 필터링된 노드 사용
     final isLoading = ref.watch(treeIsLoadingProvider);
     final errorMessage = ref.watch(treeErrorMessageProvider);
+    final userGroupIds = ref.watch(userGroupIdsProvider); // 🆕 사용자 그룹 ID 가져오기
 
     if (isLoading) {
       return const Center(

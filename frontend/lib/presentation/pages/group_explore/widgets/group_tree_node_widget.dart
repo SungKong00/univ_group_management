@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/group_tree_node.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../providers/group_tree_state_provider.dart';
 
 /// GroupTreeNodeWidget - Recursive card-based tree view
 ///
@@ -15,7 +17,8 @@ import '../../../../core/theme/app_colors.dart';
 /// - Border: depths 2,4,6,8 → neutral400, others → neutral300
 /// - Elevation: depth 0→1, depth 1→2, depth 2-8→[1,0,1,0,1,0,1]
 /// - Animation: 120ms expand/collapse transition
-class GroupTreeNodeWidget extends StatelessWidget {
+/// - 🆕 User's groups: highlighted with brand color border and subtle background
+class GroupTreeNodeWidget extends ConsumerWidget {
   final GroupTreeNode node;
   final int depth;
   final Function(int nodeId) onToggle;
@@ -28,15 +31,18 @@ class GroupTreeNodeWidget extends StatelessWidget {
   }) : assert(depth >= 0 && depth <= 8, 'Depth must be between 0 and 8');
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userGroupIds = ref.watch(userGroupIdsProvider);
+    final isUserGroup = userGroupIds.contains(node.id);
+
     return Card(
       elevation: _getElevation(),
-      color: _getBackgroundColor(),
+      color: _getBackgroundColor(isUserGroup),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.card),
         side: BorderSide(
-          color: _getBorderColor(),
-          width: 1,
+          color: _getBorderColor(isUserGroup),
+          width: isUserGroup ? 2 : 1,
         ),
       ),
       margin: EdgeInsets.zero,
@@ -45,7 +51,7 @@ class GroupTreeNodeWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(context),
+            _buildHeader(context, isUserGroup),
             if (node.isExpanded && node.hasChildren) ...[
               const SizedBox(height: 8),
               ..._buildChildren(),
@@ -56,7 +62,7 @@ class GroupTreeNodeWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, bool isUserGroup) {
     return InkWell(
       onTap: node.hasChildren ? () => onToggle(node.id) : null,
       borderRadius: BorderRadius.circular(AppRadius.button),
@@ -74,7 +80,7 @@ class GroupTreeNodeWidget extends StatelessWidget {
                     ? Icons.keyboard_arrow_down
                     : Icons.keyboard_arrow_right,
                 size: 20,
-                color: AppColors.neutral700,
+                color: isUserGroup ? AppColors.brand : AppColors.neutral700,
               )
             else
               const SizedBox(width: 20),
@@ -89,11 +95,13 @@ class GroupTreeNodeWidget extends StatelessWidget {
             else
               CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.brandLight.withValues(alpha: 0.2),
+                backgroundColor: isUserGroup
+                    ? AppColors.brandLight
+                    : AppColors.brandLight.withValues(alpha: 0.2),
                 child: Icon(
                   Icons.group,
                   size: 16,
-                  color: AppColors.brand,
+                  color: isUserGroup ? AppColors.brand : AppColors.brand.withValues(alpha: 0.6),
                 ),
               ),
             const SizedBox(width: 12),
@@ -103,14 +111,42 @@ class GroupTreeNodeWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    node.name,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.neutral900,
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          node.name,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: isUserGroup ? FontWeight.w700 : FontWeight.w600,
+                                color: isUserGroup ? AppColors.brand : AppColors.neutral900,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                      ),
+                      // 사용자 그룹 표시 배지
+                      if (isUserGroup) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.brand,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '내 그룹',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Row(
@@ -198,7 +234,12 @@ class GroupTreeNodeWidget extends StatelessWidget {
     return 12.0;
   }
 
-  Color _getBackgroundColor() {
+  Color _getBackgroundColor(bool isUserGroup) {
+    // 사용자 그룹은 브랜드 색상의 아주 연한 배경
+    if (isUserGroup) {
+      return AppColors.brandLight.withValues(alpha: 0.1);
+    }
+
     // Even depths: neutral100, Odd depths: white
     if (depth % 2 == 0) {
       return AppColors.neutral100;
@@ -206,7 +247,12 @@ class GroupTreeNodeWidget extends StatelessWidget {
     return Colors.white;
   }
 
-  Color _getBorderColor() {
+  Color _getBorderColor(bool isUserGroup) {
+    // 사용자 그룹은 브랜드 색상 테두리
+    if (isUserGroup) {
+      return AppColors.brand;
+    }
+
     // Depths 2, 4, 6, 8: neutral400
     // Others: neutral300
     if (depth == 2 || depth == 4 || depth == 6 || depth == 8) {
@@ -220,7 +266,6 @@ class GroupTreeNodeWidget extends StatelessWidget {
     if (depth == 1) return 2.0;
 
     // Depth 2-8: [1, 0, 1, 0, 1, 0, 1]
-    // depth 2→1, 3→0, 4→1, 5→0, 6→1, 7→0, 8→1
     final pattern = [1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0];
     final index = depth - 2;
     if (index >= 0 && index < pattern.length) {

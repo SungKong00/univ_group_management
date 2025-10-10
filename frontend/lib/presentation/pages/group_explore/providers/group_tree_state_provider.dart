@@ -11,29 +11,33 @@ class GroupTreeState extends Equatable {
     this.isLoading = false,
     this.errorMessage,
     this.filters = const {},
+    this.userGroupIds = const {}, // 🆕 사용자가 속한 그룹 ID들
   });
 
   final List<GroupTreeNode> rootNodes;
   final bool isLoading;
   final String? errorMessage;
   final Map<String, dynamic> filters; // showRecruiting, showAutonomous, showOfficial
+  final Set<int> userGroupIds; // 🆕 사용자가 속한 그룹 ID들
 
   GroupTreeState copyWith({
     List<GroupTreeNode>? rootNodes,
     bool? isLoading,
     String? errorMessage,
     Map<String, dynamic>? filters,
+    Set<int>? userGroupIds, // 🆕
   }) {
     return GroupTreeState(
       rootNodes: rootNodes ?? this.rootNodes,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
       filters: filters ?? this.filters,
+      userGroupIds: userGroupIds ?? this.userGroupIds, // 🆕
     );
   }
 
   @override
-  List<Object?> get props => [rootNodes, isLoading, errorMessage, filters];
+  List<Object?> get props => [rootNodes, isLoading, errorMessage, filters, userGroupIds]; // 🆕 userGroupIds 추가
 }
 
 /// Group Tree State Notifier
@@ -49,15 +53,23 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // Fetch hierarchy from backend (uses /api/groups/hierarchy)
+      // 🆕 1. 사용자의 멤버십 정보 가져오기
+      final myGroups = await _groupService.getMyGroups();
+      final userGroupIds = myGroups.map((g) => g.id).toSet();
+
+      // 2. Fetch hierarchy from backend (uses /api/groups/hierarchy)
       final hierarchyNodes = await _groupService.getHierarchy();
 
-      // Build tree structure from hierarchy nodes
+      // 3. Build tree structure from hierarchy nodes
       final tree = _buildTreeFromHierarchyNodes(hierarchyNodes);
 
+      // 🆕 4. 사용자가 속한 그룹과 그 상위 그룹들을 자동으로 펼치기
+      final expandedTree = _expandUserGroups(tree, userGroupIds);
+
       state = state.copyWith(
-        rootNodes: tree,
+        rootNodes: expandedTree,
         isLoading: false,
+        userGroupIds: userGroupIds, // 🆕 저장
       );
     } catch (e) {
       state = state.copyWith(
@@ -65,6 +77,37 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
         errorMessage: '계층 구조를 불러오는데 실패했습니다.',
       );
     }
+  }
+
+  // 🆕 사용자가 속한 그룹과 그 상위 그룹들을 자동으로 펼치는 함수
+  List<GroupTreeNode> _expandUserGroups(List<GroupTreeNode> nodes, Set<int> userGroupIds) {
+    return nodes.map((node) => _expandNodeIfNeeded(node, userGroupIds)).toList();
+  }
+
+  // 🆕 노드와 그 자식들을 재귀적으로 확인하여 펼칠지 결정
+  GroupTreeNode _expandNodeIfNeeded(GroupTreeNode node, Set<int> userGroupIds) {
+    // 자식 노드들을 먼저 처리
+    final expandedChildren = node.children
+        .map((child) => _expandNodeIfNeeded(child, userGroupIds))
+        .toList();
+
+    // 현재 노드 또는 자손 노드 중 하나라도 사용자가 속한 그룹이 있는지 확인
+    final shouldExpand = userGroupIds.contains(node.id) ||
+                        _hasUserGroupInDescendants(node, userGroupIds);
+
+    return node.copyWith(
+      children: expandedChildren,
+      isExpanded: shouldExpand,
+    );
+  }
+
+  // 🆕 자손 노드 중에 사용자가 속한 그룹이 있는지 확인
+  bool _hasUserGroupInDescendants(GroupTreeNode node, Set<int> userGroupIds) {
+    for (final child in node.children) {
+      if (userGroupIds.contains(child.id)) return true;
+      if (_hasUserGroupInDescendants(child, userGroupIds)) return true;
+    }
+    return false;
   }
 
   /// Toggle node expansion state
@@ -207,6 +250,11 @@ final treeErrorMessageProvider = Provider<String?>((ref) {
 
 final treeFiltersProvider = Provider<Map<String, dynamic>>((ref) {
   return ref.watch(groupTreeStateProvider.select((s) => s.filters));
+});
+
+// 🆕 사용자 그룹 ID 제공 Provider
+final userGroupIdsProvider = Provider<Set<int>>((ref) {
+  return ref.watch(groupTreeStateProvider.select((s) => s.userGroupIds));
 });
 
 /// Filtered root nodes provider - 필터를 적용한 트리 노드 제공
