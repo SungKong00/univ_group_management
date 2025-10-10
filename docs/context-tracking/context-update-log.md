@@ -4,6 +4,32 @@
 
 ## 2025년 10월
 
+### 2025-10-10 - 워크스페이스 뒤로가기 및 뷰 전환 로직 개선
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 기능 개선 + 문서 동기화
+**우선순위**: Medium
+**영향 범위**: 프론트엔드 (상태 관리, UI/UX), 문서 (UI/UX 명세)
+
+**구현 내용**:
+- **프론트엔드 기능 개선**:
+    - `workspace_state_provider.dart`: 특수 뷰(그룹 관리 등)에서 뒤로가기 시 이전 뷰로 돌아갈 수 있도록 `previousView` 상태를 추가하고, `handleWebBack`, `handleMobileBack` 로직을 개선했습니다.
+    - `workspace_page.dart`: `GroupAdminPage`가 `WorkspaceEmptyState` 대신 실제 위젯으로 렌더링되도록 변경하고, `previousView`를 활용한 뒤로가기 로직을 적용했습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/ui-ux/pages/workspace-pages.md`: '그룹 관리 페이지' 섹션의 설명을 `WorkspaceEmptyState` 플레이스홀더 대신 실제 `GroupAdminPage`가 구현되었다는 내용으로 업데이트했습니다.
+- ✅ `docs/implementation/frontend-workspace-guide.md`: 사용자가 이미 최신 내용으로 수정 완료했습니다.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+
+**수정된 파일**:
+- `frontend/lib/presentation/pages/workspace/workspace_page.dart`
+- `frontend/lib/presentation/providers/workspace_state_provider.dart`
+- `docs/implementation/frontend-workspace-guide.md`
+- `docs/ui-ux/pages/workspace-pages.md`
+
+**메모**: 워크스페이스 내에서 특수 기능 페이지와 채널 뷰 간의 전환 및 뒤로가기 경험이 일관성 있게 개선되었습니다.
+
+---
+
 ### 2025-10-09 - 워크스페이스 헤더 역할 표시 기능 추가
 **커밋**: 현재 세션 (커밋 예정)
 **유형**: 기능 추가 + 문서 동기화

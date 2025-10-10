@@ -24,6 +24,7 @@ This guide captures the architectural patterns, state-management rules, and UX c
 ## 2. State Management Patterns
 
 - `workspace_state_provider.dart` owns the canonical `WorkspaceState`. Use the provided selectors (e.g., `workspaceCurrentViewProvider`, `workspaceChannelPermissionsProvider`) instead of `ref.watch(workspaceStateProvider)` to avoid unnecessary rebuilds.
+- `WorkspaceStateNotifier.enterWorkspace` **must await** `myGroupsProvider.future` before loading channels so group membership & permissions are ready on the very first render. Never mutate workspace state directly from the page before this future resolves.
 - When you need new derived data, add a provider near the existing ones. Do **not** expose mutable state outside the notifier.
 - Keep all view transitions inside the notifier to guarantee atomic updates (channel/id, comment visibility, history, previous view).
 - Reset transient flags (e.g., `isNarrowDesktopCommentsFullscreen`) whenever switching to non-channel views so breadcrumbs and overlays stay in sync.

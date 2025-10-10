@@ -5,6 +5,7 @@ import '../../core/models/group_models.dart';
 import '../../core/services/channel_service.dart';
 import '../../core/utils/permission_utils.dart';
 import 'current_group_provider.dart';
+import 'my_groups_provider.dart';
 
 /// Workspace View Type
 enum WorkspaceView {
@@ -257,11 +258,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     _saveCurrentWorkspaceSnapshot();
   }
 
-  void enterWorkspace(
+  Future<void> enterWorkspace(
     String groupId, {
     String? channelId,
     GroupMembership? membership,
-  }) {
+  }) async {
     final isSameGroup = state.selectedGroupId == groupId;
     _lastGroupId = groupId;
 
@@ -309,25 +310,56 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
               ? state.selectedChannelId
               : snapshot?.selectedChannelId,
       },
+      isLoadingWorkspace: true,
     );
 
-    loadChannels(
-      groupId,
-      autoSelectChannelId: channelId ?? snapshot?.selectedChannelId,
-      membership: membership,
-    ).then((_) {
+    try {
+      final resolvedMembership =
+          membership ?? await _resolveGroupMembership(groupId);
+
+      if (resolvedMembership == null) {
+        state = state.copyWith(
+          isLoadingWorkspace: false,
+          isLoadingChannels: false,
+          channels: [],
+          hasAnyGroupPermission: false,
+          currentGroupPermissions: null,
+          currentGroupRole: null,
+          errorMessage: '그룹 정보를 불러올 수 없습니다.',
+        );
+        return;
+      }
+
+      await loadChannels(
+        groupId,
+        autoSelectChannelId: channelId ?? snapshot?.selectedChannelId,
+        membership: resolvedMembership,
+      );
+
       final restoredSnapshot = _getSnapshot(groupId);
       if (restoredSnapshot != null) {
         _applySnapshot(restoredSnapshot);
       }
-    });
+
+      state = state.copyWith(isLoadingWorkspace: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoadingWorkspace: false,
+        isLoadingChannels: false,
+        channels: [],
+        hasAnyGroupPermission: false,
+        currentGroupPermissions: null,
+        currentGroupRole: null,
+        errorMessage: '워크스페이스를 불러오는 중 문제가 발생했습니다.',
+      );
+    }
   }
 
   /// Load channels and membership information for a group
   Future<void> loadChannels(
     String groupId, {
     String? autoSelectChannelId,
-    GroupMembership? membership,
+    required GroupMembership membership,
   }) async {
     try {
       final groupIdInt = int.parse(groupId);
@@ -337,17 +369,12 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       // Fetch channels
       final channels = await _channelService.getChannels(groupIdInt);
 
-      // Use provided membership or fallback to currentGroupProvider
-      final currentGroup = membership ?? _ref.read(currentGroupProvider);
-
-      // Extract permissions from currentGroup
-      final hasAnyPermission = currentGroup?.permissions != null
-          ? PermissionUtils.hasAnyGroupManagementPermission(
-              currentGroup!.permissions,
-            )
-          : false;
-      final currentRole = currentGroup?.role;
-      final currentPermissions = currentGroup?.permissions.toList();
+      // Extract permissions from resolved membership
+      final permissions = membership.permissions;
+      final hasAnyPermission =
+          PermissionUtils.hasAnyGroupManagementPermission(permissions);
+      final currentRole = membership.role;
+      final currentPermissions = permissions.toList();
 
       // Generate dummy unread counts (for demonstration)
       final unreadCounts = <String, int>{};
@@ -388,6 +415,22 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         channels: [],
         hasAnyGroupPermission: false,
       );
+      rethrow;
+    }
+  }
+
+  Future<GroupMembership?> _resolveGroupMembership(String groupId) async {
+    try {
+      final memberships = await _ref.read(myGroupsProvider.future);
+      try {
+        return memberships.firstWhere(
+          (group) => group.id.toString() == groupId,
+        );
+      } catch (_) {
+        return null;
+      }
+    } catch (_) {
+      return null;
     }
   }
 

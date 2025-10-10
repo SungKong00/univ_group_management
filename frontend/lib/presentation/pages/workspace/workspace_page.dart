@@ -8,7 +8,6 @@ import '../../../core/constants/app_constants.dart';
 
 import '../../providers/workspace_state_provider.dart';
 import '../../providers/current_group_provider.dart';
-import '../../providers/my_groups_provider.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/layout_mode.dart';
 
@@ -91,24 +90,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       navigationControllerProvider.notifier,
     );
 
-    // Get membership info from myGroupsProvider
-    final groupsAsync = ref.read(myGroupsProvider);
-    final membership = groupsAsync.maybeWhen(
-      data: (groups) {
-        try {
-          return groups.firstWhere((g) => g.id.toString() == widget.groupId);
-        } catch (e) {
-          return null;
-        }
-      },
-      orElse: () => null,
-    );
-
     // 워크스페이스 상태 설정
     workspaceNotifier.enterWorkspace(
       widget.groupId!,
       channelId: widget.channelId,
-      membership: membership,
     );
 
     // 워크스페이스 진입 시 사이드바를 즉시 축소

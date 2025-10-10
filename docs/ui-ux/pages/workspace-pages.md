@@ -161,25 +161,33 @@
 -   `frontend/lib/presentation/widgets/common/collapsible_content.dart`
 -   `frontend/lib/presentation/widgets/comment/` (댓글 관련 위젯)
 
-## 2. 그룹 홈, 캘린더, 그룹 관리 페이지 (준비 중)
+## 2. 그룹 홈, 캘린더, 그룹 관리 페이지
 
-> **구현 상태**: Phase 1 - 재사용 가능한 준비 중 UI로 통합 (2025-10-07)
+> **구현 상태**: 그룹 관리 페이지 구현 완료, 나머지는 준비 중 UI로 표시 (2025-10-10)
 
-그룹 홈, 그룹 캘린더, 그룹 관리 기능은 현재 개발 준비 중입니다. 이전에는 각 기능별로 별도의 "준비 중" 화면이 있었으나, 코드의 재사용성과 UI의 일관성을 높이기 위해 단일 `WorkspaceEmptyState` 위젯을 사용하도록 리팩토링되었습니다.
+워크스페이스의 핵심 기능인 그룹 관리 페이지가 구현되었으며, 그룹 홈 및 캘린더는 현재 개발 준비 중입니다.
 
-### 2.1. 통합된 UI 컴포넌트
+### 2.1. 구현된 페이지: 그룹 관리
+
+-   **상태**: 구현 완료
+-   **컴포넌트**: `GroupAdminPage`
+-   **위치**: `frontend/lib/presentation/pages/group/group_admin_page.dart`
+-   **동작**: 사용자가 채널 네비게이션의 '관리자' 버튼을 클릭하면, `workspace_page.dart`는 `GroupAdminPage` 위젯을 렌더링합니다. `workspace_state_provider`는 `previousView`를 기록하여 '뒤로가기' 시 이전 채널 뷰로 복귀할 수 있도록 지원합니다.
+
+### 2.2. 준비 중인 페이지: 그룹 홈, 캘린더
+
+그룹 홈과 그룹 캘린더 기능은 `WorkspaceEmptyState` 위젯을 사용하여 "준비 중" 상태를 표시합니다.
 
 -   **컴포넌트**: `WorkspaceEmptyState`
 -   **위치**: `frontend/lib/presentation/pages/workspace/widgets/workspace_empty_state.dart`
--   **동작**: 이 위젯은 `WorkspaceEmptyType`이라는 `enum` 값을 받아, 해당 타입에 맞는 아이콘과 텍스트(제목, 설명)를 표시합니다.
+-   **동작**: 이 위젯은 `WorkspaceEmptyType` 값을 받아, 기능에 맞는 아이콘과 텍스트를 표시합니다.
 
 | 기능 | `WorkspaceEmptyType` | 표시 아이콘 | 표시 제목 |
 | :--- | :--- | :--- | :--- |
 | 그룹 홈 | `groupHome` | `Icons.home_outlined` | 그룹 홈 |
 | 그룹 캘린더 | `calendar` | `Icons.calendar_today_outlined` | 캘린더 |
-| 그룹 관리 | `groupAdmin` | `Icons.settings_outlined` | 그룹 관리 |
 
-### 2.2. 채널 미선택 시 화면
+### 2.3. 채널 미선택 시 화면
 
 사용자가 워크스페이스에 진입했지만 아직 채널을 선택하지 않았을 때 표시되는 화면 역시 `WorkspaceEmptyState` 위젯을 사용합니다.
 
@@ -187,8 +195,6 @@
 -   **표시 아이콘**: `Icons.tag`
 -   **표시 제목**: "채널을 선택하세요"
 
-이러한 통합을 통해 "내용 없음" 또는 "준비 중" 상태를 나타내는 모든 화면이 일관된 디자인을 갖게 되었으며, 향후 새로운 상태를 추가하거나 기존 디자인을 변경하기 매우 용이해졌습니다.
+### 2.4. 향후 계획
 
-### 2.3. 향후 계획
-
-각 페이지의 실제 기능은 `docs/ui-ux/pages/group-admin-page.md` 등의 개별 명세에 따라 순차적으로 구현될 예정입니다. 현재의 `WorkspaceEmptyState`는 해당 기능들이 구현되기 전까지의 Placeholder 역할을 수행합니다.
+그룹 홈 및 캘린더의 실제 기능은 각 개별 명세에 따라 순차적으로 구현될 예정입니다. 현재의 `WorkspaceEmptyState`는 해당 기능들이 구현되기 전까지의 Placeholder 역할을 수행합니다.
