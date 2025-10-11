@@ -84,11 +84,11 @@ class HomePage extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: ActionCard(
-                      icon: Icons.add,
-                      title: '그룹 생성',
-                      description: '새로운 그룹을 만들어보세요',
-                      onTap: () {},
-                      semanticsLabel: '그룹 생성 버튼',
+                      icon: Icons.people_outline,
+                      title: '모집 중인 그룹 보기',
+                      description: '지금 모집 중인 그룹을 찾아보세요',
+                      onTap: () => ref.read(homeStateProvider.notifier).showGroupExploreWithRecruitingFilter(),
+                      semanticsLabel: '모집 중인 그룹 보기 버튼',
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -106,11 +106,11 @@ class HomePage extends ConsumerWidget {
             : Column(
                 children: [
                   ActionCard(
-                    icon: Icons.add,
-                    title: '그룹 생성',
-                    description: '새로운 그룹을 만들어보세요',
-                    onTap: () {},
-                    semanticsLabel: '그룹 생성 버튼',
+                    icon: Icons.people_outline,
+                    title: '모집 중인 그룹 보기',
+                    description: '지금 모집 중인 그룹을 찾아보세요',
+                    onTap: () => ref.read(homeStateProvider.notifier).showGroupExploreWithRecruitingFilter(),
+                    semanticsLabel: '모집 중인 그룹 보기 버튼',
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   ActionCard(

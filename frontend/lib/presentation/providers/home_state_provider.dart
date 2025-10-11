@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
+import '../pages/group_explore/providers/group_explore_state_provider.dart';
 
 /// Home View Types
 enum HomeView {
@@ -33,7 +34,9 @@ class HomeState extends Equatable {
 
 /// Home State Notifier
 class HomeStateNotifier extends StateNotifier<HomeState> {
-  HomeStateNotifier() : super(const HomeState());
+  HomeStateNotifier(this._ref) : super(const HomeState());
+
+  final Ref _ref;
 
   /// Show group explore view
   void showGroupExplore() {
@@ -41,6 +44,18 @@ class HomeStateNotifier extends StateNotifier<HomeState> {
       previousView: state.currentView,
       currentView: HomeView.groupExplore,
     );
+  }
+
+  /// Show group explore view with recruiting filter enabled
+  void showGroupExploreWithRecruitingFilter() {
+    // First, navigate to group explore view
+    state = state.copyWith(
+      previousView: state.currentView,
+      currentView: HomeView.groupExplore,
+    );
+
+    // Then, activate the recruiting filter
+    _ref.read(groupExploreStateProvider.notifier).updateFilter('recruiting', true);
   }
 
   /// Show dashboard view
@@ -64,7 +79,7 @@ class HomeStateNotifier extends StateNotifier<HomeState> {
 
 // State Provider
 final homeStateProvider = StateNotifierProvider<HomeStateNotifier, HomeState>(
-  (ref) => HomeStateNotifier(),
+  (ref) => HomeStateNotifier(ref),
 );
 
 // Selective Provider (prevent unnecessary rebuilds)
