@@ -43,6 +43,7 @@ class GlobalExceptionHandler {
                 ErrorCode.APPLICATION_NOT_FOUND,
                 ErrorCode.REQUEST_NOT_FOUND,
                 ErrorCode.PERSONAL_EVENT_NOT_FOUND,
+                ErrorCode.PERSONAL_SCHEDULE_NOT_FOUND,
                 -> HttpStatus.NOT_FOUND
 
                 ErrorCode.USER_ALREADY_EXISTS,
