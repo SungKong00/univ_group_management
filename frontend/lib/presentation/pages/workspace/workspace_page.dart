@@ -24,6 +24,7 @@ import 'widgets/workspace_state_view.dart';
 import 'widgets/desktop_workspace_layout.dart';
 import 'widgets/channel_content_view.dart';
 import 'widgets/post_preview_widget.dart';
+import 'widgets/group_home_view.dart';
 import 'providers/post_preview_notifier.dart';
 import 'providers/post_actions_provider.dart';
 import 'providers/comment_actions_provider.dart';
@@ -439,7 +440,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     if (currentView != WorkspaceView.channel) {
       switch (currentView) {
         case WorkspaceView.groupHome:
-          return const WorkspaceEmptyState(type: WorkspaceEmptyType.groupHome);
+          return const GroupHomeView();
         case WorkspaceView.calendar:
           return const WorkspaceEmptyState(type: WorkspaceEmptyType.calendar);
         case WorkspaceView.groupAdmin:
@@ -553,7 +554,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     // Switch view based on currentView
     switch (currentView) {
       case WorkspaceView.groupHome:
-        return const WorkspaceEmptyState(type: WorkspaceEmptyType.groupHome);
+        return const GroupHomeView();
       case WorkspaceView.calendar:
         return const WorkspaceEmptyState(type: WorkspaceEmptyType.calendar);
       case WorkspaceView.groupAdmin:
