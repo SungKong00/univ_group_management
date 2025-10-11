@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../providers/my_groups_provider.dart';
 import '../../../providers/workspace_state_provider.dart';
+import '../../../widgets/dialogs/create_subgroup_dialog.dart';
 
 /// 그룹 홈 페이지
 ///
@@ -29,8 +31,8 @@ class GroupHomeView extends ConsumerWidget {
             child: SingleChildScrollView(
               padding: EdgeInsets.all(AppSpacing.md),
               child: isWide
-                  ? _buildWideLayout(context, hasAnyGroupPermission)
-                  : _buildNarrowLayout(context, hasAnyGroupPermission),
+                  ? _buildWideLayout(context, hasAnyGroupPermission, ref)
+                  : _buildNarrowLayout(context, hasAnyGroupPermission, ref),
             ),
           );
         },
@@ -39,12 +41,12 @@ class GroupHomeView extends ConsumerWidget {
   }
 
   /// Wide Layout (Desktop): 2-column layout
-  Widget _buildWideLayout(BuildContext context, bool hasAnyGroupPermission) {
+  Widget _buildWideLayout(BuildContext context, bool hasAnyGroupPermission, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header with button
-        _buildHeader(context, hasAnyGroupPermission),
+        _buildHeader(context, hasAnyGroupPermission, ref),
         SizedBox(height: AppSpacing.md),
 
         // Two-column layout
@@ -76,12 +78,12 @@ class GroupHomeView extends ConsumerWidget {
   }
 
   /// Narrow Layout (Mobile/Tablet): Single column layout
-  Widget _buildNarrowLayout(BuildContext context, bool hasAnyGroupPermission) {
+  Widget _buildNarrowLayout(BuildContext context, bool hasAnyGroupPermission, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header with button
-        _buildHeader(context, hasAnyGroupPermission),
+        _buildHeader(context, hasAnyGroupPermission, ref),
         SizedBox(height: AppSpacing.md),
 
         // Unread posts
@@ -98,7 +100,7 @@ class GroupHomeView extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool hasAnyGroupPermission) {
+  Widget _buildHeader(BuildContext context, bool hasAnyGroupPermission, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) {
         // 좁은 화면(< 600px)에서는 버튼을 아래로 배치
@@ -131,7 +133,7 @@ class GroupHomeView extends ConsumerWidget {
               // Button with Description (if has permission)
               if (hasAnyGroupPermission) ...[
                 SizedBox(height: AppSpacing.sm),
-                _buildCreateSubgroupSection(context),
+                _buildCreateSubgroupSection(context, ref),
               ],
             ],
           );
@@ -165,7 +167,7 @@ class GroupHomeView extends ConsumerWidget {
             // Button with Description (if has permission)
             if (hasAnyGroupPermission) ...[
               SizedBox(width: AppSpacing.md),
-              _buildCreateSubgroupSection(context),
+              _buildCreateSubgroupSection(context, ref),
             ],
           ],
         );
@@ -174,7 +176,7 @@ class GroupHomeView extends ConsumerWidget {
   }
 
   /// 하위 그룹 만들기 버튼 + 설명 (Title + Description 패턴)
-  Widget _buildCreateSubgroupSection(BuildContext context) {
+  Widget _buildCreateSubgroupSection(BuildContext context, WidgetRef ref) {
     return IntrinsicWidth(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,13 +184,43 @@ class GroupHomeView extends ConsumerWidget {
         children: [
           // Button (Title)
           OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Navigate to subgroup creation
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('하위 그룹 생성 (구현 예정)'),
-                  duration: Duration(seconds: 1),
-                ),
+            onPressed: () async {
+              final workspaceState = ref.read(workspaceStateProvider);
+              final selectedGroupId = workspaceState.selectedGroupId;
+
+              if (selectedGroupId == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                return;
+              }
+
+              // Get group details from myGroupsProvider
+              final myGroupsAsync = ref.read(myGroupsProvider);
+              final myGroups = myGroupsAsync.value;
+
+              if (myGroups == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                return;
+              }
+
+              final selectedGroup = myGroups.firstWhere(
+                (group) => group.id.toString() == selectedGroupId,
+                orElse: () => throw Exception('선택된 그룹을 찾을 수 없습니다.'),
+              );
+
+              showCreateSubgroupDialog(
+                context,
+                groupId: selectedGroup.id,
+                parentGroupName: selectedGroup.name,
               );
             },
             icon: const Icon(Icons.add_circle_outline),

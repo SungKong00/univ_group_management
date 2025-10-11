@@ -31,6 +31,7 @@ class UserServiceTest {
     private lateinit var groupJoinRequestRepository: GroupJoinRequestRepository
     private lateinit var subGroupRequestRepository: SubGroupRequestRepository
     private lateinit var groupMemberRepository: GroupMemberRepository
+    private lateinit var groupMapper: GroupMapper
 
     @BeforeEach
     fun setUp() {
@@ -41,6 +42,7 @@ class UserServiceTest {
         groupJoinRequestRepository = mockk()
         subGroupRequestRepository = mockk()
         groupMemberRepository = mockk()
+        groupMapper = mockk()
 
         userService =
             UserService(
@@ -50,6 +52,7 @@ class UserServiceTest {
                 groupJoinRequestRepository,
                 subGroupRequestRepository,
                 groupMemberRepository,
+                groupMapper,
             )
     }
 

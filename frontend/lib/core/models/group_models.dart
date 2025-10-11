@@ -124,6 +124,32 @@ class UpdateGroupRequest {
   }
 }
 
+/// CreateSubgroupRequest model for POST /api/groups/{parentId}/sub-groups/requests
+///
+/// Maps to backend CreateSubGroupRequest DTO with 'requested' prefix
+class CreateSubgroupRequest {
+  final String name;
+  final String? description;
+  final String groupType;
+  final int? maxMembers;
+
+  CreateSubgroupRequest({
+    required this.name,
+    this.description,
+    required this.groupType,
+    this.maxMembers,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'requestedGroupName': name,
+      'requestedGroupDescription': description,
+      'requestedGroupType': groupType,
+      'requestedMaxMembers': maxMembers,
+    };
+  }
+}
+
 class GroupSummaryResponse {
   GroupSummaryResponse({
     required this.id,

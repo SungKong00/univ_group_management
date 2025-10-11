@@ -190,4 +190,56 @@ class GroupService {
       rethrow;
     }
   }
+
+  /// Create subgroup request
+  ///
+  /// POST /api/groups/{parentId}/sub-groups/requests
+  /// Requires GROUP_MANAGE permission
+  /// Returns void (request is created for admin approval)
+  Future<void> createSubgroup(
+    int parentId,
+    CreateSubgroupRequest request,
+  ) async {
+    try {
+      developer.log(
+        'Creating subgroup request under parent $parentId with request: ${request.toJson()}',
+        name: 'GroupService',
+      );
+
+      final response = await _dioClient.post<Map<String, dynamic>>(
+        '/groups/$parentId/sub-groups/requests',
+        data: request.toJson(),
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json,
+        );
+
+        if (apiResponse.success) {
+          developer.log(
+            'Successfully created subgroup request',
+            name: 'GroupService',
+          );
+        } else {
+          developer.log(
+            'Failed to create subgroup request: ${apiResponse.message}',
+            name: 'GroupService',
+            level: 900,
+          );
+          throw Exception(apiResponse.message ?? 'Failed to create subgroup request');
+        }
+      } else {
+        throw Exception('Empty response from server');
+      }
+    } catch (e) {
+      developer.log(
+        'Error creating subgroup request: $e',
+        name: 'GroupService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
 }
