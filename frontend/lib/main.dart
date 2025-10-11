@@ -1,8 +1,10 @@
 import 'dart:developer' as developer;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'core/theme/theme.dart';
@@ -22,6 +24,20 @@ void main() async {
   try {
     // Load environment variables
     await dotenv.load(fileName: '.env');
+
+    // 웹 환경에서 폰트 프리로드 (FOUC 방지)
+    // 비차단 방식: Regular(400)만 백그라운드 로드, 앱 시작 차단 방지
+    if (kIsWeb) {
+      developer.log('Starting Noto Sans KR Regular font preload (non-blocking)...', name: 'main');
+      // await 제거! 백그라운드에서 로드
+      GoogleFonts.pendingFonts([
+        GoogleFonts.notoSansKr(), // Regular(400)만 프리로드
+      ]).then((_) {
+        developer.log('Noto Sans KR Regular font loaded successfully', name: 'main');
+      }).catchError((e) {
+        developer.log('Font preloading failed (continuing anyway): $e', name: 'main', level: 900);
+      });
+    }
 
     // Initialize Korean locale for date formatting
     await initializeDateFormatting('ko_KR', null);
