@@ -180,6 +180,10 @@ class AuthService {
               'Auto login successful: ${_currentUser!.email}',
               name: 'AuthService',
             );
+
+            // GoRouter에 인증 상태 변경 알림 (자동 로그인 성공)
+            authChangeNotifier.notifyAuthChanged();
+
             return true;
           } else {
             throw Exception(
@@ -200,6 +204,9 @@ class AuthService {
         await _clearTokens();
         _currentUser = null;
 
+        // GoRouter에 인증 상태 변경 알림 (로그인 페이지로 리다이렉트)
+        authChangeNotifier.notifyAuthChanged();
+
         return false;
       }
     } catch (e) {
@@ -207,6 +214,10 @@ class AuthService {
       // 예외 발생 시 로컬 데이터 정리
       await _clearTokens();
       _currentUser = null;
+
+      // GoRouter에 인증 상태 변경 알림 (로그인 페이지로 리다이렉트)
+      authChangeNotifier.notifyAuthChanged();
+
       return false;
     }
   }

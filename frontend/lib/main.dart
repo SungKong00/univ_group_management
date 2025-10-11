@@ -30,14 +30,21 @@ void main() async {
     final authService = AuthService();
     authService.initialize();
 
-    // Try auto login (non-blocking, 실패해도 앱은 계속 실행)
-    authService.tryAutoLogin().catchError((error) {
+    // Try auto login (블로킹 방식으로 변경, 인증 상태 확인 후 앱 실행)
+    try {
+      await authService.tryAutoLogin();
+      developer.log(
+        'Auto login completed',
+        name: 'main',
+      );
+    } catch (error) {
       developer.log(
         'Auto login failed, continuing with manual login: $error',
         name: 'main',
+        level: 900,
       );
-      return false; // Return false to indicate auto login failed
-    });
+      // 실패해도 앱은 계속 실행
+    }
   } catch (error) {
     developer.log('Initialization error: $error', name: 'main');
     // 초기화 실패해도 앱은 실행
