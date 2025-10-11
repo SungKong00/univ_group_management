@@ -41,6 +41,10 @@ enum class ErrorCode(val message: String) {
     // Comment
     COMMENT_NOT_FOUND("댓글을 찾을 수 없습니다."),
 
+    // Personal Calendar
+    PERSONAL_EVENT_NOT_FOUND("이벤트를 찾을 수 없습니다."),
+    PERSONAL_EVENT_INVALID_TIME("이벤트 시간 범위가 올바르지 않습니다."),
+
     // Recruitment
     RECRUITMENT_NOT_FOUND("모집 게시글을 찾을 수 없습니다."),
     RECRUITMENT_ALREADY_EXISTS("이미 활성화된 모집 게시글이 있습니다."),
