@@ -151,3 +151,6 @@ final exploreRecruitmentSearchQueryProvider = Provider<String>((ref) {
   return ref
       .watch(recruitmentExploreStateProvider.select((s) => s.searchQuery));
 });
+
+// Selected Recruitment ID for detail view
+final selectedRecruitmentIdProvider = StateProvider.autoDispose<int?>((ref) => null);
