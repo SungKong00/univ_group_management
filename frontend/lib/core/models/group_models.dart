@@ -1,3 +1,5 @@
+import 'user_models.dart';
+
 enum GroupNodeType { university, college, department, other }
 
 enum GroupType {
@@ -218,5 +220,89 @@ class GroupSummaryResponse {
 
   static String _serializeGroupType(GroupType type) {
     return type.name.toUpperCase();
+  }
+}
+
+/// SubGroupRequestResponse model for GET /api/groups/{groupId}/sub-groups/requests
+///
+/// Maps to backend SubGroupRequestResponse DTO
+class SubGroupRequestResponse {
+  final int id;
+  final UserSummaryResponse requester;
+  final GroupSummaryResponse parentGroup;
+  final String requestedGroupName;
+  final String? requestedGroupDescription;
+  final String? requestedUniversity;
+  final String? requestedCollege;
+  final String? requestedDepartment;
+  final GroupType requestedGroupType;
+  final int? requestedMaxMembers;
+  final String status; // "PENDING", "APPROVED", "REJECTED"
+  final String? responseMessage;
+  final UserSummaryResponse? reviewedBy;
+  final DateTime? reviewedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  SubGroupRequestResponse({
+    required this.id,
+    required this.requester,
+    required this.parentGroup,
+    required this.requestedGroupName,
+    this.requestedGroupDescription,
+    this.requestedUniversity,
+    this.requestedCollege,
+    this.requestedDepartment,
+    required this.requestedGroupType,
+    this.requestedMaxMembers,
+    required this.status,
+    this.responseMessage,
+    this.reviewedBy,
+    this.reviewedAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory SubGroupRequestResponse.fromJson(Map<String, dynamic> json) {
+    return SubGroupRequestResponse(
+      id: (json['id'] as num).toInt(),
+      requester: UserSummaryResponse.fromJson(json['requester'] as Map<String, dynamic>),
+      parentGroup: GroupSummaryResponse.fromJson(json['parentGroup'] as Map<String, dynamic>),
+      requestedGroupName: json['requestedGroupName'] as String,
+      requestedGroupDescription: json['requestedGroupDescription'] as String?,
+      requestedUniversity: json['requestedUniversity'] as String?,
+      requestedCollege: json['requestedCollege'] as String?,
+      requestedDepartment: json['requestedDepartment'] as String?,
+      requestedGroupType: GroupSummaryResponse._parseGroupType(json['requestedGroupType'] as String),
+      requestedMaxMembers: (json['requestedMaxMembers'] as num?)?.toInt(),
+      status: json['status'] as String,
+      responseMessage: json['responseMessage'] as String?,
+      reviewedBy: json['reviewedBy'] != null
+          ? UserSummaryResponse.fromJson(json['reviewedBy'] as Map<String, dynamic>)
+          : null,
+      reviewedAt: json['reviewedAt'] != null
+          ? DateTime.parse(json['reviewedAt'] as String)
+          : null,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+}
+
+/// ReviewSubGroupRequestRequest model for PATCH /api/groups/{groupId}/sub-groups/requests/{requestId}
+class ReviewSubGroupRequestRequest {
+  final String action; // "APPROVE" or "REJECT"
+  final String? responseMessage;
+
+  ReviewSubGroupRequestRequest({
+    required this.action,
+    this.responseMessage,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'action': action,
+      if (responseMessage != null) 'responseMessage': responseMessage,
+    };
   }
 }

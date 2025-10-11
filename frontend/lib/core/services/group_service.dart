@@ -242,4 +242,114 @@ class GroupService {
       rethrow;
     }
   }
+
+  /// Get subgroup creation requests for a group
+  ///
+  /// GET /api/groups/{groupId}/sub-groups/requests
+  /// Requires GROUP_MANAGE permission
+  /// Returns list of pending subgroup requests
+  Future<List<SubGroupRequestResponse>> getSubGroupRequests(int groupId) async {
+    try {
+      developer.log(
+        'Fetching subgroup requests for group $groupId',
+        name: 'GroupService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/groups/$groupId/sub-groups/requests',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map(
+                  (item) => SubGroupRequestResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
+                .toList();
+          }
+          return <SubGroupRequestResponse>[];
+        });
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} subgroup requests',
+            name: 'GroupService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch subgroup requests: ${apiResponse.message}',
+            name: 'GroupService',
+            level: 900,
+          );
+          throw Exception(apiResponse.message ?? 'Failed to fetch subgroup requests');
+        }
+      }
+
+      return [];
+    } catch (e) {
+      developer.log(
+        'Error fetching subgroup requests: $e',
+        name: 'GroupService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Review subgroup creation request (approve or reject)
+  ///
+  /// PATCH /api/groups/{groupId}/sub-groups/requests/{requestId}
+  /// Requires GROUP_MANAGE permission
+  /// action: "APPROVE" or "REJECT"
+  Future<void> reviewSubGroupRequest(
+    int groupId,
+    int requestId,
+    ReviewSubGroupRequestRequest request,
+  ) async {
+    try {
+      developer.log(
+        'Reviewing subgroup request $requestId for group $groupId with action: ${request.action}',
+        name: 'GroupService',
+      );
+
+      final response = await _dioClient.patch<Map<String, dynamic>>(
+        '/groups/$groupId/sub-groups/requests/$requestId',
+        data: request.toJson(),
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json,
+        );
+
+        if (apiResponse.success) {
+          developer.log(
+            'Successfully reviewed subgroup request',
+            name: 'GroupService',
+          );
+        } else {
+          developer.log(
+            'Failed to review subgroup request: ${apiResponse.message}',
+            name: 'GroupService',
+            level: 900,
+          );
+          throw Exception(apiResponse.message ?? 'Failed to review subgroup request');
+        }
+      } else {
+        throw Exception('Empty response from server');
+      }
+    } catch (e) {
+      developer.log(
+        'Error reviewing subgroup request: $e',
+        name: 'GroupService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
 }

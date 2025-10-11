@@ -10,6 +10,7 @@ import '../../providers/current_group_provider.dart';
 import '../../providers/my_groups_provider.dart';
 import '../../widgets/dialogs/edit_group_dialog.dart';
 import '../../widgets/cards/action_card.dart';
+import 'widgets/subgroup_request_section.dart';
 
 /// 그룹 관리자 페이지
 ///
@@ -107,6 +108,11 @@ class _AdminContentView extends ConsumerWidget {
     // Permission-Centric 접근: 각 권한별 섹션 생성
     final sections = <Widget>[];
 
+    // 하위 그룹 생성 요청 관리 섹션 (GROUP_MANAGE 권한 필요)
+    if (permissions.contains('GROUP_MANAGE')) {
+      sections.add(_buildSubGroupRequestSection(context, ref));
+    }
+
     // 멤버 관리 섹션
     if (permissions.contains('MEMBER_MANAGE')) {
       sections.add(_buildMemberManagementSection(context, ref));
@@ -181,6 +187,24 @@ class _AdminContentView extends ConsumerWidget {
               .expand((section) => [section, SizedBox(height: AppSpacing.md)])
               .toList()
             ..removeLast(), // 마지막 SizedBox 제거
+    );
+  }
+
+  Widget _buildSubGroupRequestSection(BuildContext context, WidgetRef ref) {
+    final currentGroup = ref.watch(currentGroupProvider);
+    if (currentGroup == null) {
+      return const SizedBox.shrink();
+    }
+
+    return _AdminSection(
+      title: '하위 그룹 생성 신청',
+      description: '대기 중인 하위 그룹 생성 신청을 승인하거나 거절하세요',
+      icon: Icons.account_tree_outlined,
+      expandableContent: SubGroupRequestSection(
+        groupId: currentGroup.id,
+        isDesktop: isDesktop,
+      ),
+      isDesktop: isDesktop,
     );
   }
 
@@ -377,21 +401,26 @@ class _AdminContentView extends ConsumerWidget {
   }
 }
 
-/// 관리 섹션 (헤더 + 액션 카드 그리드)
+/// 관리 섹션 (헤더 + 액션 카드 그리드 또는 확장 가능한 콘텐츠)
 class _AdminSection extends StatelessWidget {
   final String title;
   final String description;
   final IconData icon;
-  final List<Widget> actions;
+  final List<Widget>? actions;
+  final Widget? expandableContent;
   final bool isDesktop;
 
   const _AdminSection({
     required this.title,
     required this.description,
     required this.icon,
-    required this.actions,
+    this.actions,
+    this.expandableContent,
     required this.isDesktop,
-  });
+  }) : assert(
+          actions != null || expandableContent != null,
+          'Either actions or expandableContent must be provided',
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -443,23 +472,26 @@ class _AdminSection extends StatelessWidget {
             ],
           ),
           SizedBox(height: AppSpacing.md),
-          // 액션 카드 그리드
-          isDesktop
-              ? Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: actions,
-                )
-              : Column(
-                  children: actions
-                      .map(
-                        (action) => Padding(
-                          padding: EdgeInsets.only(bottom: AppSpacing.sm),
-                          child: action,
-                        ),
-                      )
-                      .toList(),
-                ),
+          // 액션 카드 그리드 또는 확장 가능한 콘텐츠
+          if (expandableContent != null)
+            expandableContent!
+          else if (actions != null)
+            isDesktop
+                ? Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children: actions!,
+                  )
+                : Column(
+                    children: actions!
+                        .map(
+                          (action) => Padding(
+                            padding: EdgeInsets.only(bottom: AppSpacing.sm),
+                            child: action,
+                          ),
+                        )
+                        .toList(),
+                  ),
         ],
       ),
     );
