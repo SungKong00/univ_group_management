@@ -109,4 +109,80 @@ class LocalStorage {
     _cachedRefreshToken = null;
     _cachedUserData = null;
   }
+
+  // ========== Navigation State Management ==========
+
+  /// 마지막 선택된 탭 인덱스 저장
+  Future<void> saveLastTabIndex(int index) async {
+    final prefs = await _preferences;
+    await prefs.setInt('last_tab_index', index);
+  }
+
+  /// 마지막 선택된 탭 인덱스 복원
+  /// 저장된 값이 없으면 null 반환
+  Future<int?> getLastTabIndex() async {
+    final prefs = await _preferences;
+    return prefs.getInt('last_tab_index');
+  }
+
+  // ========== Workspace State Management ==========
+
+  /// 마지막 방문한 워크스페이스 그룹 ID 저장
+  Future<void> saveLastGroupId(String? groupId) async {
+    final prefs = await _preferences;
+    if (groupId != null) {
+      await prefs.setString('last_group_id', groupId);
+    } else {
+      await prefs.remove('last_group_id');
+    }
+  }
+
+  /// 마지막 방문한 워크스페이스 그룹 ID 복원
+  Future<String?> getLastGroupId() async {
+    final prefs = await _preferences;
+    return prefs.getString('last_group_id');
+  }
+
+  /// 마지막 선택한 채널 ID 저장
+  Future<void> saveLastChannelId(String? channelId) async {
+    final prefs = await _preferences;
+    if (channelId != null) {
+      await prefs.setString('last_channel_id', channelId);
+    } else {
+      await prefs.remove('last_channel_id');
+    }
+  }
+
+  /// 마지막 선택한 채널 ID 복원
+  Future<String?> getLastChannelId() async {
+    final prefs = await _preferences;
+    return prefs.getString('last_channel_id');
+  }
+
+  /// 마지막 선택한 뷰 타입 저장
+  Future<void> saveLastViewType(String? viewType) async {
+    final prefs = await _preferences;
+    if (viewType != null) {
+      await prefs.setString('last_view_type', viewType);
+    } else {
+      await prefs.remove('last_view_type');
+    }
+  }
+
+  /// 마지막 선택한 뷰 타입 복원
+  Future<String?> getLastViewType() async {
+    final prefs = await _preferences;
+    return prefs.getString('last_view_type');
+  }
+
+  /// 모든 네비게이션/워크스페이스 상태 클리어 (로그아웃 시)
+  Future<void> clearNavigationState() async {
+    final prefs = await _preferences;
+    await Future.wait([
+      prefs.remove('last_tab_index'),
+      prefs.remove('last_group_id'),
+      prefs.remove('last_channel_id'),
+      prefs.remove('last_view_type'),
+    ]);
+  }
 }

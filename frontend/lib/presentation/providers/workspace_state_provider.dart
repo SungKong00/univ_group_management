@@ -1,8 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
 import '../../core/models/channel_models.dart';
 import '../../core/models/group_models.dart';
 import '../../core/services/channel_service.dart';
+import '../../core/services/local_storage.dart';
 import '../../core/utils/permission_utils.dart';
 import 'my_groups_provider.dart';
 
@@ -203,6 +206,65 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     );
 
     _lastGroupId = groupId;
+
+    // LocalStorage에도 저장 (앱 재시작 시 복원)
+    _saveToLocalStorage();
+  }
+
+  /// LocalStorage에 워크스페이스 상태 저장
+  void _saveToLocalStorage() {
+    LocalStorage.instance.saveLastGroupId(state.selectedGroupId);
+    LocalStorage.instance.saveLastChannelId(state.selectedChannelId);
+    LocalStorage.instance.saveLastViewType(state.currentView.name);
+  }
+
+  /// LocalStorage에서 워크스페이스 상태 복원
+  Future<void> restoreFromLocalStorage() async {
+    try {
+      final lastGroupId = await LocalStorage.instance.getLastGroupId();
+      final lastChannelId = await LocalStorage.instance.getLastChannelId();
+      final lastViewType = await LocalStorage.instance.getLastViewType();
+
+      if (lastGroupId != null) {
+        // 복원할 뷰 타입 결정
+        WorkspaceView? restoredView;
+        if (lastViewType != null) {
+          try {
+            restoredView = WorkspaceView.values.firstWhere(
+              (v) => v.name == lastViewType,
+            );
+          } catch (_) {
+            restoredView = WorkspaceView.channel;
+          }
+        }
+
+        if (kDebugMode) {
+          developer.log(
+            'Restoring workspace state: group=$lastGroupId, channel=$lastChannelId, view=$lastViewType',
+            name: 'WorkspaceStateNotifier',
+          );
+        }
+
+        // 워크스페이스 진입 시 저장된 채널 및 뷰 복원
+        await enterWorkspace(
+          lastGroupId,
+          channelId: lastChannelId,
+        );
+
+        // 뷰 타입 복원
+        if (restoredView != null && restoredView != WorkspaceView.channel) {
+          state = state.copyWith(currentView: restoredView);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        developer.log(
+          'Failed to restore workspace state from LocalStorage: $e',
+          name: 'WorkspaceStateNotifier',
+          level: 900,
+        );
+      }
+    }
   }
 
   WorkspaceSnapshot? _getSnapshot(String groupId) {
@@ -463,6 +525,9 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
     );
+
+    // LocalStorage에 저장
+    _saveToLocalStorage();
 
     // Load permissions for the selected channel
     loadChannelPermissions(channelId);

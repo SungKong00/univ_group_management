@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/app_constants.dart';
+import '../services/local_storage.dart';
 import 'navigation_config.dart';
 import 'layout_mode.dart';
 
@@ -158,6 +159,32 @@ class NavigationController extends StateNotifier<NavigationState> {
     );
   }
 
+  /// 저장된 탭 상태 복원
+  Future<void> restoreLastTab() async {
+    try {
+      final lastTabIndex = await LocalStorage.instance.getLastTabIndex();
+      if (lastTabIndex != null && lastTabIndex >= 0 && lastTabIndex < NavigationTab.values.length) {
+        final tab = NavigationTab.values[lastTabIndex];
+        navigateToTabRoot(tab);
+
+        if (kDebugMode) {
+          developer.log(
+            'Restored last tab: ${tab.name} (index: $lastTabIndex)',
+            name: 'NavigationController',
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        developer.log(
+          'Failed to restore last tab: $e',
+          name: 'NavigationController',
+          level: 900,
+        );
+      }
+    }
+  }
+
   /// 새로운 라우트로 네비게이션
   void navigateTo(String route, {Map<String, dynamic>? context}) {
     final tab = NavigationTab.fromRoute(route);
@@ -220,12 +247,21 @@ class NavigationController extends StateNotifier<NavigationState> {
       isWorkspaceCollapsed: shouldCollapse ? true : null,
     );
 
+    // 탭 변경 시 LocalStorage에 저장
+    _saveCurrentTabIndex();
+
     if (kDebugMode) {
       developer.log(
         'Navigated to: $route (tab: ${tab.name})',
         name: 'NavigationController',
       );
     }
+  }
+
+  /// 현재 탭 인덱스를 LocalStorage에 저장
+  void _saveCurrentTabIndex() {
+    final tabIndex = NavigationTab.values.indexOf(state.currentTab);
+    LocalStorage.instance.saveLastTabIndex(tabIndex);
   }
 
   Map<String, dynamic>? _normalizeContext(Map<String, dynamic>? context) {
@@ -295,6 +331,9 @@ class NavigationController extends StateNotifier<NavigationState> {
       tabHistories: newTabHistories,
       isWorkspaceCollapsed: false,
     );
+
+    // 탭 변경 시 LocalStorage에 저장
+    _saveCurrentTabIndex();
 
     if (kDebugMode) {
       developer.log('Navigate to home', name: 'NavigationController');

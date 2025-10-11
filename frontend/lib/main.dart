@@ -15,6 +15,10 @@ import 'core/constants/app_constants.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 스플래시 최소 표시 시간 보장 (깜빡임 방지)
+  final splashStartTime = DateTime.now();
+  const minSplashDuration = Duration(milliseconds: 1000);
+
   try {
     // Load environment variables
     await dotenv.load(fileName: '.env');
@@ -48,6 +52,12 @@ void main() async {
   } catch (error) {
     developer.log('Initialization error: $error', name: 'main');
     // 초기화 실패해도 앱은 실행
+  }
+
+  // 최소 스플래시 표시 시간 보장
+  final elapsedTime = DateTime.now().difference(splashStartTime);
+  if (elapsedTime < minSplashDuration) {
+    await Future.delayed(minSplashDuration - elapsedTime);
   }
 
   runApp(const ProviderScope(child: UniversityGroupApp()));

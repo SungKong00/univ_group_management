@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/pages/auth/login_page.dart';
 import '../../presentation/pages/auth/profile_setup_page.dart';
+import '../../presentation/pages/splash/splash_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/workspace/workspace_page.dart';
 import '../../presentation/pages/calendar/calendar_page.dart';
@@ -25,9 +26,14 @@ final _authService = AuthService();
 final authChangeNotifier = AuthChangeNotifier();
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: AppConstants.loginRoute,
+  initialLocation: '/splash',
   refreshListenable: authChangeNotifier,
   routes: [
+    GoRoute(
+      path: '/splash',
+      name: 'splash',
+      builder: (context, state) => const SplashPage(),
+    ),
     GoRoute(
       path: AppConstants.loginRoute,
       name: 'login',
@@ -119,10 +125,24 @@ final GoRouter appRouter = GoRouter(
   redirect: (context, state) {
     final isLoggedIn = _authService.isLoggedIn;
     final currentPath = state.uri.path;
+    final isSplashRoute = currentPath == '/splash';
     final isLoginRoute = currentPath == AppConstants.loginRoute;
     final isOnboardingRoute = currentPath == AppConstants.onboardingRoute;
     final isProfileCompleted =
         _authService.currentUser?.profileCompleted ?? false;
+
+    // 스플래시 페이지는 초기화 중에만 표시
+    // main.dart에서 tryAutoLogin 완료 후 리디렉션 발생
+    if (isSplashRoute) {
+      // 인증 상태에 따라 적절한 페이지로 이동
+      if (!isLoggedIn) {
+        return AppConstants.loginRoute;
+      }
+      if (!isProfileCompleted) {
+        return AppConstants.onboardingRoute;
+      }
+      return AppConstants.homeRoute;
+    }
 
     if (!isLoggedIn) {
       return isLoginRoute ? null : AppConstants.loginRoute;

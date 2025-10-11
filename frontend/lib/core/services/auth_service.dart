@@ -245,6 +245,9 @@ class AuthService {
     await _clearTokens();
     _currentUser = null;
 
+    // 네비게이션 및 워크스페이스 상태 클리어
+    await _storage.clearNavigationState();
+
     // GoRouter에 인증 상태 변경 알림
     authChangeNotifier.notifyAuthChanged();
   }

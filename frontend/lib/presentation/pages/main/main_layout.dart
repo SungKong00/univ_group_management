@@ -10,14 +10,48 @@ import '../../../core/navigation/layout_mode.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/models/auth_models.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/workspace_state_provider.dart';
 
-class MainLayout extends ConsumerWidget {
+class MainLayout extends ConsumerStatefulWidget {
   final Widget child;
 
   const MainLayout({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MainLayout> createState() => _MainLayoutState();
+}
+
+class _MainLayoutState extends ConsumerState<MainLayout> {
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 첫 빌드 후 상태 복원
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeState();
+    });
+  }
+
+  /// 앱 시작 시 저장된 상태 복원
+  Future<void> _initializeState() async {
+    if (_isInitialized) return;
+    _isInitialized = true;
+
+    // 탭 복원
+    final navigationController = ref.read(navigationControllerProvider.notifier);
+    await navigationController.restoreLastTab();
+
+    // 워크스페이스 상태 복원 (워크스페이스 탭인 경우에만)
+    final navigationState = ref.read(navigationControllerProvider);
+    if (navigationState.currentTab == NavigationTab.workspace) {
+      final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+      await workspaceNotifier.restoreFromLocalStorage();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // 화면 크기로부터 레이아웃 모드 계산
     final layoutMode = LayoutModeExtension.fromContext(context);
     final navigationState = ref.watch(navigationControllerProvider);
@@ -28,7 +62,7 @@ class MainLayout extends ConsumerWidget {
 
     // 레이아웃 모드 전환 감지 및 상태 동기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _handleLayoutModeTransition(ref, layoutMode);
+      _handleLayoutModeTransition(layoutMode);
     });
 
     return RouterListener(
@@ -50,7 +84,7 @@ class MainLayout extends ConsumerWidget {
   }
 
   /// 레이아웃 모드 전환 처리
-  void _handleLayoutModeTransition(WidgetRef ref, LayoutMode newMode) {
+  void _handleLayoutModeTransition(LayoutMode newMode) {
     final navigationController = ref.read(
       navigationControllerProvider.notifier,
     );
@@ -70,7 +104,7 @@ class MainLayout extends ConsumerWidget {
 
   /// COMPACT 모드: 모바일 레이아웃 (하단 네비게이션)
   Widget _buildCompactLayout() {
-    return Container(color: AppColors.lightBackground, child: child);
+    return Container(color: AppColors.lightBackground, child: widget.child);
   }
 
   /// MEDIUM/WIDE 모드: 사이드바 레이아웃
@@ -88,7 +122,7 @@ class MainLayout extends ConsumerWidget {
                       left: BorderSide(color: AppColors.lightOutline, width: 1),
                     ),
             ),
-            child: ClipRect(child: child),
+            child: ClipRect(child: widget.child),
           ),
         ),
       ],
