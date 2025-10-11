@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/models/calendar_models.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme.dart';
 
 /// Weekly timetable grid that renders personal schedules in a 30-minute interval layout.
 class TimetableWeeklyView extends StatelessWidget {
@@ -232,7 +231,7 @@ class TimetableWeeklyView extends StatelessWidget {
               top: BorderSide(
                 color: isHourLine
                     ? AppColors.lightOutline
-                    : AppColors.lightOutline.withOpacity(0.35),
+                    : AppColors.lightOutline.withValues(alpha: 0.35),
                 width: isHourLine ? 1 : 0.5,
               ),
             ),
@@ -274,15 +273,15 @@ class TimetableWeeklyView extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: schedule.color.withOpacity(0.88),
+            color: schedule.color.withValues(alpha: 0.88),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: schedule.color.withOpacity(0.95),
+              color: schedule.color.withValues(alpha: 0.95),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: schedule.color.withOpacity(0.25),
+                color: schedule.color.withValues(alpha: 0.25),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -304,7 +303,7 @@ class TimetableWeeklyView extends StatelessWidget {
               Text(
                 schedule.formattedTimeRange,
                 style: textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
               if (schedule.location != null &&
@@ -314,7 +313,7 @@ class TimetableWeeklyView extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

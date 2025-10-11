@@ -43,7 +43,7 @@ extension DayOfWeekX on DayOfWeek {
   }
 
   /// Returns a localized label such as "월요일".
-  String get longLabel => '${shortLabel}요일';
+  String get longLabel => '$shortLabel요일';
 
   /// Helper to align with [DateTime.weekday] where Monday is 1.
   int get weekdayNumber => index + 1;
@@ -181,13 +181,109 @@ Color _parseColor(String hex) {
 }
 
 String _colorToHex(Color color) => '#'
-    '${color.red.toRadixString(16).padLeft(2, '0').toUpperCase()}'
-    '${color.green.toRadixString(16).padLeft(2, '0').toUpperCase()}'
-    '${color.blue.toRadixString(16).padLeft(2, '0').toUpperCase()}';
+    '${(color.toARGB32() & 0x00FFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
 
 int _minutesSinceMidnight(TimeOfDay value) => value.hour * 60 + value.minute;
 
 DateTime _timeOfDayToDate(TimeOfDay time) {
   final now = DateTime.now();
   return DateTime(now.year, now.month, now.day, time.hour, time.minute);
+}
+
+/// Personal calendar event (단발성 일정) representation.
+class PersonalEvent {
+  const PersonalEvent({
+    required this.id,
+    required this.title,
+    this.description,
+    this.location,
+    required this.startDateTime,
+    required this.endDateTime,
+    required this.isAllDay,
+    required this.color,
+  });
+
+  final int id;
+  final String title;
+  final String? description;
+  final String? location;
+  final DateTime startDateTime;
+  final DateTime endDateTime;
+  final bool isAllDay;
+  final Color color;
+
+  factory PersonalEvent.fromJson(Map<String, dynamic> json) {
+    return PersonalEvent(
+      id: (json['id'] as num).toInt(),
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      location: json['location'] as String?,
+      startDateTime: DateTime.parse(json['startDateTime'] as String),
+      endDateTime: DateTime.parse(json['endDateTime'] as String),
+      isAllDay: json['isAllDay'] as bool? ?? false,
+      color: _parseColor(json['color'] as String? ?? '#3B82F6'),
+    );
+  }
+
+  PersonalEvent copyWith({
+    int? id,
+    String? title,
+    String? description,
+    String? location,
+    DateTime? startDateTime,
+    DateTime? endDateTime,
+    bool? isAllDay,
+    Color? color,
+  }) {
+    return PersonalEvent(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      location: location ?? this.location,
+      startDateTime: startDateTime ?? this.startDateTime,
+      endDateTime: endDateTime ?? this.endDateTime,
+      isAllDay: isAllDay ?? this.isAllDay,
+      color: color ?? this.color,
+    );
+  }
+
+  Duration get duration => endDateTime.difference(startDateTime);
+
+  bool occursOn(DateTime date) {
+    final dayStart = DateTime(date.year, date.month, date.day);
+    final dayEnd = dayStart.add(const Duration(days: 1)).subtract(const Duration(milliseconds: 1));
+    return startDateTime.isBefore(dayEnd) && endDateTime.isAfter(dayStart);
+  }
+}
+
+class PersonalEventRequest {
+  PersonalEventRequest({
+    required this.title,
+    this.description,
+    this.location,
+    required this.startDateTime,
+    required this.endDateTime,
+    this.isAllDay = false,
+    required this.color,
+  });
+
+  final String title;
+  final String? description;
+  final String? location;
+  final DateTime startDateTime;
+  final DateTime endDateTime;
+  final bool isAllDay;
+  final Color color;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'description': description?.trim().isEmpty == true ? null : description,
+      'location': location?.trim().isEmpty == true ? null : location,
+      'startDateTime': startDateTime.toIso8601String(),
+      'endDateTime': endDateTime.toIso8601String(),
+      'isAllDay': isAllDay,
+      'color': _colorToHex(color),
+    };
+  }
 }

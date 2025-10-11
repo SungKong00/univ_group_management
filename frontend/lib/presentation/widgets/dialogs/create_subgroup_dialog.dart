@@ -272,7 +272,7 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
         color: AppColors.brandLight,
         borderRadius: BorderRadius.circular(AppRadius.input),
         border: Border.all(
-          color: AppColors.brand.withOpacity(0.2),
+          color: AppColors.brand.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -462,7 +462,7 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
           border: Border.all(
             color: isSelected
                 ? AppColors.brand
-                : AppColors.lightOutline.withOpacity(0.5),
+                : AppColors.lightOutline.withValues(alpha: 0.5),
             width: isSelected ? 2 : 1,
           ),
         ),

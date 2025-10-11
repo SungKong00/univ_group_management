@@ -40,9 +40,12 @@ dependencies:
   # Utils
   intl: ^0.19.0
   equatable: ^2.0.7
-
+  
   # Responsive
   responsive_framework: ^1.4.0
+
+  # Calendar UI
+  table_calendar: ^3.0.9
 
   # Sticky Header
   flutter_sticky_header: ^0.8.0

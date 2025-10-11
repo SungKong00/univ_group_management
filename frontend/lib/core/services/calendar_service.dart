@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
 
 import '../models/auth_models.dart';
 import '../models/calendar_models.dart';
@@ -15,6 +16,7 @@ class CalendarService {
   factory CalendarService() => _instance;
 
   final DioClient _dioClient = DioClient();
+  final DateFormat _dateFormatter = DateFormat('yyyy-MM-dd');
 
   /// Fetch current user's personal schedule entries.
   Future<List<PersonalSchedule>> getPersonalSchedules() async {
@@ -161,6 +163,154 @@ class CalendarService {
       throw Exception(_friendlyMessage(
         e,
         fallback: '일정 삭제에 실패했습니다. 다시 시도해주세요.',
+      ));
+    }
+  }
+
+  /// Fetch personal calendar events within a date range.
+  Future<List<PersonalEvent>> getPersonalEvents(
+    DateTime rangeStart,
+    DateTime rangeEnd,
+  ) async {
+    try {
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/calendar',
+        queryParameters: {
+          'start': _dateFormatter.format(rangeStart),
+          'end': _dateFormatter.format(rangeEnd),
+        },
+      );
+      if (response.data == null) return const [];
+
+      final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+        if (json is List) {
+          return json
+              .map(
+                (item) => PersonalEvent.fromJson(item as Map<String, dynamic>),
+              )
+              .toList();
+        }
+        return <PersonalEvent>[];
+      });
+
+      if (apiResponse.success && apiResponse.data != null) {
+        developer.log(
+          'Fetched ${apiResponse.data!.length} personal events',
+          name: 'CalendarService',
+        );
+        return apiResponse.data!;
+      }
+
+      throw Exception(apiResponse.message ?? '이벤트를 불러오지 못했습니다.');
+    } on DioException catch (e) {
+      developer.log(
+        'Failed to load events: $e',
+        name: 'CalendarService',
+        level: 900,
+        error: e,
+      );
+      throw Exception(_friendlyMessage(
+        e,
+        fallback: '이벤트를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      ));
+    }
+  }
+
+  Future<PersonalEvent> createPersonalEvent(
+    PersonalEventRequest request,
+  ) async {
+    try {
+      final response = await _dioClient.post<Map<String, dynamic>>(
+        '/calendar',
+        data: request.toJson(),
+      );
+
+      if (response.data == null) {
+        throw Exception('빈 응답을 수신했습니다.');
+      }
+
+      final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+        return PersonalEvent.fromJson(json as Map<String, dynamic>);
+      });
+
+      if (apiResponse.success && apiResponse.data != null) {
+        developer.log(
+          'Created personal event ${apiResponse.data!.id}',
+          name: 'CalendarService',
+        );
+        return apiResponse.data!;
+      }
+
+      throw Exception(apiResponse.message ?? '이벤트 생성에 실패했습니다.');
+    } on DioException catch (e) {
+      developer.log(
+        'Failed to create event: $e',
+        name: 'CalendarService',
+        level: 900,
+        error: e,
+      );
+      throw Exception(_friendlyMessage(
+        e,
+        fallback: '이벤트 생성에 실패했습니다. 다시 시도해주세요.',
+      ));
+    }
+  }
+
+  Future<PersonalEvent> updatePersonalEvent(
+    int id,
+    PersonalEventRequest request,
+  ) async {
+    try {
+      final response = await _dioClient.put<Map<String, dynamic>>(
+        '/calendar/$id',
+        data: request.toJson(),
+      );
+
+      if (response.data == null) {
+        throw Exception('빈 응답을 수신했습니다.');
+      }
+
+      final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+        return PersonalEvent.fromJson(json as Map<String, dynamic>);
+      });
+
+      if (apiResponse.success && apiResponse.data != null) {
+        developer.log(
+          'Updated personal event $id',
+          name: 'CalendarService',
+        );
+        return apiResponse.data!;
+      }
+
+      throw Exception(apiResponse.message ?? '이벤트 수정에 실패했습니다.');
+    } on DioException catch (e) {
+      developer.log(
+        'Failed to update event $id: $e',
+        name: 'CalendarService',
+        level: 900,
+        error: e,
+      );
+      throw Exception(_friendlyMessage(
+        e,
+        fallback: '이벤트 수정에 실패했습니다. 다시 시도해주세요.',
+      ));
+    }
+  }
+
+  Future<void> deletePersonalEvent(int id) async {
+    try {
+      await _dioClient.delete<void>('/calendar/$id');
+      developer.log('Deleted personal event $id', name: 'CalendarService');
+    } on DioException catch (e) {
+      developer.log(
+        'Failed to delete event $id: $e',
+        name: 'CalendarService',
+        level: 900,
+        error: e,
+      );
+      throw Exception(_friendlyMessage(
+        e,
+        fallback: '이벤트 삭제에 실패했습니다. 다시 시도해주세요.',
       ));
     }
   }
