@@ -3,17 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../providers/home_state_provider.dart';
 import '../../group_explore/providers/group_explore_state_provider.dart';
 import '../../group_explore/widgets/group_search_bar.dart';
 import '../../group_explore/widgets/group_filter_chip_bar.dart';
 import '../../group_explore/widgets/group_explore_list.dart';
 import '../../group_explore/widgets/group_tree_view.dart';
+import '../../group_explore/widgets/recruitment_list_view.dart';
 
 /// Group Explore Content Widget
 ///
-/// Displays group exploration interface with two tabs:
+/// Displays group exploration interface with three tabs:
 /// - List View: Search, filters, and flat list of groups
 /// - Tree View: Hierarchical tree structure of groups
+/// - Recruitment View: List of group recruitment announcements
 class GroupExploreContentWidget extends ConsumerStatefulWidget {
   const GroupExploreContentWidget({super.key});
 
@@ -29,11 +32,17 @@ class _GroupExploreContentWidgetState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
 
     // Initialize state: load first page of groups
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(groupExploreStateProvider.notifier).initialize();
+
+      // Set initial tab from home state
+      final initialTab = ref.read(homeStateProvider).groupExploreInitialTab;
+      if (initialTab != _tabController.index) {
+        _tabController.animateTo(initialTab);
+      }
     });
   }
 
@@ -90,6 +99,10 @@ class _GroupExploreContentWidgetState
                   icon: Icon(Icons.account_tree),
                   text: '계층 구조',
                 ),
+                Tab(
+                  icon: Icon(Icons.campaign),
+                  text: '모집 공고',
+                ),
               ],
             ),
           ),
@@ -105,6 +118,9 @@ class _GroupExploreContentWidgetState
 
                 // Tree View
                 const GroupTreeView(),
+
+                // Recruitment View
+                const RecruitmentListView(),
               ],
             ),
           ),

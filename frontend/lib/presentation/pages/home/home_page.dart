@@ -64,7 +64,7 @@ class HomePage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
             _buildQuickActions(context, ref, isDesktop),
             const SizedBox(height: AppSpacing.lg),
-            _buildRecentGroups(context),
+            _buildRecentGroups(context, ref),
             const SizedBox(height: AppSpacing.lg),
             _buildRecentActivity(context),
           ],
@@ -84,11 +84,11 @@ class HomePage extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: ActionCard(
-                      icon: Icons.people_outline,
-                      title: '모집 중인 그룹 보기',
-                      description: '지금 모집 중인 그룹을 찾아보세요',
-                      onTap: () => ref.read(homeStateProvider.notifier).showGroupExploreWithRecruitingFilter(),
-                      semanticsLabel: '모집 중인 그룹 보기 버튼',
+                      icon: Icons.campaign,
+                      title: '모집 공고 보기',
+                      description: '지금 모집 중인 공고를 확인하세요',
+                      onTap: () => ref.read(homeStateProvider.notifier).showGroupExplore(initialTab: 2),
+                      semanticsLabel: '모집 공고 보기 버튼',
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -106,11 +106,11 @@ class HomePage extends ConsumerWidget {
             : Column(
                 children: [
                   ActionCard(
-                    icon: Icons.people_outline,
-                    title: '모집 중인 그룹 보기',
-                    description: '지금 모집 중인 그룹을 찾아보세요',
-                    onTap: () => ref.read(homeStateProvider.notifier).showGroupExploreWithRecruitingFilter(),
-                    semanticsLabel: '모집 중인 그룹 보기 버튼',
+                    icon: Icons.campaign,
+                    title: '모집 공고 보기',
+                    description: '지금 모집 중인 공고를 확인하세요',
+                    onTap: () => ref.read(homeStateProvider.notifier).showGroupExplore(initialTab: 2),
+                    semanticsLabel: '모집 공고 보기 버튼',
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   ActionCard(
@@ -126,18 +126,21 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentGroups(BuildContext context) {
+  Widget _buildRecentGroups(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('최근 활동 그룹', style: AppTheme.headlineSmallTheme(context)),
+            Text('모집 중인 그룹', style: AppTheme.headlineSmallTheme(context)),
             Semantics(
               button: true,
               label: '전체 그룹 보기',
-              child: TextButton(onPressed: () {}, child: const Text('전체 보기')),
+              child: TextButton(
+                onPressed: () => ref.read(homeStateProvider.notifier).showGroupExploreWithRecruitingFilter(),
+                child: const Text('전체 보기'),
+              ),
             ),
           ],
         ),

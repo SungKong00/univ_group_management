@@ -403,26 +403,41 @@ class RecruitmentService {
   /// GET /api/recruitments/public
   /// Public API - no authentication required
   Future<List<RecruitmentSummaryResponse>> searchPublicRecruitments({
-    String? query,
-    String? status,
+    String? keyword,
+    int page = 0,
+    int size = 20,
   }) async {
     try {
-      final queryParams = <String, dynamic>{};
-      if (query != null) queryParams['q'] = query;
-      if (status != null) queryParams['status'] = status;
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'size': size,
+      };
+      if (keyword != null && keyword.isNotEmpty) {
+        queryParams['keyword'] = keyword;
+      }
 
       developer.log(
-        'Searching public recruitments with query: $query, status: $status',
+        'Searching public recruitments with keyword: $keyword, page: $page, size: $size',
         name: 'RecruitmentService',
       );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/recruitments/public',
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+        queryParameters: queryParams,
       );
 
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          // Backend returns PagedApiResponse with 'content' field inside 'data'
+          if (json is Map<String, dynamic> && json.containsKey('content')) {
+            final content = json['content'] as List<dynamic>;
+            return content
+                .map((item) => RecruitmentSummaryResponse.fromJson(
+                      item as Map<String, dynamic>,
+                    ))
+                .toList();
+          }
+          // Fallback for direct list response
           if (json is List) {
             return json
                 .map((item) => RecruitmentSummaryResponse.fromJson(

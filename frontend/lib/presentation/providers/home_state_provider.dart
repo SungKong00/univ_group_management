@@ -13,23 +13,27 @@ class HomeState extends Equatable {
   const HomeState({
     this.currentView = HomeView.dashboard,
     this.previousView,
+    this.groupExploreInitialTab = 0,
   });
 
   final HomeView currentView;
   final HomeView? previousView;
+  final int groupExploreInitialTab; // 0: List, 1: Tree, 2: Recruitment
 
   HomeState copyWith({
     HomeView? currentView,
     HomeView? previousView,
+    int? groupExploreInitialTab,
   }) {
     return HomeState(
       currentView: currentView ?? this.currentView,
       previousView: previousView,
+      groupExploreInitialTab: groupExploreInitialTab ?? this.groupExploreInitialTab,
     );
   }
 
   @override
-  List<Object?> get props => [currentView, previousView];
+  List<Object?> get props => [currentView, previousView, groupExploreInitialTab];
 }
 
 /// Home State Notifier
@@ -39,19 +43,21 @@ class HomeStateNotifier extends StateNotifier<HomeState> {
   final Ref _ref;
 
   /// Show group explore view
-  void showGroupExplore() {
+  void showGroupExplore({int initialTab = 0}) {
     state = state.copyWith(
       previousView: state.currentView,
       currentView: HomeView.groupExplore,
+      groupExploreInitialTab: initialTab,
     );
   }
 
   /// Show group explore view with recruiting filter enabled
   void showGroupExploreWithRecruitingFilter() {
-    // First, navigate to group explore view
+    // First, navigate to group explore view (List tab)
     state = state.copyWith(
       previousView: state.currentView,
       currentView: HomeView.groupExplore,
+      groupExploreInitialTab: 0, // List tab
     );
 
     // Then, activate the recruiting filter

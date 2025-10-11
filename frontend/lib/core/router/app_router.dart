@@ -9,6 +9,7 @@ import '../../presentation/pages/calendar/calendar_page.dart';
 import '../../presentation/pages/activity/activity_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
 import '../../presentation/pages/group/group_admin_page.dart';
+import '../../presentation/pages/recruitment/recruitment_detail_page.dart';
 import '../../presentation/pages/main/main_layout.dart';
 import '../constants/app_constants.dart';
 import '../services/auth_service.dart';
@@ -101,6 +102,16 @@ final GoRouter appRouter = GoRouter(
           name: 'group-admin',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: GroupAdminPage()),
+        ),
+        GoRoute(
+          path: '/recruitment/:id',
+          name: 'recruitment-detail',
+          pageBuilder: (context, state) {
+            final recruitmentId = state.pathParameters['id']!;
+            return NoTransitionPage(
+              child: RecruitmentDetailPage(recruitmentId: recruitmentId),
+            );
+          },
         ),
       ],
     ),
