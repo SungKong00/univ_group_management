@@ -1,7 +1,6 @@
 package org.castlekong.backend.service
 
 import org.castlekong.backend.dto.GroupJoinRequestResponse
-import org.castlekong.backend.dto.GroupSummaryResponse
 import org.castlekong.backend.dto.ProfileUpdateRequest
 import org.castlekong.backend.dto.SignupProfileRequest
 import org.castlekong.backend.dto.SubGroupRequestResponse

@@ -95,8 +95,8 @@ class NavigationConfig {
   /// 모든 네비게이션 아이템을 순서대로 반환
   static const List<NavigationConfig> items = [
     home,
-    workspace,
     calendar,
+    workspace,
     activity,
     profile,
   ];

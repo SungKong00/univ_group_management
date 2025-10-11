@@ -62,6 +62,14 @@ class RecruitmentController(
         return ApiResponse.success(response)
     }
 
+    @GetMapping("/recruitments/{recruitmentId}")
+    fun getRecruitment(
+        @PathVariable recruitmentId: Long,
+    ): ApiResponse<RecruitmentResponse> {
+        val response = recruitmentService.getRecruitment(recruitmentId)
+        return ApiResponse.success(response)
+    }
+
     @PutMapping("/recruitments/{recruitmentId}")
     @PreAuthorize("hasPermission(#recruitmentId, 'RECRUITMENT', 'RECRUITMENT_MANAGE')")
     fun updateRecruitment(

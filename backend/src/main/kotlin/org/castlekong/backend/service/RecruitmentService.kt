@@ -107,6 +107,16 @@ class RecruitmentService(
         return recruitmentMapper.toRecruitmentResponse(recruitment, applicantCount.toInt(), groupMemberCount)
     }
 
+    fun getRecruitment(recruitmentId: Long): RecruitmentResponse {
+        val recruitment =
+            groupRecruitmentRepository.findByIdWithRelations(recruitmentId)
+                ?: throw BusinessException(ErrorCode.RECRUITMENT_NOT_FOUND)
+
+        val applicantCount = recruitmentApplicationRepository.countByRecruitmentId(recruitmentId)
+        val groupMemberCount = groupMemberRepository.countByGroupId(recruitment.group.id).toInt()
+        return recruitmentMapper.toRecruitmentResponse(recruitment, applicantCount.toInt(), groupMemberCount)
+    }
+
     @Transactional
     fun updateRecruitment(
         recruitmentId: Long,

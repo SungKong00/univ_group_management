@@ -3,11 +3,9 @@ package org.castlekong.backend.controller
 import org.castlekong.backend.dto.ApiResponse
 import org.castlekong.backend.dto.CreateGroupRequest
 import org.castlekong.backend.dto.GroupJoinRequestResponse
-import org.castlekong.backend.dto.GroupSummaryResponse
 import org.castlekong.backend.dto.ReviewGroupJoinRequestRequest
 import org.castlekong.backend.dto.ReviewSubGroupRequestRequest
 import org.castlekong.backend.dto.SubGroupRequestResponse
-import org.castlekong.backend.dto.UserSummaryResponse
 import org.castlekong.backend.entity.GroupJoinRequestStatus
 import org.castlekong.backend.entity.GroupMember
 import org.castlekong.backend.entity.SubGroupRequestStatus
