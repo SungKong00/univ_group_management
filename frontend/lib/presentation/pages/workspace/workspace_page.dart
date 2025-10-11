@@ -48,6 +48,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   bool _previousIsMobile = false;
   bool _previousIsNarrowDesktop = false; // Narrow desktop 상태 추적
   bool _hasResponsiveLayoutInitialized = false;
+  late final WorkspaceStateNotifier _workspaceNotifier;
+  late final NavigationController _navigationController;
 
   // 스크롤 위치 보존을 위한 ScrollController (선택사항)
   final ScrollController _postScrollController = ScrollController();
@@ -59,9 +61,16 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   @override
   void initState() {
     super.initState();
+    _workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+    _navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
 
     // 워크스페이스 진입 시 상태 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
       if (widget.groupId != null) {
         _initializeWorkspace();
       }
@@ -74,37 +83,35 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
     // groupId 변경 감지 및 상태 관리
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
       if (widget.groupId != oldWidget.groupId) {
         // groupId가 변경된 경우
         if (widget.groupId != null) {
           _initializeWorkspace();
         } else {
           // groupId가 null로 변경된 경우 상태 초기화
-          ref.read(workspaceStateProvider.notifier).exitWorkspace();
+          _workspaceNotifier.exitWorkspace();
         }
       }
     });
   }
 
   void _initializeWorkspace() {
-    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
-    final navigationController = ref.read(
-      navigationControllerProvider.notifier,
-    );
-
     // 워크스페이스 상태 설정
-    workspaceNotifier.enterWorkspace(
+    _workspaceNotifier.enterWorkspace(
       widget.groupId!,
       channelId: widget.channelId,
     );
 
     // 워크스페이스 진입 시 사이드바를 즉시 축소
-    navigationController.enterWorkspace();
+    _navigationController.enterWorkspace();
   }
 
   @override
   void dispose() {
-    ref.read(workspaceStateProvider.notifier).cacheCurrentWorkspaceState();
+    _workspaceNotifier.cacheCurrentWorkspaceState();
     _postScrollController.dispose();
     _commentScrollController.dispose();
     super.dispose();
@@ -128,6 +135,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
         // 반응형 전환 감지 및 상태 보존
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+
           _handleResponsiveTransition(isMobile, isNarrowDesktop);
 
           // 데스크톱에서 댓글창이 열릴 때 게시글 로드
@@ -177,7 +188,6 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       return;
     }
 
-    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
     final isCommentsVisible = ref.read(isCommentsVisibleProvider);
     final isNarrowFullscreen = ref.read(
       workspaceIsNarrowDesktopCommentsFullscreenProvider,
@@ -188,10 +198,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     if (_previousIsMobile != isMobile) {
       if (isMobile) {
         // 웹 → 모바일 전환
-        workspaceNotifier.handleWebToMobileTransition();
+        _workspaceNotifier.handleWebToMobileTransition();
       } else {
         // 모바일 → 웹 전환
-        workspaceNotifier.handleMobileToWebTransition();
+        _workspaceNotifier.handleMobileToWebTransition();
       }
 
       _previousIsMobile = isMobile;
@@ -204,7 +214,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         if (isNarrowDesktop && !isNarrowFullscreen) {
           // Wide → Narrow: 댓글을 전체 화면 모드로 전환
           if (selectedPostId != null) {
-            workspaceNotifier.showComments(
+            _workspaceNotifier.showComments(
               selectedPostId,
               isNarrowDesktop: true,
             );
@@ -212,7 +222,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         } else if (!isNarrowDesktop && isNarrowFullscreen) {
           // Narrow → Wide: 댓글을 사이드바 모드로 전환
           if (selectedPostId != null) {
-            workspaceNotifier.showComments(
+            _workspaceNotifier.showComments(
               selectedPostId,
               isNarrowDesktop: false,
             );
@@ -239,10 +249,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   /// 모바일 뒤로가기 처리
   void _handleMobileBackPress() {
-    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
     // handleMobileBack()이 true를 반환하면 내부적으로 처리됨
     // false를 반환하면 시스템 뒤로가기 허용
-    workspaceNotifier.handleMobileBack();
+    _workspaceNotifier.handleMobileBack();
   }
 
   /// Narrow Desktop 뒤로가기 가능 여부 확인
@@ -268,7 +277,6 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   /// Narrow Desktop 뒤로가기 처리
   void _handleNarrowDesktopBackPress() {
-    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
     final currentView = ref.read(workspaceCurrentViewProvider);
     final isCommentFullscreen = ref.read(
       workspaceIsNarrowDesktopCommentsFullscreenProvider,
@@ -276,13 +284,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
     // 특수 뷰에서는 handleWebBack() 호출
     if (currentView != WorkspaceView.channel) {
-      workspaceNotifier.handleWebBack();
+      _workspaceNotifier.handleWebBack();
       return;
     }
 
     // 댓글 전체화면에서는 댓글 닫기
     if (isCommentFullscreen) {
-      workspaceNotifier.hideComments();
+      _workspaceNotifier.hideComments();
     }
   }
 
@@ -313,10 +321,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   /// Wide Desktop 뒤로가기 처리
   void _handleWideDesktopBackPress() {
-    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
     // handleWebBack()이 모든 뒤로가기 로직을 처리함
     // (특수 뷰 → 댓글 → 채널 히스토리 순서)
-    workspaceNotifier.handleWebBack();
+    _workspaceNotifier.handleWebBack();
   }
 
   /// Tablet (MEDIUM) 뒤로가기 가능 여부 확인
@@ -346,9 +353,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   /// Tablet (MEDIUM) 뒤로가기 처리
   void _handleTabletBackPress() {
-    final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
     // Wide Desktop과 동일한 로직 (사이드바는 항상 축소 상태)
-    workspaceNotifier.handleWebBack();
+    _workspaceNotifier.handleWebBack();
   }
 
   /// LayoutMode 기반 뒤로가기 가능 여부 확인
@@ -654,8 +660,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           children: [
             // 게시글 미리보기
             PostPreviewWidget(
-              onClose: () =>
-                  ref.read(workspaceStateProvider.notifier).hideComments(),
+              onClose: _workspaceNotifier.hideComments,
             ),
 
             const Divider(height: 1, thickness: 1),
@@ -700,8 +705,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             padding: const EdgeInsets.all(4),
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 20,
-            onPressed: () =>
-                ref.read(workspaceStateProvider.notifier).hideComments(),
+            onPressed: _workspaceNotifier.hideComments,
             icon: const Icon(Icons.close),
           ),
         ),
@@ -711,7 +715,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   void _retryLoadWorkspace() {
     // Clear error and try again
-    ref.read(workspaceStateProvider.notifier).clearError();
+    _workspaceNotifier.clearError();
 
     // If we have a groupId, re-initialize workspace
     if (widget.groupId != null) {

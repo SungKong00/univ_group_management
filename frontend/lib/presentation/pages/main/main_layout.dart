@@ -29,6 +29,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     super.initState();
     // 첫 빌드 후 상태 복원
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
       _initializeState();
     });
   }
@@ -41,6 +44,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     // 탭 복원
     final navigationController = ref.read(navigationControllerProvider.notifier);
     await navigationController.restoreLastTab();
+
+    if (!mounted) {
+      return;
+    }
 
     // 워크스페이스 상태 복원 (워크스페이스 탭인 경우에만)
     final navigationState = ref.read(navigationControllerProvider);
@@ -62,6 +69,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
     // 레이아웃 모드 전환 감지 및 상태 동기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
       _handleLayoutModeTransition(layoutMode);
     });
 
