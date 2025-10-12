@@ -1272,6 +1272,14 @@ class _GroupEventFormDialogState extends State<GroupEventFormDialog> {
 
 ---
 
+## 참고: 장소 캘린더 개발 계획
+
+장소 캘린더는 별도 개발 계획으로 관리됩니다:
+- [장소 캘린더 개발 명세서](place-calendar-specification.md) - 상세 설계 및 구현 계획
+- [장소 관리 시스템](../concepts/calendar-place-management.md) - 개념 및 권한 설계
+
+---
+
 ## 8. 관련 문서
 
 ### 개념 문서
