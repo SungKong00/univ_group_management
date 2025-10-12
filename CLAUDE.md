@@ -20,6 +20,10 @@
 - **API 참조**: [docs/implementation/api-reference.md](docs/implementation/api-reference.md)
 - **데이터베이스**: [docs/implementation/database-reference.md](docs/implementation/database-reference.md)
 
+### 기능별 개발 계획
+- **개인 캘린더 MVP**: [docs/features/personal-calendar-mvp.md](docs/features/personal-calendar-mvp.md) - 시간표 + 캘린더 구현 완료
+- **그룹 캘린더 개발**: [docs/features/group-calendar-development-plan.md](docs/features/group-calendar-development-plan.md) - Phase 1-5 개발 계획
+
 ### UI/UX 설계
 - **디자인 시스템**: [docs/ui-ux/concepts/design-system.md](docs/ui-ux/concepts/design-system.md)
 
