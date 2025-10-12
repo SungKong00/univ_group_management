@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/models/calendar_models.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../widgets/dialogs/confirm_cancel_actions.dart';
 
 Future<PersonalScheduleRequest?> showScheduleFormDialog(
   BuildContext context, {
@@ -40,8 +41,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
     super.initState();
     final initial = widget.initial;
     _titleController = TextEditingController(text: initial?.title ?? '');
-    _locationController =
-        TextEditingController(text: initial?.location ?? '');
+    _locationController = TextEditingController(text: initial?.location ?? '');
     _dayOfWeek = initial?.dayOfWeek ?? DayOfWeek.monday;
     _startTime = initial?.startTime ?? const TimeOfDay(hour: 9, minute: 0);
     _endTime = initial?.endTime ?? const TimeOfDay(hour: 10, minute: 0);
@@ -129,10 +129,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   maxLength: 200,
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Text(
-                  '색상 선택',
-                  style: textTheme.titleMedium,
-                ),
+                Text('색상 선택', style: textTheme.titleMedium),
                 const SizedBox(height: AppSpacing.xs),
                 Wrap(
                   spacing: AppSpacing.xs,
@@ -172,18 +169,14 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
           ),
         ),
       ),
-      actionsPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        FilledButton(
-          onPressed: _handleSubmit,
-          child: Text(_isEditing ? '수정' : '추가'),
+        ConfirmCancelActions(
+          confirmText: _isEditing ? '수정' : '추가',
+          onConfirm: _handleSubmit,
+          confirmSemanticsLabel: _isEditing ? '일정 수정 완료' : '개인 일정 추가 완료',
+          onCancel: () => Navigator.of(context).pop(),
+          cancelSemanticsLabel: _isEditing ? '일정 수정 취소' : '개인 일정 추가 취소',
+          confirmVariant: PrimaryButtonVariant.brand,
         ),
       ],
     );
@@ -216,8 +209,9 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                     initialEntryMode: TimePickerEntryMode.dial,
                     builder: (context, child) {
                       return MediaQuery(
-                        data: MediaQuery.of(context)
-                            .copyWith(alwaysUse24HourFormat: true),
+                        data: MediaQuery.of(
+                          context,
+                        ).copyWith(alwaysUse24HourFormat: true),
                         child: child ?? const SizedBox.shrink(),
                       );
                     },
@@ -235,13 +229,18 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                 },
                 borderRadius: BorderRadius.circular(AppRadius.input),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 2,
+                    vertical: 12,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(_formatTimeOfDay(time)),
-                      const Icon(Icons.expand_more, color: AppColors.neutral500),
+                      const Icon(
+                        Icons.expand_more,
+                        color: AppColors.neutral500,
+                      ),
                     ],
                   ),
                 ),

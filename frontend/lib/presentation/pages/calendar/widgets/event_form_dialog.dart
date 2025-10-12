@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/models/calendar_models.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../widgets/dialogs/confirm_cancel_actions.dart';
 
 Future<PersonalEventRequest?> showEventFormDialog(
   BuildContext context, {
@@ -13,18 +14,13 @@ Future<PersonalEventRequest?> showEventFormDialog(
   return showDialog<PersonalEventRequest>(
     context: context,
     barrierDismissible: false,
-    builder: (context) => _EventFormDialog(
-      initial: initial,
-      anchorDate: anchorDate,
-    ),
+    builder: (context) =>
+        _EventFormDialog(initial: initial, anchorDate: anchorDate),
   );
 }
 
 class _EventFormDialog extends StatefulWidget {
-  const _EventFormDialog({
-    this.initial,
-    this.anchorDate,
-  });
+  const _EventFormDialog({this.initial, this.anchorDate});
 
   final PersonalEvent? initial;
   final DateTime? anchorDate;
@@ -56,8 +52,9 @@ class _EventFormDialogState extends State<_EventFormDialog> {
     final now = DateTime.now();
     final anchor = widget.anchorDate ?? now;
     _titleController = TextEditingController(text: initial?.title ?? '');
-    _descriptionController =
-        TextEditingController(text: initial?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: initial?.description ?? '',
+    );
     _locationController = TextEditingController(text: initial?.location ?? '');
     _isAllDay = initial?.isAllDay ?? false;
     _selectedColor = initial?.color ?? kPersonalScheduleColors.first;
@@ -66,7 +63,12 @@ class _EventFormDialogState extends State<_EventFormDialog> {
       _startDateTime = initial.startDateTime;
       _endDateTime = initial.endDateTime;
     } else {
-      final normalizedAnchor = DateTime(anchor.year, anchor.month, anchor.day, 9);
+      final normalizedAnchor = DateTime(
+        anchor.year,
+        anchor.month,
+        anchor.day,
+        9,
+      );
       _startDateTime = normalizedAnchor;
       _endDateTime = normalizedAnchor.add(const Duration(hours: 1));
     }
@@ -157,16 +159,17 @@ class _EventFormDialogState extends State<_EventFormDialog> {
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    Expanded(child: _buildDateTimeField(context, isStart: true)),
+                    Expanded(
+                      child: _buildDateTimeField(context, isStart: true),
+                    ),
                     const SizedBox(width: AppSpacing.xs),
-                    Expanded(child: _buildDateTimeField(context, isStart: false)),
+                    Expanded(
+                      child: _buildDateTimeField(context, isStart: false),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Text(
-                  '색상 선택',
-                  style: textTheme.titleMedium,
-                ),
+                Text('색상 선택', style: textTheme.titleMedium),
                 const SizedBox(height: AppSpacing.xs),
                 Wrap(
                   spacing: AppSpacing.xs,
@@ -207,13 +210,13 @@ class _EventFormDialogState extends State<_EventFormDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        FilledButton(
-          onPressed: _handleSubmit,
-          child: Text(_isEditing ? '수정' : '추가'),
+        ConfirmCancelActions(
+          confirmText: _isEditing ? '수정' : '추가',
+          onConfirm: _handleSubmit,
+          confirmSemanticsLabel: _isEditing ? '이벤트 수정 완료' : '이벤트 추가 완료',
+          onCancel: () => Navigator.of(context).pop(),
+          cancelSemanticsLabel: _isEditing ? '이벤트 수정 취소' : '이벤트 추가 취소',
+          confirmVariant: PrimaryButtonVariant.brand,
         ),
       ],
     );
@@ -225,9 +228,7 @@ class _EventFormDialogState extends State<_EventFormDialog> {
     final timeText = _timeFormatter.format(dateTime);
 
     return InputDecorator(
-      decoration: InputDecoration(
-        labelText: isStart ? '시작' : '종료',
-      ),
+      decoration: InputDecoration(labelText: isStart ? '시작' : '종료'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -328,9 +329,9 @@ class _EventFormDialogState extends State<_EventFormDialog> {
     }
 
     if (!_endDateTime.isAfter(_startDateTime)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('종료 시간은 시작 시간보다 이후여야 합니다.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('종료 시간은 시작 시간보다 이후여야 합니다.')));
       return;
     }
 
@@ -342,7 +343,9 @@ class _EventFormDialogState extends State<_EventFormDialog> {
       location: _locationController.text.trim().isEmpty
           ? null
           : _locationController.text.trim(),
-      startDateTime: _isAllDay ? _normalizeDateTime(_startDateTime) : _startDateTime,
+      startDateTime: _isAllDay
+          ? _normalizeDateTime(_startDateTime)
+          : _startDateTime,
       endDateTime: _isAllDay ? _allDayEnd(_startDateTime) : _endDateTime,
       isAllDay: _isAllDay,
       color: _selectedColor,

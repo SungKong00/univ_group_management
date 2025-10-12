@@ -77,6 +77,70 @@ class AppButtonStyles {
     );
   }
 
+  /// Brand Primary 버튼 스타일
+  /// 브랜드 퍼플 계열 CTA에 사용 (예: 캘린더 추가, 브랜드 강조 액션)
+  static ButtonStyle brandPrimary(ColorScheme colorScheme) {
+    final isDark = colorScheme.brightness == Brightness.dark;
+
+    return FilledButton.styleFrom(
+      backgroundColor: AppColors.brand,
+      foregroundColor: AppColors.onPrimary,
+      minimumSize: const Size.fromHeight(AppComponents.buttonHeight),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
+      textStyle: GoogleFonts.notoSansKr(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        height: 1.4,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.button),
+      ),
+    ).copyWith(
+      elevation: const WidgetStatePropertyAll<double>(2),
+      shadowColor: WidgetStatePropertyAll<Color>(
+        AppColors.brand.withValues(alpha: 0.3),
+      ),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return isDark ? AppColors.disabledBgDark : AppColors.disabledBgLight;
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return AppColors.brandStrong;
+        }
+        if (states.contains(WidgetState.pressed)) {
+          return AppColors.brandStrong.withValues(alpha: 0.92);
+        }
+        return AppColors.brand;
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return isDark
+              ? AppColors.disabledTextDark
+              : AppColors.disabledTextLight;
+        }
+        return AppColors.onPrimary;
+      }),
+      overlayColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return Colors.white.withValues(alpha: 0.12);
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return Colors.white.withValues(alpha: 0.08);
+        }
+        return null;
+      }),
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.focused)) {
+          return const BorderSide(color: AppColors.focusRing, width: 2);
+        }
+        return null;
+      }),
+    );
+  }
+
   /// Outlined 버튼 스타일
   /// 보조 액션에 사용
   static ButtonStyle outlined(ColorScheme colorScheme) {

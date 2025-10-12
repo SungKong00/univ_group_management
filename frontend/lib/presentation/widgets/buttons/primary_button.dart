@@ -5,6 +5,8 @@ import '../../../core/theme/app_button_styles.dart';
 import '../../../core/theme/app_colors.dart';
 import '../icons/google_logo.dart';
 
+enum PrimaryButtonVariant { action, brand }
+
 class PrimaryButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
@@ -12,6 +14,7 @@ class PrimaryButton extends StatelessWidget {
   final Widget? icon;
   final String? semanticsLabel;
   final double? width;
+  final PrimaryButtonVariant variant;
 
   const PrimaryButton({
     super.key,
@@ -21,12 +24,20 @@ class PrimaryButton extends StatelessWidget {
     this.icon,
     this.semanticsLabel,
     this.width,
+    this.variant = PrimaryButtonVariant.action,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isEnabled = onPressed != null && !isLoading;
+    final isBrandVariant = variant == PrimaryButtonVariant.brand;
+    final buttonStyle = isBrandVariant
+        ? AppButtonStyles.brandPrimary(colorScheme)
+        : AppButtonStyles.primary(colorScheme);
+    final onPrimaryColor = isBrandVariant
+        ? AppColors.onPrimary
+        : colorScheme.onPrimary;
 
     return Semantics(
       button: true,
@@ -35,17 +46,16 @@ class PrimaryButton extends StatelessWidget {
       child: SizedBox(
         width: width,
         child: FilledButton(
-          style: AppButtonStyles.primary(colorScheme),
+          style: buttonStyle,
           onPressed: isEnabled ? onPressed : null,
           child: _PrimaryButtonChild(
             text: text,
             icon: icon,
             isLoading: isLoading,
-            textStyle: AppTheme.bodyLargeTheme(context).copyWith(
-              color: colorScheme.onPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-            indicatorColor: colorScheme.onPrimary,
+            textStyle: AppTheme.bodyLargeTheme(
+              context,
+            ).copyWith(color: onPrimaryColor, fontWeight: FontWeight.w600),
+            indicatorColor: onPrimaryColor,
           ),
         ),
       ),
