@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../domain/models/calendar_event_base.dart';
+
 /// Enum representing the type of group event.
 enum EventType {
   general('GENERAL', '일반 일정', '모든 멤버에게 표시되는 일정', Icons.event),
@@ -22,7 +24,7 @@ enum EventType {
 }
 
 /// Domain model for group calendar events.
-class GroupEvent {
+class GroupEvent implements CalendarEventBase {
   const GroupEvent({
     required this.id,
     required this.groupId,
@@ -44,24 +46,38 @@ class GroupEvent {
     required this.updatedAt,
   });
 
+  @override
   final int id;
   final int groupId;
   final String groupName;
   final int creatorId;
   final String creatorName;
+  @override
   final String title;
+  @override
   final String? description;
+  @override
   final String? location;
   final DateTime startDate;
   final DateTime endDate;
+  @override
   final bool isAllDay;
   final bool isOfficial;
   final EventType eventType;
   final String? seriesId;
   final String? recurrenceRule;
+  @override
   final Color color;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Maps startDate to startDateTime for CalendarEventBase interface.
+  @override
+  DateTime get startDateTime => startDate;
+
+  /// Maps endDate to endDateTime for CalendarEventBase interface.
+  @override
+  DateTime get endDateTime => endDate;
 
   factory GroupEvent.fromJson(Map<String, dynamic> json) {
     return GroupEvent(
@@ -113,9 +129,11 @@ class GroupEvent {
   bool get isRecurring => seriesId != null;
 
   /// Returns the duration of the event.
+  @override
   Duration get duration => endDate.difference(startDate);
 
   /// Returns true if this event occurs on the given date.
+  @override
   bool occursOn(DateTime date) {
     final dayStart = DateTime(date.year, date.month, date.day);
     final dayEnd =

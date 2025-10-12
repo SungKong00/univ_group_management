@@ -3,11 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/models/calendar_models.dart';
+import '../../../domain/models/calendar_event_base.dart';
 import '../../../core/theme/app_colors.dart';
 
-/// Calendar week grid view that renders personal events in a timetable-like layout.
-/// Similar to TimetableWeeklyView, but designed for calendar events (PersonalEvent).
+/// Calendar week grid view that renders calendar events in a timetable-like layout.
+/// Generic version that works with any event type implementing CalendarEventBase.
 ///
 /// Features:
 /// - Displays events across 7 days (Mon-Sun) in a grid
@@ -15,7 +15,7 @@ import '../../../core/theme/app_colors.dart';
 /// - All-day events shown in a separate area above the grid
 /// - Multi-day events split across date columns
 /// - Highlights today with brand color
-class CalendarWeekGridView extends StatelessWidget {
+class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget {
   const CalendarWeekGridView({
     super.key,
     required this.events,
@@ -23,9 +23,9 @@ class CalendarWeekGridView extends StatelessWidget {
     required this.onEventTap,
   });
 
-  final List<PersonalEvent> events;
+  final List<T> events;
   final DateTime weekStart;
-  final ValueChanged<PersonalEvent> onEventTap;
+  final ValueChanged<T> onEventTap;
 
   static const int _minutesPerSlot = 30;
   static const double _slotHeight = 44;
@@ -37,7 +37,7 @@ class CalendarWeekGridView extends StatelessWidget {
   /// Returns (startHour, endHour) where:
   /// - Default: (9, 18) when no timed events exist
   /// - Expanded to fit all timed events (all-day events ignored)
-  (int, int) _calculateTimeRange(List<PersonalEvent> events) {
+  (int, int) _calculateTimeRange(List<T> events) {
     const minStart = 9;
     const minEnd = 18;
 
@@ -112,7 +112,7 @@ class CalendarWeekGridView extends StatelessWidget {
 
   Widget _buildHeaderRow(
     BuildContext context,
-    List<_DayInfo> dayInfos,
+    List<_DayInfo<T>> dayInfos,
   ) {
     final textTheme = Theme.of(context).textTheme;
     final today = DateTime.now();
@@ -166,7 +166,7 @@ class CalendarWeekGridView extends StatelessWidget {
 
   Widget? _buildAllDayArea(
     BuildContext context,
-    List<_DayInfo> dayInfos,
+    List<_DayInfo<T>> dayInfos,
   ) {
     final hasAllDayEvents =
         dayInfos.any((info) => info.allDayEvents.isNotEmpty);
@@ -225,7 +225,7 @@ class CalendarWeekGridView extends StatelessWidget {
     );
   }
 
-  Widget _buildAllDayEventCard(BuildContext context, PersonalEvent event) {
+  Widget _buildAllDayEventCard(BuildContext context, T event) {
     return GestureDetector(
       onTap: () => onEventTap(event),
       child: Container(
@@ -253,7 +253,7 @@ class CalendarWeekGridView extends StatelessWidget {
 
   Widget _buildBodyGrid(
     BuildContext context,
-    List<_DayInfo> dayInfos,
+    List<_DayInfo<T>> dayInfos,
     double totalHeight,
     int startHour,
     int endHour,
@@ -309,7 +309,7 @@ class CalendarWeekGridView extends StatelessWidget {
 
   Widget _buildDayColumn(
     BuildContext context,
-    _DayInfo info,
+    _DayInfo<T> info,
     double totalHeight,
     int startHour,
     int endHour,
@@ -369,7 +369,7 @@ class CalendarWeekGridView extends StatelessWidget {
 
   Widget _buildEventBlock(
     BuildContext context,
-    PersonalEvent event,
+    T event,
     DateTime dayDate,
     int totalMinutes,
     int startHour,
@@ -443,7 +443,9 @@ class CalendarWeekGridView extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
-              if (event.location != null && event.location!.trim().isNotEmpty)
+              if (event.location != null &&
+                  event.location!.isNotEmpty &&
+                  event.location!.trim().isNotEmpty)
                 Text(
                   event.location!,
                   maxLines: 1,
@@ -460,14 +462,14 @@ class CalendarWeekGridView extends StatelessWidget {
     );
   }
 
-  List<_DayInfo> _buildDayInfos() {
-    final dayMap = <DateTime, _DayEventCollection>{};
+  List<_DayInfo<T>> _buildDayInfos() {
+    final dayMap = <DateTime, _DayEventCollection<T>>{};
 
     // Initialize all 7 days of the week
     for (int i = 0; i < 7; i++) {
       final date = DateUtils.addDaysToDate(weekStart, i);
       final normalizedDate = _normalizeDate(date);
-      dayMap[normalizedDate] = _DayEventCollection(
+      dayMap[normalizedDate] = _DayEventCollection<T>(
         date: normalizedDate,
         allDayEvents: [],
         timedEvents: [],
@@ -489,7 +491,7 @@ class CalendarWeekGridView extends StatelessWidget {
 
     // Convert to list
     return dayMap.values
-        .map((collection) => _DayInfo(
+        .map((collection) => _DayInfo<T>(
               date: collection.date,
               allDayEvents: collection.allDayEvents,
               timedEvents: collection.timedEvents,
@@ -526,7 +528,7 @@ class CalendarWeekGridView extends StatelessWidget {
   }
 }
 
-class _DayEventCollection {
+class _DayEventCollection<T extends CalendarEventBase> {
   _DayEventCollection({
     required this.date,
     required this.allDayEvents,
@@ -534,11 +536,11 @@ class _DayEventCollection {
   });
 
   final DateTime date;
-  final List<PersonalEvent> allDayEvents;
-  final List<PersonalEvent> timedEvents;
+  final List<T> allDayEvents;
+  final List<T> timedEvents;
 }
 
-class _DayInfo {
+class _DayInfo<T extends CalendarEventBase> {
   const _DayInfo({
     required this.date,
     required this.allDayEvents,
@@ -546,6 +548,6 @@ class _DayInfo {
   });
 
   final DateTime date;
-  final List<PersonalEvent> allDayEvents;
-  final List<PersonalEvent> timedEvents;
+  final List<T> allDayEvents;
+  final List<T> timedEvents;
 }

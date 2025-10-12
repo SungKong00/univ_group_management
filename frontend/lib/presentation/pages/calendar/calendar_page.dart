@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:table_calendar/table_calendar.dart';
 
 import '../../../core/models/calendar_models.dart';
 import '../../../core/services/local_storage.dart';
@@ -11,8 +10,10 @@ import '../../providers/calendar_events_provider.dart';
 import '../../providers/timetable_provider.dart';
 import '../../widgets/buttons/primary_button.dart';
 import 'calendar_week_grid_view.dart';
+import 'widgets/calendar_month_with_sidebar.dart';
 import 'widgets/event_detail_sheet.dart';
 import 'widgets/event_form_dialog.dart';
+import 'widgets/month_event_chip.dart';
 import 'widgets/schedule_detail_sheet.dart';
 import 'widgets/schedule_form_dialog.dart';
 import 'widgets/timetable_weekly_view.dart';
@@ -661,7 +662,21 @@ class _CalendarTabState extends ConsumerState<CalendarTab> {
   ) {
     switch (state.view) {
       case CalendarViewType.month:
-        return _MonthCalendarView(state: state, notifier: notifier);
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: CalendarMonthWithSidebar<PersonalEvent>(
+            events: state.events,
+            focusedDate: state.focusedDate,
+            selectedDate: state.selectedDate,
+            onDateSelected: (selected, focused) => notifier.selectDate(selected),
+            onPageChanged: notifier.setFocusedDate,
+            onEventTap: (event) => _handleEventTap(context, notifier, event),
+            eventChipBuilder: (event) => MonthEventChip(
+              label: event.title,
+              color: event.color,
+            ),
+          ),
+        );
       case CalendarViewType.week:
         return _WeekCalendarView(state: state, notifier: notifier);
       case CalendarViewType.day:
@@ -780,310 +795,9 @@ class _CalendarHeader extends StatelessWidget {
   }
 }
 
-class _MonthCalendarView extends ConsumerWidget {
-  const _MonthCalendarView({required this.state, required this.notifier});
-
-  final CalendarEventsState state;
-  final CalendarEventsNotifier notifier;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final eventsByDate = state.eventsByDate;
-    final selectedEvents = _sortEventsForDay(
-      eventsByDate[_normalizeDate(state.selectedDate)] ??
-          const <PersonalEvent>[],
-      state.selectedDate,
-    );
-
-    final now = DateTime.now();
-    final textTheme = Theme.of(context).textTheme;
-    final baseDowStyle = textTheme.labelMedium ??
-        textTheme.bodyMedium ??
-        const TextStyle(fontSize: 12, fontWeight: FontWeight.w500);
-    final dowTextStyle = baseDowStyle.copyWith(
-      color: AppColors.neutral500,
-      fontWeight: FontWeight.w600,
-    );
-
-    Widget buildDayCell(DateTime day, DateTime focusedDay) {
-      final events = eventsByDate[_normalizeDate(day)] ??
-          const <PersonalEvent>[];
-      return _MonthDayCell(
-        date: day,
-        events: _sortEventsForDay(events, day),
-        isToday: isSameDay(day, now),
-        isSelected: isSameDay(day, state.selectedDate),
-        isOutsideMonth: day.month != focusedDay.month,
-      );
-    }
-
-    // 캘린더 위젯
-    final calendarWidget = Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.lightOutline, width: 1),
-      ),
-      child: TableCalendar<PersonalEvent>(
-        locale: 'ko_KR',
-        firstDay: DateTime.utc(2000, 1, 1),
-        lastDay: DateTime.utc(2100, 12, 31),
-        focusedDay: state.focusedDate,
-        availableGestures: AvailableGestures.horizontalSwipe,
-        headerVisible: false,
-        rowHeight: 96,
-        daysOfWeekHeight: 32,
-        daysOfWeekStyle: DaysOfWeekStyle(
-          weekdayStyle: dowTextStyle,
-          weekendStyle: dowTextStyle.copyWith(color: AppColors.neutral600),
-        ),
-        calendarFormat: CalendarFormat.month,
-        startingDayOfWeek: StartingDayOfWeek.monday,
-        selectedDayPredicate: (day) => isSameDay(day, state.selectedDate),
-        onDaySelected: (selectedDay, focusedDay) {
-          notifier.selectDate(selectedDay);
-        },
-        onPageChanged: notifier.setFocusedDate,
-        eventLoader: (day) =>
-            eventsByDate[_normalizeDate(day)] ?? const <PersonalEvent>[],
-        calendarStyle: const CalendarStyle(
-          isTodayHighlighted: false,
-          cellMargin: EdgeInsets.all(4),
-          cellPadding: EdgeInsets.all(6),
-          outsideDaysVisible: true,
-          canMarkersOverflow: true,
-        ),
-        calendarBuilders: CalendarBuilders<PersonalEvent>(
-          markerBuilder: (context, day, events) => const SizedBox.shrink(),
-          defaultBuilder: (context, day, focusedDay) =>
-              buildDayCell(day, focusedDay),
-          todayBuilder: (context, day, focusedDay) =>
-              buildDayCell(day, focusedDay),
-          selectedBuilder: (context, day, focusedDay) =>
-              buildDayCell(day, focusedDay),
-          outsideBuilder: (context, day, focusedDay) =>
-              buildDayCell(day, focusedDay),
-        ),
-      ),
-    );
-
-    // 일정 목록 위젯
-    final eventListWidget = Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.lightOutline, width: 1),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(
-          left: AppSpacing.sm,
-          right: AppSpacing.sm,
-          top: AppSpacing.sm,
-          bottom: AppSpacing.xs,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              DateFormat('M월 d일 (E)', 'ko_KR').format(state.selectedDate),
-              style: textTheme.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Expanded(
-              child: _EventListView(
-                events: selectedEvents,
-                emptyMessage: '선택한 날짜에 일정이 없습니다.',
-                onEventTap: (event) =>
-                    _handleEventTap(context, notifier, event),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    // 반응형 레이아웃
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWideScreen = constraints.maxWidth >= 1024;
-
-        if (isWideScreen) {
-          // 넓은 화면: Row 레이아웃 (캘린더 60% + 일정 목록 40%)
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 7,
-                child: calendarWidget,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                flex: 3,
-                child: SizedBox(
-                  height: constraints.maxHeight,
-                  child: eventListWidget,
-                ),
-              ),
-            ],
-          );
-        } else {
-          // 좁은 화면: Column 레이아웃 (기존 방식)
-          return Column(
-            children: [
-              calendarWidget,
-              const SizedBox(height: AppSpacing.sm),
-              Expanded(child: eventListWidget),
-            ],
-          );
-        }
-      },
-    );
-  }
-}
-
-class _MonthDayCell extends StatelessWidget {
-  const _MonthDayCell({
-    required this.date,
-    required this.events,
-    required this.isToday,
-    required this.isSelected,
-    required this.isOutsideMonth,
-  });
-
-  final DateTime date;
-  final List<PersonalEvent> events;
-  final bool isToday;
-  final bool isSelected;
-  final bool isOutsideMonth;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final borderColor = isSelected ? AppColors.brand : Colors.transparent;
-
-    final dayTextStyle = textTheme.bodyMedium?.copyWith(
-      fontWeight: isToday ? FontWeight.w700 : FontWeight.w600,
-      color: isSelected
-          ? AppColors.brandStrong
-          : isOutsideMonth
-              ? AppColors.neutral400
-              : AppColors.neutral800,
-    );
-
-    Widget dayLabel = Text('${date.day}', style: dayTextStyle);
-
-    if (isToday) {
-      dayLabel = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: AppColors.actionTonalBg,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: dayLabel,
-      );
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: borderColor,
-          width: isSelected ? 2 : 1,
-        ),
-      ),
-      alignment: Alignment.topLeft,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(11),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              dayLabel,
-              if (events.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                for (var i = 0; i < events.length; i++)
-                  Padding(
-                    padding: EdgeInsets.only(top: i == 0 ? 0 : 4),
-                    child: _MonthEventChip(
-                      label: events[i].title,
-                      color: events[i].color,
-                    ),
-                  ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MonthEventChip extends StatelessWidget {
-  const _MonthEventChip({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xxs,
-        vertical: 4,
-      ),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.4)),
-      ),
-      child: Text(
-        label,
-        style: textTheme.labelSmall?.copyWith(
-          color: AppColors.neutral800,
-          fontWeight: FontWeight.w600,
-        ),
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-  }
-}
-
-List<PersonalEvent> _sortEventsForDay(
-  Iterable<PersonalEvent> events,
-  DateTime day,
-) {
-  final sorted = events.toList()
-    ..sort((a, b) => _compareEventsForDay(a, b, day));
-  return sorted;
-}
-
-int _compareEventsForDay(
-  PersonalEvent a,
-  PersonalEvent b,
-  DateTime day,
-) {
-  final aStart = _effectiveStartForDay(a, day);
-  final bStart = _effectiveStartForDay(b, day);
-  final result = aStart.compareTo(bStart);
-  if (result != 0) {
-    return result;
-  }
-
-  return a.title.toLowerCase().compareTo(b.title.toLowerCase());
-}
-
-DateTime _effectiveStartForDay(PersonalEvent event, DateTime day) {
-  final dayStart = DateTime(day.year, day.month, day.day);
-  if (event.startDateTime.isBefore(dayStart)) {
-    return dayStart;
-  }
-  return event.startDateTime;
-}
+// _MonthCalendarView removed - replaced by CalendarMonthWithSidebar
+// _MonthEventChip removed - replaced by shared MonthEventChip widget
+// Sorting helpers removed - now inside CalendarMonthWithSidebar
 
 class _WeekCalendarView extends StatelessWidget {
   const _WeekCalendarView({required this.state, required this.notifier});
@@ -1102,7 +816,7 @@ class _WeekCalendarView extends StatelessWidget {
         right: AppSpacing.sm,
         bottom: 80,
       ),
-      child: CalendarWeekGridView(
+      child: CalendarWeekGridView<PersonalEvent>(
         events: state.events,
         weekStart: weekStart,
         onEventTap: (event) => _handleEventTap(context, notifier, event),
@@ -1135,61 +849,7 @@ class _DayCalendarView extends StatelessWidget {
   }
 }
 
-class _DaySection extends StatelessWidget {
-  const _DaySection({
-    required this.date,
-    required this.events,
-    required this.onEventTap,
-  });
-
-  final DateTime date;
-  final List<PersonalEvent> events;
-  final ValueChanged<PersonalEvent> onEventTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final dateLabel = DateFormat('M월 d일 (E)', 'ko_KR').format(date);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(dateLabel, style: textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.xs),
-          if (events.isEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: AppColors.lightBackground,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.lightOutline),
-              ),
-              child: Text(
-                '일정이 없습니다.',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.neutral500,
-                ),
-              ),
-            )
-          else
-            Column(
-              children: events
-                  .map(
-                    (event) => _EventCard(
-                      event: event,
-                      onTap: () => onEventTap(event),
-                    ),
-                  )
-                  .toList(),
-            ),
-        ],
-      ),
-    );
-  }
-}
+// _DaySection removed - not used anymore
 
 class _EventListView extends StatelessWidget {
   const _EventListView({

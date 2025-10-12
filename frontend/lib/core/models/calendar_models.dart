@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../domain/models/calendar_event_base.dart';
+
 /// Enum representing days of the week aligned with backend string values.
 enum DayOfWeek {
   monday,
@@ -191,7 +193,7 @@ DateTime _timeOfDayToDate(TimeOfDay time) {
 }
 
 /// Personal calendar event (단발성 일정) representation.
-class PersonalEvent {
+class PersonalEvent implements CalendarEventBase {
   const PersonalEvent({
     required this.id,
     required this.title,
@@ -203,13 +205,21 @@ class PersonalEvent {
     required this.color,
   });
 
+  @override
   final int id;
+  @override
   final String title;
+  @override
   final String? description;
+  @override
   final String? location;
+  @override
   final DateTime startDateTime;
+  @override
   final DateTime endDateTime;
+  @override
   final bool isAllDay;
+  @override
   final Color color;
 
   factory PersonalEvent.fromJson(Map<String, dynamic> json) {
@@ -247,8 +257,10 @@ class PersonalEvent {
     );
   }
 
+  @override
   Duration get duration => endDateTime.difference(startDateTime);
 
+  @override
   bool occursOn(DateTime date) {
     final dayStart = DateTime(date.year, date.month, date.day);
     final dayEnd = dayStart.add(const Duration(days: 1)).subtract(const Duration(milliseconds: 1));

@@ -6,16 +6,16 @@ import '../../../../core/models/calendar/group_event.dart';
 import '../../../../core/models/calendar/update_scope.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
-import '../../../../data/models/calendar/calendar_event.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/calendar_view_provider.dart';
 import '../../../providers/focused_date_provider.dart';
 import '../../../providers/group_calendar_provider.dart';
 import '../../../providers/group_permission_provider.dart';
 import '../../../widgets/organisms/organisms.dart';
-import 'widgets/calendar_month_view.dart';
+import '../../calendar/calendar_week_grid_view.dart';
+import '../../calendar/widgets/calendar_month_with_sidebar.dart';
+import '../../calendar/widgets/month_event_chip.dart';
 import 'widgets/calendar_view_selector.dart';
-import 'widgets/calendar_week_view.dart';
 import 'widgets/date_navigation_header.dart';
 import 'widgets/group_event_form_dialog.dart';
 
@@ -164,34 +164,46 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   }
 
   Widget _buildCalendarContent(dynamic state, CalendarView view) {
-    // Phase 3: Week view
-    if (view == CalendarView.week) {
-      final focusedDate = ref.watch(focusedDateProvider);
-      final weekStart = _getWeekStart(focusedDate);
+    final focusedDate = ref.watch(focusedDateProvider);
 
-      // Convert GroupEvent to CalendarEvent with type safety
-      final calendarEvents = (state.events as List<GroupEvent>)
-          .map((e) => CalendarEvent.fromGroupEvent(e))
-          .toList();
-
-      return CalendarWeekView(
-        weekStart: weekStart,
-        events: calendarEvents,
-        onEventTap: (calendarEvent) {
-          // Find original GroupEvent
-          final groupEvent = state.events.firstWhere(
-            (e) => e.id.toString() == calendarEvent.id,
-          );
-          _showEventDetail(groupEvent);
-        },
+    // Phase 4: Month view with sidebar
+    if (view == CalendarView.month) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        child: CalendarMonthWithSidebar<GroupEvent>(
+          events: state.events,
+          focusedDate: focusedDate,
+          selectedDate: focusedDate, // Use focusedDate as default selection
+          onDateSelected: (selected, focused) {
+            ref.read(focusedDateProvider.notifier).setDate(selected);
+          },
+          onPageChanged: (focused) {
+            ref.read(focusedDateProvider.notifier).setDate(focused);
+          },
+          onEventTap: _showEventDetail,
+          eventChipBuilder: (event) => MonthEventChip(
+            label: event.title,
+            color: event.color,
+          ),
+        ),
       );
     }
 
-    // Phase 2: Show month view with inline event cards
-    if (view == CalendarView.month) {
-      return CalendarMonthView(
-        events: state.events,
-        onEventTap: _showEventDetail,
+    // Phase 3: Week view
+    if (view == CalendarView.week) {
+      final weekStart = _getWeekStart(focusedDate);
+
+      return Padding(
+        padding: const EdgeInsets.only(
+          left: AppSpacing.sm,
+          right: AppSpacing.sm,
+          bottom: 80,
+        ),
+        child: CalendarWeekGridView<GroupEvent>(
+          events: state.events,
+          weekStart: weekStart,
+          onEventTap: _showEventDetail,
+        ),
       );
     }
 
