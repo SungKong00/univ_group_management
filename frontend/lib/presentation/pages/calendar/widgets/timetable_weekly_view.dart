@@ -19,17 +19,43 @@ class TimetableWeeklyView extends StatelessWidget {
   final DateTime weekStart;
   final ValueChanged<PersonalSchedule> onScheduleTap;
 
-  static const int _startHour = 6;
-  static const int _endHour = 24;
   static const int _minutesPerSlot = 30;
   static const double _slotHeight = 44;
   static const double _timeColumnWidth = 64;
   static const double _dayColumnMinWidth = 160;
 
+  /// Calculates the dynamic time range based on schedules.
+  /// Returns (startHour, endHour) where:
+  /// - Default: (9, 18) when no schedules exist
+  /// - Expanded to fit all schedules
+  (int, int) _calculateTimeRange(List<PersonalSchedule> schedules) {
+    const minStart = 9;
+    const minEnd = 18;
+
+    if (schedules.isEmpty) return (minStart, minEnd);
+
+    int earliestHour = minStart;
+    int latestHour = minEnd;
+
+    for (var schedule in schedules) {
+      final startHour = schedule.startMinutes ~/ 60;
+      final endMinutes = schedule.endMinutes;
+      final endHour = endMinutes % 60 > 0
+          ? (endMinutes ~/ 60) + 1
+          : endMinutes ~/ 60;
+
+      earliestHour = math.min(earliestHour, startHour);
+      latestHour = math.max(latestHour, endHour);
+    }
+
+    return (earliestHour, math.max(latestHour, minEnd));
+  }
+
   @override
   Widget build(BuildContext context) {
     final dayInfos = _buildDayInfos();
-    final totalMinutes = (_endHour - _startHour) * 60;
+    final (startHour, endHour) = _calculateTimeRange(schedules);
+    final totalMinutes = (endHour - startHour) * 60;
     final totalSlots = totalMinutes ~/ _minutesPerSlot;
     final totalHeight = totalSlots * _slotHeight;
 
@@ -37,7 +63,7 @@ class TimetableWeeklyView extends StatelessWidget {
         _timeColumnWidth + dayInfos.length * _dayColumnMinWidth;
 
     final header = _buildHeaderRow(context, dayInfos);
-    final body = _buildBodyGrid(context, dayInfos, totalHeight);
+    final body = _buildBodyGrid(context, dayInfos, totalHeight, startHour, endHour);
 
     final grid = SizedBox(
       width: gridWidth,
@@ -134,6 +160,8 @@ class TimetableWeeklyView extends StatelessWidget {
     BuildContext context,
     List<_DayInfo> dayInfos,
     double totalHeight,
+    int startHour,
+    int endHour,
   ) {
     return Container(
       decoration: const BoxDecoration(
@@ -142,16 +170,16 @@ class TimetableWeeklyView extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTimeColumn(context, totalHeight),
-          ...dayInfos.map((info) => _buildDayColumn(context, info, totalHeight)),
+          _buildTimeColumn(context, totalHeight, startHour, endHour),
+          ...dayInfos.map((info) => _buildDayColumn(context, info, totalHeight, startHour, endHour)),
         ],
       ),
     );
   }
 
-  Widget _buildTimeColumn(BuildContext context, double totalHeight) {
+  Widget _buildTimeColumn(BuildContext context, double totalHeight, int startHour, int endHour) {
     final textTheme = Theme.of(context).textTheme;
-    final totalSlots = ((_endHour - _startHour) * 60) ~/ _minutesPerSlot;
+    final totalSlots = ((endHour - startHour) * 60) ~/ _minutesPerSlot;
 
     return SizedBox(
       width: _timeColumnWidth,
@@ -160,7 +188,7 @@ class TimetableWeeklyView extends StatelessWidget {
         children: List.generate(totalSlots, (index) {
           final minutesFromStart = index * _minutesPerSlot;
           final isHourMark = minutesFromStart % 60 == 0;
-          final hour = _startHour + minutesFromStart ~/ 60;
+          final hour = startHour + minutesFromStart ~/ 60;
           return SizedBox(
             height: _slotHeight,
             child: Align(
@@ -187,6 +215,8 @@ class TimetableWeeklyView extends StatelessWidget {
     BuildContext context,
     _DayInfo info,
     double totalHeight,
+    int startHour,
+    int endHour,
   ) {
     final isToday = _isSameDate(info.date, DateTime.now());
 
@@ -194,7 +224,7 @@ class TimetableWeeklyView extends StatelessWidget {
         ? AppColors.brand.withValues(alpha: 0.04)
         : Colors.white;
 
-    final totalMinutes = (_endHour - _startHour) * 60;
+    final totalMinutes = (endHour - startHour) * 60;
 
     return Container(
       width: _dayColumnMinWidth,
@@ -211,7 +241,7 @@ class TimetableWeeklyView extends StatelessWidget {
           ),
           _buildGridLines(totalMinutes),
           ...info.schedules.map((schedule) {
-            return _buildScheduleBlock(context, schedule, totalMinutes);
+            return _buildScheduleBlock(context, schedule, totalMinutes, startHour);
           }).toList(),
         ],
       ),
@@ -245,15 +275,16 @@ class TimetableWeeklyView extends StatelessWidget {
     BuildContext context,
     PersonalSchedule schedule,
     int totalMinutes,
+    int startHour,
   ) {
     final textTheme = Theme.of(context).textTheme;
     final startMinutes = math.max(
       0,
-      schedule.startMinutes - _startHour * 60,
+      schedule.startMinutes - startHour * 60,
     );
     final endMinutes = math.min(
       totalMinutes,
-      schedule.endMinutes - _startHour * 60,
+      schedule.endMinutes - startHour * 60,
     );
     final duration = math.max(endMinutes - startMinutes, _minutesPerSlot);
 

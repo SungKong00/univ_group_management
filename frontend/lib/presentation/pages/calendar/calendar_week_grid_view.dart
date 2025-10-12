@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import '../../../core/models/calendar_models.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/theme.dart';
 
 /// Calendar week grid view that renders personal events in a timetable-like layout.
 /// Similar to TimetableWeeklyView, but designed for calendar events (PersonalEvent).
@@ -28,18 +27,45 @@ class CalendarWeekGridView extends StatelessWidget {
   final DateTime weekStart;
   final ValueChanged<PersonalEvent> onEventTap;
 
-  static const int _startHour = 6;
-  static const int _endHour = 24;
   static const int _minutesPerSlot = 30;
   static const double _slotHeight = 44;
   static const double _timeColumnWidth = 64;
   static const double _dayColumnMinWidth = 160;
   static const double _allDayAreaHeight = 80;
 
+  /// Calculates the dynamic time range based on events.
+  /// Returns (startHour, endHour) where:
+  /// - Default: (9, 18) when no timed events exist
+  /// - Expanded to fit all timed events (all-day events ignored)
+  (int, int) _calculateTimeRange(List<PersonalEvent> events) {
+    const minStart = 9;
+    const minEnd = 18;
+
+    // Filter out all-day events
+    final timedEvents = events.where((e) => !e.isAllDay).toList();
+    if (timedEvents.isEmpty) return (minStart, minEnd);
+
+    int earliestHour = minStart;
+    int latestHour = minEnd;
+
+    for (var event in timedEvents) {
+      final startHour = event.startDateTime.hour;
+      final endHour = event.endDateTime.minute > 0
+          ? event.endDateTime.hour + 1
+          : event.endDateTime.hour;
+
+      earliestHour = math.min(earliestHour, startHour);
+      latestHour = math.max(latestHour, endHour);
+    }
+
+    return (earliestHour, math.max(latestHour, minEnd));
+  }
+
   @override
   Widget build(BuildContext context) {
     final dayInfos = _buildDayInfos();
-    final totalMinutes = (_endHour - _startHour) * 60;
+    final (startHour, endHour) = _calculateTimeRange(events);
+    final totalMinutes = (endHour - startHour) * 60;
     final totalSlots = totalMinutes ~/ _minutesPerSlot;
     final totalHeight = totalSlots * _slotHeight;
 
@@ -47,7 +73,7 @@ class CalendarWeekGridView extends StatelessWidget {
 
     final header = _buildHeaderRow(context, dayInfos);
     final allDayArea = _buildAllDayArea(context, dayInfos);
-    final body = _buildBodyGrid(context, dayInfos, totalHeight);
+    final body = _buildBodyGrid(context, dayInfos, totalHeight, startHour, endHour);
 
     final grid = SizedBox(
       width: gridWidth,
@@ -229,6 +255,8 @@ class CalendarWeekGridView extends StatelessWidget {
     BuildContext context,
     List<_DayInfo> dayInfos,
     double totalHeight,
+    int startHour,
+    int endHour,
   ) {
     return Container(
       decoration: const BoxDecoration(
@@ -237,17 +265,17 @@ class CalendarWeekGridView extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTimeColumn(context, totalHeight),
+          _buildTimeColumn(context, totalHeight, startHour, endHour),
           ...dayInfos
-              .map((info) => _buildDayColumn(context, info, totalHeight)),
+              .map((info) => _buildDayColumn(context, info, totalHeight, startHour, endHour)),
         ],
       ),
     );
   }
 
-  Widget _buildTimeColumn(BuildContext context, double totalHeight) {
+  Widget _buildTimeColumn(BuildContext context, double totalHeight, int startHour, int endHour) {
     final textTheme = Theme.of(context).textTheme;
-    final totalSlots = ((_endHour - _startHour) * 60) ~/ _minutesPerSlot;
+    final totalSlots = ((endHour - startHour) * 60) ~/ _minutesPerSlot;
 
     return SizedBox(
       width: _timeColumnWidth,
@@ -256,7 +284,7 @@ class CalendarWeekGridView extends StatelessWidget {
         children: List.generate(totalSlots, (index) {
           final minutesFromStart = index * _minutesPerSlot;
           final isHourMark = minutesFromStart % 60 == 0;
-          final hour = _startHour + minutesFromStart ~/ 60;
+          final hour = startHour + minutesFromStart ~/ 60;
           return SizedBox(
             height: _slotHeight,
             child: Align(
@@ -283,6 +311,8 @@ class CalendarWeekGridView extends StatelessWidget {
     BuildContext context,
     _DayInfo info,
     double totalHeight,
+    int startHour,
+    int endHour,
   ) {
     final isToday = _isSameDate(info.date, DateTime.now());
 
@@ -290,7 +320,7 @@ class CalendarWeekGridView extends StatelessWidget {
         ? AppColors.brand.withValues(alpha: 0.04)
         : Colors.white;
 
-    final totalMinutes = (_endHour - _startHour) * 60;
+    final totalMinutes = (endHour - startHour) * 60;
 
     return Container(
       width: _dayColumnMinWidth,
@@ -307,7 +337,7 @@ class CalendarWeekGridView extends StatelessWidget {
           ),
           _buildGridLines(totalMinutes),
           ...info.timedEvents.map((event) {
-            return _buildEventBlock(context, event, info.date, totalMinutes);
+            return _buildEventBlock(context, event, info.date, totalMinutes, startHour);
           }).toList(),
         ],
       ),
@@ -342,6 +372,7 @@ class CalendarWeekGridView extends StatelessWidget {
     PersonalEvent event,
     DateTime dayDate,
     int totalMinutes,
+    int startHour,
   ) {
     final textTheme = Theme.of(context).textTheme;
 
@@ -358,8 +389,8 @@ class CalendarWeekGridView extends StatelessWidget {
     final startMinutesOfDay = effectiveStart.hour * 60 + effectiveStart.minute;
     final endMinutesOfDay = effectiveEnd.hour * 60 + effectiveEnd.minute;
 
-    final startMinutes = math.max(0, startMinutesOfDay - _startHour * 60);
-    final endMinutes = math.min(totalMinutes, endMinutesOfDay - _startHour * 60);
+    final startMinutes = math.max(0, startMinutesOfDay - startHour * 60);
+    final endMinutes = math.min(totalMinutes, endMinutesOfDay - startHour * 60);
     final duration = math.max(endMinutes - startMinutes, _minutesPerSlot);
 
     final top = (startMinutes / _minutesPerSlot) * _slotHeight;
