@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -104,13 +105,16 @@ class GroupEventServiceTest {
     @DisplayName("단일 일정 생성 - 성공")
     fun createEvent_SingleEvent_Success() {
         // Given
+        val tomorrow = LocalDate.now().plusDays(1)
         val request =
             CreateGroupEventRequest(
                 title = "단일 일정",
                 description = "단일 일정 설명",
                 location = "회의실",
-                startDate = LocalDateTime.now().plusDays(1),
-                endDate = LocalDateTime.now().plusDays(1).plusHours(1),
+                startDate = tomorrow,
+                endDate = tomorrow,
+                startTime = LocalTime.of(14, 0),
+                endTime = LocalTime.of(15, 0),
                 isAllDay = false,
                 isOfficial = false,
                 eventType = EventType.GENERAL,
@@ -129,22 +133,23 @@ class GroupEventServiceTest {
         assertThat(event.creatorId).isEqualTo(member.id)
         assertThat(event.seriesId).isNull()
         assertThat(event.recurrenceRule).isNull()
+        // duration 검증
+        assertThat(event.endDate).isAfter(event.startDate)
     }
 
     @Test
     @DisplayName("반복 일정 생성 - DAILY - 성공")
     fun createEvent_RecurringDaily_Success() {
-        // Given: 11/1 ~ 11/30, 매일 반복
-        val startDate = LocalDate.of(2025, 11, 1).atTime(14, 0)
-        val endDate = LocalDate.of(2025, 11, 30).atTime(14, 0)
-
+        // Given: 11/1 ~ 11/30, 매일 반복, 14:00-15:00
         val request =
             CreateGroupEventRequest(
                 title = "매일 반복 일정",
                 description = "매일 14:00-15:00",
                 location = null,
-                startDate = startDate,
-                endDate = endDate,
+                startDate = LocalDate.of(2025, 11, 1),
+                endDate = LocalDate.of(2025, 11, 30),
+                startTime = LocalTime.of(14, 0),
+                endTime = LocalTime.of(15, 0),
                 isAllDay = false,
                 isOfficial = false,
                 eventType = EventType.GENERAL,
@@ -159,6 +164,8 @@ class GroupEventServiceTest {
         assertThat(results).hasSize(30)
         assertThat(results.map { it.seriesId }.toSet()).hasSize(1) // 동일한 seriesId
         assertThat(results.all { it.title == "매일 반복 일정" }).isTrue()
+        // duration 검증: 모든 인스턴스가 duration > 0
+        assertThat(results.all { it.endDate.isAfter(it.startDate) }).isTrue()
 
         // DB에서도 확인
         val seriesId = results[0].seriesId!!
@@ -169,17 +176,16 @@ class GroupEventServiceTest {
     @Test
     @DisplayName("반복 일정 생성 - WEEKLY - 성공")
     fun createEvent_RecurringWeekly_Success() {
-        // Given: 11/1 ~ 11/30, 월/수/금 반복
-        val startDate = LocalDate.of(2025, 11, 1).atTime(10, 0)
-        val endDate = LocalDate.of(2025, 11, 30).atTime(10, 0)
-
+        // Given: 11/1 ~ 11/30, 월/수/금 반복, 10:00-11:00
         val request =
             CreateGroupEventRequest(
                 title = "주간 반복 일정",
                 description = "월수금 10:00-11:00",
                 location = "강의실",
-                startDate = startDate,
-                endDate = endDate,
+                startDate = LocalDate.of(2025, 11, 1),
+                endDate = LocalDate.of(2025, 11, 30),
+                startTime = LocalTime.of(10, 0),
+                endTime = LocalTime.of(11, 0),
                 isAllDay = false,
                 isOfficial = false,
                 eventType = EventType.GENERAL,
@@ -194,9 +200,11 @@ class GroupEventServiceTest {
         // When
         val results = groupEventService.createEvent(member, group.id, request)
 
-        // Then: 11월 월수금은 13개
-        assertThat(results).hasSize(13)
+        // Then: 11월 월수금은 12개 (11/1은 토요일이므로 제외)
+        assertThat(results).hasSize(12)
         assertThat(results.map { it.seriesId }.toSet()).hasSize(1)
+        // duration 검증: 모든 인스턴스가 duration > 0
+        assertThat(results.all { it.endDate.isAfter(it.startDate) }).isTrue()
 
         // 모든 일정이 월/수/금인지 확인
         val daysOfWeek = results.map { it.startDate.dayOfWeek }.toSet()
@@ -207,13 +215,16 @@ class GroupEventServiceTest {
     @DisplayName("공식 일정 생성 - CALENDAR_MANAGE 권한 없음 - 실패")
     fun createEvent_OfficialWithoutPermission_ThrowsForbidden() {
         // Given: 일반 멤버가 공식 일정 생성 시도
+        val tomorrow = LocalDate.now().plusDays(1)
         val request =
             CreateGroupEventRequest(
                 title = "공식 일정",
                 description = null,
                 location = null,
-                startDate = LocalDateTime.now().plusDays(1),
-                endDate = LocalDateTime.now().plusDays(1).plusHours(1),
+                startDate = tomorrow,
+                endDate = tomorrow,
+                startTime = LocalTime.of(14, 0),
+                endTime = LocalTime.of(15, 0),
                 isAllDay = false,
                 // 공식 일정
                 isOfficial = true,
@@ -231,13 +242,16 @@ class GroupEventServiceTest {
     @DisplayName("비공식 일정 생성 - 그룹 멤버 아님 - 실패")
     fun createEvent_NotMember_ThrowsNotGroupMember() {
         // Given: 그룹 비멤버가 일정 생성 시도
+        val tomorrow = LocalDate.now().plusDays(1)
         val request =
             CreateGroupEventRequest(
                 title = "비멤버 일정",
                 description = null,
                 location = null,
-                startDate = LocalDateTime.now().plusDays(1),
-                endDate = LocalDateTime.now().plusDays(1).plusHours(1),
+                startDate = tomorrow,
+                endDate = tomorrow,
+                startTime = LocalTime.of(14, 0),
+                endTime = LocalTime.of(15, 0),
                 isAllDay = false,
                 isOfficial = false,
                 eventType = EventType.GENERAL,
@@ -254,16 +268,15 @@ class GroupEventServiceTest {
     @DisplayName("이 일정만 수정 - 성공")
     fun updateEvent_ThisEventOnly_Success() {
         // Given: 반복 일정 생성
-        val startDate = LocalDate.of(2025, 11, 1).atTime(14, 0)
-        val endDate = LocalDate.of(2025, 11, 10).atTime(14, 0)
-
         val createRequest =
             CreateGroupEventRequest(
                 title = "원본 제목",
                 description = "원본 설명",
                 location = null,
-                startDate = startDate,
-                endDate = endDate,
+                startDate = LocalDate.of(2025, 11, 1),
+                endDate = LocalDate.of(2025, 11, 10),
+                startTime = LocalTime.of(14, 0),
+                endTime = LocalTime.of(15, 0),
                 isAllDay = false,
                 isOfficial = false,
                 eventType = EventType.GENERAL,
@@ -281,8 +294,8 @@ class GroupEventServiceTest {
                 title = "수정된 제목",
                 description = "수정된 설명",
                 location = "새 장소",
-                startDate = targetEvent.startDate,
-                endDate = targetEvent.endDate,
+                startTime = LocalTime.of(16, 0),
+                endTime = LocalTime.of(17, 0),
                 isAllDay = false,
                 color = "#10B981",
                 updateScope = UpdateScope.THIS_EVENT,
@@ -308,8 +321,8 @@ class GroupEventServiceTest {
     fun updateEvent_AllFutureEvents_Success() {
         // Given: 과거, 현재, 미래 일정 생성
         val now = LocalDateTime.now()
-        val pastDate = now.minusDays(3)
-        val futureDate = now.plusDays(7)
+        val pastDate = now.minusDays(3).toLocalDate()
+        val futureDate = now.plusDays(7).toLocalDate()
 
         val createRequest =
             CreateGroupEventRequest(
@@ -318,6 +331,8 @@ class GroupEventServiceTest {
                 location = null,
                 startDate = pastDate,
                 endDate = futureDate,
+                startTime = LocalTime.of(14, 0),
+                endTime = LocalTime.of(15, 0),
                 isAllDay = false,
                 isOfficial = false,
                 eventType = EventType.GENERAL,
@@ -334,8 +349,8 @@ class GroupEventServiceTest {
                 title = "수정된 반복 일정",
                 description = "수정된 설명",
                 location = null,
-                startDate = futureEvent.startDate,
-                endDate = futureEvent.endDate,
+                startTime = LocalTime.of(16, 0),
+                endTime = LocalTime.of(17, 0),
                 isAllDay = false,
                 color = "#F59E0B",
                 updateScope = UpdateScope.ALL_EVENTS,
@@ -358,16 +373,15 @@ class GroupEventServiceTest {
     @DisplayName("이 일정만 삭제 - 성공")
     fun deleteEvent_ThisEventOnly_Success() {
         // Given: 반복 일정 생성
-        val startDate = LocalDate.of(2025, 11, 1).atTime(14, 0)
-        val endDate = LocalDate.of(2025, 11, 10).atTime(14, 0)
-
         val createRequest =
             CreateGroupEventRequest(
                 title = "반복 일정",
                 description = null,
                 location = null,
-                startDate = startDate,
-                endDate = endDate,
+                startDate = LocalDate.of(2025, 11, 1),
+                endDate = LocalDate.of(2025, 11, 10),
+                startTime = LocalTime.of(14, 0),
+                endTime = LocalTime.of(15, 0),
                 isAllDay = false,
                 isOfficial = false,
                 eventType = EventType.GENERAL,
@@ -394,8 +408,8 @@ class GroupEventServiceTest {
     fun deleteEvent_AllFutureEvents_Success() {
         // Given: 과거, 미래 일정 생성
         val now = LocalDateTime.now()
-        val pastDate = now.minusDays(3)
-        val futureDate = now.plusDays(7)
+        val pastDate = now.minusDays(3).toLocalDate()
+        val futureDate = now.plusDays(7).toLocalDate()
 
         val createRequest =
             CreateGroupEventRequest(
@@ -404,6 +418,8 @@ class GroupEventServiceTest {
                 location = null,
                 startDate = pastDate,
                 endDate = futureDate,
+                startTime = LocalTime.of(14, 0),
+                endTime = LocalTime.of(15, 0),
                 isAllDay = false,
                 isOfficial = false,
                 eventType = EventType.GENERAL,
@@ -425,17 +441,16 @@ class GroupEventServiceTest {
     @Test
     @DisplayName("날짜 범위 조회 - 성공")
     fun getEventsByDateRange_Success() {
-        // Given: 11/1 ~ 11/30 범위에 15개 일정
-        val startDate = LocalDate.of(2025, 11, 1).atTime(10, 0)
-        val endDate = LocalDate.of(2025, 11, 15).atTime(10, 0)
-
+        // Given: 11/1 ~ 11/15 범위에 15개 일정
         val createRequest =
             CreateGroupEventRequest(
                 title = "조회 테스트 일정",
                 description = null,
                 location = null,
-                startDate = startDate,
-                endDate = endDate,
+                startDate = LocalDate.of(2025, 11, 1),
+                endDate = LocalDate.of(2025, 11, 15),
+                startTime = LocalTime.of(10, 0),
+                endTime = LocalTime.of(11, 0),
                 isAllDay = false,
                 isOfficial = false,
                 eventType = EventType.GENERAL,

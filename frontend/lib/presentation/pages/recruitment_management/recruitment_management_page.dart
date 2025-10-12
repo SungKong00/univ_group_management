@@ -947,26 +947,29 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
             '지원서 질문',
             style: AppTheme.titleMedium.copyWith(color: AppColors.neutral800),
           ),
-          SizedBox(height: AppSpacing.xs),
-          if (_questionControllers.isEmpty)
-            Text(
-              '필요하다면 아래 버튼을 눌러 질문을 추가할 수 있습니다.',
-              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
-            ),
+          SizedBox(height: 4),
+          Text(
+            '지원자에게 물어보고 싶은 질문을 추가할 수 있습니다. (최대 20개)',
+            style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
+          ),
+          SizedBox(height: AppSpacing.sm),
           for (var i = 0; i < _questionControllers.length; i++)
             Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.xs),
-              child: _QuestionEditor(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _QuestionCard(
                 index: i,
                 controller: _questionControllers[i],
                 onRemove: () => _removeQuestion(i),
               ),
             ),
-          SizedBox(height: AppSpacing.sm),
           OutlinedButton.icon(
-            onPressed: _addQuestion,
+            onPressed: _questionControllers.length < 20 ? _addQuestion : null,
             icon: const Icon(Icons.add),
-            label: const Text('질문 추가'),
+            label: Text('질문 추가 (${_questionControllers.length}/20)'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.brand,
+              side: BorderSide(color: AppColors.brand.withValues(alpha: 0.5)),
+            ),
           ),
           SizedBox(height: AppSpacing.md),
           Row(
@@ -1620,8 +1623,8 @@ class _QuestionChip extends StatelessWidget {
   }
 }
 
-class _QuestionEditor extends StatelessWidget {
-  const _QuestionEditor({
+class _QuestionCard extends StatelessWidget {
+  const _QuestionCard({
     required this.index,
     required this.controller,
     required this.onRemove,
@@ -1634,37 +1637,76 @@ class _QuestionEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.neutral100,
-        borderRadius: BorderRadius.circular(AppRadius.card / 2),
-        border: Border.all(color: AppColors.neutral200),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.neutral300, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '질문 ${index + 1}',
-                style: AppTheme.titleMedium.copyWith(
-                  color: AppColors.neutral800,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xs,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.brandLight,
+                  borderRadius: BorderRadius.circular(AppRadius.button / 2),
+                ),
+                child: Text(
+                  '질문 ${index + 1}',
+                  style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                    color: AppColors.brand,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              IconButton(
+              const Spacer(),
+              OutlinedButton.icon(
                 onPressed: onRemove,
-                icon: const Icon(Icons.delete_outline, size: 20),
-                color: AppColors.neutral500,
-                tooltip: '질문 삭제',
+                icon: const Icon(Icons.delete_outline, size: 18),
+                label: const Text('삭제'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                    vertical: 8,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ],
           ),
+          const SizedBox(height: AppSpacing.sm),
           TextFormField(
             controller: controller,
             decoration: const InputDecoration(
+              labelText: '질문 내용',
               hintText: '지원자에게 물어보고 싶은 질문을 입력하세요.',
             ),
+            maxLines: 2,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '질문을 입력해주세요.';
+              }
+              if (value.trim().length > 500) {
+                return '질문은 500자를 초과할 수 없습니다.';
+              }
+              return null;
+            },
           ),
         ],
       ),

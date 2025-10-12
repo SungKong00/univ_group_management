@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.UUID
 
 @Service
@@ -83,20 +84,30 @@ class GroupEventService(
             validateGroupMembership(user, groupId)
         }
 
-        // 3. 시간 검증
-        val start = request.startDate ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-        val end = request.endDate ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-        validateTimeRange(start, end)
+        // 3. Date/Time 검증
+        val startDate = request.startDate ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val endDate = request.endDate ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val startTime = request.startTime ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val endTime = request.endTime ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
 
-        // 4. 반복 일정 여부 확인
+        // 4. 종일 이벤트 처리
+        val actualStartTime = if (request.isAllDay) LocalTime.MIN else startTime
+        val actualEndTime = if (request.isAllDay) LocalTime.of(23, 59, 59) else endTime
+
+        // 5. 시간 검증
+        validateTimeRange(actualStartTime, actualEndTime)
+
+        // 6. 반복 일정 여부 확인
         if (request.recurrence == null) {
             // 단일 일정 생성
-            val event = createSingleEvent(group, user, request, null, null)
+            val eventStart = startDate.atTime(actualStartTime)
+            val eventEnd = startDate.atTime(actualEndTime)
+            val event = createSingleEvent(group, user, request, eventStart, eventEnd, null, null)
             val saved = groupEventRepository.save(event)
             return listOf(saved.toResponse())
         } else {
             // 반복 일정 생성 (명시적 인스턴스 저장)
-            return createRecurringEvents(group, user, request)
+            return createRecurringEvents(group, user, request, actualStartTime, actualEndTime)
         }
     }
 
@@ -107,24 +118,23 @@ class GroupEventService(
         group: Group,
         user: User,
         request: CreateGroupEventRequest,
+        startTime: LocalTime,
+        endTime: LocalTime,
     ): List<GroupEventResponse> {
         val recurrence = request.recurrence!!
         val seriesId = UUID.randomUUID().toString()
         val recurrenceRuleJson = objectMapper.writeValueAsString(recurrence)
 
-        val start = request.startDate!!
-        val end = request.endDate!!
-
-        // 원본 이벤트의 duration 계산 (버그 수정: endDate는 반복 종료일이 아니라 일정 종료 시간)
-        val duration = java.time.Duration.between(start, end)
+        val startDate = request.startDate!!
+        val endDate = request.endDate!!
 
         // 1. 생성할 날짜 목록 계산
         val dates =
             when (recurrence.type) {
                 RecurrenceType.DAILY -> {
                     // 매일: startDate부터 endDate까지 모든 날짜
-                    generateSequence(start.toLocalDate()) { it.plusDays(1) }
-                        .takeWhile { !it.isAfter(end.toLocalDate()) }
+                    generateSequence(startDate) { it.plusDays(1) }
+                        .takeWhile { !it.isAfter(endDate) }
                         .toList()
                 }
                 RecurrenceType.WEEKLY -> {
@@ -133,8 +143,8 @@ class GroupEventService(
                         recurrence.daysOfWeek
                             ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
 
-                    generateSequence(start.toLocalDate()) { it.plusDays(1) }
-                        .takeWhile { !it.isAfter(end.toLocalDate()) }
+                    generateSequence(startDate) { it.plusDays(1) }
+                        .takeWhile { !it.isAfter(endDate) }
                         .filter { it.dayOfWeek in daysOfWeek }
                         .toList()
                 }
@@ -143,17 +153,15 @@ class GroupEventService(
         // 2. 각 날짜마다 GroupEvent 인스턴스 생성
         val events =
             dates.map { date ->
-                val eventStart = date.atTime(start.toLocalTime())
-                val eventEnd = eventStart.plus(duration)  // 버그 수정: duration만큼 더함
+                val eventStart = date.atTime(startTime)
+                val eventEnd = date.atTime(endTime)
 
                 createSingleEvent(
                     group = group,
                     creator = user,
-                    request =
-                        request.copy(
-                            startDate = eventStart,
-                            endDate = eventEnd,
-                        ),
+                    request = request,
+                    eventStart = eventStart,
+                    eventEnd = eventEnd,
                     seriesId = seriesId,
                     recurrenceRule = recurrenceRuleJson,
                 )
@@ -171,6 +179,8 @@ class GroupEventService(
         group: Group,
         creator: User,
         request: CreateGroupEventRequest,
+        eventStart: LocalDateTime,
+        eventEnd: LocalDateTime,
         seriesId: String?,
         recurrenceRule: String?,
     ): GroupEvent =
@@ -180,8 +190,8 @@ class GroupEventService(
             title = request.title.trim(),
             description = request.description?.trim(),
             location = request.location?.trim(),
-            startDate = request.startDate!!,
-            endDate = request.endDate!!,
+            startDate = eventStart,
+            endDate = eventEnd,
             isAllDay = request.isAllDay,
             isOfficial = request.isOfficial,
             eventType = request.eventType,
@@ -205,21 +215,29 @@ class GroupEventService(
         val existing = getEventWithPermissionCheck(user, groupId, eventId)
 
         // 2. 시간 검증
-        val start = request.startDate ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-        val end = request.endDate ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-        validateTimeRange(start, end)
+        val startTime = request.startTime ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val endTime = request.endTime ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
 
-        // 3. 수정 범위에 따라 분기
+        // 3. 종일 이벤트 처리
+        val actualStartTime = if (request.isAllDay) LocalTime.MIN else startTime
+        val actualEndTime = if (request.isAllDay) LocalTime.of(23, 59, 59) else endTime
+
+        validateTimeRange(actualStartTime, actualEndTime)
+
+        // 4. 수정 범위에 따라 분기
         return when (request.updateScope) {
             UpdateScope.THIS_EVENT -> {
                 // 이 일정만 수정
+                val newStart = existing.startDate.toLocalDate().atTime(actualStartTime)
+                val newEnd = existing.endDate.toLocalDate().atTime(actualEndTime)
+
                 val updated =
                     existing.copy(
                         title = request.title.trim(),
                         description = request.description?.trim(),
                         location = request.location?.trim(),
-                        startDate = start,
-                        endDate = end,
+                        startDate = newStart,
+                        endDate = newEnd,
                         isAllDay = request.isAllDay,
                         color = normalizeColor(request.color),
                         updatedAt = LocalDateTime.now(),
@@ -242,13 +260,15 @@ class GroupEventService(
 
                 val updated =
                     futureEvents.map { event ->
+                        val newStart = event.startDate.toLocalDate().atTime(actualStartTime)
+                        val newEnd = event.endDate.toLocalDate().atTime(actualEndTime)
+
                         event.copy(
                             title = request.title.trim(),
                             description = request.description?.trim(),
                             location = request.location?.trim(),
-                            // 시간 차이 유지하면서 업데이트
-                            startDate = event.startDate.toLocalDate().atTime(start.toLocalTime()),
-                            endDate = event.endDate.toLocalDate().atTime(end.toLocalTime()),
+                            startDate = newStart,
+                            endDate = newEnd,
                             isAllDay = request.isAllDay,
                             color = normalizeColor(request.color),
                             updatedAt = LocalDateTime.now(),
@@ -398,8 +418,8 @@ class GroupEventService(
      * 시간 범위 검증
      */
     private fun validateTimeRange(
-        start: LocalDateTime,
-        end: LocalDateTime,
+        start: LocalTime,
+        end: LocalTime,
     ) {
         if (!end.isAfter(start)) {
             throw BusinessException(ErrorCode.INVALID_TIME_RANGE)

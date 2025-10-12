@@ -5,7 +5,9 @@ import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
 import org.castlekong.backend.entity.EventType
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 /**
  * 그룹 일정 응답 DTO
@@ -33,6 +35,11 @@ data class GroupEventResponse(
 
 /**
  * 그룹 일정 생성 요청 DTO
+ *
+ * Date/Time 분리 모델:
+ * - startDate, endDate: 반복 일정의 시작/종료 날짜 (반복 기간)
+ * - startTime, endTime: 개별 일정의 시작/종료 시간 (이벤트 duration)
+ * - 단일 일정의 경우: startDate + startTime, startDate + endTime 결합
  */
 data class CreateGroupEventRequest(
     @field:NotBlank(message = "제목은 필수입니다.")
@@ -42,10 +49,14 @@ data class CreateGroupEventRequest(
     val description: String? = null,
     @field:Size(max = 100, message = "장소는 최대 100자까지 입력할 수 있습니다.")
     val location: String? = null,
-    @field:NotNull(message = "시작 일시는 필수입니다.")
-    val startDate: LocalDateTime?,
-    @field:NotNull(message = "종료 일시는 필수입니다.")
-    val endDate: LocalDateTime?,
+    @field:NotNull(message = "시작 날짜는 필수입니다.")
+    val startDate: LocalDate?,
+    @field:NotNull(message = "종료 날짜는 필수입니다.")
+    val endDate: LocalDate?,
+    @field:NotNull(message = "시작 시간은 필수입니다.")
+    val startTime: LocalTime?,
+    @field:NotNull(message = "종료 시간은 필수입니다.")
+    val endTime: LocalTime?,
     val isAllDay: Boolean = false,
     val isOfficial: Boolean = false,
     val eventType: EventType = EventType.GENERAL,
@@ -67,10 +78,10 @@ data class UpdateGroupEventRequest(
     val description: String? = null,
     @field:Size(max = 100, message = "장소는 최대 100자까지 입력할 수 있습니다.")
     val location: String? = null,
-    @field:NotNull(message = "시작 일시는 필수입니다.")
-    val startDate: LocalDateTime?,
-    @field:NotNull(message = "종료 일시는 필수입니다.")
-    val endDate: LocalDateTime?,
+    @field:NotNull(message = "시작 시간은 필수입니다.")
+    val startTime: LocalTime?,
+    @field:NotNull(message = "종료 시간은 필수입니다.")
+    val endTime: LocalTime?,
     val isAllDay: Boolean = false,
     @field:NotBlank(message = "색상은 필수입니다.")
     @field:Size(min = 7, max = 7, message = "색상 코드는 #과 6자리 HEX 형식이어야 합니다.")
