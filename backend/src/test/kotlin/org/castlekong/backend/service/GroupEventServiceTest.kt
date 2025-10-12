@@ -470,26 +470,18 @@ class GroupEventServiceTest {
                 ),
             )
 
-        val ownerRole =
-            groupRoleRepository.save(
-                TestDataFactory.createOwnerRole(group).copy(
-                    permissions = mutableSetOf(GroupPermission.CALENDAR_MANAGE, GroupPermission.GROUP_MANAGE),
-                ),
-            )
+        val ownerRole = TestDataFactory.createOwnerRole(group)
+        ownerRole.replacePermissions(listOf(GroupPermission.CALENDAR_MANAGE, GroupPermission.GROUP_MANAGE))
+        groupRoleRepository.save(ownerRole)
 
-        groupRoleRepository.save(
-            TestDataFactory.createAdvisorRole(group).copy(
-                permissions = mutableSetOf(GroupPermission.CALENDAR_MANAGE),
-            ),
-        )
+        val advisorRole = TestDataFactory.createAdvisorRole(group)
+        advisorRole.replacePermissions(listOf(GroupPermission.CALENDAR_MANAGE))
+        groupRoleRepository.save(advisorRole)
 
-        val memberRole =
-            groupRoleRepository.save(
-                TestDataFactory.createMemberRole(group).copy(
-                    // 일반 멤버는 캘린더 권한 없음
-                    permissions = mutableSetOf(),
-                ),
-            )
+        val memberRole = TestDataFactory.createMemberRole(group)
+        // 일반 멤버는 캘린더 권한 없음
+        memberRole.replacePermissions(emptyList())
+        groupRoleRepository.save(memberRole)
 
         groupMemberRepository.save(
             TestDataFactory.createTestGroupMember(

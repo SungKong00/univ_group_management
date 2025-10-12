@@ -24,9 +24,9 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
-        # 배치 처리 최적화
+        # 배치 처리 최적화 (그룹 캘린더 반복 일정 생성 최적화)
         jdbc:
-          batch_size: 50                    # 배치 크기
+          batch_size: 30                    # 배치 크기 (반복 일정 최적화용)
           batch_versioned_data: true        # 버전 데이터 배치 처리
         order_inserts: true                 # INSERT 순서 최적화
         order_updates: true                 # UPDATE 순서 최적화

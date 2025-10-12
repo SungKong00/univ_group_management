@@ -10,11 +10,22 @@ interface GroupEventRepository : JpaRepository<GroupEvent, Long> {
     /**
      * 그룹 ID와 날짜 범위로 일정 조회
      * 캘린더 뷰에서 특정 기간의 일정을 표시할 때 사용
+     *
+     * N+1 문제 해결: JOIN FETCH로 Group, User 한 번에 로드
      */
+    @Query("""
+        SELECT e FROM GroupEvent e
+        JOIN FETCH e.group g
+        JOIN FETCH e.creator c
+        WHERE e.group.id = :groupId
+        AND e.startDate >= :startDate
+        AND e.startDate < :endDate
+        ORDER BY e.startDate ASC
+    """)
     fun findByGroupIdAndStartDateBetween(
-        groupId: Long,
-        startDate: LocalDateTime,
-        endDate: LocalDateTime,
+        @Param("groupId") groupId: Long,
+        @Param("startDate") startDate: LocalDateTime,
+        @Param("endDate") endDate: LocalDateTime,
     ): List<GroupEvent>
 
     /**

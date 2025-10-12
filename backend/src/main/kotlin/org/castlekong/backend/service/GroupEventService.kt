@@ -115,6 +115,9 @@ class GroupEventService(
         val start = request.startDate!!
         val end = request.endDate!!
 
+        // 원본 이벤트의 duration 계산 (버그 수정: endDate는 반복 종료일이 아니라 일정 종료 시간)
+        val duration = java.time.Duration.between(start, end)
+
         // 1. 생성할 날짜 목록 계산
         val dates =
             when (recurrence.type) {
@@ -141,7 +144,7 @@ class GroupEventService(
         val events =
             dates.map { date ->
                 val eventStart = date.atTime(start.toLocalTime())
-                val eventEnd = date.atTime(end.toLocalTime())
+                val eventEnd = eventStart.plus(duration)  // 버그 수정: duration만큼 더함
 
                 createSingleEvent(
                     group = group,

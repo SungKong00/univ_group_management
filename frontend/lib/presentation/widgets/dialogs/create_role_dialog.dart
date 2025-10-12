@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../pages/member_management/providers/role_management_provider.dart';
-import '../buttons/primary_button.dart';
-import '../buttons/neutral_outlined_button.dart';
+import 'confirm_cancel_actions.dart';
 
 /// 역할 생성 다이얼로그
 ///
@@ -326,28 +325,16 @@ class _CreateRoleDialogState extends ConsumerState<CreateRoleDialog>
   }
 
   Widget _buildActions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Flexible(
-          child: NeutralOutlinedButton(
-            text: '취소',
-            onPressed: _isLoading
-                ? null
-                : () => Navigator.of(context).pop(false),
-            semanticsLabel: '역할 생성 취소',
-          ),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Flexible(
-          child: PrimaryButton(
-            text: '생성',
-            isLoading: _isLoading,
-            onPressed: _isLoading ? null : _handleCreate,
-            semanticsLabel: '역할 생성',
-          ),
-        ),
-      ],
+    return ConfirmCancelActions(
+      confirmText: '생성',
+      onConfirm: _isLoading ? null : _handleCreate,
+      isConfirmLoading: _isLoading,
+      confirmSemanticsLabel: '역할 생성',
+      confirmVariant: PrimaryButtonVariant.brand,
+      onCancel: _isLoading
+          ? null
+          : () => Navigator.of(context).pop(false),
+      cancelSemanticsLabel: '역할 생성 취소',
     );
   }
 }
