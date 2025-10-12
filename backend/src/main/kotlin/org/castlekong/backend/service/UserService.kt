@@ -32,7 +32,8 @@ class UserService(
     private val groupJoinRequestRepository: GroupJoinRequestRepository,
     private val subGroupRequestRepository: SubGroupRequestRepository,
     private val groupMemberRepository: GroupMemberRepository,
-    private val groupMapper: GroupMapper, // GroupMapper 추가
+    // GroupMapper 추가
+    private val groupMapper: GroupMapper,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 

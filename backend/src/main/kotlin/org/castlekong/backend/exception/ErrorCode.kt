@@ -48,6 +48,14 @@ enum class ErrorCode(val message: String) {
     PERSONAL_SCHEDULE_NOT_FOUND("시간표 일정을 찾을 수 없습니다."),
     PERSONAL_SCHEDULE_INVALID_TIME("시간표 시간 범위가 올바르지 않습니다."),
 
+    // Group Calendar
+    EVENT_NOT_FOUND("일정을 찾을 수 없습니다."),
+    INVALID_DATE_RANGE("날짜 범위가 올바르지 않습니다."),
+    INVALID_TIME_RANGE("시간 범위가 올바르지 않습니다."),
+    INVALID_COLOR("색상 코드가 올바르지 않습니다."),
+    NOT_RECURRING_EVENT("반복 일정이 아닙니다."),
+    NOT_GROUP_MEMBER("그룹 멤버가 아닙니다."),
+
     // Recruitment
     RECRUITMENT_NOT_FOUND("모집 게시글을 찾을 수 없습니다."),
     RECRUITMENT_ALREADY_EXISTS("이미 활성화된 모집 게시글이 있습니다."),

@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../providers/calendar_events_provider.dart';
 import '../../providers/timetable_provider.dart';
+import '../../widgets/buttons/primary_button.dart';
 import 'widgets/event_detail_sheet.dart';
 import 'widgets/event_form_dialog.dart';
 import 'widgets/schedule_detail_sheet.dart';
@@ -89,13 +90,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
     ref.listen<TimetableState>(timetableStateProvider, (previous, next) {
       if (!mounted) return;
       final snackMessage = next.snackbarMessage;
-      if (snackMessage != null &&
-          snackMessage != previous?.snackbarMessage) {
+      if (snackMessage != null && snackMessage != previous?.snackbarMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(snackMessage),
-            backgroundColor:
-                next.snackbarIsError ? AppColors.error : null,
+            backgroundColor: next.snackbarIsError ? AppColors.error : null,
           ),
         );
         ref.read(timetableStateProvider.notifier).clearSnackbar();
@@ -116,10 +115,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
               child: TabBarView(
                 controller: _tabController,
                 physics: const NeverScrollableScrollPhysics(),
-                children: const [
-                  TimetableTab(),
-                  CalendarTab(),
-                ],
+                children: const [TimetableTab(), CalendarTab()],
               ),
             ),
           ],
@@ -195,9 +191,11 @@ class TimetableTab extends ConsumerWidget {
     if (isInitialLoading) {
       content = const Center(child: CircularProgressIndicator());
     } else if (state.schedules.isEmpty) {
-      content = _EmptyTimetable(onCreatePressed: () async {
-        await _handleCreate(context, notifier, isBusy);
-      });
+      content = _EmptyTimetable(
+        onCreatePressed: () async {
+          await _handleCreate(context, notifier, isBusy);
+        },
+      );
     } else {
       content = TimetableWeeklyView(
         schedules: state.schedules,
@@ -253,10 +251,7 @@ class TimetableTab extends ConsumerWidget {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            child: AnimatedSwitcher(
-              duration: AppMotion.quick,
-              child: content,
-            ),
+            child: AnimatedSwitcher(duration: AppMotion.quick, child: content),
           ),
         ),
       ],
@@ -293,10 +288,7 @@ class TimetableTab extends ConsumerWidget {
     if (action == null) return;
 
     if (action == ScheduleDetailAction.edit) {
-      final request = await showScheduleFormDialog(
-        context,
-        initial: schedule,
-      );
+      final request = await showScheduleFormDialog(context, initial: schedule);
       if (!context.mounted) return;
       if (request == null) return;
       final hasOverlap = notifier.hasOverlap(request, excludeId: schedule.id);
@@ -319,9 +311,7 @@ class TimetableTab extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('시간 겹침 확인'),
-        content: const Text(
-          '⚠️ 해당 시간대에 다른 일정이 있습니다. 계속 진행하시겠습니까?',
-        ),
+        content: const Text('⚠️ 해당 시간대에 다른 일정이 있습니다. 계속 진행하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -404,10 +394,7 @@ class _TimetableToolbar extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    weekLabel,
-                    style: textTheme.titleLarge,
-                  ),
+                  Text(weekLabel, style: textTheme.titleLarge),
                   Text(
                     weekRange,
                     style: textTheme.bodySmall?.copyWith(
@@ -504,15 +491,10 @@ class _ErrorBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: textTheme.bodyMedium?.copyWith(
-                color: AppColors.error,
-              ),
+              style: textTheme.bodyMedium?.copyWith(color: AppColors.error),
             ),
           ),
-          TextButton(
-            onPressed: onRetry,
-            child: const Text('다시 시도'),
-          ),
+          TextButton(onPressed: onRetry, child: const Text('다시 시도')),
         ],
       ),
     );
@@ -533,13 +515,13 @@ class _EmptyTimetable extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.calendar_today_outlined,
-                size: 64, color: AppColors.neutral400),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              '등록된 일정이 없습니다.',
-              style: textTheme.titleLarge,
+            const Icon(
+              Icons.calendar_today_outlined,
+              size: 64,
+              color: AppColors.neutral400,
             ),
+            const SizedBox(height: AppSpacing.sm),
+            Text('등록된 일정이 없습니다.', style: textTheme.titleLarge),
             const SizedBox(height: AppSpacing.xs),
             Text(
               '새로운 개인 일정을 추가해 주간 시간표를 채워보세요.',
@@ -597,20 +579,27 @@ class _CalendarTabState extends ConsumerState<CalendarTab> {
       }
     });
 
-    final header = _CalendarHeader(
-      state: state,
-      onPrevious: notifier.goToPreviousRange,
-      onNext: notifier.goToNextRange,
-      onToday: notifier.goToToday,
-      onChangeView: notifier.changeView,
-    );
-
-    final body = _buildCalendarBody(context, state, notifier);
-
     final children = <Widget>[
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        child: header,
+        child: _CalendarHeader(
+          state: state,
+          onPrevious: notifier.goToPreviousRange,
+          onNext: notifier.goToNextRange,
+          onToday: notifier.goToToday,
+          onChangeView: notifier.changeView,
+          onCreateEvent: state.isMutating
+              ? null
+              : () async {
+                  final request = await showEventFormDialog(
+                    context,
+                    anchorDate: state.selectedDate,
+                  );
+                  if (request != null) {
+                    await notifier.createEvent(request);
+                  }
+                },
+        ),
       ),
       if (state.loadErrorMessage != null)
         Padding(
@@ -637,33 +626,10 @@ class _CalendarTabState extends ConsumerState<CalendarTab> {
             color: AppColors.brand,
           ),
         ),
-      Expanded(child: body),
+      Expanded(child: _buildCalendarBody(context, state, notifier)),
     ];
 
-    return Stack(
-      children: [
-        Column(children: children),
-        Positioned(
-          right: AppSpacing.sm,
-          bottom: AppSpacing.sm,
-          child: FloatingActionButton.extended(
-            onPressed: state.isMutating
-                ? null
-                : () async {
-                    final request = await showEventFormDialog(
-                      context,
-                      anchorDate: state.selectedDate,
-                    );
-                    if (request != null) {
-                      await notifier.createEvent(request);
-                    }
-                  },
-            icon: const Icon(Icons.add),
-            label: const Text('이벤트 추가'),
-          ),
-        ),
-      ],
-    );
+    return Column(children: children);
   }
 
   Widget _buildCalendarBody(
@@ -689,6 +655,7 @@ class _CalendarHeader extends StatelessWidget {
     required this.onNext,
     required this.onToday,
     required this.onChangeView,
+    required this.onCreateEvent,
   });
 
   final CalendarEventsState state;
@@ -696,11 +663,16 @@ class _CalendarHeader extends StatelessWidget {
   final VoidCallback onNext;
   final VoidCallback onToday;
   final void Function(CalendarViewType view) onChangeView;
+  final VoidCallback? onCreateEvent;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final label = _buildLabel(state.view, state.focusedDate, state.selectedDate);
+    final label = _buildLabel(
+      state.view,
+      state.focusedDate,
+      state.selectedDate,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -715,12 +687,7 @@ class _CalendarHeader extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    label,
-                    style: textTheme.titleLarge,
-                  ),
-                ],
+                children: [Text(label, style: textTheme.titleLarge)],
               ),
             ),
             IconButton(
@@ -728,34 +695,45 @@ class _CalendarHeader extends StatelessWidget {
               onPressed: onNext,
               icon: const Icon(Icons.chevron_right),
             ),
-            TextButton(
-              onPressed: onToday,
-              child: const Text('오늘'),
-            ),
+            TextButton(onPressed: onToday, child: const Text('오늘')),
           ],
         ),
         const SizedBox(height: AppSpacing.xs),
-        ToggleButtons(
-          isSelected: CalendarViewType.values
-              .map((view) => view == state.view)
-              .toList(),
-          onPressed: (index) =>
-              onChangeView(CalendarViewType.values.elementAt(index)),
-          borderRadius: BorderRadius.circular(12),
-          fillColor: AppColors.brand.withValues(alpha: 0.08),
-          selectedColor: AppColors.brand,
-          children: const [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              child: Text('월간'),
+        Row(
+          children: [
+            ToggleButtons(
+              isSelected: CalendarViewType.values
+                  .map((view) => view == state.view)
+                  .toList(),
+              onPressed: (index) =>
+                  onChangeView(CalendarViewType.values.elementAt(index)),
+              borderRadius: BorderRadius.circular(12),
+              fillColor: AppColors.brand.withValues(alpha: 0.08),
+              selectedColor: AppColors.brand,
+              constraints: const BoxConstraints(minHeight: 40),
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  child: Text('월간'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  child: Text('주간'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  child: Text('일간'),
+                ),
+              ],
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              child: Text('주간'),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              child: Text('일간'),
+            const Spacer(),
+            PrimaryButton(
+              text: '이벤트 추가',
+              onPressed: onCreateEvent,
+              isLoading: state.isMutating,
+              semanticsLabel: '새 개인 이벤트 추가',
+              variant: PrimaryButtonVariant.brand,
+              width: 160,
             ),
           ],
         ),
@@ -781,10 +759,7 @@ class _CalendarHeader extends StatelessWidget {
 }
 
 class _MonthCalendarView extends ConsumerWidget {
-  const _MonthCalendarView({
-    required this.state,
-    required this.notifier,
-  });
+  const _MonthCalendarView({required this.state, required this.notifier});
 
   final CalendarEventsState state;
   final CalendarEventsNotifier notifier;
@@ -848,10 +823,7 @@ class _MonthCalendarView extends ConsumerWidget {
 }
 
 class _WeekCalendarView extends StatelessWidget {
-  const _WeekCalendarView({
-    required this.state,
-    required this.notifier,
-  });
+  const _WeekCalendarView({required this.state, required this.notifier});
 
   final CalendarEventsState state;
   final CalendarEventsNotifier notifier;
@@ -859,13 +831,22 @@ class _WeekCalendarView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final range = _weekRange(state.focusedDate);
-    final days = List.generate(7, (index) => range.start.add(Duration(days: index)));
+    final days = List.generate(
+      7,
+      (index) => range.start.add(Duration(days: index)),
+    );
     return ListView.builder(
       itemCount: days.length,
-      padding: const EdgeInsets.only(bottom: 80, left: AppSpacing.sm, right: AppSpacing.sm),
+      padding: const EdgeInsets.only(
+        bottom: 80,
+        left: AppSpacing.sm,
+        right: AppSpacing.sm,
+      ),
       itemBuilder: (context, index) {
         final day = days[index];
-        final events = state.events.where((event) => event.occursOn(day)).toList();
+        final events = state.events
+            .where((event) => event.occursOn(day))
+            .toList();
         return _DaySection(
           date: day,
           events: events,
@@ -877,18 +858,16 @@ class _WeekCalendarView extends StatelessWidget {
 }
 
 class _DayCalendarView extends StatelessWidget {
-  const _DayCalendarView({
-    required this.state,
-    required this.notifier,
-  });
+  const _DayCalendarView({required this.state, required this.notifier});
 
   final CalendarEventsState state;
   final CalendarEventsNotifier notifier;
 
   @override
   Widget build(BuildContext context) {
-    final events =
-        state.events.where((event) => event.occursOn(state.selectedDate)).toList();
+    final events = state.events
+        .where((event) => event.occursOn(state.selectedDate))
+        .toList();
     return _EventListView(
       events: events,
       emptyMessage: '이 날에는 일정이 없습니다.',
@@ -923,10 +902,7 @@ class _DaySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            dateLabel,
-            style: textTheme.titleMedium,
-          ),
+          Text(dateLabel, style: textTheme.titleMedium),
           const SizedBox(height: AppSpacing.xs),
           if (events.isEmpty)
             Container(
@@ -939,13 +915,20 @@ class _DaySection extends StatelessWidget {
               ),
               child: Text(
                 '일정이 없습니다.',
-                style: textTheme.bodyMedium?.copyWith(color: AppColors.neutral500),
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.neutral500,
+                ),
               ),
             )
           else
             Column(
               children: events
-                  .map((event) => _EventCard(event: event, onTap: () => onEventTap(event)))
+                  .map(
+                    (event) => _EventCard(
+                      event: event,
+                      onTap: () => onEventTap(event),
+                    ),
+                  )
                   .toList(),
             ),
         ],
@@ -969,18 +952,22 @@ class _EventListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectivePadding = padding ??
-        const EdgeInsets.only(left: AppSpacing.sm, right: AppSpacing.sm, bottom: 80);
+    final effectivePadding =
+        padding ??
+        const EdgeInsets.only(
+          left: AppSpacing.sm,
+          right: AppSpacing.sm,
+          bottom: 80,
+        );
     if (events.isEmpty) {
       return Center(
         child: Padding(
           padding: effectivePadding,
           child: Text(
             emptyMessage,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppColors.neutral500),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.neutral500),
             textAlign: TextAlign.center,
           ),
         ),
@@ -1041,10 +1028,7 @@ class _EventCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      event.title,
-                      style: textTheme.titleMedium,
-                    ),
+                    Text(event.title, style: textTheme.titleMedium),
                     const SizedBox(height: 4),
                     Text(
                       timeLabel,
@@ -1118,10 +1102,15 @@ void _handleEventTap(
 }
 
 DateTimeRange _weekRange(DateTime focused) {
-  final start = focused.subtract(Duration(days: focused.weekday - DateTime.monday));
+  final start = focused.subtract(
+    Duration(days: focused.weekday - DateTime.monday),
+  );
   final normalizedStart = _normalizeDate(start);
-  final normalizedEnd = _normalizeDate(normalizedStart.add(const Duration(days: 6)));
+  final normalizedEnd = _normalizeDate(
+    normalizedStart.add(const Duration(days: 6)),
+  );
   return DateTimeRange(start: normalizedStart, end: normalizedEnd);
 }
 
-DateTime _normalizeDate(DateTime date) => DateTime(date.year, date.month, date.day);
+DateTime _normalizeDate(DateTime date) =>
+    DateTime(date.year, date.month, date.day);

@@ -26,7 +26,10 @@ interface GroupEventRepository : JpaRepository<GroupEvent, Long> {
     /**
      * 그룹 ID와 공식/비공식 구분으로 일정 조회
      */
-    fun findByGroupIdAndIsOfficial(groupId: Long, isOfficial: Boolean): List<GroupEvent>
+    fun findByGroupIdAndIsOfficial(
+        groupId: Long,
+        isOfficial: Boolean,
+    ): List<GroupEvent>
 
     /**
      * 반복 일정의 미래 인스턴스 조회
