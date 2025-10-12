@@ -90,14 +90,22 @@ class GroupEventService(
         val startTime = request.startTime ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
         val endTime = request.endTime ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
 
-        // 4. 종일 이벤트 처리
+        // 4. 날짜 범위 검증
+        validateDateRange(startDate, endDate)
+
+        // 5. 반복 일정 검증
+        if (request.recurrence != null) {
+            validateRecurrenceRequest(request)
+        }
+
+        // 6. 종일 이벤트 처리
         val actualStartTime = if (request.isAllDay) LocalTime.MIN else startTime
         val actualEndTime = if (request.isAllDay) LocalTime.of(23, 59, 59) else endTime
 
-        // 5. 시간 검증
+        // 7. 시간 검증
         validateTimeRange(actualStartTime, actualEndTime)
 
-        // 6. 반복 일정 여부 확인
+        // 8. 반복 일정 여부 확인
         if (request.recurrence == null) {
             // 단일 일정 생성
             val eventStart = startDate.atTime(actualStartTime)
@@ -149,6 +157,11 @@ class GroupEventService(
                         .toList()
                 }
             }
+
+        // 1.1. 빈 인스턴스 체크
+        if (dates.isEmpty()) {
+            throw BusinessException(ErrorCode.INVALID_REQUEST)
+        }
 
         // 2. 각 날짜마다 GroupEvent 인스턴스 생성
         val events =
@@ -415,6 +428,18 @@ class GroupEventService(
     }
 
     /**
+     * 날짜 범위 검증
+     */
+    private fun validateDateRange(
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ) {
+        if (startDate.isAfter(endDate)) {
+            throw BusinessException(ErrorCode.INVALID_DATE_RANGE)
+        }
+    }
+
+    /**
      * 시간 범위 검증
      */
     private fun validateTimeRange(
@@ -423,6 +448,36 @@ class GroupEventService(
     ) {
         if (!end.isAfter(start)) {
             throw BusinessException(ErrorCode.INVALID_TIME_RANGE)
+        }
+    }
+
+    /**
+     * 반복 일정 요청 검증
+     */
+    private fun validateRecurrenceRequest(request: CreateGroupEventRequest) {
+        val recurrence = request.recurrence
+            ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+        val startDate = request.startDate
+            ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val endDate = request.endDate
+            ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+        // 반복 일정의 경우 시작일과 종료일이 동일해야 생성 가능
+        // (반복 패턴은 startDate를 기준으로 endDate까지 반복)
+        // 예: startDate=11/1, endDate=11/7이면 11/1~11/7 사이에 반복 인스턴스 생성
+
+        // 반복 기간이 365일을 초과하는 경우 제한
+        val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate)
+        if (daysBetween > 365) {
+            throw BusinessException(ErrorCode.INVALID_REQUEST)
+        }
+
+        // WEEKLY 타입일 경우 daysOfWeek 필수
+        if (recurrence.type == RecurrenceType.WEEKLY) {
+            if (recurrence.daysOfWeek.isNullOrEmpty()) {
+                throw BusinessException(ErrorCode.INVALID_REQUEST)
+            }
         }
     }
 
