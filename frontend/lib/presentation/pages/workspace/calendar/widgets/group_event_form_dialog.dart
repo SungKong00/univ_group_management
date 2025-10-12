@@ -39,6 +39,7 @@ Future<GroupEventFormResult?> showGroupEventFormDialog(
   GroupEvent? initial,
   DateTime? anchorDate,
   required bool canCreateOfficial,
+  bool? initialIsOfficial,
 }) {
   return showDialog<GroupEventFormResult>(
     context: context,
@@ -47,6 +48,7 @@ Future<GroupEventFormResult?> showGroupEventFormDialog(
       initial: initial,
       anchorDate: anchorDate,
       canCreateOfficial: canCreateOfficial,
+      initialIsOfficial: initialIsOfficial,
     ),
   );
 }
@@ -56,11 +58,13 @@ class _GroupEventFormDialog extends StatefulWidget {
     this.initial,
     this.anchorDate,
     required this.canCreateOfficial,
+    this.initialIsOfficial,
   });
 
   final GroupEvent? initial;
   final DateTime? anchorDate;
   final bool canCreateOfficial;
+  final bool? initialIsOfficial;
 
   @override
   State<_GroupEventFormDialog> createState() => _GroupEventFormDialogState();
@@ -97,7 +101,8 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
     );
     _locationController = TextEditingController(text: initial?.location ?? '');
     _isAllDay = initial?.isAllDay ?? false;
-    _isOfficial = initial?.isOfficial ?? false;
+    // Phase 6: Use initialIsOfficial from parent selector, fallback to initial event value
+    _isOfficial = initial?.isOfficial ?? widget.initialIsOfficial ?? false;
     _selectedColor = initial?.color ?? kPersonalScheduleColors.first;
 
     if (initial != null) {
@@ -197,17 +202,40 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
                   title: const Text('종일 이벤트'),
                   contentPadding: EdgeInsets.zero,
                 ),
-                if (widget.canCreateOfficial)
-                  SwitchListTile.adaptive(
-                    value: _isOfficial,
-                    onChanged: (value) {
-                      setState(() {
-                        _isOfficial = value;
-                      });
-                    },
-                    title: const Text('공식 일정'),
-                    subtitle: const Text('그룹 전체에 공지됩니다'),
-                    contentPadding: EdgeInsets.zero,
+                // Phase 6: Official/Unofficial is pre-determined in Step 1, show read-only badge
+                if (_isOfficial)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.brandLight,
+                      borderRadius: BorderRadius.circular(AppRadius.button),
+                      border: Border.all(color: AppColors.brand, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.verified, size: 16, color: AppColors.brand),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          '공식 일정',
+                          style: textTheme.labelMedium?.copyWith(
+                            color: AppColors.brand,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '그룹 전체에 공지됩니다',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: AppColors.neutral600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(

@@ -8,7 +8,20 @@ import '../../../../core/theme/theme.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/group_calendar_provider.dart';
 import '../../../providers/group_permission_provider.dart';
+import '../../../widgets/organisms/organisms.dart';
 import 'widgets/group_event_form_dialog.dart';
+
+/// Event formality categories for single-step selector
+/// Matches Phase 6 UI design: Step 1 - Official/Unofficial selection
+enum EventFormalityCategory {
+  official('공식 일정', Icons.event, '그룹 전체에 공지되는 공식 행사'),
+  unofficial('비공식 일정', Icons.event_note, '개인 또는 소그룹 모임');
+
+  const EventFormalityCategory(this.title, this.icon, this.description);
+  final String title;
+  final IconData icon;
+  final String description;
+}
 
 /// Main page for group calendar.
 class GroupCalendarPage extends ConsumerStatefulWidget {
@@ -333,7 +346,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   }
 
   Future<void> _showCreateDialog() async {
-    // Check if user has CALENDAR_MANAGE permission to create official events
+    // Phase 6 UI Flow: Step 1 - Official/Unofficial selection (permission-based)
+
+    // Check user's CALENDAR_MANAGE permission
     final permissionsAsync =
         ref.read(groupPermissionsProvider(widget.groupId));
 
@@ -341,7 +356,6 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     final permissions = await permissionsAsync.when(
       data: (permissions) async => permissions,
       loading: () async {
-        // Wait for the future to complete
         return await ref.read(groupPermissionsProvider(widget.groupId).future);
       },
       error: (_, __) async => <String>{},
@@ -349,10 +363,48 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
     final canCreateOfficial = permissions.contains('CALENDAR_MANAGE');
 
+    // Step 1: Official/Unofficial selection (only for users with permission)
+    if (canCreateOfficial) {
+      final selectedFormality =
+          await showSingleStepSelector<EventFormalityCategory>(
+        context: context,
+        title: '새 일정 만들기',
+        subtitle: '일정의 공개 범위를 선택하세요',
+        options: [
+          SelectableOption(
+            value: EventFormalityCategory.official,
+            title: EventFormalityCategory.official.title,
+            description: EventFormalityCategory.official.description,
+            icon: EventFormalityCategory.official.icon,
+          ),
+          SelectableOption(
+            value: EventFormalityCategory.unofficial,
+            title: EventFormalityCategory.unofficial.title,
+            description: EventFormalityCategory.unofficial.description,
+            icon: EventFormalityCategory.unofficial.icon,
+          ),
+        ],
+      );
+
+      if (selectedFormality == null || !mounted) return;
+
+      // Step 2: Show event form with selected formality
+      final isOfficial =
+          selectedFormality == EventFormalityCategory.official;
+      await _createGroupEvent(isOfficial: isOfficial);
+    } else {
+      // No permission: Skip Step 1, create unofficial event directly
+      await _createGroupEvent(isOfficial: false);
+    }
+  }
+
+  Future<void> _createGroupEvent({required bool isOfficial}) async {
+    // Step 2: Show event form dialog with pre-determined formality
     final result = await showGroupEventFormDialog(
       context,
       anchorDate: _focusedDate,
-      canCreateOfficial: canCreateOfficial,
+      canCreateOfficial: isOfficial,
+      initialIsOfficial: isOfficial,
     );
 
     if (result != null && mounted) {

@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../dev/selectable_option_card_demo.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -21,6 +23,28 @@ class ProfilePage extends StatelessWidget {
               '계정 설정 및 프로필 관리',
               style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
             ),
+            // 개발 모드 전용: 컴포넌트 데모 버튼
+            if (kDebugMode) ...[
+              const SizedBox(height: 32),
+              const Divider(),
+              const SizedBox(height: 16),
+              Text(
+                '개발자 도구',
+                style: AppTheme.titleLarge.copyWith(color: AppColors.neutral700),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SelectableOptionCardDemo(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.widgets),
+                label: const Text('SelectableOptionCard 데모'),
+              ),
+            ],
           ],
         ),
       ),
