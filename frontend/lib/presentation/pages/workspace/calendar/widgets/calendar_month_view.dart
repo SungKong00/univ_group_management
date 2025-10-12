@@ -102,16 +102,23 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView> {
     Color? backgroundColor;
     FontWeight fontWeight = FontWeight.normal;
 
+    // Border styling for selected date
+    Color borderColor = AppColors.neutral300;
+    double borderWidth = 0.5;
+
     if (isOutside) {
       textColor = AppColors.neutral500;
     } else if (isSelected) {
       backgroundColor = AppColors.brand;
       textColor = Colors.white;
       fontWeight = FontWeight.w600;
+      // Emphasized border for selected date
+      borderColor = AppColors.brandStrong;
+      borderWidth = 2.5;
     } else if (isToday) {
       backgroundColor = AppColors.actionTonalBg;
-      textColor = AppColors.action;
-      fontWeight = FontWeight.w600;
+      textColor = AppColors.brandStrong;
+      fontWeight = FontWeight.w700; // Bold for today
     }
 
     return Container(
@@ -121,8 +128,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView> {
         shape: isSelected || isToday ? BoxShape.rectangle : BoxShape.rectangle,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: AppColors.neutral300,
-          width: 0.5,
+          color: borderColor,
+          width: borderWidth,
         ),
       ),
       child: Column(
@@ -175,17 +182,23 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView> {
 
   /// Build calendar style
   CalendarStyle _buildCalendarStyle() {
-    return CalendarStyle(
+    return const CalendarStyle(
       // Cell shape and padding
-      cellMargin: const EdgeInsets.all(2),
-      cellPadding: const EdgeInsets.all(0),
+      cellMargin: EdgeInsets.all(2),
+      cellPadding: EdgeInsets.all(0),
 
       // Row height to accommodate multiple event cards
-      rowDecoration: const BoxDecoration(),
+      rowDecoration: BoxDecoration(),
 
       // Hide default markers (we use custom cell builder)
-      markerDecoration: const BoxDecoration(color: Colors.transparent),
+      markerDecoration: BoxDecoration(color: Colors.transparent),
       markersMaxCount: 0,
+
+      // Disable default today/selected decorations (we use custom builders)
+      todayDecoration: BoxDecoration(color: Colors.transparent),
+      selectedDecoration: BoxDecoration(color: Colors.transparent),
+      todayTextStyle: TextStyle(color: Colors.transparent),
+      selectedTextStyle: TextStyle(color: Colors.transparent),
     );
   }
 

@@ -629,7 +629,19 @@ class _CalendarTabState extends ConsumerState<CalendarTab> {
       Expanded(child: _buildCalendarBody(context, state, notifier)),
     ];
 
-    return Column(children: children);
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 950),
+        child: SizedBox(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildCalendarBody(
@@ -767,8 +779,33 @@ class _MonthCalendarView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final eventsByDate = state.eventsByDate;
-    final selectedEvents =
-        eventsByDate[_normalizeDate(state.selectedDate)] ?? const [];
+    final selectedEvents = _sortEventsForDay(
+      eventsByDate[_normalizeDate(state.selectedDate)] ??
+          const <PersonalEvent>[],
+      state.selectedDate,
+    );
+
+    final now = DateTime.now();
+    final textTheme = Theme.of(context).textTheme;
+    final baseDowStyle = textTheme.labelMedium ??
+        textTheme.bodyMedium ??
+        const TextStyle(fontSize: 12, fontWeight: FontWeight.w500);
+    final dowTextStyle = baseDowStyle.copyWith(
+      color: AppColors.neutral500,
+      fontWeight: FontWeight.w600,
+    );
+
+    Widget buildDayCell(DateTime day, DateTime focusedDay) {
+      final events = eventsByDate[_normalizeDate(day)] ??
+          const <PersonalEvent>[];
+      return _MonthDayCell(
+        date: day,
+        events: _sortEventsForDay(events, day),
+        isToday: isSameDay(day, now),
+        isSelected: isSameDay(day, state.selectedDate),
+        isOutsideMonth: day.month != focusedDay.month,
+      );
+    }
 
     return Column(
       children: [
@@ -784,6 +821,13 @@ class _MonthCalendarView extends ConsumerWidget {
             lastDay: DateTime.utc(2100, 12, 31),
             focusedDay: state.focusedDate,
             availableGestures: AvailableGestures.horizontalSwipe,
+            headerVisible: false,
+            rowHeight: 96,
+            daysOfWeekHeight: 32,
+            daysOfWeekStyle: DaysOfWeekStyle(
+              weekdayStyle: dowTextStyle,
+              weekendStyle: dowTextStyle.copyWith(color: AppColors.neutral600),
+            ),
             calendarFormat: CalendarFormat.month,
             startingDayOfWeek: StartingDayOfWeek.monday,
             selectedDayPredicate: (day) => isSameDay(day, state.selectedDate),
@@ -794,18 +838,22 @@ class _MonthCalendarView extends ConsumerWidget {
             eventLoader: (day) =>
                 eventsByDate[_normalizeDate(day)] ?? const <PersonalEvent>[],
             calendarStyle: const CalendarStyle(
-              todayDecoration: BoxDecoration(
-                color: AppColors.brandLight,
-                shape: BoxShape.circle,
-              ),
-              selectedDecoration: BoxDecoration(
-                color: AppColors.brand,
-                shape: BoxShape.circle,
-              ),
-              markerDecoration: BoxDecoration(
-                color: AppColors.action,
-                shape: BoxShape.circle,
-              ),
+              isTodayHighlighted: false,
+              cellMargin: EdgeInsets.all(4),
+              cellPadding: EdgeInsets.all(6),
+              outsideDaysVisible: true,
+              canMarkersOverflow: true,
+            ),
+            calendarBuilders: CalendarBuilders<PersonalEvent>(
+              markerBuilder: (context, day, events) => const SizedBox.shrink(),
+              defaultBuilder: (context, day, focusedDay) =>
+                  buildDayCell(day, focusedDay),
+              todayBuilder: (context, day, focusedDay) =>
+                  buildDayCell(day, focusedDay),
+              selectedBuilder: (context, day, focusedDay) =>
+                  buildDayCell(day, focusedDay),
+              outsideBuilder: (context, day, focusedDay) =>
+                  buildDayCell(day, focusedDay),
             ),
           ),
         ),
@@ -820,6 +868,150 @@ class _MonthCalendarView extends ConsumerWidget {
       ],
     );
   }
+}
+
+class _MonthDayCell extends StatelessWidget {
+  const _MonthDayCell({
+    required this.date,
+    required this.events,
+    required this.isToday,
+    required this.isSelected,
+    required this.isOutsideMonth,
+  });
+
+  final DateTime date;
+  final List<PersonalEvent> events;
+  final bool isToday;
+  final bool isSelected;
+  final bool isOutsideMonth;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final borderColor = isSelected ? AppColors.brand : Colors.transparent;
+
+    final dayTextStyle = textTheme.bodyMedium?.copyWith(
+      fontWeight: isToday ? FontWeight.w700 : FontWeight.w600,
+      color: isSelected
+          ? AppColors.brandStrong
+          : isOutsideMonth
+              ? AppColors.neutral400
+              : AppColors.neutral800,
+    );
+
+    Widget dayLabel = Text('${date.day}', style: dayTextStyle);
+
+    if (isToday) {
+      dayLabel = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: AppColors.actionTonalBg,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: dayLabel,
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: borderColor,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      alignment: Alignment.topLeft,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              dayLabel,
+              if (events.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                for (var i = 0; i < events.length; i++)
+                  Padding(
+                    padding: EdgeInsets.only(top: i == 0 ? 0 : 4),
+                    child: _MonthEventChip(
+                      label: events[i].title,
+                      color: events[i].color,
+                    ),
+                  ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MonthEventChip extends StatelessWidget {
+  const _MonthEventChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xxs,
+        vertical: 4,
+      ),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Text(
+        label,
+        style: textTheme.labelSmall?.copyWith(
+          color: AppColors.neutral800,
+          fontWeight: FontWeight.w600,
+        ),
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+List<PersonalEvent> _sortEventsForDay(
+  Iterable<PersonalEvent> events,
+  DateTime day,
+) {
+  final sorted = events.toList()
+    ..sort((a, b) => _compareEventsForDay(a, b, day));
+  return sorted;
+}
+
+int _compareEventsForDay(
+  PersonalEvent a,
+  PersonalEvent b,
+  DateTime day,
+) {
+  final aStart = _effectiveStartForDay(a, day);
+  final bStart = _effectiveStartForDay(b, day);
+  final result = aStart.compareTo(bStart);
+  if (result != 0) {
+    return result;
+  }
+
+  return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+}
+
+DateTime _effectiveStartForDay(PersonalEvent event, DateTime day) {
+  final dayStart = DateTime(day.year, day.month, day.day);
+  if (event.startDateTime.isBefore(dayStart)) {
+    return dayStart;
+  }
+  return event.startDateTime;
 }
 
 class _WeekCalendarView extends StatelessWidget {
