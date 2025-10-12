@@ -29,26 +29,29 @@
 
 ### 2.1. 핵심 권한
 
--   **사용 그룹 승인**: 다른 그룹의 '장소 사용 그룹' 신청 승인/거부 (`PLACE_MANAGE` 권한)
--   **예약 관리**: 모든 예약 현황 조회 및 강제 취소 (`PLACE_MANAGE` 권한)
--   **시간 설정**: 예약 가능/불가능 시간 설정 (`PLACE_MANAGE` 권한)
+-   **장소 등록 및 관리**: 장소 기본 정보 등록/수정 (`CALENDAR_MANAGE` 권한)
+-   **사용 그룹 승인**: 다른 그룹의 '장소 사용 그룹' 신청 승인/거부 (`CALENDAR_MANAGE` 권한)
+-   **예약 관리**: 모든 예약 현황 조회 및 강제 취소 (`CALENDAR_MANAGE` 권한)
+-   **시간 설정**: 예약 가능/불가능 시간 설정 (`CALENDAR_MANAGE` 권한)
 
 ### 2.2. 권한 통합 방식 (확정)
 
-> **설계 결정**: [DD-CAL-001](calendar-design-decisions.md#dd-cal-001-권한-통합-방식) - RBAC 통합 방식 채택
+> **설계 결정**: [DD-CAL-001](calendar-design-decisions.md#dd-cal-001-권한-통합-및-단순화) - RBAC 통합 + 권한 단순화 방식 채택
 
-장소 관리 권한은 기존 RBAC 시스템에 통합됩니다:
-- `PLACE_MANAGE`: 장소 등록, 사용 그룹 승인, 예약 관리 (관리 주체 그룹의 그룹장)
-- `PLACE_RESERVE`: 장소 예약 권한 (사용 그룹 멤버)
+장소 관리 권한은 기존 RBAC 시스템에 통합되며, 멤버십 기반 접근 제어를 활용합니다:
+- `CALENDAR_MANAGE`: 캘린더 관리 + 장소 관리 권한 통합 (관리 주체 그룹의 그룹장/교수)
+- **장소 예약**: 별도 권한 불필요 (PlaceUsageGroup APPROVED + 그룹 멤버 조건으로 자동 판별)
 
 **채택 이유**:
 - 일관된 권한 확인 로직 (PermissionService 재사용)
 - 개발 복잡도 감소
 - 사용자 학습 곡선 최소화
+- CALENDAR_MANAGE가 장소 관리를 포함하여 권한 구조 단순화
+- **권한 체계 간소화**: 예약은 승인 상태 + 멤버십 기반으로 처리하여 별도 권한 불필요
 
-**기각된 대안** (Option B - 독립 시스템):
-- 장소별 독립 권한 테이블 → 유지보수 복잡도 증가
-- 권한 확인 로직 이원화 → 캐싱 전략 분리 필요
+**기각된 대안**:
+- Option A-2 (PLACE_RESERVE 권한 추가): 실제로는 승인 상태 + 멤버십만으로 충분한 기능에 불필요한 권한 추가
+- Option B (독립 시스템): 권한 확인 로직 이원화 → 유지보수 복잡도 증가
 
 ## 3. 장소 사용 권한 획득
 
@@ -62,8 +65,9 @@
 
 ### 3.2. 예약 권한 범위
 
--   승인된 '사용 그룹'의 멤버만 예약 가능
--   예약 가능 시간은 관리 주체가 설정한 범위 내
+-   **예약 조건**: PlaceUsageGroup APPROVED 상태 + 그룹 멤버 (`isMember()`)
+-   **별도 권한 불필요**: 위 조건만 만족하면 모든 그룹 멤버가 예약 가능
+-   **예약 가능 시간**: 관리 주체가 설정한 범위 내 (PlaceAvailability 기준)
 
 ## 4. 관리 주체 변경 (권한 이전)
 
@@ -93,6 +97,44 @@
 
 -   장소 캘린더를 통해 시간대별 예약 현황 조회 가능
 -   다른 그룹의 예약 정보도 조회 가능 (공개 정보)
+
+---
+
+## 6. PlaceAvailability 사용 예시
+
+**시나리오**: AI/SC 랩실의 운영 시간을 설정합니다.
+
+**PlaceAvailability 레코드**:
+```
+place_id: 1 (AI/SC 랩실)
+day_of_week: MONDAY, start_time: 09:00, end_time: 18:00
+day_of_week: TUESDAY, start_time: 09:00, end_time: 18:00
+day_of_week: WEDNESDAY, start_time: 09:00, end_time: 18:00
+day_of_week: THURSDAY, start_time: 09:00, end_time: 18:00
+day_of_week: FRIDAY, start_time: 09:00, end_time: 18:00
+```
+
+**효과**: 평일 09:00-18:00 시간대만 예약 가능하며, 토요일과 일요일은 예약 불가합니다.
+
+---
+
+## 7. PlaceUnavailableDate 사용 시나리오
+
+**시나리오 1: 임시 공사**
+```
+place_id: 1 (AI/SC 랩실)
+exception_date: 2025-11-15
+reason: 전기 공사
+```
+→ 2025년 11월 15일(금요일)은 정상 운영 시간임에도 불구하고 예약 불가
+
+**시나리오 2: 학교 공휴일**
+```
+place_id: 1 (AI/SC 랩실)
+exception_date: 2025-12-25
+reason: 크리스마스 휴무
+```
+→ 12월 25일은 예약 불가
 
 ---
 

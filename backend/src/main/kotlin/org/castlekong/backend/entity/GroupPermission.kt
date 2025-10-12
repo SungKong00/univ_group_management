@@ -4,7 +4,7 @@ package org.castlekong.backend.entity
  * 그룹 레벨 권한 (L1 - Group-Level Permissions)
  * MVP 버전: 단순화된 권한 구조
  */
-enum class GroupPermission {
+enum class   GroupPermission {
     /**
      * 그룹 관리 권한
      * - 그룹 정보 수정 (이름, 소개 등)

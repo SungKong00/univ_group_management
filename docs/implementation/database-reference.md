@@ -700,7 +700,7 @@ CREATE INDEX idx_user_course_timetable ON user_course_timetables(course_timetabl
 
 ### 3.1. PersonalSchedule 테이블 (개인 반복 일정)
 
-사용자가 직접 생성한 반복 일정 (아르바이트, 근로장학생 등)입니다. **명시적 인스턴스 저장 방식**을 사용합니다.
+사용자가 직접 생성한 반복 일정 (아르바이트, 근로장학생 등)입니다. **단순 주간 반복 방식**을 사용합니다 (매주 특정 요일에 반복).
 
 ```sql
 CREATE TABLE personal_schedules (
@@ -823,7 +823,8 @@ CREATE TABLE group_events (
 
     -- 반복 패턴 정보
     series_id VARCHAR(50), -- 동일 반복 패턴 그룹화
-    recurrence_rule TEXT, -- RRULE 형식 또는 JSON
+    recurrence_rule TEXT, -- JSON 형식: {"type": "DAILY"} 또는 {"type": "WEEKLY", "daysOfWeek": ["MONDAY", "WEDNESDAY", "FRIDAY"]}
+    recurrence_end_date DATE, -- 반복 종료 날짜 (명시적 인스턴스 저장 방식)
 
     -- 대상자 지정 (TARGETED 타입)
     target_criteria JSON, -- 학년, 역할, 학번 등 조건 (예: {"year": [1, 2], "roles": ["멤버"]})
@@ -853,6 +854,7 @@ CREATE INDEX idx_event_date ON group_events(group_id, start_date, end_date);
 CREATE INDEX idx_event_series ON group_events(series_id);
 CREATE INDEX idx_event_official ON group_events(group_id, is_official, start_date);
 CREATE INDEX idx_event_type ON group_events(group_id, event_type);
+CREATE INDEX idx_event_recurrence ON group_events(series_id, recurrence_end_date);
 ```
 
 **JPA 엔티티 (GroupEvent.kt)**:
@@ -903,7 +905,10 @@ class GroupEvent(
     var seriesId: String? = null,
 
     @Column(name = "recurrence_rule", columnDefinition = "TEXT")
-    var recurrenceRule: String? = null,
+    var recurrenceRule: String? = null, // JSON 형식: {"type": "DAILY"} 또는 {"type": "WEEKLY", "daysOfWeek": ["MONDAY", "WEDNESDAY"]}
+
+    @Column(name = "recurrence_end_date")
+    var recurrenceEndDate: LocalDate? = null, // 반복 종료 날짜 (명시적 인스턴스 생성 범위 지정)
 
     // 대상자 지정
     @Column(name = "target_criteria", columnDefinition = "JSON")
@@ -1128,6 +1133,111 @@ CREATE TABLE places (
 
 CREATE INDEX idx_place_managing ON places(managing_group_id);
 CREATE INDEX idx_place_building ON places(building);
+```
+
+### 7.1.1. PlaceAvailability 테이블 (장소 운영 시간)
+
+장소의 예약 가능한 시간대를 요일별로 정의합니다. (별도 레코드 방식)
+
+```sql
+CREATE TABLE place_availability (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    place_id BIGINT NOT NULL,
+    day_of_week ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY') NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_availability_place ON place_availability(place_id);
+CREATE INDEX idx_availability_day ON place_availability(place_id, day_of_week);
+```
+
+**JPA 엔티티 (PlaceAvailability.kt)**:
+
+```kotlin
+@Entity
+@Table(name = "place_availability")
+class PlaceAvailability(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id", nullable = false)
+    var place: Place,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week", nullable = false)
+    var dayOfWeek: DayOfWeek,
+
+    @Column(name = "start_time", nullable = false)
+    var startTime: LocalTime,
+
+    @Column(name = "end_time", nullable = false)
+    var endTime: LocalTime,
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+) {
+    override fun equals(other: Any?) = other is PlaceAvailability && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
+}
+```
+
+### 7.1.2. PlaceUnavailableDate 테이블 (장소 예외 날짜)
+
+특정 날짜에 장소를 사용할 수 없는 예외 날짜를 관리합니다.
+
+```sql
+CREATE TABLE place_unavailable_dates (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    place_id BIGINT NOT NULL,
+    exception_date DATE NOT NULL,
+    reason VARCHAR(200),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_place_date (place_id, exception_date),
+    FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_unavailable_place ON place_unavailable_dates(place_id);
+CREATE INDEX idx_unavailable_date ON place_unavailable_dates(place_id, exception_date);
+```
+
+**JPA 엔티티 (PlaceUnavailableDate.kt)**:
+
+```kotlin
+@Entity
+@Table(
+    name = "place_unavailable_dates",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["place_id", "exception_date"])]
+)
+class PlaceUnavailableDate(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id", nullable = false)
+    var place: Place,
+
+    @Column(name = "exception_date", nullable = false)
+    var exceptionDate: LocalDate,
+
+    @Column(length = 200)
+    var reason: String? = null,
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now(),
+) {
+    override fun equals(other: Any?) = other is PlaceUnavailableDate && id != 0L && id == other.id
+    override fun hashCode(): Int = id.hashCode()
+}
 ```
 
 **JPA 엔티티 (Place.kt)**:

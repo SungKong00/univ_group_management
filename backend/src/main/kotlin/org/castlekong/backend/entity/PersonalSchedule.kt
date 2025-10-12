@@ -2,6 +2,8 @@ package org.castlekong.backend.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -27,7 +29,8 @@ data class PersonalSchedule(
     @Column(nullable = false, length = 200)
     val title: String,
 
-    @Column(name = "day_of_week", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week", nullable = false, length = 20)
     val dayOfWeek: DayOfWeek,
 
     @Column(name = "start_time", nullable = false)

@@ -4,6 +4,56 @@
 
 ## 2025년 10월
 
+### 2025-10-12 - 캘린더 권한 체계 재단순화 및 반복 일정 UI 설계 명확화
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 설계 재검토 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 백엔드 (권한 설계), 프론트엔드 (UI 설계), 문서 (캘린더 시스템)
+
+**구현 내용**:
+- **권한 체계 재단순화**:
+  - **이전**: CALENDAR_VIEW, CALENDAR_MANAGE, PLACE_RESERVE (3개)
+  - **변경 후**: **CALENDAR_MANAGE만 추가** (1개)
+  - **권한 체크 로직**:
+    - 캘린더 조회: 그룹 멤버면 누구나 가능 (별도 권한 불필요, `isMember()` 체크)
+    - 장소 예약: 해당 그룹이 PlaceUsageGroup에 APPROVED 상태면 누구나 가능 (별도 권한 불필요)
+    - 캘린더 관리: CALENDAR_MANAGE 권한 필요 (공식 일정 생성/수정/삭제, 비공식 일정 수정/삭제)
+    - 장소 관리: CALENDAR_MANAGE 권한 필요 (장소 등록/수정/삭제, 사용 그룹 승인/거절, 운영 규칙 설정)
+
+- **반복 일정 UI 설계 명확화**:
+  - **프론트엔드 입력 필드**:
+    1. 시작일 (start_date): DatePicker
+    2. 종료일 (end_date): DatePicker
+    3. 반복 패턴 선택:
+       - Option A: "매일" (DAILY)
+       - Option B: "요일 선택" (WEEKLY) → 체크박스 [월] [화] [수] [목] [금] [토] [일]
+  - **백엔드 저장 방식**:
+    - 선택한 기간(`start_date` ~ `end_date`) + 반복 패턴에 따라 **명시적 인스턴스 생성** (DD-CAL-002 유지)
+    - `recurrence_rule` JSON 형식: `{"type": "DAILY"}` 또는 `{"type": "WEEKLY", "daysOfWeek": ["MONDAY", "WEDNESDAY", "FRIDAY"]}`
+
+**동기화 완료 문서**:
+- ✅ `docs/concepts/calendar-design-decisions.md`:
+  - DD-CAL-001 수정: "CALENDAR_MANAGE 1개만 추가, 조회/예약은 멤버십 기반"
+  - DD-CAL-002 수정: 프론트엔드 UI 설계 명시 (시작일/종료일 DatePicker, 반복 패턴 선택), JSON 형식 예시 추가
+- ✅ `docs/concepts/permission-system.md`:
+  - 캘린더 권한을 1개로 변경 (CALENDAR_MANAGE)
+  - Permission-Centric 매트릭스에서 "캘린더 조회"와 "장소 예약"을 멤버십 기반으로 설명
+  - 권한 확인 플로우 7단계로 업데이트 (멤버십 체크 포함)
+- ✅ `docs/concepts/calendar-system.md`:
+  - 5.0 API 권한 설명 수정: GET (조회): `isMember()`, POST (생성): 공식 → CALENDAR_MANAGE, 비공식 → `isMember()`
+  - 반복 일정 생성 UI 섹션 추가: 시작일/종료일 DatePicker, 반복 패턴 선택 UI, recurrence_rule JSON 형식
+  - API 엔드포인트 계획을 v1.4로 업데이트
+- ✅ `docs/concepts/calendar-place-management.md`:
+  - 장소 관리 권한: CALENDAR_MANAGE
+  - 장소 예약 권한: 멤버십 + PlaceUsageGroup 승인 상태 (별도 권한 불필요)
+- ✅ `docs/implementation/database-reference.md`:
+  - GroupEvent.recurrence_rule 필드 설명에 JSON 형식 예시 추가 (SQL DDL 및 JPA 엔티티 주석)
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가
+
+**메모**: 권한 체계가 대폭 단순화되어 개발 및 사용자 경험이 개선될 것으로 예상됩니다. 조회/예약은 멤버십 기반으로 자동 처리되며, CALENDAR_MANAGE 권한만 명시적으로 관리하면 됩니다. 반복 일정 UI 설계가 구체화되어 프론트엔드 구현 시 즉시 참조 가능합니다.
+
+---
+
 ### 2025-10-10 - 워크스페이스 뒤로가기 및 뷰 전환 로직 개선
 **커밋**: 현재 세션 (커밋 예정)
 **유형**: 기능 개선 + 문서 동기화
