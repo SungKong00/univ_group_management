@@ -213,4 +213,50 @@ class LocalStorage {
     final prefs = await _preferences;
     return prefs.getInt('last_group_explore_tab');
   }
+
+  // ========== Calendar State Management ==========
+
+  /// 마지막 캘린더 탭 인덱스 저장 (0: 시간표, 1: 캘린더)
+  Future<void> saveLastCalendarTab(int tabIndex) async {
+    final prefs = await _preferences;
+    await prefs.setInt('last_calendar_tab', tabIndex);
+  }
+
+  /// 마지막 캘린더 탭 인덱스 복원
+  Future<int?> getLastCalendarTab() async {
+    final prefs = await _preferences;
+    return prefs.getInt('last_calendar_tab');
+  }
+
+  /// 마지막 캘린더 뷰 타입 저장 (month, week, day)
+  Future<void> saveLastCalendarViewType(String viewType) async {
+    final prefs = await _preferences;
+    await prefs.setString('last_calendar_view_type', viewType);
+  }
+
+  /// 마지막 캘린더 뷰 타입 복원
+  Future<String?> getLastCalendarViewType() async {
+    final prefs = await _preferences;
+    return prefs.getString('last_calendar_view_type');
+  }
+
+  /// 마지막 선택한 캘린더 날짜 저장
+  Future<void> saveLastCalendarDate(DateTime date) async {
+    final prefs = await _preferences;
+    await prefs.setString('last_calendar_date', date.toIso8601String());
+  }
+
+  /// 마지막 선택한 캘린더 날짜 복원
+  Future<DateTime?> getLastCalendarDate() async {
+    final prefs = await _preferences;
+    final dateStr = prefs.getString('last_calendar_date');
+    if (dateStr != null) {
+      try {
+        return DateTime.parse(dateStr);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
 }

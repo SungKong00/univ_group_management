@@ -1,10 +1,12 @@
 import 'dart:collection';
 import 'dart:developer' as developer;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/calendar_models.dart';
 import '../../core/services/calendar_service.dart';
+import '../../core/services/local_storage.dart';
 
 enum CalendarViewType { month, week, day }
 
@@ -100,15 +102,149 @@ class CalendarEventsState {
   }
 }
 
+/// Calendar Snapshot - 캘린더 상태를 메모리에 캐싱하기 위한 스냅샷
+class CalendarSnapshot {
+  const CalendarSnapshot({
+    required this.view,
+    required this.focusedDate,
+    required this.selectedDate,
+  });
+
+  final CalendarViewType view;
+  final DateTime focusedDate;
+  final DateTime selectedDate;
+
+  /// JSON으로 직렬화 (LocalStorage 저장용)
+  Map<String, dynamic> toJson() {
+    return {
+      'view': view.name,
+      'focusedDate': focusedDate.toIso8601String(),
+      'selectedDate': selectedDate.toIso8601String(),
+    };
+  }
+
+  /// JSON에서 복원
+  factory CalendarSnapshot.fromJson(Map<String, dynamic> json) {
+    return CalendarSnapshot(
+      view: CalendarViewType.values.firstWhere(
+        (v) => v.name == json['view'],
+        orElse: () => CalendarViewType.month,
+      ),
+      focusedDate: DateTime.parse(json['focusedDate'] as String),
+      selectedDate: DateTime.parse(json['selectedDate'] as String),
+    );
+  }
+}
+
 class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
   CalendarEventsNotifier(this._service) : super(CalendarEventsState.initial());
 
   final CalendarService _service;
 
+  /// 메모리 캐시: 캘린더 상태 스냅샷 (탭 전환 시 복원용)
+  static CalendarSnapshot? _cachedSnapshot;
+
   Future<void> initialize() async {
     if (state.hasInitialized) return;
-    await loadEvents();
-    state = state.copyWith(hasInitialized: true);
+
+    try {
+      // 1. 메모리 스냅샷 확인 (최우선)
+      if (_cachedSnapshot != null) {
+        if (kDebugMode) {
+          developer.log(
+            'Restoring calendar state from memory snapshot: ${_cachedSnapshot!.view.name}',
+            name: 'CalendarEventsNotifier',
+          );
+        }
+        _loadSnapshot();
+        await loadEvents();
+        state = state.copyWith(hasInitialized: true);
+        return;
+      }
+
+      // 2. LocalStorage에서 복원
+      final localStorage = LocalStorage.instance;
+      final lastViewType = await localStorage.getLastCalendarViewType();
+      final lastDate = await localStorage.getLastCalendarDate();
+
+      if (lastViewType != null || lastDate != null) {
+        if (kDebugMode) {
+          developer.log(
+            'Restoring calendar state from LocalStorage: view=$lastViewType, date=$lastDate',
+            name: 'CalendarEventsNotifier',
+          );
+        }
+
+        // 뷰 타입 복원
+        CalendarViewType? restoredView;
+        if (lastViewType != null) {
+          try {
+            restoredView = CalendarViewType.values.firstWhere(
+              (v) => v.name == lastViewType,
+            );
+          } catch (_) {
+            restoredView = CalendarViewType.month;
+          }
+        }
+
+        // 날짜 복원
+        final restoredDate = lastDate != null ? _normalizeDate(lastDate) : null;
+
+        state = state.copyWith(
+          view: restoredView ?? state.view,
+          focusedDate: restoredDate ?? state.focusedDate,
+          selectedDate: restoredDate ?? state.selectedDate,
+        );
+      }
+
+      await loadEvents();
+      state = state.copyWith(hasInitialized: true);
+    } catch (e) {
+      if (kDebugMode) {
+        developer.log(
+          'Failed to restore calendar state: $e',
+          name: 'CalendarEventsNotifier',
+          level: 900,
+        );
+      }
+      await loadEvents();
+      state = state.copyWith(hasInitialized: true);
+    }
+  }
+
+  /// 현재 상태를 스냅샷으로 저장 (메모리 캐싱)
+  void saveSnapshot() {
+    _cachedSnapshot = CalendarSnapshot(
+      view: state.view,
+      focusedDate: state.focusedDate,
+      selectedDate: state.selectedDate,
+    );
+  }
+
+  /// 스냅샷에서 상태 복원
+  void _loadSnapshot() {
+    if (_cachedSnapshot != null) {
+      state = state.copyWith(
+        view: _cachedSnapshot!.view,
+        focusedDate: _cachedSnapshot!.focusedDate,
+        selectedDate: _cachedSnapshot!.selectedDate,
+      );
+    }
+  }
+
+  /// LocalStorage에 현재 상태 저장
+  void _saveToLocalStorage() {
+    final localStorage = LocalStorage.instance;
+    localStorage.saveLastCalendarViewType(state.view.name);
+    localStorage.saveLastCalendarDate(state.selectedDate);
+  }
+
+  /// dispose 시 자동 저장
+  @override
+  void dispose() {
+    saveSnapshot();
+    _saveToLocalStorage();
+    super.dispose();
   }
 
   Future<void> loadEvents({bool force = false}) async {
@@ -156,6 +292,7 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
     final adjusted =
         view == CalendarViewType.day ? state.selectedDate : state.focusedDate;
     state = state.copyWith(view: view, focusedDate: adjusted);
+    _saveToLocalStorage(); // 뷰 변경 시 즉시 저장
     loadEvents();
   }
 
@@ -188,6 +325,7 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
   void selectDate(DateTime date) {
     final normalized = _normalizeDate(date);
     state = state.copyWith(selectedDate: normalized, focusedDate: normalized);
+    _saveToLocalStorage(); // 날짜 선택 시 즉시 저장
     loadEvents();
   }
 
