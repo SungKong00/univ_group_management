@@ -21,6 +21,13 @@ class GroupCalendarService {
   final DioClient _dioClient = DioClient();
   final DateFormat _dateFormatter = DateFormat('yyyy-MM-dd');
 
+  /// Format time to HH:mm:ss for backend API
+  String _formatTime(DateTime dateTime) {
+    return '${dateTime.hour.toString().padLeft(2, '0')}:'
+        '${dateTime.minute.toString().padLeft(2, '0')}:'
+        '${dateTime.second.toString().padLeft(2, '0')}';
+  }
+
   /// Fetch group calendar events within a date range.
   Future<List<GroupEvent>> getEvents({
     required int groupId,
@@ -75,6 +82,11 @@ class GroupCalendarService {
   }
 
   /// Create a new group calendar event (single or recurring).
+  ///
+  /// For the backend API:
+  /// - startDate/endDate: Date range for recurrence (yyyy-MM-dd)
+  /// - startTime/endTime: Event duration time (HH:mm:ss)
+  /// - Single event: startDate == endDate
   Future<List<GroupEvent>> createEvent({
     required int groupId,
     required String title,
@@ -88,14 +100,22 @@ class GroupCalendarService {
     RecurrencePattern? recurrence,
   }) async {
     try {
+      // Extract date and time components
+      final startDateOnly = _dateFormatter.format(startDate);
+      final endDateOnly = _dateFormatter.format(endDate);
+      final startTimeOnly = _formatTime(startDate);
+      final endTimeOnly = _formatTime(endDate);
+
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/groups/$groupId/events',
         data: {
           'title': title,
           'description': description?.trim().isEmpty == true ? null : description,
           'location': location?.trim().isEmpty == true ? null : location,
-          'startDate': startDate.toIso8601String(),
-          'endDate': endDate.toIso8601String(),
+          'startDate': startDateOnly,  // yyyy-MM-dd
+          'endDate': endDateOnly,      // yyyy-MM-dd
+          'startTime': startTimeOnly,  // HH:mm:ss
+          'endTime': endTimeOnly,      // HH:mm:ss
           'isAllDay': isAllDay,
           'isOfficial': isOfficial,
           'color': color,
@@ -145,6 +165,10 @@ class GroupCalendarService {
   }
 
   /// Update an existing group calendar event.
+  ///
+  /// For the backend API:
+  /// - Only startTime/endTime are sent (not startDate/endDate)
+  /// - Backend applies time changes to the selected event(s)
   Future<List<GroupEvent>> updateEvent({
     required int groupId,
     required int eventId,
@@ -158,14 +182,17 @@ class GroupCalendarService {
     UpdateScope updateScope = UpdateScope.thisEvent,
   }) async {
     try {
+      final startTimeOnly = _formatTime(startDate);
+      final endTimeOnly = _formatTime(endDate);
+
       final response = await _dioClient.put<Map<String, dynamic>>(
         '/groups/$groupId/events/$eventId',
         data: {
           'title': title,
           'description': description?.trim().isEmpty == true ? null : description,
           'location': location?.trim().isEmpty == true ? null : location,
-          'startDate': startDate.toIso8601String(),
-          'endDate': endDate.toIso8601String(),
+          'startTime': startTimeOnly,  // HH:mm:ss
+          'endTime': endTimeOnly,      // HH:mm:ss
           'isAllDay': isAllDay,
           'color': color,
           'updateScope': updateScope.apiValue,

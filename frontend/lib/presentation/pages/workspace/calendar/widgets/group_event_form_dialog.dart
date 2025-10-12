@@ -395,11 +395,26 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
       return;
     }
 
-    if (!_endDateTime.isAfter(_startDateTime)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('종료 시간은 시작 시간보다 이후여야 합니다.')),
-      );
-      return;
+    // For single events, validate that end time is after start time
+    if (_recurrence == null) {
+      if (!_endDateTime.isAfter(_startDateTime)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('종료 시간은 시작 시간보다 이후여야 합니다.')),
+        );
+        return;
+      }
+    }
+
+    // For recurring events, validate that end date is on or after start date
+    if (_recurrence != null) {
+      final startDateOnly = _normalizeDateTime(_startDateTime);
+      final endDateOnly = _normalizeDateTime(_endDateTime);
+      if (endDateOnly.isBefore(startDateOnly)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('반복 종료 날짜는 시작 날짜 이후여야 합니다.')),
+        );
+        return;
+      }
     }
 
     final result = GroupEventFormResult(
@@ -410,8 +425,10 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
       location: _locationController.text.trim().isEmpty
           ? null
           : _locationController.text.trim(),
-      startDate: _isAllDay ? _normalizeDateTime(_startDateTime) : _startDateTime,
-      endDate: _isAllDay ? _allDayEnd(_startDateTime) : _endDateTime,
+      // For backend API: startDate/endDate are date ranges (not time)
+      // Time is stored in startTime/endTime (extracted in service layer)
+      startDate: _startDateTime,
+      endDate: _endDateTime,
       isAllDay: _isAllDay,
       isOfficial: _isOfficial,
       color: _selectedColor,

@@ -31,6 +31,7 @@ import 'providers/comment_actions_provider.dart';
 import '../group/group_admin_page.dart';
 import '../member_management/member_management_page.dart';
 import '../recruitment_management/recruitment_management_page.dart';
+import 'calendar/group_calendar_page.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
@@ -448,7 +449,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         case WorkspaceView.groupHome:
           return const GroupHomeView();
         case WorkspaceView.calendar:
-          return const WorkspaceEmptyState(type: WorkspaceEmptyType.calendar);
+          if (selectedGroupId == null) {
+            return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
+          }
+          return GroupCalendarPage(groupId: int.parse(selectedGroupId));
         case WorkspaceView.groupAdmin:
           return const GroupAdminPage();
         case WorkspaceView.memberManagement:
@@ -562,7 +566,11 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       case WorkspaceView.groupHome:
         return const GroupHomeView();
       case WorkspaceView.calendar:
-        return const WorkspaceEmptyState(type: WorkspaceEmptyType.calendar);
+        final currentGroupId = ref.watch(currentGroupIdProvider);
+        if (currentGroupId == null) {
+          return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
+        }
+        return GroupCalendarPage(groupId: int.parse(currentGroupId));
       case WorkspaceView.groupAdmin:
         return const GroupAdminPage();
       case WorkspaceView.memberManagement:
