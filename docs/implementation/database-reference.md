@@ -1190,35 +1190,35 @@ class PlaceAvailability(
 }
 ```
 
-### 7.1.2. PlaceUnavailableDate 테이블 (장소 예외 날짜)
+### 7.1.2. PlaceBlockedTime 테이블 (장소 예약 차단 시간)
 
-특정 날짜에 장소를 사용할 수 없는 예외 날짜를 관리합니다.
+특정 날짜/시간대에 장소를 예약할 수 없는 차단 시간을 관리합니다. PlaceAvailability가 정의하는 운영 시간 내에서 추가로 예약을 차단하는 데 사용됩니다.
 
 ```sql
-CREATE TABLE place_unavailable_dates (
+CREATE TABLE place_blocked_times (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     place_id BIGINT NOT NULL,
-    exception_date DATE NOT NULL,
+    start_datetime DATETIME NOT NULL,
+    end_datetime DATETIME NOT NULL,
+    block_type ENUM('MAINTENANCE', 'EMERGENCY', 'HOLIDAY', 'OTHER') NOT NULL,
     reason VARCHAR(200),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    UNIQUE KEY uk_place_date (place_id, exception_date),
     FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_unavailable_place ON place_unavailable_dates(place_id);
-CREATE INDEX idx_unavailable_date ON place_unavailable_dates(place_id, exception_date);
+CREATE INDEX idx_blocked_place ON place_blocked_times(place_id);
+CREATE INDEX idx_blocked_time ON place_blocked_times(place_id, start_datetime, end_datetime);
+CREATE INDEX idx_blocked_type ON place_blocked_times(place_id, block_type);
 ```
 
-**JPA 엔티티 (PlaceUnavailableDate.kt)**:
+**JPA 엔티티 (PlaceBlockedTime.kt)**:
 
 ```kotlin
 @Entity
-@Table(
-    name = "place_unavailable_dates",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["place_id", "exception_date"])]
-)
-class PlaceUnavailableDate(
+@Table(name = "place_blocked_times")
+class PlaceBlockedTime(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
 
@@ -1226,17 +1226,34 @@ class PlaceUnavailableDate(
     @JoinColumn(name = "place_id", nullable = false)
     var place: Place,
 
-    @Column(name = "exception_date", nullable = false)
-    var exceptionDate: LocalDate,
+    @Column(name = "start_datetime", nullable = false)
+    var startDatetime: LocalDateTime,
+
+    @Column(name = "end_datetime", nullable = false)
+    var endDatetime: LocalDateTime,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "block_type", nullable = false)
+    var blockType: BlockType,
 
     @Column(length = 200)
     var reason: String? = null,
 
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
-    override fun equals(other: Any?) = other is PlaceUnavailableDate && id != 0L && id == other.id
+    override fun equals(other: Any?) = other is PlaceBlockedTime && id != 0L && id == other.id
     override fun hashCode(): Int = id.hashCode()
+}
+
+enum class BlockType {
+    MAINTENANCE,  // 유지보수
+    EMERGENCY,    // 긴급 상황
+    HOLIDAY,      // 휴일/휴무
+    OTHER         // 기타
 }
 ```
 

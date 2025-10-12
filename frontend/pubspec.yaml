@@ -45,7 +45,7 @@ dependencies:
   responsive_framework: ^1.4.0
 
   # Calendar UI
-  table_calendar: ^3.0.9
+  table_calendar: ^3.1.0
 
   # Sticky Header
   flutter_sticky_header: ^0.8.0

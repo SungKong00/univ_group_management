@@ -21,11 +21,24 @@
 - **데이터베이스**: [docs/implementation/database-reference.md](docs/implementation/database-reference.md)
 
 ### 기능별 개발 계획
+
+#### 캘린더 시스템 (통합)
+- **📊 통합 로드맵**: [docs/features/calendar-integration-roadmap.md](docs/features/calendar-integration-roadmap.md) - 그룹 + 장소 캘린더 전체 계획 (6-8주)
+
+#### 개인 캘린더
 - **개인 캘린더 MVP**: [docs/features/personal-calendar-mvp.md](docs/features/personal-calendar-mvp.md) - 시간표 + 캘린더 구현 완료
-- **그룹 캘린더 개발**: [docs/features/group-calendar-development-plan.md](docs/features/group-calendar-development-plan.md) - Phase 1-5 개발 계획
-- **그룹 캘린더 Phase 5**: [docs/features/group-calendar-phase5-api-integration.md](docs/features/group-calendar-phase5-api-integration.md) - API 연동 완료
-- **그룹 캘린더 Phase 6**: [docs/features/group-calendar-phase6-ui-improvement.md](docs/features/group-calendar-phase6-ui-improvement.md) - UI 개선 계획 (설계 완료, 구현 대기)
-- **장소 캘린더 명세서**: [docs/features/place-calendar-specification.md](docs/features/place-calendar-specification.md) - 장소 예약 시스템 상세 설계 (설계 완료, 구현 대기)
+
+#### 그룹 캘린더
+- **전체 개발 계획**: [docs/features/group-calendar-development-plan.md](docs/features/group-calendar-development-plan.md) - Phase 1-10 상세 계획
+- **Phase 5** (✅ 완료): [docs/features/group-calendar-phase5-api-integration.md](docs/features/group-calendar-phase5-api-integration.md) - API 연동 완료
+- **Phase 6** (✅ 완료): [docs/features/group-calendar-phase6-edit-delete.md](docs/features/group-calendar-phase6-edit-delete.md) - 수정/삭제 기능
+- **Phase 8** (⏳ 다음): 권한 시스템 통합 (2-3시간)
+- **Phase 9** (📝 대기): [docs/features/group-calendar-phase9-ui-improvement.md](docs/features/group-calendar-phase9-ui-improvement.md) - UI 개선 (설계 완료)
+
+#### 장소 캘린더
+- **상세 명세서**: [docs/features/place-calendar-specification.md](docs/features/place-calendar-specification.md) - 장소 예약 시스템 상세 설계
+- **Phase 1** (✅ 완료): 백엔드 기본 구현 (엔티티, 레포지토리, 서비스, 컨트롤러)
+- **Phase 2** (⏳ 다음): 프론트엔드 기본 구현 (6-8시간)
 
 ### UI/UX 설계
 - **디자인 시스템**: [docs/ui-ux/concepts/design-system.md](docs/ui-ux/concepts/design-system.md)

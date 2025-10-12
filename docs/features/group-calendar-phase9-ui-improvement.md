@@ -1,14 +1,15 @@
-# 그룹 캘린더 Phase 6: UI 개선 계획
+# 그룹 캘린더 Phase 9: UI 개선 계획
 
-> **버전**: 1.0
+> **버전**: 1.1
 > **작성일**: 2025-10-13
+> **최종 수정**: 2025-10-13 (Phase 번호 변경: 6 → 9)
 > **상태**: 설계 완료, 구현 대기
-> **선행 작업**: [Phase 5 API 연동](group-calendar-phase5-api-integration.md)
+> **선행 작업**: [Phase 6 수정/삭제](group-calendar-phase6-edit-delete.md) | [Phase 5 API 연동](group-calendar-phase5-api-integration.md)
 > **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md) | [설계 결정사항](../concepts/calendar-design-decisions.md) | [개발 계획](group-calendar-development-plan.md)
 
 ---
 
-## 1. Phase 6 개요
+## 1. Phase 9 개요
 
 ### 1.1. 목표
 
@@ -16,8 +17,9 @@
 
 ### 1.2. 배경
 
-**현재 상황 (Phase 5 완료)**:
-- 권한 API 연동 완료 (`GET /api/groups/{groupId}/permissions`)
+**현재 상황 (Phase 6 완료)**:
+- ✅ Phase 5: 권한 API 연동 완료 (`GET /api/groups/{groupId}/permissions`)
+- ✅ Phase 6: 일정 수정/삭제 기능 구현 완료
 - 단일 폼으로 공식/비공식 일정 생성
 - 권한 없는 사용자가 공식 일정 토글 시도 시 에러 발생
 
@@ -25,6 +27,8 @@
 - 공식 일정 토글이 숨겨져 있어 권한 소유자가 인지하기 어려움
 - 일반 사용자에게 불필요한 옵션 노출
 - 향후 TARGETED/RSVP 타입 추가 시 UI 복잡도 증가 예상
+
+**참고**: Phase 7-8은 권한 통합 및 캘린더 뷰 개선으로 예정되어 있으므로, UI 개선은 Phase 9에 배치
 
 ---
 

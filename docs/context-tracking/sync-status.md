@@ -4,9 +4,9 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-10-13 (그룹 캘린더 Phase 6 UI 개선 계획 문서화)
-**총 문서 수**: 38개
-**동기화 완료**: 38개 (100%)
+**마지막 업데이트**: 2025-10-13 (캘린더 시스템 통합 로드맵 + Phase 번호 재정리)
+**총 문서 수**: 40개
+**동기화 완료**: 40개 (100%)
 **업데이트 필요**: 0개 (0%)
 
 ---
@@ -75,8 +75,10 @@
 | `personal-calendar-mvp.md` | ✅ 최신 | 2025-10-06 | `현재` | 개인 캘린더 구현 완료 |
 | `group-calendar-development-plan.md` | ✅ 최신 | 2025-10-12 | `현재` | Phase 1-5 개발 계획 |
 | `group-calendar-phase5-api-integration.md` | ✅ 최신 | 2025-10-12 | `현재` | API 연동 수정 완료 |
-| `group-calendar-phase6-ui-improvement.md` | ✅ 최신 | 2025-10-13 | `현재` | UI 개선 계획 (신규) |
-| `place-calendar-specification.md` | ✅ 최신 | 2025-10-12 | `현재` | 장소 예약 상세 설계 |
+| `group-calendar-phase6-edit-delete.md` | ✅ 최신 | 2025-10-13 | `현재` | 수정/삭제 구현 완료 (신규) |
+| `group-calendar-phase9-ui-improvement.md` | ✅ 최신 | 2025-10-13 | `현재` | UI 개선 계획 (Phase 6→9 변경) |
+| `place-calendar-specification.md` | ✅ 최신 | 2025-10-13 | `현재` | Phase 1 완료 반영 |
+| `calendar-integration-roadmap.md` | ✅ 최신 | 2025-10-13 | `현재` | 통합 로드맵 (신규) |
 
 ### `/docs/workflows/` - 개발 프로세스
 | 파일명 | 상태 | 마지막 동기화 | 관련 커밋 | 비고 |
@@ -114,8 +116,14 @@
 
 ## 🎯 상태별 분류
 
-### ✅ 최신 상태 (38개)
+### ✅ 최신 상태 (40개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
+
+**주요 업데이트 (2025-10-13)**:
+- Phase 번호 충돌 해결 (Phase 6 → Phase 9 UI 개선)
+- 장소 캘린더 Phase 1 완료 반영
+- 통합 로드맵 문서 신규 생성
+- 그룹 캘린더 Phase 6 수정/삭제 문서화
 
 ### 🔄 업데이트 진행 중 (0개)
 없음

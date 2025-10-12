@@ -4,7 +4,17 @@
 
 ## 🚨 우선순위 높음 (High Priority)
 
-없음
+### 그룹 캘린더 Phase 8 구현 (권한 통합)
+**상태**: ⏳ 대기 중
+**적용 범위**: 프론트엔드 (group_calendar_page.dart)
+**작업 내용**:
+- `_canModifyEvent()` 함수 권한 API 연동
+- 공식 일정 수정/삭제 시 CALENDAR_MANAGE 체크
+- 통합 테스트 작성 (3개 시나리오)
+**예상 시간**: 2-3시간
+**우선순위**: P0 (즉시 진행 가능)
+**의존성**: Phase 5 권한 API 완료 (✅)
+**후속**: 장소 캘린더 Phase 2 진행
 
 ---
 
@@ -39,6 +49,29 @@
 
 ## ⚠️ 우선순위 중간 (Medium Priority)
 
+### 장소 캘린더 Phase 2 구현 (프론트엔드 기본)
+**상태**: ⏳ 대기 중
+**적용 범위**: 프론트엔드 (place_list_page.dart, place_form_dialog.dart, place_availability_settings.dart)
+**작업 내용**:
+- 장소 목록 조회 UI (건물별 트리 구조, 검색/필터)
+- 장소 등록 폼 (건물명, 방 번호, 별칭, 수용 인원)
+- 운영 시간 설정 UI (요일별 시간대)
+- PlaceService 및 PlaceProvider 구현
+**예상 시간**: 6-8시간
+**우선순위**: P0 (필수)
+**의존성**: 장소 캘린더 Phase 1 완료 (✅)
+**후속**: 장소 캘린더 Phase 3 (사용 그룹 관리)
+
+### CLAUDE.md 업데이트 (통합 로드맵 링크)
+**상태**: ⏳ 대기 중
+**적용 범위**: CLAUDE.md 네비게이션
+**작업 내용**:
+- "기능별 개발 계획" 섹션에 통합 로드맵 추가
+- Phase 6 edit-delete 문서 링크 추가
+- Phase 9 UI improvement 링크 업데이트
+**예상 시간**: 10분
+**우선순위**: P1 (권장)
+
 ---
 
 ## 📋 우선순위 낮음 (Low Priority)
@@ -55,6 +88,10 @@
 ---
 
 ## ✅ 완료/제거된 항목 (History)
+- (완료 2025-10-13) **캘린더 시스템 통합 로드맵 문서화**: calendar-integration-roadmap.md 신규 생성
+- (완료 2025-10-13) **Phase 번호 충돌 해결**: group-calendar-phase6-ui-improvement.md → phase9로 변경
+- (완료 2025-10-13) **장소 캘린더 Phase 1 완료 반영**: place-calendar-specification.md 업데이트
+- (완료 2025-10-13) **그룹 캘린더 Phase 6 문서화**: group-calendar-phase6-edit-delete.md 신규 생성
 - (완료 2025-10-09) UI/UX 전체 정합성 1차 패스 완료. color-guide와 design-system의 색상/Breakpoint 정의를 일원화하여 중복 및 불일치 해결.
 - (완료 2025-10-09) 개발 워크플로우 문서와 Git 전략 연동 검증 완료. 두 문서 간 내용 일관성 확인.
 - (완료 2025-10-06) 워크스페이스 모바일 반응형 및 브레드크럼 구현 (frontend-guide.md, responsive-design-guide.md, workspace-pages.md 등)
@@ -78,26 +115,31 @@
 
 ---
 
-## 📊 통계 및 메트릭 (갱신 2025-10-06)
-- **총 대기 항목**: 3개 (High 0 / Medium 3 / Low 0)
-- **이번 라운드 완료**: 1개 (캘린더 시스템 설계 결정사항 문서화)
-- **신규 추가**: 0개
-- **예상 잔여 작업 시간**: 2~4시간 (선택 포함)
+## 📊 통계 및 메트릭 (갱신 2025-10-13)
+- **총 대기 항목**: 5개 (High 1 / Medium 2 / Low 2)
+- **이번 라운드 완료**: 4개 (통합 로드맵 문서화, Phase 번호 정리, 장소 Phase 1 반영, Phase 6 문서화)
+- **신규 추가**: 2개 (Phase 8 구현, Phase 2 구현)
+- **예상 잔여 작업 시간**: 8~11시간 (필수) + 선택 작업
 
 ---
 
 ## 🎯 다음 액션 아이템
-### 오늘
-1. 통계(stats) 설계 초안 여부 결정
-2. 채널 권한 UI 접근성 세부 요구 정의 (초안)
+### 즉시 (Next 1-2 days)
+1. **그룹 캘린더 Phase 8 구현** (권한 통합) - 2-3시간
+2. **CLAUDE.md 업데이트** (통합 로드맵 링크 추가) - 10분
 
-### 이번 주
-1. UI/UX 정합성 1차 패스
-2. 관리자 대시보드 요구사항 초안 작성
+### 이번 주 (This Week)
+1. **장소 캘린더 Phase 2 구현** (프론트엔드 기본) - 6-8시간
+2. 통계(stats) 설계 초안 여부 결정 (보류)
 
-### 이번 달
-1. Recruitment stats 구현 & 문서화
-2. 권한 캐시 UX 개선안 문서화
+### 다음 주 (Next Week)
+1. **장소 캘린더 Phase 3 구현** (사용 그룹 관리) - 4-6시간
+2. 채널 권한 UI 접근성 세부 요구 정의 (선택)
+
+### 이번 달 (This Month)
+1. **장소 캘린더 Phase 4-5 완료** (예약 시스템 + 차단 시간) - 11-14시간
+2. **그룹 캘린더 Phase 9 검토** (UI 개선 진행 여부 결정)
+3. Recruitment stats 구현 & 문서화 (선택)
 
 ---
 

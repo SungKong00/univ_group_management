@@ -118,23 +118,49 @@ day_of_week: FRIDAY, start_time: 09:00, end_time: 18:00
 
 ---
 
-## 7. PlaceUnavailableDate 사용 시나리오
+## 7. PlaceBlockedTime 사용 시나리오
 
-**시나리오 1: 임시 공사**
+PlaceBlockedTime은 PlaceAvailability로 정의된 운영 시간 내에서 특정 시간대만 예약을 차단할 때 사용합니다.
+
+**시나리오 1: 장비 유지보수**
 ```
 place_id: 1 (AI/SC 랩실)
-exception_date: 2025-11-15
-reason: 전기 공사
+start_datetime: 2025-11-15 09:00:00
+end_datetime: 2025-11-15 12:00:00
+block_type: MAINTENANCE
+reason: 서버 장비 유지보수
 ```
-→ 2025년 11월 15일(금요일)은 정상 운영 시간임에도 불구하고 예약 불가
+→ 2025년 11월 15일 오전 9시~12시는 예약 불가 (오후 시간은 예약 가능)
 
-**시나리오 2: 학교 공휴일**
+**시나리오 2: 긴급 상황**
 ```
 place_id: 1 (AI/SC 랩실)
-exception_date: 2025-12-25
+start_datetime: 2025-11-20 14:00:00
+end_datetime: 2025-11-20 18:00:00
+block_type: EMERGENCY
+reason: 긴급 전기 공사
+```
+→ 2025년 11월 20일 오후 2시~6시는 긴급 차단
+
+**시나리오 3: 전일 휴무**
+```
+place_id: 1 (AI/SC 랩실)
+start_datetime: 2025-12-25 00:00:00
+end_datetime: 2025-12-25 23:59:59
+block_type: HOLIDAY
 reason: 크리스마스 휴무
 ```
-→ 12월 25일은 예약 불가
+→ 12월 25일 전체는 예약 불가
+
+**시나리오 4: 특정 시간대 행사**
+```
+place_id: 2 (회의실)
+start_datetime: 2025-11-10 10:00:00
+end_datetime: 2025-11-10 15:00:00
+block_type: OTHER
+reason: 학과 행사 예정
+```
+→ 11월 10일 오전 10시~오후 3시는 예약 불가
 
 ---
 

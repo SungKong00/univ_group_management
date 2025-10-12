@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/enums/calendar_view.dart';
 import '../../../../core/models/calendar/group_event.dart';
 import '../../../../core/models/calendar/update_scope.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../../data/models/calendar/calendar_event.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/calendar_view_provider.dart';
+import '../../../providers/focused_date_provider.dart';
 import '../../../providers/group_calendar_provider.dart';
 import '../../../providers/group_permission_provider.dart';
 import '../../../widgets/organisms/organisms.dart';
+import 'widgets/calendar_month_view.dart';
+import 'widgets/calendar_view_selector.dart';
+import 'widgets/calendar_week_view.dart';
+import 'widgets/date_navigation_header.dart';
 import 'widgets/group_event_form_dialog.dart';
 
 /// Event formality categories for single-step selector
@@ -38,7 +46,6 @@ class GroupCalendarPage extends ConsumerStatefulWidget {
 
 class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     with SingleTickerProviderStateMixin {
-  final DateTime _focusedDate = DateTime.now();
   late TabController _tabController;
 
   @override
@@ -57,8 +64,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   }
 
   Future<void> _loadEvents() async {
-    final startOfMonth = DateTime(_focusedDate.year, _focusedDate.month, 1);
-    final endOfMonth = DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
+    final focusedDate = ref.read(focusedDateProvider);
+    final startOfMonth = DateTime(focusedDate.year, focusedDate.month, 1);
+    final endOfMonth = DateTime(focusedDate.year, focusedDate.month + 1, 0);
 
     await ref.read(groupCalendarProvider(widget.groupId).notifier).loadEvents(
           groupId: widget.groupId,
@@ -124,153 +132,23 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
   Widget _buildGroupCalendarTab() {
     final state = ref.watch(groupCalendarProvider(widget.groupId));
+    final currentView = ref.watch(calendarViewProvider);
 
     return Stack(
       children: [
-        Builder(
-          builder: (context) {
-            if (state.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        Column(
+          children: [
+            // Date navigation header
+            const DateNavigationHeader(),
 
-            if (state.errorMessage != null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: AppColors.error.withOpacity(0.5),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      '오류가 발생했습니다',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      state.errorMessage!,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    ElevatedButton.icon(
-                      onPressed: _loadEvents,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('다시 시도'),
-                    ),
-                  ],
-                ),
-              );
-            }
+            // View selector (day/week/month)
+            const CalendarViewSelector(),
 
-            if (state.events.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.event_available,
-                      size: 64,
-                      color: AppColors.neutral400,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      '등록된 일정이 없습니다',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      '+ 버튼을 눌러 첫 일정을 추가해보세요',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.neutral600,
-                          ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              itemCount: state.events.length,
-              itemBuilder: (context, index) {
-                final event = state.events[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: ListTile(
-                    leading: Container(
-                      width: 4,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: event.color,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    title: Row(
-                      children: [
-                        Expanded(child: Text(event.title)),
-                        if (event.isOfficial)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.brandLight,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '공식',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(
-                                    color: AppColors.brand,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                          ),
-                        if (event.isRecurring)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 8),
-                            child: Icon(
-                              Icons.repeat,
-                              size: 16,
-                            ),
-                          ),
-                      ],
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text(
-                          _formatDateRange(event.startDate, event.endDate, event.isAllDay),
-                        ),
-                        if (event.location != null) ...[
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              const Icon(Icons.place, size: 14),
-                              const SizedBox(width: 4),
-                              Text(event.location!),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.more_vert),
-                      onPressed: () => _showEventActions(event),
-                    ),
-                    onTap: () => _showEventDetail(event),
-                  ),
-                );
-              },
-            );
-          },
+            // Calendar content area - Placeholder for Phase 2
+            Expanded(
+              child: _buildCalendarContent(state, currentView),
+            ),
+          ],
         ),
         Positioned(
           right: 16,
@@ -283,6 +161,80 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         ),
       ],
     );
+  }
+
+  Widget _buildCalendarContent(dynamic state, CalendarView view) {
+    // Phase 3: Week view
+    if (view == CalendarView.week) {
+      final focusedDate = ref.watch(focusedDateProvider);
+      final weekStart = _getWeekStart(focusedDate);
+
+      // Convert GroupEvent to CalendarEvent with type safety
+      final calendarEvents = (state.events as List<GroupEvent>)
+          .map((e) => CalendarEvent.fromGroupEvent(e))
+          .toList();
+
+      return CalendarWeekView(
+        weekStart: weekStart,
+        events: calendarEvents,
+        onEventTap: (calendarEvent) {
+          // Find original GroupEvent
+          final groupEvent = state.events.firstWhere(
+            (e) => e.id.toString() == calendarEvent.id,
+          );
+          _showEventDetail(groupEvent);
+        },
+      );
+    }
+
+    // Phase 2: Show month view with inline event cards
+    if (view == CalendarView.month) {
+      return CalendarMonthView(
+        events: state.events,
+        onEventTap: _showEventDetail,
+      );
+    }
+
+    // Fallback (should not reach here)
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.calendar_today,
+            size: 64,
+            color: AppColors.neutral400,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            '${_getViewName(view)} 뷰',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            '준비 중입니다',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.neutral600,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get Monday of the week containing the given date
+  DateTime _getWeekStart(DateTime date) {
+    final weekday = date.weekday; // 1 (Monday) to 7 (Sunday)
+    return date.subtract(Duration(days: weekday - 1));
+  }
+
+  String _getViewName(CalendarView view) {
+    switch (view) {
+      case CalendarView.week:
+        return '주간';
+      case CalendarView.month:
+        return '월간';
+    }
   }
 
   Widget _buildPlaceCalendarTab() {
@@ -347,6 +299,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
   Future<void> _showCreateDialog() async {
     // Phase 6 UI Flow: Step 1 - Official/Unofficial selection (permission-based)
+    final focusedDate = ref.read(focusedDateProvider);
 
     // Check user's CALENDAR_MANAGE permission
     final permissionsAsync =
@@ -391,14 +344,17 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       // Step 2: Show event form with selected formality
       final isOfficial =
           selectedFormality == EventFormalityCategory.official;
-      await _createGroupEvent(isOfficial: isOfficial);
+      await _createGroupEvent(isOfficial: isOfficial, anchorDate: focusedDate);
     } else {
       // No permission: Skip Step 1, create unofficial event directly
-      await _createGroupEvent(isOfficial: false);
+      await _createGroupEvent(isOfficial: false, anchorDate: focusedDate);
     }
   }
 
-  Future<void> _createGroupEvent({required bool isOfficial}) async {
+  Future<void> _createGroupEvent({
+    required bool isOfficial,
+    required DateTime anchorDate,
+  }) async {
     EventType selectedType = EventType.general;
 
     // Step 2: 공식 일정일 경우 유형 선택
@@ -426,7 +382,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     // Step 3: Show event form dialog with pre-determined formality and type
     final result = await showGroupEventFormDialog(
       context,
-      anchorDate: _focusedDate,
+      anchorDate: anchorDate,
       canCreateOfficial: isOfficial,
       initialIsOfficial: isOfficial,
       eventType: selectedType,
@@ -647,6 +603,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   String _formatDateTime(DateTime dateTime) {
     return '${_format(dateTime, 'yyyy-MM-dd')} ${_format(dateTime, 'HH:mm')}';
   }
+
 
   Future<void> _showEventActions(GroupEvent event) async {
     await showModalBottomSheet(

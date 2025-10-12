@@ -73,4 +73,12 @@ enum class ErrorCode(val message: String) {
     // Action
     INVALID_ACTION("유효하지 않은 액션입니다."),
     ACCESS_DENIED("접근이 거부되었습니다."),
+
+    // Place
+    PLACE_NOT_FOUND("장소를 찾을 수 없습니다."),
+    PLACE_ALREADY_EXISTS("이미 등록된 장소입니다."),
+    PLACE_USAGE_NOT_FOUND("사용 그룹을 찾을 수 없습니다."),
+    PLACE_USAGE_ALREADY_REQUESTED("이미 신청한 장소입니다."),
+    PLACE_USAGE_NOT_APPROVED("장소 사용 권한이 승인되지 않았습니다."),
+    BLOCKED_TIME_NOT_FOUND("차단 시간을 찾을 수 없습니다."),
 }

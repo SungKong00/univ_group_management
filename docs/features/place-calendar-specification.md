@@ -4,7 +4,25 @@
 
 **목적**: 대학 내 장소(강의실, 동아리방 등)의 예약 및 관리 시스템
 **관련 문서**: [장소 관리 개념](../concepts/calendar-place-management.md), [캘린더 시스템](../concepts/calendar-system.md)
-**상태**: 설계 완료, 구현 대기
+**상태**: Phase 1 백엔드 구현 완료, Phase 2 프론트엔드 대기
+
+---
+
+## ✅ Phase 1 완료 사항 (2025-10-13)
+
+### 백엔드 구현 완료
+- **엔티티 (4개)**: Place, PlaceAvailability, PlaceBlockedTime, PlaceUsageGroup
+- **레포지토리 (4개)**: 최적화된 JPQL 쿼리 포함
+- **서비스 (3개)**: PlaceService, PlaceUsageGroupService, PlaceBlockedTimeService
+- **컨트롤러 (1개)**: PlaceController (REST API 엔드포인트)
+- **DTO 클래스**: Jakarta Validation 포함
+- **ErrorCode**: 장소 관련 에러 코드 추가
+
+### 다음 단계
+- **Phase 2**: 프론트엔드 기본 구현 (장소 목록, 등록, 운영 시간 설정)
+- **Phase 3**: 사용 그룹 관리 UI
+- **Phase 4**: 예약 시스템 구현
+- **Phase 5**: 차단 시간 관리
 
 ## 🎯 핵심 기능
 
@@ -74,6 +92,19 @@ endTime: LocalTime     // 종료 시간
 ```
 - **제외 시간 지원**: 여러 시간대 허용 (예: 09:00-12:00, 14:00-18:00)
 
+### PlaceBlockedTime (예약 차단 시간)
+```kotlin
+id: UUID
+placeId: UUID
+startDatetime: LocalDateTime  // 차단 시작 일시
+endDatetime: LocalDateTime    // 차단 종료 일시
+blockType: BlockType          // 차단 유형
+reason: String?               // 차단 사유 (선택)
+```
+- **BlockType**: MAINTENANCE (유지보수), EMERGENCY (긴급), HOLIDAY (휴일), OTHER (기타)
+- **운영 시간과의 관계**: PlaceAvailability로 정의된 운영 시간 내에서 추가 차단
+- **사용 예**: 특정 날짜/시간대의 유지보수, 긴급 상황, 휴일 등
+
 ### PlaceUsageGroup (사용 그룹)
 ```kotlin
 id: UUID
@@ -102,6 +133,11 @@ version: Long       // 낙관적 락
 ### 운영 시간 API
 - `POST /api/places/{id}/availability` - 운영 시간 추가
 - `DELETE /api/places/{id}/availability/{availId}` - 운영 시간 삭제
+
+### 차단 시간 API
+- `POST /api/places/{id}/blocked-times` - 차단 시간 추가 (관리 주체)
+- `GET /api/places/{id}/blocked-times` - 차단 시간 조회
+- `DELETE /api/places/{id}/blocked-times/{blockedId}` - 차단 시간 삭제 (관리 주체)
 
 ### 사용 그룹 API
 - `POST /api/places/{id}/usage-requests` - 사용 신청 (그룹 관리자)
@@ -161,6 +197,7 @@ version: Long       // 낙관적 락
 ### 예약 생성 실패
 - **시간 충돌**: `409 CONFLICT` - "이미 예약된 시간대입니다"
 - **운영 시간 외**: `400 BAD_REQUEST` - "운영 시간이 아닙니다"
+- **차단 시간**: `400 BAD_REQUEST` - "해당 시간대는 예약이 불가능합니다 (사유: {reason})"
 - **승인되지 않은 그룹**: `403 FORBIDDEN` - "장소 사용 권한이 없습니다"
 
 ### 장소 삭제 실패
