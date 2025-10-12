@@ -57,6 +57,7 @@ class GroupController(
     private val groupRoleService: GroupRoleService,
     userService: UserService,
     private val securityExpressionHelper: SecurityExpressionHelper,
+    private val permissionService: org.castlekong.backend.security.PermissionService,
 ) : BaseController(userService) {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
@@ -468,5 +469,33 @@ class GroupController(
                 securityExpressionHelper.isGroupMember(groupId)
             }
         return ApiResponse.success(membershipMap)
+    }
+
+    // === 권한 조회 ===
+    @GetMapping("/{groupId}/permissions")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "내 그룹 권한 조회",
+        description = "현재 사용자가 특정 그룹에서 가지는 권한 목록을 반환합니다.",
+    )
+    fun getMyPermissions(
+        @PathVariable groupId: Long,
+        authentication: Authentication,
+    ): ApiResponse<Set<String>> {
+        val user = getUserByEmail(authentication.name)
+        val permissions =
+            permissionService.getEffective(groupId, user.id) { roleName ->
+                systemRolePermissions(roleName)
+            }
+        return ApiResponse.success(permissions.map { it.name }.toSet())
+    }
+
+    private fun systemRolePermissions(roleName: String): Set<org.castlekong.backend.entity.GroupPermission> {
+        return when (roleName.uppercase()) {
+            "그룹장" -> org.castlekong.backend.entity.GroupPermission.entries.toSet()
+            "교수" -> org.castlekong.backend.entity.GroupPermission.entries.toSet()
+            "멤버" -> emptySet()
+            else -> emptySet()
+        }
     }
 }

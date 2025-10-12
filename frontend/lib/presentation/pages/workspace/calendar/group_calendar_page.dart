@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/group_calendar_provider.dart';
+import '../../../providers/group_permission_provider.dart';
 import 'widgets/group_event_form_dialog.dart';
 
 /// Main page for group calendar.
@@ -332,10 +333,26 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   }
 
   Future<void> _showCreateDialog() async {
+    // Check if user has CALENDAR_MANAGE permission to create official events
+    final permissionsAsync =
+        ref.read(groupPermissionsProvider(widget.groupId));
+
+    // Wait for permissions to load if not already loaded
+    final permissions = await permissionsAsync.when(
+      data: (permissions) async => permissions,
+      loading: () async {
+        // Wait for the future to complete
+        return await ref.read(groupPermissionsProvider(widget.groupId).future);
+      },
+      error: (_, __) async => <String>{},
+    );
+
+    final canCreateOfficial = permissions.contains('CALENDAR_MANAGE');
+
     final result = await showGroupEventFormDialog(
       context,
       anchorDate: _focusedDate,
-      canCreateOfficial: true,
+      canCreateOfficial: canCreateOfficial,
     );
 
     if (result != null && mounted) {
@@ -375,16 +392,21 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     final currentUser = ref.read(currentUserProvider);
     if (currentUser == null) return false;
 
+    // Check if user has CALENDAR_MANAGE permission
+    final permissionsAsync =
+        ref.read(groupPermissionsProvider(widget.groupId));
+    final hasCalendarManage = permissionsAsync.maybeWhen(
+      data: (permissions) => permissions.contains('CALENDAR_MANAGE'),
+      orElse: () => false,
+    );
+
     // Official events: Require CALENDAR_MANAGE permission
     if (event.isOfficial) {
-      // TODO: Check if user has CALENDAR_MANAGE permission for this group
-      // For now, assume we can check via a permission field in the event or user
-      // This requires backend integration
-      return false; // Placeholder
+      return hasCalendarManage;
     }
 
     // Unofficial events: Creator or CALENDAR_MANAGE
-    return event.creatorId == currentUser.id;
+    return event.creatorId == currentUser.id || hasCalendarManage;
   }
 
   Future<void> _showEventDetail(GroupEvent event) async {
