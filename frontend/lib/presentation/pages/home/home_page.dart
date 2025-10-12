@@ -8,35 +8,48 @@ import '../../widgets/cards/action_card.dart';
 import '../../widgets/cards/group_card.dart';
 import 'widgets/group_explore_content_widget.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // 홈 페이지 초기화 (상태 복원)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(homeStateProvider.notifier).initialize();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentView = ref.watch(currentHomeViewProvider);
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       body: SafeArea(
-        child: _buildViewForCurrentState(context, ref, currentView),
+        child: _buildViewForCurrentState(context, currentView),
       ),
     );
   }
 
   Widget _buildViewForCurrentState(
     BuildContext context,
-    WidgetRef ref,
     HomeView currentView,
   ) {
     switch (currentView) {
       case HomeView.dashboard:
-        return _buildDashboardView(context, ref);
+        return _buildDashboardView(context);
       case HomeView.groupExplore:
         return const GroupExploreContentWidget();
     }
   }
 
-  Widget _buildDashboardView(BuildContext context, WidgetRef ref) {
+  Widget _buildDashboardView(BuildContext context) {
     // 문서 스펙: TABLET(451px) 이상을 데스크톱 레이아웃으로 간주
     // largerThan(MOBILE) = 451px 이상 = TABLET, DESKTOP, 4K
     final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
@@ -62,9 +75,9 @@ class HomePage extends ConsumerWidget {
               ).copyWith(color: AppColors.neutral600),
             ),
             const SizedBox(height: AppSpacing.lg),
-            _buildQuickActions(context, ref, isDesktop),
+            _buildQuickActions(context, isDesktop),
             const SizedBox(height: AppSpacing.lg),
-            _buildRecentGroups(context, ref),
+            _buildRecentGroups(context),
             const SizedBox(height: AppSpacing.lg),
             _buildRecentActivity(context),
           ],
@@ -73,7 +86,7 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, WidgetRef ref, bool isDesktop) {
+  Widget _buildQuickActions(BuildContext context, bool isDesktop) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -126,7 +139,7 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentGroups(BuildContext context, WidgetRef ref) {
+  Widget _buildRecentGroups(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

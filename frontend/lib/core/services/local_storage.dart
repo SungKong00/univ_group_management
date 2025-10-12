@@ -183,6 +183,34 @@ class LocalStorage {
       prefs.remove('last_group_id'),
       prefs.remove('last_channel_id'),
       prefs.remove('last_view_type'),
+      prefs.remove('last_home_view'),
+      prefs.remove('last_group_explore_tab'),
     ]);
+  }
+
+  // ========== Home State Management ==========
+
+  /// 마지막 홈 뷰 저장
+  Future<void> saveLastHomeView(String view) async {
+    final prefs = await _preferences;
+    await prefs.setString('last_home_view', view);
+  }
+
+  /// 마지막 홈 뷰 복원
+  Future<String?> getLastHomeView() async {
+    final prefs = await _preferences;
+    return prefs.getString('last_home_view');
+  }
+
+  /// 마지막 그룹 탐색 탭 저장
+  Future<void> saveLastGroupExploreTab(int tabIndex) async {
+    final prefs = await _preferences;
+    await prefs.setInt('last_group_explore_tab', tabIndex);
+  }
+
+  /// 마지막 그룹 탐색 탭 복원
+  Future<int?> getLastGroupExploreTab() async {
+    final prefs = await _preferences;
+    return prefs.getInt('last_group_explore_tab');
   }
 }

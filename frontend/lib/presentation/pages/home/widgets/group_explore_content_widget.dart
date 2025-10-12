@@ -32,17 +32,25 @@ class _GroupExploreContentWidgetState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+
+    final initialTab = ref.read(homeStateProvider).groupExploreInitialTab;
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: initialTab, // 초기 탭 설정
+    );
+
+    // 탭 변경 감지 리스너 추가
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) return; // 애니메이션 중복 방지
+
+      // HomeStateNotifier에 탭 변경 알림
+      ref.read(homeStateProvider.notifier).setGroupExploreTab(_tabController.index);
+    });
 
     // Initialize state: load first page of groups
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(groupExploreStateProvider.notifier).initialize();
-
-      // Set initial tab from home state
-      final initialTab = ref.read(homeStateProvider).groupExploreInitialTab;
-      if (initialTab != _tabController.index) {
-        _tabController.animateTo(initialTab);
-      }
     });
   }
 
