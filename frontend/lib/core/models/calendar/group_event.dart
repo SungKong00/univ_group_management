@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 
 /// Enum representing the type of group event.
 enum EventType {
-  general('GENERAL'),
-  targeted('TARGETED'),
-  rsvp('RSVP');
+  general('GENERAL', '일반 일정', '모든 멤버에게 표시되는 일정', Icons.event),
+  targeted('TARGETED', '대상 지정 일정', '특정 멤버만 참여 (준비 중)', Icons.people),
+  rsvp('RSVP', '참여 신청 일정', '선착순 참여 신청 (준비 중)', Icons.how_to_reg);
 
-  const EventType(this.apiValue);
+  const EventType(this.apiValue, this.title, this.description, this.icon);
   final String apiValue;
+  final String title;
+  final String description;
+  final IconData icon;
 
   static EventType fromApi(String value) {
     final normalized = value.toUpperCase();

@@ -399,12 +399,37 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   }
 
   Future<void> _createGroupEvent({required bool isOfficial}) async {
-    // Step 2: Show event form dialog with pre-determined formality
+    EventType selectedType = EventType.general;
+
+    // Step 2: 공식 일정일 경우 유형 선택
+    if (isOfficial) {
+      final selected = await showSingleStepSelector<EventType>(
+        context: context,
+        title: '공식 일정 유형 선택',
+        subtitle: '어떤 유형의 공식 일정을 만드시겠습니까?',
+        options: EventType.values
+            .map(
+              (type) => SelectableOption(
+                value: type,
+                title: type.title,
+                description: type.description,
+                icon: type.icon,
+              ),
+            )
+            .toList(),
+      );
+
+      if (selected == null) return; // 취소
+      selectedType = selected;
+    }
+
+    // Step 3: Show event form dialog with pre-determined formality and type
     final result = await showGroupEventFormDialog(
       context,
       anchorDate: _focusedDate,
       canCreateOfficial: isOfficial,
       initialIsOfficial: isOfficial,
+      eventType: selectedType,
     );
 
     if (result != null && mounted) {

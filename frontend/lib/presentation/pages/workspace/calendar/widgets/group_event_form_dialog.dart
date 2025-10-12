@@ -40,6 +40,7 @@ Future<GroupEventFormResult?> showGroupEventFormDialog(
   DateTime? anchorDate,
   required bool canCreateOfficial,
   bool? initialIsOfficial,
+  EventType? eventType,
 }) {
   return showDialog<GroupEventFormResult>(
     context: context,
@@ -49,6 +50,7 @@ Future<GroupEventFormResult?> showGroupEventFormDialog(
       anchorDate: anchorDate,
       canCreateOfficial: canCreateOfficial,
       initialIsOfficial: initialIsOfficial,
+      eventType: eventType,
     ),
   );
 }
@@ -59,12 +61,14 @@ class _GroupEventFormDialog extends StatefulWidget {
     this.anchorDate,
     required this.canCreateOfficial,
     this.initialIsOfficial,
+    this.eventType,
   });
 
   final GroupEvent? initial;
   final DateTime? anchorDate;
   final bool canCreateOfficial;
   final bool? initialIsOfficial;
+  final EventType? eventType;
 
   @override
   State<_GroupEventFormDialog> createState() => _GroupEventFormDialogState();
@@ -81,6 +85,7 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
   late bool _isAllDay;
   late bool _isOfficial;
   late Color _selectedColor;
+  late EventType _eventType;
   RecurrencePattern? _recurrence;
 
   bool get _isEditing => widget.initial != null;
@@ -104,6 +109,8 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
     // Phase 6: Use initialIsOfficial from parent selector, fallback to initial event value
     _isOfficial = initial?.isOfficial ?? widget.initialIsOfficial ?? false;
     _selectedColor = initial?.color ?? kPersonalScheduleColors.first;
+    // Phase 6 Step 2: Use eventType from parent selector, fallback to general
+    _eventType = initial?.eventType ?? widget.eventType ?? EventType.general;
 
     if (initial != null) {
       _startDateTime = initial.startDate;
@@ -203,13 +210,13 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
                   contentPadding: EdgeInsets.zero,
                 ),
                 // Phase 6: Official/Unofficial is pre-determined in Step 1, show read-only badge
-                if (_isOfficial)
+                if (_isOfficial) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
                       vertical: AppSpacing.xs,
                     ),
-                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.xs),
                     decoration: BoxDecoration(
                       color: AppColors.brandLight,
                       borderRadius: BorderRadius.circular(AppRadius.button),
@@ -237,6 +244,44 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
                       ],
                     ),
                   ),
+                  // Phase 6 Step 2: Show selected event type as read-only badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.neutral100,
+                      borderRadius: BorderRadius.circular(AppRadius.button),
+                      border: Border.all(color: AppColors.neutral300, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_eventType.icon, size: 16, color: AppColors.neutral700),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          _eventType.title,
+                          style: textTheme.labelMedium?.copyWith(
+                            color: AppColors.neutral700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Flexible(
+                          child: Text(
+                            _eventType.description,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: AppColors.neutral600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
