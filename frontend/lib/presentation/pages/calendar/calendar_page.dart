@@ -10,6 +10,7 @@ import '../../../core/theme/theme.dart';
 import '../../providers/calendar_events_provider.dart';
 import '../../providers/timetable_provider.dart';
 import '../../widgets/buttons/primary_button.dart';
+import 'calendar_week_grid_view.dart';
 import 'widgets/event_detail_sheet.dart';
 import 'widgets/event_form_dialog.dart';
 import 'widgets/schedule_detail_sheet.dart';
@@ -629,18 +630,27 @@ class _CalendarTabState extends ConsumerState<CalendarTab> {
       Expanded(child: _buildCalendarBody(context, state, notifier)),
     ];
 
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 950),
-        child: SizedBox(
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: children,
-          ),
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final shouldCenter = screenWidth < 1024;
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    );
+
+    if (shouldCenter) {
+      return Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 950),
+          child: SizedBox(width: double.infinity, child: content),
         ),
-      ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      child: content,
     );
   }
 
@@ -807,65 +817,126 @@ class _MonthCalendarView extends ConsumerWidget {
       );
     }
 
-    return Column(
-      children: [
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: AppColors.lightOutline, width: 1),
-          ),
-          child: TableCalendar<PersonalEvent>(
-            locale: 'ko_KR',
-            firstDay: DateTime.utc(2000, 1, 1),
-            lastDay: DateTime.utc(2100, 12, 31),
-            focusedDay: state.focusedDate,
-            availableGestures: AvailableGestures.horizontalSwipe,
-            headerVisible: false,
-            rowHeight: 96,
-            daysOfWeekHeight: 32,
-            daysOfWeekStyle: DaysOfWeekStyle(
-              weekdayStyle: dowTextStyle,
-              weekendStyle: dowTextStyle.copyWith(color: AppColors.neutral600),
-            ),
-            calendarFormat: CalendarFormat.month,
-            startingDayOfWeek: StartingDayOfWeek.monday,
-            selectedDayPredicate: (day) => isSameDay(day, state.selectedDate),
-            onDaySelected: (selectedDay, focusedDay) {
-              notifier.selectDate(selectedDay);
-            },
-            onPageChanged: notifier.setFocusedDate,
-            eventLoader: (day) =>
-                eventsByDate[_normalizeDate(day)] ?? const <PersonalEvent>[],
-            calendarStyle: const CalendarStyle(
-              isTodayHighlighted: false,
-              cellMargin: EdgeInsets.all(4),
-              cellPadding: EdgeInsets.all(6),
-              outsideDaysVisible: true,
-              canMarkersOverflow: true,
-            ),
-            calendarBuilders: CalendarBuilders<PersonalEvent>(
-              markerBuilder: (context, day, events) => const SizedBox.shrink(),
-              defaultBuilder: (context, day, focusedDay) =>
-                  buildDayCell(day, focusedDay),
-              todayBuilder: (context, day, focusedDay) =>
-                  buildDayCell(day, focusedDay),
-              selectedBuilder: (context, day, focusedDay) =>
-                  buildDayCell(day, focusedDay),
-              outsideBuilder: (context, day, focusedDay) =>
-                  buildDayCell(day, focusedDay),
-            ),
-          ),
+    // 캘린더 위젯
+    final calendarWidget = Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.lightOutline, width: 1),
+      ),
+      child: TableCalendar<PersonalEvent>(
+        locale: 'ko_KR',
+        firstDay: DateTime.utc(2000, 1, 1),
+        lastDay: DateTime.utc(2100, 12, 31),
+        focusedDay: state.focusedDate,
+        availableGestures: AvailableGestures.horizontalSwipe,
+        headerVisible: false,
+        rowHeight: 96,
+        daysOfWeekHeight: 32,
+        daysOfWeekStyle: DaysOfWeekStyle(
+          weekdayStyle: dowTextStyle,
+          weekendStyle: dowTextStyle.copyWith(color: AppColors.neutral600),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        Expanded(
-          child: _EventListView(
-            events: selectedEvents,
-            emptyMessage: '선택한 날짜에 일정이 없습니다.',
-            onEventTap: (event) => _handleEventTap(context, notifier, event),
-          ),
+        calendarFormat: CalendarFormat.month,
+        startingDayOfWeek: StartingDayOfWeek.monday,
+        selectedDayPredicate: (day) => isSameDay(day, state.selectedDate),
+        onDaySelected: (selectedDay, focusedDay) {
+          notifier.selectDate(selectedDay);
+        },
+        onPageChanged: notifier.setFocusedDate,
+        eventLoader: (day) =>
+            eventsByDate[_normalizeDate(day)] ?? const <PersonalEvent>[],
+        calendarStyle: const CalendarStyle(
+          isTodayHighlighted: false,
+          cellMargin: EdgeInsets.all(4),
+          cellPadding: EdgeInsets.all(6),
+          outsideDaysVisible: true,
+          canMarkersOverflow: true,
         ),
-      ],
+        calendarBuilders: CalendarBuilders<PersonalEvent>(
+          markerBuilder: (context, day, events) => const SizedBox.shrink(),
+          defaultBuilder: (context, day, focusedDay) =>
+              buildDayCell(day, focusedDay),
+          todayBuilder: (context, day, focusedDay) =>
+              buildDayCell(day, focusedDay),
+          selectedBuilder: (context, day, focusedDay) =>
+              buildDayCell(day, focusedDay),
+          outsideBuilder: (context, day, focusedDay) =>
+              buildDayCell(day, focusedDay),
+        ),
+      ),
+    );
+
+    // 일정 목록 위젯
+    final eventListWidget = Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.lightOutline, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: AppSpacing.sm,
+          right: AppSpacing.sm,
+          top: AppSpacing.sm,
+          bottom: AppSpacing.xs,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              DateFormat('M월 d일 (E)', 'ko_KR').format(state.selectedDate),
+              style: textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Expanded(
+              child: _EventListView(
+                events: selectedEvents,
+                emptyMessage: '선택한 날짜에 일정이 없습니다.',
+                onEventTap: (event) =>
+                    _handleEventTap(context, notifier, event),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // 반응형 레이아웃
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWideScreen = constraints.maxWidth >= 1024;
+
+        if (isWideScreen) {
+          // 넓은 화면: Row 레이아웃 (캘린더 60% + 일정 목록 40%)
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 7,
+                child: calendarWidget,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                flex: 3,
+                child: SizedBox(
+                  height: constraints.maxHeight,
+                  child: eventListWidget,
+                ),
+              ),
+            ],
+          );
+        } else {
+          // 좁은 화면: Column 레이아웃 (기존 방식)
+          return Column(
+            children: [
+              calendarWidget,
+              const SizedBox(height: AppSpacing.sm),
+              Expanded(child: eventListWidget),
+            ],
+          );
+        }
+      },
     );
   }
 }
@@ -1023,28 +1094,19 @@ class _WeekCalendarView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final range = _weekRange(state.focusedDate);
-    final days = List.generate(
-      7,
-      (index) => range.start.add(Duration(days: index)),
-    );
-    return ListView.builder(
-      itemCount: days.length,
+    final weekStart = range.start;
+
+    return Padding(
       padding: const EdgeInsets.only(
-        bottom: 80,
         left: AppSpacing.sm,
         right: AppSpacing.sm,
+        bottom: 80,
       ),
-      itemBuilder: (context, index) {
-        final day = days[index];
-        final events = state.events
-            .where((event) => event.occursOn(day))
-            .toList();
-        return _DaySection(
-          date: day,
-          events: events,
-          onEventTap: (event) => _handleEventTap(context, notifier, event),
-        );
-      },
+      child: CalendarWeekGridView(
+        events: state.events,
+        weekStart: weekStart,
+        onEventTap: (event) => _handleEventTap(context, notifier, event),
+      ),
     );
   }
 }
