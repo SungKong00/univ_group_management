@@ -4,6 +4,44 @@
 
 ## 2025년 10월
 
+### 2025-10-13 - 그룹 캘린더 Phase 6 UI 개선 계획 문서화
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 문서 추가 + 설계 확정
+**우선순위**: High
+**영향 범위**: 프론트엔드 (UI/UX 설계), 문서 (신규 가이드)
+
+**구현 내용**:
+- **Phase 5 완료 사항 문서화**:
+  - 권한 API 연동 완료 (백엔드/프론트엔드/통합 테스트 3개)
+  - GroupCalendarPage 권한 체크 로직 통합
+  - 공식 일정 토글 버그 수정 (권한 로딩 대기 로직)
+
+- **Phase 6 UI 설계 확정**:
+  - Option C 채택: 다단계 카드 선택 UI
+  - Step 1: 공식/비공식 선택 (권한 보유자만)
+  - Step 2: 일정 유형 선택 (Phase 2 구현 예정)
+  - 일반 사용자: Step 1 생략, 비공식 일정 폼 바로 표시
+
+- **재사용 가능한 컴포넌트 시스템 설계**:
+  - Atomic Design 패턴 적용
+  - Atoms: SelectableOptionCard, OptionIcon, OptionText
+  - Molecules: OptionCardGroup, StepHeader
+  - Organisms: SingleStepSelector<T>, MultiStepSelector<T>
+  - 예상 타임라인: 9-13시간 (Phase 1-5)
+
+**동기화 완료 문서**:
+- 🆕 `docs/features/group-calendar-phase6-ui-improvement.md`: Phase 6 UI 개선 계획 신규 문서 생성
+  - 완료된 작업 (Phase 5)
+  - 설계 완료 사항 (Option C UI 플로우)
+  - 구현 계획 (Phase 1-5, Atomic Design)
+  - 재사용 시나리오 (캘린더, 채널 권한, 장소 예약)
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가
+- ✅ `docs/context-tracking/sync-status.md`: 신규 문서 추가 및 상태 갱신
+
+**메모**: Phase 5 완료 및 Phase 6 설계 확정으로 구현 준비 완료. 재사용 가능한 컴포넌트 시스템으로 향후 다른 기능 개발에도 활용 가능.
+
+---
+
 ### 2025-10-12 - 캘린더 권한 체계 재단순화 및 반복 일정 UI 설계 명확화
 **커밋**: 현재 세션 (커밋 예정)
 **유형**: 설계 재검토 + 문서 동기화
