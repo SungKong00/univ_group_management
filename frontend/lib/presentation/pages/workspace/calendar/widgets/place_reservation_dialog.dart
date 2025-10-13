@@ -30,7 +30,7 @@ class _PlaceReservationDialogState
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  String? _selectedPlaceId;
+  int? _selectedPlaceId;
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
@@ -208,8 +208,8 @@ class _PlaceReservationDialogState
   Widget _buildPlaceSelector(PlaceCalendarState state) {
     final places = state.places;
 
-    return DropdownButtonFormField<String>(
-      initialValue: _selectedPlaceId,
+    return DropdownButtonFormField<int>(
+      value: _selectedPlaceId,
       decoration: const InputDecoration(
         labelText: '장소',
         prefixIcon: Icon(Icons.place),
@@ -224,7 +224,7 @@ class _PlaceReservationDialogState
       items: places.isEmpty
           ? []
           : places.map((place) {
-              return DropdownMenuItem<String>(
+              return DropdownMenuItem<int>(
                 value: place.id,
                 child: Row(
                   children: [
@@ -254,7 +254,7 @@ class _PlaceReservationDialogState
         });
       },
       validator: (value) {
-        if (value == null || value.isEmpty) {
+        if (value == null) {
           return '장소를 선택해주세요';
         }
         return null;
@@ -384,7 +384,10 @@ class _PlaceReservationDialogState
       return;
     }
 
-    // Combine date and time
+    // Note: Currently, the API requires a groupEventId which contains the date/time info.
+    // These DateTime variables are kept for future use when we allow direct reservation
+    // without requiring an existing group event.
+    // ignore: unused_local_variable
     final startDateTime = DateTime(
       _selectedDate!.year,
       _selectedDate!.month,
@@ -392,7 +395,7 @@ class _PlaceReservationDialogState
       _startTime!.hour,
       _startTime!.minute,
     );
-
+    // ignore: unused_local_variable
     final endDateTime = DateTime(
       _selectedDate!.year,
       _selectedDate!.month,
@@ -402,20 +405,17 @@ class _PlaceReservationDialogState
     );
 
     // Create reservation request
-    final request = PlaceReservationRequest(
+    final request = CreatePlaceReservationRequest(
       placeId: _selectedPlaceId!,
       groupEventId: DateTime.now().millisecondsSinceEpoch ~/
           1000, // Temporary mock group event ID
-      title: _titleController.text.trim(),
-      startDateTime: startDateTime,
-      endDateTime: endDateTime,
-      description: _descriptionController.text.trim().isEmpty
-          ? null
-          : _descriptionController.text.trim(),
     );
 
     try {
-      await ref.read(placeCalendarProvider.notifier).addReservation(request);
+      await ref.read(placeCalendarProvider.notifier).createReservation(
+        placeId: _selectedPlaceId!,
+        request: request,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

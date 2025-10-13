@@ -41,6 +41,10 @@ class SecurityConfig(
                     // 공개 모집 조회 엔드포인트
                     .requestMatchers(HttpMethod.GET, "/api/groups/*/recruitments").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/recruitments/public").permitAll()
+                    // 공개 장소 조회 엔드포인트 (인증 불필요)
+                    .requestMatchers(HttpMethod.GET, "/api/places").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*").permitAll()
+                    // 장소 예약 관련 엔드포인트는 인증 필요
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

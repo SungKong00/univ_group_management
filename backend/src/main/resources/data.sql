@@ -119,6 +119,126 @@ INSERT INTO personal_events (id, user_id, title, description, start_date_time, e
 VALUES (7, 1, '프로젝트 최종 발표', '캡스톤 프로젝트 최종 발표 및 시연', '2025-11-15 10:00:00', '2025-11-15 12:00:00', false, '공학관 대강의실', '#3B82F6', NOW(), NOW());
 
 -- =====================================================================
+-- 7) Places (장소)
+-- =====================================================================
+-- managing_group_id: 장소를 관리하는 그룹 ID (FK to groups)
+-- building: 건물명
+-- room_number: 방 번호
+-- alias: 장소 별칭 (선택)
+-- capacity: 수용 인원 (선택)
+-- deleted_at: NULL = 활성, NOT NULL = 삭제됨 (soft delete)
+
+-- 공학관 강의실 (AI시스템반도체학과 관리)
+INSERT INTO places (id, managing_group_id, building, room_number, alias, capacity, created_at, updated_at)
+VALUES (1, 11, '공학관', '201호', '공학관 201호', 30, NOW(), NOW());
+
+INSERT INTO places (id, managing_group_id, building, room_number, alias, capacity, created_at, updated_at)
+VALUES (2, 11, '공학관', '301호', '공학관 301호', 40, NOW(), NOW());
+
+-- 공학관 세미나실 (AI/SW계열 관리)
+INSERT INTO places (id, managing_group_id, building, room_number, alias, capacity, created_at, updated_at)
+VALUES (3, 2, '공학관', '세미나실', '공학관 세미나실', 50, NOW(), NOW());
+
+-- 학생회관 회의실 (한신대학교 관리)
+INSERT INTO places (id, managing_group_id, building, room_number, alias, capacity, created_at, updated_at)
+VALUES (4, 1, '학생회관', '301호', '학생회 회의실', 15, NOW(), NOW());
+
+-- 중앙도서관 스터디룸 (한신대학교 관리)
+INSERT INTO places (id, managing_group_id, building, room_number, alias, capacity, created_at, updated_at)
+VALUES (5, 1, '중앙도서관', '스터디룸A', '도서관 스터디룸 A', 8, NOW(), NOW());
+
+INSERT INTO places (id, managing_group_id, building, room_number, alias, capacity, created_at, updated_at)
+VALUES (6, 1, '중앙도서관', '스터디룸B', '도서관 스터디룸 B', 6, NOW(), NOW());
+
+-- 체육관 (한신대학교 관리)
+INSERT INTO places (id, managing_group_id, building, room_number, alias, capacity, created_at, updated_at)
+VALUES (7, 1, '체육관', '1층', '체육관', 100, NOW(), NOW());
+
+-- 대강당 (한신대학교 관리)
+INSERT INTO places (id, managing_group_id, building, room_number, alias, capacity, created_at, updated_at)
+VALUES (8, 1, '본관', '대강당', '대강당', 500, NOW(), NOW());
+
+-- =====================================================================
+-- 8) Place Availability (장소 운영 시간)
+-- =====================================================================
+-- 공학관 201호 운영 시간 (평일 09:00-18:00)
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (1, 1, 'MONDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (2, 1, 'TUESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (3, 1, 'WEDNESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (4, 1, 'THURSDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (5, 1, 'FRIDAY', '09:00:00', '18:00:00', 0, NOW());
+
+-- 세미나실 운영 시간 (평일 09:00-21:00)
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (6, 3, 'MONDAY', '09:00:00', '21:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (7, 3, 'TUESDAY', '09:00:00', '21:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (8, 3, 'WEDNESDAY', '09:00:00', '21:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (9, 3, 'THURSDAY', '09:00:00', '21:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (10, 3, 'FRIDAY', '09:00:00', '21:00:00', 0, NOW());
+
+-- 스터디룸 A 운영 시간 (매일 08:00-22:00)
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (11, 5, 'MONDAY', '08:00:00', '22:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (12, 5, 'TUESDAY', '08:00:00', '22:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (13, 5, 'WEDNESDAY', '08:00:00', '22:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (14, 5, 'THURSDAY', '08:00:00', '22:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (15, 5, 'FRIDAY', '08:00:00', '22:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (16, 5, 'SATURDAY', '08:00:00', '22:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at)
+VALUES (17, 5, 'SUNDAY', '08:00:00', '22:00:00', 0, NOW());
+
+-- =====================================================================
+-- 9) Place Usage Group (장소 사용 가능 그룹)
+-- =====================================================================
+-- status: PENDING (대기), APPROVED (승인), REJECTED (거절)
+-- 관리 그룹이 아닌 그룹이 장소를 사용하려면 승인 필요
+
+-- 공학관 201호 사용 가능 그룹 (AI시스템반도체학과, AI/SW학과)
+INSERT INTO place_usage_groups (id, place_id, group_id, status, created_at, updated_at)
+VALUES (1, 1, 11, 'APPROVED', NOW(), NOW());
+INSERT INTO place_usage_groups (id, place_id, group_id, status, created_at, updated_at)
+VALUES (2, 1, 13, 'APPROVED', NOW(), NOW());
+
+-- 세미나실 사용 가능 그룹 (AI/SW계열 전체)
+INSERT INTO place_usage_groups (id, place_id, group_id, status, created_at, updated_at)
+VALUES (3, 3, 2, 'APPROVED', NOW(), NOW());
+
+-- 스터디룸 A 사용 가능 그룹 (AI시스템반도체학과)
+INSERT INTO place_usage_groups (id, place_id, group_id, status, created_at, updated_at)
+VALUES (4, 5, 11, 'APPROVED', NOW(), NOW());
+
+-- =====================================================================
+-- 10) Place Reservations (장소 예약 - 샘플 데이터)
+-- =====================================================================
+-- PlaceReservation은 GroupEvent와 1:1 관계입니다.
+-- GroupEvent가 먼저 생성되어야 PlaceReservation을 생성할 수 있습니다.
+-- 예약 샘플 데이터는 REST API를 통해 추가하거나, GroupEvent 테스트 데이터를 먼저 생성한 후 추가하세요.
+--
+-- 필수 필드 (PlaceReservation 엔티티 기준):
+-- - group_event_id: GroupEvent FK (NOT NULL, UNIQUE)
+-- - place_id: Place FK (NOT NULL)
+-- - reserved_by: User FK (NOT NULL)
+-- - version: 낙관적 락 버전 (0으로 시작)
+--
+-- 예시 (GroupEvent가 있다고 가정):
+-- INSERT INTO place_reservations (id, group_event_id, place_id, reserved_by, version, created_at, updated_at)
+-- VALUES (1, 1, 1, 1, 0, NOW(), NOW());
+
+-- =====================================================================
 -- H2 AUTO_INCREMENT Sequence Initialization
 -- =====================================================================
 -- Since we explicitly inserted IDs above, we must reset the sequence
@@ -127,7 +247,13 @@ VALUES (7, 1, '프로젝트 최종 발표', '캡스톤 프로젝트 최종 발�
 -- Groups table: max ID = 13, so next ID should be 14
 -- Personal Schedules table: max ID = 8, so next ID should be 9
 -- Personal Events table: max ID = 7, so next ID should be 8
+-- Places table: max ID = 8, so next ID should be 9
+-- Place Availabilities table: max ID = 17, so next ID should be 18
+-- Place Usage Groups table: max ID = 4, so next ID should be 5
 ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
 ALTER TABLE groups ALTER COLUMN id RESTART WITH 14;
 ALTER TABLE personal_schedules ALTER COLUMN id RESTART WITH 9;
 ALTER TABLE personal_events ALTER COLUMN id RESTART WITH 8;
+ALTER TABLE places ALTER COLUMN id RESTART WITH 9;
+ALTER TABLE place_availabilities ALTER COLUMN id RESTART WITH 18;
+ALTER TABLE place_usage_groups ALTER COLUMN id RESTART WITH 5;

@@ -28,10 +28,8 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Load places for the group
-      ref.read(placeCalendarProvider.notifier).loadPlaces(widget.groupId);
-    });
+    // Note: Places should be set externally via setPlaces()
+    // This component only manages place selection and reservations
   }
 
   @override
@@ -227,12 +225,11 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
                 '시간',
                 reservation.formattedDateRange,
               ),
-              if (reservation.groupName.isNotEmpty)
-                _buildDetailRow(
-                  Icons.group,
-                  '그룹',
-                  reservation.groupName,
-                ),
+              _buildDetailRow(
+                Icons.person,
+                '예약자',
+                reservation.reservedByName,
+              ),
               if (reservation.description != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 _buildDetailRow(
@@ -244,12 +241,6 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 '생성: ${_formatDateTime(reservation.createdAt)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.neutral600,
-                    ),
-              ),
-              Text(
-                '수정: ${_formatDateTime(reservation.updatedAt)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.neutral600,
                     ),
@@ -356,7 +347,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
       try {
         await ref
             .read(placeCalendarProvider.notifier)
-            .deleteReservation(reservation.id);
+            .cancelReservation(reservation.id);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

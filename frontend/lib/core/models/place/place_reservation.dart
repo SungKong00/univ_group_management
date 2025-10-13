@@ -8,24 +8,21 @@ class PlaceReservation implements CalendarEventBase {
     required this.id,
     required this.placeId,
     required this.placeName,
-    required this.groupId,
-    required this.groupName,
     required this.groupEventId,
     required this.title,
     required this.startDateTime,
     required this.endDateTime,
     this.description,
-    required this.color,
+    required this.reservedBy,
+    required this.reservedByName,
     required this.createdAt,
-    required this.updatedAt,
+    required this.color,
   });
 
   @override
   final int id;
-  final String placeId;
+  final int placeId;
   final String placeName;
-  final int groupId;
-  final String groupName;
   final int groupEventId;
   @override
   final String title;
@@ -35,10 +32,11 @@ class PlaceReservation implements CalendarEventBase {
   final DateTime endDateTime;
   @override
   final String? description;
+  final int reservedBy;
+  final String reservedByName;
+  final DateTime createdAt;
   @override
   final Color color;
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   /// Reservations are never all-day
   @override
@@ -95,18 +93,17 @@ class PlaceReservation implements CalendarEventBase {
   factory PlaceReservation.fromJson(Map<String, dynamic> json) {
     return PlaceReservation(
       id: (json['id'] as num).toInt(),
-      placeId: json['placeId'] as String,
+      placeId: (json['placeId'] as num).toInt(),
       placeName: json['placeName'] as String,
-      groupId: (json['groupId'] as num).toInt(),
-      groupName: json['groupName'] as String,
       groupEventId: (json['groupEventId'] as num).toInt(),
       title: json['title'] as String,
       startDateTime: DateTime.parse(json['startDateTime'] as String),
       endDateTime: DateTime.parse(json['endDateTime'] as String),
       description: json['description'] as String?,
-      color: _parseColor(json['color'] as String? ?? '#3B82F6'),
+      reservedBy: (json['reservedBy'] as num).toInt(),
+      reservedByName: json['reservedByName'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      color: _parseColor(json['color'] as String? ?? '#3B82F6'),
     );
   }
 
@@ -115,48 +112,45 @@ class PlaceReservation implements CalendarEventBase {
       'id': id,
       'placeId': placeId,
       'placeName': placeName,
-      'groupId': groupId,
-      'groupName': groupName,
       'groupEventId': groupEventId,
       'title': title,
       'startDateTime': startDateTime.toIso8601String(),
       'endDateTime': endDateTime.toIso8601String(),
       'description': description,
-      'color': _colorToHex(color),
+      'reservedBy': reservedBy,
+      'reservedByName': reservedByName,
       'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'color': _colorToHex(color),
     };
   }
 
   PlaceReservation copyWith({
     int? id,
-    String? placeId,
+    int? placeId,
     String? placeName,
-    int? groupId,
-    String? groupName,
     int? groupEventId,
     String? title,
     DateTime? startDateTime,
     DateTime? endDateTime,
     String? description,
-    Color? color,
+    int? reservedBy,
+    String? reservedByName,
     DateTime? createdAt,
-    DateTime? updatedAt,
+    Color? color,
   }) {
     return PlaceReservation(
       id: id ?? this.id,
       placeId: placeId ?? this.placeId,
       placeName: placeName ?? this.placeName,
-      groupId: groupId ?? this.groupId,
-      groupName: groupName ?? this.groupName,
       groupEventId: groupEventId ?? this.groupEventId,
       title: title ?? this.title,
       startDateTime: startDateTime ?? this.startDateTime,
       endDateTime: endDateTime ?? this.endDateTime,
       description: description ?? this.description,
-      color: color ?? this.color,
+      reservedBy: reservedBy ?? this.reservedBy,
+      reservedByName: reservedByName ?? this.reservedByName,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      color: color ?? this.color,
     );
   }
 
@@ -177,31 +171,34 @@ class PlaceReservation implements CalendarEventBase {
 }
 
 /// Request payload for creating a place reservation
-class PlaceReservationRequest {
-  const PlaceReservationRequest({
+class CreatePlaceReservationRequest {
+  const CreatePlaceReservationRequest({
     required this.placeId,
     required this.groupEventId,
-    required this.title,
-    required this.startDateTime,
-    required this.endDateTime,
-    this.description,
   });
 
-  final String placeId;
+  final int placeId;
   final int groupEventId;
-  final String title;
-  final DateTime startDateTime;
-  final DateTime endDateTime;
-  final String? description;
 
   Map<String, dynamic> toJson() {
     return {
       'placeId': placeId,
       'groupEventId': groupEventId,
-      'title': title,
-      'startDateTime': startDateTime.toIso8601String(),
-      'endDateTime': endDateTime.toIso8601String(),
-      'description': description?.trim().isEmpty == true ? null : description,
+    };
+  }
+}
+
+/// Request payload for updating a place reservation
+class UpdatePlaceReservationRequest {
+  const UpdatePlaceReservationRequest({
+    this.placeId,
+  });
+
+  final int? placeId;
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (placeId != null) 'placeId': placeId,
     };
   }
 }

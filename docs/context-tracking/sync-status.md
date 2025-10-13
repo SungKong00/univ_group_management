@@ -4,9 +4,9 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-10-13 (백엔드 권한 로직 리팩토링)
-**총 문서 수**: 40개
-**동기화 완료**: 40개 (100%)
+**마지막 업데이트**: 2025-10-13 (장소 캘린더 최종 설계 문서화)
+**총 문서 수**: 42개
+**동기화 완료**: 42개 (100%)
 **업데이트 필요**: 0개 (0%)
 
 ---
@@ -77,7 +77,9 @@
 | `group-calendar-phase5-api-integration.md` | ✅ 최신 | 2025-10-12 | `현재` | API 연동 수정 완료 |
 | `group-calendar-phase6-edit-delete.md` | ✅ 최신 | 2025-10-13 | `현재` | 수정/삭제 구현 완료 (신규) |
 | `group-calendar-phase9-ui-improvement.md` | ✅ 최신 | 2025-10-13 | `현재` | UI 개선 계획 (Phase 6→9 변경) |
-| `place-calendar-specification.md` | ✅ 최신 | 2025-10-13 | `현재` | Phase 1 완료 반영 |
+| `place-calendar-specification.md` | ✅ 최신 | 2025-10-13 | `현재` | 10개 질문 답변 반영, 최종 설계 확정 |
+| `place-calendar-phase2-frontend-basic.md` | ✅ 최신 | 2025-10-13 | `현재` | Phase 2 프론트엔드 상세 계획 (신규) |
+| `place-calendar-phase3-usage-permission.md` | ✅ 최신 | 2025-10-13 | `현재` | Phase 3 예약 권한 신청 계획 (신규) |
 | `calendar-integration-roadmap.md` | ✅ 최신 | 2025-10-13 | `현재` | 통합 로드맵 (신규) |
 
 ### `/docs/workflows/` - 개발 프로세스
@@ -120,6 +122,10 @@
 모든 코드 변경사항이 반영되어 동기화된 문서들
 
 **주요 업데이트 (2025-10-13)**:
+- 장소 캘린더 최종 설계 문서화 (10개 질문 답변 반영)
+- Phase 2-3 상세 구현 계획 문서 신규 생성
+- 예약 권한 신청 플로우 확정 (PlaceUsageGroup 활용)
+- UI/UX 설계 구체화 (멀티 플레이스 뷰, 드롭다운 구조, 액션 버튼 배치)
 - Phase 번호 충돌 해결 (Phase 6 → Phase 9 UI 개선)
 - 장소 캘린더 Phase 1 완료 반영
 - 통합 로드맵 문서 신규 생성

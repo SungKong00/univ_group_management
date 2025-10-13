@@ -19,7 +19,7 @@ class BuildingPlaceSelector extends ConsumerStatefulWidget {
 class _BuildingPlaceSelectorState
     extends ConsumerState<BuildingPlaceSelector> {
   String? _selectedBuilding;
-  String? _selectedPlaceId;
+  int? _selectedPlaceId;
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +140,7 @@ class _BuildingPlaceSelectorState
   Widget _buildPlaceDropdown(List<Place> places) {
     final isEnabled = _selectedBuilding != null && places.isNotEmpty;
 
-    return DropdownButtonFormField<String>(
+    return DropdownButtonFormField<int>(
       value: _selectedPlaceId,
       decoration: InputDecoration(
         labelText: '장소',
@@ -155,7 +155,7 @@ class _BuildingPlaceSelectorState
       items: !isEnabled
           ? []
           : places.map((place) {
-              return DropdownMenuItem<String>(
+              return DropdownMenuItem<int>(
                 value: place.id,
                 child: Row(
                   children: [

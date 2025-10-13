@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Place model representing a physical location that can be reserved
 class Place {
   const Place({
@@ -8,45 +6,36 @@ class Place {
     required this.building,
     required this.roomNumber,
     this.alias,
+    required this.displayName,
     this.capacity,
-    this.deletedAt,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
-  final String id;
+  final int id;
   final int managingGroupId;
   final String building;
   final String roomNumber;
   final String? alias;
+  final String displayName;
   final int? capacity;
-  final DateTime? deletedAt;
-
-  /// Returns the display name for the place
-  /// If alias exists: "별칭 (방 번호)"
-  /// Otherwise: "건물-방 번호"
-  String get displayName {
-    if (alias != null && alias!.isNotEmpty) {
-      return '$alias ($roomNumber)';
-    }
-    return '$building-$roomNumber';
-  }
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   /// Full location string: "건물 방 번호"
   String get fullLocation => '$building $roomNumber';
 
-  /// Check if the place is deleted (soft delete)
-  bool get isDeleted => deletedAt != null;
-
   factory Place.fromJson(Map<String, dynamic> json) {
     return Place(
-      id: json['id'] as String,
+      id: (json['id'] as num).toInt(),
       managingGroupId: (json['managingGroupId'] as num).toInt(),
       building: json['building'] as String,
       roomNumber: json['roomNumber'] as String,
       alias: json['alias'] as String?,
+      displayName: json['displayName'] as String,
       capacity: json['capacity'] as int?,
-      deletedAt: json['deletedAt'] != null
-          ? DateTime.parse(json['deletedAt'] as String)
-          : null,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
   }
 
@@ -57,19 +46,23 @@ class Place {
       'building': building,
       'roomNumber': roomNumber,
       'alias': alias,
+      'displayName': displayName,
       'capacity': capacity,
-      'deletedAt': deletedAt?.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
   Place copyWith({
-    String? id,
+    int? id,
     int? managingGroupId,
     String? building,
     String? roomNumber,
     String? alias,
+    String? displayName,
     int? capacity,
-    DateTime? deletedAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return Place(
       id: id ?? this.id,
@@ -77,8 +70,10 @@ class Place {
       building: building ?? this.building,
       roomNumber: roomNumber ?? this.roomNumber,
       alias: alias ?? this.alias,
+      displayName: displayName ?? this.displayName,
       capacity: capacity ?? this.capacity,
-      deletedAt: deletedAt ?? this.deletedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 

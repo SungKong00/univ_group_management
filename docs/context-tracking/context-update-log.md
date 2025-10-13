@@ -4,6 +4,63 @@
 
 ## 2025년 10월
 
+### 2025-10-13 - 장소 캘린더 최종 설계 문서화 (10개 질문 답변 반영)
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 설계 확정 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 백엔드 (API 설계), 프론트엔드 (UI/UX 설계), 문서 (명세서, Phase 계획)
+
+**구현 내용**:
+- **10개 질문 답변 기반 최종 설계 확정**:
+  1. **멀티 플레이스 뷰**: 유지 (여러 장소를 한 화면에서 선택 가능)
+  2. **드롭다운 구조**: 건물 → 장소 2단계
+  3. **장소 필터링**: 관리(managingGroupId) OR 승인(PlaceUsageGroup.APPROVED)
+  4. **권한**: CALENDAR_MANAGE 재사용
+  5. **권한 이전**: 추후 Phase로 미루기 (복잡도로 인해 연기)
+  6. **예약 권한 신청**: PlaceUsageGroup 생성 (PENDING → APPROVED/REJECTED)
+  7. **새 장소 생성**: managingGroupId 자동 설정, 운영시간 바로 설정
+  8. **버튼 배치**: 한 줄에 모든 액션 (예약 권한 신청, 새 장소 생성, 장소 관리)
+  9. **관리 그룹 표시**: 캘린더 위에 표시
+  10. **장소 관리 버튼**: 자신의 그룹이 소유한 장소에서만 표시
+
+- **예약 권한 신청 플로우 확정**:
+  ```
+  사용자 (CALENDAR_MANAGE) → [예약 권한 신청] 버튼 클릭
+    ↓
+  PlaceUsageGroup 생성 (status: PENDING, rejectionReason: null)
+    ↓
+  관리 그룹의 CALENDAR_MANAGE 보유자가 그룹 관리 페이지에서 확인
+    ↓
+  [승인] → status: APPROVED
+  [거절] → status: REJECTED, rejectionReason: "..."
+  ```
+
+- **Phase별 상세 계획 수립**:
+  - **Phase 2** (6-8h): 프론트엔드 기본 구현 (장소 목록, 등록, 운영시간 설정)
+  - **Phase 3** (6-8h): 예약 권한 신청 시스템 (백엔드 API 개선 + 프론트엔드 UI)
+  - **Phase 4** (8-10h): 예약 시스템 구현 (그룹 일정 통합)
+
+**동기화 완료 문서**:
+- ✅ `docs/features/place-calendar-specification.md`: 최종 설계 반영 (UI/UX, API, 비즈니스 로직)
+  - 핵심 기능에 예약 권한 신청 플로우 추가
+  - UI/UX 설계 구체화 (6개 섹션)
+  - PlaceUsageGroup.rejectionReason 필드 추가
+  - 사용 그룹 API 명세 상세화
+  - 비즈니스 로직 정책 추가 (장소 필터링, 예약 권한 신청, 장소 관리 버튼 표시 조건)
+- 🆕 `docs/features/place-calendar-phase2-frontend-basic.md`: Phase 2 상세 계획 신규 생성 (6-8h)
+  - 4개 작업 항목 (장소 목록, 등록 폼, 운영시간 설정, API 서비스)
+  - 완성도 높은 코드 예시 포함 (Dart/Flutter)
+- 🆕 `docs/features/place-calendar-phase3-usage-permission.md`: Phase 3 상세 계획 신규 생성 (6-8h)
+  - 백엔드 API 개선 (PlaceUsageGroup 엔티티, DTO, 서비스, 컨트롤러)
+  - 프론트엔드 UI (예약 권한 신청, 그룹 관리 페이지 승인, 권한 취소)
+  - 완성도 높은 코드 예시 포함 (Kotlin, Dart)
+- ✅ `docs/context-tracking/sync-status.md`: 총 문서 수 42개, 신규 문서 2개 추가
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가
+
+**메모**: 장소 캘린더 시스템의 최종 설계가 확정되어 즉시 구현 착수 가능. Phase 2-3 상세 계획 문서로 개발 가이드 완성.
+
+---
+
 ### 2025-10-13 - 백엔드 권한 로직 리팩토링 및 문서 동기화
 **커밋**: 현재 세션 (커밋 예정)
 **유형**: 리팩토링 + 문서 동기화

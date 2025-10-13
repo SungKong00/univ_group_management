@@ -143,21 +143,19 @@ class MultiPlaceCalendarView extends ConsumerWidget {
                     ),
                   ],
                 ),
-                if (reservation.groupName.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      const Icon(Icons.group, size: 14, color: AppColors.neutral600),
-                      const SizedBox(width: 4),
-                      Text(
-                        reservation.groupName,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: AppColors.neutral600,
-                        ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    const Icon(Icons.person, size: 14, color: AppColors.neutral600),
+                    const SizedBox(width: 4),
+                    Text(
+                      reservation.reservedByName,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: AppColors.neutral600,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
