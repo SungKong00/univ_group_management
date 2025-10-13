@@ -3,7 +3,6 @@ package org.castlekong.backend.service
 import org.castlekong.backend.entity.GroupEvent
 import org.castlekong.backend.entity.Place
 import org.castlekong.backend.entity.PlaceReservation
-import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.GroupEventRepository

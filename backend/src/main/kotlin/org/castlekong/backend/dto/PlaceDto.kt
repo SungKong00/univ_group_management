@@ -122,3 +122,49 @@ data class UsageGroupResponse(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 )
+
+// ===== PlaceReservation DTOs =====
+
+/**
+ * 장소 예약 생성 요청 DTO
+ */
+data class CreatePlaceReservationRequest(
+    @field:NotNull(message = "장소 ID는 필수입니다")
+    val placeId: Long,
+    @field:NotNull(message = "그룹 일정 ID는 필수입니다")
+    val groupEventId: Long,
+)
+
+/**
+ * 장소 예약 수정 요청 DTO (장소 변경)
+ */
+data class UpdatePlaceReservationRequest(
+    // null이면 시간만 재검증
+    val placeId: Long? = null,
+)
+
+/**
+ * 장소 예약 응답 DTO
+ */
+data class PlaceReservationResponse(
+    val id: Long,
+    val placeId: Long,
+    val placeName: String,
+    val groupEventId: Long,
+    val title: String,
+    val startDateTime: LocalDateTime,
+    val endDateTime: LocalDateTime,
+    val description: String?,
+    val reservedBy: Long,
+    val reservedByName: String,
+    val createdAt: LocalDateTime,
+)
+
+/**
+ * 장소 캘린더 응답 DTO (다중 장소 조회용)
+ */
+data class PlaceCalendarResponse(
+    val placeId: Long,
+    val placeName: String,
+    val reservations: List<PlaceReservationResponse>,
+)
