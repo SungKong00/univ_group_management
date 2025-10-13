@@ -4,6 +4,7 @@ import '../models/place/place.dart';
 import '../models/place/place_availability.dart';
 import '../models/place/place_detail_response.dart';
 import '../models/place/place_reservation.dart';
+import '../models/place/place_usage_group.dart';
 import '../network/dio_client.dart';
 
 /// Place Service
@@ -601,6 +602,280 @@ class PlaceService {
         level: 900,
       );
       rethrow;
+    }
+  }
+
+  // ===== Place Usage Permission APIs =====
+
+  /// Create a new usage permission request
+  ///
+  /// POST /api/places/{placeId}/usage-requests
+  /// Returns the created usage group record
+  Future<PlaceUsageGroup> createUsageRequest({
+    required int placeId,
+    String? reason,
+  }) async {
+    try {
+      developer.log(
+        'Creating usage request for place $placeId',
+        name: 'PlaceService',
+      );
+
+      final response = await _dioClient.post<Map<String, dynamic>>(
+        '/places/$placeId/usage-requests',
+        data: CreateUsageRequestRequest(reason: reason).toJson(),
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => PlaceUsageGroup.fromJson(json as Map<String, dynamic>),
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully created usage request for place $placeId',
+            name: 'PlaceService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to create usage request: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          throw Exception(
+            apiResponse.message ?? 'Failed to create usage request',
+          );
+        }
+      } else {
+        throw Exception('Empty response from server');
+      }
+    } catch (e) {
+      developer.log(
+        'Error creating usage request: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Update usage permission status (approve/reject)
+  ///
+  /// PATCH /api/places/{placeId}/usage-groups/{groupId}
+  /// Returns the updated usage group record
+  Future<PlaceUsageGroup> updateUsageStatus({
+    required int placeId,
+    required int groupId,
+    required UsageStatus status,
+    String? rejectionReason,
+  }) async {
+    try {
+      developer.log(
+        'Updating usage status for place $placeId, group $groupId to $status',
+        name: 'PlaceService',
+      );
+
+      final response = await _dioClient.patch<Map<String, dynamic>>(
+        '/places/$placeId/usage-groups/$groupId',
+        data: UpdateUsageStatusRequest(
+          status: status,
+          rejectionReason: rejectionReason,
+        ).toJson(),
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => PlaceUsageGroup.fromJson(json as Map<String, dynamic>),
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully updated usage status',
+            name: 'PlaceService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to update usage status: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          throw Exception(
+            apiResponse.message ?? 'Failed to update usage status',
+          );
+        }
+      } else {
+        throw Exception('Empty response from server');
+      }
+    } catch (e) {
+      developer.log(
+        'Error updating usage status: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Revoke usage permission for a group
+  ///
+  /// DELETE /api/places/{placeId}/usage-groups/{groupId}
+  /// Returns metadata about deleted reservations
+  Future<Map<String, dynamic>> revokeUsagePermission({
+    required int placeId,
+    required int groupId,
+  }) async {
+    try {
+      developer.log(
+        'Revoking usage permission for place $placeId, group $groupId',
+        name: 'PlaceService',
+      );
+
+      final response = await _dioClient.delete<Map<String, dynamic>>(
+        '/places/$placeId/usage-groups/$groupId',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json as Map<String, dynamic>,
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully revoked usage permission',
+            name: 'PlaceService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to revoke usage permission: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          throw Exception(
+            apiResponse.message ?? 'Failed to revoke usage permission',
+          );
+        }
+      } else {
+        throw Exception('Empty response from server');
+      }
+    } catch (e) {
+      developer.log(
+        'Error revoking usage permission: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Get pending usage requests for a place
+  ///
+  /// GET /api/places/{placeId}/usage-requests/pending
+  /// Returns list of pending usage requests
+  Future<List<PlaceUsageGroup>> getPendingRequests(int placeId) async {
+    try {
+      developer.log(
+        'Fetching pending requests for place $placeId',
+        name: 'PlaceService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/places/$placeId/usage-requests/pending',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map((item) =>
+                    PlaceUsageGroup.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+          return <PlaceUsageGroup>[];
+        });
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} pending requests',
+            name: 'PlaceService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch pending requests: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          return [];
+        }
+      }
+
+      return [];
+    } catch (e) {
+      developer.log(
+        'Error fetching pending requests: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      return [];
+    }
+  }
+
+  /// Get approved usage groups for a place
+  ///
+  /// GET /api/places/{placeId}/usage-groups
+  /// Returns list of approved groups
+  Future<List<PlaceUsageGroup>> getApprovedGroups(int placeId) async {
+    try {
+      developer.log(
+        'Fetching approved groups for place $placeId',
+        name: 'PlaceService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/places/$placeId/usage-groups',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map((item) =>
+                    PlaceUsageGroup.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+          return <PlaceUsageGroup>[];
+        });
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} approved groups',
+            name: 'PlaceService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch approved groups: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          return [];
+        }
+      }
+
+      return [];
+    } catch (e) {
+      developer.log(
+        'Error fetching approved groups: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      return [];
     }
   }
 

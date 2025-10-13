@@ -2,6 +2,7 @@ package org.castlekong.backend.repository
 
 import org.castlekong.backend.entity.PlaceReservation
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
@@ -157,4 +158,31 @@ interface PlaceReservationRepository : JpaRepository<PlaceReservation, Long> {
         @Param("startDate") startDate: LocalDateTime,
         @Param("endDate") endDate: LocalDateTime,
     ): List<PlaceReservation>
+
+    /**
+     * 미래 예약 삭제 (장소 + 그룹)
+     *
+     * 특정 장소에 대한 특정 그룹의 미래 예약을 모두 삭제
+     * - 사용 권한 취소 시 사용
+     * - 현재 시점 이후의 예약만 삭제
+     *
+     * @param placeId 장소 ID
+     * @param groupId 그룹 ID
+     * @param now 현재 시간
+     * @return 삭제된 예약 수
+     */
+    @Modifying
+    @Query(
+        """
+        DELETE FROM PlaceReservation pr
+        WHERE pr.place.id = :placeId
+        AND pr.groupEvent.group.id = :groupId
+        AND pr.groupEvent.startDate > :now
+    """,
+    )
+    fun deleteFutureReservationsByPlaceAndGroup(
+        @Param("placeId") placeId: Long,
+        @Param("groupId") groupId: Long,
+        @Param("now") now: LocalDateTime,
+    ): Int
 }

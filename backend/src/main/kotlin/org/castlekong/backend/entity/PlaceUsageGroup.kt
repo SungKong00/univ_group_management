@@ -50,6 +50,8 @@ class PlaceUsageGroup(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     var status: UsageStatus = UsageStatus.PENDING,
+    @Column(name = "rejection_reason", length = 500)
+    var rejectionReason: String? = null,
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = false)
@@ -57,18 +59,26 @@ class PlaceUsageGroup(
 ) {
     /**
      * 승인 처리
+     * - 상태를 APPROVED로 변경
+     * - 거절 사유 초기화
      */
     fun approve(): PlaceUsageGroup {
         this.status = UsageStatus.APPROVED
+        this.rejectionReason = null
         this.updatedAt = LocalDateTime.now()
         return this
     }
 
     /**
      * 거절 처리
+     * - 상태를 REJECTED로 변경
+     * - 거절 사유 저장
+     *
+     * @param reason 거절 사유 (선택)
      */
-    fun reject(): PlaceUsageGroup {
+    fun reject(reason: String?): PlaceUsageGroup {
         this.status = UsageStatus.REJECTED
+        this.rejectionReason = reason
         this.updatedAt = LocalDateTime.now()
         return this
     }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/place/place.dart';
 import '../../core/models/place/place_availability.dart';
 import '../../core/models/place/place_detail_response.dart';
+import '../../core/models/place/place_usage_group.dart';
 import '../../core/services/place_service.dart';
 
 // ===== Service Provider =====
@@ -295,4 +296,72 @@ final placeManagementProvider =
         (ref) {
   final placeService = ref.watch(placeServiceProvider);
   return PlaceManagementNotifier(placeService);
+});
+
+// ===== Place Usage Permission Providers =====
+
+/// Provider for fetching pending usage requests for a place
+///
+/// Returns a list of pending usage requests that need approval.
+/// Uses family pattern to support multiple place IDs.
+final pendingUsageRequestsProvider = FutureProvider.family
+    .autoDispose<List<PlaceUsageGroup>, int>((ref, placeId) async {
+  final placeService = ref.watch(placeServiceProvider);
+
+  developer.log(
+    'Fetching pending usage requests for place $placeId',
+    name: 'PlaceProvider',
+  );
+
+  try {
+    final requests = await placeService.getPendingRequests(placeId);
+
+    developer.log(
+      'Successfully fetched ${requests.length} pending requests',
+      name: 'PlaceProvider',
+    );
+
+    return requests;
+  } catch (e, stack) {
+    developer.log(
+      'Failed to fetch pending requests for place $placeId: $e',
+      name: 'PlaceProvider',
+      error: e,
+      stackTrace: stack,
+    );
+    rethrow;
+  }
+});
+
+/// Provider for fetching approved usage groups for a place
+///
+/// Returns a list of groups that have been approved to use the place.
+/// Uses family pattern to support multiple place IDs.
+final approvedUsageGroupsProvider = FutureProvider.family
+    .autoDispose<List<PlaceUsageGroup>, int>((ref, placeId) async {
+  final placeService = ref.watch(placeServiceProvider);
+
+  developer.log(
+    'Fetching approved usage groups for place $placeId',
+    name: 'PlaceProvider',
+  );
+
+  try {
+    final groups = await placeService.getApprovedGroups(placeId);
+
+    developer.log(
+      'Successfully fetched ${groups.length} approved groups',
+      name: 'PlaceProvider',
+    );
+
+    return groups;
+  } catch (e, stack) {
+    developer.log(
+      'Failed to fetch approved groups for place $placeId: $e',
+      name: 'PlaceProvider',
+      error: e,
+      stackTrace: stack,
+    );
+    rethrow;
+  }
 });

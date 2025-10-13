@@ -11,7 +11,6 @@ import java.util.Date
  * Usage: Run this main function to generate a test JWT token
  */
 object JwtTestTokenGenerator {
-
     private const val SECRET_KEY = "defaultSecretKeyForJWTWhichIsVeryLongAndSecure"
     private const val EXPIRATION_MS = 86400000L // 24 hours
 

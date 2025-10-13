@@ -9,6 +9,7 @@ import '../../../providers/group_permission_provider.dart';
 import '../../../widgets/place/place_card.dart';
 import 'place_form_dialog.dart';
 import 'place_availability_settings_page.dart';
+import 'dialogs/place_usage_request_dialog.dart';
 
 class PlaceListPage extends ConsumerStatefulWidget {
   final int groupId;
@@ -46,6 +47,14 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
         titleTextStyle: AppTheme.titleLarge.copyWith(
           color: AppColors.neutral900,
         ),
+        actions: [
+          // Request permission button
+          IconButton(
+            icon: const Icon(Icons.request_page),
+            tooltip: '예약 권한 신청',
+            onPressed: () => _showUsageRequestDialog(),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -334,6 +343,15 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
         builder: (context) => PlaceAvailabilitySettingsPage(
           placeId: placeId,
         ),
+      ),
+    );
+  }
+
+  void _showUsageRequestDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => PlaceUsageRequestDialog(
+        groupId: widget.groupId,
       ),
     );
   }

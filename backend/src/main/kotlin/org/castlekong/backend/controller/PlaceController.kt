@@ -6,8 +6,12 @@ import org.castlekong.backend.dto.AvailabilityRequest
 import org.castlekong.backend.dto.CreatePlaceRequest
 import org.castlekong.backend.dto.PlaceDetailResponse
 import org.castlekong.backend.dto.PlaceResponse
+import org.castlekong.backend.dto.RequestUsageRequest
 import org.castlekong.backend.dto.UpdatePlaceRequest
+import org.castlekong.backend.dto.UpdateUsageStatusRequest
+import org.castlekong.backend.dto.UsageGroupResponse
 import org.castlekong.backend.service.PlaceService
+import org.castlekong.backend.service.PlaceUsageGroupService
 import org.castlekong.backend.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
@@ -25,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/places")
 class PlaceController(
     private val placeService: PlaceService,
+    private val placeUsageGroupService: PlaceUsageGroupService,
     private val userService: UserService,
 ) {
     /**
@@ -110,5 +115,84 @@ class PlaceController(
         val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
         placeService.setAvailabilities(user, id, requests)
         return ApiResponse.success(Unit)
+    }
+
+    // ===== PlaceUsageGroup API =====
+
+    /**
+     * POST /api/places/{id}/usage-requests
+     * 장소 사용 신청 (CALENDAR_MANAGE)
+     */
+    @PostMapping("/{id}/usage-requests")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun requestUsage(
+        authentication: Authentication,
+        @PathVariable id: Long,
+        @Valid @RequestBody request: RequestUsageRequest,
+    ): ApiResponse<UsageGroupResponse> {
+        val email = authentication.name
+        val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
+        val result = placeUsageGroupService.requestUsage(user, id, request)
+        return ApiResponse.success(result)
+    }
+
+    /**
+     * PATCH /api/places/{placeId}/usage-groups/{groupId}
+     * 사용 승인/거절 (관리 주체)
+     */
+    @PatchMapping("/{placeId}/usage-groups/{groupId}")
+    fun updateUsageStatus(
+        authentication: Authentication,
+        @PathVariable placeId: Long,
+        @PathVariable groupId: Long,
+        @Valid @RequestBody request: UpdateUsageStatusRequest,
+    ): ApiResponse<UsageGroupResponse> {
+        val email = authentication.name
+        val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
+        val result = placeUsageGroupService.updateUsageStatus(user, placeId, groupId, request)
+        return ApiResponse.success(result)
+    }
+
+    /**
+     * DELETE /api/places/{placeId}/usage-groups/{groupId}
+     * 사용 권한 취소 (관리 주체, 미래 예약 삭제)
+     */
+    @DeleteMapping("/{placeId}/usage-groups/{groupId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun revokeUsagePermission(
+        authentication: Authentication,
+        @PathVariable placeId: Long,
+        @PathVariable groupId: Long,
+    ) {
+        val email = authentication.name
+        val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
+        placeUsageGroupService.revokeUsagePermission(user, placeId, groupId)
+    }
+
+    /**
+     * GET /api/places/{id}/usage-requests/pending
+     * 대기 중인 사용 신청 조회 (관리 주체)
+     */
+    @GetMapping("/{id}/usage-requests/pending")
+    fun getPendingRequests(
+        authentication: Authentication,
+        @PathVariable id: Long,
+    ): ApiResponse<List<UsageGroupResponse>> {
+        val email = authentication.name
+        val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
+        val result = placeUsageGroupService.getPendingRequests(user, id)
+        return ApiResponse.success(result)
+    }
+
+    /**
+     * GET /api/places/{id}/usage-groups
+     * 승인된 사용 그룹 조회 (공개)
+     */
+    @GetMapping("/{id}/usage-groups")
+    fun getApprovedGroups(
+        @PathVariable id: Long,
+    ): ApiResponse<List<UsageGroupResponse>> {
+        val result = placeUsageGroupService.getApprovedGroups(id)
+        return ApiResponse.success(result)
     }
 }

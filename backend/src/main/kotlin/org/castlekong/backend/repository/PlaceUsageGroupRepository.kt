@@ -123,4 +123,29 @@ interface PlaceUsageGroupRepository : JpaRepository<PlaceUsageGroup, Long> {
         @Param("placeId") placeId: Long,
         @Param("groupId") groupId: Long,
     ): Boolean
+
+    /**
+     * 특정 상태의 사용 그룹 조회
+     */
+    @Query(
+        """
+        SELECT pug FROM PlaceUsageGroup pug
+        JOIN FETCH pug.group
+        WHERE pug.place.id = :placeId
+        AND pug.status = :status
+        ORDER BY pug.createdAt
+    """,
+    )
+    fun findByPlaceIdAndStatus(
+        @Param("placeId") placeId: Long,
+        @Param("status") status: org.castlekong.backend.entity.UsageStatus,
+    ): List<PlaceUsageGroup>
+
+    /**
+     * 장소와 그룹으로 사용 권한 삭제
+     */
+    fun deleteByPlaceIdAndGroupId(
+        placeId: Long,
+        groupId: Long,
+    )
 }

@@ -102,16 +102,29 @@ data class BlockedTimeResponse(
 
 // ===== UsageGroup DTOs =====
 
+/**
+ * 사용 신청 요청 DTO
+ */
 data class RequestUsageRequest(
     @field:NotNull(message = "그룹 ID는 필수입니다")
     val groupId: Long,
+    @field:Size(max = 500, message = "신청 사유는 500자 이내로 입력하세요")
+    val reason: String? = null,
 )
 
+/**
+ * 승인/거절 요청 DTO
+ */
 data class UpdateUsageStatusRequest(
     @field:NotNull(message = "승인 상태는 필수입니다")
     val status: UsageStatus,
+    @field:Size(max = 500, message = "거절 사유는 500자 이내로 입력하세요")
+    val rejectionReason: String? = null,
 )
 
+/**
+ * 사용 그룹 응답 DTO
+ */
 data class UsageGroupResponse(
     val id: Long,
     val placeId: Long,
@@ -119,6 +132,7 @@ data class UsageGroupResponse(
     val groupId: Long,
     val groupName: String,
     val status: UsageStatus,
+    val rejectionReason: String?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 )
