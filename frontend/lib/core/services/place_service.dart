@@ -347,18 +347,27 @@ class PlaceService {
             name: 'PlaceService',
             level: 900,
           );
+          // Return empty list if API reports failure (but no exception)
           return [];
         }
       }
 
-      return [];
-    } catch (e) {
       developer.log(
-        'Error fetching places: $e',
+        'Empty response from server when fetching places',
         name: 'PlaceService',
         level: 900,
       );
       return [];
+    } catch (e, stack) {
+      developer.log(
+        'Error fetching places: $e',
+        name: 'PlaceService',
+        error: e,
+        stackTrace: stack,
+        level: 1000, // ERROR level
+      );
+      // Rethrow to allow Provider to show error state
+      rethrow;
     }
   }
 
@@ -398,14 +407,22 @@ class PlaceService {
         }
       }
 
-      return null;
-    } catch (e) {
       developer.log(
-        'Error fetching place detail: $e',
+        'Empty response from server when fetching place detail',
         name: 'PlaceService',
         level: 900,
       );
       return null;
+    } catch (e, stack) {
+      developer.log(
+        'Error fetching place detail for place $id: $e',
+        name: 'PlaceService',
+        error: e,
+        stackTrace: stack,
+        level: 1000, // ERROR level
+      );
+      // Rethrow to allow Provider to show error state
+      rethrow;
     }
   }
 
@@ -520,6 +537,15 @@ class PlaceService {
       final response =
           await _dioClient.delete<Map<String, dynamic>>('/places/$id');
 
+      // Handle 204 No Content response (successful deletion)
+      if (response.statusCode == 204) {
+        developer.log(
+          'Successfully deleted place $id (204 No Content)',
+          name: 'PlaceService',
+        );
+        return;
+      }
+
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(
           response.data!,
@@ -540,13 +566,25 @@ class PlaceService {
           throw Exception(apiResponse.message ?? 'Failed to delete place');
         }
       } else {
+        // Empty response body but status code is 2xx (success)
+        if (response.statusCode != null &&
+            response.statusCode! >= 200 &&
+            response.statusCode! < 300) {
+          developer.log(
+            'Successfully deleted place $id (empty response but 2xx status)',
+            name: 'PlaceService',
+          );
+          return;
+        }
         throw Exception('Empty response from server');
       }
-    } catch (e) {
+    } catch (e, stack) {
       developer.log(
-        'Error deleting place: $e',
+        'Error deleting place $id: $e',
         name: 'PlaceService',
-        level: 900,
+        error: e,
+        stackTrace: stack,
+        level: 1000, // ERROR level
       );
       rethrow;
     }

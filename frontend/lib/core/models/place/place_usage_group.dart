@@ -1,13 +1,13 @@
 /// Enum for place usage permission status
 enum UsageStatus {
   /// Waiting for approval
-  pending,
+  PENDING,
 
   /// Approved and can make reservations
-  approved,
+  APPROVED,
 
   /// Rejected by managing group
-  rejected,
+  REJECTED,
 }
 
 /// Model representing a group's permission status for using a place
@@ -15,6 +15,7 @@ class PlaceUsageGroup {
   const PlaceUsageGroup({
     required this.id,
     required this.placeId,
+    required this.placeName,
     required this.groupId,
     required this.groupName,
     required this.status,
@@ -25,6 +26,7 @@ class PlaceUsageGroup {
 
   final int id;
   final int placeId;
+  final String placeName;
   final int groupId;
   final String groupName;
   final UsageStatus status;
@@ -36,6 +38,7 @@ class PlaceUsageGroup {
     return PlaceUsageGroup(
       id: (json['id'] as num).toInt(),
       placeId: (json['placeId'] as num).toInt(),
+      placeName: json['placeName'] as String,
       groupId: (json['groupId'] as num).toInt(),
       groupName: json['groupName'] as String,
       status: UsageStatus.values.byName(json['status'] as String),
@@ -49,6 +52,7 @@ class PlaceUsageGroup {
     return {
       'id': id,
       'placeId': placeId,
+      'placeName': placeName,
       'groupId': groupId,
       'groupName': groupName,
       'status': status.name,
@@ -61,6 +65,7 @@ class PlaceUsageGroup {
   PlaceUsageGroup copyWith({
     int? id,
     int? placeId,
+    String? placeName,
     int? groupId,
     String? groupName,
     UsageStatus? status,
@@ -71,6 +76,7 @@ class PlaceUsageGroup {
     return PlaceUsageGroup(
       id: id ?? this.id,
       placeId: placeId ?? this.placeId,
+      placeName: placeName ?? this.placeName,
       groupId: groupId ?? this.groupId,
       groupName: groupName ?? this.groupName,
       status: status ?? this.status,
@@ -92,7 +98,7 @@ class PlaceUsageGroup {
 
   @override
   String toString() {
-    return 'PlaceUsageGroup(id: $id, placeId: $placeId, groupId: $groupId, groupName: $groupName, status: $status)';
+    return 'PlaceUsageGroup(id: $id, placeId: $placeId, placeName: $placeName, groupId: $groupId, groupName: $groupName, status: $status)';
   }
 }
 

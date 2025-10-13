@@ -334,7 +334,7 @@ class _RequestCard extends ConsumerWidget {
         await ref.read(placeServiceProvider).updateUsageStatus(
               placeId: placeId,
               groupId: request.groupId,
-              status: UsageStatus.approved,
+              status: UsageStatus.APPROVED,
             );
 
         ref.invalidate(pendingUsageRequestsProvider(placeId));
@@ -459,7 +459,7 @@ class _RequestCard extends ConsumerWidget {
         await ref.read(placeServiceProvider).updateUsageStatus(
               placeId: placeId,
               groupId: request.groupId,
-              status: UsageStatus.rejected,
+              status: UsageStatus.REJECTED,
               rejectionReason: reasonController.text.trim().isEmpty
                   ? null
                   : reasonController.text.trim(),

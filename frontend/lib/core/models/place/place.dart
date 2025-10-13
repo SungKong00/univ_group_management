@@ -3,6 +3,7 @@ class Place {
   const Place({
     required this.id,
     required this.managingGroupId,
+    required this.managingGroupName,
     required this.building,
     required this.roomNumber,
     this.alias,
@@ -14,6 +15,7 @@ class Place {
 
   final int id;
   final int managingGroupId;
+  final String managingGroupName;
   final String building;
   final String roomNumber;
   final String? alias;
@@ -29,6 +31,7 @@ class Place {
     return Place(
       id: (json['id'] as num).toInt(),
       managingGroupId: (json['managingGroupId'] as num).toInt(),
+      managingGroupName: json['managingGroupName'] as String,
       building: json['building'] as String,
       roomNumber: json['roomNumber'] as String,
       alias: json['alias'] as String?,
@@ -43,6 +46,7 @@ class Place {
     return {
       'id': id,
       'managingGroupId': managingGroupId,
+      'managingGroupName': managingGroupName,
       'building': building,
       'roomNumber': roomNumber,
       'alias': alias,
@@ -56,6 +60,7 @@ class Place {
   Place copyWith({
     int? id,
     int? managingGroupId,
+    String? managingGroupName,
     String? building,
     String? roomNumber,
     String? alias,
@@ -67,6 +72,7 @@ class Place {
     return Place(
       id: id ?? this.id,
       managingGroupId: managingGroupId ?? this.managingGroupId,
+      managingGroupName: managingGroupName ?? this.managingGroupName,
       building: building ?? this.building,
       roomNumber: roomNumber ?? this.roomNumber,
       alias: alias ?? this.alias,
@@ -89,11 +95,11 @@ class Place {
 
   @override
   String toString() {
-    return 'Place(id: $id, building: $building, roomNumber: $roomNumber, alias: $alias)';
+    return 'Place(id: $id, managingGroup: $managingGroupName, building: $building, roomNumber: $roomNumber, alias: $alias)';
   }
 }
 
-/// Request payload for creating or updating a place
+/// Request payload for creating or updating a place (deprecated - use specific Create/Update classes)
 class PlaceRequest {
   const PlaceRequest({
     required this.managingGroupId,
@@ -114,8 +120,8 @@ class PlaceRequest {
       'managingGroupId': managingGroupId,
       'building': building,
       'roomNumber': roomNumber,
-      'alias': alias?.trim().isEmpty == true ? null : alias,
-      'capacity': capacity,
+      if (alias != null && alias!.trim().isNotEmpty) 'alias': alias,
+      if (capacity != null) 'capacity': capacity,
     };
   }
 }

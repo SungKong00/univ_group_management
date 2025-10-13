@@ -7,6 +7,7 @@ import '../../../../../core/theme/theme.dart';
 import '../../../../providers/focused_date_provider.dart';
 import '../../../../providers/group_permission_provider.dart';
 import '../../../../providers/place_calendar_provider.dart';
+import '../../../../providers/place_provider.dart';
 import '../../place/place_list_page.dart';
 import 'building_place_selector.dart';
 import 'multi_place_calendar_view.dart';
@@ -30,8 +31,21 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
   @override
   void initState() {
     super.initState();
-    // Note: Places should be set externally via setPlaces()
-    // This component only manages place selection and reservations
+    // Load places data when the tab is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPlaces();
+    });
+  }
+
+  /// Load places from API and set them to the place calendar provider
+  Future<void> _loadPlaces() async {
+    try {
+      final places = await ref.read(placesProvider.future);
+      ref.read(placeCalendarProvider.notifier).setPlaces(places);
+    } catch (e) {
+      // Error handling is done by the provider
+      // The UI will show the error state automatically
+    }
   }
 
   @override
@@ -89,16 +103,9 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
       );
     }
 
-    // Empty state: No places selected
-    if (state.selectedPlaceIds.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.place,
-        title: '장소를 선택하세요',
-        subtitle: '위의 드롭다운에서 건물과 장소를 선택하여 예약 현황을 확인하세요',
-      );
-    }
-
-    // Calendar view with selected places
+    // Calendar view - always show calendar, even if no places are selected
+    // When no places are selected, calendar will be empty
+    // When places are selected, their reservations will be displayed
     return MultiPlaceCalendarView(
       focusedDate: focusedDate,
       selectedDate: focusedDate,
