@@ -16,7 +16,6 @@ import java.util.Optional
  */
 @Repository
 interface PlaceRepository : JpaRepository<Place, Long> {
-
     /**
      * 활성 장소만 조회 (Soft delete 제외)
      */
@@ -26,64 +25,82 @@ interface PlaceRepository : JpaRepository<Place, Long> {
     /**
      * 건물별 활성 장소 조회
      */
-    @Query("""
+    @Query(
+        """
         SELECT p FROM Place p
         WHERE p.building = :building
         AND p.deletedAt IS NULL
         ORDER BY p.roomNumber
-    """)
-    fun findActiveByBuilding(@Param("building") building: String): List<Place>
+    """,
+    )
+    fun findActiveByBuilding(
+        @Param("building") building: String,
+    ): List<Place>
 
     /**
      * 관리 주체 그룹으로 조회
      */
-    @Query("""
+    @Query(
+        """
         SELECT p FROM Place p
         JOIN FETCH p.managingGroup
         WHERE p.managingGroup.id = :groupId
         AND p.deletedAt IS NULL
         ORDER BY p.building, p.roomNumber
-    """)
-    fun findByManagingGroupIdWithGroup(@Param("groupId") groupId: Long): List<Place>
+    """,
+    )
+    fun findByManagingGroupIdWithGroup(
+        @Param("groupId") groupId: Long,
+    ): List<Place>
 
     /**
      * 건물-방번호로 조회 (중복 체크용)
      */
-    @Query("""
+    @Query(
+        """
         SELECT p FROM Place p
         WHERE p.building = :building
         AND p.roomNumber = :roomNumber
         AND p.deletedAt IS NULL
-    """)
+    """,
+    )
     fun findByBuildingAndRoomNumber(
         @Param("building") building: String,
-        @Param("roomNumber") roomNumber: String
+        @Param("roomNumber") roomNumber: String,
     ): Optional<Place>
 
     /**
      * ID로 활성 장소 조회 (Soft delete 제외)
      */
     @Query("SELECT p FROM Place p WHERE p.id = :id AND p.deletedAt IS NULL")
-    fun findActiveById(@Param("id") id: Long): Optional<Place>
+    fun findActiveById(
+        @Param("id") id: Long,
+    ): Optional<Place>
 
     /**
      * ID로 장소 조회 (관리 주체 포함, Fetch Join)
      */
-    @Query("""
+    @Query(
+        """
         SELECT p FROM Place p
         JOIN FETCH p.managingGroup
         WHERE p.id = :id
         AND p.deletedAt IS NULL
-    """)
-    fun findActiveByIdWithManagingGroup(@Param("id") id: Long): Optional<Place>
+    """,
+    )
+    fun findActiveByIdWithManagingGroup(
+        @Param("id") id: Long,
+    ): Optional<Place>
 
     /**
      * 건물 목록 조회 (중복 제거)
      */
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT p.building FROM Place p
         WHERE p.deletedAt IS NULL
         ORDER BY p.building
-    """)
+    """,
+    )
     fun findAllBuildings(): List<String>
 }

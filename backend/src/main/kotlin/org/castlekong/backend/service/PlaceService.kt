@@ -1,12 +1,22 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.dto.*
+import org.castlekong.backend.dto.AvailabilityRequest
+import org.castlekong.backend.dto.AvailabilityResponse
+import org.castlekong.backend.dto.CreatePlaceRequest
+import org.castlekong.backend.dto.PlaceDetailResponse
+import org.castlekong.backend.dto.PlaceResponse
+import org.castlekong.backend.dto.UpdatePlaceRequest
 import org.castlekong.backend.entity.Place
 import org.castlekong.backend.entity.PlaceAvailability
 import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.PlaceAvailabilityRepository
+import org.castlekong.backend.repository.PlaceRepository
+import org.castlekong.backend.repository.PlaceUsageGroupRepository
+import org.castlekong.backend.security.PermissionService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -23,7 +33,10 @@ class PlaceService(
     /**
      * 장소 등록
      */
-    fun createPlace(user: User, request: CreatePlaceRequest): PlaceResponse {
+    fun createPlace(
+        user: User,
+        request: CreatePlaceRequest,
+    ): PlaceResponse {
         // 권한 확인
         checkCalendarManagePermission(user.id!!, request.managingGroupId)
 
@@ -32,19 +45,21 @@ class PlaceService(
             .ifPresent { throw BusinessException(ErrorCode.PLACE_ALREADY_EXISTS) }
 
         // 관리 그룹 조회
-        val managingGroup = groupRepository.findById(request.managingGroupId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+        val managingGroup =
+            groupRepository.findById(request.managingGroupId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
 
         // 장소 생성
-        val place = placeRepository.save(
-            Place(
-                managingGroup = managingGroup,
-                building = request.building.trim(),
-                roomNumber = request.roomNumber.trim(),
-                alias = request.alias?.trim(),
-                capacity = request.capacity
+        val place =
+            placeRepository.save(
+                Place(
+                    managingGroup = managingGroup,
+                    building = request.building.trim(),
+                    roomNumber = request.roomNumber.trim(),
+                    alias = request.alias?.trim(),
+                    capacity = request.capacity,
+                ),
             )
-        )
 
         // 운영 시간 설정
         request.availabilities?.let { addAvailabilities(place.id, it) }
@@ -56,16 +71,16 @@ class PlaceService(
      * 장소 조회 (공개)
      */
     @Transactional(readOnly = true)
-    fun getAllActivePlaces(): List<PlaceResponse> =
-        placeRepository.findAllActive().map { it.toResponse() }
+    fun getAllActivePlaces(): List<PlaceResponse> = placeRepository.findAllActive().map { it.toResponse() }
 
     /**
      * 장소 상세 조회
      */
     @Transactional(readOnly = true)
     fun getPlaceDetail(placeId: Long): PlaceDetailResponse {
-        val place = placeRepository.findActiveById(placeId)
-            .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
+        val place =
+            placeRepository.findActiveById(placeId)
+                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
 
         val availabilities = placeAvailabilityRepository.findByPlaceId(placeId)
         val approvedCount = placeUsageGroupRepository.findApprovedByPlaceId(placeId).size
@@ -73,16 +88,21 @@ class PlaceService(
         return PlaceDetailResponse(
             place = place.toResponse(),
             availabilities = availabilities.map { it.toResponse() },
-            approvedGroupCount = approvedCount
+            approvedGroupCount = approvedCount,
         )
     }
 
     /**
      * 장소 수정
      */
-    fun updatePlace(user: User, placeId: Long, request: UpdatePlaceRequest): PlaceResponse {
-        val place = placeRepository.findActiveById(placeId)
-            .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
+    fun updatePlace(
+        user: User,
+        placeId: Long,
+        request: UpdatePlaceRequest,
+    ): PlaceResponse {
+        val place =
+            placeRepository.findActiveById(placeId)
+                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
 
         checkCalendarManagePermission(user.id!!, place.managingGroup.id)
 
@@ -93,9 +113,13 @@ class PlaceService(
     /**
      * 장소 삭제 (Soft delete)
      */
-    fun deletePlace(user: User, placeId: Long) {
-        val place = placeRepository.findActiveById(placeId)
-            .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
+    fun deletePlace(
+        user: User,
+        placeId: Long,
+    ) {
+        val place =
+            placeRepository.findActiveById(placeId)
+                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
 
         checkCalendarManagePermission(user.id!!, place.managingGroup.id)
 
@@ -106,9 +130,14 @@ class PlaceService(
     /**
      * 운영 시간 설정
      */
-    fun setAvailabilities(user: User, placeId: Long, requests: List<AvailabilityRequest>) {
-        val place = placeRepository.findActiveById(placeId)
-            .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
+    fun setAvailabilities(
+        user: User,
+        placeId: Long,
+        requests: List<AvailabilityRequest>,
+    ) {
+        val place =
+            placeRepository.findActiveById(placeId)
+                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
 
         checkCalendarManagePermission(user.id!!, place.managingGroup.id)
 
@@ -119,55 +148,87 @@ class PlaceService(
         addAvailabilities(placeId, requests)
     }
 
-    private fun addAvailabilities(placeId: Long, requests: List<AvailabilityRequest>) {
-        val place = placeRepository.findById(placeId)
-            .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
+    private fun addAvailabilities(
+        placeId: Long,
+        requests: List<AvailabilityRequest>,
+    ) {
+        val place =
+            placeRepository.findById(placeId)
+                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
 
-        val availabilities = requests.map { req ->
-            if (!req.endTime.isAfter(req.startTime)) {
-                throw BusinessException(ErrorCode.INVALID_TIME_RANGE)
+        val availabilities =
+            requests.map { req ->
+                if (!req.endTime.isAfter(req.startTime)) {
+                    throw BusinessException(ErrorCode.INVALID_TIME_RANGE)
+                }
+
+                PlaceAvailability(
+                    place = place,
+                    dayOfWeek = req.dayOfWeek,
+                    startTime = req.startTime,
+                    endTime = req.endTime,
+                    displayOrder = req.displayOrder,
+                )
             }
-
-            PlaceAvailability(
-                place = place,
-                dayOfWeek = req.dayOfWeek,
-                startTime = req.startTime,
-                endTime = req.endTime,
-                displayOrder = req.displayOrder
-            )
-        }
 
         placeAvailabilityRepository.saveAll(availabilities)
     }
 
-    private fun checkCalendarManagePermission(userId: Long, groupId: Long) {
-        if (!groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)) {
-            throw BusinessException(ErrorCode.NOT_GROUP_MEMBER)
-        }
+    private fun checkCalendarManagePermission(
+        userId: Long,
+        groupId: Long,
+    ) {
+        groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+            .orElseThrow { BusinessException(ErrorCode.NOT_GROUP_MEMBER) }
 
-        if (!permissionService.hasPermission(userId, groupId, "CALENDAR_MANAGE")) {
-            throw BusinessException(ErrorCode.FORBIDDEN, "장소 관리 권한이 없습니다")
+        val effectivePermissions =
+            permissionService.getEffective(groupId, userId) { roleName ->
+                getSystemRolePermissions(roleName)
+            }
+
+        if (!effectivePermissions.contains(org.castlekong.backend.entity.GroupPermission.CALENDAR_MANAGE)) {
+            throw BusinessException(ErrorCode.FORBIDDEN)
         }
     }
 
-    private fun Place.toResponse() = PlaceResponse(
-        id = id,
-        managingGroupId = managingGroup.id,
-        managingGroupName = managingGroup.name,
-        building = building,
-        roomNumber = roomNumber,
-        alias = alias,
-        displayName = getDisplayName(),
-        capacity = capacity,
-        createdAt = createdAt,
-        updatedAt = updatedAt
-    )
+    private fun getSystemRolePermissions(roleName: String): Set<org.castlekong.backend.entity.GroupPermission> =
+        when (roleName) {
+            "그룹장" ->
+                setOf(
+                    org.castlekong.backend.entity.GroupPermission.GROUP_MANAGE,
+                    org.castlekong.backend.entity.GroupPermission.MEMBER_MANAGE,
+                    org.castlekong.backend.entity.GroupPermission.CHANNEL_MANAGE,
+                    org.castlekong.backend.entity.GroupPermission.RECRUITMENT_MANAGE,
+                    org.castlekong.backend.entity.GroupPermission.CALENDAR_MANAGE,
+                )
+            "교수" ->
+                setOf(
+                    org.castlekong.backend.entity.GroupPermission.CHANNEL_MANAGE,
+                    org.castlekong.backend.entity.GroupPermission.CALENDAR_MANAGE,
+                )
+            else -> emptySet()
+        }
 
-    private fun PlaceAvailability.toResponse() = AvailabilityResponse(
-        id = id,
-        dayOfWeek = dayOfWeek,
-        startTime = startTime,
-        endTime = endTime,
-        displayOrder = displayOrder
-    )
+    private fun Place.toResponse() =
+        PlaceResponse(
+            id = id,
+            managingGroupId = managingGroup.id,
+            managingGroupName = managingGroup.name,
+            building = building,
+            roomNumber = roomNumber,
+            alias = alias,
+            displayName = getDisplayName(),
+            capacity = capacity,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+        )
+
+    private fun PlaceAvailability.toResponse() =
+        AvailabilityResponse(
+            id = id,
+            dayOfWeek = dayOfWeek,
+            startTime = startTime,
+            endTime = endTime,
+            displayOrder = displayOrder,
+        )
 }

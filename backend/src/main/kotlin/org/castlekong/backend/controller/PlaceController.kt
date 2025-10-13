@@ -1,20 +1,32 @@
 package org.castlekong.backend.controller
 
 import jakarta.validation.Valid
-import org.castlekong.backend.dto.*
+import org.castlekong.backend.dto.ApiResponse
+import org.castlekong.backend.dto.AvailabilityRequest
+import org.castlekong.backend.dto.CreatePlaceRequest
+import org.castlekong.backend.dto.PlaceDetailResponse
+import org.castlekong.backend.dto.PlaceResponse
+import org.castlekong.backend.dto.UpdatePlaceRequest
 import org.castlekong.backend.service.PlaceService
-import org.castlekong.backend.util.ApiResponse
+import org.castlekong.backend.service.UserService
 import org.springframework.http.HttpStatus
-import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.web.bind.annotation.*
+import org.springframework.security.core.Authentication
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/places")
 class PlaceController(
-    private val placeService: PlaceService
+    private val placeService: PlaceService,
+    private val userService: UserService,
 ) {
-
     /**
      * GET /api/places
      * 활성 장소 목록 조회 (공개)
@@ -30,7 +42,9 @@ class PlaceController(
      * 장소 상세 조회 (공개)
      */
     @GetMapping("/{id}")
-    fun getPlaceDetail(@PathVariable id: Long): ApiResponse<PlaceDetailResponse> {
+    fun getPlaceDetail(
+        @PathVariable id: Long,
+    ): ApiResponse<PlaceDetailResponse> {
         val detail = placeService.getPlaceDetail(id)
         return ApiResponse.success(detail)
     }
@@ -42,10 +56,11 @@ class PlaceController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun createPlace(
-        @AuthenticationPrincipal userDetails: UserDetails,
-        @Valid @RequestBody request: CreatePlaceRequest
+        authentication: Authentication,
+        @Valid @RequestBody request: CreatePlaceRequest,
     ): ApiResponse<PlaceResponse> {
-        val user = (userDetails as org.castlekong.backend.security.CustomUserDetails).user
+        val email = authentication.name
+        val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
         val place = placeService.createPlace(user, request)
         return ApiResponse.success(place)
     }
@@ -56,11 +71,12 @@ class PlaceController(
      */
     @PatchMapping("/{id}")
     fun updatePlace(
-        @AuthenticationPrincipal userDetails: UserDetails,
+        authentication: Authentication,
         @PathVariable id: Long,
-        @Valid @RequestBody request: UpdatePlaceRequest
+        @Valid @RequestBody request: UpdatePlaceRequest,
     ): ApiResponse<PlaceResponse> {
-        val user = (userDetails as org.castlekong.backend.security.CustomUserDetails).user
+        val email = authentication.name
+        val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
         val place = placeService.updatePlace(user, id, request)
         return ApiResponse.success(place)
     }
@@ -72,10 +88,11 @@ class PlaceController(
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deletePlace(
-        @AuthenticationPrincipal userDetails: UserDetails,
-        @PathVariable id: Long
+        authentication: Authentication,
+        @PathVariable id: Long,
     ) {
-        val user = (userDetails as org.castlekong.backend.security.CustomUserDetails).user
+        val email = authentication.name
+        val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
         placeService.deletePlace(user, id)
     }
 
@@ -85,11 +102,12 @@ class PlaceController(
      */
     @PostMapping("/{id}/availabilities")
     fun setAvailabilities(
-        @AuthenticationPrincipal userDetails: UserDetails,
+        authentication: Authentication,
         @PathVariable id: Long,
-        @Valid @RequestBody requests: List<AvailabilityRequest>
+        @Valid @RequestBody requests: List<AvailabilityRequest>,
     ): ApiResponse<Unit> {
-        val user = (userDetails as org.castlekong.backend.security.CustomUserDetails).user
+        val email = authentication.name
+        val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
         placeService.setAvailabilities(user, id, requests)
         return ApiResponse.success(Unit)
     }

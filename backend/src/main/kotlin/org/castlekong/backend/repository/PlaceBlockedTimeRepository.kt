@@ -15,84 +15,99 @@ import java.time.LocalDateTime
  */
 @Repository
 interface PlaceBlockedTimeRepository : JpaRepository<PlaceBlockedTime, Long> {
-
     /**
      * 시간 충돌 검사 (예약 가능 여부 확인용)
      */
-    @Query("""
+    @Query(
+        """
         SELECT bt FROM PlaceBlockedTime bt
         WHERE bt.place.id = :placeId
         AND bt.startDatetime < :endDatetime
         AND bt.endDatetime > :startDatetime
-    """)
+    """,
+    )
     fun findConflicts(
         @Param("placeId") placeId: Long,
         @Param("startDatetime") startDatetime: LocalDateTime,
-        @Param("endDatetime") endDatetime: LocalDateTime
+        @Param("endDatetime") endDatetime: LocalDateTime,
     ): List<PlaceBlockedTime>
 
     /**
      * 특정 기간의 차단 시간 목록 조회
      */
-    @Query("""
+    @Query(
+        """
         SELECT bt FROM PlaceBlockedTime bt
         JOIN FETCH bt.createdBy
         WHERE bt.place.id = :placeId
         AND bt.startDatetime < :endDatetime
         AND bt.endDatetime > :startDatetime
         ORDER BY bt.startDatetime
-    """)
+    """,
+    )
     fun findByPlaceIdAndTimeRange(
         @Param("placeId") placeId: Long,
         @Param("startDatetime") startDatetime: LocalDateTime,
-        @Param("endDatetime") endDatetime: LocalDateTime
+        @Param("endDatetime") endDatetime: LocalDateTime,
     ): List<PlaceBlockedTime>
 
     /**
      * 장소의 모든 차단 시간 조회
      */
-    @Query("""
+    @Query(
+        """
         SELECT bt FROM PlaceBlockedTime bt
         WHERE bt.place.id = :placeId
         ORDER BY bt.startDatetime
-    """)
-    fun findByPlaceId(@Param("placeId") placeId: Long): List<PlaceBlockedTime>
+    """,
+    )
+    fun findByPlaceId(
+        @Param("placeId") placeId: Long,
+    ): List<PlaceBlockedTime>
 
     /**
      * 차단 유형별 조회
      */
-    @Query("""
+    @Query(
+        """
         SELECT bt FROM PlaceBlockedTime bt
         WHERE bt.place.id = :placeId
         AND bt.blockType = :blockType
         ORDER BY bt.startDatetime
-    """)
+    """,
+    )
     fun findByPlaceIdAndBlockType(
         @Param("placeId") placeId: Long,
-        @Param("blockType") blockType: BlockType
+        @Param("blockType") blockType: BlockType,
     ): List<PlaceBlockedTime>
 
     /**
      * 관리자가 생성한 차단 시간 조회
      */
-    @Query("""
+    @Query(
+        """
         SELECT bt FROM PlaceBlockedTime bt
         WHERE bt.createdBy.id = :userId
         ORDER BY bt.createdAt DESC
-    """)
-    fun findByCreatedBy(@Param("userId") userId: Long): List<PlaceBlockedTime>
+    """,
+    )
+    fun findByCreatedBy(
+        @Param("userId") userId: Long,
+    ): List<PlaceBlockedTime>
 
     /**
      * 미래 차단 시간 조회
      */
-    @Query("""
+    @Query(
+        """
         SELECT bt FROM PlaceBlockedTime bt
         WHERE bt.place.id = :placeId
         AND bt.endDatetime > :now
         ORDER BY bt.startDatetime
-    """)
+    """,
+    )
     fun findFutureBlockedTimes(
         @Param("placeId") placeId: Long,
-        @Param("now") now: LocalDateTime
+        @Param("now") now: LocalDateTime,
     ): List<PlaceBlockedTime>
 }

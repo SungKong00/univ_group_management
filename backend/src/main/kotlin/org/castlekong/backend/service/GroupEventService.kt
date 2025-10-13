@@ -455,13 +455,16 @@ class GroupEventService(
      * 반복 일정 요청 검증
      */
     private fun validateRecurrenceRequest(request: CreateGroupEventRequest) {
-        val recurrence = request.recurrence
-            ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val recurrence =
+            request.recurrence
+                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
 
-        val startDate = request.startDate
-            ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-        val endDate = request.endDate
-            ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val startDate =
+            request.startDate
+                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val endDate =
+            request.endDate
+                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
 
         // 반복 일정의 경우 시작일과 종료일이 동일해야 생성 가능
         // (반복 패턴은 startDate를 기준으로 endDate까지 반복)

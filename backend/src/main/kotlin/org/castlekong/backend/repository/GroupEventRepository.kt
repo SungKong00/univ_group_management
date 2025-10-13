@@ -13,7 +13,8 @@ interface GroupEventRepository : JpaRepository<GroupEvent, Long> {
      *
      * N+1 문제 해결: JOIN FETCH로 Group, User 한 번에 로드
      */
-    @Query("""
+    @Query(
+        """
         SELECT e FROM GroupEvent e
         JOIN FETCH e.group g
         JOIN FETCH e.creator c
@@ -21,7 +22,8 @@ interface GroupEventRepository : JpaRepository<GroupEvent, Long> {
         AND e.startDate >= :startDate
         AND e.startDate < :endDate
         ORDER BY e.startDate ASC
-    """)
+    """,
+    )
     fun findByGroupIdAndStartDateBetween(
         @Param("groupId") groupId: Long,
         @Param("startDate") startDate: LocalDateTime,

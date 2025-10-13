@@ -231,13 +231,47 @@ fun createPost(channelId: Long, request: CreatePostRequest): PostDto
 
 ### 권한 확인 플로우
 
-1. **그룹 캘린더 조회**: 그룹 멤버인지 확인합니다. (`isMember()`)
-2. **공식 일정 생성/수정/삭제**: `CALENDAR_MANAGE` 권한을 확인합니다.
-3. **비공식 일정 생성**: 그룹 멤버인지 확인합니다. (모든 멤버 가능)
-4. **비공식 일정 수정/삭제**: 작성자 본인인지 또는 `CALENDAR_MANAGE` 권한이 있는지 확인합니다.
-5. **장소 등록/수정/삭제**: `CALENDAR_MANAGE` 권한을 확인합니다.
-6. **장소 사용 그룹 승인/거절**: `CALENDAR_MANAGE` 권한을 확인합니다.
-7. **장소 예약**: PlaceUsageGroup APPROVED 상태 + 그룹 멤버인지 확인합니다.
+캘린더 및 장소 관련 서비스에서는 기존 `@PreAuthorize` 방식과 더불어, 서비스 로직 내에서 직접 권한을 확인하는 명시적인 방식을 함께 사용합니다. 이는 요청의 주체(e.g., `Place`)가 아닌, 연관된 그룹(e.g., `managingGroupId`)의 권한을 확인해야 하는 복합적인 시나리오에 대응하기 위함입니다.
+
+**주요 확인 패턴**: `PermissionService.getEffective` 직접 호출
+```kotlin
+// PlaceService.kt / PlaceBlockedTimeService.kt 등에서 사용
+
+private fun checkCalendarManagePermission(userId: Long, groupId: Long) {
+    // 1. 그룹 멤버 여부 우선 확인
+    groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+        .orElseThrow { BusinessException(ErrorCode.NOT_GROUP_MEMBER) }
+
+    // 2. 유효 권한 집합 계산
+    val effectivePermissions =
+        permissionService.getEffective(groupId, userId) { roleName ->
+            // 시스템 역할(그룹장, 교수)에 대한 기본 권한을 람다로 제공
+            getSystemRolePermissions(roleName)
+        }
+
+    // 3. CALENDAR_MANAGE 권한 포함 여부 확인
+    if (!effectivePermissions.contains(GroupPermission.CALENDAR_MANAGE)) {
+        throw BusinessException(ErrorCode.FORBIDDEN)
+    }
+}
+
+// 시스템 역할에 따른 권한을 정의하는 private 함수
+private fun getSystemRolePermissions(roleName: String): Set<GroupPermission> =
+    when (roleName) {
+        "그룹장", "교수" -> setOf(GroupPermission.CALENDAR_MANAGE, ...) // CALENDAR_MANAGE 권한 부여
+        else -> emptySet()
+    }
+```
+
+**상황별 권한 확인 절차:**
+
+1.  **그룹 캘린더 조회**: 그룹 멤버인지 확인 (`isMember()`).
+2.  **공식 일정 생성/수정/삭제**: `CALENDAR_MANAGE` 권한을 확인 (`@PreAuthorize` 또는 직접 호출).
+3.  **비공식 일정 생성**: 그룹 멤버인지 확인 (모든 멤버 가능).
+4.  **비공식 일정 수정/삭제**: 작성자 본인인지 또는 `CALENDAR_MANAGE` 권한이 있는지 확인.
+5.  **장소 등록/수정/삭제**: `checkCalendarManagePermission` 함수를 통해 `CALENDAR_MANAGE` 권한을 명시적으로 확인.
+6.  **장소 사용 그룹 승인/거절**: `checkCalendarManagePermission` 함수를 통해 `CALENDAR_MANAGE` 권한을 명시적으로 확인.
+7.  **장소 예약**: `PlaceUsageGroup`이 `APPROVED` 상태이고, 사용자가 해당 그룹의 멤버인지 확인. (별도 권한 불필요)
 
 ### 통합 배경
 

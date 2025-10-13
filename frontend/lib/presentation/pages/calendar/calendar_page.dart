@@ -133,17 +133,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('캘린더', style: textTheme.headlineMedium),
-          const SizedBox(height: 4),
-          Text(
-            '개인 시간표와 단발성 이벤트를 한 곳에서 관리하세요.',
-            style: textTheme.bodyMedium?.copyWith(color: AppColors.neutral600),
-          ),
-        ],
-      ),
+      child: Text('캘린더', style: textTheme.headlineMedium),
     );
   }
 

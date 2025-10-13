@@ -18,45 +18,40 @@ import java.time.LocalDateTime
         Index(name = "idx_blocked_place", columnList = "place_id"),
         Index(name = "idx_blocked_date", columnList = "place_id, start_datetime, end_datetime"),
         Index(name = "idx_blocked_type", columnList = "block_type"),
-        Index(name = "idx_blocked_creator", columnList = "created_by, created_at")
-    ]
+        Index(name = "idx_blocked_creator", columnList = "created_by, created_at"),
+    ],
 )
 class PlaceBlockedTime(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id", nullable = false)
     var place: Place,
-
     @Column(name = "start_datetime", nullable = false)
     var startDatetime: LocalDateTime,
-
     @Column(name = "end_datetime", nullable = false)
     var endDatetime: LocalDateTime,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "block_type", nullable = false, length = 20)
     var blockType: BlockType,
-
     @Column(name = "reason", length = 200)
     var reason: String? = null,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     var createdBy: User,
-
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
     /**
      * 주어진 시간 범위와 겹치는지 확인
      */
-    fun overlapsWith(start: LocalDateTime, end: LocalDateTime): Boolean {
+    fun overlapsWith(
+        start: LocalDateTime,
+        end: LocalDateTime,
+    ): Boolean {
         return !(end.isBefore(startDatetime) || start.isAfter(endDatetime))
     }
 
@@ -74,7 +69,7 @@ class PlaceBlockedTime(
         val startTime = startDatetime.toLocalTime()
         val endTime = endDatetime.toLocalTime()
         return startTime.hour == 0 && startTime.minute == 0 &&
-                endTime.hour == 23 && endTime.minute == 59
+            endTime.hour == 23 && endTime.minute == 59
     }
 
     override fun equals(other: Any?): Boolean {
@@ -94,8 +89,8 @@ class PlaceBlockedTime(
  * BlockType (차단 유형)
  */
 enum class BlockType {
-    MAINTENANCE,  // 유지보수
-    EMERGENCY,    // 긴급 상황
-    HOLIDAY,      // 휴일
-    OTHER         // 기타
+    MAINTENANCE, // 유지보수
+    EMERGENCY, // 긴급 상황
+    HOLIDAY, // 휴일
+    OTHER, // 기타
 }

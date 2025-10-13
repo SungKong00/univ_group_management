@@ -15,29 +15,34 @@ import java.time.DayOfWeek
  */
 @Repository
 interface PlaceAvailabilityRepository : JpaRepository<PlaceAvailability, Long> {
-
     /**
      * 장소의 모든 운영 시간 조회
      */
-    @Query("""
+    @Query(
+        """
         SELECT pa FROM PlaceAvailability pa
         WHERE pa.place.id = :placeId
         ORDER BY pa.dayOfWeek, pa.displayOrder, pa.startTime
-    """)
-    fun findByPlaceId(@Param("placeId") placeId: Long): List<PlaceAvailability>
+    """,
+    )
+    fun findByPlaceId(
+        @Param("placeId") placeId: Long,
+    ): List<PlaceAvailability>
 
     /**
      * 특정 요일의 운영 시간 조회
      */
-    @Query("""
+    @Query(
+        """
         SELECT pa FROM PlaceAvailability pa
         WHERE pa.place.id = :placeId
         AND pa.dayOfWeek = :dayOfWeek
         ORDER BY pa.displayOrder, pa.startTime
-    """)
+    """,
+    )
     fun findByPlaceIdAndDayOfWeek(
         @Param("placeId") placeId: Long,
-        @Param("dayOfWeek") dayOfWeek: DayOfWeek
+        @Param("dayOfWeek") dayOfWeek: DayOfWeek,
     ): List<PlaceAvailability>
 
     /**
@@ -45,19 +50,23 @@ interface PlaceAvailabilityRepository : JpaRepository<PlaceAvailability, Long> {
      */
     @Modifying
     @Query("DELETE FROM PlaceAvailability pa WHERE pa.place.id = :placeId")
-    fun deleteByPlaceId(@Param("placeId") placeId: Long)
+    fun deleteByPlaceId(
+        @Param("placeId") placeId: Long,
+    )
 
     /**
      * 장소가 특정 요일에 운영하는지 확인
      */
-    @Query("""
+    @Query(
+        """
         SELECT CASE WHEN COUNT(pa) > 0 THEN true ELSE false END
         FROM PlaceAvailability pa
         WHERE pa.place.id = :placeId
         AND pa.dayOfWeek = :dayOfWeek
-    """)
+    """,
+    )
     fun existsByPlaceIdAndDayOfWeek(
         @Param("placeId") placeId: Long,
-        @Param("dayOfWeek") dayOfWeek: DayOfWeek
+        @Param("dayOfWeek") dayOfWeek: DayOfWeek,
     ): Boolean
 }

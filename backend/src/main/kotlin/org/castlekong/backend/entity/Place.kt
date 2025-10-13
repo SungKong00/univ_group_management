@@ -17,42 +17,34 @@ import java.time.LocalDateTime
     uniqueConstraints = [
         UniqueConstraint(
             name = "uk_place_location",
-            columnNames = ["building", "room_number", "deleted_at"]
-        )
+            columnNames = ["building", "room_number", "deleted_at"],
+        ),
     ],
     indexes = [
         Index(name = "idx_place_managing_group", columnList = "managing_group_id"),
         Index(name = "idx_place_building", columnList = "building"),
-        Index(name = "idx_place_deleted_at", columnList = "deleted_at")
-    ]
+        Index(name = "idx_place_deleted_at", columnList = "deleted_at"),
+    ],
 )
 class Place(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "managing_group_id", nullable = false)
     var managingGroup: Group,
-
     @Column(nullable = false, length = 100)
     var building: String,
-
     @Column(name = "room_number", nullable = false, length = 50)
     var roomNumber: String,
-
     @Column(length = 100)
     var alias: String? = null,
-
     @Column(nullable = true)
     var capacity: Int? = null,
-
     @Column(name = "deleted_at")
     var deletedAt: LocalDateTime? = null,
-
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
@@ -81,7 +73,10 @@ class Place(
     /**
      * 장소 정보 업데이트
      */
-    fun updateInfo(alias: String?, capacity: Int?): Place {
+    fun updateInfo(
+        alias: String?,
+        capacity: Int?,
+    ): Place {
         this.alias = alias
         this.capacity = capacity
         this.updatedAt = LocalDateTime.now()

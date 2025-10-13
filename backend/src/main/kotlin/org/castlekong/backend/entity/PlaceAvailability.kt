@@ -16,38 +16,35 @@ import java.time.LocalTime
     name = "place_availabilities",
     indexes = [
         Index(name = "idx_availability_place", columnList = "place_id"),
-        Index(name = "idx_availability_day", columnList = "place_id, day_of_week")
-    ]
+        Index(name = "idx_availability_day", columnList = "place_id, day_of_week"),
+    ],
 )
 class PlaceAvailability(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id", nullable = false)
     var place: Place,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "day_of_week", nullable = false, length = 10)
     var dayOfWeek: DayOfWeek,
-
     @Column(name = "start_time", nullable = false)
     var startTime: LocalTime,
-
     @Column(name = "end_time", nullable = false)
     var endTime: LocalTime,
-
     @Column(name = "display_order", nullable = false)
     var displayOrder: Int = 0,
-
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalTime = LocalTime.now(),
 ) {
     /**
      * 주어진 시간 범위가 이 운영 시간 내에 포함되는지 확인
      */
-    fun contains(start: LocalTime, end: LocalTime): Boolean {
+    fun contains(
+        start: LocalTime,
+        end: LocalTime,
+    ): Boolean {
         return !start.isBefore(startTime) && !end.isAfter(endTime)
     }
 

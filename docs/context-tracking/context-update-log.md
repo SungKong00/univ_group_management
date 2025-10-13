@@ -4,6 +4,65 @@
 
 ## 2025년 10월
 
+### 2025-10-13 - 백엔드 권한 로직 리팩토링 및 문서 동기화
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 리팩토링 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 백엔드 (권한 처리), 문서 (개념, 구현 가이드)
+
+**구현 내용**:
+- **백엔드 권한 로직 리팩토링**:
+    - `PlaceController`, `PlaceService`, `PlaceBlockedTimeService`, `PlaceUsageGroupService`에서 사용하던 인증 방식을 `@AuthenticationPrincipal`에서 `Authentication` 객체를 직접 사용하도록 변경했습니다.
+    - `UserService`를 통해 이메일로 사용자를 조회하는 로직을 추가했습니다.
+    - `CALENDAR_MANAGE` 권한 확인 로직을 기존 `@PreAuthorize` 어노테이션 방식에서, 서비스 내에서 `permissionService.getEffective`를 직접 호출하는 명시적인 방식으로 변경했습니다.
+    - 이 변경은 연관된 리소스(예: 장소의 관리 그룹)에 대한 권한을 확인해야 하는 복합적인 시나리오에 대응하기 위함입니다.
+- **코드 스타일 정리**:
+    - Kotlin 코드 전반에 걸쳐 포맷팅(들여쓰기, 줄바꿈, 꼬리 쉼표 등)을 정리하여 일관성을 확보했습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/concepts/permission-system.md`: '캘린더 권한 확인 플로우' 섹션을 새로운 `permissionService.getEffective` 직접 호출 방식에 대한 설명과 코드 예시를 포함하여 상세하게 업데이트했습니다.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
+- 🔄 `docs/context-tracking/sync-status.md`: `permission-system.md`의 마지막 동기화 날짜를 갱신할 예정입니다.
+
+**메모**: 백엔드의 장소 관리 관련 권한 처리 방식이 더 명확하고 유연하게 개선되었습니다. 핵심 개념 문서인 `permission-system.md`가 최신 구현 상태를 정확히 반영하도록 업데이트되었습니다.
+
+---
+
+### 2025-10-13 - 장소 캘린더 Phase 1 진행 상황 검증
+**커밋**: 현재 세션 (검증 완료)
+**유형**: 문서 검증 + 진행 상황 확인
+**우선순위**: High
+**영향 범위**: 컨텍스트 추적, 프로젝트 관리
+
+**검증 내용**:
+- **Phase 1 백엔드 구현 100% 완료 확인**:
+  - ✅ 4개 엔티티: Place, PlaceAvailability, PlaceBlockedTime, PlaceUsageGroup
+  - ✅ 4개 레포지토리: 최적화된 JPQL 쿼리 포함
+  - ✅ 3개 서비스: PlaceService (174줄), PlaceUsageGroupService (116줄), PlaceBlockedTimeService (101줄)
+  - ✅ 1개 컨트롤러: PlaceController (6개 API 엔드포인트)
+  - ✅ 11개 DTO 클래스: Jakarta Validation 포함
+  - ✅ 5개 ErrorCode: 장소 관련 에러 코드
+
+- **프론트엔드 구현 상태**:
+  - ❌ Phase 2 미착수 (장소 목록, 등록 폼, 운영 시간 설정 UI)
+  - 예상 소요 시간: 6-8시간
+
+**문서 동기화 상태 확인**:
+- ✅ `docs/features/place-calendar-specification.md`: Phase 1 완료 표시 정확
+- ✅ `docs/features/calendar-integration-roadmap.md`: 진행 상황 정확
+- ✅ `docs/context-tracking/sync-status.md`: 최신 상태 유지 (100%)
+- ✅ `docs/context-tracking/pending-updates.md`: Phase 2 대기 상태 정확
+
+**전체 진행률**: 20% (Phase 1 완료 / 총 5 phases)
+
+**다음 단계**:
+1. 그룹 캘린더 Phase 8 구현 (권한 통합, 2-3시간) - 우선
+2. 장소 캘린더 Phase 2 구현 (프론트엔드 기본, 6-8시간)
+
+**메모**: Phase 1 백엔드 구현이 완벽하게 완료되어 있으며, 문서와 실제 코드 상태가 정확하게 일치합니다. 프론트엔드 구현을 위한 모든 준비가 완료되었습니다.
+
+---
+
 ### 2025-10-13 - 그룹 캘린더 Phase 6 UI 개선 계획 문서화
 **커밋**: 현재 세션 (커밋 예정)
 **유형**: 문서 추가 + 설계 확정

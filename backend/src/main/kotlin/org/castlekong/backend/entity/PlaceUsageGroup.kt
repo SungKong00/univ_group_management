@@ -16,35 +16,30 @@ import java.time.LocalDateTime
     uniqueConstraints = [
         UniqueConstraint(
             name = "uk_place_usage_group",
-            columnNames = ["place_id", "group_id"]
-        )
+            columnNames = ["place_id", "group_id"],
+        ),
     ],
     indexes = [
         Index(name = "idx_usage_group_place", columnList = "place_id"),
         Index(name = "idx_usage_group_group", columnList = "group_id"),
-        Index(name = "idx_usage_group_status", columnList = "place_id, status")
-    ]
+        Index(name = "idx_usage_group_status", columnList = "place_id, status"),
+    ],
 )
 class PlaceUsageGroup(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id", nullable = false)
     var place: Place,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     var group: Group,
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     var status: UsageStatus = UsageStatus.PENDING,
-
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
@@ -93,7 +88,7 @@ class PlaceUsageGroup(
  * UsageStatus (사용 승인 상태)
  */
 enum class UsageStatus {
-    PENDING,   // 대기 중
-    APPROVED,  // 승인됨
-    REJECTED,  // 거절됨
+    PENDING, // 대기 중
+    APPROVED, // 승인됨
+    REJECTED, // 거절됨
 }

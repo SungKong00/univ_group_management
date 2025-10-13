@@ -8,6 +8,7 @@ import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.PlaceBlockedTimeRepository
 import org.castlekong.backend.repository.PlaceRepository
+import org.castlekong.backend.security.PermissionService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -25,11 +26,12 @@ class PlaceBlockedTimeService(
     fun createBlockedTime(
         user: User,
         placeId: Long,
-        request: CreateBlockedTimeRequest
+        request: CreateBlockedTimeRequest,
     ): BlockedTimeResponse {
         // 장소 조회
-        val place = placeRepository.findActiveById(placeId)
-            .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
+        val place =
+            placeRepository.findActiveById(placeId)
+                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
 
         // 관리 주체 확인
         checkCalendarManagePermission(user.id!!, place.managingGroup.id)
@@ -40,16 +42,17 @@ class PlaceBlockedTimeService(
         }
 
         // 차단 시간 생성
-        val blockedTime = placeBlockedTimeRepository.save(
-            PlaceBlockedTime(
-                place = place,
-                startDatetime = request.startDatetime,
-                endDatetime = request.endDatetime,
-                blockType = request.blockType,
-                reason = request.reason,
-                createdBy = user
+        val blockedTime =
+            placeBlockedTimeRepository.save(
+                PlaceBlockedTime(
+                    place = place,
+                    startDatetime = request.startDatetime,
+                    endDatetime = request.endDatetime,
+                    blockType = request.blockType,
+                    reason = request.reason,
+                    createdBy = user,
+                ),
             )
-        )
 
         return blockedTime.toResponse()
     }
@@ -61,41 +64,74 @@ class PlaceBlockedTimeService(
     fun getBlockedTimes(
         placeId: Long,
         startDatetime: LocalDateTime,
-        endDatetime: LocalDateTime
+        endDatetime: LocalDateTime,
     ): List<BlockedTimeResponse> {
         return placeBlockedTimeRepository.findByPlaceIdAndTimeRange(
-            placeId, startDatetime, endDatetime
+            placeId,
+            startDatetime,
+            endDatetime,
         ).map { it.toResponse() }
     }
 
     /**
      * 차단 시간 삭제
      */
-    fun deleteBlockedTime(user: User, blockedTimeId: Long) {
-        val blockedTime = placeBlockedTimeRepository.findById(blockedTimeId)
-            .orElseThrow { BusinessException(ErrorCode.BLOCKED_TIME_NOT_FOUND) }
+    fun deleteBlockedTime(
+        user: User,
+        blockedTimeId: Long,
+    ) {
+        val blockedTime =
+            placeBlockedTimeRepository.findById(blockedTimeId)
+                .orElseThrow { BusinessException(ErrorCode.BLOCKED_TIME_NOT_FOUND) }
 
         checkCalendarManagePermission(user.id!!, blockedTime.place.managingGroup.id)
 
         placeBlockedTimeRepository.delete(blockedTime)
     }
 
-    private fun checkCalendarManagePermission(userId: Long, groupId: Long) {
-        if (!permissionService.hasPermission(userId, groupId, "CALENDAR_MANAGE")) {
-            throw BusinessException(ErrorCode.FORBIDDEN, "장소 관리 권한이 없습니다")
+    private fun checkCalendarManagePermission(
+        userId: Long,
+        groupId: Long,
+    ) {
+        val effectivePermissions =
+            permissionService.getEffective(groupId, userId) { roleName ->
+                getSystemRolePermissions(roleName)
+            }
+
+        if (!effectivePermissions.contains(org.castlekong.backend.entity.GroupPermission.CALENDAR_MANAGE)) {
+            throw BusinessException(ErrorCode.FORBIDDEN)
         }
     }
 
-    private fun PlaceBlockedTime.toResponse() = BlockedTimeResponse(
-        id = id,
-        placeId = place.id,
-        placeName = place.getDisplayName(),
-        startDatetime = startDatetime,
-        endDatetime = endDatetime,
-        blockType = blockType,
-        reason = reason,
-        createdBy = createdBy.id!!,
-        createdByName = createdBy.name,
-        createdAt = createdAt
-    )
+    private fun getSystemRolePermissions(roleName: String): Set<org.castlekong.backend.entity.GroupPermission> =
+        when (roleName) {
+            "그룹장" ->
+                setOf(
+                    org.castlekong.backend.entity.GroupPermission.GROUP_MANAGE,
+                    org.castlekong.backend.entity.GroupPermission.MEMBER_MANAGE,
+                    org.castlekong.backend.entity.GroupPermission.CHANNEL_MANAGE,
+                    org.castlekong.backend.entity.GroupPermission.RECRUITMENT_MANAGE,
+                    org.castlekong.backend.entity.GroupPermission.CALENDAR_MANAGE,
+                )
+            "교수" ->
+                setOf(
+                    org.castlekong.backend.entity.GroupPermission.CHANNEL_MANAGE,
+                    org.castlekong.backend.entity.GroupPermission.CALENDAR_MANAGE,
+                )
+            else -> emptySet()
+        }
+
+    private fun PlaceBlockedTime.toResponse() =
+        BlockedTimeResponse(
+            id = id,
+            placeId = place.id,
+            placeName = place.getDisplayName(),
+            startDatetime = startDatetime,
+            endDatetime = endDatetime,
+            blockType = blockType,
+            reason = reason,
+            createdBy = createdBy.id!!,
+            createdByName = createdBy.name,
+            createdAt = createdAt,
+        )
 }

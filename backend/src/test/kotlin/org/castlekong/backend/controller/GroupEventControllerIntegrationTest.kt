@@ -754,7 +754,8 @@ class GroupEventControllerIntegrationTest {
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(15, 0),
                     isAllDay = false,
-                    isOfficial = true, // 공식 일정
+                    // 공식 일정
+                    isOfficial = true,
                     eventType = EventType.GENERAL,
                     color = "#EF4444",
                     recurrence = null,
@@ -875,7 +876,8 @@ class GroupEventControllerIntegrationTest {
                     description = null,
                     location = null,
                     startDate = LocalDate.now().plusDays(10),
-                    endDate = LocalDate.now().plusDays(1), // 시작일보다 빠름
+                    // 시작일보다 빠름
+                    endDate = LocalDate.now().plusDays(1),
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(15, 0),
                     isAllDay = false,
@@ -952,7 +954,8 @@ class GroupEventControllerIntegrationTest {
                     recurrence =
                         RecurrencePattern(
                             type = RecurrenceType.WEEKLY,
-                            daysOfWeek = null, // 요일 미선택
+                            // 요일 미선택
+                            daysOfWeek = null,
                         ),
                 )
 
