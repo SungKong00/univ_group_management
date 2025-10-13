@@ -17,6 +17,7 @@ import '../../calendar/calendar_week_grid_view.dart';
 import '../../calendar/widgets/calendar_month_with_sidebar.dart';
 import '../../calendar/widgets/month_event_chip.dart';
 import 'widgets/group_event_form_dialog.dart';
+import 'widgets/place_calendar_tab.dart';
 
 /// Event formality categories for single-step selector
 /// Matches Phase 6 UI design: Step 1 - Official/Unofficial selection
@@ -293,30 +294,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   }
 
   Widget _buildPlaceCalendarTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.place,
-            size: 64,
-            color: AppColors.neutral400,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            '장소 캘린더',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            '준비 중입니다',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.neutral600,
-                ),
-          ),
-        ],
-      ),
-    );
+    return PlaceCalendarTab(groupId: widget.groupId);
   }
 
   String _formatDateRange(DateTime start, DateTime end, bool isAllDay) {

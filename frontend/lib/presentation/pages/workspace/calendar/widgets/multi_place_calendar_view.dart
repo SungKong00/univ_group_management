@@ -1,0 +1,168 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../../core/models/place/place_reservation.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/theme.dart';
+import '../../../../providers/place_calendar_provider.dart';
+import '../../../calendar/widgets/calendar_month_with_sidebar.dart';
+
+/// Multi-place calendar view showing reservations for selected places
+/// Displays all reservations with place-specific colors
+class MultiPlaceCalendarView extends ConsumerWidget {
+  final DateTime focusedDate;
+  final DateTime? selectedDate;
+  final void Function(DateTime selectedDay, DateTime focusedDay) onDateSelected;
+  final void Function(DateTime focusedDay) onPageChanged;
+  final void Function(PlaceReservation reservation) onReservationTap;
+
+  const MultiPlaceCalendarView({
+    super.key,
+    required this.focusedDate,
+    required this.selectedDate,
+    required this.onDateSelected,
+    required this.onPageChanged,
+    required this.onReservationTap,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(placeCalendarProvider);
+    final reservations = state.selectedPlaceReservations;
+
+    return CalendarMonthWithSidebar<PlaceReservation>(
+      events: reservations,
+      focusedDate: focusedDate,
+      selectedDate: selectedDate,
+      onDateSelected: onDateSelected,
+      onPageChanged: onPageChanged,
+      onEventTap: onReservationTap,
+      eventChipBuilder: (reservation) => _buildReservationChip(context, reservation),
+      eventCardBuilder: (reservation) => _buildReservationCard(context, reservation),
+    );
+  }
+
+  /// Build custom reservation chip for calendar cells
+  Widget _buildReservationChip(BuildContext context, PlaceReservation reservation) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xxs,
+        vertical: 4,
+      ),
+      decoration: BoxDecoration(
+        color: reservation.color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: reservation.color.withOpacity(0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            reservation.title,
+            style: textTheme.labelSmall?.copyWith(
+              color: AppColors.neutral900,
+              fontWeight: FontWeight.w600,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+          Text(
+            reservation.placeName,
+            style: textTheme.labelSmall?.copyWith(
+              color: AppColors.neutral600,
+              fontSize: 10,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build custom reservation card for sidebar list
+  Widget _buildReservationCard(BuildContext context, PlaceReservation reservation) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.lightOutline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 6,
+            height: 60,
+            decoration: BoxDecoration(
+              color: reservation.color,
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  reservation.title,
+                  style: textTheme.titleMedium,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.place, size: 14, color: AppColors.neutral600),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        reservation.placeName,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: AppColors.neutral600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    const Icon(Icons.schedule, size: 14, color: AppColors.neutral600),
+                    const SizedBox(width: 4),
+                    Text(
+                      reservation.formattedTimeRange,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: AppColors.neutral600,
+                      ),
+                    ),
+                  ],
+                ),
+                if (reservation.groupName.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.group, size: 14, color: AppColors.neutral600),
+                      const SizedBox(width: 4),
+                      Text(
+                        reservation.groupName,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: AppColors.neutral600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
