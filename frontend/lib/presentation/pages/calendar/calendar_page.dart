@@ -109,7 +109,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPageHeader(context),
             const SizedBox(height: AppSpacing.sm),
             _buildTabBar(context),
             const SizedBox(height: AppSpacing.sm),
@@ -123,17 +122,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildPageHeader(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      child: Text('캘린더', style: textTheme.headlineMedium),
     );
   }
 
