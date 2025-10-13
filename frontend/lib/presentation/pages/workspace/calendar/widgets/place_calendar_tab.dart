@@ -71,7 +71,8 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         ),
 
         // Floating action button for adding reservations
-        if (state.selectedPlaceIds.isNotEmpty)
+        // Show button when places are available, regardless of selection
+        if (state.places.isNotEmpty)
           Positioned(
             right: AppSpacing.md,
             bottom: AppSpacing.md,
@@ -162,6 +163,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
 
     final result = await showPlaceReservationDialog(
       context,
+      groupId: widget.groupId,
       initialDate: focusedDate,
     );
 

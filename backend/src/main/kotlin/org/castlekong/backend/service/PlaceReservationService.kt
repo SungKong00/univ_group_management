@@ -325,15 +325,26 @@ class PlaceReservationService(
 
     /**
      * 사용 그룹 승인 확인
+     *
+     * 관리 그룹(managingGroupId)은 자신의 장소를 승인 없이 예약 가능
+     * 다른 그룹은 PlaceUsageGroup에서 APPROVED 상태 확인 필요
      */
     private fun checkUsageGroupApproval(
         place: Place,
         groupEvent: GroupEvent,
     ) {
+        val groupId = groupEvent.group.id
+
+        // 관리 그룹이면 승인 체크 생략
+        if (place.managingGroup.id == groupId) {
+            return
+        }
+
+        // 다른 그룹은 승인 확인
         val isApproved =
             placeUsageGroupRepository.isApprovedForPlace(
                 place.id,
-                groupEvent.group.id,
+                groupId,
             )
 
         if (!isApproved) {
