@@ -5,7 +5,8 @@ import '../../../../core/repositories/repository_providers.dart';
 /// 멤버 목록 Provider
 ///
 /// 특정 그룹의 멤버 목록을 제공합니다.
-final memberListProvider = FutureProvider.family<List<GroupMember>, int>((
+final memberListProvider =
+    FutureProvider.autoDispose.family<List<GroupMember>, int>((
   ref,
   groupId,
 ) async {

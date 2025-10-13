@@ -318,21 +318,28 @@ Widget build(BuildContext context) {
 
 1. **중앙 Provider 초기화 시스템 설정** (`core/providers/provider_reset.dart`)
 ```dart
-/// 로그아웃 시 자동으로 invalidate될 Provider 목록
-final providersToResetOnLogout = <ProviderOrFamily>[
+typedef LogoutResetCallback = void Function(Ref ref);
+
+final _providersToInvalidateOnLogout = <ProviderOrFamily<dynamic>>[
   myGroupsProvider,
-  myNotificationsProvider,  // 새로운 Provider 추가 시 여기에 등록
+  homeStateProvider,
+  groupCalendarProvider,
+  // ... 사용자 데이터 Provider 등록
 ];
 
-/// 모든 사용자 데이터 관련 Provider를 초기화
+final _customLogoutCallbacks = <LogoutResetCallback>[
+  (ref) => ref.read(workspaceStateProvider.notifier).forceClearForLogout(),
+  (ref) => ref.read(homeStateProvider.notifier).clearSnapshots(),
+];
+
 void resetAllUserDataProviders(Ref ref) {
-  // FutureProvider 및 일반 Provider 일괄 초기화
-  for (final provider in providersToResetOnLogout) {
-    ref.invalidate(provider);
+  for (final callback in _customLogoutCallbacks) {
+    callback(ref); // 메모리 스냅샷/로컬 상태 정리
   }
 
-  // StateNotifierProvider 별도 처리
-  ref.read(workspaceStateProvider.notifier).exitWorkspace();
+  for (final provider in _providersToInvalidateOnLogout) {
+    ref.invalidate(provider); // Riverpod 캐시 무효화
+  }
 }
 ```
 
@@ -352,7 +359,7 @@ Future<void> logout() async {
 }
 ```
 
-3. **autoDispose 패턴 적용**
+3. **autoDispose 패턴 적용** (계정 전환 시 자동 해제)
 ```dart
 // ❌ 기존: 메모리에 계속 유지되어 캐시 문제 발생
 final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
@@ -373,8 +380,10 @@ final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref)
 
 **관련 파일:**
 - `lib/core/providers/provider_reset.dart` - 중앙 Provider 초기화 시스템
+- `lib/presentation/providers/workspace_state_provider.dart` - 스냅샷 강제 초기화
+- `lib/presentation/providers/home_state_provider.dart` - 홈 스냅샷 초기화
+- `lib/presentation/providers/calendar_events_provider.dart` - 캘린더 스냅샷 초기화
 - `lib/presentation/providers/auth_provider.dart` - 로그아웃 로직
-- `lib/presentation/providers/my_groups_provider.dart` - autoDispose 적용 예시
 
 **참고:** [프론트엔드 가이드 - Provider 초기화 시스템](../implementation/frontend-guide.md#상태-관리-패턴)
 

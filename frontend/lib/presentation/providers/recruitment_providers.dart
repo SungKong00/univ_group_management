@@ -76,8 +76,8 @@ class ReviewApplicationParams {
 ///
 /// Fetches the currently active recruitment for a specific group.
 /// Returns null if no active recruitment exists.
-final activeRecruitmentProvider =
-    FutureProvider.family<RecruitmentResponse?, int>((ref, groupId) async {
+final activeRecruitmentProvider = FutureProvider.autoDispose
+    .family<RecruitmentResponse?, int>((ref, groupId) async {
   final service = RecruitmentService();
   return await service.getActiveRecruitment(groupId);
 });
@@ -85,8 +85,8 @@ final activeRecruitmentProvider =
 /// Archived Recruitments Provider
 ///
 /// Fetches the list of past/closed recruitments for a specific group.
-final archivedRecruitmentsProvider = FutureProvider.family<
-    List<ArchivedRecruitmentResponse>, int>((ref, groupId) async {
+final archivedRecruitmentsProvider = FutureProvider.autoDispose
+    .family<List<ArchivedRecruitmentResponse>, int>((ref, groupId) async {
   final service = RecruitmentService();
   return await service.getArchivedRecruitments(groupId);
 });
@@ -94,8 +94,8 @@ final archivedRecruitmentsProvider = FutureProvider.family<
 /// Application List Provider
 ///
 /// Fetches all applications for a specific recruitment.
-final applicationListProvider = FutureProvider.family<
-    List<ApplicationSummaryResponse>, int>((ref, recruitmentId) async {
+final applicationListProvider = FutureProvider.autoDispose
+    .family<List<ApplicationSummaryResponse>, int>((ref, recruitmentId) async {
   final service = RecruitmentService();
   return await service.getApplications(recruitmentId);
 });
@@ -103,8 +103,8 @@ final applicationListProvider = FutureProvider.family<
 /// Recruitment Detail Provider
 ///
 /// Fetches detailed information about a specific recruitment.
-final recruitmentDetailProvider =
-    FutureProvider.family<RecruitmentResponse, int>((ref, recruitmentId) async {
+final recruitmentDetailProvider = FutureProvider.autoDispose
+    .family<RecruitmentResponse, int>((ref, recruitmentId) async {
   final service = RecruitmentService();
   return await service.getRecruitment(recruitmentId);
 });
@@ -112,8 +112,8 @@ final recruitmentDetailProvider =
 /// Application Detail Provider
 ///
 /// Fetches detailed information about a specific application.
-final applicationProvider =
-    FutureProvider.family<ApplicationResponse, int>((ref, applicationId) async {
+final applicationProvider = FutureProvider.autoDispose
+    .family<ApplicationResponse, int>((ref, applicationId) async {
   final service = RecruitmentService();
   return await service.getApplication(applicationId);
 });

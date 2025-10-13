@@ -9,7 +9,7 @@ final groupServiceProvider = Provider<GroupService>((ref) {
 
 /// 하위 그룹 생성 요청 목록 Provider
 final subGroupRequestListProvider =
-    FutureProvider.family<List<SubGroupRequestResponse>, int>((
+    FutureProvider.autoDispose.family<List<SubGroupRequestResponse>, int>((
   ref,
   groupId,
 ) async {

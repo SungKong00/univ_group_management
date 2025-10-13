@@ -4,7 +4,8 @@ import '../../../../core/repositories/repository_providers.dart';
 import 'member_list_provider.dart';
 
 /// 가입 신청 목록 Provider
-final joinRequestListProvider = FutureProvider.family<List<JoinRequest>, int>((
+final joinRequestListProvider =
+    FutureProvider.autoDispose.family<List<JoinRequest>, int>((
   ref,
   groupId,
 ) async {

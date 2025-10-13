@@ -265,19 +265,29 @@ onFieldSubmitted: (value) {
 
 ```dart
 // core/providers/provider_reset.dart
-final providersToResetOnLogout = <ProviderOrFamily>[
+typedef LogoutResetCallback = void Function(Ref ref);
+
+final _providersToInvalidateOnLogout = <ProviderOrFamily<dynamic>>[
   myGroupsProvider,
-  // 새로운 사용자 데이터 Provider는 여기에 추가
+  homeStateProvider,
+  calendarEventsProvider,
+  // ... 사용자 데이터 Provider 등록
+];
+
+final _customLogoutCallbacks = <LogoutResetCallback>[
+  (ref) => ref.read(workspaceStateProvider.notifier).forceClearForLogout(),
+  (ref) => ref.read(homeStateProvider.notifier).clearSnapshots(),
+  (ref) => ref.read(calendarEventsProvider.notifier).clearSnapshots(),
 ];
 
 void resetAllUserDataProviders(Ref ref) {
-  // FutureProvider 및 일반 Provider 일괄 초기화
-  for (final provider in providersToResetOnLogout) {
-    ref.invalidate(provider);
+  for (final callback in _customLogoutCallbacks) {
+    callback(ref); // in-memory snapshot/로컬 상태 정리
   }
 
-  // StateNotifierProvider 별도 처리
-  ref.read(workspaceStateProvider.notifier).exitWorkspace();
+  for (final provider in _providersToInvalidateOnLogout) {
+    ref.invalidate(provider); // Riverpod 캐시 무효화
+  }
 }
 ```
 
@@ -317,9 +327,9 @@ Future<void> logout() async {
 
 **새로운 사용자 데이터 Provider 추가 시:**
 
-1. `core/providers/provider_reset.dart`의 `providersToResetOnLogout` 리스트에 추가
-2. 가능한 경우 `autoDispose` 적용
-3. StateNotifierProvider는 `resetAllUserDataProviders()` 함수 내부에서 별도 처리
+1. `_providersToInvalidateOnLogout`에 Provider를 등록해 invalidate 보장
+2. Provider가 메모리 캐시를 유지한다면 `LogoutResetCallback`에 전용 정리 함수를 등록
+3. 가능한 경우 `autoDispose` 적용하여 불필요한 메모리 유지 최소화
 
 이 패턴은 다음을 보장합니다:
 - 로그아웃 시 모든 사용자 데이터 완전 제거

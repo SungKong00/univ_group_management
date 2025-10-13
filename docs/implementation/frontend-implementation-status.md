@@ -192,23 +192,29 @@ lib/
 - ✅ **상태 격리**: 계정 전환 시 이전 계정 데이터 완전 제거
 
 **구현 위치:**
-- `lib/core/providers/provider_reset.dart` - 중앙 Provider 초기화 시스템
+- `lib/core/providers/provider_reset.dart` - 중앙 Provider 초기화/콜백 시스템
+- `lib/presentation/providers/workspace_state_provider.dart` - 스냅샷 강제 초기화
+- `lib/presentation/providers/home_state_provider.dart` - 홈 상태 초기화
+- `lib/presentation/providers/calendar_events_provider.dart` - 캘린더 상태 초기화
 - `lib/presentation/providers/auth_provider.dart` - 로그아웃 로직
-- `lib/presentation/providers/my_groups_provider.dart` - autoDispose 적용
 
 **핵심 패턴:**
 ```dart
-// Provider 초기화 시스템
+// Provider 초기화 시스템 (요약)
 void resetAllUserDataProviders(Ref ref) {
-  for (final provider in providersToResetOnLogout) {
-    ref.invalidate(provider);
+  for (final callback in _customLogoutCallbacks) {
+    callback(ref); // in-memory snapshot 정리
   }
-  ref.read(workspaceStateProvider.notifier).exitWorkspace();
+
+  for (final provider in _providersToInvalidateOnLogout) {
+    ref.invalidate(provider); // Riverpod 캐시 무효화
+  }
 }
 
-// autoDispose 패턴
-final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref) async {
-  // 사용하지 않을 때 자동 메모리 해제
+// autoDispose 패턴 예시
+final activeRecruitmentProvider = FutureProvider.autoDispose
+    .family<RecruitmentResponse?, int>((ref, groupId) async {
+  return await RecruitmentService().getActiveRecruitment(groupId);
 });
 ```
 

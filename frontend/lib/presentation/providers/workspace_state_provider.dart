@@ -320,6 +320,13 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     _saveCurrentWorkspaceSnapshot();
   }
 
+  /// Forcefully clears workspace-related caches (used during logout)
+  void forceClearForLogout() {
+    _workspaceSnapshots.clear();
+    _lastGroupId = null;
+    state = const WorkspaceState();
+  }
+
   Future<void> enterWorkspace(
     String groupId, {
     String? channelId,

@@ -261,7 +261,7 @@ class GroupCalendarNotifier extends StateNotifier<GroupCalendarState> {
 
 /// Provider for group calendar state.
 /// Use a separate provider per group by using `.family`.
-final groupCalendarProvider = StateNotifierProvider.family<
-    GroupCalendarNotifier, GroupCalendarState, int>((ref, groupId) {
+final groupCalendarProvider = StateNotifierProvider.autoDispose
+    .family<GroupCalendarNotifier, GroupCalendarState, int>((ref, groupId) {
   return GroupCalendarNotifier(GroupCalendarService());
 });

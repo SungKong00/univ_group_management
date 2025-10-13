@@ -161,6 +161,13 @@ class HomeStateNotifier extends StateNotifier<HomeState> {
     );
   }
 
+  /// Clears any cached state so the next login starts fresh
+  void clearSnapshots() {
+    _cachedSnapshot = null;
+    _hasInitialized = false;
+    state = const HomeState();
+  }
+
   /// 스냅샷에서 상태 복원
   void loadSnapshot() {
     if (_cachedSnapshot != null) {

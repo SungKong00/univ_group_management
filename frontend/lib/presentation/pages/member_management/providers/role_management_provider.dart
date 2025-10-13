@@ -3,7 +3,8 @@ import '../../../../core/models/member_models.dart';
 import '../../../../core/repositories/repository_providers.dart';
 
 /// 그룹 역할 목록 Provider
-final roleListProvider = FutureProvider.family<List<GroupRole>, int>((
+final roleListProvider = FutureProvider.autoDispose
+    .family<List<GroupRole>, int>((
   ref,
   groupId,
 ) async {

@@ -221,6 +221,12 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
     );
   }
 
+  /// Clears cached snapshots and resets state (used during logout)
+  void clearSnapshots() {
+    _cachedSnapshot = null;
+    state = CalendarEventsState.initial();
+  }
+
   /// 스냅샷에서 상태 복원
   void _loadSnapshot() {
     if (_cachedSnapshot != null) {
