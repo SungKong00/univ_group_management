@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/enums/calendar_view.dart';
 import '../../../../core/models/calendar/group_event.dart';
@@ -15,8 +16,6 @@ import '../../../widgets/organisms/organisms.dart';
 import '../../calendar/calendar_week_grid_view.dart';
 import '../../calendar/widgets/calendar_month_with_sidebar.dart';
 import '../../calendar/widgets/month_event_chip.dart';
-import 'widgets/calendar_view_selector.dart';
-import 'widgets/date_navigation_header.dart';
 import 'widgets/group_event_form_dialog.dart';
 
 /// Event formality categories for single-step selector
@@ -133,31 +132,36 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   Widget _buildGroupCalendarTab() {
     final state = ref.watch(groupCalendarProvider(widget.groupId));
     final currentView = ref.watch(calendarViewProvider);
+    final focusedDate = ref.watch(focusedDateProvider);
 
-    return Stack(
+    return Column(
       children: [
-        Column(
-          children: [
-            // Date navigation header
-            const DateNavigationHeader(),
-
-            // View selector (day/week/month)
-            const CalendarViewSelector(),
-
-            // Calendar content area - Placeholder for Phase 2
-            Expanded(
-              child: _buildCalendarContent(state, currentView),
-            ),
-          ],
-        ),
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: FloatingActionButton(
-            onPressed: _showCreateDialog,
-            tooltip: '일정 추가',
-            child: const Icon(Icons.add),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm,
+            AppSpacing.sm,
+            AppSpacing.sm,
+            AppSpacing.xs,
           ),
+          child: _GroupCalendarHeader(
+            view: currentView,
+            label: _formatFocusedLabel(focusedDate, currentView),
+            isBusy: state.isLoading,
+            onChangeView: (view) {
+              if (view != currentView) {
+                ref.read(calendarViewProvider.notifier).setView(view);
+              }
+            },
+            onPrevious: () => _handlePrevious(currentView),
+            onNext: () => _handleNext(currentView),
+            onToday: () =>
+                ref.read(focusedDateProvider.notifier).resetToToday(),
+            onCreateEvent:
+                state.isLoading ? null : () => _showCreateDialog(),
+          ),
+        ),
+        Expanded(
+          child: _buildCalendarContent(state, currentView),
         ),
       ],
     );
@@ -246,6 +250,45 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         return '주간';
       case CalendarView.month:
         return '월간';
+    }
+  }
+
+  String _formatFocusedLabel(DateTime date, CalendarView view) {
+    switch (view) {
+      case CalendarView.week:
+        final weekStart = _getWeekStart(date);
+        final weekEnd = weekStart.add(const Duration(days: 6));
+        if (weekStart.month == weekEnd.month) {
+          return '${weekStart.year}년 ${weekStart.month}월 ${weekStart.day}일 ~ ${weekEnd.day}일';
+        }
+        return '${DateFormat('M월 d일', 'ko_KR').format(weekStart)} ~ '
+            '${DateFormat('M월 d일', 'ko_KR').format(weekEnd)}';
+      case CalendarView.month:
+        return DateFormat('yyyy년 M월', 'ko_KR').format(date);
+    }
+  }
+
+  void _handlePrevious(CalendarView view) {
+    final notifier = ref.read(focusedDateProvider.notifier);
+    switch (view) {
+      case CalendarView.week:
+        notifier.previousWeek();
+        break;
+      case CalendarView.month:
+        notifier.previous(1);
+        break;
+    }
+  }
+
+  void _handleNext(CalendarView view) {
+    final notifier = ref.read(focusedDateProvider.notifier);
+    switch (view) {
+      case CalendarView.week:
+        notifier.nextWeek();
+        break;
+      case CalendarView.month:
+        notifier.next(1);
+        break;
     }
   }
 
@@ -801,6 +844,164 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
           ),
         ],
       ),
+    );
+  }
+}
+
+class _GroupCalendarHeader extends StatelessWidget {
+  const _GroupCalendarHeader({
+    required this.view,
+    required this.label,
+    required this.isBusy,
+    required this.onChangeView,
+    required this.onPrevious,
+    required this.onNext,
+    required this.onToday,
+    required this.onCreateEvent,
+  });
+
+  final CalendarView view;
+  final String label;
+  final bool isBusy;
+  final ValueChanged<CalendarView> onChangeView;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final VoidCallback onToday;
+  final VoidCallback? onCreateEvent;
+
+  @override
+  Widget build(BuildContext context) {
+    final viewToggle = ToggleButtons(
+      isSelected: CalendarView.values
+          .map((option) => option == view)
+          .toList(growable: false),
+      onPressed: (index) =>
+          onChangeView(CalendarView.values.elementAt(index)),
+      borderRadius: BorderRadius.circular(12),
+      fillColor: AppColors.brand.withValues(alpha: 0.08),
+      selectedColor: AppColors.brand,
+      constraints: const BoxConstraints(minHeight: 40),
+      children: const [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: Text('주간'),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: Text('월간'),
+        ),
+      ],
+    );
+
+    final addButton = FilledButton.icon(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, AppComponents.buttonHeight),
+      ),
+      onPressed: onCreateEvent,
+      icon: const Icon(Icons.add),
+      label: const Text('일정 추가'),
+    );
+
+    final navigator = _GroupCalendarNavigator(
+      label: label,
+      onPrevious: onPrevious,
+      onNext: onNext,
+      onToday: onToday,
+      enabled: !isBusy,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 720;
+
+        if (isCompact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(child: navigator),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: viewToggle,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  addButton,
+                ],
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            viewToggle,
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Center(child: navigator),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            addButton,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _GroupCalendarNavigator extends StatelessWidget {
+  const _GroupCalendarNavigator({
+    required this.label,
+    required this.onPrevious,
+    required this.onNext,
+    required this.onToday,
+    required this.enabled,
+  });
+
+  final String label;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final VoidCallback onToday;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: '이전',
+          onPressed: enabled ? onPrevious : null,
+          icon: const Icon(Icons.chevron_left),
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 160),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: textTheme.titleLarge,
+          ),
+        ),
+        IconButton(
+          tooltip: '다음',
+          onPressed: enabled ? onNext : null,
+          icon: const Icon(Icons.chevron_right),
+        ),
+        TextButton(
+          onPressed: enabled ? onToday : null,
+          child: const Text('오늘'),
+        ),
+      ],
     );
   }
 }

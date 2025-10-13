@@ -682,77 +682,96 @@ class _CalendarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final label = _buildLabel(
       state.view,
       state.focusedDate,
       state.selectedDate,
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            IconButton(
-              tooltip: '이전',
-              onPressed: onPrevious,
-              icon: const Icon(Icons.chevron_left),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [Text(label, style: textTheme.titleLarge)],
-              ),
-            ),
-            IconButton(
-              tooltip: '다음',
-              onPressed: onNext,
-              icon: const Icon(Icons.chevron_right),
-            ),
-            TextButton(onPressed: onToday, child: const Text('오늘')),
-          ],
+    final viewToggle = ToggleButtons(
+      isSelected:
+          CalendarViewType.values.map((view) => view == state.view).toList(),
+      onPressed: (index) =>
+          onChangeView(CalendarViewType.values.elementAt(index)),
+      borderRadius: BorderRadius.circular(12),
+      fillColor: AppColors.brand.withValues(alpha: 0.08),
+      selectedColor: AppColors.brand,
+      constraints: const BoxConstraints(minHeight: 40),
+      children: const [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: Text('월간'),
         ),
-        const SizedBox(height: AppSpacing.xs),
-        Row(
-          children: [
-            ToggleButtons(
-              isSelected: CalendarViewType.values
-                  .map((view) => view == state.view)
-                  .toList(),
-              onPressed: (index) =>
-                  onChangeView(CalendarViewType.values.elementAt(index)),
-              borderRadius: BorderRadius.circular(12),
-              fillColor: AppColors.brand.withValues(alpha: 0.08),
-              selectedColor: AppColors.brand,
-              constraints: const BoxConstraints(minHeight: 40),
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                  child: Text('월간'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                  child: Text('주간'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                  child: Text('일간'),
-                ),
-              ],
-            ),
-            const Spacer(),
-            PrimaryButton(
-              text: '이벤트 추가',
-              onPressed: onCreateEvent,
-              isLoading: state.isMutating,
-              semanticsLabel: '새 개인 이벤트 추가',
-              variant: PrimaryButtonVariant.brand,
-              width: 160,
-            ),
-          ],
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: Text('주간'),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: Text('일간'),
         ),
       ],
+    );
+
+    final addButton = PrimaryButton(
+      text: '일정 추가',
+      onPressed: onCreateEvent,
+      isLoading: state.isMutating,
+      semanticsLabel: '새 개인 일정 추가',
+      variant: PrimaryButtonVariant.brand,
+      width: 160,
+    );
+
+    final navigator = _CalendarNavigator(
+      label: label,
+      onPrevious: onPrevious,
+      onNext: onNext,
+      onToday: onToday,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 720;
+
+        if (isCompact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(child: navigator),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: viewToggle,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  addButton,
+                ],
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            viewToggle,
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Center(child: navigator),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            addButton,
+          ],
+        );
+      },
     );
   }
 
@@ -770,6 +789,49 @@ class _CalendarHeader extends StatelessWidget {
       case CalendarViewType.day:
         return DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(selected);
     }
+  }
+}
+
+class _CalendarNavigator extends StatelessWidget {
+  const _CalendarNavigator({
+    required this.label,
+    required this.onPrevious,
+    required this.onNext,
+    required this.onToday,
+  });
+
+  final String label;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final VoidCallback onToday;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: '이전',
+          onPressed: onPrevious,
+          icon: const Icon(Icons.chevron_left),
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 160),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: textTheme.titleLarge,
+          ),
+        ),
+        IconButton(
+          tooltip: '다음',
+          onPressed: onNext,
+          icon: const Icon(Icons.chevron_right),
+        ),
+        TextButton(onPressed: onToday, child: const Text('오늘')),
+      ],
+    );
   }
 }
 
