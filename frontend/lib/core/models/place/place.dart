@@ -119,3 +119,54 @@ class PlaceRequest {
     };
   }
 }
+
+/// Request payload for creating a new place
+class CreatePlaceRequest {
+  const CreatePlaceRequest({
+    required this.managingGroupId,
+    required this.building,
+    required this.roomNumber,
+    this.alias,
+    this.capacity,
+  });
+
+  final int managingGroupId;
+  final String building;
+  final String roomNumber;
+  final String? alias;
+  final int? capacity;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'managingGroupId': managingGroupId,
+      'building': building,
+      'roomNumber': roomNumber,
+      if (alias != null && alias!.trim().isNotEmpty) 'alias': alias,
+      if (capacity != null) 'capacity': capacity,
+    };
+  }
+}
+
+/// Request payload for updating an existing place
+class UpdatePlaceRequest {
+  const UpdatePlaceRequest({
+    this.building,
+    this.roomNumber,
+    this.alias,
+    this.capacity,
+  });
+
+  final String? building;
+  final String? roomNumber;
+  final String? alias;
+  final int? capacity;
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (building != null) 'building': building,
+      if (roomNumber != null) 'roomNumber': roomNumber,
+      if (alias != null) 'alias': alias!.trim().isEmpty ? null : alias,
+      if (capacity != null) 'capacity': capacity,
+    };
+  }
+}

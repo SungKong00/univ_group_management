@@ -1,5 +1,8 @@
 import 'dart:developer' as developer;
 import '../models/auth_models.dart';
+import '../models/place/place.dart';
+import '../models/place/place_availability.dart';
+import '../models/place/place_detail_response.dart';
 import '../models/place/place_reservation.dart';
 import '../network/dio_client.dart';
 
@@ -307,7 +310,299 @@ class PlaceService {
   }
 
   // ===== Place Management APIs =====
-  // TODO: Add place CRUD APIs when needed
+
+  /// Get all places
+  ///
+  /// GET /api/places
+  /// Returns list of all places
+  Future<List<Place>> getAllPlaces() async {
+    try {
+      developer.log(
+        'Fetching all places',
+        name: 'PlaceService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>('/places');
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map((item) => Place.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+          return <Place>[];
+        });
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} places',
+            name: 'PlaceService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch places: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          return [];
+        }
+      }
+
+      return [];
+    } catch (e) {
+      developer.log(
+        'Error fetching places: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      return [];
+    }
+  }
+
+  /// Get place detail with availabilities
+  ///
+  /// GET /api/places/{id}
+  /// Returns place detail including availability schedules
+  Future<PlaceDetailResponse?> getPlaceDetail(int id) async {
+    try {
+      developer.log(
+        'Fetching place detail for place $id',
+        name: 'PlaceService',
+      );
+
+      final response =
+          await _dioClient.get<Map<String, dynamic>>('/places/$id');
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => PlaceDetailResponse.fromJson(json as Map<String, dynamic>),
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched place detail for place $id',
+            name: 'PlaceService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch place detail: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          return null;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      developer.log(
+        'Error fetching place detail: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      return null;
+    }
+  }
+
+  /// Create a new place
+  ///
+  /// POST /api/places
+  /// Returns the created place
+  Future<Place> createPlace(CreatePlaceRequest request) async {
+    try {
+      developer.log(
+        'Creating place: ${request.building} ${request.roomNumber}',
+        name: 'PlaceService',
+      );
+
+      final response = await _dioClient.post<Map<String, dynamic>>(
+        '/places',
+        data: request.toJson(),
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => Place.fromJson(json as Map<String, dynamic>),
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully created place ${apiResponse.data!.id}',
+            name: 'PlaceService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to create place: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          throw Exception(apiResponse.message ?? 'Failed to create place');
+        }
+      } else {
+        throw Exception('Empty response from server');
+      }
+    } catch (e) {
+      developer.log(
+        'Error creating place: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Update an existing place
+  ///
+  /// PATCH /api/places/{id}
+  /// Returns the updated place
+  Future<Place> updatePlace(int id, UpdatePlaceRequest request) async {
+    try {
+      developer.log(
+        'Updating place $id',
+        name: 'PlaceService',
+      );
+
+      final response = await _dioClient.patch<Map<String, dynamic>>(
+        '/places/$id',
+        data: request.toJson(),
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => Place.fromJson(json as Map<String, dynamic>),
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully updated place $id',
+            name: 'PlaceService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to update place: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          throw Exception(apiResponse.message ?? 'Failed to update place');
+        }
+      } else {
+        throw Exception('Empty response from server');
+      }
+    } catch (e) {
+      developer.log(
+        'Error updating place: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Delete a place
+  ///
+  /// DELETE /api/places/{id}
+  Future<void> deletePlace(int id) async {
+    try {
+      developer.log(
+        'Deleting place $id',
+        name: 'PlaceService',
+      );
+
+      final response =
+          await _dioClient.delete<Map<String, dynamic>>('/places/$id');
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json,
+        );
+
+        if (apiResponse.success) {
+          developer.log(
+            'Successfully deleted place $id',
+            name: 'PlaceService',
+          );
+        } else {
+          developer.log(
+            'Failed to delete place: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          throw Exception(apiResponse.message ?? 'Failed to delete place');
+        }
+      } else {
+        throw Exception('Empty response from server');
+      }
+    } catch (e) {
+      developer.log(
+        'Error deleting place: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Set availabilities for a place
+  ///
+  /// POST /api/places/{placeId}/availabilities
+  /// Replaces all existing availabilities with the provided list
+  Future<void> setAvailabilities(
+    int placeId,
+    List<AvailabilityRequest> availabilities,
+  ) async {
+    try {
+      developer.log(
+        'Setting ${availabilities.length} availabilities for place $placeId',
+        name: 'PlaceService',
+      );
+
+      final response = await _dioClient.post<Map<String, dynamic>>(
+        '/places/$placeId/availabilities',
+        data: availabilities.map((a) => a.toJson()).toList(),
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json,
+        );
+
+        if (apiResponse.success) {
+          developer.log(
+            'Successfully set availabilities for place $placeId',
+            name: 'PlaceService',
+          );
+        } else {
+          developer.log(
+            'Failed to set availabilities: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          throw Exception(
+            apiResponse.message ?? 'Failed to set availabilities',
+          );
+        }
+      } else {
+        throw Exception('Empty response from server');
+      }
+    } catch (e) {
+      developer.log(
+        'Error setting availabilities: $e',
+        name: 'PlaceService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
 
   // ===== Helper Methods =====
 

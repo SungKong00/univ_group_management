@@ -5,7 +5,9 @@ import '../../../../../core/models/place/place_reservation.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
 import '../../../../providers/focused_date_provider.dart';
+import '../../../../providers/group_permission_provider.dart';
 import '../../../../providers/place_calendar_provider.dart';
+import '../../place/place_list_page.dart';
 import 'building_place_selector.dart';
 import 'multi_place_calendar_view.dart';
 import 'place_reservation_dialog.dart';
@@ -41,6 +43,9 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
       children: [
         Column(
           children: [
+            // Header with place management button
+            _buildHeader(context),
+
             // Building and place selector
             BuildingPlaceSelector(),
 
@@ -362,5 +367,57 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         }
       }
     }
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final permissions = ref.watch(groupPermissionsProvider(widget.groupId));
+    final hasCalendarManage = permissions.when(
+      data: (perms) => perms.contains('CALENDAR_MANAGE'),
+      loading: () => false,
+      error: (_, __) => false,
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.neutral200,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '장소 예약 현황',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          if (hasCalendarManage)
+            TextButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PlaceListPage(groupId: widget.groupId),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.settings, size: 20),
+              label: const Text('장소 관리'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.brand,
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
