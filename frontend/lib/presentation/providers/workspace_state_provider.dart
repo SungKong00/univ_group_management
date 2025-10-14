@@ -8,6 +8,7 @@ import '../../core/services/channel_service.dart';
 import '../../core/services/local_storage.dart';
 import '../../core/utils/permission_utils.dart';
 import 'my_groups_provider.dart';
+import 'place_calendar_provider.dart';
 
 /// Workspace View Type
 enum WorkspaceView {
@@ -337,6 +338,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
     if (!isSameGroup && state.selectedGroupId != null) {
       _saveCurrentWorkspaceSnapshot();
+      _ref.invalidate(placeCalendarProvider);
     }
 
     final snapshot = channelId != null ? null : _getSnapshot(groupId);
