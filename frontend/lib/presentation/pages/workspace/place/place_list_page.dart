@@ -28,7 +28,7 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final placesAsync = ref.watch(placesProvider);
+    final placesAsync = ref.watch(placesProvider(widget.groupId));
     final permissionsAsync = ref.watch(groupPermissionsProvider(widget.groupId));
 
     final hasCalendarManage = permissionsAsync.when(

@@ -16,30 +16,31 @@ final placeServiceProvider = Provider<PlaceService>((ref) {
 
 // ===== Data Providers =====
 
-/// Provider for fetching all places
+/// Provider for fetching reservable places for a specific group
 ///
-/// Returns a list of all places available in the system.
+/// Returns a list of places that the given group is approved to use.
+/// Uses family to pass the groupId.
 /// Automatically disposes when no longer in use.
-final placesProvider = FutureProvider.autoDispose<List<Place>>((ref) async {
+final placesProvider = FutureProvider.family.autoDispose<List<Place>, int>((ref, groupId) async {
   final placeService = ref.watch(placeServiceProvider);
 
   developer.log(
-    'Fetching all places',
+    'Fetching reservable places for group $groupId',
     name: 'PlaceProvider',
   );
 
   try {
-    final places = await placeService.getAllPlaces();
+    final places = await placeService.getReservablePlaces(groupId);
 
     developer.log(
-      'Successfully fetched ${places.length} places',
+      'Successfully fetched ${places.length} reservable places for group $groupId',
       name: 'PlaceProvider',
     );
 
     return places;
   } catch (e, stack) {
     developer.log(
-      'Failed to fetch places: $e',
+      'Failed to fetch reservable places for group $groupId: $e',
       name: 'PlaceProvider',
       error: e,
       stackTrace: stack,

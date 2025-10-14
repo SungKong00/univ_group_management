@@ -78,6 +78,22 @@ class PlaceService(
     fun getAllActivePlaces(): List<PlaceResponse> = placeRepository.findAllActive().map { it.toResponse() }
 
     /**
+     * 특정 그룹이 예약 가능한 장소 목록 조회
+     */
+    @Transactional(readOnly = true)
+    fun findReservablePlacesForGroup(
+        user: User,
+        groupId: Long,
+    ): List<PlaceResponse> {
+        // 1. 사용자가 해당 그룹의 멤버인지 확인
+        groupMemberRepository.findByGroupIdAndUserId(groupId, user.id!!)
+            .orElseThrow { BusinessException(ErrorCode.NOT_GROUP_MEMBER) }
+
+        // 2. Repository를 통해 예약 가능한 장소 목록 조회
+        return placeRepository.findReservablePlacesByGroupId(groupId).map { it.toResponse() }
+    }
+
+    /**
      * 장소 상세 조회
      */
     @Transactional(readOnly = true)

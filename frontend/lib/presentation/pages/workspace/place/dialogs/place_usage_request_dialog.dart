@@ -35,7 +35,7 @@ class _PlaceUsageRequestDialogState
 
   @override
   Widget build(BuildContext context) {
-    final placesAsync = ref.watch(placesProvider);
+    final placesAsync = ref.watch(placesProvider(widget.groupId));
 
     return AlertDialog(
       title: Text(

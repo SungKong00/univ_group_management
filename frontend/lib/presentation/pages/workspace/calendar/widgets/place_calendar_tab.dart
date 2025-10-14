@@ -40,7 +40,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
   /// Load places from API and set them to the place calendar provider
   Future<void> _loadPlaces() async {
     try {
-      final places = await ref.read(placesProvider.future);
+      final places = await ref.read(placesProvider(widget.groupId).future);
       ref.read(placeCalendarProvider.notifier).setPlaces(places);
     } catch (e) {
       // Error handling is done by the provider

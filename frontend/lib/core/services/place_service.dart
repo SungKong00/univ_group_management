@@ -371,6 +371,63 @@ class PlaceService {
     }
   }
 
+  /// Get reservable places for a specific group
+  ///
+  /// GET /api/groups/{groupId}/reservable-places
+  /// Returns list of places the group is approved to use
+  Future<List<Place>> getReservablePlaces(int groupId) async {
+    try {
+      developer.log(
+        'Fetching reservable places for group $groupId',
+        name: 'PlaceService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>('/groups/$groupId/reservable-places');
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map((item) => Place.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+          return <Place>[];
+        });
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} reservable places for group $groupId',
+            name: 'PlaceService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch reservable places: ${apiResponse.message}',
+            name: 'PlaceService',
+            level: 900,
+          );
+          return [];
+        }
+      }
+
+      developer.log(
+        'Empty response from server when fetching reservable places',
+        name: 'PlaceService',
+        level: 900,
+      );
+      return [];
+    } catch (e, stack) {
+      developer.log(
+        'Error fetching reservable places for group $groupId: $e',
+        name: 'PlaceService',
+        error: e,
+        stackTrace: stack,
+        level: 1000,
+      );
+      rethrow;
+    }
+  }
+
   /// Get place detail with availabilities
   ///
   /// GET /api/places/{id}
