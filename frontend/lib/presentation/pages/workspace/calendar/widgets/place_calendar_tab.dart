@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
+import '../../../../../core/enums/calendar_view.dart';
 import '../../../../../core/models/place/place_reservation.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
+import '../../../../providers/calendar_view_provider.dart';
 import '../../../../providers/focused_date_provider.dart';
 import '../../../../providers/group_permission_provider.dart';
 import '../../../../providers/place_calendar_provider.dart';
@@ -52,6 +55,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
   Widget build(BuildContext context) {
     final state = ref.watch(placeCalendarProvider);
     final focusedDate = ref.watch(focusedDateProvider);
+    final currentView = ref.watch(calendarViewProvider);
 
     return Stack(
       children: [
@@ -60,12 +64,15 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
             // Header with place management button
             _buildHeader(context),
 
+            // View controls (Week/Month toggle + Date navigation)
+            _buildViewControls(context, currentView, focusedDate),
+
             // Building and place selector
             BuildingPlaceSelector(),
 
             // Calendar view or empty state
             Expanded(
-              child: _buildContent(state, focusedDate),
+              child: _buildContent(state, focusedDate, currentView),
             ),
           ],
         ),
@@ -87,7 +94,11 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     );
   }
 
-  Widget _buildContent(PlaceCalendarState state, DateTime focusedDate) {
+  Widget _buildContent(
+    PlaceCalendarState state,
+    DateTime focusedDate,
+    CalendarView view,
+  ) {
     // Loading state
     if (state.isLoading && state.places.isEmpty) {
       return const Center(
@@ -108,6 +119,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     // When no places are selected, calendar will be empty
     // When places are selected, their reservations will be displayed
     return MultiPlaceCalendarView(
+      view: view,
       focusedDate: focusedDate,
       selectedDate: focusedDate,
       onDateSelected: (selected, focused) {
@@ -209,7 +221,9 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
                       children: [
                         Text(
                           reservation.title,
-                          style: Theme.of(context).textTheme.headlineSmall,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -280,7 +294,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
               children: [
                 Text(
                   label,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.neutral600,
                       ),
                 ),
@@ -375,6 +389,145 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
           );
         }
       }
+    }
+  }
+
+  Widget _buildViewControls(
+    BuildContext context,
+    CalendarView currentView,
+    DateTime focusedDate,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.neutral200,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // View toggle (Week/Month)
+          ToggleButtons(
+            isSelected: CalendarView.values
+                .map((option) => option == currentView)
+                .toList(growable: false),
+            onPressed: (index) {
+              ref
+                  .read(calendarViewProvider.notifier)
+                  .setView(CalendarView.values.elementAt(index));
+            },
+            borderRadius: BorderRadius.circular(12),
+            fillColor: AppColors.brand.withValues(alpha: 0.08),
+            selectedColor: AppColors.brand,
+            constraints: const BoxConstraints(minHeight: 40),
+            children: const [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                child: Text('주간'),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                child: Text('월간'),
+              ),
+            ],
+          ),
+          const SizedBox(width: AppSpacing.sm),
+
+          // Date navigation
+          Expanded(
+            child: _buildDateNavigator(context, currentView, focusedDate),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateNavigator(
+    BuildContext context,
+    CalendarView view,
+    DateTime focusedDate,
+  ) {
+    final label = _formatFocusedLabel(focusedDate, view);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          tooltip: '이전',
+          onPressed: () => _handlePrevious(view),
+          icon: const Icon(Icons.chevron_left),
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 120),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
+        IconButton(
+          tooltip: '다음',
+          onPressed: () => _handleNext(view),
+          icon: const Icon(Icons.chevron_right),
+        ),
+        TextButton(
+          onPressed: () => ref.read(focusedDateProvider.notifier).resetToToday(),
+          child: const Text('오늘'),
+        ),
+      ],
+    );
+  }
+
+  String _formatFocusedLabel(DateTime date, CalendarView view) {
+    switch (view) {
+      case CalendarView.week:
+        final weekStart = _getWeekStart(date);
+        final weekEnd = weekStart.add(const Duration(days: 6));
+        if (weekStart.month == weekEnd.month) {
+          return '${weekStart.year}년 ${weekStart.month}월 ${weekStart.day}일 ~ ${weekEnd.day}일';
+        }
+        return '${DateFormat('M월 d일', 'ko_KR').format(weekStart)} ~ '
+            '${DateFormat('M월 d일', 'ko_KR').format(weekEnd)}';
+      case CalendarView.month:
+        return DateFormat('yyyy년 M월', 'ko_KR').format(date);
+    }
+  }
+
+  DateTime _getWeekStart(DateTime date) {
+    final weekday = date.weekday; // 1 (Monday) to 7 (Sunday)
+    return date.subtract(Duration(days: weekday - 1));
+  }
+
+  void _handlePrevious(CalendarView view) {
+    final notifier = ref.read(focusedDateProvider.notifier);
+    switch (view) {
+      case CalendarView.week:
+        notifier.previousWeek();
+        break;
+      case CalendarView.month:
+        notifier.previous(1);
+        break;
+    }
+  }
+
+  void _handleNext(CalendarView view) {
+    final notifier = ref.read(focusedDateProvider.notifier);
+    switch (view) {
+      case CalendarView.week:
+        notifier.nextWeek();
+        break;
+      case CalendarView.month:
+        notifier.next(1);
+        break;
     }
   }
 
