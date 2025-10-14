@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -42,45 +43,46 @@ class _PlaceAvailabilitySettingsPageState
 
   /// Load existing availabilities from API
   Future<void> _loadAvailabilities() async {
-    final placeDetailAsync = ref.read(placeDetailProvider(widget.placeId));
+    try {
+      final placeDetail = await ref.read(placeDetailProvider(widget.placeId).future);
+      if (placeDetail != null && mounted) {
+        setState(() {
+          // Clear existing entries before loading
+          for (var day in DayOfWeek.values) {
+            _availabilities[day]!.clear();
+          }
 
-    await placeDetailAsync.when(
-      data: (placeDetail) async {
-        if (placeDetail != null && mounted) {
-          setState(() {
-            // Group availabilities by day of week
-            for (var availability in placeDetail.availabilities) {
-              _availabilities[availability.dayOfWeek]!.add(
-                AvailabilityEntry(
-                  id: availability.id,
-                  startTime: availability.startTime,
-                  endTime: availability.endTime,
-                  displayOrder: availability.displayOrder,
-                ),
-              );
-            }
+          // Group availabilities by day of week
+          for (var availability in placeDetail.availabilities) {
+            _availabilities[availability.dayOfWeek]!.add(
+              AvailabilityEntry(
+                id: availability.id,
+                startTime: availability.startTime,
+                endTime: availability.endTime,
+                displayOrder: availability.displayOrder,
+              ),
+            );
+          }
 
-            // Sort by display order
-            for (var day in DayOfWeek.values) {
-              _availabilities[day]!.sort((a, b) =>
-                  a.displayOrder.compareTo(b.displayOrder));
-            }
+          // Sort by display order
+          for (var day in DayOfWeek.values) {
+            _availabilities[day]!.sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+          }
 
-            _isInitialized = true;
-          });
-        }
-      },
-      loading: () async {
-        // Wait for loading to complete
-      },
-      error: (error, _) async {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('장소 정보를 불러오는 데 실패했습니다: $error')),
-          );
-        }
-      },
-    );
+          _isInitialized = true;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('장소 정보를 불러오는 데 실패했습니다: $error')),
+        );
+        // Also set initialized to true on error to stop loading
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    }
   }
 
   @override
@@ -515,7 +517,13 @@ class _PlaceAvailabilitySettingsPageState
         );
         Navigator.pop(context);
       }
-    } catch (e) {
+    } catch (e, stack) {
+      developer.log(
+        'Failed to save availabilities',
+        name: 'PlaceAvailabilitySettingsPage',
+        error: e,
+        stackTrace: stack,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

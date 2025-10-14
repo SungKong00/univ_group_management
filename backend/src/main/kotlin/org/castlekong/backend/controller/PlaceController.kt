@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
+@RequestMapping("/api")
 class PlaceController(
     private val placeService: PlaceService,
     private val placeUsageGroupService: PlaceUsageGroupService,
@@ -35,7 +36,7 @@ class PlaceController(
      * GET /api/places
      * 활성 장소 목록 조회 (공개)
      */
-    @GetMapping("/api/places")
+    @GetMapping("/places")
     fun getAllPlaces(): ApiResponse<List<PlaceResponse>> {
         val places = placeService.getAllActivePlaces()
         return ApiResponse.success(places)
@@ -45,7 +46,7 @@ class PlaceController(
      * GET /api/groups/{groupId}/reservable-places
      * 특정 그룹이 예약 가능한 장소 목록 조회
      */
-    @GetMapping("/api/groups/{groupId}/reservable-places")
+    @GetMapping("/groups/{groupId}/reservable-places")
     fun getReservablePlacesForGroup(
         authentication: Authentication,
         @PathVariable groupId: Long,
@@ -60,7 +61,7 @@ class PlaceController(
      * GET /api/places/{id}
      * 장소 상세 조회 (공개)
      */
-    @GetMapping("/api/places/{id}")
+    @GetMapping("/places/{id}")
     fun getPlaceDetail(
         @PathVariable id: Long,
     ): ApiResponse<PlaceDetailResponse> {
@@ -72,7 +73,7 @@ class PlaceController(
      * POST /api/places
      * 장소 등록 (CALENDAR_MANAGE)
      */
-    @PostMapping("/api/places")
+    @PostMapping("/places")
     @ResponseStatus(HttpStatus.CREATED)
     fun createPlace(
         authentication: Authentication,
@@ -88,7 +89,7 @@ class PlaceController(
      * PATCH /api/places/{id}
      * 장소 수정 (관리 주체)
      */
-    @PatchMapping("/api/places/{id}")
+    @PatchMapping("/places/{id}")
     fun updatePlace(
         authentication: Authentication,
         @PathVariable id: Long,
@@ -104,7 +105,7 @@ class PlaceController(
      * DELETE /api/places/{id}
      * 장소 삭제 (Soft delete, 관리 주체)
      */
-    @DeleteMapping("/api/places/{id}")
+    @DeleteMapping("/places/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deletePlace(
         authentication: Authentication,
@@ -119,7 +120,7 @@ class PlaceController(
      * POST /api/places/{id}/availabilities
      * 운영 시간 설정 (관리 주체)
      */
-    @PostMapping("/api/places/{id}/availabilities")
+    @PostMapping("/places/{id}/availabilities")
     fun setAvailabilities(
         authentication: Authentication,
         @PathVariable id: Long,
@@ -137,7 +138,7 @@ class PlaceController(
      * POST /api/places/{id}/usage-requests
      * 장소 사용 신청 (CALENDAR_MANAGE)
      */
-    @PostMapping("/api/places/{id}/usage-requests")
+    @PostMapping("/places/{id}/usage-requests")
     @ResponseStatus(HttpStatus.CREATED)
     fun requestUsage(
         authentication: Authentication,
@@ -154,7 +155,7 @@ class PlaceController(
      * PATCH /api/places/{placeId}/usage-groups/{groupId}
      * 사용 승인/거절 (관리 주체)
      */
-    @PatchMapping("/api/places/{placeId}/usage-groups/{groupId}")
+    @PatchMapping("/places/{placeId}/usage-groups/{groupId}")
     fun updateUsageStatus(
         authentication: Authentication,
         @PathVariable placeId: Long,
@@ -171,7 +172,7 @@ class PlaceController(
      * DELETE /api/places/{placeId}/usage-groups/{groupId}
      * 사용 권한 취소 (관리 주체, 미래 예약 삭제)
      */
-    @DeleteMapping("/api/places/{placeId}/usage-groups/{groupId}")
+    @DeleteMapping("/places/{placeId}/usage-groups/{groupId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun revokeUsagePermission(
         authentication: Authentication,
@@ -187,7 +188,7 @@ class PlaceController(
      * GET /api/places/{id}/usage-requests/pending
      * 대기 중인 사용 신청 조회 (관리 주체)
      */
-    @GetMapping("/api/places/{id}/usage-requests/pending")
+    @GetMapping("/places/{id}/usage-requests/pending")
     fun getPendingRequests(
         authentication: Authentication,
         @PathVariable id: Long,
@@ -202,7 +203,7 @@ class PlaceController(
      * GET /api/places/{id}/usage-groups
      * 승인된 사용 그룹 조회 (공개)
      */
-    @GetMapping("/api/places/{id}/usage-groups")
+    @GetMapping("/places/{id}/usage-groups")
     fun getApprovedGroups(
         @PathVariable id: Long,
     ): ApiResponse<List<UsageGroupResponse>> {

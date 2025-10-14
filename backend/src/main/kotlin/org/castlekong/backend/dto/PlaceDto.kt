@@ -1,5 +1,6 @@
 package org.castlekong.backend.dto
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -60,8 +61,10 @@ data class AvailabilityRequest(
     @field:NotNull(message = "요일은 필수입니다")
     val dayOfWeek: DayOfWeek,
     @field:NotNull(message = "시작 시간은 필수입니다")
+    @field:JsonFormat(pattern = "HH:mm:ss")
     val startTime: LocalTime,
     @field:NotNull(message = "종료 시간은 필수입니다")
+    @field:JsonFormat(pattern = "HH:mm:ss")
     val endTime: LocalTime,
     val displayOrder: Int = 0,
 )
@@ -69,7 +72,9 @@ data class AvailabilityRequest(
 data class AvailabilityResponse(
     val id: Long,
     val dayOfWeek: DayOfWeek,
+    @field:JsonFormat(pattern = "HH:mm:ss")
     val startTime: LocalTime,
+    @field:JsonFormat(pattern = "HH:mm:ss")
     val endTime: LocalTime,
     val displayOrder: Int,
 )
