@@ -12,6 +12,7 @@ import '../../../providers/calendar_view_provider.dart';
 import '../../../providers/focused_date_provider.dart';
 import '../../../providers/group_calendar_provider.dart';
 import '../../../providers/group_permission_provider.dart';
+import '../../../utils/responsive_layout_helper.dart';
 import '../../../widgets/organisms/organisms.dart';
 import '../../calendar/calendar_week_grid_view.dart';
 import '../../calendar/widgets/calendar_month_with_sidebar.dart';
@@ -890,7 +891,9 @@ class _GroupCalendarHeader extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 720;
+        // Use project standard: 850px breakpoint for wide desktop
+        final helper = ResponsiveLayoutHelper(context: context, constraints: constraints);
+        final isCompact = !helper.isWideDesktop;
 
         if (isCompact) {
           return Column(

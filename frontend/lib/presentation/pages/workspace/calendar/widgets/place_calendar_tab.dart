@@ -11,8 +11,9 @@ import '../../../../providers/focused_date_provider.dart';
 import '../../../../providers/group_permission_provider.dart';
 import '../../../../providers/place_calendar_provider.dart';
 import '../../../../providers/place_provider.dart';
+import '../../../../utils/responsive_layout_helper.dart';
 import '../../place/place_list_page.dart';
-import 'building_place_selector.dart';
+import 'compact_building_place_selector.dart';
 import 'multi_place_calendar_view.dart';
 import 'place_reservation_dialog.dart';
 
@@ -57,22 +58,43 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     final focusedDate = ref.watch(focusedDateProvider);
     final currentView = ref.watch(calendarViewProvider);
 
+    // Use LayoutBuilder to get actual widget width (not screen width)
+    // This ensures correct responsive behavior when navigation bars are present
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use project standard: 850px breakpoint for wide desktop
+        final helper = ResponsiveLayoutHelper(context: context, constraints: constraints);
+        final isWideMode = helper.isWideDesktop;
+
+        return _buildContent(
+          state,
+          focusedDate,
+          currentView,
+          isWideMode,
+        );
+      },
+    );
+  }
+
+  Widget _buildContent(
+    PlaceCalendarState state,
+    DateTime focusedDate,
+    CalendarView currentView,
+    bool isWideMode,
+  ) {
     return Stack(
       children: [
         Column(
           children: [
-            // Header with place management button
-            _buildHeader(context),
+            // Responsive header: 1 row in wide mode, 2 rows in compact mode
+            _buildResponsiveHeader(context, currentView, focusedDate, isWideMode),
 
-            // View controls (Week/Month toggle + Date navigation)
-            _buildViewControls(context, currentView, focusedDate),
-
-            // Building and place selector
-            BuildingPlaceSelector(),
+            // Selected places chips (from BuildingPlaceSelector)
+            _buildSelectedPlacesChips(state),
 
             // Calendar view or empty state
             Expanded(
-              child: _buildContent(state, focusedDate, currentView),
+              child: _buildCalendarView(state, focusedDate, currentView),
             ),
           ],
         ),
@@ -94,7 +116,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     );
   }
 
-  Widget _buildContent(
+  Widget _buildCalendarView(
     PlaceCalendarState state,
     DateTime focusedDate,
     CalendarView view,
@@ -392,11 +414,22 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     }
   }
 
-  Widget _buildViewControls(
+  /// Build responsive header that adapts to screen width
+  /// Wide mode (>=850px): 1 row with all controls
+  /// Compact mode (<850px): 2 rows (date nav + other controls)
+  Widget _buildResponsiveHeader(
     BuildContext context,
     CalendarView currentView,
     DateTime focusedDate,
+    bool isWideMode,
   ) {
+    final permissions = ref.watch(groupPermissionsProvider(widget.groupId));
+    final hasCalendarManage = permissions.when(
+      data: (perms) => perms.contains('CALENDAR_MANAGE'),
+      loading: () => false,
+      error: (_, __) => false,
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -411,40 +444,170 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          // View toggle (Week/Month)
-          ToggleButtons(
-            isSelected: CalendarView.values
-                .map((option) => option == currentView)
-                .toList(growable: false),
-            onPressed: (index) {
-              ref
-                  .read(calendarViewProvider.notifier)
-                  .setView(CalendarView.values.elementAt(index));
-            },
-            borderRadius: BorderRadius.circular(12),
-            fillColor: AppColors.brand.withValues(alpha: 0.08),
-            selectedColor: AppColors.brand,
-            constraints: const BoxConstraints(minHeight: 40),
-            children: const [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                child: Text('주간'),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                child: Text('월간'),
-              ),
-            ],
-          ),
-          const SizedBox(width: AppSpacing.sm),
+      child: isWideMode
+          ? _buildWideHeader(context, currentView, focusedDate, hasCalendarManage)
+          : _buildCompactHeader(context, currentView, focusedDate, hasCalendarManage),
+    );
+  }
 
-          // Date navigation
-          Expanded(
-            child: _buildDateNavigator(context, currentView, focusedDate),
+  /// Wide mode layout: [주간/월간] | [◀ 2025년 11월 ▶ 오늘] | [건물▼ 장소▼ ⚙️]
+  Widget _buildWideHeader(
+    BuildContext context,
+    CalendarView currentView,
+    DateTime focusedDate,
+    bool hasCalendarManage,
+  ) {
+    return Row(
+      children: [
+        // View toggle (Week/Month)
+        _buildViewToggle(currentView),
+        const SizedBox(width: AppSpacing.md),
+
+        // Date navigation (centered, takes remaining space)
+        Expanded(
+          child: _buildDateNavigator(context, currentView, focusedDate),
+        ),
+        const SizedBox(width: AppSpacing.md),
+
+        // Building/Place selector + Settings button
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CompactBuildingPlaceSelector(),
+            const SizedBox(width: AppSpacing.xs),
+            if (hasCalendarManage) _buildPlaceManageButton(context),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Compact mode layout (2 rows):
+  /// Row 1: [◀ 2025년 11월 ▶ 오늘]
+  /// Row 2: [주간/월간] | [건물▼ 장소▼] | [⚙️]
+  Widget _buildCompactHeader(
+    BuildContext context,
+    CalendarView currentView,
+    DateTime focusedDate,
+    bool hasCalendarManage,
+  ) {
+    return Column(
+      children: [
+        // Row 1: Date navigation (full width)
+        _buildDateNavigator(context, currentView, focusedDate),
+        const SizedBox(height: AppSpacing.xs),
+
+        // Row 2: View toggle + Building/Place selector + Settings
+        Row(
+          children: [
+            // View toggle
+            _buildViewToggle(currentView),
+            const SizedBox(width: AppSpacing.xs),
+
+            // Building/Place selector (takes remaining space)
+            const Expanded(
+              child: CompactBuildingPlaceSelector(),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+
+            // Settings button
+            if (hasCalendarManage) _buildPlaceManageButton(context),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// View toggle button (Week/Month)
+  Widget _buildViewToggle(CalendarView currentView) {
+    return ToggleButtons(
+      isSelected: CalendarView.values
+          .map((option) => option == currentView)
+          .toList(growable: false),
+      onPressed: (index) {
+        ref
+            .read(calendarViewProvider.notifier)
+            .setView(CalendarView.values.elementAt(index));
+      },
+      borderRadius: BorderRadius.circular(12),
+      fillColor: AppColors.brand.withValues(alpha: 0.08),
+      selectedColor: AppColors.brand,
+      constraints: const BoxConstraints(minHeight: 40, minWidth: 50),
+      children: const [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: Text('주간'),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: Text('월간'),
+        ),
+      ],
+    );
+  }
+
+  /// Place management button (icon only with tooltip)
+  Widget _buildPlaceManageButton(BuildContext context) {
+    return IconButton(
+      tooltip: '장소 관리',
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PlaceListPage(groupId: widget.groupId),
           ),
-        ],
+        );
+      },
+      icon: const Icon(Icons.settings),
+      color: AppColors.brand,
+      iconSize: 24,
+    );
+  }
+
+  /// Selected places chips display
+  Widget _buildSelectedPlacesChips(PlaceCalendarState state) {
+    if (state.selectedPlaces.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.neutral200,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Wrap(
+        spacing: AppSpacing.xs,
+        runSpacing: AppSpacing.xs,
+        children: state.selectedPlaces.map((place) {
+          final color = state.getColorForPlace(place.id);
+          return Chip(
+            label: Text(
+              place.displayName,
+              style: AppTheme.bodySmall.copyWith(
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: color,
+            deleteIconColor: Colors.white,
+            onDeleted: () {
+              ref.read(placeCalendarProvider.notifier).deselectPlace(place.id);
+            },
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: 2,
+            ),
+            visualDensity: VisualDensity.compact,
+          );
+        }).toList(),
       ),
     );
   }
@@ -529,57 +692,5 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         notifier.next(1);
         break;
     }
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    final permissions = ref.watch(groupPermissionsProvider(widget.groupId));
-    final hasCalendarManage = permissions.when(
-      data: (perms) => perms.contains('CALENDAR_MANAGE'),
-      loading: () => false,
-      error: (_, __) => false,
-    );
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.neutral200,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '장소 예약 현황',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-          if (hasCalendarManage)
-            TextButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PlaceListPage(groupId: widget.groupId),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.settings, size: 20),
-              label: const Text('장소 관리'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.brand,
-              ),
-            ),
-        ],
-      ),
-    );
   }
 }
