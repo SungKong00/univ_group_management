@@ -62,7 +62,11 @@ class PlaceService(
             )
 
         // 운영 시간 설정
-        request.availabilities?.let { addAvailabilities(place.id, it) }
+        if (request.availabilities.isNullOrEmpty()) {
+            createDefaultAvailabilities(place)
+        } else {
+            addAvailabilities(place.id, request.availabilities)
+        }
 
         return place.toResponse()
     }
@@ -172,6 +176,29 @@ class PlaceService(
             }
 
         placeAvailabilityRepository.saveAll(availabilities)
+    }
+
+    private fun createDefaultAvailabilities(place: Place) {
+        val defaultDays = listOf(
+            java.time.DayOfWeek.MONDAY,
+            java.time.DayOfWeek.TUESDAY,
+            java.time.DayOfWeek.WEDNESDAY,
+            java.time.DayOfWeek.THURSDAY,
+            java.time.DayOfWeek.FRIDAY
+        )
+        val startTime = java.time.LocalTime.of(9, 0)
+        val endTime = java.time.LocalTime.of(18, 0)
+
+        val defaultAvailabilities = defaultDays.map { day ->
+            PlaceAvailability(
+                place = place,
+                dayOfWeek = day,
+                startTime = startTime,
+                endTime = endTime,
+                displayOrder = 0
+            )
+        }
+        placeAvailabilityRepository.saveAll(defaultAvailabilities)
     }
 
     private fun checkCalendarManagePermission(

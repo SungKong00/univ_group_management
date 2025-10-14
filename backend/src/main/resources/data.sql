@@ -202,6 +202,44 @@ INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_tim
 VALUES (17, 5, 'SUNDAY', '08:00:00', '22:00:00', 0, NOW());
 
 -- =====================================================================
+-- 8-1) Place Availability Backfill (운영 시간 없는 장소 기본값 설정)
+-- =====================================================================
+-- 공학관 301호 (ID: 2) 운영 시간 (평일 09:00-18:00)
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (18, 2, 'MONDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (19, 2, 'TUESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (20, 2, 'WEDNESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (21, 2, 'THURSDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (22, 2, 'FRIDAY', '09:00:00', '18:00:00', 0, NOW());
+
+-- 학생회관 301호 (ID: 4) 운영 시간 (평일 09:00-18:00)
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (23, 4, 'MONDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (24, 4, 'TUESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (25, 4, 'WEDNESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (26, 4, 'THURSDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (27, 4, 'FRIDAY', '09:00:00', '18:00:00', 0, NOW());
+
+-- 중앙도서관 스터디룸B (ID: 6) 운영 시간 (평일 09:00-18:00)
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (28, 6, 'MONDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (29, 6, 'TUESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (30, 6, 'WEDNESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (31, 6, 'THURSDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (32, 6, 'FRIDAY', '09:00:00', '18:00:00', 0, NOW());
+
+-- 체육관 (ID: 7) 운영 시간 (평일 09:00-18:00)
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (33, 7, 'MONDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (34, 7, 'TUESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (35, 7, 'WEDNESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (36, 7, 'THURSDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (37, 7, 'FRIDAY', '09:00:00', '18:00:00', 0, NOW());
+
+-- 본관 대강당 (ID: 8) 운영 시간 (평일 09:00-18:00)
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (38, 8, 'MONDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (39, 8, 'TUESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (40, 8, 'WEDNESDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (41, 8, 'THURSDAY', '09:00:00', '18:00:00', 0, NOW());
+INSERT INTO place_availabilities (id, place_id, day_of_week, start_time, end_time, display_order, created_at) VALUES (42, 8, 'FRIDAY', '09:00:00', '18:00:00', 0, NOW());
+
+-- =====================================================================
 -- 9) Place Usage Group (장소 사용 가능 그룹)
 -- =====================================================================
 -- status: PENDING (대기), APPROVED (승인), REJECTED (거절)
@@ -248,12 +286,12 @@ VALUES (4, 5, 11, 'APPROVED', NOW(), NOW());
 -- Personal Schedules table: max ID = 8, so next ID should be 9
 -- Personal Events table: max ID = 7, so next ID should be 8
 -- Places table: max ID = 8, so next ID should be 9
--- Place Availabilities table: max ID = 17, so next ID should be 18
+-- Place Availabilities table: max ID = 42, so next ID should be 43
 -- Place Usage Groups table: max ID = 4, so next ID should be 5
 ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
 ALTER TABLE groups ALTER COLUMN id RESTART WITH 14;
 ALTER TABLE personal_schedules ALTER COLUMN id RESTART WITH 9;
 ALTER TABLE personal_events ALTER COLUMN id RESTART WITH 8;
 ALTER TABLE places ALTER COLUMN id RESTART WITH 9;
-ALTER TABLE place_availabilities ALTER COLUMN id RESTART WITH 18;
+ALTER TABLE place_availabilities ALTER COLUMN id RESTART WITH 43;
 ALTER TABLE place_usage_groups ALTER COLUMN id RESTART WITH 5;
