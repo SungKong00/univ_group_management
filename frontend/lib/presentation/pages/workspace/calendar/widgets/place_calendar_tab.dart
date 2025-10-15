@@ -483,8 +483,8 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
   }
 
   /// Compact mode layout (2 rows):
-  /// Row 1: [◀ 2025년 11월 ▶ 오늘]
-  /// Row 2: [주간/월간] | [건물▼ 장소▼] | [⚙️]
+  /// Row 1: [주간/월간] | [◀ 2025년 11월 ▶ 오늘]
+  /// Row 2: [건물▼ 장소▼] | [⚙️]
   Widget _buildCompactHeader(
     BuildContext context,
     CalendarView currentView,
@@ -493,17 +493,21 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
   ) {
     return Column(
       children: [
-        // Row 1: Date navigation (full width)
-        _buildDateNavigator(context, currentView, focusedDate),
-        const SizedBox(height: AppSpacing.xs),
-
-        // Row 2: View toggle + Building/Place selector + Settings
+        // Row 1: View toggle and Date navigation
         Row(
           children: [
-            // View toggle
             _buildViewToggle(currentView),
             const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: _buildDateNavigator(context, currentView, focusedDate),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
 
+        // Row 2: Building/Place selector + Settings
+        Row(
+          children: [
             // Building/Place selector (takes remaining space)
             const Expanded(
               child: CompactBuildingPlaceSelector(),
