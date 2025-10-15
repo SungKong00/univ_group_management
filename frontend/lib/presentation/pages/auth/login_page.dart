@@ -303,6 +303,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               variant: ButtonVariant.tonal,
                               semanticsLabel: '관리자 계정으로 로그인하기',
                             ),
+                            if (kDebugMode) ...[
+                              const SizedBox(height: AppTheme.spacing8),
+                              _buildTestLoginButtons(),
+                            ],
                             const SizedBox(height: AppTheme.spacing16),
                             _buildInfoCallout(context),
                           ],
@@ -317,6 +321,56 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildTestLoginButtons() {
+    return Wrap(
+      spacing: AppTheme.spacing8,
+      runSpacing: AppTheme.spacing8,
+      alignment: WrapAlignment.center,
+      children: [
+        _buildTestLoginButton('TestUser1', 'mock_google_token_for_testuser1'),
+        _buildTestLoginButton('TestUser2', 'mock_google_token_for_testuser2'),
+        _buildTestLoginButton('TestUser3', 'mock_google_token_for_testuser3'),
+      ],
+    );
+  }
+
+  Widget _buildTestLoginButton(String label, String mockToken) {
+    return OutlinedButton(
+      onPressed: _isLoading ? null : () => _handleMockLogin(mockToken),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.neutral700,
+        side: const BorderSide(color: AppColors.neutral300),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing12,
+          vertical: AppTheme.spacing8,
+        ),
+      ),
+      child: Text(label, style: AppTheme.bodySmall),
+    );
+  }
+
+  Future<void> _handleMockLogin(String mockToken) async {
+    setState(() => _isLoading = true);
+    try {
+      final loginResponse = await ref.read(authProvider.notifier).loginWithMockToken(mockToken);
+      if (!mounted) return;
+      await _handlePostLogin(loginResponse);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('테스트 로그인 실패: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Widget _buildLogo() {

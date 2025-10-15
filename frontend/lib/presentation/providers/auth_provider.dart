@@ -98,6 +98,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<LoginResponse> loginWithMockToken(String mockToken) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final response = await _authService.loginWithMockToken(mockToken);
+
+      state = state.copyWith(user: response.user, isLoading: false);
+
+      return response;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
+    }
+  }
+
   Future<void> logout() async {
     state = state.copyWith(isLoading: true, error: null);
 

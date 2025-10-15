@@ -26,51 +26,19 @@ class AuthService {
     await _saveUserInfo(userInfo);
   }
 
-  /// 테스트 계정으로 로그인 (개발용)
-  Future<LoginResponse> loginWithTestAccount() async {
+  Future<LoginResponse> loginWithMockToken(String mockToken) async {
     // DioClient가 초기화되지 않은 경우 자동 초기화
     if (_dioClient == null) {
       initialize();
     }
+    // Re-use the google login logic with a mock token
+    return loginWithGoogle(idToken: mockToken);
+  }
 
-    try {
-      // 실제 백엔드 API 호출을 위한 더미 토큰 생성
-      // 백엔드에서는 test 토큰을 받으면 castlekong1019@gmail.com 계정으로 로그인 처리
-      final response = await _dioClient!.post<Map<String, dynamic>>(
-        '/auth/google/callback',
-        data: {'id_token': 'mock_google_token_for_castlekong1019'},
-      );
-
-      if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) => LoginResponse.fromJson(json as Map<String, dynamic>),
-        );
-
-        if (apiResponse.success && apiResponse.data != null) {
-          final loginResponse = apiResponse.data!;
-          await _saveTokens(loginResponse.accessToken, loginResponse.tokenType);
-          await _saveUserInfo(loginResponse.user);
-          _currentUser = loginResponse.user;
-
-          // GoRouter에 인증 상태 변경 알림
-          authChangeNotifier.notifyAuthChanged();
-
-          return loginResponse;
-        } else {
-          throw Exception(apiResponse.message ?? 'Login failed');
-        }
-      } else {
-        throw Exception('No response data');
-      }
-    } catch (e) {
-      developer.log(
-        'Test login error details: $e',
-        name: 'AuthService',
-        level: 900,
-      );
-      throw Exception('테스트 로그인 실패: ${e.toString()}');
-    }
+  /// 테스트 계정으로 로그인 (개발용)
+  Future<LoginResponse> loginWithTestAccount() async {
+    // Maintain backward compatibility
+    return loginWithMockToken('mock_google_token_for_castlekong1019');
   }
 
   /// Google OAuth 토큰으로 로그인 (ID Token 또는 Access Token)

@@ -8,6 +8,7 @@ import org.castlekong.backend.service.GroupRoleInitializationService
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -32,6 +33,7 @@ import java.time.LocalDateTime
  * Idempotency: Safe to run multiple times - checks before creating each resource.
  */
 @Component
+@Order(1) // Run before other runners to ensure base data is set up
 class GroupInitializationRunner(
     private val groupRepository: GroupRepository,
     private val groupRoleInitializationService: GroupRoleInitializationService,

@@ -33,11 +33,30 @@ class DefaultGoogleIdTokenVerifierPort(
         return try {
             if (idToken.startsWith("mock_google_token_for_")) {
                 logger.info("Processing mock Google token for development")
-                return GoogleUserInfo(
-                    email = "castlekong1019@gmail.com",
-                    name = "Castlekong",
-                    profileImageUrl = null,
-                )
+                val userIdentifier = idToken.substringAfter("mock_google_token_for_")
+                return when (userIdentifier) {
+                    "castlekong1019" -> GoogleUserInfo(
+                        email = "castlekong1019@gmail.com",
+                        name = "Castlekong",
+                        profileImageUrl = null,
+                    )
+                    "testuser1" -> GoogleUserInfo(
+                        email = "testuser1@hs.ac.kr",
+                        name = "TestUser1",
+                        profileImageUrl = null,
+                    )
+                    "testuser2" -> GoogleUserInfo(
+                        email = "testuser2@hs.ac.kr",
+                        name = "TestUser2",
+                        profileImageUrl = null,
+                    )
+                    "testuser3" -> GoogleUserInfo(
+                        email = "testuser3@hs.ac.kr",
+                        name = "TestUser3",
+                        profileImageUrl = null,
+                    )
+                    else -> null // Unknown mock user
+                }
             }
             // 테스트 / 로컬에서 임의 invalid.* 패턴이면 즉시 null
             if (idToken.startsWith("invalid.")) {

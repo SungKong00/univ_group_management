@@ -278,6 +278,13 @@ class GroupMemberService(
         throw BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND)
     }
 
+    fun isMember(
+        groupId: Long,
+        userId: Long,
+    ): Boolean {
+        return groupMemberRepository.findByGroupIdAndUserId(groupId, userId).isPresent
+    }
+
     @Transactional
     fun removeMember(
         groupId: Long,
