@@ -8,25 +8,47 @@ class AuthState {
   final UserInfo? user;
   final bool isLoading;
   final String? error;
+  final bool isLoggingOut;
 
-  const AuthState({this.user, this.isLoading = false, this.error});
+  const AuthState({
+    this.user,
+    this.isLoading = false,
+    this.error,
+    this.isLoggingOut = false,
+  });
 
   bool get isLoggedIn => user != null;
 
-  AuthState copyWith({UserInfo? user, bool? isLoading, String? error}) {
+  AuthState copyWith({
+    UserInfo? user,
+    bool? isLoading,
+    String? error,
+    bool? isLoggingOut,
+  }) {
     return AuthState(
       user: user,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      isLoggingOut: isLoggingOut ?? this.isLoggingOut,
     );
   }
 
   AuthState clearError() {
-    return AuthState(user: user, isLoading: isLoading, error: null);
+    return AuthState(
+      user: user,
+      isLoading: isLoading,
+      error: null,
+      isLoggingOut: isLoggingOut,
+    );
   }
 
   AuthState clearUser() {
-    return const AuthState(user: null, isLoading: false, error: null);
+    return const AuthState(
+      user: null,
+      isLoading: false,
+      error: null,
+      isLoggingOut: false,
+    );
   }
 }
 
@@ -114,7 +136,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: null, isLoggingOut: true);
 
     try {
       await _authService.logout();
@@ -133,6 +155,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(
         isLoading: false,
         error: 'Logout failed: ${e.toString()}',
+        isLoggingOut: false,
       );
       rethrow;
     }

@@ -9,6 +9,7 @@ import '../../core/services/local_storage.dart';
 import '../../core/utils/permission_utils.dart';
 import 'my_groups_provider.dart';
 import 'place_calendar_provider.dart';
+import 'auth_provider.dart';
 
 /// Workspace View Type
 enum WorkspaceView {
@@ -191,6 +192,12 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       _lastGroupId != null ? _workspaceSnapshots[_lastGroupId!] : null;
 
   void _saveCurrentWorkspaceSnapshot() {
+    // Logout Race Condition Fix:
+    // Check if logout is in progress. If so, do not save the snapshot.
+    final isLoggingOut = _ref.read(authProvider).isLoggingOut;
+    if (isLoggingOut) return;
+
+    if (!mounted) return; // Prevent access after dispose
     final groupId = state.selectedGroupId;
     if (groupId == null) return;
 
