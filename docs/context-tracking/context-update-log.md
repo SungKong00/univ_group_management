@@ -2,6 +2,26 @@
 
 이 파일은 프로젝트의 컨텍스트 문서들이 언제, 어떤 커밋에서 업데이트되었는지 추적합니다.
 
+### 2025-10-17 - 장소 예약 API 문서 동기화
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 문서 동기화
+**우선순위**: Medium
+**영향 범위**: 문서 (API 명세)
+
+**구현 내용**:
+- `PlaceReservationController.kt` 와 `place_service.dart` 의 최신 구현 상태를 API 관련 문서에 반영했습니다.
+- 장소 예약 생성/조회/수정/삭제 API의 엔드포인트 경로와 파라미터를 실제 코드와 일치시켰습니다.
+- `api-reference.md`에서 캘린더 API의 상태를 '구현 미착수'에서 '장소 예약 API 구현 완료'로 변경했습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/api-reference.md`: 장소 예약 관련 API 명세를 v1.4로 업데이트하고, 구현 상태를 명시했습니다.
+- ✅ `docs/features/place-calendar-specification.md`: API 명세 섹션의 예약 관련 엔드포인트를 실제 구현과 일치시켰습니다.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그를 추가합니다.
+
+**메모**: 백엔드 장소 예약 API의 실제 구현 내용이 관련 핵심 문서 두 곳에 정확히 반영되었습니다.
+
+---
+
 ## 2025년 10월
 
 ### 2025-10-16 - 테스트 데이터 관리 문서 추가
@@ -132,7 +152,6 @@
   - ✅ 1개 컨트롤러: PlaceController (6개 API 엔드포인트)
   - ✅ 11개 DTO 클래스: Jakarta Validation 포함
   - ✅ 5개 ErrorCode: 장소 관련 에러 코드
-
 - **프론트엔드 구현 상태**:
   - ❌ Phase 2 미착수 (장소 목록, 등록 폼, 운영 시간 설정 UI)
   - 예상 소요 시간: 6-8시간
@@ -164,13 +183,11 @@
   - 권한 API 연동 완료 (백엔드/프론트엔드/통합 테스트 3개)
   - GroupCalendarPage 권한 체크 로직 통합
   - 공식 일정 토글 버그 수정 (권한 로딩 대기 로직)
-
 - **Phase 6 UI 설계 확정**:
   - Option C 채택: 다단계 카드 선택 UI
   - Step 1: 공식/비공식 선택 (권한 보유자만)
   - Step 2: 일정 유형 선택 (Phase 2 구현 예정)
   - 일반 사용자: Step 1 생략, 비공식 일정 폼 바로 표시
-
 - **재사용 가능한 컴포넌트 시스템 설계**:
   - Atomic Design 패턴 적용
   - Atoms: SelectableOptionCard, OptionIcon, OptionText
@@ -206,7 +223,6 @@
     - 장소 예약: 해당 그룹이 PlaceUsageGroup에 APPROVED 상태면 누구나 가능 (별도 권한 불필요)
     - 캘린더 관리: CALENDAR_MANAGE 권한 필요 (공식 일정 생성/수정/삭제, 비공식 일정 수정/삭제)
     - 장소 관리: CALENDAR_MANAGE 권한 필요 (장소 등록/수정/삭제, 사용 그룹 승인/거절, 운영 규칙 설정)
-
 - **반복 일정 UI 설계 명확화**:
   - **프론트엔드 입력 필드**:
     1. 시작일 (start_date): DatePicker
@@ -515,7 +531,6 @@
     - 13개의 재사용 가능한 컴포넌트 생성 (총 1,429줄)
     - Phase 1-4: 인프라 구축 및 초기 리팩터링 (351줄 감소)
     - Phase 5-10: 반응형 로직, 상태 렌더링, 레이아웃, Provider 최적화 (318줄 감소)
-
 - **생성된 주요 컴포넌트**:
     - `ResponsiveLayoutHelper` (122줄) - 반응형 계산 로직 중앙화
     - `WorkspaceStateView` (182줄) - Empty/Loading/Error 상태 통합
@@ -725,7 +740,7 @@
 ### 2025-10-06 - 워크스페이스 헤더 구조 리팩토링
 **커밋**: 현재 세션
 **유형**: 코드 수정 + 문서 동기화
-**우선순위**: Medium
+**우선순위**: Low
 **영향 범위**: 프론트엔드 (UI 디자인)
 
 **구현 내용**:
@@ -736,6 +751,7 @@
 **동기화 완료 문서**:
 - ✅ `docs/ui-ux/concepts/design-system.md`: 헤더(Header) 컴포넌트 가이드 신설 및 2단 계층 구조 명세 추가
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가
+- ✅ `docs/context-tracking/sync-status.md`: 동기화 상태 갱신
 
 **수정된 파일**:
 - `frontend/lib/presentation/widgets/workspace/workspace_header.dart`

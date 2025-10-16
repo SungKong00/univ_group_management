@@ -669,13 +669,34 @@ context.go('/workspace/${topGroup.id}');
 
 ---
 
-## 캘린더 API (v1.3)
+## 캘린더 API (v1.4)
 
-> **개발 우선순위**: Phase 6 이후
-> **상태**: 스키마 및 API 설계 완료, 구현 미착수
+> **상태**: 장소 예약 API 구현 완료, 그 외 설계 단계
 > **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md)
 
-### 시간표 API (`/api/timetable`)
+### 장소 및 예약 API (`/api`)
+
+장소 조회, 관리 및 예약 관련 기능을 제공합니다.
+
+-   `GET /places`: 모든 장소 목록 조회 (공개)
+-   `GET /places/{placeId}`: 특정 장소 상세 정보 조회 (공개)
+-   `GET /places/calendar`: 다중 장소 캘린더 조회 (공개)
+    -   **쿼리**: `placeIds`, `startDate`, `endDate`
+-   `GET /places/{placeId}/reservations`: 특정 장소의 예약 목록 조회 (공개)
+    -   **쿼리**: `startDate`, `endDate`
+-   `POST /places/{placeId}/reservations`: 새 장소 예약 생성
+    -   **권한**: `isAuthenticated()`
+    -   **요청**: `CreatePlaceReservationRequest` (`placeId`, `groupEventId`)
+-   `PATCH /reservations/{reservationId}`: 예약 수정 (장소 변경 등)
+    -   **권한**: 예약자 본인 또는 `CALENDAR_MANAGE`
+    -   **요청**: `UpdatePlaceReservationRequest` (`placeId`)
+-   `DELETE /reservations/{reservationId}`: 예약 취소
+    -   **권한**: 예약자 본인 또는 `CALENDAR_MANAGE`
+
+---
+> 아래 API들은 현재 설계 단계에 있으며, 구현 시 명세가 변경될 수 있습니다.
+
+### 시간표 API (`/api/timetable`) - 설계 단계
 
 개인의 고정/반복 일정을 관리합니다.
 
@@ -686,7 +707,7 @@ context.go('/workspace/${topGroup.id}');
 - `PUT /me/schedules/{scheduleId}`: 개인 반복 일정 수정 (권한: `isAuthenticated()`)
 - `DELETE /me/schedules/{scheduleId}`: 개인 반복 일정 삭제 (권한: `isAuthenticated()`)
 
-### 개인 캘린더 API (`/api/calendar`)
+### 개인 캘린더 API (`/api/calendar`) - 설계 단계
 
 개인의 모든 유동적/확정적 일정을 통합 조회하고 관리합니다.
 
@@ -695,7 +716,7 @@ context.go('/workspace/${topGroup.id}');
 - `PUT /me/events/{eventId}`: 개인 이벤트 수정 (권한: `isAuthenticated()`)
 - `DELETE /me/events/{eventId}`: 개인 이벤트 삭제 (권한: `isAuthenticated()`)
 
-### 그룹 캘린더 API (`/api/groups/{groupId}/events`)
+### 그룹 캘린더 API (`/api/groups/{groupId}/events`) - 설계 단계
 
 그룹의 일정을 관리합니다.
 
@@ -707,25 +728,6 @@ context.go('/workspace/${topGroup.id}');
 - `POST /{eventId}/participants`: 일정 참여 상태 변경 (권한: **그룹 멤버**)
 - `GET /{eventId}/participants`: 일정 참여자 목록 조회 (권한: **그룹 멤버**)
 
-### 최적 시간 추천 API (`/api/groups/{groupId}/recommend-time`)
+### 최적 시간 추천 API (`/api/groups/{groupId}/recommend-time`) - 설계 단계
 
 - `POST /`: 그룹 일정 생성을 위한 최적 시간 추천 (권한: **그룹 멤버**)
-
-### 장소 API (`/api/places`)
-
-장소 및 예약 관련 기능을 관리합니다.
-
-- `POST /`: 장소 등록 (권한: `PLACE_MANAGE`)
-- `GET /{placeId}`: 특정 장소 상세 정보 조회 (권한: `isAuthenticated()`)
-- `POST /{placeId}/usage-groups`: 장소 사용 그룹 신청 (권한: 그룹 관리자)
-- `GET /{placeId}/usage-groups`: 장소 사용 그룹 신청 목록 조회 (권한: `PLACE_MANAGE`)
-- `PATCH /{placeId}/usage-groups/{usageGroupId}`: 사용 그룹 신청 승인/거절 (권한: `PLACE_MANAGE`)
-
-- **장소 운영 규칙 관리 API**:
-    - `GET /{placeId}/availability`: 장소 운영 규칙 목록 조회 (권한: `PLACE_MANAGE`)
-    - `POST /{placeId}/availability`: 장소 운영 규칙 추가 (권한: `PLACE_MANAGE`)
-    - `PUT /availability/{availabilityId}`: 장소 운영 규칙 수정 (권한: `PLACE_MANAGE`)
-    - `DELETE /availability/{availabilityId}`: 장소 운영 규칙 삭제 (권한: `PLACE_MANAGE`)
-
-- **장소 예약 현황 조회 API**:
-    - `GET /{placeId}/available-slots?date=YYYY-MM-DD`: 특정 날짜의 **최종 예약 가능 시간 슬롯** 목록 조회 (권한: **`isAuthenticated()`**)

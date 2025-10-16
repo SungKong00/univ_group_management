@@ -193,13 +193,13 @@ version: Long       // 낙관적 락
   - 경고: "X개 예약이 취소됩니다"
 
 ### 예약 API
-- `POST /api/places/{id}/reservations` - 예약 생성 (GroupEvent 생성 시)
-- `GET /api/places/{id}/reservations` - 예약 현황 조회
-- `DELETE /api/reservations/{id}` - 예약 취소
+- `POST /api/places/{placeId}/reservations` - 예약 생성 (GroupEvent 생성 시)
+- `GET /api/places/{placeId}/reservations` - 특정 장소의 예약 현황 조회
+- `PATCH /api/reservations/{reservationId}` - 예약 수정 (장소 변경 등)
+- `DELETE /api/reservations/{reservationId}` - 예약 취소
 
-### 예약 가능 시간 API
-- `GET /api/places/{id}/calendar?start=2025-11-01&end=2025-11-30` - 캘린더 데이터
-  - 응답: 예약된 시간대 + 운영 시간 정보
+### 다중 장소 캘린더 API
+- `GET /api/places/calendar?placeIds={ids...}` - 여러 장소의 예약 현황 동시 조회
 
 ## 📋 비즈니스 로직 정책
 

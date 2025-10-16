@@ -11,6 +11,7 @@ import '../../providers/my_groups_provider.dart';
 import '../../widgets/dialogs/edit_group_dialog.dart';
 import '../../widgets/cards/action_card.dart';
 import 'widgets/subgroup_request_section.dart';
+import 'providers/subgroup_request_provider.dart';
 
 /// 그룹 관리자 페이지
 ///
@@ -105,13 +106,15 @@ class _AdminContentView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentGroup = ref.watch(currentGroupProvider);
+
     // Permission-Centric 접근: 각 권한별 섹션 생성
     final sections = <Widget>[];
 
     // 하위 그룹 생성 요청 관리 섹션 (GROUP_MANAGE 권한 필요)
-    if (permissions.contains('GROUP_MANAGE')) {
-      sections.add(_buildSubGroupRequestSection(context, ref));
-    }
+    final subGroupRequestSection = permissions.contains('GROUP_MANAGE')
+        ? _buildSubGroupRequestSection(context, ref)
+        : null;
 
     // 멤버 관리 섹션
     if (permissions.contains('MEMBER_MANAGE')) {
@@ -131,6 +134,32 @@ class _AdminContentView extends ConsumerWidget {
     // 그룹 설정 섹션
     if (permissions.contains('GROUP_MANAGE')) {
       sections.add(_buildGroupSettingsSection(context, ref));
+    }
+
+    // 대기 중인 하위 그룹 생성 신청 개수 확인하여 섹션 배치
+    // 대기 신청 개수에 따라 위치를 동적으로 결정
+    if (subGroupRequestSection != null && currentGroup != null) {
+      final pendingCountAsync =
+          ref.watch(pendingSubGroupRequestCountProvider(currentGroup.id));
+
+      // 대기 신청이 있는지에 따라 섹션 위치 결정
+      final shouldInsertAtTop = pendingCountAsync.when(
+        data: (count) => count > 0,
+        // 로딩 중일 때는 최상단에 배치
+        loading: () => true,
+        // 에러 발생 시에도 최상단에 배치
+        error: (_, __) => true,
+      );
+
+      if (shouldInsertAtTop) {
+        sections.insert(0, subGroupRequestSection);
+      } else {
+        // 대기 신청 없음: 최하단에 배치
+        sections.add(subGroupRequestSection);
+      }
+    } else if (subGroupRequestSection != null) {
+      // currentGroup이 null이면 일단 최상단에 배치
+      sections.insert(0, subGroupRequestSection);
     }
 
     if (sections.isEmpty) {

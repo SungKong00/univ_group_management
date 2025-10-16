@@ -17,6 +17,13 @@ final subGroupRequestListProvider =
   return await service.getSubGroupRequests(groupId);
 });
 
+/// 대기 중인 하위 그룹 생성 요청 개수 Provider
+final pendingSubGroupRequestCountProvider = FutureProvider.autoDispose
+    .family<int, int>((ref, groupId) async {
+  final requests = await ref.watch(subGroupRequestListProvider(groupId).future);
+  return requests.where((request) => request.status == 'PENDING').length;
+});
+
 /// 하위 그룹 생성 요청 승인 Params
 class ApproveSubGroupRequestParams {
   final int groupId;
