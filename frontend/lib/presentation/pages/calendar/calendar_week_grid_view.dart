@@ -90,23 +90,37 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
     final horizontalController = ScrollController();
     final verticalController = ScrollController();
 
-    return Scrollbar(
-      controller: verticalController,
-      thumbVisibility: true,
-      child: SingleChildScrollView(
-        controller: verticalController,
-        child: Scrollbar(
-          controller: horizontalController,
+    // LayoutBuilder를 수평 스크롤 바깥으로 옮겨 뷰포트의 유한한 maxWidth를 확보
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewportWidth = constraints.maxWidth;
+
+        return Scrollbar(
+          controller: verticalController,
           thumbVisibility: true,
-          notificationPredicate: (notification) =>
-              notification.metrics.axis == Axis.horizontal,
           child: SingleChildScrollView(
-            controller: horizontalController,
-            scrollDirection: Axis.horizontal,
-            child: grid,
+            controller: verticalController,
+            child: Scrollbar(
+              controller: horizontalController,
+              thumbVisibility: true,
+              notificationPredicate: (notification) =>
+                  notification.metrics.axis == Axis.horizontal,
+              child: SingleChildScrollView(
+                controller: horizontalController,
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  // 뷰포트가 더 넓을 경우, 컨테이너 폭을 뷰포트 이상으로 만들어 중앙 정렬이 보이도록 함
+                  width: math.max(viewportWidth, gridWidth),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: grid,
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

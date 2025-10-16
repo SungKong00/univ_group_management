@@ -312,7 +312,7 @@ class TimetableTab extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('시간 겹침 확인'),
-        content: const Text('⚠️ 해당 시��대에 다른 일정이 있습니다. 계속 진행하시겠습니까?'),
+        content: const Text('⚠️ 해당 시간대에 다른 일정이 있습니다. 계속 진행하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
