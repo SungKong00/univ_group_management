@@ -46,6 +46,7 @@
 ### 개발 워크플로우
 - **개발 프로세스**: [docs/workflows/development-flow.md](docs/workflows/development-flow.md)
 - **테스트 전략**: [docs/workflows/testing-strategy.md](docs/workflows/testing-strategy.md)
+- **테스트 데이터**: [docs/testing/test-data-reference.md](docs/testing/test-data-reference.md) - TestDataRunner 구조 및 사용자/그룹 정보
 
 ### 개발 컨벤션 (신규)
 - **Git 전략**: [docs/conventions/git-strategy.md](docs/conventions/git-strategy.md) - GitHub Flow 가이드

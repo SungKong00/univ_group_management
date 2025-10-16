@@ -12,16 +12,6 @@ INSERT INTO users (id, email, name, password_hash, global_role, profile_complete
 VALUES (1, 'castlekong1019@gmail.com', 'Castlekong', '', 'STUDENT', true, NOW(), NOW(), true, true, 'castlekong',
         'AI/SW계열', '20250001');
 
--- Test Users
-INSERT INTO users (id, email, name, password_hash, global_role, profile_completed, created_at, updated_at, is_active, email_verified, nickname, department, student_no, academic_year)
-VALUES (101, 'testuser1@hs.ac.kr', 'TestUser1', '', 'STUDENT', true, NOW(), NOW(), true, true, 'TU1', 'AI/SW계열', '20250011', 1);
-
-INSERT INTO users (id, email, name, password_hash, global_role, profile_completed, created_at, updated_at, is_active, email_verified, nickname, department, student_no, academic_year)
-VALUES (102, 'testuser2@hs.ac.kr', 'TestUser2', '', 'STUDENT', true, NOW(), NOW(), true, true, 'TU2', 'AI/SW계열', '20250012', 2);
-
-INSERT INTO users (id, email, name, password_hash, global_role, profile_completed, created_at, updated_at, is_active, email_verified, nickname, department, student_no, academic_year)
-VALUES (103, 'testuser3@hs.ac.kr', 'TestUser3', '', 'STUDENT', true, NOW(), NOW(), true, true, 'TU3', 'AI/SW계열', '20250013', 3);
-
 
 -- 2) Groups - University Level
 INSERT INTO groups (id, name, owner_id, university, group_type, default_channels_created,
@@ -299,7 +289,7 @@ VALUES (4, 5, 11, 'APPROVED', NOW(), NOW());
 -- Places table: max ID = 8, so next ID should be 9
 -- Place Availabilities table: max ID = 42, so next ID should be 43
 -- Place Usage Groups table: max ID = 4, so next ID should be 5
-ALTER TABLE users ALTER COLUMN id RESTART WITH 104;
+ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
 ALTER TABLE groups ALTER COLUMN id RESTART WITH 14;
 ALTER TABLE personal_schedules ALTER COLUMN id RESTART WITH 9;
 ALTER TABLE personal_events ALTER COLUMN id RESTART WITH 8;
