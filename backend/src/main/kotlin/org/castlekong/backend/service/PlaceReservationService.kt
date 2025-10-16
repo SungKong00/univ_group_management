@@ -163,66 +163,64 @@ class PlaceReservationService(
     /**
      * 장소별 예약 조회
      *
+     * 공개 기능: 충돌 방지를 위해 모든 장소의 예약 현황을 조회 가능
+     * 인증 없이 호출 가능 (userId는 현재 사용되지 않음)
+     *
      * @param placeId 장소 ID
      * @param startDate 조회 시작 날짜
      * @param endDate 조회 종료 날짜
-     * @param userId 조회 요청자 ID
+     * @param userId 조회 요청자 ID (선택적, 현재 미사용)
      * @return 예약 목록
-     * @throws BusinessException 사용 그룹 미승인
+     * @throws BusinessException 장소 없음
      */
     @Transactional(readOnly = true)
     fun getReservations(
         placeId: Long,
         startDate: LocalDateTime,
         endDate: LocalDateTime,
-        userId: Long,
+        userId: Long?,
     ): List<PlaceReservation> {
         // 장소 조회 (존재 여부 확인)
         placeRepository.findActiveById(placeId)
             .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
 
-        // 사용자의 그룹 중 하나라도 이 장소 사용 승인되어 있으면 OK
-        // (조회 권한은 느슨하게 적용)
-        // TODO: 추후 권한 정책 확정 시 세분화 가능
-
+        // 공개 조회: 승인 여부와 무관하게 모든 예약 조회 가능
         return placeReservationRepository.findByPlaceIdAndDateRange(placeId, startDate, endDate)
     }
 
     /**
      * 다중 장소 캘린더 조회
      *
+     * 공개 기능: 충돌 방지를 위해 모든 장소의 예약 현황을 조회 가능
+     * 인증 없이 호출 가능 (userId는 현재 사용되지 않음)
+     *
      * @param placeIds 장소 ID 목록
      * @param startDate 조회 시작 날짜
      * @param endDate 조회 종료 날짜
-     * @param userId 조회 요청자 ID
-     * @return 예약 목록 (장소별 필터링 적용)
+     * @param userId 조회 요청자 ID (선택적, 현재 미사용)
+     * @return 예약 목록 (존재하는 장소만)
      */
     @Transactional(readOnly = true)
     fun getPlaceCalendar(
         placeIds: List<Long>,
         startDate: LocalDateTime,
         endDate: LocalDateTime,
-        userId: Long,
+        userId: Long?,
     ): List<PlaceReservation> {
         if (placeIds.isEmpty()) return emptyList()
 
-        // 사용자의 승인된 장소 목록 조회
-        val userGroupIds =
-            groupMemberRepository.findByUserId(userId)
-                .map { it.group.id }
-
-        // 사용자가 접근 가능한 장소 필터링
-        val accessiblePlaceIds =
-            placeIds.filter { placeId ->
-                userGroupIds.any { groupId ->
-                    placeUsageGroupRepository.isApprovedForPlace(placeId, groupId)
-                }
+        // 존재하는 장소(deletedAt IS NULL)만 필터링
+        val validPlaceIds =
+            placeIds.mapNotNull { placeId ->
+                placeRepository.findActiveById(placeId)
+                    .map { it.id }
+                    .orElse(null)
             }
 
-        if (accessiblePlaceIds.isEmpty()) return emptyList()
+        if (validPlaceIds.isEmpty()) return emptyList()
 
         return placeReservationRepository.findByPlaceIdsAndDateRange(
-            accessiblePlaceIds,
+            validPlaceIds,
             startDate,
             endDate,
         )

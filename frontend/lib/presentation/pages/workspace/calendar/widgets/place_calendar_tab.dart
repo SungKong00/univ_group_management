@@ -32,6 +32,10 @@ class PlaceCalendarTab extends ConsumerStatefulWidget {
 }
 
 class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
+  Set<int> _previousSelectedPlaceIds = {};
+  DateTime? _previousFocusedDate;
+  CalendarView? _previousCalendarView;
+
   @override
   void initState() {
     super.initState();
@@ -52,11 +56,87 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     }
   }
 
+  /// Load reservations for the current calendar view and focused date
+  Future<void> _loadReservationsForCurrentView() async {
+    final focusedDate = ref.read(focusedDateProvider);
+    final currentView = ref.read(calendarViewProvider);
+
+    final dateRange = _calculateDateRange(focusedDate, currentView);
+
+    await ref.read(placeCalendarProvider.notifier).loadReservations(
+          startDate: dateRange.start,
+          endDate: dateRange.end,
+        );
+  }
+
+  /// Calculate date range based on calendar view and focused date
+  DateTimeRange _calculateDateRange(DateTime focusedDate, CalendarView view) {
+    switch (view) {
+      case CalendarView.week:
+        // For week view, get the week start (Monday) and end (Sunday)
+        final weekStart = _getWeekStart(focusedDate);
+        final weekEnd = weekStart.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+        return DateTimeRange(start: weekStart, end: weekEnd);
+
+      case CalendarView.month:
+        // For month view, get the first and last day of the month
+        final monthStart = DateTime(focusedDate.year, focusedDate.month, 1);
+        final monthEnd = DateTime(focusedDate.year, focusedDate.month + 1, 0, 23, 59, 59);
+        return DateTimeRange(start: monthStart, end: monthEnd);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(placeCalendarProvider);
     final focusedDate = ref.watch(focusedDateProvider);
     final currentView = ref.watch(calendarViewProvider);
+
+    // Listen for changes in selected place IDs
+    ref.listen<PlaceCalendarState>(
+      placeCalendarProvider,
+      (previous, next) {
+        // Check if selectedPlaceIds has changed
+        if (previous?.selectedPlaceIds != next.selectedPlaceIds) {
+          // If new places are selected (and not empty), load reservations
+          if (next.selectedPlaceIds.isNotEmpty &&
+              next.selectedPlaceIds != _previousSelectedPlaceIds) {
+            _previousSelectedPlaceIds = Set.from(next.selectedPlaceIds);
+            _loadReservationsForCurrentView();
+          } else if (next.selectedPlaceIds.isEmpty) {
+            _previousSelectedPlaceIds = {};
+          }
+        }
+      },
+    );
+
+    // Listen for focused date changes (month/week navigation)
+    ref.listen<DateTime>(
+      focusedDateProvider,
+      (previous, next) {
+        // If date changed and we have selected places, reload reservations
+        if (previous != next && _previousFocusedDate != next) {
+          _previousFocusedDate = next;
+          if (state.selectedPlaceIds.isNotEmpty) {
+            _loadReservationsForCurrentView();
+          }
+        }
+      },
+    );
+
+    // Listen for calendar view changes (week/month toggle)
+    ref.listen<CalendarView>(
+      calendarViewProvider,
+      (previous, next) {
+        // If view changed and we have selected places, reload reservations
+        if (previous != next && _previousCalendarView != next) {
+          _previousCalendarView = next;
+          if (state.selectedPlaceIds.isNotEmpty) {
+            _loadReservationsForCurrentView();
+          }
+        }
+      },
+    );
 
     // Use LayoutBuilder to get actual widget width (not screen width)
     // This ensures correct responsive behavior when navigation bars are present
@@ -399,15 +479,41 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
             .read(placeCalendarProvider.notifier)
             .cancelReservation(reservation.id);
 
+        // Success: Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('예약이 취소되었습니다')),
+            const SnackBar(
+              content: Text('예약이 취소되었습니다'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
           );
         }
       } catch (e) {
+        // Error: Show detailed error message
         if (mounted) {
+          // Extract meaningful error message
+          String errorMessage = '예약 취소에 실패했습니다';
+          final errorString = e.toString();
+
+          // Remove "Exception: " prefix if present
+          if (errorString.startsWith('Exception: ')) {
+            errorMessage = errorString.substring(11);
+          } else {
+            errorMessage = '$errorMessage: $errorString';
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('예약 취소 실패: ${e.toString()}')),
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 4),
+              action: SnackBarAction(
+                label: '확인',
+                textColor: Colors.white,
+                onPressed: () {},
+              ),
+            ),
           );
         }
       }

@@ -204,28 +204,24 @@ class PlaceService {
         '/reservations/$reservationId',
       );
 
-      if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) => json,
+      // Any 2xx status code is considered success for DELETE operations
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        developer.log(
+          'Successfully canceled reservation $reservationId (status: ${response.statusCode})',
+          name: 'PlaceService',
         );
-
-        if (apiResponse.success) {
-          developer.log(
-            'Successfully canceled reservation $reservationId',
-            name: 'PlaceService',
-          );
-        } else {
-          developer.log(
-            'Failed to cancel reservation: ${apiResponse.message}',
-            name: 'PlaceService',
-            level: 900,
-          );
-          throw Exception(apiResponse.message ?? 'Failed to cancel reservation');
-        }
-      } else {
-        throw Exception('Empty response from server');
+        return;
       }
+
+      // Non-2xx responses
+      developer.log(
+        'Failed to cancel reservation: Unexpected status code ${response.statusCode}',
+        name: 'PlaceService',
+        level: 900,
+      );
+      throw Exception('Failed to cancel reservation: Unexpected response status');
     } catch (e) {
       developer.log(
         'Error canceling reservation: $e',

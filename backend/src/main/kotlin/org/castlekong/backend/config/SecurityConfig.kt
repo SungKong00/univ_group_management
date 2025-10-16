@@ -44,7 +44,9 @@ class SecurityConfig(
                     // 공개 장소 조회 엔드포인트 (인증 불필요)
                     .requestMatchers(HttpMethod.GET, "/api/places").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/places/*").permitAll()
-                    // 장소 예약 관련 엔드포인트는 인증 필요
+                    .requestMatchers(HttpMethod.GET, "/api/places/calendar").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*/reservations").permitAll()
+                    // 장소 예약 생성/수정/삭제는 인증 필요
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

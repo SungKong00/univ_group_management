@@ -106,19 +106,14 @@ interface PlaceRepository : JpaRepository<Place, Long> {
 
     /**
      * 특정 그룹이 예약 가능한 장소 목록 조회 (사용 승인 또는 직접 관리)
+     * - LEFT JOIN 방식으로 리팩터링 (서브쿼리 제거)
      */
     @Query(
         """
-        SELECT p FROM Place p WHERE p.id IN (
-            SELECT ug.place.id FROM PlaceUsageGroup ug
-            WHERE ug.group.id = :groupId
-            AND ug.status = org.castlekong.backend.entity.UsageStatus.APPROVED
-            AND ug.place.deletedAt IS NULL
-        ) OR p.id IN (
-            SELECT p2.id FROM Place p2
-            WHERE p2.managingGroup.id = :groupId
-            AND p2.deletedAt IS NULL
-        )
+        SELECT DISTINCT p FROM Place p
+        LEFT JOIN PlaceUsageGroup ug ON ug.place.id = p.id AND ug.group.id = :groupId AND ug.status = org.castlekong.backend.entity.UsageStatus.APPROVED
+        WHERE p.deletedAt IS NULL
+        AND (p.managingGroup.id = :groupId OR ug.id IS NOT NULL)
         ORDER BY p.building, p.roomNumber
     """,
     )

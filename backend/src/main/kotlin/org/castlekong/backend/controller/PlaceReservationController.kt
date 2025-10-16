@@ -62,12 +62,12 @@ class PlaceReservationController(
 
     /**
      * GET /api/places/{placeId}/reservations?startDate={date}&endDate={date}
-     * 특정 장소의 예약 목록 조회
+     * 특정 장소의 예약 목록 조회 (공개 API - 인증 불필요)
      *
      * @param placeId 장소 ID
      * @param startDate 조회 시작 날짜
      * @param endDate 조회 종료 날짜
-     * @param authentication JWT 인증 정보
+     * @param authentication JWT 인증 정보 (선택적)
      * @return 예약 목록
      */
     @GetMapping("/places/{placeId}/reservations")
@@ -75,15 +75,15 @@ class PlaceReservationController(
         @PathVariable placeId: Long,
         @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
         @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate,
-        authentication: Authentication,
+        authentication: Authentication?,
     ): ApiResponse<List<PlaceReservationResponse>> {
-        val user = getCurrentUser(authentication)
+        val userId = authentication?.let { getCurrentUser(it).id }
         val reservations =
             placeReservationService.getReservations(
                 placeId = placeId,
                 startDate = startDate.atStartOfDay(),
                 endDate = endDate.plusDays(1).atStartOfDay(),
-                userId = user.id!!,
+                userId = userId,
             )
         return ApiResponse.success(reservations.map { it.toResponse() })
     }
@@ -136,12 +136,12 @@ class PlaceReservationController(
 
     /**
      * GET /api/places/calendar?placeIds={ids}&startDate={date}&endDate={date}
-     * 다중 장소 캘린더 조회
+     * 다중 장소 캘린더 조회 (공개 API - 인증 불필요)
      *
      * @param placeIds 장소 ID 목록 (쉼표로 구분)
      * @param startDate 조회 시작 날짜
      * @param endDate 조회 종료 날짜
-     * @param authentication JWT 인증 정보
+     * @param authentication JWT 인증 정보 (선택적)
      * @return 장소별 예약 목록
      */
     @GetMapping("/places/calendar")
@@ -149,15 +149,15 @@ class PlaceReservationController(
         @RequestParam("placeIds") placeIds: List<Long>,
         @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
         @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate,
-        authentication: Authentication,
+        authentication: Authentication?,
     ): ApiResponse<List<PlaceCalendarResponse>> {
-        val user = getCurrentUser(authentication)
+        val userId = authentication?.let { getCurrentUser(it).id }
         val reservations =
             placeReservationService.getPlaceCalendar(
                 placeIds = placeIds,
                 startDate = startDate.atStartOfDay(),
                 endDate = endDate.plusDays(1).atStartOfDay(),
-                userId = user.id!!,
+                userId = userId,
             )
 
         // 장소별로 그룹핑
