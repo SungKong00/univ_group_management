@@ -19,6 +19,7 @@ enum WorkspaceView {
   groupAdmin, // Group admin/management page view
   memberManagement, // Member management page view
   recruitmentManagement, // Recruitment management page view
+  applicationManagement, // Application management page view (모집 지원자 관리)
 }
 
 /// Mobile Workspace View Type (3-step navigation flow)
@@ -612,6 +613,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.recruitmentManagement,
+      selectedChannelId: null,
+      isCommentsVisible: false,
+      selectedPostId: null,
+      isNarrowDesktopCommentsFullscreen: false,
+    );
+  }
+
+  /// Show application management page view (모집 지원자 관리)
+  void showApplicationManagementPage() {
+    state = state.copyWith(
+      previousView: state.currentView,
+      currentView: WorkspaceView.applicationManagement,
       selectedChannelId: null,
       isCommentsVisible: false,
       selectedPostId: null,

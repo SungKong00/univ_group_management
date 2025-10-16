@@ -9,7 +9,7 @@ import '../network/dio_client.dart';
 /// Phase 2: API 연동 시 GroupService와 통합
 abstract class JoinRequestRepository {
   Future<List<JoinRequest>> getPendingRequests(int groupId);
-  Future<void> approveRequest(int groupId, int requestId, int roleId);
+  Future<void> approveRequest(int groupId, int requestId);
   Future<void> rejectRequest(int groupId, int requestId);
 }
 
@@ -69,18 +69,17 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
   }
 
   @override
-  Future<void> approveRequest(int groupId, int requestId, int roleId) async {
+  Future<void> approveRequest(int groupId, int requestId) async {
     try {
       developer.log(
-        'Approving join request $requestId for group $groupId with role $roleId',
+        'Approving join request $requestId for group $groupId',
         name: 'ApiJoinRequestRepository',
       );
 
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/groups/$groupId/join-requests/$requestId',
         data: {
-          'decision': 'APPROVE',
-          'assignedRoleId': roleId, // roleId를 직접 전달
+          'action': 'APPROVE',
         },
       );
 
@@ -126,7 +125,7 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
 
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/groups/$groupId/join-requests/$requestId',
-        data: {'decision': 'REJECT'},
+        data: {'action': 'REJECT'},
       );
 
       if (response.data != null) {
@@ -163,7 +162,7 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
 
   /// 백엔드 응답을 JoinRequest 모델로 변환
   ///
-  /// 백엔드 응답 구조:
+  /// 백엔드 응답 구조 (GroupJoinRequestResponse):
   /// {
   ///   "id": 1,
   ///   "user": {
@@ -172,8 +171,8 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
   ///     "email": "kang@example.com",
   ///     "profileImageUrl": null
   ///   },
-  ///   "message": "지원 동기",
-  ///   "requestedAt": "2024-10-01T12:00:00",
+  ///   "requestMessage": "지원 동기",     ← requestMessage (message X)
+  ///   "createdAt": "2024-10-01T12:00:00", ← createdAt (requestedAt X)
   ///   "status": "PENDING"
   /// }
   JoinRequest _parseJoinRequest(Map<String, dynamic> json) {
@@ -185,9 +184,11 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
       userName: user['name'] as String,
       email: user['email'] as String,
       profileImageUrl: user['profileImageUrl'] as String?,
-      message: json['message'] as String,
-      requestedAt: DateTime.parse(json['requestedAt'] as String),
-      status: JoinRequestStatus.fromString(json['status'] as String),
+      message: json['requestMessage'] as String? ?? 'No message provided',
+      requestedAt: DateTime.parse(
+        json['createdAt'] as String? ?? DateTime.now().toIso8601String(),
+      ),
+      status: JoinRequestStatus.fromString(json['status'] as String? ?? 'PENDING'),
     );
   }
 }
@@ -241,7 +242,7 @@ class MockJoinRequestRepository implements JoinRequestRepository {
   }
 
   @override
-  Future<void> approveRequest(int groupId, int requestId, int roleId) async {
+  Future<void> approveRequest(int groupId, int requestId) async {
     await Future.delayed(const Duration(milliseconds: 200));
 
     final requests = _requestsByGroup[groupId];

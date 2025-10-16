@@ -17,12 +17,10 @@ final joinRequestListProvider =
 class ApproveRequestParams {
   final int groupId;
   final int requestId;
-  final int roleId;
 
   ApproveRequestParams({
     required this.groupId,
     required this.requestId,
-    required this.roleId,
   });
 
   @override
@@ -31,11 +29,10 @@ class ApproveRequestParams {
       other is ApproveRequestParams &&
           runtimeType == other.runtimeType &&
           groupId == other.groupId &&
-          requestId == other.requestId &&
-          roleId == other.roleId;
+          requestId == other.requestId;
 
   @override
-  int get hashCode => Object.hash(groupId, requestId, roleId);
+  int get hashCode => Object.hash(groupId, requestId);
 }
 
 final approveJoinRequestProvider = FutureProvider.autoDispose
@@ -44,7 +41,6 @@ final approveJoinRequestProvider = FutureProvider.autoDispose
       await repository.approveRequest(
         params.groupId,
         params.requestId,
-        params.roleId,
       );
 
       // 성공 후 신청 목록 및 멤버 목록 새로고침

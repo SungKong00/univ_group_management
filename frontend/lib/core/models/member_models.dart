@@ -185,15 +185,32 @@ class JoinRequest {
   });
 
   factory JoinRequest.fromJson(Map<String, dynamic> json) {
+    // 백엔드 응답: user 객체 형태
+    // {
+    //   "id": 123,
+    //   "group": {...},
+    //   "user": {
+    //     "id": 1,
+    //     "name": "John",
+    //     "email": "john@example.com",
+    //     "profileImageUrl": "..."
+    //   },
+    //   "requestMessage": "...",
+    //   "status": "PENDING",
+    //   "requestedAt": "2025-10-17T..."
+    // }
+
+    final user = json['user'] as Map<String, dynamic>?;
+
     return JoinRequest(
       id: (json['id'] as num).toInt(),
-      userId: json['userId'] as String,
-      userName: json['userName'] as String,
-      email: json['email'] as String,
-      profileImageUrl: json['profileImageUrl'] as String?,
-      message: json['message'] as String,
-      requestedAt: DateTime.parse(json['requestedAt'] as String),
-      status: JoinRequestStatus.fromString(json['status'] as String),
+      userId: user?['id'].toString() ?? '',
+      userName: user?['name'] as String? ?? 'Unknown',
+      email: user?['email'] as String? ?? 'unknown@example.com',
+      profileImageUrl: user?['profileImageUrl'] as String?,
+      message: json['requestMessage'] as String? ?? '',
+      requestedAt: DateTime.parse(json['createdAt'] as String? ?? DateTime.now().toIso8601String()),
+      status: JoinRequestStatus.fromString(json['status'] as String? ?? 'PENDING'),
     );
   }
 

@@ -358,9 +358,7 @@ class _AdminContentView extends ConsumerWidget {
           icon: Icons.inbox_outlined,
           title: '지원자 관리',
           description: '지원자를 확인하고 승인하세요',
-          onTap: () {
-            _showComingSoonDialog(context, '지원자 관리');
-          },
+          onTap: () => ref.read(workspaceStateProvider.notifier).showApplicationManagementPage(),
         ),
       ],
       isDesktop: isDesktop,

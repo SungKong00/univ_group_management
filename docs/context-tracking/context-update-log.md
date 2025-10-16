@@ -2,6 +2,47 @@
 
 이 파일은 프로젝트의 컨텍스트 문서들이 언제, 어떤 커밋에서 업데이트되었는지 추적합니다.
 
+### 2025-10-17 - 가입 신청 및 지원자 관리 기능 개선 및 문서 동기화
+**커밋**: 현재 세션 (커밋 예정)
+**유형**: 기능 개선 + 문서 동기화
+**우선순위**: Medium
+**영향 범위**: 프론트엔드 (멤버 관리, 모집 관리), 문서 (API 명세, UI/UX 명세)
+
+**구현 내용**:
+- **프론트엔드 기능 개선**:
+    - **가입 신청 승인 로직 변경**: 가입 신청 승인 시 역할을 선택하는 UI를 제거하고, 백엔드 API 변경에 맞춰 `roleId` 없이 요청하도록 수정했습니다. 승인 시 "멤버" 역할로 자동 추가된다는 안내 문구를 추가했습니다.
+    - **API 응답 구조 변경 대응**: 백엔드의 가입 신청 및 지원자 목록 API 응답이 변경됨에 따라(중첩된 `user` 객체, 페이지네이션 등), 프론트엔드 모델과 리포지토리를 수정하여 새로운 구조를 처리하도록 했습니다.
+    - **지원자 관리 페이지 활성화**: 그룹 관리 페이지의 '지원자 관리' 버튼이 실제 지원자 관리 페이지(`ApplicationManagementPage`)로 이동하도록 `WorkspaceState`에 `applicationManagement` 뷰를 추가하고 관련 네비게이션 로직을 구현했습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/api-reference.md`:
+    - `PATCH /groups/{groupId}/join-requests/{requestId}` API의 요청 본문을 `action: 'APPROVE'` 형식으로 명시하고, 역할이 자동 할당됨을 설명했습니다.
+    - `GET /{groupId}/join-requests` API의 응답 구조에 중첩된 `user` 객체와 변경된 필드명을 반영했습니다.
+    - `GET /recruitments/{recruitmentId}/applications` API의 응답이 페이지네이션 구조(`PagedApiResponse`)임을 명시하고 예시를 추가했습니다.
+- ✅ `docs/ui-ux/pages/group-admin-page.md`: '모집 관리' 섹션의 '지원자 관리' 기능 상태를 '향후 구현 예정'에서 '구현 완료'로 변경하고, 페이지 이동 동작을 설명했습니다.
+- ✅ `docs/ui-ux/pages/workspace-pages.md`: 워크스페이스에 '지원자 관리 페이지'가 추가되었음을 명시하고, 관련 컴포넌트와 동작을 설명하는 섹션을 추가했습니다.
+- ✅ `docs/implementation/frontend-workspace-guide.md`: `WorkspaceStateNotifier`에 새로운 네비게이션 메소드를 추가하는 예시로 `showApplicationManagementPage`를 추가하여 가이드를 최신 상태로 유지했습니다.
+- ✅ `docs/context-tracking/context-update-log.md`: 현재 로그를 추가합니다.
+
+**수정된 파일**:
+- `frontend/lib/core/models/member_models.dart`
+- `frontend/lib/core/repositories/join_request_repository.dart`
+- `frontend/lib/core/services/recruitment_service.dart`
+- `frontend/lib/presentation/pages/group/group_admin_page.dart`
+- `frontend/lib/presentation/pages/member_management/providers/join_request_provider.dart`
+- `frontend/lib/presentation/pages/member_management/widgets/join_request_section.dart`
+- `frontend/lib/presentation/pages/workspace/workspace_page.dart`
+- `frontend/lib/presentation/providers/page_title_provider.dart`
+- `frontend/lib/presentation/providers/workspace_state_provider.dart`
+- `docs/implementation/api-reference.md`
+- `docs/ui-ux/pages/group-admin-page.md`
+- `docs/ui-ux/pages/workspace-pages.md`
+- `docs/implementation/frontend-workspace-guide.md`
+
+**메모**: 백엔드 API 변경사항을 프론트엔드에 적용하고, 비활성화 상태였던 지원자 관리 기능을 실제 페이지와 연동했습니다. 관련된 모든 기술 및 UI 문서를 최신 상태로 동기화하여 일관성을 확보했습니다.
+
+---
+
 ### 2025-10-17 - 장소 예약 API 문서 동기화
 **커밋**: 현재 세션 (커밋 예정)
 **유형**: 문서 동기화
@@ -11,7 +52,7 @@
 **구현 내용**:
 - `PlaceReservationController.kt` 와 `place_service.dart` 의 최신 구현 상태를 API 관련 문서에 반영했습니다.
 - 장소 예약 생성/조회/수정/삭제 API의 엔드포인트 경로와 파라미터를 실제 코드와 일치시켰습니다.
-- `api-reference.md`에서 캘린더 API의 상태를 '구현 미착수'에서 '장소 예약 API 구현 완료'로 변경했습니다.
+- `api-reference.md`에서 캘린더 API의 상태를 \'구현 미착수\'에서 \'장소 예약 API 구현 완료\'로 변경했습니다.
 
 **동기화 완료 문서**:
 - ✅ `docs/implementation/api-reference.md`: 장소 예약 관련 API 명세를 v1.4로 업데이트하고, 구현 상태를 명시했습니다.
@@ -85,7 +126,7 @@
   관리 그룹의 CALENDAR_MANAGE 보유자가 그룹 관리 페이지에서 확인
     ↓
   [승인] → status: APPROVED
-  [거절] → status: REJECTED, rejectionReason: "..."
+  [거절] → status: REJECTED, rejectionReason: \"...\"
   ```
 
 - **Phase별 상세 계획 수립**:
@@ -130,7 +171,7 @@
     - Kotlin 코드 전반에 걸쳐 포맷팅(들여쓰기, 줄바꿈, 꼬리 쉼표 등)을 정리하여 일관성을 확보했습니다.
 
 **동기화 완료 문서**:
-- ✅ `docs/concepts/permission-system.md`: '캘린더 권한 확인 플로우' 섹션을 새로운 `permissionService.getEffective` 직접 호출 방식에 대한 설명과 코드 예시를 포함하여 상세하게 업데이트했습니다.
+- ✅ `docs/concepts/permission-system.md`: \'캘린더 권한 확인 플로우\' 섹션을 새로운 `permissionService.getEffective` 직접 호출 방식에 대한 설명과 코드 예시를 포함하여 상세하게 업데이트했습니다.
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
 - 🔄 `docs/context-tracking/sync-status.md`: `permission-system.md`의 마지막 동기화 날짜를 갱신할 예정입니다.
 
@@ -188,7 +229,7 @@
   - Step 1: 공식/비공식 선택 (권한 보유자만)
   - Step 2: 일정 유형 선택 (Phase 2 구현 예정)
   - 일반 사용자: Step 1 생략, 비공식 일정 폼 바로 표시
-- **재사용 가능한 컴포넌트 시스템 설계**:
+- **재사용 가능한 컴포넌트 시스템 설계**:\
   - Atomic Design 패턴 적용
   - Atoms: SelectableOptionCard, OptionIcon, OptionText
   - Molecules: OptionCardGroup, StepHeader
@@ -228,19 +269,19 @@
     1. 시작일 (start_date): DatePicker
     2. 종료일 (end_date): DatePicker
     3. 반복 패턴 선택:
-       - Option A: "매일" (DAILY)
-       - Option B: "요일 선택" (WEEKLY) → 체크박스 [월] [화] [수] [목] [금] [토] [일]
+       - Option A: \"매일\" (DAILY)
+       - Option B: \"요일 선택\" (WEEKLY) → 체크박스 [월] [화] [수] [목] [금] [토] [일]
   - **백엔드 저장 방식**:
     - 선택한 기간(`start_date` ~ `end_date`) + 반복 패턴에 따라 **명시적 인스턴스 생성** (DD-CAL-002 유지)
-    - `recurrence_rule` JSON 형식: `{"type": "DAILY"}` 또는 `{"type": "WEEKLY", "daysOfWeek": ["MONDAY", "WEDNESDAY", "FRIDAY"]}`
+    - `recurrence_rule` JSON 형식: `{\"type\": \"DAILY\"}` 또는 `{\"type\": \"WEEKLY\", \"daysOfWeek\": [\"MONDAY\", \"WEDNESDAY\", \"FRIDAY\"]}`
 
 **동기화 완료 문서**:
 - ✅ `docs/concepts/calendar-design-decisions.md`:
-  - DD-CAL-001 수정: "CALENDAR_MANAGE 1개만 추가, 조회/예약은 멤버십 기반"
+  - DD-CAL-001 수정: \"CALENDAR_MANAGE 1개만 추가, 조회/예약은 멤버십 기반\"
   - DD-CAL-002 수정: 프론트엔드 UI 설계 명시 (시작일/종료일 DatePicker, 반복 패턴 선택), JSON 형식 예시 추가
 - ✅ `docs/concepts/permission-system.md`:
   - 캘린더 권한을 1개로 변경 (CALENDAR_MANAGE)
-  - Permission-Centric 매트릭스에서 "캘린더 조회"와 "장소 예약"을 멤버십 기반으로 설명
+  - Permission-Centric 매트릭스에서 \"캘린더 조회\"와 \"장소 예약\"을 멤버십 기반으로 설명
   - 권한 확인 플로우 7단계로 업데이트 (멤버십 체크 포함)
 - ✅ `docs/concepts/calendar-system.md`:
   - 5.0 API 권한 설명 수정: GET (조회): `isMember()`, POST (생성): 공식 → CALENDAR_MANAGE, 비공식 → `isMember()`
@@ -269,7 +310,7 @@
     - `workspace_page.dart`: `GroupAdminPage`가 `WorkspaceEmptyState` 대신 실제 위젯으로 렌더링되도록 변경하고, `previousView`를 활용한 뒤로가기 로직을 적용했습니다.
 
 **동기화 완료 문서**:
-- ✅ `docs/ui-ux/pages/workspace-pages.md`: '그룹 관리 페이지' 섹션의 설명을 `WorkspaceEmptyState` 플레이스홀더 대신 실제 `GroupAdminPage`가 구현되었다는 내용으로 업데이트했습니다.
+- ✅ `docs/ui-ux/pages/workspace-pages.md`: \'그룹 관리 페이지\' 섹션의 설명을 `WorkspaceEmptyState` 플레이스홀더 대신 실제 `GroupAdminPage`가 구현되었다는 내용으로 업데이트했습니다.
 - ✅ `docs/implementation/frontend-workspace-guide.md`: 사용자가 이미 최신 내용으로 수정 완료했습니다.
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
 
@@ -291,7 +332,7 @@
 
 **구현 내용**:
 - **프론트엔드 기능 추가**:
-    - 워크스페이스 헤더(`WorkspaceHeader`)에 현재 사용자의 그룹 내 역할(예: "그룹장")을 표시하는 기능을 추가했습니다.
+    - 워크스페이스 헤더(`WorkspaceHeader`)에 현재 사용자의 그룹 내 역할(예: \"그룹장\")을 표시하는 기능을 추가했습니다.
     - `top_navigation.dart`에서 `workspaceStateProvider`를 통해 역할 정보를 가져와 `WorkspaceHeader`에 전달합니다.
 
 **동기화 완료 문서**:
@@ -356,7 +397,7 @@
     - 문제 해결 과정에서 추가되었던 `UserService`, `GroupMemberService`, `ProfileSetupPage`의 디버깅용 로그를 모두 제거했습니다.
 
 **동기화 완료 문서**:
-- ✅ `docs/implementation/backend-guide.md`: '로컬 개발 환경 가이드' 섹션을 신설하여 H2 DB ID 충돌 해결 방법과 사용자 생성 시 동시성 처리 패턴을 상세히 설명했습니다.
+- ✅ `docs/implementation/backend-guide.md`: \'로컬 개발 환경 가이드\' 섹션을 신설하여 H2 DB ID 충돌 해결 방법과 사용자 생성 시 동시성 처리 패턴을 상세히 설명했습니다.
 - ✅ `docs/troubleshooting/common-errors.md`: `DataIntegrityViolationException` 및 `HttpMessageNotReadableException`에 대한 원인과 해결 방법을 추가했습니다.
 - ✅ `docs/implementation/api-reference.md`: `INVALID_STATE`, `INVALID_REQUEST_BODY`, `DATA_INTEGRITY_VIOLATION` 등 새로운 표준 에러 코드를 추가했습니다.
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
@@ -408,7 +449,7 @@
 - `frontend/lib/presentation/widgets/dialogs/edit_role_dialog.dart` (신규)
 - `frontend/lib/presentation/pages/member_management/widgets/role_management_section.dart` (수정)
 
-**Phase 1 파일 (기록용, 10-09 이전 완료)**:
+**Phase 1 파일 (기록용, 10-09 이전 완료)**:\
 - `frontend/lib/core/repositories/member_repository.dart`
 - `frontend/lib/presentation/pages/member_management/providers/member_list_provider.dart`
 - `frontend/lib/presentation/pages/member_management/widgets/member_list_section.dart`
@@ -424,14 +465,14 @@
 **영향 범위**: 문서 (UI/UX 컨셉)
 
 **구현 내용**:
-- `pending-updates.md`의 'UI/UX 전체 정합성 1차 패스' 작업을 수행하여 문서 간 중복 및 불일치 문제를 해결했습니다.
+- `pending-updates.md`의 \'UI/UX 전체 정합성 1차 패스\' 작업을 수행하여 문서 간 중복 및 불일치 문제를 해결했습니다.
 - **색상 정의 일원화**: `color-guide.md`에서 구체적인 색상 코드 목록을 제거하고, `design-system.md`를 단일 소스로 참조하도록 변경했습니다.
 - **Breakpoint 정의 통일**: `responsive-design-guide.md`의 Breakpoint 정의를 `design-system.md`의 구체적인 픽셀 값과 매핑하여 일관성을 확보했습니다.
 
 **동기화 완료 문서**:
 - ✅ `docs/ui-ux/concepts/color-guide.md`: 색상 토큰 정의를 `design-system.md`로 위임.
 - ✅ `docs/ui-ux/concepts/responsive-design-guide.md`: Breakpoint 정의를 `design-system.md`와 일치시킴.
-- ✅ `docs/context-tracking/pending-updates.md`: 'UI/UX 전체 정합성 1차 패스' 항목을 완료 처리하고 히스토리로 이동.
+- ✅ `docs/context-tracking/pending-updates.md`: \'UI/UX 전체 정합성 1차 패스\' 항목을 완료 처리하고 히스토리로 이동.
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
 
 **메모**: UI/UX 관련 핵심 컨셉 문서들의 일관성을 높여 유지보수성을 개선했습니다.
@@ -445,11 +486,11 @@
 **영향 범위**: 문서 (워크플로우, 컨벤션)
 
 **구현 내용**:
-- `pending-updates.md`에 명시된 '개발 워크플로우 문서 Git 전략 연동 검증' 작업을 수행했습니다.
+- `pending-updates.md`에 명시된 \'개발 워크플로우 문서 Git 전략 연동 검증\' 작업을 수행했습니다.
 - `docs/workflows/development-flow.md`와 `docs/conventions/git-strategy.md` 내용을 비교 분석하여 두 문서 간의 브랜치 전략, 워크플로우, 병합 방식 등 핵심 내용이 일관됨을 확인했습니다.
 
 **동기화 완료 문서**:
-- ✅ `docs/context-tracking/pending-updates.md`: 검증 작업 상태를 '완료'로 변경하고 히스토리로 이동했습니다.
+- ✅ `docs/context-tracking/pending-updates.md`: 검증 작업 상태를 \'완료\'로 변경하고 히스토리로 이동했습니다.
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
 
 **메모**: 문서 간 일관성이 확인되어 별도의 수정 없이 검증 작업을 완료합니다.
@@ -498,7 +539,7 @@
 - ✅ `docs/implementation/api-reference.md`: `ADMIN_MANAGE`를 `MEMBER_MANAGE`로 모두 수정하고, 중복된 API 설명을 제거했습니다.
 - ✅ `docs/ui-ux/pages/group-admin-page.md`: 접근 권한 명세에서 `ADMIN_MANAGE`를 `MEMBER_MANAGE`로 수정했습니다.
 - ✅ `docs/maintenance/group-management-permissions.md`: 권한 변경 이력을 추가하고, 권한 이름을 `MEMBER_MANAGE`로 업데이트했습니다.
-- ✅ `docs/implementation/frontend-implementation-status.md`: 워크스페이스 상태 관리 섹션에 '상태 진입 로직 리팩토링' 항목을 추가하여 변경 사항을 기록했습니다.
+- ✅ `docs/implementation/frontend-implementation-status.md`: 워크스페이스 상태 관리 섹션에 \'상태 진입 로직 리팩토링\' 항목을 추가하여 변경 사항을 기록했습니다.
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
 
 **수정된 파일**:
@@ -619,18 +660,18 @@
 
 **구현 내용**:
 - **프론트엔드**:
-    - 워크스페이스에 '그룹 관리' 페이지를 추가하고, 해당 페이지로 이동하는 기능을 구현했습니다. 현재는 '준비 중' 상태를 표시하는 UI입니다.
+    - 워크스페이스에 \'그룹 관리\' 페이지를 추가하고, 해당 페이지로 이동하는 기능을 구현했습니다. 현재는 \'준비 중\' 상태를 표시하는 UI입니다.
     - `WorkspaceView`에 `groupAdmin`을 추가하고, 이를 표시하는 `showGroupAdminPage` 상태 관리 로직을 구현했습니다.
-    - 채널 네비게이션 및 모바일 채널 목록의 '그룹 관리' 버튼 액션을 라우팅 방식에서 `showGroupAdminPage` 호출로 변경했습니다.
+    - 채널 네비게이션 및 모바일 채널 목록의 \'그룹 관리\' 버튼 액션을 라우팅 방식에서 `showGroupAdminPage` 호출로 변경했습니다.
 - **문서**:
     - 새로운 그룹 관리 권한 추가 시 따라야 할 체크리스트인 `group-management-permissions.md` 유지보수 가이드를 추가했습니다.
 
 **동기화 완료 문서**:
 - 🆕 `docs/ui-ux/pages/group-admin-page.md`: 그룹 관리 페이지에 대한 신규 UI/UX 명세서 생성.
 - 🆕 `docs/maintenance/group-management-permissions.md`: 그룹 관리 권한 추가 시 체크리스트 가이드 문서 생성.
-- ✅ `docs/ui-ux/pages/navigation-and-page-flow.md`: 채널 네비게이션의 '그룹 관리' 버튼 동작 방식을 상태 변경 호출로 수정.
-- ✅ `docs/ui-ux/pages/workspace-pages.md`: 워크스페이스 페이지 명세에 '그룹 관리 페이지' 섹션 추가.
-- ✅ `docs/implementation/frontend-implementation-status.md`: 페이지 구현 현황에 '그룹 관리' 페이지를 추가하고, 워크스페이스 기능에 '그룹 관리 페이지 (준비 중 UI)' 항목 추가.
+- ✅ `docs/ui-ux/pages/navigation-and-page-flow.md`: 채널 네비게이션의 \'그룹 관리\' 버튼 동작 방식을 상태 변경 호출로 수정.
+- ✅ `docs/ui-ux/pages/workspace-pages.md`: 워크스페이스 페이지 명세에 \'그룹 관리 페이지\' 섹션 추가.
+- ✅ `docs/implementation/frontend-implementation-status.md`: 페이지 구현 현황에 \'그룹 관리\' 페이지를 추가하고, 워크스페이스 기능에 \'그룹 관리 페이지 (준비 중 UI)\' 항목 추가.
 - ✅ `docs/context-tracking/sync-status.md`: 관련된 모든 문서의 상태를 `✅ 최신`으로 업데이트하고, 신규 문서를 추가.
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
 
@@ -664,10 +705,10 @@
 **동기화 완료 문서**:
 - 🆕 `docs/ui-ux/pages/group-admin-page.md`: 그룹 관리 페이지에 대한 신규 UI/UX 명세서 생성.
 - ✅ `docs/implementation/backend-guide.md`: `GroupInitializationRunner`를 사용한 새로운 데이터 자동 초기화 프로세스 설명 추가.
-- ✅ `docs/implementation/database-reference.md`: `data.sql`의 역할이 축소되고, 데이터가 런타임에 생성된다는 내용으로 '초기 데이터 설정' 섹션 업데이트.
+- ✅ `docs/implementation/database-reference.md`: `data.sql`의 역할이 축소되고, 데이터가 런타임에 생성된다는 내용으로 \'초기 데이터 설정\' 섹션 업데이트.
 - ✅ `docs/implementation/api-reference.md`: 멤버십 정보 API (`GET /api/groups/{groupId}/members/me`)의 응답이 중첩 구조로 변경되었음을 반영.
-- ✅ `docs/ui-ux/pages/channel-pages.md`: 게시글 목록의 새로운 'Sticky Header' UI에 대한 명세 추가.
-- ✅ `docs/ui-ux/pages/navigation-and-page-flow.md`: 채널 네비게이션의 '관리자 페이지' 버튼이 `/group-admin` 경로로 연결되도록 수정.
+- ✅ `docs/ui-ux/pages/channel-pages.md`: 게시글 목록의 새로운 \'Sticky Header\' UI에 대한 명세 추가.
+- ✅ `docs/ui-ux/pages/navigation-and-page-flow.md`: 채널 네비게이션의 \'관리자 페이지\' 버튼이 `/group-admin` 경로로 연결되도록 수정.
 - ✅ `docs/context-tracking/sync-status.md`: 관련된 모든 문서의 상태를 `✅ 최신`으로 업데이트하고, 신규 문서를 추가.
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
 
@@ -698,8 +739,8 @@
 - 이전 게시글 로드 시, 스크롤 위치가 튀지 않고 자연스럽게 유지되도록 로직 개선.
 
 **동기화 완료 문서**:
-- ✅ `docs/ui-ux/pages/workspace-pages.md`: 채널 페이지의 스크롤 동작 설명을 '역방향 무한 스크롤'로 수정.
-- ✅ `docs/implementation/frontend-guide.md`: 게시글/댓글 시스템의 동작 패턴에 '채팅형 스크롤'에 대한 설명을 추가.
+- ✅ `docs/ui-ux/pages/workspace-pages.md`: 채널 페이지의 스크롤 동작 설명을 \'역방향 무한 스크롤\'로 수정.
+- ✅ `docs/implementation/frontend-guide.md`: 게시글/댓글 시스템의 동작 패턴에 \'채팅형 스크롤\'에 대한 설명을 추가.
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
 
 **수정된 파일**:
@@ -722,9 +763,9 @@
 - 웹 댓글 사이드바 레이아웃을 재구성하여 게시글 미리보기 영역을 추가.
 
 **동기화 완료 문서**:
-- ✅ `docs/ui-ux/pages/workspace-pages.md`: 웹/모바일 댓글 시스템 명세에 '게시글 미리보기' 기능 추가.
+- ✅ `docs/ui-ux/pages/workspace-pages.md`: 웹/모바일 댓글 시스템 명세에 \'게시글 미리보기\' 기능 추가.
 - ✅ `docs/implementation/frontend-guide.md`: `CollapsibleContent` 공통 위젯에 대한 설명 추가.
-- ✅ `docs/implementation/frontend-implementation-status.md`: '게시글/댓글 시스템' 기능 현황에 댓글창 UX 개선 항목 추가 및 완료 처리.
+- ✅ `docs/implementation/frontend-implementation-status.md`: \'게시글/댓글 시스템\' 기능 현황에 댓글창 UX 개선 항목 추가 및 완료 처리.
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가.
 
 **수정된 파일**:
@@ -745,7 +786,7 @@
 
 **구현 내용**:
 - `WorkspaceHeader` 위젯 리팩토링
-- 명시적 제목(예: "댓글")이 있을 경우, '제목'과 '경로'를 2단으로 분리하여 표시하는 구조 적용
+- 명시적 제목(예: \"댓글\")이 있을 경우, \'제목\'과 \'경로\'를 2단으로 분리하여 표시하는 구조 적용
 - `Explicit Title First` 원칙에 따라 페이지 컨텍스트 가독성 향상
 
 **동기화 완료 문서**:
@@ -778,7 +819,7 @@
 - ✅ `docs/context-tracking/pending-updates.md`: 관련 항목 완료 처리
 - ✅ `docs/context-tracking/context-update-log.md`: 현재 로그 추가
 
-**핵심 변경사항**:
+**핵심 변경사항**:\
 - 모바일 환경에서 사용자가 현재 위치를 명확하게 인지하고, 일관된 탐색 경험을 할 수 있도록 개선했습니다.
 
 ---
@@ -881,7 +922,7 @@
 - 댓글 버튼 반응형 너비 적용:
   - 모바일(≤600px): 게시글 폭의 70%
   - 웹(>600px): 최대 800px
-- 버튼 오른쪽 끝에 ">" 아이콘 추가
+- 버튼 오른쪽 끝에 \">\" 아이콘 추가
 - spaceBetween 레이아웃으로 텍스트 변경 시에도 아이콘 위치 고정
 - 버튼과 댓글창 사이 외부 여백 64px 추가
 - hover 시 브랜드 컬러 테두리 표시 유지
@@ -948,7 +989,7 @@
 
 ### 2025-10-05 - 에이전트 마스터 워크플로우 개정
 **업데이트된 문서:**
-- ✅ `GEMINI.md` - "문서 업데이트"와 "커밋" 요청을 처리하는 통합 워크플로우로 전면 개정
+- ✅ `GEMINI.md` - \"문서 업데이트\"와 \"커밋\" 요청을 처리하는 통합 워크플로우로 전면 개정
 - ✅ `docs/context-tracking/context-update-log.md` - 현재 로그 추가
 - ✅ `docs/context-tracking/sync-status.md` - `GEMINI.md` 추적 시작 및 동기화 상태 업데이트
 - ✅ `docs/context-tracking/pending-updates.md` - 최종 업데이트 날짜 갱신
@@ -1005,7 +1046,7 @@
 - ✅ `docs/concepts/channel-permissions.md` - 채널 권한 Permission-Centric 매트릭스 및 초기 0바인딩 정책 명시
 - ✅ `docs/concepts/workspace-channel.md` - 채널 삭제 벌크 순서 및 자동 바인딩 제거 언급 동기화 (확인 필요 시 재검토)
 - ✅ `docs/implementation/backend-guide.md` - 채널 CRUD 및 삭제 시 Bulk 순서(간접 참조) 반영
-- ✅ `docs/troubleshooting/permission-errors.md` - 디버깅 절차에서 "기본 바인딩" 표현 제거, 수동 바인딩 점검으로 변경
+- ✅ `docs/troubleshooting/permission-errors.md` - 디버깅 절차에서 \"기본 바인딩\" 표현 제거, 수동 바인딩 점검으로 변경
 - ✅ `docs/implementation/api-reference.md` - 타임스탬프 최신화 (권한 관련 엔드포인트 영향 검토 완료)
 
 **영향받는 문서 (검토 필요):**

@@ -178,60 +178,44 @@ class _JoinRequestCard extends ConsumerWidget {
     WidgetRef ref,
     List<GroupRole> roles,
   ) {
-    int selectedRoleId = roles.first.id;
-
     showDialog(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('가입 승인'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${request.userName}님을 승인하고 역할을 부여하세요.',
-                style: AppTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                initialValue: selectedRoleId,
-                decoration: const InputDecoration(
-                  labelText: '역할 선택',
-                  border: OutlineInputBorder(),
-                ),
-                items: roles.map((role) {
-                  return DropdownMenuItem(
-                    value: role.id,
-                    child: Text(role.name),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => selectedRoleId = value);
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('취소'),
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('가입 승인'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${request.userName}님의 가입을 승인하시겠습니까?',
+              style: AppTheme.bodyMedium,
             ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-                await _handleApprove(context, ref, selectedRoleId);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brand,
-                foregroundColor: Colors.white,
+            const SizedBox(height: 12),
+            Text(
+              '승인 시 "멤버" 역할로 자동 추가됩니다.',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppColors.neutral600,
               ),
-              child: const Text('승인'),
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await _handleApprove(context, ref);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.brand,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('승인'),
+          ),
+        ],
       ),
     );
   }
@@ -239,7 +223,6 @@ class _JoinRequestCard extends ConsumerWidget {
   Future<void> _handleApprove(
     BuildContext context,
     WidgetRef ref,
-    int roleId,
   ) async {
     try {
       await ref.read(
@@ -247,7 +230,6 @@ class _JoinRequestCard extends ConsumerWidget {
           ApproveRequestParams(
             groupId: groupId,
             requestId: request.id,
-            roleId: roleId,
           ),
         ).future,
       );

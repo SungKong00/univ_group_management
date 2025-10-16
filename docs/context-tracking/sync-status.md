@@ -4,7 +4,7 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-10-17 (장소 예약 API 문서 동기화)
+**마지막 업데이트**: 2025-10-17 (가입 신청 및 지원자 관리 기능 문서 동기화)
 **총 문서 수**: 43개
 **동기화 완료**: 43개 (100%)
 **업데이트 필요**: 0개 (0%)
@@ -37,11 +37,11 @@
 |--------|------|---------------|-----------|------|
 | `backend-guide.md` | ✅ 최신 | 2025-10-09 | `현재` | 로컬 개발 환경 가이드 추가 |
 | `frontend-guide.md` | ✅ 최신 | 2025-10-06 | `현재` | 채팅형 스크롤 패턴 추가 |
-| `frontend-workspace-guide.md` | ✅ 최신 | 2025-10-10 | `현재` | 워크스페이스/네비게이션 구현 패턴 가이드 |
+| `frontend-workspace-guide.md` | ✅ 최신 | 2025-10-17 | `현재` | `showApplicationManagementPage` 예시 추가 |
 | `component-reusability-guide.md` | ✅ 최신 | 2025-10-07 | `현재` | SlidePanel, PostPreviewWidget 추가 |
 | `frontend-implementation-status.md` | ✅ 최신 | 2025-10-08 | `현재` | 워크스페이스 진입 로직 개선 반영 |
 | `workspace-refactoring-status.md` | ✅ 최신 | 2025-10-07 | `현재` | Phase 1-10 진행 상황 추적 문서 (신규) |
-| `api-reference.md` | ✅ 최신 | 2025-10-17 | `현재` | 장소 예약 API 구현 상태 반영 |
+| `api-reference.md` | ✅ 최신 | 2025-10-17 | `현재` | 가입/모집 API 명세 업데이트 |
 | `database-reference.md` | ✅ 최신 | 2025-10-12 | `현재` | recurrence_rule JSON 형식 예시 추가 (SQL DDL 및 JPA 엔티티) |
 
 ### `/docs/ui-ux/concepts/` - UI/UX 개념
@@ -57,12 +57,12 @@
 |--------|------|---------------|-----------|------|
 | `authentication-pages.md` | ✅ 최신 | 2024-09-28 | `86b8cf6` | |
 | `navigation-and-page-flow.md` | ✅ 최신 | 2025-10-07 | `현재` | 그룹 관리 페이지 상태 변경 방식 반영 |
-| `workspace-pages.md` | ✅ 최신 | 2025-10-10 | `현재` | 그룹 관리 페이지 구현 상태 반영 |
+| `workspace-pages.md` | ✅ 최신 | 2025-10-17 | `현재` | 지원자 관리 페이지 섹션 추가 |
 | `home-page.md` | ✅ 최신 | 2024-09-28 | `86b8cf6` | |
 | `channel-pages.md` | ✅ 최신 | 2025-10-07 | `현재` | 게시글 목록 Sticky Header UI 명세 추가 |
 | `my-activity-page.md` | ✅ 최신 | 2024-09-28 | `86b8cf6` | |
 | `recruitment-pages.md` | ✅ 최신 | 2024-09-28 | `86b8cf6` | |
-| `group-admin-page.md` | ✅ 최신 | 2025-10-08 | `현재` | 접근 권한 업데이트 |
+| `group-admin-page.md` | ✅ 최신 | 2025-10-17 | `현재` | 지원자 관리 기능 상태 업데이트 |
 
 ### `/docs/maintenance/` - 유지보수 가이드
 | 파일명 | 상태 | 마지막 동기화 | 관련 커밋 | 비고 |
@@ -115,9 +115,9 @@
 ### `/docs/context-tracking/` - 컨텍스트 추적 (신규)
 | 파일명 | 상태 | 마지막 동기화 | 관련 커밋 | 비고 |
 |--------|------|---------------|-----------|------|
-| `context-update-log.md` | ✅ 최신 | 2025-10-13 | `현재` | 권한 로직 리팩토링 로그 추가 |
+| `context-update-log.md` | ✅ 최신 | 2025-10-17 | `현재` | 가입/모집 기능 개선 로그 추가 |
 | `pending-updates.md` | ✅ 최신 | 2025-10-06 | `현재` | 컨트롤러 테스트 문서화 완료 기록 |
-| `sync-status.md` | ✅ 최신 | 2025-10-09 | `현재` | 현재 파일 (변경사항 반영) |
+| `sync-status.md` | ✅ 최신 | 2025-10-17 | `현재` | 현재 파일 (변경사항 반영) |
 
 ---
 
@@ -125,6 +125,13 @@
 
 ### ✅ 최신 상태 (43개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
+
+**주요 업데이트 (2025-10-17)**:
+- 가입 신청 및 지원자 관리 기능 개선에 따른 프론트엔드 코드 변경사항을 관련 API, UI/UX 문서에 동기화했습니다.
+  - `api-reference.md`: 가입 승인 API 요청/응답 구조 변경, 지원자 목록 API 페이지네이션 응답 구조 명시
+  - `group-admin-page.md`: '지원자 관리' 기능 활성화 상태 반영
+  - `workspace-pages.md`: '지원자 관리' 페이지 추가
+  - `frontend-workspace-guide.md`: 네비게이션 메소드 예시 업데이트
 
 **주요 업데이트 (2025-10-16)**:
 - 테스트 데이터 관리 문서 신규 생성 (test-data-reference.md)

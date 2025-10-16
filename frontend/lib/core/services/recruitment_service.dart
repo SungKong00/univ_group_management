@@ -537,6 +537,7 @@ class RecruitmentService {
   ///
   /// GET /api/recruitments/{recruitmentId}/applications
   /// Requires RECRUITMENT_MANAGE permission
+  /// Returns paginated list of applications
   Future<List<ApplicationSummaryResponse>> getApplications(
     int recruitmentId,
   ) async {
@@ -552,6 +553,16 @@ class RecruitmentService {
 
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          // Backend returns PagedApiResponse with 'content' field inside 'data'
+          if (json is Map<String, dynamic> && json.containsKey('content')) {
+            final content = json['content'] as List<dynamic>;
+            return content
+                .map((item) => ApplicationSummaryResponse.fromJson(
+                      item as Map<String, dynamic>,
+                    ))
+                .toList();
+          }
+          // Fallback for direct list response
           if (json is List) {
             return json
                 .map((item) => ApplicationSummaryResponse.fromJson(

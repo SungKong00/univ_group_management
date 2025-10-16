@@ -15,7 +15,7 @@ This guide captures the architectural patterns, state-management rules, and UX c
 
 ### Adding a new workspace view
 1. Add a case to `WorkspaceView` enum if it represents a new top-level view.
-2. Implement a navigation method on `WorkspaceStateNotifier` (e.g., `showGroupAdminPage`) that clears transient channel/comment state and sets `previousView` when needed.
+2. Implement a navigation method on `WorkspaceStateNotifier` (e.g., `showGroupAdminPage`, `showApplicationManagementPage`) that clears transient channel/comment state and sets `previousView` when needed.
 3. Update `_buildMainContent` in `workspace_page.dart` to render the new view.
 4. Update `page_title_provider.dart` (desktop + mobile breadcrumb) to return the correct title/path.
 5. Extend `ChannelNavigation` or other widgets only if the new view needs entry points in the left rail.

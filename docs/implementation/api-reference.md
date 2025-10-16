@@ -253,7 +253,33 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
 ### 3.4. 가입 및 생성 요청 관리
 
 -   `GET /{groupId}/join-requests`: 그룹 가입 신청 목록 조회 (`MEMBER_MANAGE` 권한 필요)
+    -   **응답**: `ApiResponse<List<GroupJoinRequestResponse>>`
+    -   **응답 구조 (GroupJoinRequestResponse)**:
+        ```json
+        {
+          "id": 1,
+          "user": {
+            "id": 1,
+            "name": "Kang",
+            "email": "kang@example.com",
+            "profileImageUrl": null
+          },
+          "requestMessage": "지원 동기",
+          "status": "PENDING",
+          "createdAt": "2024-10-01T12:00:00"
+        }
+        ```
+    -   **참고**: `userId`, `userName` 등의 평평한 구조에서 중첩된 `user` 객체로 변경되었습니다. 또한 `message` -> `requestMessage`, `requestedAt` -> `createdAt`으로 필드명이 변경되었습니다.
+
 -   `PATCH /{groupId}/join-requests/{requestId}`: 가입 신청 승인/거절 (`MEMBER_MANAGE` 권한 필요)
+    -   **요청**: `UpdateJoinRequest`
+        ```json
+        {
+          "action": "APPROVE" // or "REJECT"
+        }
+        ```
+    -   **참고**: 기존 `decision` 필드에서 `action` 필드로 변경되었습니다. 승인 시 별도의 역할(role) 지정 없이 그룹의 기본 역할로 자동 할당됩니다.
+
 -   `POST /{groupId}/sub-groups/requests`: 하위 그룹 생성 요청
 -   `GET /{groupId}/sub-groups/requests`: 하위 그룹 생성 요청 목록 조회 (`GROUP_MANAGE` 권한 필요)
 -   `PATCH /{groupId}/sub-groups/requests/{requestId}`: 하위 그룹 생성 요청 승인/거절 (`GROUP_MANAGE` 권한 필요)
@@ -407,7 +433,32 @@ POST /api/recruitments/{id}/applications
 | RECRUITMENT_CLOSED | 모집이 OPEN 아님 |
 
 ### 4.9 지원서 목록 / 상세
-- 목록: `GET /api/recruitments/{id}/applications?page=0&size=20` (RECRUITMENT_MANAGE)
+### 4.9 지원서 목록 / 상세
+- 목록: `GET /api/recruitments/{id}/applications?page=0&size=20` (`RECRUITMENT_MANAGE` 권한 필요)
+  - **응답**: `ApiResponse<PagedApiResponse<ApplicationSummaryResponse>>`
+  - **응답 구조**:
+    ```json
+    {
+      "success": true,
+      "data": {
+        "content": [
+          {
+            "id": 1,
+            "recruitmentId": 12,
+            "userId": 5,
+            "userName": "지원자명",
+            "status": "PENDING",
+            "submittedAt": "2025-10-18T10:00:00"
+          }
+        ],
+        "page": 0,
+        "size": 20,
+        "totalElements": 1,
+        "totalPages": 1
+      },
+      "error": null
+    }
+    ```
 - 상세: `GET /api/applications/{appId}` (권한자 또는 본인)
 
 ### 4.10 지원서 심사

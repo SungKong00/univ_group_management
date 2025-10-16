@@ -161,18 +161,31 @@
 -   `frontend/lib/presentation/widgets/common/collapsible_content.dart`
 -   `frontend/lib/presentation/widgets/comment/` (댓글 관련 위젯)
 
-## 2. 그룹 홈, 캘린더, 그룹 관리 페이지
+## 2. 그룹 홈, 캘린더, 그룹 관리 및 지원자 관리 페이지
 
-> **구현 상태**: 그룹 관리 페이지 구현 완료, 나머지는 준비 중 UI로 표시 (2025-10-10)
+> **구현 상태**: 그룹 관리, 멤버 관리, 지원자 관리 페이지 구현 완료. 나머지는 준비 중 UI로 표시 (2025-10-17)
 
-워크스페이스의 핵심 기능인 그룹 관리 페이지가 구현되었으며, 그룹 홈 및 캘린더는 현재 개발 준비 중입니다.
+워크스페이스의 핵심 기능인 그룹 관리, 멤버 관리, 지원자 관리 페이지가 구현되었으며, 그룹 홈 및 캘린더는 현재 개발 준비 중입니다.
 
-### 2.1. 구현된 페이지: 그룹 관리
+### 2.1. 구현된 페이지: 그룹 관리, 멤버 관리, 지원자 관리
 
--   **상태**: 구현 완료
--   **컴포넌트**: `GroupAdminPage`
--   **위치**: `frontend/lib/presentation/pages/group/group_admin_page.dart`
--   **동작**: 사용자가 채널 네비게이션의 '관리자' 버튼을 클릭하면, `workspace_page.dart`는 `GroupAdminPage` 위젯을 렌더링합니다. `workspace_state_provider`는 `previousView`를 기록하여 '뒤로가기' 시 이전 채널 뷰로 복귀할 수 있도록 지원합니다.
+-   **그룹 관리 페이지**:
+    -   **상태**: 구현 완료
+    -   **컴포넌트**: `GroupAdminPage`
+    -   **위치**: `frontend/lib/presentation/pages/group/group_admin_page.dart`
+    -   **동작**: 사용자가 채널 네비게이션의 '관리자' 버튼을 클릭하면, `workspace_page.dart`는 `GroupAdminPage` 위젯을 렌더링합니다. `workspace_state_provider`는 `previousView`를 기록하여 '뒤로가기' 시 이전 채널 뷰로 복귀할 수 있도록 지원합니다.
+
+-   **멤버 관리 페이지**:
+    -   **상태**: 구현 완료
+    -   **컴포넌트**: `MemberManagementPage`
+    -   **위치**: `frontend/lib/presentation/pages/member_management/member_management_page.dart`
+    -   **동작**: 그룹 관리 페이지에서 '멤버 목록'을 클릭하면 `WorkspaceView`가 `memberManagement`로 변경되어 이 페이지로 이동합니다.
+
+-   **지원자 관리 페이지**:
+    -   **상태**: 구현 완료
+    -   **컴포넌트**: `ApplicationManagementPage`
+    -   **위치**: `frontend/lib/presentation/pages/recruitment_management/application_management_page.dart`
+    -   **동작**: 그룹 관리 페이지에서 '지원자 관리'를 클릭하면 `WorkspaceView`가 `applicationManagement`로 변경되어 이 페이지로 이동합니다.
 
 ### 2.2. 준비 중인 페이지: 그룹 홈, 캘린더
 
