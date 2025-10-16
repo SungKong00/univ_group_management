@@ -13,9 +13,9 @@ import '../../../../providers/place_calendar_provider.dart';
 import '../../../../providers/place_provider.dart';
 import '../../../../utils/responsive_layout_helper.dart';
 import '../../place/place_list_page.dart';
-import 'compact_building_place_selector.dart';
 import 'multi_place_calendar_view.dart';
 import 'place_reservation_dialog.dart';
+import 'place_selector_button.dart';
 
 /// Place calendar tab component
 /// Displays building/place selector, calendar view, and reservation actions
@@ -573,11 +573,11 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         ),
         const SizedBox(width: AppSpacing.md),
 
-        // Building/Place selector + Settings button
+        // Place selector + Settings button
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CompactBuildingPlaceSelector(),
+            const PlaceSelectorButton(),
             const SizedBox(width: AppSpacing.xs),
             if (hasCalendarManage) _buildPlaceManageButton(context),
           ],
@@ -609,14 +609,12 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Row 2: Building/Place selector + Settings
+        // Row 2: Place selector + Settings
         Row(
           children: [
-            // Building/Place selector (takes remaining space)
-            const Expanded(
-              child: CompactBuildingPlaceSelector(),
-            ),
-            const SizedBox(width: AppSpacing.xs),
+            // Place selector
+            const PlaceSelectorButton(),
+            const Spacer(),
 
             // Settings button
             if (hasCalendarManage) _buildPlaceManageButton(context),
