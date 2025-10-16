@@ -212,9 +212,10 @@ class TimetableTab extends ConsumerWidget {
         ),
         if (state.loadErrorMessage != null)
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
+            padding: const EdgeInsets.only(
+              left: AppSpacing.sm,
+              right: AppSpacing.sm,
+              bottom: AppSpacing.xxs,
             ),
             child: _ErrorBanner(
               message: state.loadErrorMessage!,
@@ -225,13 +226,33 @@ class TimetableTab extends ConsumerWidget {
           ),
         if (showProgressBar)
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            padding: EdgeInsets.only(
+              left: AppSpacing.sm,
+              right: AppSpacing.sm,
+              bottom: AppSpacing.xxs,
+            ),
             child: LinearProgressIndicator(minHeight: 2),
           ),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            child: AnimatedSwitcher(duration: AppMotion.quick, child: content),
+            padding: const EdgeInsets.only(
+              left: AppSpacing.sm,
+              right: AppSpacing.sm,
+            ),
+            child: AnimatedSwitcher(
+              duration: AppMotion.quick,
+              // 콘텐츠를 상단에 붙여 배치하여 상단 버튼/네비게이션과의 불필요한 간격 제거
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  alignment: Alignment.topLeft,
+                  children: [
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
+              child: content,
+            ),
           ),
         ),
       ],
@@ -291,7 +312,7 @@ class TimetableTab extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('시간 겹침 확인'),
-        content: const Text('⚠️ 해당 시간대에 다른 일정이 있습니다. 계속 진행하시겠습니까?'),
+        content: const Text('⚠️ 해당 시��대에 다른 일정이 있습니다. 계속 진행하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -360,93 +381,74 @@ class _TimetableToolbar extends StatelessWidget {
     final weekLabel = _buildWeekLabel(state.weekStart);
     final weekRange = _buildWeekRange(state.weekStart);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        tooltip: '이전 주',
-                        onPressed: isBusy ? null : onPreviousWeek,
-                        icon: const Icon(Icons.chevron_left),
-                      ),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(weekLabel, style: textTheme.titleLarge),
-                          Text(
-                            weekRange,
-                            style: textTheme.bodySmall?.copyWith(
-                              color: AppColors.neutral500,
-                            ),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: Row(
+          children: [
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, AppComponents.buttonHeight),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onPressed: isBusy ? null : onShowCourseComingSoon,
+              icon: const Icon(Icons.school_outlined),
+              label: const Text('수업 추가'),
+            ),
+            Expanded(
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: '이전 주',
+                      onPressed: isBusy ? null : onPreviousWeek,
+                      icon: const Icon(Icons.chevron_left),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(weekLabel, style: textTheme.titleLarge),
+                        Text(
+                          weekRange,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: AppColors.neutral500,
                           ),
-                        ],
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        tooltip: '다음 주',
-                        onPressed: isBusy ? null : onNextWeek,
-                        icon: const Icon(Icons.chevron_right),
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: isBusy ? null : onToday,
+                      child: const Text('오늘'),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      tooltip: '다음 주',
+                      onPressed: isBusy ? null : onNextWeek,
+                      icon: const Icon(Icons.chevron_right),
+                    ),
+                  ],
                 ),
-                TextButton(
-                  onPressed: isBusy ? null : onToday,
-                  child: const Text('오늘'),
-                ),
-                IconButton(
-                  tooltip: '새로고침',
-                  onPressed: isBusy ? null : onRefresh,
-                  icon: const Icon(Icons.refresh),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(0, AppComponents.buttonHeight),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: isBusy ? null : onShowCourseComingSoon,
-                  icon: const Icon(Icons.school_outlined),
-                  label: const Text('수업 추가'),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(0, AppComponents.buttonHeight),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: isBusy
-                      ? null
-                      : () async {
-                          await onCreate();
-                        },
-                  icon: const Icon(Icons.add_circle_outline),
-                  label: const Text('개인 일정 추가'),
-                ),
-              ],
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(0, AppComponents.buttonHeight),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onPressed: isBusy
+                  ? null
+                  : () async {
+                      await onCreate();
+                    },
+              icon: const Icon(Icons.add_circle_outline),
+              label: const Text('개인 일정 추가'),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
