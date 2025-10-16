@@ -519,7 +519,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
   }
 
   /// Build responsive header that adapts to screen width
-  /// Wide mode (>=850px): 1 row with all controls
+  /// Wide mode (>=850px): 1 row with all controls, max width 1200px, centered
   /// Compact mode (<850px): 2 rows (date nav + other controls)
   Widget _buildResponsiveHeader(
     BuildContext context,
@@ -549,7 +549,12 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         ),
       ),
       child: isWideMode
-          ? _buildWideHeader(context, currentView, focusedDate, hasCalendarManage)
+          ? Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: _buildWideHeader(context, currentView, focusedDate, hasCalendarManage),
+              ),
+            )
           : _buildCompactHeader(context, currentView, focusedDate, hasCalendarManage),
     );
   }

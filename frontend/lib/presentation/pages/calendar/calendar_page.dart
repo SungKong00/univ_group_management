@@ -363,71 +363,88 @@ class _TimetableToolbar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            IconButton(
-              tooltip: '이전 주',
-              onPressed: isBusy ? null : onPreviousWeek,
-              icon: const Icon(Icons.chevron_left),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(weekLabel, style: textTheme.titleLarge),
-                  Text(
-                    weekRange,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: AppColors.neutral500,
-                    ),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        tooltip: '이전 주',
+                        onPressed: isBusy ? null : onPreviousWeek,
+                        icon: const Icon(Icons.chevron_left),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(weekLabel, style: textTheme.titleLarge),
+                          Text(
+                            weekRange,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: AppColors.neutral500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        tooltip: '다음 주',
+                        onPressed: isBusy ? null : onNextWeek,
+                        icon: const Icon(Icons.chevron_right),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                TextButton(
+                  onPressed: isBusy ? null : onToday,
+                  child: const Text('오늘'),
+                ),
+                IconButton(
+                  tooltip: '새로고침',
+                  onPressed: isBusy ? null : onRefresh,
+                  icon: const Icon(Icons.refresh),
+                ),
+              ],
             ),
-            IconButton(
-              tooltip: '다음 주',
-              onPressed: isBusy ? null : onNextWeek,
-              icon: const Icon(Icons.chevron_right),
-            ),
-            TextButton(
-              onPressed: isBusy ? null : onToday,
-              child: const Text('오늘'),
-            ),
-            IconButton(
-              tooltip: '새로고침',
-              onPressed: isBusy ? null : onRefresh,
-              icon: const Icon(Icons.refresh),
-            ),
-          ],
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(0, AppComponents.buttonHeight),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: isBusy ? null : onShowCourseComingSoon,
-              icon: const Icon(Icons.school_outlined),
-              label: const Text('수업 추가'),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, AppComponents.buttonHeight),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: isBusy ? null : onShowCourseComingSoon,
+                  icon: const Icon(Icons.school_outlined),
+                  label: const Text('수업 추가'),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, AppComponents.buttonHeight),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: isBusy
+                      ? null
+                      : () async {
+                          await onCreate();
+                        },
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('개인 일정 추가'),
+                ),
+              ],
             ),
-            const SizedBox(width: AppSpacing.xs),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, AppComponents.buttonHeight),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: isBusy
-                  ? null
-                  : () async {
-                      await onCreate();
-                    },
-              icon: const Icon(Icons.add_circle_outline),
-              label: const Text('개인 일정 추가'),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -731,7 +748,7 @@ class _CalendarHeader extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 720;
+        final isCompact = constraints.maxWidth < 850;
 
         if (isCompact) {
           return Column(
@@ -759,17 +776,22 @@ class _CalendarHeader extends StatelessWidget {
           );
         }
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            viewToggle,
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Center(child: navigator),
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                viewToggle,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: navigator,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                addButton,
+              ],
             ),
-            const SizedBox(width: AppSpacing.sm),
-            addButton,
-          ],
+          ),
         );
       },
     );
@@ -809,7 +831,7 @@ class _CalendarNavigator extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
           tooltip: '이전',

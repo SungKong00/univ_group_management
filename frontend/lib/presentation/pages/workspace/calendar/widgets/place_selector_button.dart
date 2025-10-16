@@ -22,7 +22,9 @@ class _PlaceSelectorButtonState extends ConsumerState<PlaceSelectorButton> {
 
   @override
   void dispose() {
-    _removePopover();
+    // Remove overlay without calling setState to avoid lifecycle issues
+    _overlayEntry?.remove();
+    _overlayEntry = null;
     super.dispose();
   }
 

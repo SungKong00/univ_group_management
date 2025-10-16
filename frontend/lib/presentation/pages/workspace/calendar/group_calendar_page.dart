@@ -921,17 +921,22 @@ class _GroupCalendarHeader extends StatelessWidget {
           );
         }
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            viewToggle,
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Center(child: navigator),
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                viewToggle,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Center(child: navigator),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                addButton,
+              ],
             ),
-            const SizedBox(width: AppSpacing.sm),
-            addButton,
-          ],
+          ),
         );
       },
     );
