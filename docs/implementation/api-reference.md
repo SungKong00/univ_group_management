@@ -633,6 +633,28 @@ DELETE /api/comments/{commentId}
 - **권한**: 작성자 본인 또는 관리자
 - **응답**: `ApiResponse<void>`
 
+### 5.4. 채널 권한 관리 (Channel Permission Management)
+
+**채널 역할-권한 바인딩 수정**
+```
+PUT /api/channels/{channelId}/role-bindings/{bindingId}
+```
+- **권한**: `CHANNEL_MANAGE` (채널 권한)
+- **요청**: `UpdateChannelRoleBindingRequest`
+  ```json
+  {
+    "permissions": ["POST_READ", "COMMENT_WRITE"]
+  }
+  ```
+- **응답**: `ApiResponse<ChannelRoleBindingResponse>`
+
+**채널 역할-권한 바인딩 삭제**
+```
+DELETE /api/channels/{channelId}/role-bindings/{bindingId}
+```
+- **권한**: `CHANNEL_MANAGE` (채널 권한)
+- **응답**: `ApiResponse<void>` (204 No Content)
+
 **권한 에러 예시**:
 | 상황 | ErrorCode | HTTP |
 |------|-----------|------|

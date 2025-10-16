@@ -60,6 +60,14 @@
 5. FILE_UPLOAD → 최소화 (대역폭/보안)
 6. 저장 → ChannelRoleBinding 생성/갱신
 
+## 권한 관리 UI (Permission Management UI)
+
+채널 권한은 `그룹 관리 > 채널 관리` 페이지에서 설정할 수 있습니다. (`CHANNEL_MANAGE` 그룹 권한 필요)
+
+- **페이지 구조**: 채널 목록이 먼저 표시되고, 특정 채널을 선택하면 해당 채널의 권한 매트릭스가 나타납니다.
+- **권한 매트릭스**: 각 역할(가로축)과 권한(세로축)이 교차하는 지점에 체크박스가 있어, 관리자는 직관적으로 역할에 권한을 부여하거나 해제할 수 있습니다.
+- **저장**: 변경 사항을 저장하면 `PUT /channels/{channelId}/role-bindings/{bindingId}` 또는 `DELETE /channels/{channelId}/role-bindings/{bindingId}` API가 호출되어 서버에 반영됩니다.
+
 ## 캐시 연관
 권한 변경 시 PermissionService.invalidateGroup(groupId) 호출 (캐시 적용 시).
 
