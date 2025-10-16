@@ -20,6 +20,8 @@ class AppSpacing {
 class AppRadius {
   AppRadius._();
 
+  static const double xs = 4.0;
+  static const double sm = 8.0;
   static const double card = 20.0;
   static const double button = 12.0;
   static const double input = 12.0;

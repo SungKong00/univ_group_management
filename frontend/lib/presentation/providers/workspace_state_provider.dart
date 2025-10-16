@@ -18,6 +18,7 @@ enum WorkspaceView {
   calendar, // Calendar view
   groupAdmin, // Group admin/management page view
   memberManagement, // Member management page view
+  channelManagement, // Channel management page view
   recruitmentManagement, // Recruitment management page view
   applicationManagement, // Application management page view (모집 지원자 관리)
 }
@@ -625,6 +626,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.applicationManagement,
+      selectedChannelId: null,
+      isCommentsVisible: false,
+      selectedPostId: null,
+      isNarrowDesktopCommentsFullscreen: false,
+    );
+  }
+
+  /// Show channel management page view
+  void showChannelManagementPage() {
+    state = state.copyWith(
+      previousView: state.currentView,
+      currentView: WorkspaceView.channelManagement,
       selectedChannelId: null,
       isCommentsVisible: false,
       selectedPostId: null,

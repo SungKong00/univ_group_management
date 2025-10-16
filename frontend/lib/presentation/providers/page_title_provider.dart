@@ -173,6 +173,8 @@ PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceBreadcrumbContext context) {
       return const PageBreadcrumb(title: '그룹 관리');
     case WorkspaceView.memberManagement:
       return const PageBreadcrumb(title: '멤버 관리');
+    case WorkspaceView.channelManagement:
+      return const PageBreadcrumb(title: '채널 관리');
     case WorkspaceView.recruitmentManagement:
       return const PageBreadcrumb(title: '모집 관리');
     case WorkspaceView.applicationManagement:
@@ -201,6 +203,9 @@ PageBreadcrumb _buildMobileBreadcrumb(
   }
   if (context.currentView == WorkspaceView.memberManagement) {
     return const PageBreadcrumb(title: '멤버 관리', path: ['멤버 관리']);
+  }
+  if (context.currentView == WorkspaceView.channelManagement) {
+    return const PageBreadcrumb(title: '채널 관리', path: ['채널 관리']);
   }
   if (context.currentView == WorkspaceView.recruitmentManagement) {
     return const PageBreadcrumb(title: '모집 관리', path: ['모집 관리']);

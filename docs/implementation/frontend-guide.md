@@ -6,6 +6,7 @@ Flutter 기반 대학 그룹 관리 시스템의 프론트엔드 아키텍처와
 ## 관련 문서
 - [디자인 시스템](../ui-ux/design-system.md) - Toss 기반 디자인 토큰
 - [컴포넌트 재사용성 가이드](component-reusability-guide.md) - 재사용 가능한 코드 작성 패턴
+- [워크스페이스 페이지 추가 가이드](workspace-page-implementation-guide.md) - 새 관리 페이지 추가 완전 체크리스트
 - [API 참조](api-reference.md) - 백엔드 연동 가이드
 - [도메인 개요](../concepts/domain-overview.md) - 시스템 전체 구조
 

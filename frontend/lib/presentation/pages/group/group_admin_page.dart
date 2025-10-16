@@ -123,7 +123,7 @@ class _AdminContentView extends ConsumerWidget {
 
     // 채널 관리 섹션
     if (permissions.contains('CHANNEL_MANAGE')) {
-      sections.add(_buildChannelManagementSection(context));
+      sections.add(_buildChannelManagementSection(context, ref));
     }
 
     // 모집 관리 섹션
@@ -306,35 +306,17 @@ class _AdminContentView extends ConsumerWidget {
     );
   }
 
-  Widget _buildChannelManagementSection(BuildContext context) {
+  Widget _buildChannelManagementSection(BuildContext context, WidgetRef ref) {
     return _AdminSection(
       title: '채널 관리',
       description: '워크스페이스 채널 생성 및 관리',
       icon: Icons.tag_outlined,
       actions: [
         ActionCard(
-          icon: Icons.add_outlined,
-          title: '채널 생성',
-          description: '새로운 채널을 만들어보세요',
-          onTap: () {
-            _showComingSoonDialog(context, '채널 생성');
-          },
-        ),
-        ActionCard(
           icon: Icons.list_outlined,
-          title: '채널 목록',
-          description: '모든 채널을 관리하세요',
-          onTap: () {
-            _showComingSoonDialog(context, '채널 목록');
-          },
-        ),
-        ActionCard(
-          icon: Icons.lock_outline,
-          title: '채널 권한 설정',
-          description: '채널별 접근 권한을 설정하세요',
-          onTap: () {
-            _showComingSoonDialog(context, '채널 권한 설정');
-          },
+          title: '채널 목록 및 관리',
+          description: '채널 목록 조회, 생성, 권한 설정',
+          onTap: () => ref.read(workspaceStateProvider.notifier).showChannelManagementPage(),
         ),
       ],
       isDesktop: isDesktop,
@@ -377,6 +359,7 @@ class _AdminContentView extends ConsumerWidget {
           ),
         );
   }
+
 
   void _handleEditGroup(BuildContext context, WidgetRef ref) async {
     // Get current group information from currentGroupProvider

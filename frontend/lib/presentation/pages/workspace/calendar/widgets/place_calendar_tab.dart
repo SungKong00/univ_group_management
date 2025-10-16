@@ -92,51 +92,49 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     final focusedDate = ref.watch(focusedDateProvider);
     final currentView = ref.watch(calendarViewProvider);
 
-    // Listen for changes in selected place IDs
-    ref.listen<PlaceCalendarState>(
-      placeCalendarProvider,
-      (previous, next) {
-        // Check if selectedPlaceIds has changed
-        if (previous?.selectedPlaceIds != next.selectedPlaceIds) {
-          // If new places are selected (and not empty), load reservations
-          if (next.selectedPlaceIds.isNotEmpty &&
-              next.selectedPlaceIds != _previousSelectedPlaceIds) {
-            _previousSelectedPlaceIds = Set.from(next.selectedPlaceIds);
-            _loadReservationsForCurrentView();
-          } else if (next.selectedPlaceIds.isEmpty) {
-            _previousSelectedPlaceIds = {};
-          }
-        }
-      },
-    );
+    // Check if we need to reload reservations based on state changes
+    // This replaces ref.listen to avoid lifecycle issues in TabBarView
 
-    // Listen for focused date changes (month/week navigation)
-    ref.listen<DateTime>(
-      focusedDateProvider,
-      (previous, next) {
-        // If date changed and we have selected places, reload reservations
-        if (previous != next && _previousFocusedDate != next) {
-          _previousFocusedDate = next;
-          if (state.selectedPlaceIds.isNotEmpty) {
+    // Check for selected place IDs changes
+    if (state.selectedPlaceIds != _previousSelectedPlaceIds) {
+      if (state.selectedPlaceIds.isNotEmpty) {
+        _previousSelectedPlaceIds = Set.from(state.selectedPlaceIds);
+        // Schedule reservation load after build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
             _loadReservationsForCurrentView();
           }
-        }
-      },
-    );
+        });
+      } else {
+        _previousSelectedPlaceIds = {};
+      }
+    }
 
-    // Listen for calendar view changes (week/month toggle)
-    ref.listen<CalendarView>(
-      calendarViewProvider,
-      (previous, next) {
-        // If view changed and we have selected places, reload reservations
-        if (previous != next && _previousCalendarView != next) {
-          _previousCalendarView = next;
-          if (state.selectedPlaceIds.isNotEmpty) {
+    // Check for focused date changes
+    if (focusedDate != _previousFocusedDate) {
+      _previousFocusedDate = focusedDate;
+      if (state.selectedPlaceIds.isNotEmpty) {
+        // Schedule reservation load after build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
             _loadReservationsForCurrentView();
           }
-        }
-      },
-    );
+        });
+      }
+    }
+
+    // Check for calendar view changes
+    if (currentView != _previousCalendarView) {
+      _previousCalendarView = currentView;
+      if (state.selectedPlaceIds.isNotEmpty) {
+        // Schedule reservation load after build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _loadReservationsForCurrentView();
+          }
+        });
+      }
+    }
 
     // Use LayoutBuilder to get actual widget width (not screen width)
     // This ensures correct responsive behavior when navigation bars are present

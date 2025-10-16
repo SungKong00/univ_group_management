@@ -269,4 +269,264 @@ class ChannelService {
       rethrow;
     }
   }
+
+  /// Update a channel
+  ///
+  /// PUT /channels/{channelId}
+  Future<Channel?> updateChannel({
+    required int channelId,
+    String? name,
+    String? description,
+  }) async {
+    try {
+      developer.log(
+        'Updating channel: $channelId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.put<Map<String, dynamic>>(
+        '/channels/$channelId',
+        data: {
+          if (name != null) 'name': name,
+          if (description != null) 'description': description,
+        },
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => Channel.fromJson(json as Map<String, dynamic>),
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully updated channel',
+            name: 'ChannelService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to update channel: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return null;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      developer.log(
+        'Error updating channel: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Delete a channel
+  ///
+  /// DELETE /channels/{channelId}
+  Future<bool> deleteChannel(int channelId) async {
+    try {
+      developer.log(
+        'Deleting channel: $channelId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.delete<Map<String, dynamic>>(
+        '/channels/$channelId',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json,
+        );
+
+        if (apiResponse.success) {
+          developer.log(
+            'Successfully deleted channel',
+            name: 'ChannelService',
+          );
+          return true;
+        } else {
+          developer.log(
+            'Failed to delete channel: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return false;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      developer.log(
+        'Error deleting channel: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Get channel role bindings
+  ///
+  /// GET /channels/{channelId}/role-bindings
+  Future<List<Map<String, dynamic>>> getChannelRoleBindings(
+    int channelId,
+  ) async {
+    try {
+      developer.log(
+        'Fetching channel role bindings for channel: $channelId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/channels/$channelId/role-bindings',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) {
+            if (json is List) {
+              return json.cast<Map<String, dynamic>>();
+            }
+            return <Map<String, dynamic>>[];
+          },
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} role bindings',
+            name: 'ChannelService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch channel role bindings: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return [];
+        }
+      }
+
+      return [];
+    } catch (e) {
+      developer.log(
+        'Error fetching channel role bindings: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      return [];
+    }
+  }
+
+  /// Update channel role binding
+  ///
+  /// PUT /channels/{channelId}/role-bindings/{bindingId}
+  Future<bool> updateChannelRoleBinding({
+    required int channelId,
+    required int bindingId,
+    required List<String> permissions,
+  }) async {
+    try {
+      developer.log(
+        'Updating channel role binding: channelId=$channelId, bindingId=$bindingId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.put<Map<String, dynamic>>(
+        '/channels/$channelId/role-bindings/$bindingId',
+        data: {
+          'permissions': permissions,
+        },
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json,
+        );
+
+        if (apiResponse.success) {
+          developer.log(
+            'Successfully updated channel role binding',
+            name: 'ChannelService',
+          );
+          return true;
+        } else {
+          developer.log(
+            'Failed to update channel role binding: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return false;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      developer.log(
+        'Error updating channel role binding: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Delete channel role binding
+  ///
+  /// DELETE /channels/{channelId}/role-bindings/{bindingId}
+  Future<bool> deleteChannelRoleBinding({
+    required int channelId,
+    required int bindingId,
+  }) async {
+    try {
+      developer.log(
+        'Deleting channel role binding: channelId=$channelId, bindingId=$bindingId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.delete<Map<String, dynamic>>(
+        '/channels/$channelId/role-bindings/$bindingId',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json,
+        );
+
+        if (apiResponse.success) {
+          developer.log(
+            'Successfully deleted channel role binding',
+            name: 'ChannelService',
+          );
+          return true;
+        } else {
+          developer.log(
+            'Failed to delete channel role binding: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return false;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      developer.log(
+        'Error deleting channel role binding: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
 }

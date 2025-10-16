@@ -30,6 +30,7 @@ import 'providers/post_actions_provider.dart';
 import 'providers/comment_actions_provider.dart';
 import '../group/group_admin_page.dart';
 import '../member_management/member_management_page.dart';
+import '../admin/channel_management_page.dart';
 import '../recruitment_management/recruitment_management_page.dart';
 import '../recruitment_management/application_management_page.dart';
 import 'calendar/group_calendar_page.dart';
@@ -458,6 +459,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           return const GroupAdminPage();
         case WorkspaceView.memberManagement:
           return const MemberManagementPage();
+        case WorkspaceView.channelManagement:
+          return const ChannelManagementPage();
         case WorkspaceView.recruitmentManagement:
           return const RecruitmentManagementPage();
         case WorkspaceView.applicationManagement:
@@ -578,6 +581,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         return const GroupAdminPage();
       case WorkspaceView.memberManagement:
         return const MemberManagementPage();
+      case WorkspaceView.channelManagement:
+        return const ChannelManagementPage();
       case WorkspaceView.recruitmentManagement:
         return const RecruitmentManagementPage();
       case WorkspaceView.applicationManagement:

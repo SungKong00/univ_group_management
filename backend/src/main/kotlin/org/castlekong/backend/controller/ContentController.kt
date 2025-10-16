@@ -293,4 +293,32 @@ class ContentController(
         val response = channelPermissionManagementService.createChannelRoleBinding(channelId, request, user.id)
         return ApiResponse.success(response)
     }
+
+    @PutMapping("/channels/{channelId}/role-bindings/{bindingId}")
+    @PreAuthorize("isAuthenticated()")
+    fun updateChannelRoleBinding(
+        @PathVariable channelId: Long,
+        @PathVariable bindingId: Long,
+        @Valid @RequestBody request: org.castlekong.backend.dto.UpdateChannelRoleBindingRequest,
+        authentication: Authentication,
+    ): ApiResponse<org.castlekong.backend.dto.ChannelRoleBindingResponse> {
+        val user = getUserByEmail(authentication.name)
+        // TODO: CHANNEL_MANAGE 권한 확인 추가 필요
+        val response = channelPermissionManagementService.updateChannelRoleBinding(bindingId, request)
+        return ApiResponse.success(response)
+    }
+
+    @DeleteMapping("/channels/{channelId}/role-bindings/{bindingId}")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteChannelRoleBinding(
+        @PathVariable channelId: Long,
+        @PathVariable bindingId: Long,
+        authentication: Authentication,
+    ): ApiResponse<Unit> {
+        val user = getUserByEmail(authentication.name)
+        // TODO: CHANNEL_MANAGE 권한 확인 추가 필요
+        channelPermissionManagementService.deleteChannelRoleBinding(bindingId)
+        return ApiResponse.success()
+    }
 }
