@@ -266,4 +266,31 @@ class ContentController(
         val payload = mapOf("permissions" to perms.map { it.name })
         return ApiResponse.success(payload)
     }
+
+    // === Channel Role Bindings (권한 설정) ===
+    @GetMapping("/channels/{channelId}/role-bindings")
+    @PreAuthorize("isAuthenticated()")
+    fun getChannelRoleBindings(
+        @PathVariable channelId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<org.castlekong.backend.dto.ChannelRoleBindingResponse>> {
+        // 채널이 속한 그룹의 멤버만 조회 가능
+        val user = getUserByEmail(authentication.name)
+        val bindings = channelPermissionManagementService.getChannelRoleBindings(channelId)
+        return ApiResponse.success(bindings)
+    }
+
+    @PostMapping("/channels/{channelId}/role-bindings")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun createChannelRoleBinding(
+        @PathVariable channelId: Long,
+        @Valid @RequestBody request: org.castlekong.backend.dto.CreateChannelRoleBindingRequest,
+        authentication: Authentication,
+    ): ApiResponse<org.castlekong.backend.dto.ChannelRoleBindingResponse> {
+        val user = getUserByEmail(authentication.name)
+        // CHANNEL_MANAGE 권한 확인은 서비스 레이어에서 처리
+        val response = channelPermissionManagementService.createChannelRoleBinding(channelId, request, user.id)
+        return ApiResponse.success(response)
+    }
 }

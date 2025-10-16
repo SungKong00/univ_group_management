@@ -157,4 +157,116 @@ class ChannelService {
       return null;
     }
   }
+
+  /// Create a new channel in a workspace
+  ///
+  /// POST /workspaces/{workspaceId}/channels
+  Future<Channel?> createChannel({
+    required int workspaceId,
+    required String name,
+    String? description,
+    String? type, // 'TEXT', 'ANNOUNCEMENT'
+  }) async {
+    try {
+      developer.log(
+        'Creating channel in workspace: $workspaceId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.post<Map<String, dynamic>>(
+        '/workspaces/$workspaceId/channels',
+        data: {
+          'name': name,
+          'description': description,
+          'type': type ?? 'TEXT',
+        },
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => Channel.fromJson(json as Map<String, dynamic>),
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully created channel: ${apiResponse.data!.name}',
+            name: 'ChannelService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to create channel: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return null;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      developer.log(
+        'Error creating channel: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Create channel role binding
+  ///
+  /// POST /channels/{channelId}/role-bindings
+  Future<bool> createChannelRoleBinding({
+    required int channelId,
+    required int roleId,
+    required List<String> permissions,
+  }) async {
+    try {
+      developer.log(
+        'Creating channel role binding: channelId=$channelId, roleId=$roleId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.post<Map<String, dynamic>>(
+        '/channels/$channelId/role-bindings',
+        data: {
+          'groupRoleId': roleId,
+          'permissions': permissions,
+        },
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json,
+        );
+
+        if (apiResponse.success) {
+          developer.log(
+            'Successfully created channel role binding',
+            name: 'ChannelService',
+          );
+          return true;
+        } else {
+          developer.log(
+            'Failed to create channel role binding: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return false;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      developer.log(
+        'Error creating channel role binding: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
 }

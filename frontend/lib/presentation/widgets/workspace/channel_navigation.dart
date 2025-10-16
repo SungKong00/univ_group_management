@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/channel_models.dart';
 import '../../../core/models/page_breadcrumb.dart';
+import '../../../core/models/auth_models.dart';
 import '../../../core/navigation/navigation_controller.dart';
+import '../../../core/network/dio_client.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../providers/workspace_state_provider.dart';
+import '../dialogs/create_channel_dialog.dart';
+import '../dialogs/channel_permissions_dialog.dart';
 import 'channel_item.dart';
 import 'workspace_header.dart';
 
@@ -276,19 +280,27 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 섹션 제목: 채널
+              // 섹션 제목: 채널 + 톱니바퀴 버튼
               Padding(
                 padding: const EdgeInsets.only(
                   left: AppSpacing.sm,
+                  right: AppSpacing.xs,
                   top: AppSpacing.xs,
                   bottom: AppSpacing.xxs,
                 ),
-                child: Text(
-                  '채널',
-                  style: AppTheme.bodySmall.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.neutral600,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '채널',
+                      style: AppTheme.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.neutral600,
+                      ),
+                    ),
+                    if (widget.hasAnyGroupPermission)
+                      _buildChannelManageButton(),
+                  ],
                 ),
               ),
               Expanded(
@@ -340,6 +352,122 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
                 currentView == WorkspaceView.memberManagement ||
                 currentView == WorkspaceView.recruitmentManagement,
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildChannelManageButton() {
+    return Consumer(
+      builder: (context, ref, child) {
+        return IconButton(
+          icon: const Icon(Icons.settings, size: 18),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+          tooltip: '채널 관리',
+          color: AppColors.neutral600,
+          onPressed: () async {
+            // 현재 그룹 ID 가져오기
+            final groupIdStr = widget.currentGroupId;
+            if (groupIdStr == null) return;
+
+            final groupId = int.tryParse(groupIdStr);
+            if (groupId == null) return;
+
+            // 워크스페이스 ID 조회
+            try {
+              final dioClient = DioClient();
+              final response = await dioClient.get<Map<String, dynamic>>(
+                '/groups/$groupId/workspaces',
+              );
+
+              if (response.data == null) return;
+
+              final apiResponse = ApiResponse.fromJson(
+                response.data!,
+                (json) {
+                  if (json is List && json.isNotEmpty) {
+                    final workspace = json.first as Map<String, dynamic>;
+                    return workspace['id'] as int;
+                  }
+                  return null;
+                },
+              );
+
+              if (!apiResponse.success || apiResponse.data == null) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('워크스페이스를 찾을 수 없습니다')),
+                  );
+                }
+                return;
+              }
+
+              final workspaceId = apiResponse.data!;
+
+              // 채널 생성 다이얼로그 표시
+              if (!context.mounted) return;
+              final channel = await showCreateChannelDialog(
+                context,
+                workspaceId: workspaceId,
+                groupId: groupId,
+              );
+
+              if (channel != null) {
+                // 권한 설정 다이얼로그 표시 (필수)
+                if (!context.mounted) return;
+                final permissionsSet = await showChannelPermissionsDialog(
+                  context,
+                  channelId: channel.id,
+                  channelName: channel.name,
+                  groupId: groupId,
+                  isRequired: true,
+                );
+
+                if (permissionsSet) {
+                  // 채널 목록 새로고침 (Provider 무효화)
+                  if (!context.mounted) return;
+                  ref.invalidate(workspaceChannelsProvider);
+
+                  // 새로 생성된 채널로 네비게이션
+                  ref
+                      .read(workspaceStateProvider.notifier)
+                      .showChannel(channel.id.toString());
+
+                  // 성공 메시지 표시
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '채널 "${channel.name}"이(가) 생성되고 권한이 설정되었습니다',
+                        ),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                } else {
+                  // 권한 설정이 취소되거나 실패한 경우
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '채널 "${channel.name}"이(가) 생성되었으나 권한 설정이 필요합니다',
+                        ),
+                        backgroundColor: AppColors.warning,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                }
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('오류가 발생했습니다: $e')),
+                );
+              }
+            }
+          },
         );
       },
     );
