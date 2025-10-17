@@ -3,12 +3,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:vibration/vibration.dart';
 import 'event_painter.dart';
 import 'highlight_painter.dart';
 import 'selection_painter.dart';
 import 'time_grid_painter.dart';
 
 typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end});
+
+/// Haptic feedback intensity types
+enum HapticFeedbackType {
+  medium,  // Strong feedback for important actions
+  light,   // Light feedback for completion
+  selection, // Subtle feedback for selection changes
+}
 
 /// Weekly Schedule Editor with platform-specific gesture handling
 ///
@@ -60,6 +68,48 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   Rect? _highlightRect;
 
   // --- Helper Functions ---
+
+  /// Enhanced haptic feedback with fallback to direct vibration
+  Future<void> _triggerHaptic(HapticFeedbackType type) async {
+    if (kIsWeb) return; // No haptic on web
+
+    try {
+      // 1️⃣ Try system haptic first
+      switch (type) {
+        case HapticFeedbackType.medium:
+          HapticFeedback.mediumImpact();
+          break;
+        case HapticFeedbackType.light:
+          HapticFeedback.lightImpact();
+          break;
+        case HapticFeedbackType.selection:
+          HapticFeedback.selectionClick();
+          break;
+      }
+
+      // 2️⃣ Fallback to direct vibration if system haptic might not work
+      final hasVibrator = await Vibration.hasVibrator() ?? false;
+      if (hasVibrator) {
+        final hasAmplitude = await Vibration.hasAmplitudeControl() ?? false;
+        if (!hasAmplitude) {
+          // Device doesn't support amplitude control, use simple vibration
+          switch (type) {
+            case HapticFeedbackType.medium:
+              Vibration.vibrate(duration: 100);
+              break;
+            case HapticFeedbackType.light:
+              Vibration.vibrate(duration: 70);
+              break;
+            case HapticFeedbackType.selection:
+              Vibration.vibrate(duration: 100); // Same as medium for noticeable feedback
+              break;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Haptic error: $e');
+    }
+  }
 
   ({int day, int slot}) _pixelToCell(Offset position, double dayColumnWidth) {
     final double slotHeight = _minSlotHeight;
@@ -254,6 +304,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       currentCell = (day: _startCell!.day, slot: currentCell.slot);
     }
 
+    // Haptic feedback when crossing cell boundary (mobile only)
+    if (!kIsWeb && _endCell != null && currentCell != _endCell) {
+      _triggerHaptic(HapticFeedbackType.selection);
+    }
+
     // Prevent backward time selection (hide selection rect as visual feedback)
     if (currentCell.slot < _startCell!.slot) {
       setState(() {
@@ -316,7 +371,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _handleLongPressStart(Offset position, double dayColumnWidth) {
     if (!widget.isEditable) return;
 
-    HapticFeedback.mediumImpact();
+    _triggerHaptic(HapticFeedbackType.medium);
     setState(() {
       _isSelecting = true;
       _startCell = _pixelToCell(position, dayColumnWidth);
@@ -391,17 +446,41 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   /// Mobile: Long press + drag mode
   Widget _buildMobileGestureHandler(double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
     return GestureDetector(
+      // Show gray highlight immediately on touch down
+      onTapDown: (details) {
+        // Show highlight for touched cell
+        final touchedCell = _pixelToCell(details.localPosition, dayColumnWidth);
+        setState(() {
+          _highlightRect = _cellToRect(touchedCell, touchedCell, dayColumnWidth);
+        });
+        // Handle existing event tap
+        _handleMobileTap(details.localPosition, eventRects);
+      },
+      onTapUp: (details) {
+        // Clear highlight if it was just a tap (not long press)
+        if (!_isSelecting) {
+          setState(() {
+            _highlightRect = null;
+          });
+        }
+      },
+      onTapCancel: () {
+        // Clear highlight if tap was cancelled
+        if (!_isSelecting) {
+          setState(() {
+            _highlightRect = null;
+          });
+        }
+      },
       // Long press to start selection
       onLongPressStart: (details) => _handleLongPressStart(details.localPosition, dayColumnWidth),
       onLongPressMoveUpdate: (details) => _updateSelectionCell(details.localPosition, dayColumnWidth),
       onLongPressEnd: (details) {
         if (_isSelecting) {
-          HapticFeedback.lightImpact();
+          _triggerHaptic(HapticFeedbackType.light);
           _completeSelection();
         }
       },
-      // Tap to edit existing events
-      onTapDown: (details) => _handleMobileTap(details.localPosition, eventRects),
       behavior: HitTestBehavior.opaque,
       child: _buildCalendarStack(eventRects),
     );

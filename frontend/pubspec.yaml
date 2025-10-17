@@ -50,6 +50,9 @@ dependencies:
   # Sticky Header
   flutter_sticky_header: ^0.8.0
 
+  # Haptic Feedback
+  vibration: ^2.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
