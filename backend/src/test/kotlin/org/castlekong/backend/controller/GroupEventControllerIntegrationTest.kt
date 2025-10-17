@@ -71,6 +71,21 @@ class GroupEventControllerIntegrationTest {
     @Autowired
     private lateinit var groupEventRepository: GroupEventRepository
 
+    @Autowired
+    private lateinit var placeRepository: org.castlekong.backend.repository.PlaceRepository
+
+    @Autowired
+    private lateinit var placeUsageGroupRepository: org.castlekong.backend.repository.PlaceUsageGroupRepository
+
+    @Autowired
+    private lateinit var placeAvailabilityRepository: org.castlekong.backend.repository.PlaceAvailabilityRepository
+
+    @Autowired
+    private lateinit var placeReservationRepository: org.castlekong.backend.repository.PlaceReservationRepository
+
+    @Autowired
+    private lateinit var placeBlockedTimeRepository: org.castlekong.backend.repository.PlaceBlockedTimeRepository
+
     // Test data
     private lateinit var owner: User
     private lateinit var member: User
@@ -1000,6 +1015,388 @@ class GroupEventControllerIntegrationTest {
             )
                 .andDo(print())
                 .andExpect(status().isNotFound)
+        }
+    }
+
+    @Nested
+    @DisplayName("장소 통합 (Phase 4) 테스트")
+    inner class PlaceIntegrationTest {
+        private lateinit var testPlace: org.castlekong.backend.entity.Place
+        private lateinit var managingGroup: Group
+
+        @BeforeEach
+        fun setUpPlace() {
+            // 장소 관리 그룹 생성
+            managingGroup =
+                groupRepository.save(
+                    TestDataFactory.createTestGroup(
+                        name = "AISC 동아리",
+                        owner = owner,
+                    ),
+                )
+
+            // 장소 등록
+            testPlace =
+                placeRepository.save(
+                    org.castlekong.backend.entity.Place(
+                        managingGroup = managingGroup,
+                        building = "60주년 기념관",
+                        roomNumber = "18203",
+                        alias = "AISC랩실",
+                        capacity = 30,
+                    ),
+                )
+
+            // 장소 사용 권한 승인 (우리 그룹이 이 장소를 사용할 수 있도록)
+            placeUsageGroupRepository.save(
+                org.castlekong.backend.entity.PlaceUsageGroup(
+                    place = testPlace,
+                    group = group,
+                    status = org.castlekong.backend.entity.UsageStatus.APPROVED,
+                ),
+            )
+
+            // 운영 시간 설정 (월-금 09:00-18:00)
+            for (day in listOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)) {
+                placeAvailabilityRepository.save(
+                    org.castlekong.backend.entity.PlaceAvailability(
+                        place = testPlace,
+                        dayOfWeek = day,
+                        startTime = LocalTime.of(9, 0),
+                        endTime = LocalTime.of(18, 0),
+                    ),
+                )
+            }
+        }
+
+        @Test
+        @DisplayName("1. GET /api/groups/{groupId}/available-places - 성공")
+        fun testGetAvailablePlaces_Success() {
+            // When & Then
+            mockMvc.perform(
+                get("/api/groups/${group.id}/available-places")
+                    .header("Authorization", "Bearer $memberToken")
+                    .accept(MediaType.APPLICATION_JSON),
+            )
+                .andDo(print())
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray)
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].id").value(testPlace.id))
+                .andExpect(jsonPath("$.data[0].building").value("60주년 기념관"))
+                .andExpect(jsonPath("$.data[0].roomNumber").value("18203"))
+                .andExpect(jsonPath("$.data[0].alias").value("AISC랩실"))
+                .andExpect(jsonPath("$.data[0].capacity").value(30))
+                .andExpect(jsonPath("$.data[0].managingGroupName").value("AISC 동아리"))
+        }
+
+        @Test
+        @DisplayName("2. GET /api/groups/{groupId}/available-places - 비멤버 접근 금지")
+        fun testGetAvailablePlaces_Forbidden() {
+            // When & Then: 비멤버가 접근 시도
+            mockMvc.perform(
+                get("/api/groups/${group.id}/available-places")
+                    .header("Authorization", "Bearer $nonMemberToken")
+                    .accept(MediaType.APPLICATION_JSON),
+            )
+                .andDo(print())
+                .andExpect(status().isForbidden)
+        }
+
+        @Test
+        @DisplayName("3. Mode A - 장소 없음 (locationText=null, placeId=null)")
+        fun testCreateEvent_ModeA_Success() {
+            // Given
+            val tomorrow = LocalDate.now().plusDays(1)
+            val request =
+                CreateGroupEventRequest(
+                    title = "온라인 총회",
+                    description = "Zoom 링크 별도 공지",
+                    locationText = null,
+                    placeId = null,
+                    startDate = tomorrow,
+                    endDate = tomorrow,
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(15, 0),
+                    isAllDay = false,
+                    isOfficial = false,
+                    eventType = EventType.GENERAL,
+                    color = "#3B82F6",
+                    recurrence = null,
+                )
+
+            // When & Then
+            val result =
+                mockMvc.perform(
+                    post("/api/groups/${group.id}/events")
+                        .header("Authorization", "Bearer $memberToken")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)),
+                )
+                    .andDo(print())
+                    .andExpect(status().isCreated)
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data[0].title").value("온라인 총회"))
+                    .andExpect(jsonPath("$.data[0].locationText").isEmpty)
+                    .andExpect(jsonPath("$.data[0].place").isEmpty)
+                    .andReturn()
+
+            // PlaceReservation 생성되지 않음 확인
+            val response = objectMapper.readTree(result.response.contentAsString)
+            val eventId = response["data"][0]["id"].asLong()
+            val reservation = placeReservationRepository.findByGroupEventId(eventId)
+            assert(reservation == null) { "Mode A에서는 예약이 생성되면 안 됩니다." }
+        }
+
+        @Test
+        @DisplayName("4. Mode B - 수동 입력 (locationText='학생회관', placeId=null)")
+        fun testCreateEvent_ModeB_Success() {
+            // Given
+            val tomorrow = LocalDate.now().plusDays(1)
+            val request =
+                CreateGroupEventRequest(
+                    title = "외부 세미나",
+                    description = null,
+                    locationText = "학생회관 2층",
+                    placeId = null,
+                    startDate = tomorrow,
+                    endDate = tomorrow,
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
+                    isAllDay = false,
+                    isOfficial = false,
+                    eventType = EventType.GENERAL,
+                    color = "#10B981",
+                    recurrence = null,
+                )
+
+            // When & Then
+            val result =
+                mockMvc.perform(
+                    post("/api/groups/${group.id}/events")
+                        .header("Authorization", "Bearer $memberToken")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)),
+                )
+                    .andDo(print())
+                    .andExpect(status().isCreated)
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data[0].title").value("외부 세미나"))
+                    .andExpect(jsonPath("$.data[0].locationText").value("학생회관 2층"))
+                    .andExpect(jsonPath("$.data[0].place").isEmpty)
+                    .andReturn()
+
+            // PlaceReservation 생성되지 않음 확인
+            val response = objectMapper.readTree(result.response.contentAsString)
+            val eventId = response["data"][0]["id"].asLong()
+            val reservation = placeReservationRepository.findByGroupEventId(eventId)
+            assert(reservation == null) { "Mode B에서는 예약이 생성되면 안 됩니다." }
+        }
+
+        @Test
+        @DisplayName("5. Mode C - 장소 선택 (placeId=valid, locationText=null)")
+        fun testCreateEvent_ModeC_Success() {
+            // Given: 월요일 선택 (운영 시간 내)
+            val nextMonday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.MONDAY))
+            val request =
+                CreateGroupEventRequest(
+                    title = "정기 스터디",
+                    description = null,
+                    locationText = null,
+                    placeId = testPlace.id,
+                    startDate = nextMonday,
+                    endDate = nextMonday,
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
+                    isAllDay = false,
+                    isOfficial = false,
+                    eventType = EventType.GENERAL,
+                    color = "#F59E0B",
+                    recurrence = null,
+                )
+
+            // When & Then
+            val result =
+                mockMvc.perform(
+                    post("/api/groups/${group.id}/events")
+                        .header("Authorization", "Bearer $memberToken")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)),
+                )
+                    .andDo(print())
+                    .andExpect(status().isCreated)
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data[0].title").value("정기 스터디"))
+                    .andExpect(jsonPath("$.data[0].locationText").isEmpty)
+                    .andExpect(jsonPath("$.data[0].place").isNotEmpty)
+                    .andExpect(jsonPath("$.data[0].place.id").value(testPlace.id))
+                    .andReturn()
+
+            // PlaceReservation 생성됨 확인
+            val response = objectMapper.readTree(result.response.contentAsString)
+            val eventId = response["data"][0]["id"].asLong()
+            val reservation = placeReservationRepository.findByGroupEventId(eventId)
+            assert(reservation != null) { "Mode C에서는 예약이 자동 생성되어야 합니다." }
+            assert(reservation!!.place.id == testPlace.id) { "예약 장소가 일치해야 합니다." }
+        }
+
+        @Test
+        @DisplayName("6. Mode C - 예약 충돌 에러")
+        fun testCreateEvent_ModeC_ReservationConflict() {
+            // Given: 기존 예약 생성
+            val nextMonday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.MONDAY))
+            val existingRequest =
+                CreateGroupEventRequest(
+                    title = "기존 예약",
+                    description = null,
+                    locationText = null,
+                    placeId = testPlace.id,
+                    startDate = nextMonday,
+                    endDate = nextMonday,
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
+                    isAllDay = false,
+                    isOfficial = false,
+                    eventType = EventType.GENERAL,
+                    color = "#3B82F6",
+                    recurrence = null,
+                )
+
+            mockMvc.perform(
+                post("/api/groups/${group.id}/events")
+                    .header("Authorization", "Bearer $memberToken")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(existingRequest)),
+            )
+                .andExpect(status().isCreated)
+
+            // When: 충돌하는 시간대에 예약 시도 (14:30-16:30, 겹침)
+            val conflictingRequest =
+                CreateGroupEventRequest(
+                    title = "충돌 예약",
+                    description = null,
+                    locationText = null,
+                    placeId = testPlace.id,
+                    startDate = nextMonday,
+                    endDate = nextMonday,
+                    startTime = LocalTime.of(14, 30),
+                    endTime = LocalTime.of(16, 30),
+                    isAllDay = false,
+                    isOfficial = false,
+                    eventType = EventType.GENERAL,
+                    color = "#EF4444",
+                    recurrence = null,
+                )
+
+            // Then: 409 Conflict 에러
+            mockMvc.perform(
+                post("/api/groups/${group.id}/events")
+                    .header("Authorization", "Bearer $memberToken")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(conflictingRequest)),
+            )
+                .andDo(print())
+                .andExpect(status().isConflict)
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("RESERVATION_CONFLICT"))
+        }
+
+        @Test
+        @DisplayName("7. Mode C - 운영 시간 외 예약 시도")
+        fun testCreateEvent_ModeC_OutsideOperatingHours() {
+            // Given: 토요일 선택 (운영하지 않는 요일)
+            val nextSaturday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.SATURDAY))
+            val request =
+                CreateGroupEventRequest(
+                    title = "주말 스터디",
+                    description = null,
+                    locationText = null,
+                    placeId = testPlace.id,
+                    startDate = nextSaturday,
+                    endDate = nextSaturday,
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
+                    isAllDay = false,
+                    isOfficial = false,
+                    eventType = EventType.GENERAL,
+                    color = "#F59E0B",
+                    recurrence = null,
+                )
+
+            // When & Then: 400 Bad Request 에러
+            mockMvc.perform(
+                post("/api/groups/${group.id}/events")
+                    .header("Authorization", "Bearer $memberToken")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)),
+            )
+                .andDo(print())
+                .andExpect(status().isBadRequest)
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("OUTSIDE_OPERATING_HOURS"))
+        }
+
+        @Test
+        @DisplayName("8. Mode C - 반복 일정 + 장소 예약 (매주 월요일, 4주)")
+        fun testCreateRecurringEvent_ModeC_Success() {
+            // Given: 다음 월요일부터 4주간 반복
+            val nextMonday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.MONDAY))
+            val endDate = nextMonday.plusWeeks(3) // 4주 = 4번 반복
+            val request =
+                CreateGroupEventRequest(
+                    title = "주간 팀 회의",
+                    description = "매주 월요일 정기 회의",
+                    locationText = null,
+                    placeId = testPlace.id,
+                    startDate = nextMonday,
+                    endDate = endDate,
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(15, 0),
+                    isAllDay = false,
+                    isOfficial = false,
+                    eventType = EventType.GENERAL,
+                    color = "#8B5CF6",
+                    recurrence =
+                        RecurrencePattern(
+                            type = RecurrenceType.WEEKLY,
+                            daysOfWeek = listOf(DayOfWeek.MONDAY),
+                        ),
+                )
+
+            // When & Then
+            val result =
+                mockMvc.perform(
+                    post("/api/groups/${group.id}/events")
+                        .header("Authorization", "Bearer $memberToken")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)),
+                )
+                    .andDo(print())
+                    .andExpect(status().isCreated)
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.length()").value(4)) // 4개 일정 생성
+                    .andExpect(jsonPath("$.data[0].title").value("주간 팀 회의"))
+                    .andExpect(jsonPath("$.data[0].seriesId").isNotEmpty)
+                    .andExpect(jsonPath("$.data[0].place.id").value(testPlace.id))
+                    .andReturn()
+
+            // 4개 PlaceReservation 모두 생성됨 확인
+            val response = objectMapper.readTree(result.response.contentAsString)
+            val eventIds =
+                (0 until 4).map { i ->
+                    response["data"][i]["id"].asLong()
+                }
+
+            val reservations =
+                eventIds.mapNotNull { eventId ->
+                    placeReservationRepository.findByGroupEventId(eventId)
+                }
+
+            assert(reservations.size == 4) { "반복 일정 4개에 대해 모두 예약이 생성되어야 합니다." }
+            reservations.forEach { reservation ->
+                assert(reservation.place.id == testPlace.id) { "모든 예약이 동일 장소여야 합니다." }
+            }
         }
     }
 }

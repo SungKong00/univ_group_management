@@ -751,6 +751,42 @@ context.go('/workspace/${topGroup.id}');
 
 장소 조회, 관리 및 예약 관련 기능을 제공합니다.
 
+#### GET /api/groups/{groupId}/available-places
+
+**설명**: 그룹이 예약 가능한 장소 목록을 조회합니다.
+
+**권한**: 그룹 멤버 (`@PreAuthorize("@security.isMember(#groupId)")`)
+
+**응답 (200 OK)**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "managingGroupId": 10,
+      "managingGroupName": "AISC",
+      "building": "60주년 기념관",
+      "roomNumber": "18203",
+      "alias": "AISC랩실",
+      "displayName": "AISC랩실 (60주년 기념관-18203)",
+      "capacity": 30,
+      "createdAt": "2025-10-13T10:00:00",
+      "updatedAt": "2025-10-13T10:00:00"
+    }
+  ],
+  "error": null
+}
+```
+
+**에러 응답**:
+- 403 Forbidden: 그룹 멤버가 아님
+- 404 Not Found: 그룹을 찾을 수 없음
+
+---
+
+#### 기타 장소/예약 API (기존)
+
 -   `GET /places`: 모든 장소 목록 조회 (공개)
 -   `GET /places/{placeId}`: 특정 장소 상세 정보 조회 (공개)
 -   `GET /places/calendar`: 다중 장소 캘린더 조회 (공개)
