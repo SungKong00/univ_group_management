@@ -2,7 +2,7 @@
 
 > **상위 문서**: [그룹 캘린더 개발 계획](group-calendar-development-plan.md) | [장소 캘린더 명세서](place-calendar-specification.md)
 > **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md) | [장소 관리](../concepts/calendar-place-management.md)
-> **상태**: 설계 완료 (2025-10-18), 구현 예정
+> **상태**: Phase 2 완료 (2025-10-18), Phase 3 진행 중
 > **브랜치**: palce_callendar
 
 ## 📋 개요
@@ -1141,11 +1141,12 @@ Future<void> _createEvent() async {
 - [ ] DTO 클래스 수정
 - [ ] Repository 메서드 추가
 
-### 우선순위 2: Phase 2 구현 (비즈니스 로직)
-- [ ] 모드 검증 로직 구현
-- [ ] 장소 사용 권한 확인 로직
-- [ ] 예약 가능 시간 3단계 검증
-- [ ] 반복 일정 + 장소 예약 통합
+### 우선순위 2: Phase 2 구현 (비즈니스 로직) ✅ 완료 (2025-10-18)
+- [x] 모드 검증 로직 구현 (validateLocationFields)
+- [x] 장소 사용 권한 확인 로직 (hasReservationPermission)
+- [x] 예약 가능 시간 3단계 검증 (validateReservation)
+- [x] 반복 일정 + 장소 예약 통합 (createRecurringEventsWithPlace)
+- [x] ValidationResult 유틸리티 클래스 추가
 
 ### 우선순위 3: Phase 3 구현 (API)
 - [ ] GET /api/groups/{groupId}/available-places 구현

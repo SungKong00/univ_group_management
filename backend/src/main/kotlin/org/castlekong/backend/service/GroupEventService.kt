@@ -31,6 +31,7 @@ class GroupEventService(
     private val groupMemberRepository: GroupMemberRepository,
     private val permissionService: PermissionService,
     private val objectMapper: ObjectMapper,
+    private val placeReservationService: PlaceReservationService,
 ) {
     /**
      * 그룹의 특정 기간 일정 조회
@@ -105,17 +106,37 @@ class GroupEventService(
         // 7. 시간 검증
         validateTimeRange(actualStartTime, actualEndTime)
 
-        // 8. 반복 일정 여부 확인
+        // 8. Phase 2: 장소 정보 검증 (3가지 모드)
+        validateLocationFields(request.locationText, request.placeId)
+
+        // 9. Phase 2: 장소 선택 시 (Mode C) 권한 및 예약 가능 여부 검증
+        if (request.placeId != null) {
+            validatePlaceReservation(user, groupId, request, actualStartTime, actualEndTime)
+        }
+
+        // 10. 반복 일정 여부 확인
         if (request.recurrence == null) {
             // 단일 일정 생성
             val eventStart = startDate.atTime(actualStartTime)
             val eventEnd = startDate.atTime(actualEndTime)
             val event = createSingleEvent(group, user, request, eventStart, eventEnd, null, null)
             val saved = groupEventRepository.save(event)
+
+            // Phase 2: 장소 선택 시 예약 생성
+            if (request.placeId != null) {
+                placeReservationService.createReservationForEvent(request.placeId, saved, user)
+            }
+
             return listOf(saved.toResponse())
         } else {
             // 반복 일정 생성 (명시적 인스턴스 저장)
-            return createRecurringEvents(group, user, request, actualStartTime, actualEndTime)
+            return if (request.placeId != null) {
+                // Phase 2: 반복 일정 + 장소 예약
+                createRecurringEventsWithPlace(group, user, request, actualStartTime, actualEndTime)
+            } else {
+                // 반복 일정 (장소 없음)
+                createRecurringEvents(group, user, request, actualStartTime, actualEndTime)
+            }
         }
     }
 
@@ -203,7 +224,7 @@ class GroupEventService(
             title = request.title.trim(),
             description = request.description?.trim(),
             locationText = request.locationText?.trim(),
-            // Phase 1: place 연동은 Phase 2에서 구현
+            // Phase 2: place 연동 (placeId가 있으면 null로 남김 - 이후 설정)
             place = null,
             startDate = eventStart,
             endDate = eventEnd,
@@ -499,6 +520,157 @@ class GroupEventService(
             throw BusinessException(ErrorCode.INVALID_COLOR)
         }
         return value.uppercase()
+    }
+
+    // ===== Phase 2: 장소 통합 헬퍼 메서드 =====
+
+    /**
+     * 장소 필드 검증 (Mode A/B/C)
+     *
+     * - Mode A (장소 없음): locationText=null, placeId=null
+     * - Mode B (수동 입력): locationText!=null, placeId=null
+     * - Mode C (장소 선택): locationText=null, placeId!=null
+     * - 에러: locationText!=null AND placeId!=null (동시 사용 불가)
+     */
+    private fun validateLocationFields(
+        locationText: String?,
+        placeId: Long?,
+    ) {
+        // 규칙: locationText와 placeId는 동시에 값을 가질 수 없음
+        if (!locationText.isNullOrBlank() && placeId != null) {
+            throw BusinessException(ErrorCode.INVALID_LOCATION_MODE)
+        }
+    }
+
+    /**
+     * 장소 예약 검증 (Mode C)
+     *
+     * 1. 사용 권한 확인 (managingGroup OR PlaceUsageGroup APPROVED)
+     * 2. 예약 가능 여부 확인 (운영 시간, 차단 시간, 예약 충돌)
+     */
+    private fun validatePlaceReservation(
+        user: User,
+        groupId: Long,
+        request: CreateGroupEventRequest,
+        startTime: LocalTime,
+        endTime: LocalTime,
+    ) {
+        val placeId = request.placeId ?: return
+
+        // 1. 사용 권한 확인
+        if (!placeReservationService.hasReservationPermission(groupId, placeId)) {
+            throw BusinessException(ErrorCode.NO_PLACE_PERMISSION)
+        }
+
+        // 2. 단일 일정인 경우: 예약 가능 여부 검증
+        if (request.recurrence == null) {
+            val startDate = request.startDate!!
+            val startDateTime = startDate.atTime(startTime)
+            val endDateTime = startDate.atTime(endTime)
+
+            val validationResult =
+                placeReservationService.validateReservation(
+                    placeId,
+                    startDateTime,
+                    endDateTime,
+                )
+
+            if (!validationResult.isSuccess) {
+                throw BusinessException(validationResult.errorCode!!)
+            }
+        }
+        // 반복 일정의 경우: createRecurringEventsWithPlace()에서 각 날짜별로 검증
+    }
+
+    /**
+     * 반복 일정 + 장소 예약 생성 (Phase 2)
+     *
+     * 반복 패턴에 따라 여러 인스턴스 생성하고, 각각에 대해 장소 예약 생성
+     * - 모든 날짜의 예약 가능 여부를 사전 검증
+     * - 일부 날짜 실패 시 전체 실패 정책 (부분 성공 미지원)
+     */
+    private fun createRecurringEventsWithPlace(
+        group: Group,
+        user: User,
+        request: CreateGroupEventRequest,
+        startTime: LocalTime,
+        endTime: LocalTime,
+    ): List<GroupEventResponse> {
+        val placeId = request.placeId ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val recurrence = request.recurrence!!
+        val seriesId = UUID.randomUUID().toString()
+        val recurrenceRuleJson = objectMapper.writeValueAsString(recurrence)
+
+        val startDate = request.startDate!!
+        val endDate = request.endDate!!
+
+        // 1. 생성할 날짜 목록 계산
+        val dates =
+            when (recurrence.type) {
+                RecurrenceType.DAILY -> {
+                    generateSequence(startDate) { it.plusDays(1) }
+                        .takeWhile { !it.isAfter(endDate) }
+                        .toList()
+                }
+                RecurrenceType.WEEKLY -> {
+                    val daysOfWeek =
+                        recurrence.daysOfWeek
+                            ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+                    generateSequence(startDate) { it.plusDays(1) }
+                        .takeWhile { !it.isAfter(endDate) }
+                        .filter { it.dayOfWeek in daysOfWeek }
+                        .toList()
+                }
+            }
+
+        if (dates.isEmpty()) {
+            throw BusinessException(ErrorCode.INVALID_REQUEST)
+        }
+
+        // 2. 모든 날짜의 예약 가능 여부 사전 검증
+        dates.forEach { date ->
+            val eventStart = date.atTime(startTime)
+            val eventEnd = date.atTime(endTime)
+
+            val validationResult =
+                placeReservationService.validateReservation(
+                    placeId,
+                    eventStart,
+                    eventEnd,
+                )
+
+            if (!validationResult.isSuccess) {
+                throw BusinessException(validationResult.errorCode!!)
+            }
+        }
+
+        // 3. 모든 검증 통과 후 일정 생성 + 예약 생성
+        val events =
+            dates.map { date ->
+                val eventStart = date.atTime(startTime)
+                val eventEnd = date.atTime(endTime)
+
+                // GroupEvent 생성
+                val event =
+                    createSingleEvent(
+                        group = group,
+                        creator = user,
+                        request = request,
+                        eventStart = eventStart,
+                        eventEnd = eventEnd,
+                        seriesId = seriesId,
+                        recurrenceRule = recurrenceRuleJson,
+                    )
+                val savedEvent = groupEventRepository.save(event)
+
+                // PlaceReservation 생성
+                placeReservationService.createReservationForEvent(placeId, savedEvent, user)
+
+                savedEvent.toResponse()
+            }
+
+        return events
     }
 
     /**

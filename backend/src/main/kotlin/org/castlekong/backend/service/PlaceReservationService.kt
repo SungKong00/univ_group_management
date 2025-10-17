@@ -1,8 +1,10 @@
 package org.castlekong.backend.service
 
+import org.castlekong.backend.common.ValidationResult
 import org.castlekong.backend.entity.GroupEvent
 import org.castlekong.backend.entity.Place
 import org.castlekong.backend.entity.PlaceReservation
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.GroupEventRepository
@@ -12,6 +14,7 @@ import org.castlekong.backend.repository.PlaceBlockedTimeRepository
 import org.castlekong.backend.repository.PlaceRepository
 import org.castlekong.backend.repository.PlaceReservationRepository
 import org.castlekong.backend.repository.PlaceUsageGroupRepository
+import org.castlekong.backend.repository.UserRepository
 import org.castlekong.backend.security.PermissionService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -37,6 +40,7 @@ class PlaceReservationService(
     private val groupEventRepository: GroupEventRepository,
     private val groupMemberRepository: GroupMemberRepository,
     private val permissionService: PermissionService,
+    private val userRepository: UserRepository,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -402,4 +406,207 @@ class PlaceReservationService(
                 )
             else -> emptySet()
         }
+
+    // ============ GroupEvent Integration Methods (Phase 2) ============
+
+    /**
+     * 예약 가능 여부 검증 (3단계: 운영 시간 → 차단 시간 → 예약 충돌)
+     *
+     * GroupEventService에서 일정 생성 전 호출하여 예약 가능 여부 확인
+     *
+     * @param placeId 장소 ID
+     * @param startDateTime 시작 시간
+     * @param endDateTime 종료 시간
+     * @param excludeEventId 제외할 일정 ID (수정 시 자기 자신 제외)
+     * @return ValidationResult (성공/실패 + 에러코드)
+     */
+    fun validateReservation(
+        placeId: Long,
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime,
+        excludeEventId: Long? = null,
+    ): ValidationResult {
+        // 1. 장소 조회
+        val place =
+            placeRepository.findActiveById(placeId)
+                .orElse(null)
+                ?: return ValidationResult.failure(ErrorCode.PLACE_NOT_FOUND)
+
+        // 2. 운영 시간 확인
+        if (!isWithinOperatingHours(place, startDateTime, endDateTime)) {
+            return ValidationResult.failure(
+                ErrorCode.OUTSIDE_OPERATING_HOURS,
+                "운영 시간 외입니다.",
+            )
+        }
+
+        // 3. 차단 시간 확인
+        val blockedTimes =
+            placeBlockedTimeRepository.findConflicts(
+                place.id,
+                startDateTime,
+                endDateTime,
+            )
+
+        if (blockedTimes.isNotEmpty()) {
+            val reason = blockedTimes.first().reason
+            return ValidationResult.failure(
+                ErrorCode.PLACE_BLOCKED,
+                "해당 시간대는 예약이 불가능합니다. 사유: ${reason ?: "관리자 차단"}",
+            )
+        }
+
+        // 4. 예약 충돌 확인
+        val conflictingReservations =
+            if (excludeEventId != null) {
+                // 수정 시: 자기 자신 제외하고 검증
+                placeReservationRepository.findOverlappingReservations(
+                    place.id,
+                    startDateTime,
+                    endDateTime,
+                    excludeEventId,
+                )
+            } else {
+                // 생성 시: 모든 예약과 비교
+                placeReservationRepository.findByPlaceIdAndDateRange(
+                    place.id,
+                    startDateTime,
+                    endDateTime,
+                ).filter { reservation ->
+                    reservation.groupEvent.startDate < endDateTime &&
+                        reservation.groupEvent.endDate > startDateTime
+                }
+            }
+
+        if (conflictingReservations.isNotEmpty()) {
+            return ValidationResult.failure(
+                ErrorCode.RESERVATION_CONFLICT,
+                "이미 예약된 시간대입니다.",
+            )
+        }
+
+        return ValidationResult.success()
+    }
+
+    /**
+     * 그룹의 장소 사용 권한 확인
+     *
+     * - 관리 그룹(managingGroup)이면 자동 허용
+     * - 다른 그룹이면 PlaceUsageGroup APPROVED 상태 확인
+     *
+     * @param groupId 그룹 ID
+     * @param placeId 장소 ID
+     * @return true: 권한 있음, false: 권한 없음
+     */
+    fun hasReservationPermission(
+        groupId: Long,
+        placeId: Long,
+    ): Boolean {
+        val place =
+            placeRepository.findActiveById(placeId)
+                .orElse(null) ?: return false
+
+        // 관리 그룹이면 자동 허용
+        if (place.managingGroup.id == groupId) {
+            return true
+        }
+
+        // PlaceUsageGroup APPROVED 확인
+        return placeUsageGroupRepository.isApprovedForPlace(placeId, groupId)
+    }
+
+    /**
+     * PlaceReservation 생성 (GroupEvent 기반)
+     *
+     * GroupEventService에서 일정 생성 후 호출하여 예약 레코드 생성
+     * - 사전 검증 완료 가정 (validateReservation + hasReservationPermission 호출됨)
+     *
+     * @param placeId 장소 ID
+     * @param groupEvent 생성된 GroupEvent
+     * @param user 예약자 (일정 작성자)
+     * @return 생성된 PlaceReservation
+     */
+    fun createReservationForEvent(
+        placeId: Long,
+        groupEvent: GroupEvent,
+        user: User,
+    ): PlaceReservation {
+        val place =
+            placeRepository.findActiveById(placeId)
+                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
+
+        val reservation =
+            PlaceReservation(
+                place = place,
+                groupEvent = groupEvent,
+                reservedBy = user,
+            )
+
+        val saved = placeReservationRepository.save(reservation)
+        logger.info("예약 생성 (GroupEvent 통합): reservationId=${saved.id}, eventId=${groupEvent.id}, placeId=$placeId")
+        return saved
+    }
+
+    /**
+     * 운영 시간 확인 (여러 날짜에 걸친 일정 지원)
+     *
+     * @param place 장소
+     * @param startDateTime 시작 시간
+     * @param endDateTime 종료 시간
+     * @return true: 운영 시간 내, false: 운영 시간 외
+     */
+    private fun isWithinOperatingHours(
+        place: Place,
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime,
+    ): Boolean {
+        val startDate = startDateTime.toLocalDate()
+        val endDate = endDateTime.toLocalDate()
+
+        // 같은 날 예약인 경우
+        if (startDate == endDate) {
+            return checkOperatingHoursForSingleDay(place, startDateTime, endDateTime)
+        }
+
+        // 여러 날에 걸친 예약: 각 날짜별로 검증
+        var currentDate = startDate
+        while (!currentDate.isAfter(endDate)) {
+            val dayStart =
+                if (currentDate == startDate) startDateTime else currentDate.atStartOfDay()
+            val dayEnd =
+                if (currentDate == endDate) endDateTime else currentDate.atTime(23, 59, 59)
+
+            if (!checkOperatingHoursForSingleDay(place, dayStart, dayEnd)) {
+                return false
+            }
+
+            currentDate = currentDate.plusDays(1)
+        }
+
+        return true
+    }
+
+    /**
+     * 단일 날짜 운영 시간 확인
+     */
+    private fun checkOperatingHoursForSingleDay(
+        place: Place,
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime,
+    ): Boolean {
+        val dayOfWeek = startDateTime.dayOfWeek
+        val startTime = startDateTime.toLocalTime()
+        val endTime = endDateTime.toLocalTime()
+
+        val availabilities = placeAvailabilityRepository.findByPlaceIdAndDayOfWeek(place.id, dayOfWeek)
+
+        if (availabilities.isEmpty()) {
+            return false // 해당 요일 운영 안 함
+        }
+
+        // 예약 시간이 운영 시간 범위 내에 있는지 확인
+        return availabilities.any { avail ->
+            startTime >= avail.startTime && endTime <= avail.endTime
+        }
+    }
 }
