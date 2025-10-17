@@ -6,7 +6,12 @@ import 'selection_painter.dart';
 import 'time_grid_painter.dart';
 
 class WeeklyScheduleEditor extends StatefulWidget {
-  const WeeklyScheduleEditor({super.key});
+  final bool allowMultiDaySelection;
+
+  const WeeklyScheduleEditor({
+    super.key,
+    this.allowMultiDaySelection = false, // Default to single-day selection
+  });
 
   @override
   State<WeeklyScheduleEditor> createState() => _WeeklyScheduleEditorState();
@@ -21,7 +26,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   final int _daysInWeek = 7;
 
   // State
-  final List<Rect> _events = [];
+  final List<({({int day, int slot}) start, ({int day, int slot}) end})> _events = [];
   bool _isSelecting = false;
   ({int day, int slot})? _startCell;
   ({int day, int slot})? _endCell;
@@ -70,7 +75,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         _selectionRect = _cellToRect(_startCell!, _endCell!, size);
       });
     } else {
-      final Rect? finalSelection = _selectionRect;
       final ({int day, int slot})? finalStartCell = _startCell;
       final ({int day, int slot})? finalEndCell = _endCell;
 
@@ -81,9 +85,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         _selectionRect = null;
       });
 
-      if (finalSelection != null) {
-        final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: finalStartCell!.slot * 15));
-        final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (finalEndCell!.slot + 1) * 15));
+      if (finalStartCell != null && finalEndCell != null) {
+        final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: finalStartCell.slot * 15));
+        final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (finalEndCell.slot + 1) * 15));
 
         showDialog(
           context: context,
@@ -101,7 +105,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               TextButton(
                 onPressed: () {
                   setState(() {
-                    _events.add(finalSelection);
+                    _events.add((start: finalStartCell, end: finalEndCell));
                   });
                   Navigator.of(context).pop();
                 },
@@ -119,10 +123,20 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = constraints.biggest;
+        final List<Rect> eventRects = _events.map((event) {
+          return _cellToRect(event.start, event.end, size);
+        }).toList();
+
         return MouseRegion(
           onHover: (event) {
             if (_isSelecting) {
-              final currentCell = _pixelToCell(event.localPosition, size);
+              var currentCell = _pixelToCell(event.localPosition, size);
+
+              // If multi-day selection is not allowed, constrain to the start day.
+              if (!widget.allowMultiDaySelection) {
+                currentCell = (day: _startCell!.day, slot: currentCell.slot);
+              }
+
               if (currentCell != _endCell) {
                 setState(() {
                   _endCell = currentCell;
@@ -133,6 +147,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           },
           child: GestureDetector(
             onTapDown: (details) => _handleTap(details.localPosition, size),
+            behavior: HitTestBehavior.opaque, // Ensure the entire area is hittable
             child: Stack(
               children: [
                 CustomPaint(
@@ -145,7 +160,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                   size: Size.infinite,
                 ),
                 CustomPaint(
-                  painter: EventPainter(events: _events),
+                  painter: EventPainter(events: eventRects),
                   size: Size.infinite,
                 ),
                 CustomPaint(
