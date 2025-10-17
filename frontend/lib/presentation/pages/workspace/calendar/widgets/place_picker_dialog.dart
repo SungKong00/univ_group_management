@@ -112,34 +112,45 @@ class _PlacePickerDialogState extends State<_PlacePickerDialog> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.dialog),
       ),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 500,
-          maxHeight: 600,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: '검색',
-                hintText: '장소 이름, 건물, 호수로 검색',
-                prefixIcon: Icon(Icons.search),
+      content: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenSize = MediaQuery.of(context).size;
+          final maxHeight = screenSize.height * 0.6; // 화면 높이의 60%
+          final maxWidth = 500.0;
+
+          return ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: maxWidth,
+              maxHeight: maxHeight,
+            ),
+            child: SizedBox(
+              width: maxWidth,
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      labelText: '검색',
+                      hintText: '장소 이름, 건물, 호수로 검색',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Expanded(
+                    child: _buildContent(),
+                  ),
+                ],
               ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
             ),
-            const SizedBox(height: AppSpacing.md),
-            Expanded(
-              child: _buildContent(),
-            ),
-          ],
-        ),
+          );
+        },
       ),
       actions: [
         ConfirmCancelActions(
@@ -232,57 +243,60 @@ class _PlacePickerDialogState extends State<_PlacePickerDialog> {
       );
     }
 
-    return ListView.builder(
-      itemCount: placesByBuilding.length,
-      itemBuilder: (context, index) {
-        final building = placesByBuilding.keys.elementAt(index);
-        final places = placesByBuilding[building]!;
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: placesByBuilding.entries.map((entry) {
+          final building = entry.key;
+          final places = entry.value;
+          final index = placesByBuilding.keys.toList().indexOf(building);
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (index > 0) const Divider(height: AppSpacing.lg),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.domain, size: 16, color: AppColors.neutral600),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    building,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: AppColors.neutral700,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xs,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.neutral200,
-                      borderRadius: BorderRadius.circular(AppRadius.xs),
-                    ),
-                    child: Text(
-                      '${places.length}개',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (index > 0) const Divider(height: AppSpacing.lg),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.domain, size: 16, color: AppColors.neutral600),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      building,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             color: AppColors.neutral700,
-                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
                           ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: AppSpacing.xs),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.neutral200,
+                        borderRadius: BorderRadius.circular(AppRadius.xs),
+                      ),
+                      child: Text(
+                        '${places.length}개',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.neutral700,
+                              fontSize: 11,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            ...places.map((place) => _buildPlaceItem(place)),
-          ],
-        );
-      },
+              ...places.map((place) => _buildPlaceItem(place)),
+            ],
+          );
+        }).toList(),
+      ),
     );
   }
 
