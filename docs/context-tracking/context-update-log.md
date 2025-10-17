@@ -2,6 +2,51 @@
 
 이 파일은 프로젝트의 컨텍스트 문서들이 언제, 어떤 커밋에서 업데이트되었는지 추적합니다.
 
+### 2025-10-18 - 장소-일정 연동 Phase 2 비즈니스 로직 구현
+**커밋**: 5c744a51d4b301b17c9ac7dd6bc075ce1306ceca
+**유형**: 기능 구현 + 문서 동기화
+**우선순위**: High
+**영향 범위**: 백엔드 (비즈니스 로직, 유틸리티), 문서 (기능 설계)
+
+**구현 내용**:
+- **ValidationResult 유틸리티 클래스 추가**:
+    - 검증 결과를 담는 데이터 클래스 구현 (`backend/src/main/kotlin/org/castlekong/backend/common/ValidationResult.kt`)
+    - `success()`, `failure()` 팩토리 메서드로 간결한 사용성 제공
+    - ErrorCode 및 메시지를 포함하여 비즈니스 예외 처리 통합
+
+- **PlaceReservationService 확장 (GroupEvent 통합)**:
+    - `validateReservation()`: 3단계 예약 검증 (운영 시간 → 차단 시간 → 예약 충돌)
+    - `hasReservationPermission()`: 그룹의 장소 사용 권한 확인 (관리 그룹 또는 PlaceUsageGroup APPROVED 검증)
+    - `createReservationForEvent()`: GroupEvent 기반 PlaceReservation 생성
+    - `isWithinOperatingHours()`: 여러 날짜에 걸친 일정의 운영 시간 검증 지원
+
+- **GroupEventService 장소 연동 로직 추가**:
+    - `validateLocationFields()`: 3가지 모드 (A: 장소 없음, B: 수동 입력, C: 장소 선택) 상호 배타성 검증
+    - `validatePlaceReservation()`: 장소 권한 + 예약 가능 여부 사전 검증
+    - `createRecurringEventsWithPlace()`: 반복 일정 + 장소 예약 통합 처리 (모든 날짜 사전 검증 후 일괄 생성)
+    - PlaceReservationService 의존성 주입
+
+**동기화 완료 문서**:
+- ✅ `docs/features/group-event-place-integration.md`:
+    - Phase 2 완료 상태 업데이트 (Phase 2 완료, Phase 3 진행 중)
+    - 체크리스트 항목 완료 표시 및 추가 구현 내역 반영
+
+**수정된 파일**:
+- `backend/src/main/kotlin/org/castlekong/backend/common/ValidationResult.kt` (신규)
+- `backend/src/main/kotlin/org/castlekong/backend/service/GroupEventService.kt`
+- `backend/src/main/kotlin/org/castlekong/backend/service/PlaceReservationService.kt`
+- `docs/features/group-event-place-integration.md`
+
+**기술적 세부사항**:
+- 예약 검증 3단계 처리: 운영 시간 → 차단 시간 → 예약 충돌 순서로 검증
+- 반복 일정: 모든 날짜 사전 검증 후 일괄 생성 (전체 실패 정책)
+- 여러 날짜 운영 시간 검증: 날짜별 분할 처리 지원
+- ErrorCode 활용: `INVALID_LOCATION_MODE`, `NO_PLACE_PERMISSION`, `OUTSIDE_OPERATING_HOURS`, `PLACE_BLOCKED`, `RESERVATION_CONFLICT`
+
+**다음 단계**: Phase 3 (API 구현) - 장소 조회 API 및 일정 생성/수정 API 확장
+
+---
+
 ### 2025-10-17 - 채널 관리 기능 구현 및 문서 동기화
 **커밋**: 724ec8b6c174daeb814f088d4a4d1a02915ca497
 **유형**: 기능 구현 + 문서 동기화

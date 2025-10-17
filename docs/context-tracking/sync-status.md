@@ -4,7 +4,7 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-10-18 (장소-일정 통합 Phase 1 완료)
+**마지막 업데이트**: 2025-10-18 (장소-일정 통합 Phase 2 완료)
 **총 문서 수**: 43개
 **동기화 완료**: 43개 (100%)
 **업데이트 필요**: 0개 (0%)
@@ -78,6 +78,7 @@
 | `group-calendar-phase6-edit-delete.md` | ✅ 최신 | 2025-10-13 | `현재` | 수정/삭제 구현 완료 (신규) |
 | `group-calendar-phase9-ui-improvement.md` | ✅ 최신 | 2025-10-13 | `현재` | UI 개선 계획 (Phase 6→9 변경) |
 | `place-calendar-specification.md` | ✅ 최신 | 2025-10-17 | `현재` | 장소 예약 API 명세 동기화 |
+| `group-event-place-integration.md` | ✅ 최신 | 2025-10-18 | `5c744a5` | Phase 2 완료 상태 반영 |
 | `place-calendar-phase2-frontend-basic.md` | ✅ 최신 | 2025-10-13 | `현재` | Phase 2 프론트엔드 상세 계획 (신규) |
 | `place-calendar-phase3-usage-permission.md` | ✅ 최신 | 2025-10-13 | `현재` | Phase 3 예약 권한 신청 계획 (신규) |
 | `calendar-integration-roadmap.md` | ✅ 최신 | 2025-10-13 | `현재` | 통합 로드맵 (신규) |
@@ -127,10 +128,11 @@
 모든 코드 변경사항이 반영되어 동기화된 문서들
 
 **주요 업데이트 (2025-10-18)**:
-- 장소-일정 통합 Phase 1 (데이터 모델) 구현 완료에 따른 문서 동기화
-  - `database-reference.md`: GroupEvent 스키마 변경 (location → location_text, place_id 추가)
-  - `database-reference.md`: JPA 엔티티 업데이트 (3가지 모드 지원, init 블록 검증)
-  - `database-reference.md`: V5 Migration 변경 이력 추가
+- 장소-일정 통합 Phase 2 (비즈니스 로직) 구현 완료에 따른 문서 동기화
+  - `group-event-place-integration.md`: Phase 2 완료 상태 반영, 체크리스트 업데이트
+  - ValidationResult 유틸리티 클래스 추가
+  - GroupEventService 장소 연동 로직 구현 (validateLocationFields, validatePlaceReservation, createRecurringEventsWithPlace)
+  - PlaceReservationService GroupEvent 통합 메서드 구현 (validateReservation, hasReservationPermission, createReservationForEvent)
 
 **주요 업데이트 (2025-10-17)**:
 - 가입 신청 및 지원자 관리 기능 개선에 따른 프론트엔드 코드 변경사항을 관련 API, UI/UX 문서에 동기화했습니다.
