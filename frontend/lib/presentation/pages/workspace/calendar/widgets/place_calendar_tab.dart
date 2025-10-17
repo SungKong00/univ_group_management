@@ -32,7 +32,7 @@ class PlaceCalendarTab extends ConsumerStatefulWidget {
 }
 
 class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
-  Set<int> _previousSelectedPlaceIds = {};
+  Set<int>? _previousSelectedPlaceIds;
   DateTime? _previousFocusedDate;
   CalendarView? _previousCalendarView;
 
@@ -95,18 +95,14 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     // Check if we need to reload reservations based on state changes
     // This replaces ref.listen to avoid lifecycle issues in TabBarView
 
-    // Check for selected place IDs changes
-    if (state.selectedPlaceIds != _previousSelectedPlaceIds) {
+    // Determine if we need to load reservations
+    bool shouldLoadReservations = false;
+
+    // Check for selected place IDs changes (use identical comparison for Set)
+    if (!identical(state.selectedPlaceIds, _previousSelectedPlaceIds)) {
+      _previousSelectedPlaceIds = state.selectedPlaceIds;
       if (state.selectedPlaceIds.isNotEmpty) {
-        _previousSelectedPlaceIds = Set.from(state.selectedPlaceIds);
-        // Schedule reservation load after build
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _loadReservationsForCurrentView();
-          }
-        });
-      } else {
-        _previousSelectedPlaceIds = {};
+        shouldLoadReservations = true;
       }
     }
 
@@ -114,12 +110,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     if (focusedDate != _previousFocusedDate) {
       _previousFocusedDate = focusedDate;
       if (state.selectedPlaceIds.isNotEmpty) {
-        // Schedule reservation load after build
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _loadReservationsForCurrentView();
-          }
-        });
+        shouldLoadReservations = true;
       }
     }
 
@@ -127,13 +118,17 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     if (currentView != _previousCalendarView) {
       _previousCalendarView = currentView;
       if (state.selectedPlaceIds.isNotEmpty) {
-        // Schedule reservation load after build
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _loadReservationsForCurrentView();
-          }
-        });
+        shouldLoadReservations = true;
       }
+    }
+
+    // Schedule reservation load after build (only once per build cycle)
+    if (shouldLoadReservations) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadReservationsForCurrentView();
+        }
+      });
     }
 
     // Use LayoutBuilder to get actual widget width (not screen width)

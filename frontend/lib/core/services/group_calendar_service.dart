@@ -87,11 +87,14 @@ class GroupCalendarService {
   /// - startDate/endDate: Date range for recurrence (yyyy-MM-dd)
   /// - startTime/endTime: Event duration time (HH:mm:ss)
   /// - Single event: startDate == endDate
+  /// - locationText: Text-based location (for text input)
+  /// - placeId: Place ID (for place reservation)
   Future<List<GroupEvent>> createEvent({
     required int groupId,
     required String title,
     String? description,
-    String? location,
+    String? locationText,
+    int? placeId,
     required DateTime startDate,
     required DateTime endDate,
     bool isAllDay = false,
@@ -111,7 +114,8 @@ class GroupCalendarService {
         data: {
           'title': title,
           'description': description?.trim().isEmpty == true ? null : description,
-          'location': location?.trim().isEmpty == true ? null : location,
+          'locationText': locationText?.trim().isEmpty == true ? null : locationText,
+          'placeId': placeId,
           'startDate': startDateOnly,  // yyyy-MM-dd
           'endDate': endDateOnly,      // yyyy-MM-dd
           'startTime': startTimeOnly,  // HH:mm:ss
@@ -169,12 +173,15 @@ class GroupCalendarService {
   /// For the backend API:
   /// - Only startTime/endTime are sent (not startDate/endDate)
   /// - Backend applies time changes to the selected event(s)
+  /// - locationText: Text-based location (for text input)
+  /// - placeId: Place ID (for place reservation)
   Future<List<GroupEvent>> updateEvent({
     required int groupId,
     required int eventId,
     required String title,
     String? description,
-    String? location,
+    String? locationText,
+    int? placeId,
     required DateTime startDate,
     required DateTime endDate,
     bool isAllDay = false,
@@ -190,7 +197,8 @@ class GroupCalendarService {
         data: {
           'title': title,
           'description': description?.trim().isEmpty == true ? null : description,
-          'location': location?.trim().isEmpty == true ? null : location,
+          'locationText': locationText?.trim().isEmpty == true ? null : locationText,
+          'placeId': placeId,
           'startTime': startTimeOnly,  // HH:mm:ss
           'endTime': endTimeOnly,      // HH:mm:ss
           'isAllDay': isAllDay,

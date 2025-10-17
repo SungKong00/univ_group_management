@@ -425,10 +425,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
     if (result != null && mounted) {
       try {
-        // Determine location string for API
-        final locationString = result.place != null
-            ? result.place!.displayName
-            : result.locationText;
+        // Determine location parameters for API
+        final locationText = result.locationText;
+        final placeId = result.place?.id;
 
         await ref
             .read(groupCalendarProvider(widget.groupId).notifier)
@@ -436,7 +435,8 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
           groupId: widget.groupId,
           title: result.title,
           description: result.description,
-          location: locationString,
+          locationText: locationText,
+          placeId: placeId,
           startDate: result.startDate,
           endDate: result.endDate,
           isAllDay: result.isAllDay,
@@ -705,10 +705,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
     if (result != null && mounted) {
       try {
-        // Determine location string for API
-        final locationString = result.place != null
-            ? result.place!.displayName
-            : result.locationText;
+        // Determine location parameters for API
+        final locationText = result.locationText;
+        final placeId = result.place?.id;
 
         await ref
             .read(groupCalendarProvider(widget.groupId).notifier)
@@ -717,7 +716,8 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
           eventId: event.id,
           title: result.title,
           description: result.description,
-          location: locationString,
+          locationText: locationText,
+          placeId: placeId,
           startDate: result.startDate,
           endDate: result.endDate,
           isAllDay: result.isAllDay,
