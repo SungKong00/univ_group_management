@@ -4,16 +4,19 @@ import 'package:intl/intl.dart';
 import '../../../../../core/models/calendar/group_event.dart';
 import '../../../../../core/models/calendar/recurrence_pattern.dart';
 import '../../../../../core/models/calendar_models.dart';
+import '../../../../../core/models/place/place.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
 import '../../../../widgets/dialogs/confirm_cancel_actions.dart';
+import 'location_selector.dart';
 import 'recurrence_selector.dart';
 
 /// Result from the group event form dialog.
 class GroupEventFormResult {
   final String title;
   final String? description;
-  final String? location;
+  final String? locationText;
+  final Place? place;
   final DateTime startDate;
   final DateTime endDate;
   final bool isAllDay;
@@ -24,7 +27,8 @@ class GroupEventFormResult {
   const GroupEventFormResult({
     required this.title,
     this.description,
-    this.location,
+    this.locationText,
+    this.place,
     required this.startDate,
     required this.endDate,
     required this.isAllDay,
@@ -36,6 +40,7 @@ class GroupEventFormResult {
 
 Future<GroupEventFormResult?> showGroupEventFormDialog(
   BuildContext context, {
+  required int groupId,
   GroupEvent? initial,
   DateTime? anchorDate,
   required bool canCreateOfficial,
@@ -46,6 +51,7 @@ Future<GroupEventFormResult?> showGroupEventFormDialog(
     context: context,
     barrierDismissible: false,
     builder: (context) => _GroupEventFormDialog(
+      groupId: groupId,
       initial: initial,
       anchorDate: anchorDate,
       canCreateOfficial: canCreateOfficial,
@@ -57,6 +63,7 @@ Future<GroupEventFormResult?> showGroupEventFormDialog(
 
 class _GroupEventFormDialog extends StatefulWidget {
   const _GroupEventFormDialog({
+    required this.groupId,
     this.initial,
     this.anchorDate,
     required this.canCreateOfficial,
@@ -64,6 +71,7 @@ class _GroupEventFormDialog extends StatefulWidget {
     this.eventType,
   });
 
+  final int groupId;
   final GroupEvent? initial;
   final DateTime? anchorDate;
   final bool canCreateOfficial;
@@ -78,7 +86,6 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
-  late final TextEditingController _locationController;
 
   late DateTime _startDateTime;
   late DateTime _endDateTime;
@@ -87,6 +94,8 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
   late Color _selectedColor;
   late EventType _eventType;
   RecurrencePattern? _recurrence;
+  String? _locationText;
+  Place? _selectedPlace;
 
   bool get _isEditing => widget.initial != null;
 
@@ -104,7 +113,18 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
     _descriptionController = TextEditingController(
       text: initial?.description ?? '',
     );
-    _locationController = TextEditingController(text: initial?.location ?? '');
+
+    // Initialize location fields from initial event
+    if (initial != null) {
+      // TODO: Parse initial.location to determine if it's a place or text
+      // For now, assume it's text if present
+      if (initial.location != null && initial.location!.isNotEmpty) {
+        _locationText = initial.location;
+      }
+      // If initial has a place field (need to check GroupEvent model)
+      // _selectedPlace = initial.place;
+    }
+
     _isAllDay = initial?.isAllDay ?? false;
     // Phase 6: Use initialIsOfficial from parent selector, fallback to initial event value
     _isOfficial = initial?.isOfficial ?? widget.initialIsOfficial ?? false;
@@ -136,7 +156,6 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _locationController.dispose();
     super.dispose();
   }
 
@@ -186,13 +205,18 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  controller: _locationController,
-                  maxLength: 100,
-                  decoration: const InputDecoration(
-                    labelText: '장소 (선택)',
-                    hintText: '예: 중앙도서관 4층',
-                  ),
+                LocationSelector(
+                  groupId: widget.groupId,
+                  initialLocationText: _locationText,
+                  initialPlace: _selectedPlace,
+                  startDateTime: _startDateTime,
+                  endDateTime: _endDateTime,
+                  onLocationChanged: (locationText, place) {
+                    setState(() {
+                      _locationText = locationText;
+                      _selectedPlace = place;
+                    });
+                  },
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 SwitchListTile.adaptive(
@@ -495,9 +519,8 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
       description: _descriptionController.text.trim().isEmpty
           ? null
           : _descriptionController.text.trim(),
-      location: _locationController.text.trim().isEmpty
-          ? null
-          : _locationController.text.trim(),
+      locationText: _locationText,
+      place: _selectedPlace,
       // For backend API: startDate/endDate are date ranges (not time)
       // Time is stored in startTime/endTime (extracted in service layer)
       startDate: _startDateTime,

@@ -416,6 +416,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     // Step 3: Show event form dialog with pre-determined formality and type
     final result = await showGroupEventFormDialog(
       context,
+      groupId: widget.groupId,
       anchorDate: anchorDate,
       canCreateOfficial: isOfficial,
       initialIsOfficial: isOfficial,
@@ -424,13 +425,18 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
     if (result != null && mounted) {
       try {
+        // Determine location string for API
+        final locationString = result.place != null
+            ? result.place!.displayName
+            : result.locationText;
+
         await ref
             .read(groupCalendarProvider(widget.groupId).notifier)
             .createEvent(
           groupId: widget.groupId,
           title: result.title,
           description: result.description,
-          location: result.location,
+          location: locationString,
           startDate: result.startDate,
           endDate: result.endDate,
           isAllDay: result.isAllDay,
@@ -692,12 +698,18 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
     final result = await showGroupEventFormDialog(
       context,
+      groupId: widget.groupId,
       initial: event,
       canCreateOfficial: event.isOfficial, // Keep the same official status
     );
 
     if (result != null && mounted) {
       try {
+        // Determine location string for API
+        final locationString = result.place != null
+            ? result.place!.displayName
+            : result.locationText;
+
         await ref
             .read(groupCalendarProvider(widget.groupId).notifier)
             .updateEvent(
@@ -705,7 +717,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
           eventId: event.id,
           title: result.title,
           description: result.description,
-          location: result.location,
+          location: locationString,
           startDate: result.startDate,
           endDate: result.endDate,
           isAllDay: result.isAllDay,

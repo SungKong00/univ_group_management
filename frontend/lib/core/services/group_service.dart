@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 import '../models/group_models.dart';
 import '../models/auth_models.dart';
+import '../models/place/place.dart';
 import '../network/dio_client.dart';
 
 /// Group Service
@@ -346,6 +347,60 @@ class GroupService {
     } catch (e) {
       developer.log(
         'Error reviewing subgroup request: $e',
+        name: 'GroupService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Get available places for a group
+  ///
+  /// GET /api/groups/{groupId}/available-places
+  /// Returns list of places that the group has permission to reserve
+  Future<List<Place>> getAvailablePlaces(int groupId) async {
+    try {
+      developer.log(
+        'Fetching available places for group $groupId',
+        name: 'GroupService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/groups/$groupId/available-places',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map(
+                  (item) => Place.fromJson(item as Map<String, dynamic>),
+                )
+                .toList();
+          }
+          return <Place>[];
+        });
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} available places',
+            name: 'GroupService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch available places: ${apiResponse.message}',
+            name: 'GroupService',
+            level: 900,
+          );
+          throw Exception(apiResponse.message ?? 'Failed to fetch available places');
+        }
+      }
+
+      return [];
+    } catch (e) {
+      developer.log(
+        'Error fetching available places: $e',
         name: 'GroupService',
         level: 900,
       );
