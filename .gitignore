@@ -171,6 +171,7 @@ $RECYCLE.BIN/
 !/frontend/ios/**/default.mode2v3
 !/frontend/ios/**/default.pbxuser
 !/frontend/ios/**/default.perspectivev3
+/frontend/ios/Podfile.lock
 
 # macOS
 /frontend/macos/**/Pods/
@@ -187,6 +188,7 @@ $RECYCLE.BIN/
 /frontend/macos/Flutter/flutter_export_environment.sh
 /frontend/macos/ServiceDefinitions.json
 /frontend/macos/Runner/GeneratedPluginRegistrant.*
+/frontend/macos/Podfile.lock
 
 # Linux
 /frontend/linux/flutter/ephemeral/
