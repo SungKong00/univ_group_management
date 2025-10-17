@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 class EventPainter extends CustomPainter {
-  final List<Rect> events;
+  final List<({Rect rect, String title})> events;
 
   EventPainter({required this.events});
 
@@ -12,21 +12,22 @@ class EventPainter extends CustomPainter {
       ..color = Colors.blue.withOpacity(0.8)
       ..style = PaintingStyle.fill;
 
-    for (final eventRect in events) {
-      // Draw the event block
-      final rrect = RRect.fromRectAndRadius(eventRect, const Radius.circular(4));
+    for (final event in events) {
+      final rrect = RRect.fromRectAndRadius(event.rect, const Radius.circular(4));
       canvas.drawRRect(rrect, paint);
 
-      // Optionally, add text inside the event block
       final textPainter = TextPainter(
-        text: const TextSpan(
-          text: '일정', // Placeholder text
-          style: TextStyle(color: Colors.white, fontSize: 12),
+        text: TextSpan(
+          text: event.title,
+          style: const TextStyle(color: Colors.white, fontSize: 12),
         ),
+        maxLines: 2,
+        ellipsis: '...',
         textDirection: TextDirection.ltr,
       );
-      textPainter.layout(minWidth: 0, maxWidth: eventRect.width);
-      textPainter.paint(canvas, eventRect.topLeft + const Offset(4, 4));
+
+      textPainter.layout(minWidth: 0, maxWidth: event.rect.width - 8); // 4px padding on each side
+      textPainter.paint(canvas, event.rect.topLeft + const Offset(4, 4));
     }
   }
 
