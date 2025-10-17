@@ -15,6 +15,7 @@ import org.castlekong.backend.dto.GroupSummaryResponse
 import org.castlekong.backend.dto.JoinGroupRequest
 import org.castlekong.backend.dto.PagedApiResponse
 import org.castlekong.backend.dto.PaginationInfo
+import org.castlekong.backend.dto.PlaceResponse
 import org.castlekong.backend.dto.ReviewGroupJoinRequestRequest
 import org.castlekong.backend.dto.ReviewSubGroupRequestRequest
 import org.castlekong.backend.dto.SubGroupRequestResponse
@@ -55,6 +56,7 @@ class GroupController(
     private val workspaceManagementService: WorkspaceManagementService,
     private val adminStatsService: AdminStatsService,
     private val groupRoleService: GroupRoleService,
+    private val placeService: org.castlekong.backend.service.PlaceService,
     userService: UserService,
     private val securityExpressionHelper: SecurityExpressionHelper,
     private val permissionService: org.castlekong.backend.security.PermissionService,
@@ -497,5 +499,29 @@ class GroupController(
             "멤버" -> emptySet()
             else -> emptySet()
         }
+    }
+
+    // === 그룹 일정-장소 통합 ===
+
+    /**
+     * GET /api/groups/{groupId}/available-places
+     * 현재 그룹이 예약 가능한 장소 목록 조회
+     *
+     * @권한 그룹 멤버
+     * @설명 PlaceUsageGroup APPROVED 상태인 장소만 반환
+     */
+    @GetMapping("/{groupId}/available-places")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "그룹 예약 가능 장소 조회",
+        description = "현재 그룹이 예약 가능한 장소 목록을 조회합니다 (APPROVED 상태만)",
+    )
+    fun getAvailablePlaces(
+        @PathVariable groupId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<PlaceResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val places = placeService.findReservablePlacesForGroup(user, groupId)
+        return ApiResponse.success(places)
     }
 }

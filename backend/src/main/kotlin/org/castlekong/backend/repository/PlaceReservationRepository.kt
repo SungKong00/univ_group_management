@@ -55,12 +55,24 @@ interface PlaceReservationRepository : JpaRepository<PlaceReservation, Long> {
      * - Phase 1: 데이터 모델 구현에서 요구되는 메서드명
      * - findOverlappingReservations()와 동일한 기능
      */
+    @Query(
+        """
+        SELECT pr FROM PlaceReservation pr
+        JOIN FETCH pr.groupEvent ge
+        JOIN FETCH pr.place p
+        WHERE pr.place.id = :placeId
+        AND ge.startDate < :endDateTime
+        AND ge.endDate > :startDateTime
+        AND (:excludeReservationId IS NULL OR pr.id != :excludeReservationId)
+        ORDER BY ge.startDate ASC
+    """,
+    )
     fun findConflictingReservations(
-        placeId: Long,
-        startDateTime: LocalDateTime,
-        endDateTime: LocalDateTime,
-        excludeReservationId: Long? = null,
-    ): List<PlaceReservation> = findOverlappingReservations(placeId, startDateTime, endDateTime, excludeReservationId)
+        @Param("placeId") placeId: Long,
+        @Param("startDateTime") startDateTime: LocalDateTime,
+        @Param("endDateTime") endDateTime: LocalDateTime,
+        @Param("excludeReservationId") excludeReservationId: Long? = null,
+    ): List<PlaceReservation>
 
     /**
      * 날짜 범위 조회 (단일 장소)
