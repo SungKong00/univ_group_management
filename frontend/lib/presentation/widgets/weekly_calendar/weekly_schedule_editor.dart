@@ -31,6 +31,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   final int _startHour = 0;
   final int _endHour = 24;
   final int _daysInWeek = 7;
+  final double _minSlotHeight = 20.0; // Minimum height for a 15-minute slot
 
   // State
   final List<Event> _events = [];
@@ -42,24 +43,21 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   // --- Helper Functions ---
 
-  ({int day, int slot}) _pixelToCell(Offset position, Size size) {
-    final double dayColumnWidth = (size.width - _timeColumnWidth) / _daysInWeek;
-    final double hourHeight = (size.height - _dayRowHeight) / (_endHour - _startHour);
-    final double slotHeight = hourHeight / 4;
+  ({int day, int slot}) _pixelToCell(Offset position, double dayColumnWidth) {
+    final double slotHeight = _minSlotHeight;
+    final int totalSlots = (_endHour - _startHour) * 4;
 
     int day = ((position.dx - _timeColumnWidth) / dayColumnWidth).floor();
     int slot = ((position.dy - _dayRowHeight) / slotHeight).floor();
 
     day = day.clamp(0, _daysInWeek - 1);
-    slot = slot.clamp(0, (_endHour - _startHour) * 4 - 1);
+    slot = slot.clamp(0, totalSlots - 1);
 
     return (day: day, slot: slot);
   }
 
-  Rect _cellToRect(({int day, int slot}) start, ({int day, int slot}) end, Size size) {
-    final double dayColumnWidth = (size.width - _timeColumnWidth) / _daysInWeek;
-    final double hourHeight = (size.height - _dayRowHeight) / (_endHour - _startHour);
-    final double slotHeight = hourHeight / 4;
+  Rect _cellToRect(({int day, int slot}) start, ({int day, int slot}) end, double dayColumnWidth) {
+    final double slotHeight = _minSlotHeight;
 
     final startDay = start.day < end.day ? start.day : end.day;
     final endDay = start.day > end.day ? start.day : end.day;
@@ -227,7 +225,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   // --- Event Handlers ---
 
-  void _handleTap(Offset position, Size size, List<({Rect rect, Event event})> eventRects) {
+  void _handleTap(Offset position, double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
     if (!widget.isEditable) return;
 
     final tappedEvent = _findTappedEvent(position, eventRects);
@@ -239,9 +237,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     if (!_isSelecting) {
       setState(() {
         _isSelecting = true;
-        _startCell = _pixelToCell(position, size);
+        _startCell = _pixelToCell(position, dayColumnWidth);
         _endCell = _startCell;
-        _selectionRect = _cellToRect(_startCell!, _endCell!, size);
+        _selectionRect = _cellToRect(_startCell!, _endCell!, dayColumnWidth);
       });
     } else {
       final finalStartCell = _startCell;
@@ -262,81 +260,87 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = constraints.biggest;
-        final List<({Rect rect, Event event})> eventRects = _events.map((event) {
-          return (rect: _cellToRect(event.start, event.end, size), event: event);
-        }).toList();
+    return SingleChildScrollView(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
+          final double contentHeight = _dayRowHeight + (_endHour - _startHour) * 4 * _minSlotHeight;
 
-        return MouseRegion(
-          onHover: (event) {
-            if (!widget.isEditable) return;
+          final List<({Rect rect, Event event})> eventRects = _events.map((event) {
+            return (rect: _cellToRect(event.start, event.end, dayColumnWidth), event: event);
+          }).toList();
 
-            if (_isSelecting) {
-              var currentCell = _pixelToCell(event.localPosition, size);
+          return SizedBox(
+            height: contentHeight,
+            child: MouseRegion(
+              onHover: (event) {
+                if (!widget.isEditable) return;
 
-              if (!widget.allowMultiDaySelection) {
-                currentCell = (day: _startCell!.day, slot: currentCell.slot);
-              }
+                if (_isSelecting) {
+                  var currentCell = _pixelToCell(event.localPosition, dayColumnWidth);
 
-              if (currentCell.slot < _startCell!.slot) {
+                  if (!widget.allowMultiDaySelection) {
+                    currentCell = (day: _startCell!.day, slot: currentCell.slot);
+                  }
+
+                  if (currentCell.slot < _startCell!.slot) {
+                    setState(() {
+                      _endCell = currentCell;
+                      _selectionRect = null;
+                    });
+                  } else if (currentCell != _endCell) {
+                    setState(() {
+                      _endCell = currentCell;
+                      _selectionRect = _cellToRect(_startCell!, currentCell, dayColumnWidth);
+                    });
+                  }
+                } else {
+                  final currentCell = _pixelToCell(event.localPosition, dayColumnWidth);
+                  setState(() {
+                    _highlightRect = _cellToRect(currentCell, currentCell, dayColumnWidth);
+                  });
+                }
+              },
+              onExit: (event) {
                 setState(() {
-                  _endCell = currentCell;
-                  _selectionRect = null;
+                  _highlightRect = null;
                 });
-              } else if (currentCell != _endCell) {
-                setState(() {
-                  _endCell = currentCell;
-                  _selectionRect = _cellToRect(_startCell!, currentCell, size);
-                });
-              }
-            } else {
-              // Highlight the cell under the mouse when not selecting
-              final currentCell = _pixelToCell(event.localPosition, size);
-              setState(() {
-                _highlightRect = _cellToRect(currentCell, currentCell, size);
-              });
-            }
-          },
-          onExit: (event) {
-            setState(() {
-              _highlightRect = null;
-            });
-          },
-          child: GestureDetector(
-            onTapDown: (details) => _handleTap(details.localPosition, size, eventRects),
-            behavior: HitTestBehavior.opaque,
-            child: Stack(
-              children: [
-                CustomPaint(
-                  painter: TimeGridPainter(
-                    startHour: _startHour,
-                    endHour: _endHour,
-                    timeColumnWidth: _timeColumnWidth,
-                    dayRowHeight: _dayRowHeight,
-                  ),
-                  size: Size.infinite,
+              },
+              child: GestureDetector(
+                onTapDown: (details) => _handleTap(details.localPosition, dayColumnWidth, eventRects),
+                behavior: HitTestBehavior.opaque,
+                child: Stack(
+                  children: [
+                    CustomPaint(
+                      painter: TimeGridPainter(
+                        startHour: _startHour,
+                        endHour: _endHour,
+                        timeColumnWidth: _timeColumnWidth,
+                        dayRowHeight: _dayRowHeight,
+                      ),
+                      size: Size.infinite,
+                    ),
+                    CustomPaint(
+                      painter: EventPainter(events: eventRects.map((e) => (rect: e.rect, title: e.event.title)).toList()),
+                      size: Size.infinite,
+                    ),
+                    if (widget.isEditable) ...[
+                      CustomPaint(
+                        painter: HighlightPainter(highlightRect: _highlightRect),
+                        size: Size.infinite,
+                      ),
+                      CustomPaint(
+                        painter: SelectionPainter(selection: _selectionRect),
+                        size: Size.infinite,
+                      ),
+                    ],
+                  ],
                 ),
-                CustomPaint(
-                  painter: EventPainter(events: eventRects.map((e) => (rect: e.rect, title: e.event.title)).toList()),
-                  size: Size.infinite,
-                ),
-                if (widget.isEditable) ...[
-                  CustomPaint(
-                    painter: HighlightPainter(highlightRect: _highlightRect),
-                    size: Size.infinite,
-                  ),
-                  CustomPaint(
-                    painter: SelectionPainter(selection: _selectionRect),
-                    size: Size.infinite,
-                  ),
-                ],
-              ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
