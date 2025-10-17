@@ -4,7 +4,7 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-10-17 (채널 관리 기능 문서 동기화)
+**마지막 업데이트**: 2025-10-18 (장소-일정 통합 Phase 1 완료)
 **총 문서 수**: 43개
 **동기화 완료**: 43개 (100%)
 **업데이트 필요**: 0개 (0%)
@@ -42,7 +42,7 @@
 | `frontend-implementation-status.md` | ✅ 최신 | 2025-10-08 | `현재` | 워크스페이스 진입 로직 개선 반영 |
 | `workspace-refactoring-status.md` | ✅ 최신 | 2025-10-07 | `현재` | Phase 1-10 진행 상황 추적 문서 (신규) |
 | `api-reference.md` | ✅ 최신 | 2025-10-17 | `현재` | 가입/모집 API 명세 업데이트 |
-| `database-reference.md` | ✅ 최신 | 2025-10-12 | `현재` | recurrence_rule JSON 형식 예시 추가 (SQL DDL 및 JPA 엔티티) |
+| `database-reference.md` | ✅ 최신 | 2025-10-18 | `현재` | V5 Migration 반영 (GroupEvent 장소 통합) |
 
 ### `/docs/ui-ux/concepts/` - UI/UX 개념
 | 파일명 | 상태 | 마지막 동기화 | 관련 커밋 | 비고 |
@@ -125,6 +125,12 @@
 
 ### ✅ 최신 상태 (43개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
+
+**주요 업데이트 (2025-10-18)**:
+- 장소-일정 통합 Phase 1 (데이터 모델) 구현 완료에 따른 문서 동기화
+  - `database-reference.md`: GroupEvent 스키마 변경 (location → location_text, place_id 추가)
+  - `database-reference.md`: JPA 엔티티 업데이트 (3가지 모드 지원, init 블록 검증)
+  - `database-reference.md`: V5 Migration 변경 이력 추가
 
 **주요 업데이트 (2025-10-17)**:
 - 가입 신청 및 지원자 관리 기능 개선에 따른 프론트엔드 코드 변경사항을 관련 API, UI/UX 문서에 동기화했습니다.

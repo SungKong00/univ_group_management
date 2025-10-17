@@ -20,7 +20,13 @@ data class GroupEventResponse(
     val creatorName: String,
     val title: String,
     val description: String?,
-    val location: String?,
+    // ===== 장소 통합 (3가지 모드) =====
+    // Mode B: 수동 입력 장소
+    val locationText: String?,
+    // Mode C: 선택된 장소 ID
+    val placeId: Long?,
+    // Mode C: 장소 표시명 (건물-방번호)
+    val placeName: String?,
     val startDate: LocalDateTime,
     val endDate: LocalDateTime,
     val isAllDay: Boolean,
@@ -40,6 +46,12 @@ data class GroupEventResponse(
  * - startDate, endDate: 반복 일정의 시작/종료 날짜 (반복 기간)
  * - startTime, endTime: 개별 일정의 시작/종료 시간 (이벤트 duration)
  * - 단일 일정의 경우: startDate + startTime, startDate + endTime 결합
+ *
+ * 장소 통합 (3가지 모드):
+ * - Mode A: locationText=null, placeId=null (장소 없음)
+ * - Mode B: locationText="텍스트", placeId=null (수동 입력)
+ * - Mode C: locationText=null, placeId=1 (장소 선택 + 자동 예약)
+ * - 검증: locationText와 placeId는 동시에 값을 가질 수 없음
  */
 data class CreateGroupEventRequest(
     @field:NotBlank(message = "제목은 필수입니다.")
@@ -47,8 +59,12 @@ data class CreateGroupEventRequest(
     val title: String,
     @field:Size(max = 2000, message = "설명은 최대 2000자까지 입력할 수 있습니다.")
     val description: String? = null,
+    // ===== 장소 통합 필드 =====
+    // Mode B: 수동 입력
     @field:Size(max = 100, message = "장소는 최대 100자까지 입력할 수 있습니다.")
-    val location: String? = null,
+    val locationText: String? = null,
+    // Mode C: 장소 선택
+    val placeId: Long? = null,
     @field:NotNull(message = "시작 날짜는 필수입니다.")
     val startDate: LocalDate?,
     @field:NotNull(message = "종료 날짜는 필수입니다.")
@@ -69,6 +85,12 @@ data class CreateGroupEventRequest(
 
 /**
  * 그룹 일정 수정 요청 DTO
+ *
+ * 장소 변경 지원:
+ * - Mode A → Mode B/C: locationText 또는 placeId 설정
+ * - Mode B → Mode A/C: locationText null 또는 placeId 설정
+ * - Mode C → Mode A/B: placeId null 또는 locationText 설정
+ * - 검증: locationText와 placeId는 동시에 값을 가질 수 없음
  */
 data class UpdateGroupEventRequest(
     @field:NotBlank(message = "제목은 필수입니다.")
@@ -76,8 +98,12 @@ data class UpdateGroupEventRequest(
     val title: String,
     @field:Size(max = 2000, message = "설명은 최대 2000자까지 입력할 수 있습니다.")
     val description: String? = null,
+    // ===== 장소 통합 필드 =====
+    // Mode B: 수동 입력
     @field:Size(max = 100, message = "장소는 최대 100자까지 입력할 수 있습니다.")
-    val location: String? = null,
+    val locationText: String? = null,
+    // Mode C: 장소 선택
+    val placeId: Long? = null,
     @field:NotNull(message = "시작 시간은 필수입니다.")
     val startTime: LocalTime?,
     @field:NotNull(message = "종료 시간은 필수입니다.")

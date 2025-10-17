@@ -556,6 +556,7 @@ INSERT INTO groups (id, name, owner_id, parent_id, ...) VALUES (2, 'AI/SW계열'
 ## 변경 이력 (발췌)
 | 날짜 | 변경 사항 |
 |------|-----------|
+| 2025-10-18 | **V5 마이그레이션**: GroupEvent에 장소 통합 (location → location_text 변경, place_id 외래키 추가, 3가지 모드 지원) |
 | 2025-10-06 | **V2 마이그레이션**: 프로덕션 환경을 위한 대규모 성능 최적화 인덱스 추가. |
 | 2025-10-01 | GroupRole 비불변화(data class 제거), 시스템 역할 불변성 명시, ChannelRoleBinding 자동 생성 제거, ChannelRoleBinding 스키마/엔티티 추가, 삭제 Bulk 순서 추가 |
 
@@ -812,7 +813,15 @@ CREATE TABLE group_events (
     creator_id BIGINT NOT NULL,
     title VARCHAR(200) NOT NULL,
     description TEXT,
-    location VARCHAR(100),
+
+    -- ===== 장소 통합 (3가지 모드 지원) - V5 Migration =====
+    -- Mode A: location_text=null, place_id=null (장소 없음)
+    -- Mode B: location_text="텍스트", place_id=null (수동 입력)
+    -- Mode C: location_text=null, place_id=1 (장소 선택 + 자동 예약)
+    -- 주의: locationText와 placeId는 상호 배타적 (엔티티에서 검증)
+    location_text VARCHAR(100),  -- 기존 'location' 컬럼 이름 변경
+    place_id BIGINT,              -- 장소 선택 시 외래키
+
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
     is_all_day BOOLEAN DEFAULT false,
@@ -823,38 +832,28 @@ CREATE TABLE group_events (
 
     -- 반복 패턴 정보
     series_id VARCHAR(50), -- 동일 반복 패턴 그룹화
-    recurrence_rule TEXT, -- JSON 형식: {"type": "DAILY"} 또는 {"type": "WEEKLY", "daysOfWeek": ["MONDAY", "WEDNESDAY", "FRIDAY"]}
-    recurrence_end_date DATE, -- 반복 종료 날짜 (명시적 인스턴스 저장 방식)
-
-    -- 대상자 지정 (TARGETED 타입)
-    target_criteria JSON, -- 학년, 역할, 학번 등 조건 (예: {"year": [1, 2], "roles": ["멤버"]})
-
-    -- 참여 제한 (RSVP 타입)
-    max_participants INT, -- 참여 인원 제한 (NULL이면 무제한)
-    current_participants INT DEFAULT 0, -- 현재 참여자 수
-
-    -- 채널 연동
-    linked_channel_id BIGINT, -- 연동된 채널 ID
-    linked_post_id BIGINT, -- 자동 생성된 게시글 ID
+    recurrence_rule TEXT, -- JSON 형식: {"type": "DAILY"} 또는 {"type": "WEEKLY", "daysOfWeek": ["MONDAY", "WEDNESDAY"]}
 
     -- 메타 정보
-    color VARCHAR(7), -- 색상 코드
+    color VARCHAR(7) NOT NULL DEFAULT '#3B82F6', -- 색상 코드
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
     FOREIGN KEY (creator_id) REFERENCES users(id),
-    FOREIGN KEY (linked_channel_id) REFERENCES channels(id) ON DELETE SET NULL,
-    FOREIGN KEY (linked_post_id) REFERENCES posts(id) ON DELETE SET NULL
+    FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE SET NULL
 );
 
+-- 기본 인덱스
 CREATE INDEX idx_event_group ON group_events(group_id);
 CREATE INDEX idx_event_creator ON group_events(creator_id);
 CREATE INDEX idx_event_date ON group_events(group_id, start_date, end_date);
 CREATE INDEX idx_event_series ON group_events(series_id);
 CREATE INDEX idx_event_official ON group_events(group_id, is_official, start_date);
 CREATE INDEX idx_event_type ON group_events(group_id, event_type);
-CREATE INDEX idx_event_recurrence ON group_events(series_id, recurrence_end_date);
+
+-- 장소 연동 인덱스 (V5 Migration)
+CREATE INDEX idx_group_event_place ON group_events(place_id);
 ```
 
 **JPA 엔티티 (GroupEvent.kt)**:
@@ -862,91 +861,81 @@ CREATE INDEX idx_event_recurrence ON group_events(series_id, recurrence_end_date
 ```kotlin
 @Entity
 @Table(name = "group_events")
-class GroupEvent(
+data class GroupEvent(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    val id: Long = 0,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
-    var group: Group,
+    val group: Group,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
-    var creator: User,
+    val creator: User,
 
     @Column(nullable = false, length = 200)
-    var title: String,
+    val title: String,
 
     @Column(columnDefinition = "TEXT")
-    var description: String? = null,
+    val description: String? = null,
 
-    @Column(length = 100)
-    var location: String? = null,
+    // ===== 장소 통합 필드 (3가지 모드 지원) - V5 Migration =====
+    // Mode A: locationText=null, place=null (장소 없음)
+    // Mode B: locationText="텍스트", place=null (수동 입력)
+    // Mode C: locationText=null, place=Place객체 (장소 선택 + 자동 예약)
+    @Column(name = "location_text", length = 100)
+    val locationText: String? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id")
+    val place: Place? = null,
 
     @Column(name = "start_date", nullable = false)
-    var startDate: LocalDateTime,
+    val startDate: LocalDateTime,
 
     @Column(name = "end_date", nullable = false)
-    var endDate: LocalDateTime,
+    val endDate: LocalDateTime,
 
     @Column(name = "is_all_day", nullable = false)
-    var isAllDay: Boolean = false,
+    val isAllDay: Boolean = false,
 
     // 일정 분류
     @Column(name = "is_official", nullable = false)
-    var isOfficial: Boolean = false,
+    val isOfficial: Boolean = false,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false)
-    var eventType: EventType = EventType.GENERAL,
+    val eventType: EventType = EventType.GENERAL,
 
     // 반복 패턴
     @Column(name = "series_id", length = 50)
-    var seriesId: String? = null,
+    val seriesId: String? = null,
 
     @Column(name = "recurrence_rule", columnDefinition = "TEXT")
-    var recurrenceRule: String? = null, // JSON 형식: {"type": "DAILY"} 또는 {"type": "WEEKLY", "daysOfWeek": ["MONDAY", "WEDNESDAY"]}
+    val recurrenceRule: String? = null, // JSON 형식: {"type": "DAILY"} 또는 {"type": "WEEKLY", "daysOfWeek": ["MONDAY", "WEDNESDAY"]}
 
-    @Column(name = "recurrence_end_date")
-    var recurrenceEndDate: LocalDate? = null, // 반복 종료 날짜 (명시적 인스턴스 생성 범위 지정)
+    @Column(length = 7, nullable = false)
+    val color: String = "#3B82F6", // 색상 코드
 
-    // 대상자 지정
-    @Column(name = "target_criteria", columnDefinition = "JSON")
-    var targetCriteria: String? = null, // JSON 문자열
-
-    // 참여 제한
-    @Column(name = "max_participants")
-    var maxParticipants: Int? = null,
-
-    @Column(name = "current_participants", nullable = false)
-    var currentParticipants: Int = 0,
-
-    // 채널 연동
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "linked_channel_id")
-    var linkedChannel: Channel? = null,
-
-    @ManyToOne(fetch = FetchType.LAzy)
-    @JoinColumn(name = "linked_post_id")
-    var linkedPost: Post? = null,
-
-    @Column(length = 7)
-    var color: String? = null,
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now(),
+    @Column(name = "created_at", nullable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now(),
+    val updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
-    override fun equals(other: Any?) = other is GroupEvent && id != 0L && id == other.id
-    override fun hashCode(): Int = id.hashCode()
+    init {
+        // 검증: locationText와 place는 동시에 값을 가질 수 없음 (상호 배타적)
+        require(locationText.isNullOrBlank() || place == null) {
+            "locationText와 place는 동시에 값을 가질 수 없습니다. " +
+                "(locationText='$locationText', place.id=${place?.id})"
+        }
+    }
 }
 
 enum class EventType {
-    GENERAL,   // 대상 미지정
-    TARGETED,  // 대상자 지정
-    RSVP       // 참여자 신청
+    GENERAL,   // 일반 공지형 (MVP)
+    TARGETED,  // 대상 지정형 (Phase 2)
+    RSVP,      // 참여 신청형 (Phase 2)
 }
 ```
 

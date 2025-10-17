@@ -89,4 +89,11 @@ enum class ErrorCode(val message: String) {
     PLACE_TIME_BLOCKED("해당 시간대는 예약이 불가능합니다."),
     PLACE_NOT_MANAGING_GROUP("장소를 관리하는 그룹이 아닙니다."),
     PLACE_NOT_AUTHORIZED("장소 예약 권한이 없습니다."),
+
+    // Group Event - Place Integration (Phase 1)
+    OUTSIDE_OPERATING_HOURS("운영 시간이 아닙니다."),
+    PLACE_BLOCKED("해당 시간대는 예약이 불가능합니다."),
+    RESERVATION_CONFLICT("이미 예약된 시간대입니다."),
+    NO_PLACE_PERMISSION("장소 사용 권한이 없습니다."),
+    INVALID_LOCATION_MODE("locationText와 placeId는 동시에 사용할 수 없습니다."),
 }

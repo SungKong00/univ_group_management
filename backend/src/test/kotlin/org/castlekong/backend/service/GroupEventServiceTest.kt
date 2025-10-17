@@ -110,7 +110,7 @@ class GroupEventServiceTest {
             CreateGroupEventRequest(
                 title = "단일 일정",
                 description = "단일 일정 설명",
-                location = "회의실",
+                locationText = "회의실",
                 startDate = tomorrow,
                 endDate = tomorrow,
                 startTime = LocalTime.of(14, 0),
@@ -145,7 +145,7 @@ class GroupEventServiceTest {
             CreateGroupEventRequest(
                 title = "매일 반복 일정",
                 description = "매일 14:00-15:00",
-                location = null,
+                locationText = null,
                 startDate = LocalDate.of(2025, 11, 1),
                 endDate = LocalDate.of(2025, 11, 30),
                 startTime = LocalTime.of(14, 0),
@@ -181,7 +181,7 @@ class GroupEventServiceTest {
             CreateGroupEventRequest(
                 title = "주간 반복 일정",
                 description = "월수금 10:00-11:00",
-                location = "강의실",
+                locationText = "강의실",
                 startDate = LocalDate.of(2025, 11, 1),
                 endDate = LocalDate.of(2025, 11, 30),
                 startTime = LocalTime.of(10, 0),
@@ -220,7 +220,7 @@ class GroupEventServiceTest {
             CreateGroupEventRequest(
                 title = "공식 일정",
                 description = null,
-                location = null,
+                locationText = null,
                 startDate = tomorrow,
                 endDate = tomorrow,
                 startTime = LocalTime.of(14, 0),
@@ -247,7 +247,7 @@ class GroupEventServiceTest {
             CreateGroupEventRequest(
                 title = "비멤버 일정",
                 description = null,
-                location = null,
+                locationText = null,
                 startDate = tomorrow,
                 endDate = tomorrow,
                 startTime = LocalTime.of(14, 0),
@@ -272,7 +272,7 @@ class GroupEventServiceTest {
             CreateGroupEventRequest(
                 title = "원본 제목",
                 description = "원본 설명",
-                location = null,
+                locationText = null,
                 startDate = LocalDate.of(2025, 11, 1),
                 endDate = LocalDate.of(2025, 11, 10),
                 startTime = LocalTime.of(14, 0),
@@ -293,7 +293,7 @@ class GroupEventServiceTest {
             UpdateGroupEventRequest(
                 title = "수정된 제목",
                 description = "수정된 설명",
-                location = "새 장소",
+                locationText = "새 장소",
                 startTime = LocalTime.of(16, 0),
                 endTime = LocalTime.of(17, 0),
                 isAllDay = false,
@@ -328,7 +328,7 @@ class GroupEventServiceTest {
             CreateGroupEventRequest(
                 title = "반복 일정",
                 description = "설명",
-                location = null,
+                locationText = null,
                 startDate = pastDate,
                 endDate = futureDate,
                 startTime = LocalTime.of(14, 0),
@@ -348,7 +348,7 @@ class GroupEventServiceTest {
             UpdateGroupEventRequest(
                 title = "수정된 반복 일정",
                 description = "수정된 설명",
-                location = null,
+                locationText = null,
                 startTime = LocalTime.of(16, 0),
                 endTime = LocalTime.of(17, 0),
                 isAllDay = false,
@@ -377,7 +377,7 @@ class GroupEventServiceTest {
             CreateGroupEventRequest(
                 title = "반복 일정",
                 description = null,
-                location = null,
+                locationText = null,
                 startDate = LocalDate.of(2025, 11, 1),
                 endDate = LocalDate.of(2025, 11, 10),
                 startTime = LocalTime.of(14, 0),
@@ -415,7 +415,7 @@ class GroupEventServiceTest {
             CreateGroupEventRequest(
                 title = "반복 일정",
                 description = null,
-                location = null,
+                locationText = null,
                 startDate = pastDate,
                 endDate = futureDate,
                 startTime = LocalTime.of(14, 0),
@@ -446,7 +446,7 @@ class GroupEventServiceTest {
             CreateGroupEventRequest(
                 title = "조회 테스트 일정",
                 description = null,
-                location = null,
+                locationText = null,
                 startDate = LocalDate.of(2025, 11, 1),
                 endDate = LocalDate.of(2025, 11, 15),
                 startTime = LocalTime.of(10, 0),

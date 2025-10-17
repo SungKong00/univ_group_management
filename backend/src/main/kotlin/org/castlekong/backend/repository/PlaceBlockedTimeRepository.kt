@@ -33,6 +33,26 @@ interface PlaceBlockedTimeRepository : JpaRepository<PlaceBlockedTime, Long> {
     ): List<PlaceBlockedTime>
 
     /**
+     * 날짜 범위의 차단 시간 조회 (설계 문서 요구사항)
+     * - Phase 1: 데이터 모델 구현에서 요구되는 메서드
+     * - 예약 가능 검증 3단계 중 Step 2 (차단 시간 확인)에서 사용
+     */
+    @Query(
+        """
+        SELECT bt FROM PlaceBlockedTime bt
+        WHERE bt.place.id = :placeId
+        AND bt.startDatetime < :endDate
+        AND bt.endDatetime > :startDate
+        ORDER BY bt.startDatetime
+    """,
+    )
+    fun findByPlaceIdAndDateRange(
+        @Param("placeId") placeId: Long,
+        @Param("startDate") startDate: LocalDateTime,
+        @Param("endDate") endDate: LocalDateTime,
+    ): List<PlaceBlockedTime>
+
+    /**
      * 특정 기간의 차단 시간 목록 조회
      */
     @Query(

@@ -51,6 +51,18 @@ interface PlaceReservationRepository : JpaRepository<PlaceReservation, Long> {
     ): List<PlaceReservation>
 
     /**
+     * 충돌 예약 조회 (설계 문서 요구사항 - alias)
+     * - Phase 1: 데이터 모델 구현에서 요구되는 메서드명
+     * - findOverlappingReservations()와 동일한 기능
+     */
+    fun findConflictingReservations(
+        placeId: Long,
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime,
+        excludeReservationId: Long? = null,
+    ): List<PlaceReservation> = findOverlappingReservations(placeId, startDateTime, endDateTime, excludeReservationId)
+
+    /**
      * 날짜 범위 조회 (단일 장소)
      *
      * 특정 장소의 특정 기간 예약 목록

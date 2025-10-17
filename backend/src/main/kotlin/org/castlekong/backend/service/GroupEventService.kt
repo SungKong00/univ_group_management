@@ -202,7 +202,9 @@ class GroupEventService(
             creator = creator,
             title = request.title.trim(),
             description = request.description?.trim(),
-            location = request.location?.trim(),
+            locationText = request.locationText?.trim(),
+            // Phase 1: place 연동은 Phase 2에서 구현
+            place = null,
             startDate = eventStart,
             endDate = eventEnd,
             isAllDay = request.isAllDay,
@@ -248,7 +250,9 @@ class GroupEventService(
                     existing.copy(
                         title = request.title.trim(),
                         description = request.description?.trim(),
-                        location = request.location?.trim(),
+                        locationText = request.locationText?.trim(),
+                        // Phase 1: place 연동은 Phase 2에서 구현
+                        place = null,
                         startDate = newStart,
                         endDate = newEnd,
                         isAllDay = request.isAllDay,
@@ -279,7 +283,9 @@ class GroupEventService(
                         event.copy(
                             title = request.title.trim(),
                             description = request.description?.trim(),
-                            location = request.location?.trim(),
+                            locationText = request.locationText?.trim(),
+                            // Phase 1: place 연동은 Phase 2에서 구현
+                            place = null,
                             startDate = newStart,
                             endDate = newEnd,
                             isAllDay = request.isAllDay,
@@ -507,7 +513,9 @@ class GroupEventService(
             creatorName = creator.name,
             title = title,
             description = description,
-            location = location,
+            locationText = locationText,
+            placeId = place?.id,
+            placeName = place?.getDisplayName(),
             startDate = startDate,
             endDate = endDate,
             isAllDay = isAllDay,

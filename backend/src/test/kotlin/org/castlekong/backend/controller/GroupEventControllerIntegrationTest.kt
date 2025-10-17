@@ -184,7 +184,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "팀 회의",
                     description = "주간 회의",
-                    location = "회의실",
+                    locationText = "회의실",
                     startDate = tomorrow,
                     endDate = tomorrow,
                     startTime = LocalTime.of(14, 0),
@@ -224,7 +224,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "조회 테스트 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = tomorrow,
                     endDate = tomorrow,
                     startTime = LocalTime.of(10, 0),
@@ -271,7 +271,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "원본 제목",
                     description = "원본 설명",
-                    location = null,
+                    locationText = null,
                     startDate = tomorrow,
                     endDate = tomorrow,
                     startTime = LocalTime.of(14, 0),
@@ -300,7 +300,7 @@ class GroupEventControllerIntegrationTest {
                 UpdateGroupEventRequest(
                     title = "수정된 제목",
                     description = "수정된 설명",
-                    location = "새 장소",
+                    locationText = "새 장소",
                     startTime = LocalTime.of(16, 0),
                     endTime = LocalTime.of(17, 0),
                     isAllDay = false,
@@ -331,7 +331,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "삭제 테스트 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = tomorrow,
                     endDate = tomorrow,
                     startTime = LocalTime.of(14, 0),
@@ -392,7 +392,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "매일 스크럼",
                     description = "아침 스탠드업 미팅",
-                    location = null,
+                    locationText = null,
                     startDate = startDate,
                     endDate = endDate,
                     startTime = LocalTime.of(10, 0),
@@ -430,7 +430,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "운동",
                     description = "헬스장 PT",
-                    location = "체육관",
+                    locationText = "체육관",
                     startDate = startDate,
                     endDate = endDate,
                     startTime = LocalTime.of(19, 0),
@@ -471,7 +471,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "반복 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = startDate,
                     endDate = endDate,
                     startTime = LocalTime.of(14, 0),
@@ -500,7 +500,7 @@ class GroupEventControllerIntegrationTest {
                 UpdateGroupEventRequest(
                     title = "매일 스크럼 (첫날만 변경)",
                     description = "특별 회의",
-                    location = null,
+                    locationText = null,
                     startTime = LocalTime.of(16, 0),
                     endTime = LocalTime.of(17, 0),
                     isAllDay = false,
@@ -542,7 +542,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "반복 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = pastDate,
                     endDate = futureDate,
                     startTime = LocalTime.of(14, 0),
@@ -572,7 +572,7 @@ class GroupEventControllerIntegrationTest {
                 UpdateGroupEventRequest(
                     title = "수정된 반복 일정",
                     description = "전체 변경",
-                    location = null,
+                    locationText = null,
                     startTime = LocalTime.of(16, 0),
                     endTime = LocalTime.of(17, 0),
                     isAllDay = false,
@@ -603,7 +603,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "반복 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = startDate,
                     endDate = endDate,
                     startTime = LocalTime.of(14, 0),
@@ -657,7 +657,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "반복 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = pastDate,
                     endDate = futureDate,
                     startTime = LocalTime.of(14, 0),
@@ -715,7 +715,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "비공식 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = tomorrow,
                     endDate = tomorrow,
                     startTime = LocalTime.of(14, 0),
@@ -748,7 +748,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "공식 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = tomorrow,
                     endDate = tomorrow,
                     startTime = LocalTime.of(14, 0),
@@ -781,7 +781,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "멤버의 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = tomorrow,
                     endDate = tomorrow,
                     startTime = LocalTime.of(14, 0),
@@ -810,7 +810,7 @@ class GroupEventControllerIntegrationTest {
                 UpdateGroupEventRequest(
                     title = "수정 시도",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startTime = LocalTime.of(16, 0),
                     endTime = LocalTime.of(17, 0),
                     isAllDay = false,
@@ -838,7 +838,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "비멤버 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = tomorrow,
                     endDate = tomorrow,
                     startTime = LocalTime.of(14, 0),
@@ -874,7 +874,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "잘못된 일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = LocalDate.now().plusDays(10),
                     // 시작일보다 빠름
                     endDate = LocalDate.now().plusDays(1),
@@ -909,7 +909,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = tomorrow,
                     endDate = tomorrow,
                     startTime = LocalTime.of(14, 0),
@@ -942,7 +942,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "주간 반복",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = startDate,
                     endDate = endDate,
                     startTime = LocalTime.of(10, 0),
@@ -979,7 +979,7 @@ class GroupEventControllerIntegrationTest {
                 CreateGroupEventRequest(
                     title = "일정",
                     description = null,
-                    location = null,
+                    locationText = null,
                     startDate = tomorrow,
                     endDate = tomorrow,
                     startTime = LocalTime.of(14, 0),

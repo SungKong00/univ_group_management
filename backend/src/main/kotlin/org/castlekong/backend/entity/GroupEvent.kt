@@ -29,8 +29,15 @@ data class GroupEvent(
     val title: String,
     @Column(columnDefinition = "TEXT")
     val description: String? = null,
-    @Column(length = 100)
-    val location: String? = null,
+    // ===== 장소 통합 필드 (3가지 모드 지원) =====
+    // Mode A: locationText=null, place=null (장소 없음)
+    // Mode B: locationText="텍스트", place=null (수동 입력)
+    // Mode C: locationText=null, place=Place객체 (장소 선택 + 자동 예약)
+    @Column(name = "location_text", length = 100)
+    val locationText: String? = null,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id")
+    val place: Place? = null,
     @Column(name = "start_date", nullable = false)
     val startDate: LocalDateTime,
     @Column(name = "end_date", nullable = false)
@@ -52,7 +59,15 @@ data class GroupEvent(
     val createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now(),
-)
+) {
+    init {
+        // 검증: locationText와 place는 동시에 값을 가질 수 없음 (상호 배타적)
+        require(locationText.isNullOrBlank() || place == null) {
+            "locationText와 place는 동시에 값을 가질 수 없습니다. " +
+                "(locationText='$locationText', place.id=${place?.id})"
+        }
+    }
+}
 
 enum class EventType {
     GENERAL, // 일반 공지형 (MVP)
