@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../dev/selectable_option_card_demo.dart';
+import '../dev/weekly_calendar_demo_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -43,6 +44,18 @@ class ProfilePage extends StatelessWidget {
                 },
                 icon: const Icon(Icons.widgets),
                 label: const Text('SelectableOptionCard 데모'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const WeeklyCalendarDemoPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.calendar_month),
+                label: const Text('주간 캘린더 데모'),
               ),
             ],
           ],
