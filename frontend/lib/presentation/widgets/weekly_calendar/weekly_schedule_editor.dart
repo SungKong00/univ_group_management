@@ -10,11 +10,13 @@ typedef Event = ({String id, String title, ({int day, int slot}) start, ({int da
 class WeeklyScheduleEditor extends StatefulWidget {
   final bool allowMultiDaySelection;
   final bool isEditable;
+  final bool allowEventOverlap;
 
   const WeeklyScheduleEditor({
     super.key,
     this.allowMultiDaySelection = false,
-    this.isEditable = true, // Default to editable
+    this.isEditable = true,
+    this.allowEventOverlap = true, // Default to flexible mode (allow overlap with warning)
   });
 
   @override
@@ -68,6 +70,24 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       _timeColumnWidth + (endDay + 1) * dayColumnWidth,
       _dayRowHeight + (endSlot + 1) * slotHeight,
     );
+  }
+
+  bool _isOverlapping(({int day, int slot}) startCell, ({int day, int slot}) endCell) {
+    final newStartSlot = startCell.slot < endCell.slot ? startCell.slot : endCell.slot;
+    final newEndSlot = startCell.slot > endCell.slot ? startCell.slot : endCell.slot;
+
+    for (final event in _events) {
+      if (event.start.day == startCell.day) { // Check only within the same day
+        final existingStartSlot = event.start.slot < event.end.slot ? event.start.slot : event.end.slot;
+        final existingEndSlot = event.start.slot > event.end.slot ? event.start.slot : event.end.slot;
+
+        // Check for time intersection
+        if (newStartSlot < existingEndSlot && newEndSlot > existingStartSlot) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   Event? _findTappedEvent(Offset position, List<({Rect rect, Event event})> eventRects) {
@@ -158,6 +178,37 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           ),
           TextButton(
             onPressed: () {
+              final isOverlapping = _isOverlapping(startCell, endCell);
+
+              // Strict mode: Prevent creation and show an error dialog.
+              if (!widget.allowEventOverlap && isOverlapping) {
+                Navigator.of(context).pop(); // Close the create dialog
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('생성 불가'),
+                    content: const Text('겹치는 시간에는 일정을 생성할 수 없습니다.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('확인'),
+                      ),
+                    ],
+                  ),
+                );
+                return; // Stop execution
+              }
+
+              // Flexible mode (default): Show a SnackBar warning but still create.
+              if (isOverlapping) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('경고: 다른 일정과 겹칩니다.'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+
               setState(() {
                 _events.add((
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -177,7 +228,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   // --- Event Handlers ---
 
-  void _handleTap(Offset position, List<({Rect rect, Event event})> eventRects) {
+  void _handleTap(Offset position, Size size, List<({Rect rect, Event event})> eventRects) {
     if (!widget.isEditable) return;
 
     // Check if an existing event was tapped
@@ -191,14 +242,15 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     if (!_isSelecting) {
       setState(() {
         _isSelecting = true;
-        _startCell = _pixelToCell(position, context.size!);
+        _startCell = _pixelToCell(position, size);
         _endCell = _startCell;
-        _selectionRect = _cellToRect(_startCell!, _endCell!, context.size!);
+        _selectionRect = _cellToRect(_startCell!, _endCell!, size);
       });
     } else {
       final finalStartCell = _startCell;
       final finalEndCell = _endCell;
 
+      // Reset state immediately
       setState(() {
         _isSelecting = false;
         _startCell = null;
@@ -206,7 +258,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         _selectionRect = null;
       });
 
-      if (finalStartCell != null && finalEndCell != null) {
+      // Only show dialog if the selection is valid (not backwards)
+      if (finalStartCell != null && finalEndCell != null && finalEndCell.slot >= finalStartCell.slot) {
         _showCreateDialog(finalStartCell, finalEndCell);
       }
     }
@@ -230,16 +283,22 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                 currentCell = (day: _startCell!.day, slot: currentCell.slot);
               }
 
-              if (currentCell != _endCell) {
+              // Invalidate selection if dragging upwards
+              if (currentCell.slot < _startCell!.slot) {
                 setState(() {
                   _endCell = currentCell;
-                  _selectionRect = _cellToRect(_startCell!, _endCell!, size);
+                  _selectionRect = null; // Make selection disappear
+                });
+              } else if (currentCell != _endCell) {
+                setState(() {
+                  _endCell = currentCell;
+                  _selectionRect = _cellToRect(_startCell!, currentCell, size);
                 });
               }
             }
           },
           child: GestureDetector(
-            onTapDown: (details) => _handleTap(details.localPosition, eventRects),
+            onTapDown: (details) => _handleTap(details.localPosition, size, eventRects),
             behavior: HitTestBehavior.opaque,
             child: Stack(
               children: [
