@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -67,7 +68,73 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   Rect? _selectionRect;
   Rect? _highlightRect;
 
+  // Auto-scroll
+  late ScrollController _scrollController;
+  Timer? _autoScrollTimer;
+  static const double _edgeScrollThreshold = 50.0; // Pixels from edge to trigger scroll
+  static const double _scrollSpeed = 5.0; // Pixels per timer tick (reduced from 30.0)
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _autoScrollTimer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   // --- Helper Functions ---
+
+  /// Handle auto-scrolling when drag reaches screen edge
+  void _handleEdgeScrolling(Offset localPosition) {
+    // Convert local coordinates to global screen coordinates
+    final RenderBox? box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+
+    final globalPosition = box.localToGlobal(localPosition);
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Bottom navigation bar height (typically 56-80px)
+    const navBarHeight = 80.0;
+
+    // Define thresholds accounting for navigation bar
+    final topThreshold = _edgeScrollThreshold;
+    final bottomThreshold = screenHeight - navBarHeight - _edgeScrollThreshold;
+
+    bool shouldScroll = false;
+    bool scrollDown = false;
+
+    if (globalPosition.dy < topThreshold) {
+      shouldScroll = true;
+      scrollDown = false;
+    } else if (globalPosition.dy > bottomThreshold) {
+      shouldScroll = true;
+      scrollDown = true;
+    }
+
+    if (shouldScroll) {
+      // Start auto-scroll timer if not already running
+      _autoScrollTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
+        if (_scrollController.hasClients) {
+          final newOffset = scrollDown
+              ? _scrollController.offset + _scrollSpeed
+              : (_scrollController.offset - _scrollSpeed).clamp(0.0, _scrollController.position.maxScrollExtent);
+
+          if (newOffset != _scrollController.offset) {
+            _scrollController.jumpTo(newOffset.clamp(0.0, _scrollController.position.maxScrollExtent));
+          }
+        }
+      });
+    } else {
+      // Stop auto-scroll if not at edge
+      _autoScrollTimer?.cancel();
+      _autoScrollTimer = null;
+    }
+  }
 
   /// Enhanced haptic feedback with fallback to direct vibration
   Future<void> _triggerHaptic(HapticFeedbackType type) async {
@@ -115,8 +182,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     final double slotHeight = _minSlotHeight;
     final int totalSlots = (_endHour - _startHour) * 4;
 
+    // Account for scroll offset
+    final scrollOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
+
     int day = ((position.dx - _timeColumnWidth) / dayColumnWidth).floor();
-    int slot = ((position.dy - _dayRowHeight) / slotHeight).floor();
+    int slot = ((position.dy + scrollOffset - _dayRowHeight) / slotHeight).floor();
 
     day = day.clamp(0, _daysInWeek - 1);
     slot = slot.clamp(0, totalSlots - 1);
@@ -297,6 +367,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _updateSelectionCell(Offset position, double dayColumnWidth) {
     if (!widget.isEditable || _startCell == null) return;
 
+    // Handle auto-scroll at screen edges (mobile only)
+    if (!kIsWeb) {
+      _handleEdgeScrolling(position);
+    }
+
     var currentCell = _pixelToCell(position, dayColumnWidth);
 
     // Restrict to same day if multi-day selection is disabled
@@ -331,6 +406,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _completeSelection() {
     final finalStartCell = _startCell;
     final finalEndCell = _endCell;
+
+    // Stop auto-scroll timer
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = null;
 
     setState(() {
       _isSelecting = false;
@@ -393,6 +472,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      controller: _scrollController,
       physics: _isSelecting ? const NeverScrollableScrollPhysics() : null,
       child: LayoutBuilder(
         builder: (context, constraints) {
