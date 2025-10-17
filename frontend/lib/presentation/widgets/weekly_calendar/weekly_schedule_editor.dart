@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'event_painter.dart';
+import 'highlight_painter.dart';
 import 'selection_painter.dart';
 import 'time_grid_painter.dart';
 
@@ -16,7 +17,7 @@ class WeeklyScheduleEditor extends StatefulWidget {
     super.key,
     this.allowMultiDaySelection = false,
     this.isEditable = true,
-    this.allowEventOverlap = true, // Default to flexible mode (allow overlap with warning)
+    this.allowEventOverlap = true,
   });
 
   @override
@@ -37,6 +38,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   ({int day, int slot})? _startCell;
   ({int day, int slot})? _endCell;
   Rect? _selectionRect;
+  Rect? _highlightRect;
 
   // --- Helper Functions ---
 
@@ -77,11 +79,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     final newEndSlot = startCell.slot > endCell.slot ? startCell.slot : endCell.slot;
 
     for (final event in _events) {
-      if (event.start.day == startCell.day) { // Check only within the same day
+      if (event.start.day == startCell.day) {
         final existingStartSlot = event.start.slot < event.end.slot ? event.start.slot : event.end.slot;
         final existingEndSlot = event.start.slot > event.end.slot ? event.start.slot : event.end.slot;
 
-        // Check for time intersection
         if (newStartSlot < existingEndSlot && newEndSlot > existingStartSlot) {
           return true;
         }
@@ -180,9 +181,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             onPressed: () {
               final isOverlapping = _isOverlapping(startCell, endCell);
 
-              // Strict mode: Prevent creation and show an error dialog.
               if (!widget.allowEventOverlap && isOverlapping) {
-                Navigator.of(context).pop(); // Close the create dialog
+                Navigator.of(context).pop();
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -196,10 +196,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                     ],
                   ),
                 );
-                return; // Stop execution
+                return;
               }
 
-              // Flexible mode (default): Show a SnackBar warning but still create.
               if (isOverlapping) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -231,14 +230,12 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _handleTap(Offset position, Size size, List<({Rect rect, Event event})> eventRects) {
     if (!widget.isEditable) return;
 
-    // Check if an existing event was tapped
     final tappedEvent = _findTappedEvent(position, eventRects);
     if (tappedEvent != null) {
       _showEditDialog(tappedEvent);
       return;
     }
 
-    // If not, handle new selection
     if (!_isSelecting) {
       setState(() {
         _isSelecting = true;
@@ -250,7 +247,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       final finalStartCell = _startCell;
       final finalEndCell = _endCell;
 
-      // Reset state immediately
       setState(() {
         _isSelecting = false;
         _startCell = null;
@@ -258,7 +254,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         _selectionRect = null;
       });
 
-      // Only show dialog if the selection is valid (not backwards)
       if (finalStartCell != null && finalEndCell != null && finalEndCell.slot >= finalStartCell.slot) {
         _showCreateDialog(finalStartCell, finalEndCell);
       }
@@ -276,6 +271,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
         return MouseRegion(
           onHover: (event) {
+            if (!widget.isEditable) return;
+
             if (_isSelecting) {
               var currentCell = _pixelToCell(event.localPosition, size);
 
@@ -283,11 +280,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                 currentCell = (day: _startCell!.day, slot: currentCell.slot);
               }
 
-              // Invalidate selection if dragging upwards
               if (currentCell.slot < _startCell!.slot) {
                 setState(() {
                   _endCell = currentCell;
-                  _selectionRect = null; // Make selection disappear
+                  _selectionRect = null;
                 });
               } else if (currentCell != _endCell) {
                 setState(() {
@@ -295,7 +291,18 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                   _selectionRect = _cellToRect(_startCell!, currentCell, size);
                 });
               }
+            } else {
+              // Highlight the cell under the mouse when not selecting
+              final currentCell = _pixelToCell(event.localPosition, size);
+              setState(() {
+                _highlightRect = _cellToRect(currentCell, currentCell, size);
+              });
             }
+          },
+          onExit: (event) {
+            setState(() {
+              _highlightRect = null;
+            });
           },
           child: GestureDetector(
             onTapDown: (details) => _handleTap(details.localPosition, size, eventRects),
@@ -315,11 +322,16 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                   painter: EventPainter(events: eventRects.map((e) => (rect: e.rect, title: e.event.title)).toList()),
                   size: Size.infinite,
                 ),
-                if (widget.isEditable)
+                if (widget.isEditable) ...[
+                  CustomPaint(
+                    painter: HighlightPainter(highlightRect: _highlightRect),
+                    size: Size.infinite,
+                  ),
                   CustomPaint(
                     painter: SelectionPainter(selection: _selectionRect),
                     size: Size.infinite,
                   ),
+                ],
               ],
             ),
           ),
