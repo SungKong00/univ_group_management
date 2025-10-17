@@ -58,7 +58,13 @@ class _PlacePickerDialogState extends State<_PlacePickerDialog> {
         _errorMessage = null;
       });
 
-      final places = await _groupService.getAvailablePlaces(widget.groupId);
+      // Fetch places with 10-second timeout
+      final places = await _groupService
+          .getAvailablePlaces(widget.groupId)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('장소 목록을 불러오는 데 시간이 초과되었습니다. 다시 시도해주세요.'),
+          );
 
       setState(() {
         _places = places;
@@ -67,9 +73,27 @@ class _PlacePickerDialogState extends State<_PlacePickerDialog> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = e.toString();
+        _errorMessage = _formatErrorMessage(e);
       });
     }
+  }
+
+  /// Format error messages for user display
+  String _formatErrorMessage(Object error) {
+    final errorStr = error.toString();
+    if (errorStr.contains('초과')) {
+      return errorStr;
+    }
+    if (errorStr.contains('Connection')) {
+      return '네트워크 연결을 확인해주세요.';
+    }
+    if (errorStr.contains('401') || errorStr.contains('Unauthorized')) {
+      return '인증 정보가 만료되었습니다. 다시 로그인해주세요.';
+    }
+    if (errorStr.contains('403') || errorStr.contains('Forbidden')) {
+      return '이 그룹의 장소에 접근할 수 없습니다.';
+    }
+    return '장소 목록을 불러올 수 없습니다';
   }
 
   List<Place> get _filteredPlaces {
@@ -106,51 +130,43 @@ class _PlacePickerDialogState extends State<_PlacePickerDialog> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final screenSize = MediaQuery.of(context).size;
+    final maxHeight = screenSize.height * 0.6; // 화면 높이의 60%
+    final maxWidth = (screenSize.width * 0.9).clamp(300.0, 500.0);
 
     return AlertDialog(
       title: Text('장소 선택', style: textTheme.titleLarge),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.dialog),
       ),
-      content: LayoutBuilder(
-        builder: (context, constraints) {
-          final screenSize = MediaQuery.of(context).size;
-          final maxHeight = screenSize.height * 0.6; // 화면 높이의 60%
-          final maxWidth = 500.0;
-
-          return ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: maxWidth,
-              maxHeight: maxHeight,
-            ),
-            child: SizedBox(
-              width: maxWidth,
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: _searchController,
-                    decoration: const InputDecoration(
-                      labelText: '검색',
-                      hintText: '장소 이름, 건물, 호수로 검색',
-                      prefixIcon: Icon(Icons.search),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Expanded(
-                    child: _buildContent(),
-                  ),
-                ],
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: maxWidth,
+          maxHeight: maxHeight,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                labelText: '검색',
+                hintText: '장소 이름, 건물, 호수로 검색',
+                prefixIcon: Icon(Icons.search),
               ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
             ),
-          );
-        },
+            const SizedBox(height: AppSpacing.md),
+            Expanded(
+              child: _buildContent(),
+            ),
+          ],
+        ),
       ),
       actions: [
         ConfirmCancelActions(

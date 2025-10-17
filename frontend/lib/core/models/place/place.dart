@@ -36,7 +36,7 @@ class Place {
       roomNumber: json['roomNumber'] as String,
       alias: json['alias'] as String?,
       displayName: json['displayName'] as String,
-      capacity: json['capacity'] as int?,
+      capacity: (json['capacity'] as num?)?.toInt(),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
