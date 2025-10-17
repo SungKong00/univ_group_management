@@ -12,6 +12,13 @@ import 'time_grid_painter.dart';
 
 typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end});
 
+/// Calendar interaction mode
+enum CalendarMode {
+  add,   // Add new events (ignores existing event blocks)
+  edit,  // Edit/delete existing events
+  view,  // Read-only mode
+}
+
 /// Haptic feedback intensity types
 enum HapticFeedbackType {
   medium,  // Strong feedback for important actions
@@ -62,6 +69,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   // State
   final List<Event> _events = [];
+  CalendarMode _mode = CalendarMode.add; // Default to add mode
   bool _isSelecting = false;
   ({int day, int slot})? _startCell;
   ({int day, int slot})? _endCell;
@@ -428,12 +436,19 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _handleTap(Offset position, double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
     if (!widget.isEditable) return;
 
-    final tappedEvent = _findTappedEvent(position, eventRects);
-    if (tappedEvent != null) {
-      _showEditDialog(tappedEvent);
-      return;
+    // View mode: no interaction
+    if (_mode == CalendarMode.view) return;
+
+    // Edit mode: prioritize event editing
+    if (_mode == CalendarMode.edit) {
+      final tappedEvent = _findTappedEvent(position, eventRects);
+      if (tappedEvent != null) {
+        _showEditDialog(tappedEvent);
+        return;
+      }
     }
 
+    // Add mode or Edit mode (when not tapping an event): create new event
     if (!_isSelecting) {
       setState(() {
         _isSelecting = true;
@@ -450,6 +465,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _handleLongPressStart(Offset position, double dayColumnWidth) {
     if (!widget.isEditable) return;
 
+    // View mode: no interaction
+    if (_mode == CalendarMode.view) return;
+
     _triggerHaptic(HapticFeedbackType.medium);
     setState(() {
       _isSelecting = true;
@@ -463,43 +481,93 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _handleMobileTap(Offset position, List<({Rect rect, Event event})> eventRects) {
     if (!widget.isEditable) return;
 
-    final tappedEvent = _findTappedEvent(position, eventRects);
-    if (tappedEvent != null) {
-      _showEditDialog(tappedEvent);
+    // View mode: no interaction
+    if (_mode == CalendarMode.view) return;
+
+    // Edit mode: allow editing events
+    if (_mode == CalendarMode.edit) {
+      final tappedEvent = _findTappedEvent(position, eventRects);
+      if (tappedEvent != null) {
+        _showEditDialog(tappedEvent);
+      }
     }
+    // Add mode: ignore event taps (handled by long press)
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      controller: _scrollController,
-      physics: _isSelecting ? const NeverScrollableScrollPhysics() : null,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
-          final double contentHeight = _dayRowHeight + (_endHour - _startHour) * 4 * _minSlotHeight;
+    return Column(
+      children: [
+        // Mode selector
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SegmentedButton<CalendarMode>(
+            segments: const [
+              ButtonSegment(
+                value: CalendarMode.add,
+                label: Text('추가 모드'),
+                icon: Icon(Icons.add_circle_outline),
+              ),
+              ButtonSegment(
+                value: CalendarMode.edit,
+                label: Text('수정 모드'),
+                icon: Icon(Icons.edit_outlined),
+              ),
+              ButtonSegment(
+                value: CalendarMode.view,
+                label: Text('고정 모드'),
+                icon: Icon(Icons.visibility_outlined),
+              ),
+            ],
+            selected: {_mode},
+            onSelectionChanged: (Set<CalendarMode> newSelection) {
+              setState(() {
+                _mode = newSelection.first;
+                // Clear any ongoing selection when switching modes
+                _isSelecting = false;
+                _startCell = null;
+                _endCell = null;
+                _selectionRect = null;
+                _highlightRect = null;
+              });
+            },
+          ),
+        ),
+        // Calendar content
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: _isSelecting ? const NeverScrollableScrollPhysics() : null,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
+                final double contentHeight = _dayRowHeight + (_endHour - _startHour) * 4 * _minSlotHeight;
 
-          final List<({Rect rect, Event event})> eventRects = _events.map((event) {
-            return (rect: _cellToRect(event.start, event.end, dayColumnWidth), event: event);
-          }).toList();
+                final List<({Rect rect, Event event})> eventRects = _events.map((event) {
+                  return (rect: _cellToRect(event.start, event.end, dayColumnWidth), event: event);
+                }).toList();
 
-          // Platform-specific gesture handler selection
-          // Web: MouseRegion for hover feedback
-          // Mobile: Long press + drag for touch-friendly interaction
-          return SizedBox(
-            height: contentHeight,
-            child: kIsWeb ? _buildWebGestureHandler(dayColumnWidth, eventRects) : _buildMobileGestureHandler(dayColumnWidth, eventRects),
-          );
-        },
-      ),
+                // Platform-specific gesture handler selection
+                // Web: MouseRegion for hover feedback
+                // Mobile: Long press + drag for touch-friendly interaction
+                return SizedBox(
+                  height: contentHeight,
+                  child: kIsWeb ? _buildWebGestureHandler(dayColumnWidth, eventRects) : _buildMobileGestureHandler(dayColumnWidth, eventRects),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   /// Web: MouseRegion + GestureDetector (hover + two-click mode)
   Widget _buildWebGestureHandler(double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
     return MouseRegion(
+      cursor: _mode == CalendarMode.view ? SystemMouseCursors.basic : SystemMouseCursors.click,
       onHover: (event) {
-        if (!widget.isEditable) return;
+        if (!widget.isEditable || _mode == CalendarMode.view) return;
 
         if (_isSelecting) {
           _updateSelectionCell(event.localPosition, dayColumnWidth);
@@ -528,6 +596,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     return GestureDetector(
       // Show gray highlight immediately on touch down
       onTapDown: (details) {
+        if (_mode == CalendarMode.view) return;
+
         // Show highlight for touched cell
         final touchedCell = _pixelToCell(details.localPosition, dayColumnWidth);
         setState(() {
