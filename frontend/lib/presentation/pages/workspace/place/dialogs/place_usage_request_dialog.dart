@@ -108,7 +108,7 @@ class _PlaceUsageRequestDialogState
                       filled: true,
                       fillColor: Colors.white,
                     ),
-                    value: _selectedPlaceId,
+                    initialValue: _selectedPlaceId,
                     items: availablePlaces
                         .map((p) => DropdownMenuItem(
                               value: p.id,
@@ -134,7 +134,7 @@ class _PlaceUsageRequestDialogState
                 error: (e, _) => Container(
                   padding: EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppRadius.input),
                   ),
                   child: Row(

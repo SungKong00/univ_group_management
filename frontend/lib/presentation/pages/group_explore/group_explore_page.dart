@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
 import 'providers/group_explore_state_provider.dart';
 import 'widgets/group_search_bar.dart';
 import 'widgets/group_filter_chip_bar.dart';

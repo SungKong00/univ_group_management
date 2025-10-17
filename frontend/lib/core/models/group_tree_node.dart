@@ -16,7 +16,7 @@ class GroupTreeNode extends Equatable {
   final List<GroupTreeNode> children;
   final bool isExpanded;
 
-  GroupTreeNode({
+  const GroupTreeNode({
     required this.id,
     required this.name,
     this.profileImageUrl,

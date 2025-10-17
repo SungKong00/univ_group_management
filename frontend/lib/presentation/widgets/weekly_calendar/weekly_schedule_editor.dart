@@ -1,5 +1,7 @@
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'event_painter.dart';
 import 'highlight_painter.dart';
@@ -8,9 +10,25 @@ import 'time_grid_painter.dart';
 
 typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end});
 
+/// Weekly Schedule Editor with platform-specific gesture handling
+///
+/// Web: MouseRegion-based hover feedback with two-click selection
+/// Mobile: Long press + drag gesture for intuitive touch interaction
+///
+/// Features:
+/// - Real-time visual feedback during selection
+/// - Backward time selection prevention
+/// - Optional multi-day selection
+/// - Event overlap detection
+/// - Haptic feedback on mobile
 class WeeklyScheduleEditor extends StatefulWidget {
+  /// Allow selecting time range across multiple days
   final bool allowMultiDaySelection;
+
+  /// Enable/disable editing capabilities
   final bool isEditable;
+
+  /// Allow creating overlapping events
   final bool allowEventOverlap;
 
   const WeeklyScheduleEditor({
@@ -225,6 +243,54 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   // --- Event Handlers ---
 
+  /// Common logic to update selection during drag (used by both web and mobile)
+  void _updateSelectionCell(Offset position, double dayColumnWidth) {
+    if (!widget.isEditable || _startCell == null) return;
+
+    var currentCell = _pixelToCell(position, dayColumnWidth);
+
+    // Restrict to same day if multi-day selection is disabled
+    if (!widget.allowMultiDaySelection) {
+      currentCell = (day: _startCell!.day, slot: currentCell.slot);
+    }
+
+    // Prevent backward time selection (hide selection rect as visual feedback)
+    if (currentCell.slot < _startCell!.slot) {
+      setState(() {
+        _endCell = currentCell;
+        _selectionRect = null;
+        // Show current cell highlight during drag
+        _highlightRect = _cellToRect(currentCell, currentCell, dayColumnWidth);
+      });
+    } else if (currentCell != _endCell) {
+      setState(() {
+        _endCell = currentCell;
+        _selectionRect = _cellToRect(_startCell!, currentCell, dayColumnWidth);
+        // Show current cell highlight during drag
+        _highlightRect = _cellToRect(currentCell, currentCell, dayColumnWidth);
+      });
+    }
+  }
+
+  /// Complete the selection and show create dialog
+  void _completeSelection() {
+    final finalStartCell = _startCell;
+    final finalEndCell = _endCell;
+
+    setState(() {
+      _isSelecting = false;
+      _startCell = null;
+      _endCell = null;
+      _selectionRect = null;
+      _highlightRect = null; // Clear highlight on completion
+    });
+
+    if (finalStartCell != null && finalEndCell != null && finalEndCell.slot >= finalStartCell.slot) {
+      _showCreateDialog(finalStartCell, finalEndCell);
+    }
+  }
+
+  /// Handle tap for web (two-click mode)
   void _handleTap(Offset position, double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
     if (!widget.isEditable) return;
 
@@ -242,25 +308,37 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         _selectionRect = _cellToRect(_startCell!, _endCell!, dayColumnWidth);
       });
     } else {
-      final finalStartCell = _startCell;
-      final finalEndCell = _endCell;
+      _completeSelection();
+    }
+  }
 
-      setState(() {
-        _isSelecting = false;
-        _startCell = null;
-        _endCell = null;
-        _selectionRect = null;
-      });
+  /// Handle long press start for mobile
+  void _handleLongPressStart(Offset position, double dayColumnWidth) {
+    if (!widget.isEditable) return;
 
-      if (finalStartCell != null && finalEndCell != null && finalEndCell.slot >= finalStartCell.slot) {
-        _showCreateDialog(finalStartCell, finalEndCell);
-      }
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _isSelecting = true;
+      _startCell = _pixelToCell(position, dayColumnWidth);
+      _endCell = _startCell;
+      _selectionRect = _cellToRect(_startCell!, _endCell!, dayColumnWidth);
+    });
+  }
+
+  /// Handle mobile tap (for editing existing events only)
+  void _handleMobileTap(Offset position, List<({Rect rect, Event event})> eventRects) {
+    if (!widget.isEditable) return;
+
+    final tappedEvent = _findTappedEvent(position, eventRects);
+    if (tappedEvent != null) {
+      _showEditDialog(tappedEvent);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: _isSelecting ? const NeverScrollableScrollPhysics() : null,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
@@ -270,77 +348,93 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             return (rect: _cellToRect(event.start, event.end, dayColumnWidth), event: event);
           }).toList();
 
+          // Platform-specific gesture handler selection
+          // Web: MouseRegion for hover feedback
+          // Mobile: Long press + drag for touch-friendly interaction
           return SizedBox(
             height: contentHeight,
-            child: MouseRegion(
-              onHover: (event) {
-                if (!widget.isEditable) return;
-
-                if (_isSelecting) {
-                  var currentCell = _pixelToCell(event.localPosition, dayColumnWidth);
-
-                  if (!widget.allowMultiDaySelection) {
-                    currentCell = (day: _startCell!.day, slot: currentCell.slot);
-                  }
-
-                  if (currentCell.slot < _startCell!.slot) {
-                    setState(() {
-                      _endCell = currentCell;
-                      _selectionRect = null;
-                    });
-                  } else if (currentCell != _endCell) {
-                    setState(() {
-                      _endCell = currentCell;
-                      _selectionRect = _cellToRect(_startCell!, currentCell, dayColumnWidth);
-                    });
-                  }
-                } else {
-                  final currentCell = _pixelToCell(event.localPosition, dayColumnWidth);
-                  setState(() {
-                    _highlightRect = _cellToRect(currentCell, currentCell, dayColumnWidth);
-                  });
-                }
-              },
-              onExit: (event) {
-                setState(() {
-                  _highlightRect = null;
-                });
-              },
-              child: GestureDetector(
-                onTapDown: (details) => _handleTap(details.localPosition, dayColumnWidth, eventRects),
-                behavior: HitTestBehavior.opaque,
-                child: Stack(
-                  children: [
-                    CustomPaint(
-                      painter: TimeGridPainter(
-                        startHour: _startHour,
-                        endHour: _endHour,
-                        timeColumnWidth: _timeColumnWidth,
-                        dayRowHeight: _dayRowHeight,
-                      ),
-                      size: Size.infinite,
-                    ),
-                    CustomPaint(
-                      painter: EventPainter(events: eventRects.map((e) => (rect: e.rect, title: e.event.title)).toList()),
-                      size: Size.infinite,
-                    ),
-                    if (widget.isEditable) ...[
-                      CustomPaint(
-                        painter: HighlightPainter(highlightRect: _highlightRect),
-                        size: Size.infinite,
-                      ),
-                      CustomPaint(
-                        painter: SelectionPainter(selection: _selectionRect),
-                        size: Size.infinite,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+            child: kIsWeb ? _buildWebGestureHandler(dayColumnWidth, eventRects) : _buildMobileGestureHandler(dayColumnWidth, eventRects),
           );
         },
       ),
+    );
+  }
+
+  /// Web: MouseRegion + GestureDetector (hover + two-click mode)
+  Widget _buildWebGestureHandler(double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
+    return MouseRegion(
+      onHover: (event) {
+        if (!widget.isEditable) return;
+
+        if (_isSelecting) {
+          _updateSelectionCell(event.localPosition, dayColumnWidth);
+        } else {
+          final currentCell = _pixelToCell(event.localPosition, dayColumnWidth);
+          setState(() {
+            _highlightRect = _cellToRect(currentCell, currentCell, dayColumnWidth);
+          });
+        }
+      },
+      onExit: (event) {
+        setState(() {
+          _highlightRect = null;
+        });
+      },
+      child: GestureDetector(
+        onTapDown: (details) => _handleTap(details.localPosition, dayColumnWidth, eventRects),
+        behavior: HitTestBehavior.opaque,
+        child: _buildCalendarStack(eventRects),
+      ),
+    );
+  }
+
+  /// Mobile: Long press + drag mode
+  Widget _buildMobileGestureHandler(double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
+    return GestureDetector(
+      // Long press to start selection
+      onLongPressStart: (details) => _handleLongPressStart(details.localPosition, dayColumnWidth),
+      onLongPressMoveUpdate: (details) => _updateSelectionCell(details.localPosition, dayColumnWidth),
+      onLongPressEnd: (details) {
+        if (_isSelecting) {
+          HapticFeedback.lightImpact();
+          _completeSelection();
+        }
+      },
+      // Tap to edit existing events
+      onTapDown: (details) => _handleMobileTap(details.localPosition, eventRects),
+      behavior: HitTestBehavior.opaque,
+      child: _buildCalendarStack(eventRects),
+    );
+  }
+
+  /// Common calendar visualization stack
+  Widget _buildCalendarStack(List<({Rect rect, Event event})> eventRects) {
+    return Stack(
+      children: [
+        CustomPaint(
+          painter: TimeGridPainter(
+            startHour: _startHour,
+            endHour: _endHour,
+            timeColumnWidth: _timeColumnWidth,
+            dayRowHeight: _dayRowHeight,
+          ),
+          size: Size.infinite,
+        ),
+        CustomPaint(
+          painter: EventPainter(events: eventRects.map((e) => (rect: e.rect, title: e.event.title)).toList()),
+          size: Size.infinite,
+        ),
+        if (widget.isEditable) ...[
+          CustomPaint(
+            painter: HighlightPainter(highlightRect: _highlightRect),
+            size: Size.infinite,
+          ),
+          CustomPaint(
+            painter: SelectionPainter(selection: _selectionRect),
+            size: Size.infinite,
+          ),
+        ],
+      ],
     );
   }
 }

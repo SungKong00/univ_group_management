@@ -98,7 +98,7 @@ class _BuildingPlaceSelectorState
 
   Widget _buildBuildingDropdown(List<String> buildings) {
     return DropdownButtonFormField<String>(
-      value: _selectedBuilding,
+      initialValue: _selectedBuilding,
       decoration: InputDecoration(
         labelText: '건물',
         contentPadding: const EdgeInsets.symmetric(
@@ -141,7 +141,7 @@ class _BuildingPlaceSelectorState
     final isEnabled = _selectedBuilding != null && places.isNotEmpty;
 
     return DropdownButtonFormField<int>(
-      value: _selectedPlaceId,
+      initialValue: _selectedPlaceId,
       decoration: InputDecoration(
         labelText: '장소',
         contentPadding: const EdgeInsets.symmetric(

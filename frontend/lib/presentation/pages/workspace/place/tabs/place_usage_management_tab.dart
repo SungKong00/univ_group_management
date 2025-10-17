@@ -21,7 +21,7 @@ class PlaceUsageManagementTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final placesAsync = ref.watch(placesProvider);
+    final placesAsync = ref.watch(placesProvider(groupId));
 
     return placesAsync.when(
       loading: () => const Center(
@@ -334,7 +334,7 @@ class _RequestCard extends ConsumerWidget {
         await ref.read(placeServiceProvider).updateUsageStatus(
               placeId: placeId,
               groupId: request.groupId,
-              status: UsageStatus.APPROVED,
+              status: UsageStatus.approved,
             );
 
         ref.invalidate(pendingUsageRequestsProvider(placeId));
@@ -459,7 +459,7 @@ class _RequestCard extends ConsumerWidget {
         await ref.read(placeServiceProvider).updateUsageStatus(
               placeId: placeId,
               groupId: request.groupId,
-              status: UsageStatus.REJECTED,
+              status: UsageStatus.rejected,
               rejectionReason: reasonController.text.trim().isEmpty
                   ? null
                   : reasonController.text.trim(),
@@ -615,7 +615,7 @@ class _ApprovedGroupsList extends ConsumerWidget {
             Container(
               padding: EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.input),
                 border: Border.all(color: AppColors.error),
               ),

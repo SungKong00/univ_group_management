@@ -31,7 +31,7 @@ class EventCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         decoration: BoxDecoration(
           color: event.isOfficial
-              ? AppColors.brandLight.withOpacity(0.3)
+              ? AppColors.brandLight.withValues(alpha: 0.3)
               : AppColors.neutral200,
           borderRadius: BorderRadius.circular(4),
           border: Border(

@@ -93,7 +93,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 DropdownButtonFormField<DayOfWeek>(
-                  value: _dayOfWeek,
+                  initialValue: _dayOfWeek,
                   decoration: const InputDecoration(labelText: '요일'),
                   items: DayOfWeek.values
                       .map(
@@ -135,7 +135,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   spacing: AppSpacing.xs,
                   runSpacing: AppSpacing.xs,
                   children: kPersonalScheduleColors.map((color) {
-                    final isSelected = color.value == _selectedColor.value;
+                    final isSelected = color.toARGB32() == _selectedColor.toARGB32();
                     return GestureDetector(
                       onTap: () {
                         setState(() {

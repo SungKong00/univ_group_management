@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/models/group_models.dart';
 import '../providers/group_explore_state_provider.dart';
 
 /// Group Filter Chip Bar

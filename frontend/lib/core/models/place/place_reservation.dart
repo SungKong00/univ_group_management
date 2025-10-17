@@ -211,4 +211,4 @@ Color _parseColor(String hex) {
 }
 
 String _colorToHex(Color color) =>
-    '#${(color.value & 0x00FFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
+    '#${(color.toARGB32() & 0x00FFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';

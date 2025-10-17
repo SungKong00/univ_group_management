@@ -468,9 +468,12 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
         ),
         child: Row(
           children: [
+            // ignore: deprecated_member_use
             Radio<String>(
               value: value,
+              // ignore: deprecated_member_use
               groupValue: _selectedType,
+              // ignore: deprecated_member_use
               onChanged: _isSubmitting
                   ? null
                   : (val) {

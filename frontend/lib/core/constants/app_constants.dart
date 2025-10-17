@@ -2,7 +2,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
   static const String appName = 'University Group Management';
-  static const String baseUrl = 'http://localhost:8080/api';
+  static const String baseUrl = 'http://127.0.0.1:8080/api';
 
   // Storage Keys
   static const String accessTokenKey = 'access_token';

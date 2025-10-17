@@ -242,7 +242,7 @@ class TimetableWeeklyView extends StatelessWidget {
           _buildGridLines(totalMinutes),
           ...info.schedules.map((schedule) {
             return _buildScheduleBlock(context, schedule, totalMinutes, startHour);
-          }).toList(),
+          }),
         ],
       ),
     );

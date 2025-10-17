@@ -127,7 +127,7 @@ class _PlaceReservationDialogState
 
                       // 장소 선택 드롭다운
                       DropdownButtonFormField<int>(
-                        value: _selectedPlaceId,
+                        initialValue: _selectedPlaceId,
                         decoration: const InputDecoration(
                           labelText: '장소',
                           prefixIcon: Icon(Icons.place),

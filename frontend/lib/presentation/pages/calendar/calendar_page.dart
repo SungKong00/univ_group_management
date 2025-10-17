@@ -455,7 +455,7 @@ class _TimetableToolbar extends StatelessWidget {
   String _buildWeekLabel(DateTime weekStart) {
     final anchor = weekStart.add(const Duration(days: 3));
     final weekNumber = ((anchor.day - 1) ~/ 7) + 1;
-    return '${anchor.year}년 ${anchor.month}월 ${weekNumber}주차';
+    return '${anchor.year}년 ${anchor.month}월 $weekNumber주차';
   }
 
   String _buildWeekRange(DateTime weekStart) {

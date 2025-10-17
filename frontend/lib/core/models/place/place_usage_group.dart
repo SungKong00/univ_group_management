@@ -1,13 +1,13 @@
 /// Enum for place usage permission status
 enum UsageStatus {
   /// Waiting for approval
-  PENDING,
+  pending,
 
   /// Approved and can make reservations
-  APPROVED,
+  approved,
 
   /// Rejected by managing group
-  REJECTED,
+  rejected,
 }
 
 /// Model representing a group's permission status for using a place

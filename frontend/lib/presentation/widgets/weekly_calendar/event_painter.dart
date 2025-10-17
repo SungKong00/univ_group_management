@@ -9,7 +9,7 @@ class EventPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue.withOpacity(0.8)
+      ..color = Colors.blue.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
 
     for (final event in events) {

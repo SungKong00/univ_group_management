@@ -340,9 +340,9 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
         vertical: 4,
       ),
       decoration: BoxDecoration(
-        color: event.color.withOpacity(0.12),
+        color: event.color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: event.color.withOpacity(0.4)),
+        border: Border.all(color: event.color.withValues(alpha: 0.4)),
       ),
       child: Text(
         event.title,

@@ -352,7 +352,7 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
           _buildGridLines(totalMinutes),
           ...info.timedEvents.map((event) {
             return _buildEventBlock(context, event, info.date, totalMinutes, startHour);
-          }).toList(),
+          }),
         ],
       ),
     );
