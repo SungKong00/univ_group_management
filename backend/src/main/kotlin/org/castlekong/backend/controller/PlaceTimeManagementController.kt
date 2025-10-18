@@ -1,14 +1,13 @@
 package org.castlekong.backend.controller
 
 import jakarta.validation.Valid
-import org.castlekong.backend.common.ApiResponse
 import org.castlekong.backend.dto.AddFullDayClosureRequest
 import org.castlekong.backend.dto.AddPartialClosureRequest
 import org.castlekong.backend.dto.AddRestrictedTimeRequest
+import org.castlekong.backend.dto.ApiResponse
 import org.castlekong.backend.dto.AvailableTimesResponse
 import org.castlekong.backend.dto.ClosureInfo
 import org.castlekong.backend.dto.OperatingHoursInfo
-import org.castlekong.backend.dto.OperatingHoursItem
 import org.castlekong.backend.dto.OperatingHoursResponse
 import org.castlekong.backend.dto.PlaceClosureResponse
 import org.castlekong.backend.dto.ReservationInfo
@@ -218,9 +217,10 @@ class PlaceTimeManagementController(
             userRepository.findByEmail(authentication.name)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
+        // 수정 시 요일은 변경되지 않음 (기존 값 유지)
         val data =
             PlaceRestrictedTimeService.RestrictedTimeData(
-                dayOfWeek = DayOfWeek.MONDAY, // 수정 시 요일은 변경되지 않음 (기존 값 유지)
+                dayOfWeek = DayOfWeek.MONDAY,
                 startTime = request.startTime,
                 endTime = request.endTime,
                 reason = request.reason,
@@ -242,7 +242,7 @@ class PlaceTimeManagementController(
         @PathVariable placeId: Long,
         @PathVariable restrictedTimeId: Long,
         authentication: Authentication,
-    ): ResponseEntity<ApiResponse<Void>> {
+    ): ResponseEntity<ApiResponse<Unit>> {
         val user =
             userRepository.findByEmail(authentication.name)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
@@ -350,7 +350,7 @@ class PlaceTimeManagementController(
         @PathVariable placeId: Long,
         @PathVariable closureId: Long,
         authentication: Authentication,
-    ): ResponseEntity<ApiResponse<Void>> {
+    ): ResponseEntity<ApiResponse<Unit>> {
         val user =
             userRepository.findByEmail(authentication.name)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }

@@ -11,8 +11,11 @@ import org.castlekong.backend.repository.GroupEventRepository
 import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.PlaceAvailabilityRepository
 import org.castlekong.backend.repository.PlaceBlockedTimeRepository
+import org.castlekong.backend.repository.PlaceClosureRepository
+import org.castlekong.backend.repository.PlaceOperatingHoursRepository
 import org.castlekong.backend.repository.PlaceRepository
 import org.castlekong.backend.repository.PlaceReservationRepository
+import org.castlekong.backend.repository.PlaceRestrictedTimeRepository
 import org.castlekong.backend.repository.PlaceUsageGroupRepository
 import org.castlekong.backend.repository.UserRepository
 import org.castlekong.backend.security.PermissionService
