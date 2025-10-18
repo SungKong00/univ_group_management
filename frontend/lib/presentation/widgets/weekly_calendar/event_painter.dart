@@ -1,22 +1,17 @@
-
 import 'package:flutter/material.dart';
 
 class EventPainter extends CustomPainter {
-  final List<({Rect rect, String title, int? columnIndex, int? totalColumns})> events;
+  final List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns})> events;
 
   EventPainter({required this.events});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.blue.withValues(alpha: 0.45)
-      ..style = PaintingStyle.fill;
-
     // Sort events for proper z-index rendering:
     // 1. Earlier start time first (drawn below)
     // 2. If same start time, longer duration first (drawn below)
     // Result: Later/shorter blocks appear on top
-    final sortedEvents = List<({Rect rect, String title, int? columnIndex, int? totalColumns})>.from(events)
+    final sortedEvents = List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns})>.from(events)
       ..sort((a, b) {
         // Compare top position (start time)
         final topCompare = a.rect.top.compareTo(b.rect.top);
@@ -43,6 +38,16 @@ class EventPainter extends CustomPainter {
           event.rect.bottom,
         );
       }
+
+      // Determine color based on event type
+      // External events (read-only, reference): Blue
+      // User-created events (editable): Purple (brand color)
+      final isExternalEvent = event.id.startsWith('ext-');
+      final paint = Paint()
+        ..color = isExternalEvent
+            ? Colors.blue.withValues(alpha: 0.45)  // External (참고용)
+            : const Color(0xFF5C068C).withValues(alpha: 0.45)  // User-created (보라색)
+        ..style = PaintingStyle.fill;
 
       final rrect = RRect.fromRectAndRadius(eventRect, const Radius.circular(4));
       canvas.drawRRect(rrect, paint);

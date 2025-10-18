@@ -118,19 +118,16 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     final weekEnd = weekStart.add(const Duration(days: 6));
     final List<Event> convertedEvents = [];
 
-    debugPrint('[WeeklyScheduleEditor] Converting events:');
-    debugPrint('[WeeklyScheduleEditor] Week: $weekStart ~ $weekEnd');
-    debugPrint('[WeeklyScheduleEditor] Input: ${groupEvents.length} events');
+    // Only log when there are events to process
+    if (groupEvents.isEmpty) {
+      return convertedEvents;
+    }
+
+    debugPrint('[WeeklyScheduleEditor] Converting ${groupEvents.length} events for week: $weekStart ~ $weekEnd');
 
     for (final groupEvent in groupEvents) {
-      debugPrint('[Event] ${groupEvent.title}');
-      debugPrint('  Start: ${groupEvent.startDateTime}');
-      debugPrint('  End: ${groupEvent.endDateTime}');
-
       // Filter events within the current week
       if (groupEvent.startDateTime.isBefore(weekEnd) && groupEvent.endDateTime.isAfter(weekStart)) {
-        debugPrint('  ✓ Date filter passed');
-
         // Calculate day (0=Monday, 6=Sunday)
         int eventDay = groupEvent.startDateTime.weekday - 1;
         if (eventDay >= _daysInWeek) eventDay = _daysInWeek - 1; // Cap at Sunday
@@ -151,8 +148,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           endSlot = totalSlots - 1;
         }
 
-        debugPrint('  Day: $eventDay, StartSlot: $startSlot, EndSlot: $endSlot, TotalSlots: $totalSlots');
-
         if (startSlot < totalSlots && endSlot >= 0 && startSlot <= endSlot) {
           convertedEvents.add((
             id: 'ext-${groupEvent.id}', // Prefix to distinguish external events
@@ -160,16 +155,12 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             start: (day: eventDay, slot: startSlot),
             end: (day: eventDay, slot: endSlot),
           ));
-          debugPrint('  ✓ Slot filter passed → Added');
-        } else {
-          debugPrint('  ✗ Slot filter failed (startSlot<totalSlots=${startSlot < totalSlots}, endSlot>=0=${endSlot >= 0}, startSlot<=endSlot=${startSlot <= endSlot})');
+          debugPrint('  ✓ Added: ${groupEvent.title} (Day: $eventDay, ${startSlot}-${endSlot})');
         }
-      } else {
-        debugPrint('  ✗ Date filter failed');
       }
     }
 
-    debugPrint('[Result] ${convertedEvents.length} events ready for rendering');
+    debugPrint('[WeeklyScheduleEditor] Result: ${convertedEvents.length}/${groupEvents.length} events rendered');
     return convertedEvents;
   }
 
@@ -1034,7 +1025,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   /// Common calendar visualization stack
   Widget _buildCalendarStack(List<({Rect rect, Event event})> eventRects, double dayColumnWidth) {
     // Prepare event data for EventPainter
-    List<({Rect rect, String title, int? columnIndex, int? totalColumns})> eventData;
+    List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns})> eventData;
 
     if (_isOverlapView) {
       // Overlap view: analyze and assign columns
@@ -1050,6 +1041,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         return (
           rect: e.rect,
           title: e.event.title,
+          id: e.event.id,
           columnIndex: info?.columnIndex,
           totalColumns: info?.totalColumns,
         );
@@ -1059,6 +1051,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       eventData = eventRects.map((e) => (
         rect: e.rect,
         title: e.event.title,
+        id: e.event.id,
         columnIndex: null,
         totalColumns: null,
       )).toList();
