@@ -30,8 +30,9 @@ class RecruitmentCard extends ConsumerWidget {
         },
         borderRadius: BorderRadius.circular(AppRadius.card),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Group Name
@@ -55,7 +56,7 @@ class RecruitmentCard extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
               // Recruitment Title
               Text(
@@ -64,7 +65,7 @@ class RecruitmentCard extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
               // Content Preview
               if (recruitment.content != null) ...[
@@ -76,7 +77,7 @@ class RecruitmentCard extends ConsumerWidget {
                     color: AppColors.neutral700,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
               ],
 
               // Bottom Info Row

@@ -88,7 +88,7 @@ class GroupCard extends StatelessWidget {
                       context,
                     ).copyWith(color: AppColors.neutral600),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: AppSpacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.xxs,

@@ -10,6 +10,7 @@ import '../../group_explore/widgets/group_filter_chip_bar.dart';
 import '../../group_explore/widgets/group_explore_list.dart';
 import '../../group_explore/widgets/group_tree_view.dart';
 import '../../group_explore/widgets/recruitment_list_view.dart';
+import '../../group_explore/widgets/recruitment_search_bar.dart';
 
 /// Group Explore Content Widget
 ///
@@ -128,12 +129,59 @@ class _GroupExploreContentWidgetState
                 const GroupTreeView(),
 
                 // Recruitment View
-                const RecruitmentListView(),
+                _buildRecruitmentView(context, isDesktop, errorMessage),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRecruitmentView(BuildContext context, bool isDesktop, String? errorMessage) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Search Bar
+        RecruitmentSearchBar(),
+        const SizedBox(height: AppSpacing.sm),
+
+        // Error Banner (if any)
+        if (errorMessage != null) ...[
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppRadius.button),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    errorMessage,
+                    style: AppTheme.bodyMediumTheme(context).copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+
+        // Recruitment List
+        const Expanded(
+          child: RecruitmentListView(),
+        ),
+      ],
     );
   }
 

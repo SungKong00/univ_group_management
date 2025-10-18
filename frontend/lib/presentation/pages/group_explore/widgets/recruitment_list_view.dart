@@ -4,7 +4,6 @@ import 'package:responsive_framework/responsive_framework.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/recruitment_explore_state_provider.dart';
-import 'recruitment_search_bar.dart';
 import 'recruitment_card.dart';
 import 'recruitment_detail_view.dart';
 
@@ -83,68 +82,14 @@ class _RecruitmentListViewState extends ConsumerState<RecruitmentListView> {
     final recruitments = ref.watch(exploreRecruitmentsProvider);
     final isLoading = ref.watch(exploreRecruitmentIsLoadingProvider);
     final hasMore = ref.watch(exploreRecruitmentHasMoreProvider);
-    final errorMessage = ref.watch(exploreRecruitmentErrorMessageProvider);
     final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
-      },
-      child: SingleChildScrollView(
-        key: const ValueKey('list'),
-        child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Search Bar
-          const RecruitmentSearchBar(),
-          const SizedBox(height: AppSpacing.sm),
-
-          // Error Banner (if any)
-          if (errorMessage != null) ...[
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppRadius.button),
-                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    color: AppColors.error,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Text(
-                      errorMessage,
-                      style: AppTheme.bodyMediumTheme(context).copyWith(
-                        color: AppColors.error,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-          ],
-
-          // Recruitment List
-          _buildRecruitmentList(
-            context,
-            recruitments,
-            isLoading,
-            hasMore,
-            isDesktop,
-          ),
-        ],
-      ),
-      ),
+    return _buildRecruitmentList(
+      context,
+      recruitments,
+      isLoading,
+      hasMore,
+      isDesktop,
     );
   }
 
@@ -198,39 +143,38 @@ class _RecruitmentListViewState extends ConsumerState<RecruitmentListView> {
       );
     }
 
-    // Desktop: 2-column grid, Mobile: 1-column list
-    final crossAxisCount = isDesktop ? 2 : 1;
-    final childAspectRatio = isDesktop ? 1.5 : 1.8;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double screenWidth = constraints.maxWidth;
+        final int crossAxisCount = (screenWidth / 350).floor().clamp(1, 4);
+        final double cardWidth = (screenWidth - (crossAxisCount - 1) * AppSpacing.sm) / crossAxisCount;
 
-    return SizedBox(
-      height: MediaQuery.of(context).size.height - 300,
-      child: GridView.builder(
-        controller: _scrollController,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          childAspectRatio: childAspectRatio,
-          crossAxisSpacing: AppSpacing.sm,
-          mainAxisSpacing: AppSpacing.sm,
-        ),
-        itemCount: recruitments.length + (hasMore && isLoading ? 1 : 0),
-        itemBuilder: (context, index) {
-          // Loading indicator at the end
-          if (index == recruitments.length) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.action,
+        return Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            ...recruitments.map((recruitment) {
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: 300,
+                  maxWidth: cardWidth,
+                ),
+                child: RecruitmentCard(recruitment: recruitment),
+              );
+            }).toList(),
+            if (hasMore && isLoading)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.action,
+                  ),
                 ),
               ),
-            );
-          }
-
-          final recruitment = recruitments[index];
-          return RecruitmentCard(recruitment: recruitment);
-        },
-      ),
+          ],
+        );
+      },
     );
   }
 }

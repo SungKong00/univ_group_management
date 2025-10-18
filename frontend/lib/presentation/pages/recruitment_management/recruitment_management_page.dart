@@ -1514,29 +1514,63 @@ class _InfoGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
-    final children = items
-        .map(
-          (item) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-            child: _InfoTile(item: item),
-          ),
-        )
-        .toList();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate number of columns based on screen width
+        final int crossAxisCount = _calculateCrossAxisCount(constraints.maxWidth);
 
-    if (isDesktop) {
-      return GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: AppSpacing.sm,
-        crossAxisSpacing: AppSpacing.sm,
-        childAspectRatio: 3,
-        children: children,
-      );
+        // Calculate spacing based on design system
+        const spacing = AppSpacing.xs;
+
+        // Calculate item width with minimum/maximum constraints
+        final itemWidth = _calculateItemWidth(constraints.maxWidth, crossAxisCount, spacing);
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: items.map((item) {
+            return SizedBox(
+              width: itemWidth,
+              child: _InfoTile(item: item),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  /// Calculate number of columns based on screen width
+  /// - Mobile (0-450px): 1 column
+  /// - Tablet (451-800px): 2 columns
+  /// - Desktop (801px+): 2 or 4 columns
+  int _calculateCrossAxisCount(double width) {
+    if (width <= 450) {
+      return 1; // Mobile: 1 column
+    } else if (width <= 800) {
+      return 2; // Tablet: 2 columns
+    } else if (width <= 1200) {
+      return 2; // Small desktop: 2 columns
+    } else {
+      return 4; // Large desktop: 4 columns
+    }
+  }
+
+  /// Calculate item width with responsive layout
+  /// Ensures proper spacing and minimum/maximum constraints
+  double _calculateItemWidth(double totalWidth, int columns, double spacing) {
+    if (columns == 1) {
+      return totalWidth; // Full width for single column
     }
 
-    return Column(children: children);
+    // Calculate width: (total - spacing between items) / number of columns
+    final totalSpacing = spacing * (columns - 1);
+    final calculatedWidth = (totalWidth - totalSpacing) / columns;
+
+    // Apply minimum/maximum constraints for readability
+    const minWidth = 160.0;
+    const maxWidth = 400.0;
+
+    return calculatedWidth.clamp(minWidth, maxWidth);
   }
 }
 
@@ -1555,25 +1589,34 @@ class _InfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
         color: AppColors.brandLight,
-        borderRadius: BorderRadius.circular(AppRadius.card / 2),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             item.label,
-            style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
+            style: AppTheme.bodySmall.copyWith(
+              color: AppColors.neutral600,
+            ),
           ),
-          SizedBox(height: 2),
+          SizedBox(height: 4),
           Text(
             item.value,
-            style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral900),
+            style: AppTheme.bodyMedium.copyWith(
+              color: AppColors.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ],
       ),

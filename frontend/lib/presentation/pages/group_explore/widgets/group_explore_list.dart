@@ -45,7 +45,6 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
     final groups = ref.watch(exploreGroupsProvider);
     final isLoading = ref.watch(exploreIsLoadingProvider);
     final hasMore = ref.watch(exploreHasMoreProvider);
-    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
 
     // Empty state
     if (groups.isEmpty && !isLoading) {
@@ -84,25 +83,27 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
       );
     }
 
-    // Desktop: 2-column grid, Mobile: 1-column list
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = isDesktop ? 2 : 1;
-        final childAspectRatio = isDesktop ? 1.8 : 2.5;
+        final double screenWidth = constraints.maxWidth;
+        final int crossAxisCount = (screenWidth / 350).floor().clamp(1, 4);
+        final double cardWidth = (screenWidth - (crossAxisCount - 1) * AppSpacing.sm) / crossAxisCount;
 
-        return GridView.builder(
-          controller: _scrollController,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: childAspectRatio,
-            crossAxisSpacing: AppSpacing.sm,
-            mainAxisSpacing: AppSpacing.sm,
-          ),
-          itemCount: groups.length + (hasMore && isLoading ? 1 : 0),
-          itemBuilder: (context, index) {
-            // Loading indicator at the end
-            if (index == groups.length) {
-              return Center(
+        return Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            ...groups.map((group) {
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: 300,
+                  maxWidth: cardWidth,
+                ),
+                child: GroupExploreCard(group: group),
+              );
+            }).toList(),
+            if (hasMore && isLoading)
+              Center(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: CircularProgressIndicator(
@@ -110,12 +111,8 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
                     color: AppColors.action,
                   ),
                 ),
-              );
-            }
-
-            final group = groups[index];
-            return GroupExploreCard(group: group);
-          },
+              ),
+          ],
         );
       },
     );

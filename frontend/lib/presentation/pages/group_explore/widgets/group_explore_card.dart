@@ -47,6 +47,7 @@ class GroupExploreCard extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.sm),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Group name + Recruiting badge
@@ -94,15 +95,15 @@ class GroupExploreCard extends ConsumerWidget {
                   ),
                 ],
                 if (group.description != null) ...[
-                  const SizedBox(height: AppSpacing.xxs),
+                  const SizedBox(height: 6),
                   Text(
                     group.description!,
                     style: AppTheme.bodyMediumTheme(context),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 8),
                 ],
-                const SizedBox(height: AppSpacing.xs),
                 // Tags + Member count
                 Row(
                   children: [
