@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_colors.dart';
 
 class SelectionPainter extends CustomPainter {
   final Rect? selection;
@@ -10,7 +11,7 @@ class SelectionPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (selection != null) {
       final paint = Paint()
-        ..color = Colors.blue.withValues(alpha: 0.3)
+        ..color = AppColors.brand.withOpacity(0.24)
         ..style = PaintingStyle.fill;
       canvas.drawRect(selection!, paint);
     }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -91,6 +92,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   Rect? _selectionRect;
   Rect? _highlightRect;
 
+  late int _visibleStartHour;
+  late int _visibleEndHour;
+  bool _hasAppliedInitialScroll = false;
+
   // Auto-scroll
   late ScrollController _scrollController;
   Timer? _autoScrollTimer;
@@ -101,6 +106,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    final initialRange = _calculateVisibleHourRange();
+    _visibleStartHour = initialRange.startHour;
+    _visibleEndHour = initialRange.endHour;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
   }
 
   @override
@@ -108,6 +117,90 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     _autoScrollTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  DateTime get _effectiveWeekStart => widget.weekStart ?? _getWeekStart(DateTime.now());
+
+  DateTime _getWeekStart(DateTime date) {
+    return date.subtract(Duration(days: date.weekday - 1));
+  }
+
+  ({int startHour, int endHour}) _calculateVisibleHourRange({CalendarMode? modeOverride}) {
+    final CalendarMode mode = modeOverride ?? _mode;
+
+    if (mode == CalendarMode.add) {
+      return (startHour: 0, endHour: 24);
+    }
+
+    final allEvents = _getAllEvents();
+    if (allEvents.isEmpty) {
+      return (startHour: 9, endHour: 18);
+    }
+
+    int minSlot = (_endHour - _startHour) * 4;
+    int maxSlot = 0;
+    for (final event in allEvents) {
+      final int eventStart = math.min(event.start.slot, event.end.slot);
+      final int eventEnd = math.max(event.start.slot, event.end.slot);
+      if (eventStart < minSlot) minSlot = eventStart;
+      if (eventEnd > maxSlot) maxSlot = eventEnd;
+    }
+
+    // Convert to hour boundaries, ensuring the default 9-18 range is preserved
+    int computedStartHour = (minSlot / 4).floor();
+    int computedEndHour = ((maxSlot + 1) / 4).ceil();
+
+    computedStartHour = math.min(computedStartHour, 9);
+    computedEndHour = math.max(computedEndHour, 18);
+
+    computedStartHour = computedStartHour.clamp(0, 23);
+    computedEndHour = computedEndHour.clamp(computedStartHour + 1, 24);
+
+    return (startHour: computedStartHour, endHour: computedEndHour);
+  }
+
+  void _applyInitialScrollIfNeeded() {
+    if (!mounted) return;
+    if (_hasAppliedInitialScroll) return;
+    if (!_scrollController.hasClients) return;
+
+    final int desiredHour = _mode == CalendarMode.add ? 9 : _visibleStartHour;
+    final int clampedHour = desiredHour.clamp(_visibleStartHour, _visibleEndHour - 1);
+    final double offset = (clampedHour - _visibleStartHour) * 4 * _minSlotHeight;
+
+    final double maxExtent = _scrollController.position.maxScrollExtent;
+    final double targetOffset = offset.clamp(0.0, maxExtent);
+
+    if (_scrollController.offset != targetOffset) {
+      _scrollController.jumpTo(targetOffset);
+    }
+
+    _hasAppliedInitialScroll = true;
+  }
+
+  void _updateVisibleRangeForCurrentState() {
+    final range = _calculateVisibleHourRange();
+    if (_visibleStartHour != range.startHour || _visibleEndHour != range.endHour) {
+      _visibleStartHour = range.startHour;
+      _visibleEndHour = range.endHour;
+      _hasAppliedInitialScroll = false;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant WeeklyScheduleEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final newRange = _calculateVisibleHourRange();
+    if (newRange.startHour != _visibleStartHour || newRange.endHour != _visibleEndHour) {
+      setState(() {
+        _visibleStartHour = newRange.startHour;
+        _visibleEndHour = newRange.endHour;
+        _hasAppliedInitialScroll = false;
+      });
+    } else if (widget.weekStart != oldWidget.weekStart || widget.externalEvents != oldWidget.externalEvents) {
+      _hasAppliedInitialScroll = false;
+    }
   }
 
   // --- External Event Processing ---
@@ -346,13 +439,15 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   ({int day, int slot}) _pixelToCell(Offset position, double dayColumnWidth) {
     final double slotHeight = _minSlotHeight;
-    final int totalSlots = (_endHour - _startHour) * 4;
+    final int visibleSlots = (_visibleEndHour - _visibleStartHour) * 4;
 
     int day = ((position.dx - _timeColumnWidth) / dayColumnWidth).floor();
-    int slot = ((position.dy - _dayRowHeight) / slotHeight).floor();
-
     day = day.clamp(0, _daysInWeek - 1);
-    slot = slot.clamp(0, totalSlots - 1);
+
+    int slotOffset = (position.dy / slotHeight).floor();
+    slotOffset = slotOffset.clamp(0, visibleSlots - 1);
+
+    final int slot = slotOffset + _visibleStartHour * 4;
 
     return (day: day, slot: slot);
   }
@@ -367,9 +462,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
     return Rect.fromLTRB(
       _timeColumnWidth + startDay * dayColumnWidth,
-      _dayRowHeight + startSlot * slotHeight,
+      (startSlot - _visibleStartHour * 4) * slotHeight,
       _timeColumnWidth + (endDay + 1) * dayColumnWidth,
-      _dayRowHeight + (endSlot + 1) * slotHeight,
+      (endSlot - _visibleStartHour * 4 + 1) * slotHeight,
     );
   }
 
@@ -601,6 +696,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             onPressed: () {
               setState(() {
                 _events.removeWhere((e) => e.id == event.id);
+                _updateVisibleRangeForCurrentState();
               });
               Navigator.of(context).pop();
             },
@@ -621,6 +717,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                     start: event.start,
                     end: event.end,
                   );
+                  _updateVisibleRangeForCurrentState();
                 }
               });
               Navigator.of(context).pop();
@@ -699,6 +796,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                   start: startCell,
                   end: endCell,
                 ));
+                _updateVisibleRangeForCurrentState();
               });
               Navigator.of(context).pop();
             },
@@ -888,14 +986,18 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                   ],
                   selected: {_mode},
                   onSelectionChanged: (Set<CalendarMode> newSelection) {
+                    final nextMode = newSelection.first;
+                    final range = _calculateVisibleHourRange(modeOverride: nextMode);
                     setState(() {
-                      _mode = newSelection.first;
-                      // Clear any ongoing selection when switching modes
+                      _mode = nextMode;
                       _isSelecting = false;
                       _startCell = null;
                       _endCell = null;
                       _selectionRect = null;
                       _highlightRect = null;
+                      _visibleStartHour = range.startHour;
+                      _visibleEndHour = range.endHour;
+                      _hasAppliedInitialScroll = false;
                     });
                   },
                 ),
@@ -919,29 +1021,55 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         ),
         // Calendar content
         Expanded(
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            physics: _isSelecting ? const NeverScrollableScrollPhysics() : null,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
-                final double contentHeight = _dayRowHeight + (_endHour - _startHour) * 4 * _minSlotHeight;
+          child: Column(
+            children: [
+              SizedBox(
+                height: _dayRowHeight,
+                child: IgnorePointer(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return CustomPaint(
+                        size: Size(constraints.maxWidth, _dayRowHeight),
+                        painter: TimeGridPainter(
+                          startHour: _visibleStartHour,
+                          endHour: _visibleEndHour,
+                          timeColumnWidth: _timeColumnWidth,
+                          weekStart: _effectiveWeekStart,
+                          paintHeader: true,
+                          paintGrid: false,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
+                    final double contentHeight = (_visibleEndHour - _visibleStartHour) * 4 * _minSlotHeight;
 
-                // Get all events including external group events
-                final allEvents = _getAllEvents();
-                final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {
-                  return (rect: _cellToRect(event.start, event.end, dayColumnWidth), event: event);
-                }).toList();
+                    final allEvents = _getAllEvents();
+                    final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {
+                      return (rect: _cellToRect(event.start, event.end, dayColumnWidth), event: event);
+                    }).toList();
 
-                // Platform-specific gesture handler selection
-                // Web: MouseRegion for hover feedback
-                // Mobile: Long press + drag for touch-friendly interaction
-                return SizedBox(
-                  height: contentHeight,
-                  child: kIsWeb ? _buildWebGestureHandler(dayColumnWidth, eventRects) : _buildMobileGestureHandler(dayColumnWidth, eventRects),
-                );
-              },
-            ),
+                    WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
+
+                    return SingleChildScrollView(
+                      controller: _scrollController,
+                      physics: _isSelecting ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
+                      child: SizedBox(
+                        height: contentHeight,
+                        child: kIsWeb
+                            ? _buildWebGestureHandler(dayColumnWidth, eventRects, contentHeight)
+                            : _buildMobileGestureHandler(dayColumnWidth, eventRects, contentHeight),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -949,7 +1077,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   }
 
   /// Web: MouseRegion + GestureDetector (hover + two-click mode)
-  Widget _buildWebGestureHandler(double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
+  Widget _buildWebGestureHandler(
+    double dayColumnWidth,
+    List<({Rect rect, Event event})> eventRects,
+    double contentHeight,
+  ) {
     return MouseRegion(
       cursor: _mode == CalendarMode.view ? SystemMouseCursors.basic : SystemMouseCursors.click,
       onHover: (event) {
@@ -972,13 +1104,17 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       child: GestureDetector(
         onTapDown: (details) => _handleTap(details.localPosition, dayColumnWidth, eventRects),
         behavior: HitTestBehavior.opaque,
-        child: _buildCalendarStack(eventRects, dayColumnWidth),
+        child: _buildCalendarStack(eventRects, dayColumnWidth, contentHeight),
       ),
     );
   }
 
   /// Mobile: Long press + drag mode
-  Widget _buildMobileGestureHandler(double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
+  Widget _buildMobileGestureHandler(
+    double dayColumnWidth,
+    List<({Rect rect, Event event})> eventRects,
+    double contentHeight,
+  ) {
     return GestureDetector(
       // Show gray highlight immediately on touch down
       onTapDown: (details) {
@@ -1018,12 +1154,16 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         }
       },
       behavior: HitTestBehavior.opaque,
-      child: _buildCalendarStack(eventRects, dayColumnWidth),
+      child: _buildCalendarStack(eventRects, dayColumnWidth, contentHeight),
     );
   }
 
   /// Common calendar visualization stack
-  Widget _buildCalendarStack(List<({Rect rect, Event event})> eventRects, double dayColumnWidth) {
+  Widget _buildCalendarStack(
+    List<({Rect rect, Event event})> eventRects,
+    double dayColumnWidth,
+    double contentHeight,
+  ) {
     // Prepare event data for EventPainter
     List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns})> eventData;
 
@@ -1057,32 +1197,41 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       )).toList();
     }
 
-    return Stack(
-      children: [
-        CustomPaint(
-          painter: TimeGridPainter(
-            startHour: _startHour,
-            endHour: _endHour,
-            timeColumnWidth: _timeColumnWidth,
-            dayRowHeight: _dayRowHeight,
+    return SizedBox(
+      height: contentHeight,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: TimeGridPainter(
+                startHour: _visibleStartHour,
+                endHour: _visibleEndHour,
+                timeColumnWidth: _timeColumnWidth,
+                weekStart: _effectiveWeekStart,
+                paintHeader: false,
+                paintGrid: true,
+              ),
+            ),
           ),
-          size: Size.infinite,
-        ),
-        CustomPaint(
-          painter: EventPainter(events: eventData),
-          size: Size.infinite,
-        ),
-        if (widget.isEditable) ...[
-          CustomPaint(
-            painter: HighlightPainter(highlightRect: _highlightRect),
-            size: Size.infinite,
+          Positioned.fill(
+            child: CustomPaint(
+              painter: EventPainter(events: eventData),
+            ),
           ),
-          CustomPaint(
-            painter: SelectionPainter(selection: _selectionRect),
-            size: Size.infinite,
-          ),
+          if (widget.isEditable) ...[
+            Positioned.fill(
+              child: CustomPaint(
+                painter: HighlightPainter(highlightRect: _highlightRect),
+              ),
+            ),
+            Positioned.fill(
+              child: CustomPaint(
+                painter: SelectionPainter(selection: _selectionRect),
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

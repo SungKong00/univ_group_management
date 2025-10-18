@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_colors.dart';
 
 class HighlightPainter extends CustomPainter {
   final Rect? highlightRect;
@@ -10,7 +11,7 @@ class HighlightPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (highlightRect != null) {
       final paint = Paint()
-        ..color = Colors.black.withValues(alpha: 0.05)
+        ..color = AppColors.brand.withOpacity(0.12)
         ..style = PaintingStyle.fill;
       canvas.drawRect(highlightRect!, paint);
     }

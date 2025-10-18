@@ -1,103 +1,172 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 
 class TimeGridPainter extends CustomPainter {
+  TimeGridPainter({
+    required this.startHour,
+    required this.endHour,
+    required this.timeColumnWidth,
+    required this.weekStart,
+    this.paintHeader = true,
+    this.paintGrid = true,
+  }) : assert(endHour > startHour, 'endHour must be greater than startHour');
+
   final int startHour;
   final int endHour;
   final double timeColumnWidth;
-  final double dayRowHeight;
+  final DateTime weekStart;
+  final bool paintHeader;
+  final bool paintGrid;
 
-  TimeGridPainter({
-    this.startHour = 0,
-    this.endHour = 24,
-    this.timeColumnWidth = 50.0,
-    this.dayRowHeight = 30.0,
-  });
+  static const int _daysInWeek = 7;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final hourLinePaint = Paint()
+    final Paint hourLinePaint = Paint()
       ..color = Colors.grey[400]!
       ..strokeWidth = 1.0;
-
-    final halfHourLinePaint = Paint()
+    final Paint halfHourLinePaint = Paint()
       ..color = Colors.grey[200]!
       ..strokeWidth = 0.5;
-
-    final dayColumnPaint = Paint()
+    final Paint dayColumnPaint = Paint()
       ..color = Colors.grey[300]!
       ..strokeWidth = 0.5;
 
-    final double hourHeight = (size.height - dayRowHeight) / (endHour - startHour);
-    final double halfHourHeight = hourHeight / 2;
+    final double dayColumnWidth = (size.width - timeColumnWidth) / _daysInWeek;
 
-    // Draw hour and half-hour lines and labels
-    for (int i = 0; i < (endHour - startHour); i++) {
-      final hourY = dayRowHeight + i * hourHeight;
-      final halfHourY = hourY + halfHourHeight;
+    if (paintGrid) {
+      final int hourSpan = endHour - startHour;
+      final double hourHeight = size.height / hourSpan;
+      final double halfHourHeight = hourHeight / 2;
 
-      // Draw hour line
-      canvas.drawLine(Offset(timeColumnWidth, hourY), Offset(size.width, hourY), hourLinePaint);
-      // Draw half-hour line
-      canvas.drawLine(Offset(timeColumnWidth, halfHourY), Offset(size.width, halfHourY), halfHourLinePaint);
+      for (int i = 0; i < hourSpan; i++) {
+        final double hourY = i * hourHeight;
+        final double halfHourY = hourY + halfHourHeight;
 
-      // Draw hour label
-      final hour = startHour + i;
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: DateFormat('ha').format(DateTime(2024, 1, 1, hour)), // '9AM' format
-          style: TextStyle(color: Colors.grey[600], fontSize: 12),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
-      // Right-align the text within the time column
-      final xOffset = timeColumnWidth - textPainter.width - 5; // 5px padding
-      textPainter.paint(canvas, Offset(xOffset, hourY - 8));
-    }
+        // Draw hour and half-hour guides
+        canvas.drawLine(
+          Offset(timeColumnWidth, hourY),
+          Offset(size.width, hourY),
+          hourLinePaint,
+        );
+        if (halfHourY < size.height) {
+          canvas.drawLine(
+            Offset(timeColumnWidth, halfHourY),
+            Offset(size.width, halfHourY),
+            halfHourLinePaint,
+          );
+        }
 
-    // Draw day columns and labels
-    final double dayColumnWidth = (size.width - timeColumnWidth) / 7;
-    final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-
-    for (int i = 0; i < 7; i++) {
-      final x = timeColumnWidth + i * dayColumnWidth;
-      if (i > 0) {
-        canvas.drawLine(Offset(x, dayRowHeight), Offset(x, size.height), dayColumnPaint);
+        // Draw hour label (e.g. 09:00)
+        final hour = startHour + i;
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: DateFormat('HH:mm').format(DateTime(2024, 1, 1, hour)),
+            style: TextStyle(color: Colors.grey[600], fontSize: 11),
+          ),
+          textDirection: TextDirection.ltr,
+        )
+          ..layout();
+        final double labelX = timeColumnWidth - textPainter.width - 6;
+        final double labelY = hourY - 8;
+        textPainter.paint(canvas, Offset(labelX, labelY.clamp(0.0, size.height)));
       }
 
-      final day = startOfWeek.add(Duration(days: i));
-      final dayText = DateFormat.E('ko_KR').format(day);
-      final dateText = DateFormat('d').format(day);
-
-      final dayTextPainter = TextPainter(
-        textAlign: TextAlign.center,
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: '\n$dateText', // Date number
-              style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-          ],
-          text: dayText, // Day of week
-          style: TextStyle(color: Colors.grey[700], fontSize: 12),
-        ),
-        textDirection: TextDirection.ltr,
+      // Draw bottom boundary line for the grid
+      canvas.drawLine(
+        Offset(timeColumnWidth, size.height),
+        Offset(size.width, size.height),
+        hourLinePaint,
       );
-      dayTextPainter.layout(minWidth: dayColumnWidth, maxWidth: dayColumnWidth);
-      dayTextPainter.paint(canvas, Offset(x, 5));
+
+      // Draw vertical day separators
+      for (int dayIndex = 0; dayIndex <= _daysInWeek; dayIndex++) {
+        final double x = timeColumnWidth + dayIndex * dayColumnWidth;
+        canvas.drawLine(Offset(x, 0), Offset(x, size.height), dayColumnPaint);
+      }
+
+      // Draw divider for time column
+      canvas.drawLine(
+        Offset(timeColumnWidth, 0),
+        Offset(timeColumnWidth, size.height),
+        hourLinePaint,
+      );
     }
 
-    // Draw line separating days row from grid
-    canvas.drawLine(Offset(0, dayRowHeight), Offset(size.width, dayRowHeight), hourLinePaint);
-    // Draw line separating time column from grid
-    canvas.drawLine(Offset(timeColumnWidth, 0), Offset(timeColumnWidth, size.height), hourLinePaint);
+    if (paintHeader) {
+      final Paint headerGridPaint = Paint()
+        ..color = Colors.grey[400]!
+        ..strokeWidth = 1.0;
+
+      for (int dayIndex = 0; dayIndex < _daysInWeek; dayIndex++) {
+        final DateTime day = weekStart.add(Duration(days: dayIndex));
+        final bool isToday = _isSameDay(day, DateTime.now());
+
+        final String dayText = DateFormat.E('ko_KR').format(day);
+        final String dateText = DateFormat('d').format(day);
+
+        final TextPainter headerPainter = TextPainter(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: '\n$dateText',
+                style: TextStyle(
+                  color: isToday ? Colors.blue : Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+            text: dayText,
+            style: TextStyle(
+              color: isToday ? Colors.blue : Colors.grey[700],
+              fontSize: 12,
+              fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )
+          ..layout(minWidth: dayColumnWidth, maxWidth: dayColumnWidth);
+
+        final double x = timeColumnWidth + dayIndex * dayColumnWidth;
+        headerPainter.paint(canvas, Offset(x, 4));
+
+        if (dayIndex > 0) {
+          canvas.drawLine(
+            Offset(x, 0),
+            Offset(x, size.height),
+            headerGridPaint,
+          );
+        }
+      }
+
+      // Bottom border of header
+      canvas.drawLine(
+        Offset(0, size.height),
+        Offset(size.width, size.height),
+        headerGridPaint,
+      );
+      // Divider for time column inside header
+      canvas.drawLine(
+        Offset(timeColumnWidth, 0),
+        Offset(timeColumnWidth, size.height),
+        headerGridPaint,
+      );
+    }
   }
 
   @override
   bool shouldRepaint(covariant TimeGridPainter oldDelegate) {
-    return oldDelegate.startHour != startHour || oldDelegate.endHour != endHour;
+    return oldDelegate.startHour != startHour ||
+        oldDelegate.endHour != endHour ||
+        oldDelegate.timeColumnWidth != timeColumnWidth ||
+        oldDelegate.weekStart != weekStart ||
+        oldDelegate.paintHeader != paintHeader ||
+        oldDelegate.paintGrid != paintGrid;
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }
