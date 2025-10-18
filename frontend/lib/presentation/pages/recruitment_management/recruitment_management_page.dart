@@ -740,12 +740,15 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
       lastDate: now.add(const Duration(days: 365 * 2)),
     );
 
+    if (!mounted) return;
     if (pickedDate == null) return;
 
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(initialDate),
     );
+
+    if (!mounted) return;
 
     setState(() {
       if (pickedTime != null) {
@@ -790,6 +793,7 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
     if (maxApplicantsText.isNotEmpty) {
       maxApplicants = int.tryParse(maxApplicantsText);
       if (maxApplicants == null || maxApplicants <= 0) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('모집 인원은 양의 정수로 입력해주세요.')),
         );

@@ -341,17 +341,18 @@ class _PlacePickerDialogState extends State<_PlacePickerDialog> {
         ),
         child: Row(
           children: [
-            Radio<bool>(
-              value: true,
-              groupValue: isSelected,
-              onChanged: (_) {
-                setState(() {
-                  _selectedPlace = isSelected ? null : place;
-                });
-              },
-              activeColor: AppColors.brand,
+            Semantics(
+              selected: isSelected,
+              button: true,
+              child: Icon(
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: isSelected ? AppColors.brand : AppColors.neutral400,
+                size: 20,
+              ),
             ),
-            const SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

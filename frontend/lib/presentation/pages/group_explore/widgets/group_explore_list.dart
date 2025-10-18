@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/group_explore_state_provider.dart';
@@ -101,7 +100,7 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
                 ),
                 child: GroupExploreCard(group: group),
               );
-            }).toList(),
+            }),
             if (hasMore && isLoading)
               Center(
                 child: Padding(

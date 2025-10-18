@@ -348,6 +348,8 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       error: (_, __) async => <String>{},
     );
 
+    if (!mounted) return;
+
     final canCreateOfficial = permissions.contains('CALENDAR_MANAGE');
 
     // Step 1: Official/Unofficial selection (only for users with permission)
@@ -410,6 +412,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       );
 
       if (selected == null) return; // 취소
+      if (!mounted) return;
       selectedType = selected;
     }
 
@@ -692,6 +695,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     if (event.isRecurring) {
       updateScope = await _showUpdateScopeDialog();
       if (updateScope == null) return; // User cancelled
+      if (!mounted) return;
     }
 
     if (!mounted) return;

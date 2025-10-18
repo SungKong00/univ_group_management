@@ -1038,6 +1038,7 @@ void _handleEventTap(
   PersonalEvent event,
 ) async {
   final action = await showEventDetailSheet(context, event: event);
+  if (!context.mounted) return;
   if (action == null) return;
 
   switch (action) {

@@ -131,7 +131,7 @@ class RecruitmentCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: _isEndingSoon(endDate!)
-                                ? AppColors.error.withOpacity(0.1)
+                                ? AppColors.error.withAlpha(26) // 0.1 opacity
                                 : AppColors.brandLight,
                             borderRadius: BorderRadius.circular(
                               AppComponents.badgeRadius,

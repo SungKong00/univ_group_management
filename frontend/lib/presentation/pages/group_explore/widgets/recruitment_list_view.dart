@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/recruitment_explore_state_provider.dart';
@@ -51,14 +50,12 @@ class _RecruitmentListViewState extends ConsumerState<RecruitmentListView> {
     final recruitments = ref.watch(exploreRecruitmentsProvider);
     final isLoading = ref.watch(exploreRecruitmentIsLoadingProvider);
     final hasMore = ref.watch(exploreRecruitmentHasMoreProvider);
-    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
 
     return _buildRecruitmentList(
       context,
       recruitments,
       isLoading,
       hasMore,
-      isDesktop,
     );
   }
 
@@ -67,7 +64,6 @@ class _RecruitmentListViewState extends ConsumerState<RecruitmentListView> {
     List recruitments,
     bool isLoading,
     bool hasMore,
-    bool isDesktop,
   ) {
     // Empty state
     if (recruitments.isEmpty && !isLoading) {
@@ -130,7 +126,7 @@ class _RecruitmentListViewState extends ConsumerState<RecruitmentListView> {
                 ),
                 child: RecruitmentCard(recruitment: recruitment),
               );
-            }).toList(),
+            }),
             if (hasMore && isLoading)
               Center(
                 child: Padding(

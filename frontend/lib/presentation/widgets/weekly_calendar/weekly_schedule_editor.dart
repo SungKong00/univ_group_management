@@ -163,10 +163,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       }
 
       // 2️⃣ Fallback to direct vibration if system haptic might not work
-      final hasVibrator = await Vibration.hasVibrator() ?? false;
+      final hasVibrator = await Vibration.hasVibrator();
       if (hasVibrator) {
-        final hasAmplitude = await Vibration.hasAmplitudeControl() ?? false;
-        if (!hasAmplitude) {
+        final hasAmplitudeControl = await Vibration.hasAmplitudeControl();
+        if (!hasAmplitudeControl) {
           // Device doesn't support amplitude control, use simple vibration
           switch (type) {
             case HapticFeedbackType.medium:
