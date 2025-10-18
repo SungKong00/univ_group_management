@@ -1,6 +1,6 @@
 import 'user_models.dart';
 
-enum GroupNodeType { university, college, department, other }
+enum GroupNodeType { university, college, department, official, autonomous, other }
 
 enum GroupType {
   autonomous, // AUTONOMOUS
@@ -49,6 +49,10 @@ class GroupHierarchyNode {
         return GroupNodeType.college;
       case 'DEPARTMENT':
         return GroupNodeType.department;
+      case 'OFFICIAL':
+        return GroupNodeType.official;
+      case 'AUTONOMOUS':
+        return GroupNodeType.autonomous;
       default:
         return GroupNodeType.other;
     }

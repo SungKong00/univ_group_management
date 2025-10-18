@@ -215,6 +215,10 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
         return GroupType.college;
       case GroupNodeType.department:
         return GroupType.department;
+      case GroupNodeType.official:
+        return GroupType.official;
+      case GroupNodeType.autonomous:
+        return GroupType.autonomous;
       case GroupNodeType.other:
         return GroupType.autonomous; // Default to autonomous for unknown types
     }
@@ -322,16 +326,29 @@ GroupTreeNode? _filterNodeRecursive(GroupTreeNode node, Map<String, dynamic> fil
   // 자율/공식 그룹은 필터 적용
   bool shouldShow = false;
 
-  if (showRecruiting && node.isRecruiting) {
+  // 그룹 타입 필터 체크 (공식/자율)
+  final isAutonomousGroup = node.groupType == GroupType.autonomous;
+  final isOfficialGroup = node.groupType == GroupType.official;
+
+  // 공식 그룹 필터가 켜져 있고 공식 그룹인 경우
+  if (showOfficial && isOfficialGroup) {
     shouldShow = true;
   }
 
-  if (showAutonomous && node.groupType == GroupType.autonomous) {
+  // 자율 그룹 필터가 켜져 있고 자율 그룹인 경우
+  if (showAutonomous && isAutonomousGroup) {
     shouldShow = true;
   }
 
-  if (showOfficial && node.groupType == GroupType.official) {
+  // 모집 중 필터는 추가 조건으로만 작용 (그룹 타입 필터와 함께 사용)
+  // 모집 중 필터만 단독으로 켜져 있는 경우
+  if (showRecruiting && !showAutonomous && !showOfficial && node.isRecruiting) {
     shouldShow = true;
+  }
+
+  // 그룹 타입 필터와 모집 중 필터가 함께 켜져 있는 경우, 둘 다 만족해야 함
+  if (showRecruiting && (showAutonomous || showOfficial)) {
+    shouldShow = shouldShow && node.isRecruiting;
   }
 
   // 필터에 맞지 않으면 null 반환 (제외)
