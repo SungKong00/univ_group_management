@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:vibration/vibration.dart';
+import '../../../core/theme/app_theme.dart';
 import 'event_painter.dart';
 import 'highlight_painter.dart';
 import 'selection_painter.dart';
@@ -235,16 +236,164 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     return false;
   }
 
-  Event? _findTappedEvent(Offset position, List<({Rect rect, Event event})> eventRects) {
-    for (final eventRect in eventRects) {
-      if (eventRect.rect.contains(position)) {
-        return eventRect.event;
+  /// Find all events at a specific cell
+  List<Event> _findEventsAtCell(({int day, int slot}) cell) {
+    final List<Event> overlappingEvents = [];
+
+    for (final event in _events) {
+      final eventStartSlot = event.start.slot < event.end.slot ? event.start.slot : event.end.slot;
+      final eventEndSlot = event.start.slot > event.end.slot ? event.start.slot : event.end.slot;
+
+      // Check if event is on the same day and overlaps with the cell
+      if (event.start.day == cell.day && cell.slot >= eventStartSlot && cell.slot <= eventEndSlot) {
+        overlappingEvents.add(event);
       }
     }
-    return null;
+
+    return overlappingEvents;
   }
 
   // --- Dialogs ---
+
+  /// Show detail view dialog (read-only)
+  void _showEventDetailDialog(Event event) {
+    final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
+    final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
+    final dayNames = ['월', '화', '수', '목', '금', '토', '일'];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.dialog),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.event, color: Theme.of(context).colorScheme.primary, size: 24),
+            SizedBox(width: AppSpacing.xxs),
+            Text('일정 상세', style: AppTheme.headlineSmall),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title
+            Text(
+              event.title,
+              style: AppTheme.headlineSmall,
+            ),
+            SizedBox(height: AppSpacing.sm),
+            // Day
+            Row(
+              children: [
+                Icon(Icons.calendar_today, size: AppComponents.infoIconSize, color: Colors.grey),
+                SizedBox(width: AppSpacing.xxs),
+                Text(
+                  dayNames[event.start.day],
+                  style: AppTheme.bodyMedium.copyWith(color: Colors.grey),
+                ),
+              ],
+            ),
+            SizedBox(height: AppSpacing.xxs),
+            // Time range
+            Row(
+              children: [
+                Icon(Icons.access_time, size: AppComponents.infoIconSize, color: Colors.grey),
+                SizedBox(width: AppSpacing.xxs),
+                Text(
+                  '${DateFormat.jm().format(startTime)} - ${DateFormat.jm().format(endTime)}',
+                  style: AppTheme.bodyMedium.copyWith(color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          if (_mode == CalendarMode.edit)
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showEditDialog(event);
+              },
+              child: const Text('수정'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('닫기'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show overlapping events selection dialog
+  void _showOverlappingEventsDialog(List<Event> events, ({int day, int slot}) cell) {
+    final dayNames = ['월', '화', '수', '목', '금', '토', '일'];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.dialog),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.layers, color: Theme.of(context).colorScheme.primary, size: 24),
+            SizedBox(width: AppSpacing.xxs),
+            Text('겹친 일정 (${events.length}개)', style: AppTheme.headlineSmall),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: events.length,
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              color: Theme.of(context).colorScheme.outline,
+            ),
+            itemBuilder: (context, index) {
+              final event = events[index];
+              final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
+              final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
+
+              return ListTile(
+                contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs, vertical: AppSpacing.xxs / 2),
+                leading: Container(
+                  width: 4,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                title: Text(
+                  event.title,
+                  style: AppTheme.titleMedium,
+                ),
+                subtitle: Text(
+                  '${dayNames[event.start.day]} · ${DateFormat.jm().format(startTime)} - ${DateFormat.jm().format(endTime)}',
+                  style: AppTheme.bodySmall.copyWith(color: Colors.grey),
+                ),
+                trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _showEventDetailDialog(event);
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('닫기'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showEditDialog(Event event) {
     final titleController = TextEditingController(text: event.title);
@@ -436,17 +585,31 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _handleTap(Offset position, double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
     if (!widget.isEditable) return;
 
-    // View mode: no interaction
-    if (_mode == CalendarMode.view) return;
+    // Edit mode or View mode: check for overlapping events
+    if (_mode == CalendarMode.edit || _mode == CalendarMode.view) {
+      final cell = _pixelToCell(position, dayColumnWidth);
+      final overlappingEvents = _findEventsAtCell(cell);
 
-    // Edit mode: prioritize event editing
-    if (_mode == CalendarMode.edit) {
-      final tappedEvent = _findTappedEvent(position, eventRects);
-      if (tappedEvent != null) {
-        _showEditDialog(tappedEvent);
-        return;
+      if (overlappingEvents.isNotEmpty) {
+        // 1 event: show edit dialog directly (existing behavior)
+        if (overlappingEvents.length == 1) {
+          if (_mode == CalendarMode.edit) {
+            _showEditDialog(overlappingEvents.first);
+          } else {
+            _showEventDetailDialog(overlappingEvents.first);
+          }
+          return;
+        }
+        // 2+ events: show overlapping events modal
+        else {
+          _showOverlappingEventsDialog(overlappingEvents, cell);
+          return;
+        }
       }
     }
+
+    // View mode: no further interaction if no events
+    if (_mode == CalendarMode.view) return;
 
     // Add mode or Edit mode (when not tapping an event): create new event
     if (!_isSelecting) {
@@ -478,17 +641,27 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   }
 
   /// Handle mobile tap (for editing existing events only)
-  void _handleMobileTap(Offset position, List<({Rect rect, Event event})> eventRects) {
+  void _handleMobileTap(Offset position, double dayColumnWidth) {
     if (!widget.isEditable) return;
 
-    // View mode: no interaction
-    if (_mode == CalendarMode.view) return;
+    // Edit mode or View mode: check for overlapping events
+    if (_mode == CalendarMode.edit || _mode == CalendarMode.view) {
+      final cell = _pixelToCell(position, dayColumnWidth);
+      final overlappingEvents = _findEventsAtCell(cell);
 
-    // Edit mode: allow editing events
-    if (_mode == CalendarMode.edit) {
-      final tappedEvent = _findTappedEvent(position, eventRects);
-      if (tappedEvent != null) {
-        _showEditDialog(tappedEvent);
+      if (overlappingEvents.isNotEmpty) {
+        // 1 event: show edit dialog directly (existing behavior)
+        if (overlappingEvents.length == 1) {
+          if (_mode == CalendarMode.edit) {
+            _showEditDialog(overlappingEvents.first);
+          } else {
+            _showEventDetailDialog(overlappingEvents.first);
+          }
+        }
+        // 2+ events: show overlapping events modal
+        else {
+          _showOverlappingEventsDialog(overlappingEvents, cell);
+        }
       }
     }
     // Add mode: ignore event taps (handled by long press)
@@ -604,7 +777,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           _highlightRect = _cellToRect(touchedCell, touchedCell, dayColumnWidth);
         });
         // Handle existing event tap
-        _handleMobileTap(details.localPosition, eventRects);
+        _handleMobileTap(details.localPosition, dayColumnWidth);
       },
       onTapUp: (details) {
         // Clear highlight if it was just a tap (not long press)

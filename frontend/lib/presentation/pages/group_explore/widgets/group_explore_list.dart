@@ -88,30 +88,37 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
         final int crossAxisCount = (screenWidth / 350).floor().clamp(1, 4);
         final double cardWidth = (screenWidth - (crossAxisCount - 1) * AppSpacing.sm) / crossAxisCount;
 
-        return Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            ...groups.map((group) {
-              return ConstrainedBox(
-                constraints: BoxConstraints(
-                  minWidth: 300,
-                  maxWidth: cardWidth,
-                ),
-                child: GroupExploreCard(group: group),
-              );
-            }),
-            if (hasMore && isLoading)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.action,
+        return SingleChildScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              ...groups.map((group) {
+                return ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: 300,
+                    maxWidth: cardWidth,
+                  ),
+                  child: GroupExploreCard(group: group),
+                );
+              }),
+              if (hasMore && isLoading)
+                SizedBox(
+                  width: screenWidth,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.action,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         );
       },
     );
