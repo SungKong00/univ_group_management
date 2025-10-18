@@ -1,52 +1,42 @@
 import 'package:flutter/material.dart';
 
 class EventPainter extends CustomPainter {
-  final List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns})> events;
+  final List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span})> events;
 
   EventPainter({required this.events});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Sort events for proper z-index rendering:
-    // 1. Earlier start time first (drawn below)
-    // 2. If same start time, longer duration first (drawn below)
-    // Result: Later/shorter blocks appear on top
-    final sortedEvents = List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns})>.from(events)
+    final sortedEvents = List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span})>.from(events)
       ..sort((a, b) {
-        // Compare top position (start time)
         final topCompare = a.rect.top.compareTo(b.rect.top);
         if (topCompare != 0) return topCompare;
-
-        // If same start, compare height (duration) in descending order
         final heightA = a.rect.height;
         final heightB = b.rect.height;
-        return heightB.compareTo(heightA); // Longer first (reverse)
+        return heightB.compareTo(heightA);
       });
 
     for (final event in sortedEvents) {
       Rect eventRect = event.rect;
 
-      // Apply column layout if overlap info is provided
-      if (event.columnIndex != null && event.totalColumns != null && event.totalColumns! > 1) {
-        final columnWidth = event.rect.width / event.totalColumns!;
-        final columnOffset = columnWidth * event.columnIndex!;
+      if (event.columnIndex != null && event.totalColumns != null && event.totalColumns! > 0) {
+        final int totalColumns = event.totalColumns!;
+        final double columnWidth = event.rect.width / totalColumns;
+        final int span = event.span ?? 1;
 
-        eventRect = Rect.fromLTRB(
-          event.rect.left + columnOffset,
+        eventRect = Rect.fromLTWH(
+          event.rect.left + columnWidth * event.columnIndex!,
           event.rect.top,
-          event.rect.left + columnOffset + columnWidth,
-          event.rect.bottom,
+          columnWidth * span - 2, // Subtract a small amount for spacing
+          event.rect.height,
         );
       }
 
-      // Determine color based on event type
-      // External events (read-only, reference): Blue
-      // User-created events (editable): Purple (brand color)
       final isExternalEvent = event.id.startsWith('ext-');
       final paint = Paint()
         ..color = isExternalEvent
-            ? Colors.blue.withValues(alpha: 0.45)  // External (참고용)
-            : const Color(0xFF5C068C).withValues(alpha: 0.45)  // User-created (보라색)
+            ? Colors.blue.withOpacity(0.45)
+            : const Color(0xFF5C068C).withOpacity(0.45)
         ..style = PaintingStyle.fill;
 
       final rrect = RRect.fromRectAndRadius(eventRect, const Radius.circular(4));
@@ -62,14 +52,13 @@ class EventPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       );
 
-      textPainter.layout(minWidth: 0, maxWidth: eventRect.width - 8); // 4px padding on each side
+      textPainter.layout(minWidth: 0, maxWidth: eventRect.width - 8);
       textPainter.paint(canvas, eventRect.topLeft + const Offset(4, 4));
     }
   }
 
   @override
   bool shouldRepaint(covariant EventPainter oldDelegate) {
-    // Deep comparison since we're sorting the events list
     if (oldDelegate.events.length != events.length) return true;
     for (int i = 0; i < events.length; i++) {
       if (oldDelegate.events[i] != events[i]) return true;
