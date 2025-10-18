@@ -274,10 +274,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   /// Analyze overlapping events and assign column positions
   /// Returns a map: eventId -> (columnIndex, totalColumns)
-  Map<String, ({int columnIndex, int totalColumns})> _analyzeOverlappingGroups(
-    List<Event> events,
-    double dayColumnWidth,
-  ) {
+  Map<String, ({int columnIndex, int totalColumns})> _analyzeOverlappingGroups(List<Event> events) {
     final Map<String, ({int columnIndex, int totalColumns})> result = {};
 
     // Group events by day
@@ -294,54 +291,102 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       // Sort by start time, then by duration (longer first)
       final sortedEvents = List<Event>.from(dayEvents)
         ..sort((a, b) {
-          final startCompare = a.start.slot.compareTo(b.start.slot);
+          final startCompare = _eventStartSlot(a).compareTo(_eventStartSlot(b));
           if (startCompare != 0) return startCompare;
 
-          final durationA = (a.end.slot - a.start.slot).abs();
-          final durationB = (b.end.slot - b.start.slot).abs();
+          final durationA = _eventEndSlot(a) - _eventStartSlot(a);
+          final durationB = _eventEndSlot(b) - _eventStartSlot(b);
           return durationB.compareTo(durationA);
         });
 
-      // Find overlapping groups and assign columns (Google Calendar algorithm)
-      final List<List<Event>> columns = [];
+      // Build clusters of overlapping events
+      final clusters = <List<Event>>[];
+      var currentCluster = <Event>[];
+      final active = <Event>[];
 
       for (final event in sortedEvents) {
-        final eventStart = event.start.slot < event.end.slot ? event.start.slot : event.end.slot;
-        final eventEnd = event.start.slot > event.end.slot ? event.start.slot : event.end.slot;
+        final eventStart = _eventStartSlot(event);
 
-        // Try to place in existing column
-        bool placed = false;
-        for (final column in columns) {
-          bool canPlace = true;
-          for (final existing in column) {
-            final existingStart = existing.start.slot < existing.end.slot ? existing.start.slot : existing.end.slot;
-            final existingEnd = existing.start.slot > existing.end.slot ? existing.start.slot : event.end.slot;
+        active.removeWhere((existing) => _eventEndSlot(existing) <= eventStart);
 
-            // Check overlap
-            if (eventStart < existingEnd && eventEnd > existingStart) {
-              canPlace = false;
-              break;
-            }
-          }
-
-          if (canPlace) {
-            column.add(event);
-            placed = true;
-            break;
-          }
+        if (active.isEmpty && currentCluster.isNotEmpty) {
+          clusters.add(List<Event>.from(currentCluster));
+          currentCluster.clear();
         }
 
-        // Create new column if no suitable column found
-        if (!placed) {
-          columns.add([event]);
+        active.add(event);
+        currentCluster.add(event);
+      }
+
+      if (currentCluster.isNotEmpty) {
+        clusters.add(currentCluster);
+      }
+
+      for (final cluster in clusters) {
+        final clusterResult = _assignColumnsForCluster(cluster);
+        result.addAll(clusterResult);
+      }
+    }
+
+    return result;
+  }
+
+  Map<String, ({int columnIndex, int totalColumns})> _assignColumnsForCluster(List<Event> cluster) {
+    final result = <String, ({int columnIndex, int totalColumns})>{};
+
+    final clusterEvents = List<Event>.from(cluster)
+      ..sort((a, b) {
+        final startCompare = _eventStartSlot(a).compareTo(_eventStartSlot(b));
+        if (startCompare != 0) return startCompare;
+
+        final durationA = _eventEndSlot(a) - _eventStartSlot(a);
+        final durationB = _eventEndSlot(b) - _eventStartSlot(b);
+        return durationB.compareTo(durationA);
+      });
+
+    final columns = <List<Event>>[];
+
+    for (final event in clusterEvents) {
+      final eventStart = _eventStartSlot(event);
+      bool placed = false;
+
+      for (int colIndex = 0; colIndex < columns.length; colIndex++) {
+        final column = columns[colIndex];
+        final lastEvent = column.last;
+        if (_eventEndSlot(lastEvent) <= eventStart) {
+          column.add(event);
+          placed = true;
+          break;
         }
       }
 
-      // Assign column positions
-      for (int colIndex = 0; colIndex < columns.length; colIndex++) {
-        for (final event in columns[colIndex]) {
-          result[event.id] = (columnIndex: colIndex, totalColumns: columns.length);
+      if (!placed) {
+        columns.add([event]);
+      }
+    }
+
+    for (int colIndex = 0; colIndex < columns.length; colIndex++) {
+      final columnEvents = columns[colIndex];
+      for (final event in columnEvents) {
+        final overlappingColumns = <int>{};
+        for (int otherColIndex = 0; otherColIndex < columns.length; otherColIndex++) {
+          for (final otherEvent in columns[otherColIndex]) {
+            if (identical(event, otherEvent) || _eventsOverlap(event, otherEvent)) {
+              overlappingColumns.add(otherColIndex);
+              break;
+            }
+          }
         }
+
+        if (overlappingColumns.isEmpty) {
+          overlappingColumns.add(colIndex);
+        }
+
+        final sortedOverlap = overlappingColumns.toList()..sort();
+        final compressedIndex = sortedOverlap.indexOf(colIndex);
+        final totalColumns = sortedOverlap.length;
+
+        result[event.id] = (columnIndex: compressedIndex, totalColumns: totalColumns);
       }
     }
 
@@ -466,6 +511,18 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       _timeColumnWidth + (endDay + 1) * dayColumnWidth,
       (endSlot - _visibleStartHour * 4 + 1) * slotHeight,
     );
+  }
+
+  int _eventStartSlot(Event event) => math.min(event.start.slot, event.end.slot);
+
+  int _eventEndSlot(Event event) => math.max(event.start.slot, event.end.slot);
+
+  bool _eventsOverlap(Event a, Event b) {
+    final startA = _eventStartSlot(a);
+    final endA = _eventEndSlot(a);
+    final startB = _eventStartSlot(b);
+    final endB = _eventEndSlot(b);
+    return startA < endB && endA > startB;
   }
 
   bool _isOverlapping(({int day, int slot}) startCell, ({int day, int slot}) endCell) {
@@ -1171,10 +1228,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       // Overlap view: analyze and assign columns
       // Get all events including external group events for overlap analysis
       final allEvents = _getAllEvents();
-      final overlapInfo = _analyzeOverlappingGroups(
-        allEvents,
-        dayColumnWidth,
-      );
+      final overlapInfo = _analyzeOverlappingGroups(allEvents);
 
       eventData = eventRects.map((e) {
         final info = overlapInfo[e.event.id];
