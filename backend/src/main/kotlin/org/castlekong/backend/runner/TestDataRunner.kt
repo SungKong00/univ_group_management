@@ -1,23 +1,31 @@
 package org.castlekong.backend.runner
 
 import org.castlekong.backend.dto.CreateApplicationRequest
+import org.castlekong.backend.dto.CreateGroupEventRequest
 import org.castlekong.backend.dto.CreateGroupRequest
 import org.castlekong.backend.dto.CreateGroupRoleRequest
 import org.castlekong.backend.dto.CreatePersonalScheduleRequest
 import org.castlekong.backend.dto.CreatePlaceRequest
 import org.castlekong.backend.dto.CreateRecruitmentRequest
+import org.castlekong.backend.dto.RecurrencePattern
+import org.castlekong.backend.dto.RecurrenceType
 import org.castlekong.backend.dto.RequestUsageRequest
 import org.castlekong.backend.dto.SignupProfileRequest
 import org.castlekong.backend.dto.UpdateUsageStatusRequest
 import org.castlekong.backend.entity.GroupPermission
 import org.castlekong.backend.entity.GroupType
+import org.castlekong.backend.entity.PlaceAvailability
 import org.castlekong.backend.entity.UsageStatus
 import org.castlekong.backend.entity.User
+import org.castlekong.backend.repository.PlaceAvailabilityRepository
+import org.castlekong.backend.repository.PlaceRepository
 import org.castlekong.backend.service.GoogleUserInfo
+import org.castlekong.backend.service.GroupEventService
 import org.castlekong.backend.service.GroupManagementService
 import org.castlekong.backend.service.GroupMemberService
 import org.castlekong.backend.service.GroupRoleService
 import org.castlekong.backend.service.PersonalScheduleService
+import org.castlekong.backend.service.PlaceReservationService
 import org.castlekong.backend.service.PlaceService
 import org.castlekong.backend.service.PlaceUsageGroupService
 import org.castlekong.backend.service.RecruitmentService
@@ -29,6 +37,7 @@ import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
@@ -47,7 +56,9 @@ import java.time.LocalTime
  * 4. 커스텀 역할 생성 및 할당
  * 5. 모집 공고 및 지원서 생성
  * 6. 장소 생성 및 사용 권한 관리
- * 7. 페르소나별 시간표 생성
+ * 7. 장소 운영 시간 생성
+ * 8. 페르소나별 시간표 생성
+ * 9. 그룹 캘린더 일정 및 장소 예약 생성
  *
  * @Order(2) - GroupInitializationRunner 이후 실행
  */
@@ -62,6 +73,11 @@ class TestDataRunner(
     private val placeService: PlaceService,
     private val placeUsageGroupService: PlaceUsageGroupService,
     private val personalScheduleService: PersonalScheduleService,
+    private val groupEventService: GroupEventService,
+    private val placeReservationService: PlaceReservationService,
+    private val placeAvailabilityRepository: PlaceAvailabilityRepository,
+    private val placeRepository: PlaceRepository,
+    private val permissionService: org.castlekong.backend.security.PermissionService,
 ) : ApplicationRunner {
     private val logger = LoggerFactory.getLogger(TestDataRunner::class.java)
 
@@ -72,6 +88,14 @@ class TestDataRunner(
             logger.info("=== Test data already exists, skipping TestDataRunner ===")
             return
         }
+
+        // Invalidate permission cache
+        permissionService.invalidateGroup(1)
+        permissionService.invalidateGroup(2)
+        permissionService.invalidateGroup(3)
+        permissionService.invalidateGroup(11)
+        permissionService.invalidateGroup(12)
+        permissionService.invalidateGroup(13)
 
         logger.info("=== Starting Test Data Creation ===")
 
@@ -89,10 +113,16 @@ class TestDataRunner(
             createRecruitments(users, customGroups)
 
             // Phase 5: 장소 생성 및 사용 권한
-            createPlaces(users, customGroups)
+            val customPlaces = createPlaces(users, customGroups)
 
-            // Phase 6: 페르소나별 시간표 생성
+            // Phase 6: 장소 운영 시간 생성
+            createPlaceAvailabilities(customPlaces)
+
+            // Phase 7: 페르소나별 시간표 생성
             createPersonalSchedules(users)
+
+            // Phase 8: 그룹 캘린더 일정 및 장소 예약 생성
+            createCalendarEventsAndReservations(users, customGroups, customPlaces)
 
             logger.info("=== Test Data Creation Completed Successfully ===")
         } catch (e: Exception) {
@@ -120,7 +150,7 @@ class TestDataRunner(
      * @return 생성된 사용자 목록
      */
     private fun createTestUsers(): TestUsers {
-        logger.info("[1/5] Creating test users (Google OAuth simulation + Profile submission)...")
+        logger.info("[1/7] Creating test users (Google OAuth simulation + Profile submission)...")
 
         // User 1: TestUser1 (AI/SW학과)
         val user1 =
@@ -132,6 +162,7 @@ class TestDataRunner(
                 dept = "AI/SW학과",
                 studentNo = "20250011",
                 academicYear = 1,
+                role = "STUDENT",
             )
 
         // User 2: TestUser2 (AI/SW계열 - 학과 선택 안함)
@@ -144,6 +175,7 @@ class TestDataRunner(
                 dept = null,
                 studentNo = "20250012",
                 academicYear = 2,
+                role = "STUDENT",
             )
 
         // User 3: TestUser3 (AI시스템반도체학과)
@@ -156,6 +188,7 @@ class TestDataRunner(
                 dept = "AI시스템반도체학과",
                 studentNo = "20250013",
                 academicYear = 3,
+                role = "STUDENT",
             )
 
         logger.info("-> SUCCESS: Created 3 test users with profile completion")
@@ -186,6 +219,7 @@ class TestDataRunner(
         dept: String?,
         studentNo: String,
         academicYear: Int,
+        role: String = "STUDENT",
     ): User {
         // Step 1: Google OAuth 시뮬레이션 - findOrCreateUser 호출
         val googleUserInfo =
@@ -208,7 +242,7 @@ class TestDataRunner(
                 studentNo = studentNo,
                 academicYear = academicYear,
                 schoolEmail = email,
-                role = "STUDENT",
+                role = role,
             )
 
         val completedUser = userService.submitSignupProfile(createdUser.id!!, profileRequest)
@@ -224,7 +258,7 @@ class TestDataRunner(
      * @return 생성된 커스텀 그룹 정보
      */
     private fun createCustomGroups(users: TestUsers): CustomGroups {
-        logger.info("[2/5] Creating custom groups...")
+        logger.info("[2/7] Creating custom groups...")
 
         // 코딩 동아리 (user1이 그룹장)
         val devCrewGroup =
@@ -281,7 +315,7 @@ class TestDataRunner(
         users: TestUsers,
         groups: CustomGroups,
     ) {
-        logger.info("[3/5] Setting up group memberships and roles...")
+        logger.info("[3/7] Setting up group memberships and roles...")
 
         // user3를 학생회에 추가
         safeExecute("Adding user3 to Student Council") {
@@ -299,6 +333,7 @@ class TestDataRunner(
                             setOf(
                                 GroupPermission.CHANNEL_MANAGE.name,
                                 GroupPermission.RECRUITMENT_MANAGE.name,
+                                GroupPermission.CALENDAR_MANAGE.name,
                             ),
                         priority = 50,
                     ),
@@ -329,7 +364,7 @@ class TestDataRunner(
         users: TestUsers,
         groups: CustomGroups,
     ) {
-        logger.info("[4/5] Creating recruitments and applications...")
+        logger.info("[4/7] Creating recruitments and applications...")
 
         // 학생회 모집 공고 생성 (user2가 작성)
         val recruitment =
@@ -374,8 +409,8 @@ class TestDataRunner(
     private fun createPlaces(
         users: TestUsers,
         groups: CustomGroups,
-    ) {
-        logger.info("[5/5] Creating places and managing usage permissions...")
+    ): CustomPlaces {
+        logger.info("[5/7] Creating places and managing usage permissions...")
 
         // 학생회실 장소 생성 (user2가 관리)
         val labPlace =
@@ -388,6 +423,21 @@ class TestDataRunner(
                         roomNumber = "201호",
                         alias = "학생회실",
                         capacity = 25,
+                    ),
+                )
+            }
+
+        // 세미나실 장소 생성 (user2가 관리)
+        val seminarRoom =
+            safeExecute("Creating place '세미나실'") {
+                placeService.createPlace(
+                    users.user2,
+                    CreatePlaceRequest(
+                        managingGroupId = groups.studentCouncilId,
+                        building = "60주년 기념관",
+                        roomNumber = "101호",
+                        alias = "세미나실",
+                        capacity = 50,
                     ),
                 )
             }
@@ -414,11 +464,126 @@ class TestDataRunner(
             )
         }
 
+        // AI/SW학과 그룹이 세미나실 사용 요청
+        safeExecute("AI/SW department requesting seminar room usage") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")
+            placeUsageGroupService.requestUsage(
+                owner!!,
+                seminarRoom.id,
+                RequestUsageRequest(
+                    groupId = 13, // AI/SW학과 그룹 ID
+                    reason = "학과 특강 및 세미나를 위해 사용하고 싶습니다.",
+                ),
+            )
+        }
+
+        // 학생회에서 AI/SW학과 사용 승인
+        safeExecute("Student Council approving AI/SW department usage") {
+            placeUsageGroupService.updateUsageStatus(
+                users.user2,
+                seminarRoom.id,
+                13, // AI/SW학과 그룹 ID
+                UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
+            )
+        }
+
+        // AI/SW계열 그룹이 세미나실 사용 요청
+        safeExecute("AI/SW college requesting seminar room usage") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")
+            placeUsageGroupService.requestUsage(
+                owner!!,
+                seminarRoom.id,
+                RequestUsageRequest(
+                    groupId = 2, // AI/SW계열 그룹 ID
+                    reason = "계열 단위 행사를 위해 사용하고 싶습니다.",
+                ),
+            )
+        }
+
+        // 학생회에서 AI/SW계열 사용 승인
+        safeExecute("Student Council approving AI/SW college usage") {
+            placeUsageGroupService.updateUsageStatus(
+                users.user2,
+                seminarRoom.id,
+                2, // AI/SW계열 그룹 ID
+                UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
+            )
+        }
+
+        // AI시스템반도체학과 그룹이 세미나실 사용 요청
+        safeExecute("AI/Semiconductor department requesting seminar room usage") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")
+            placeUsageGroupService.requestUsage(
+                owner!!,
+                seminarRoom.id,
+                RequestUsageRequest(
+                    groupId = 11, // AI시스템반도체학과 그룹 ID
+                    reason = "전공 스터디 및 프로젝트를 위해 사용하고 싶습니다.",
+                ),
+            )
+        }
+
+        // 학생회에서 AI시스템반도체학과 사용 승인
+        safeExecute("Student Council approving AI/Semiconductor department usage") {
+            placeUsageGroupService.updateUsageStatus(
+                users.user2,
+                seminarRoom.id,
+                11, // AI시스템반도체학과 그룹 ID
+                UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
+            )
+        }
+
+
+
         logger.info("-> SUCCESS: Created place and managed usage permissions")
+        return CustomPlaces(labPlace.id, seminarRoom.id)
     }
 
     /**
-     * Phase 6: 페르소나별 시간표 생성
+     * Phase 6: 장소 운영 시간 생성
+     *
+     * @param places 커스텀 장소들
+     */
+    private fun createPlaceAvailabilities(places: CustomPlaces) {
+        logger.info("[6/7] Creating place availabilities...")
+
+        val labPlace = placeRepository.findById(places.labPlaceId).orElseThrow()
+        val seminarRoom = placeRepository.findById(places.seminarRoomId).orElseThrow()
+
+        safeExecute("Creating availabilities for '학생회실'") {
+            val weekdays = listOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)
+            weekdays.forEach {
+                placeAvailabilityRepository.save(
+                    PlaceAvailability(
+                        place = labPlace,
+                        dayOfWeek = it,
+                        startTime = LocalTime.of(9, 0),
+                        endTime = LocalTime.of(22, 0)
+                    )
+                )
+            }
+        }
+
+        safeExecute("Creating availabilities for '세미나실'") {
+            val weekdays = listOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)
+            weekdays.forEach {
+                placeAvailabilityRepository.save(
+                    PlaceAvailability(
+                        place = seminarRoom,
+                        dayOfWeek = it,
+                        startTime = LocalTime.of(9, 0),
+                        endTime = LocalTime.of(22, 0)
+                    )
+                )
+            }
+        }
+
+        logger.info("-> SUCCESS: Created place availabilities")
+    }
+
+
+    /**
+     * Phase 7: 페르소나별 시간표 생성
      *
      * 각 사용자의 특징과 페르소나에 맞는 시간표를 생성합니다.
      * - TestUser1: 프로그래밍, 자료구조, 알고리즘 등 CS 전공 과목
@@ -428,7 +593,7 @@ class TestDataRunner(
      * @param users 테스트 사용자들
      */
     private fun createPersonalSchedules(users: TestUsers) {
-        logger.info("[6/6] Creating personal schedules based on user personas...")
+        logger.info("[7/8] Creating personal schedules based on user personas...")
 
         // TestUser1: CS 전공 과목 (프로그래밍 중심)
         safeExecute("Creating schedules for TestUser1 (CS courses)") {
@@ -615,6 +780,170 @@ class TestDataRunner(
     }
 
     /**
+     * Phase 8: 그룹 캘린더 일정 및 장소 예약 생성
+     *
+     * @param users 테스트 사용자들
+     * @param groups 커스텀 그룹들
+     * @param places 커스텀 장소들
+     */
+    private fun createCalendarEventsAndReservations(
+        users: TestUsers,
+        groups: CustomGroups,
+        places: CustomPlaces,
+    ) {
+        logger.info("[8/8] Creating group calendar events and reservations...")
+
+        val owner = userService.findByEmail("castlekong1019@gmail.com")
+
+        // 시나리오 1: 간단한 그룹 이벤트 (DevCrew)
+        safeExecute("Creating simple group event for DevCrew") {
+            groupEventService.createEvent(
+                users.user1,
+                groups.devCrewId,
+                CreateGroupEventRequest(
+                    title = "주간 알고리즘 스터디",
+                    description = "매주 월요일에 진행되는 알고리즘 스터디입니다.",
+                    locationText = "온라인",
+                    startDate = LocalDate.now().plusDays(1),
+                    endDate = LocalDate.now().plusMonths(1),
+                    startTime = LocalTime.of(19, 0),
+                    endTime = LocalTime.of(21, 0),
+                    isOfficial = false,
+                    color = "#03A9F4",
+                    recurrence = RecurrencePattern(
+                        type = RecurrenceType.WEEKLY,
+                        daysOfWeek = listOf(DayOfWeek.MONDAY)
+                    )
+                )
+            )
+        }
+
+        // 시나리오 2: 장소 예약이 포함된 공식 그룹 이벤트 (총학생회)
+        safeExecute("Creating official group event with place reservation for Student Council") {
+            groupEventService.createEvent(
+                users.user2,
+                groups.studentCouncilId,
+                CreateGroupEventRequest(
+                    title = "총학생회 정기 회의",
+                    description = "매주 수요일에 진행되는 총학생회 정기 회의입니다.",
+                    placeId = places.labPlaceId,
+                    startDate = LocalDate.now().plusDays(1),
+                    endDate = LocalDate.now().plusMonths(1),
+                    startTime = LocalTime.of(17, 0),
+                    endTime = LocalTime.of(18, 30),
+                    isOfficial = true,
+                    color = "#E91E63",
+                    recurrence = RecurrencePattern(
+                        type = RecurrenceType.WEEKLY,
+                        daysOfWeek = listOf(DayOfWeek.WEDNESDAY)
+                    )
+                )
+            )
+        }
+
+        // 시나리오 3: 그룹 이벤트 없는 장소 예약 (총학생회)
+        safeExecute("Creating a direct place reservation for Student Council") {
+            val event = groupEventService.createEvent(
+                users.user3,
+                groups.studentCouncilId,
+                CreateGroupEventRequest(
+                    title = "임시 회의",
+                    description = "긴급 회의",
+                    placeId = places.labPlaceId,
+                    startDate = LocalDate.now().plusDays(2),
+                    endDate = LocalDate.now().plusDays(2),
+                    startTime = LocalTime.of(13, 0),
+                    endTime = LocalTime.of(14, 0),
+                    isOfficial = false,
+                    color = "#FFC107"
+                )
+            )
+        }
+
+        // 시나리오 4: 예약 불가능한 장소가 포함된 그룹 이벤트
+        safeExecute("Creating group event with a non-reservable location text") {
+            groupEventService.createEvent(
+                users.user1,
+                groups.devCrewId,
+                CreateGroupEventRequest(
+                    title = "팀 프로젝트 회의",
+                    description = "학교 근처 카페에서 진행",
+                    locationText = "학교 근처 카페",
+                    startDate = LocalDate.now().plusDays(3),
+                    endDate = LocalDate.now().plusDays(3),
+                    startTime = LocalTime.of(15, 0),
+                    endTime = LocalTime.of(17, 0),
+                    isOfficial = false,
+                    color = "#795548"
+                )
+            )
+        }
+
+        // 시나리오 5: AI/SW계열 개강 총회 (공식 행사)
+        safeExecute("Creating official event for AI/SW college") {
+            val nextMonday = LocalDate.now().plusWeeks(1).with(DayOfWeek.MONDAY)
+            groupEventService.createEvent(
+                owner!!,
+                2, // AI/SW계열 그룹 ID
+                CreateGroupEventRequest(
+                    title = "AI/SW계열 개강 총회",
+                    description = "2025년 2학기 개강 총회입니다. 모든 계열 학생들은 참석해주세요.",
+                    placeId = places.seminarRoomId,
+                    startDate = nextMonday,
+                    endDate = nextMonday,
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
+                    isOfficial = true,
+                    color = "#8BC34A"
+                )
+            )
+        }
+
+        // 시나리오 6: AI/SW학과 자료구조 특강 (세미나)
+        safeExecute("Creating seminar for AI/SW department") {
+            val nextTuesday = LocalDate.now().plusWeeks(1).with(DayOfWeek.TUESDAY)
+            groupEventService.createEvent(
+                owner!!,
+                13, // AI/SW학과 그룹 ID
+                CreateGroupEventRequest(
+                    title = "자료구조 특강",
+                    description = "외부 전문가를 초빙하여 진행하는 자료구조 특강입니다.",
+                    placeId = places.seminarRoomId,
+                    startDate = nextTuesday,
+                    endDate = nextTuesday,
+                    startTime = LocalTime.of(15, 0),
+                    endTime = LocalTime.of(17, 0),
+                    isOfficial = true,
+                    color = "#00BCD4"
+                )
+            )
+        }
+
+        // 시나리오 7: AI시스템반도체학과 프로젝트를 위한 장소 예약
+        safeExecute("Creating direct reservation for AI/Semiconductor department") {
+            val nextWednesday = LocalDate.now().plusWeeks(1).with(DayOfWeek.WEDNESDAY)
+            groupEventService.createEvent(
+                owner!!,
+                11, // AI시스템반도체학과 그룹 ID
+                CreateGroupEventRequest(
+                    title = "졸업 프로젝트 회의",
+                    description = "캡스톤 디자인 팀 프로젝트 회의",
+                    placeId = places.seminarRoomId,
+                    startDate = nextWednesday,
+                    endDate = nextWednesday,
+                    startTime = LocalTime.of(10, 0),
+                    endTime = LocalTime.of(12, 0),
+                    isOfficial = false,
+                    color = "#FF9800"
+                )
+            )
+        }
+
+        logger.info("-> SUCCESS: Created group calendar events and reservations")
+    }
+
+
+    /**
      * 안전한 실행 래퍼 - 에러 로깅 및 재발생
      *
      * @param description 작업 설명
@@ -650,5 +979,13 @@ class TestDataRunner(
     private data class CustomGroups(
         val devCrewId: Long,
         val studentCouncilId: Long,
+    )
+
+    /**
+     * 커스텀 장소 정보 데이터 클래스
+     */
+    private data class CustomPlaces(
+        val labPlaceId: Long,
+        val seminarRoomId: Long,
     )
 }

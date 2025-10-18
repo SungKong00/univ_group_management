@@ -17,7 +17,11 @@ Phase 4: 모집 공고 및 지원서 생성
   ↓
 Phase 5: 장소 생성 및 사용 권한 관리
   ↓
-Phase 6: 페르소나별 시간표 생성
+Phase 6: 장소 운영 시간 생성
+  ↓
+Phase 7: 페르소나별 시간표 생성
+  ↓
+Phase 8: 그룹 캘린더 일정 및 장소 예약 생성
 ```
 
 ## 테스트 사용자 정보
@@ -29,6 +33,7 @@ Phase 6: 페르소나별 시간표 생성
 | - | testuser1@hs.ac.kr | TestUser1 | TU1 | 20250011 | AI/SW계열 | AI/SW학과 | 1학년 | STUDENT |
 | - | testuser2@hs.ac.kr | TestUser2 | TU2 | 20250012 | AI/SW계열 | (선택안함) | 2학년 | STUDENT |
 | - | testuser3@hs.ac.kr | TestUser3 | TU3 | 20250013 | AI/SW계열 | AI시스템반도체학과 | 3학년 | STUDENT |
+| - | professor1@hs.ac.kr | Professor1 | Prof1 | P00001 | AI/SW계열 | AI/SW학과 | 0학년 | PROFESSOR |
 
 > **참고**: ID는 실행 시 동적으로 할당됩니다. 이메일로 사용자를 식별하는 것을 권장합니다.
 
@@ -44,13 +49,17 @@ Phase 6: 페르소나별 시간표 생성
 - **자동 가입 그룹**: 한신대학교, AI/SW계열 (학과 선택 안함)
 - **생성한 그룹**: 학생회 (그룹장 역할)
 - **작성한 모집**: 학생회 2025년 2학기 신입 부원 모집
-- **관리하는 장소**: 학생회실 (학생회관 201호)
+- **관리하는 장소**: 학생회실 (학생회관 201호), 세미나실 (60주년 기념관 101호)
 - **권한**: 학생회 그룹의 모든 권한 (OWNER)
 
 #### TestUser3 (testuser3@hs.ac.kr)
 - **자동 가입 그룹**: 한신대학교, AI/SW계열, AI시스템반도체학과 (프로필 제출 시 자동)
 - **수동 가입 그룹**: 학생회 (커스텀 역할: 학생회 간부)
-- **역할**: 학생회 간부 (CHANNEL_MANAGE, RECRUITMENT_MANAGE 권한)
+- **역할**: 학생회 간부 (CHANNEL_MANAGE, RECRUITMENT_MANAGE, CALENDAR_MANAGE 권한)
+
+#### Professor1 (professor1@hs.ac.kr)
+- **자동 가입 그룹**: 한신대학교, AI/SW계열, AI/SW학과 (프로필 제출 시 자동)
+- **역할**: AI/SW학과 그룹의 교수
 
 ## 테스트 그룹 정보
 
@@ -59,9 +68,11 @@ Phase 6: 페르소나별 시간표 생성
 | ID | 그룹명 | 그룹 타입 | 부모 그룹 | 소유자 |
 |----|--------|-----------|-----------|--------|
 | 1 | 한신대학교 | UNIVERSITY | - | castlekong1019@gmail.com |
-| 2 | AI/SW계열 | DEPARTMENT | 한신대학교 | castlekong1019@gmail.com |
-| 3 | AI/SW학과 | DEPARTMENT | AI/SW계열 | castlekong1019@gmail.com |
-| 4 | AI시스템반도체학과 | DEPARTMENT | AI/SW계열 | castlekong1019@gmail.com |
+| 2 | AI/SW계열 | COLLEGE | 한신대학교 | castlekong1019@gmail.com |
+| 3 | 경영/미디어계열 | COLLEGE | 한신대학교 | castlekong1019@gmail.com |
+| 11 | AI시스템반도체학과 | DEPARTMENT | AI/SW계열 | castlekong1019@gmail.com |
+| 12 | 미디어영상광고홍보학과 | DEPARTMENT | 경영/미디어계열 | castlekong1019@gmail.com |
+| 13 | AI/SW학과 | DEPARTMENT | AI/SW계열 | castlekong1019@gmail.com |
 
 ### 커스텀 그룹 (TestDataRunner에서 생성)
 
@@ -85,7 +96,7 @@ Phase 6: 페르소나별 시간표 생성
 #### 학생회 그룹
 | 역할명 | 우선순위 | 권한 | 할당된 사용자 |
 |--------|---------|------|--------------|
-| 학생회 간부 | 50 | CHANNEL_MANAGE, RECRUITMENT_MANAGE | TestUser3 |
+| 학생회 간부 | 50 | CHANNEL_MANAGE, RECRUITMENT_MANAGE, CALENDAR_MANAGE | TestUser3 |
 
 ## 테스트 모집 정보
 
@@ -105,12 +116,13 @@ Phase 6: 페르소나별 시간표 생성
 | 장소명 | 건물 | 호수 | 별칭 | 수용 인원 | 관리 그룹 | 사용 승인 그룹 |
 |--------|------|------|------|----------|-----------|---------------|
 | 학생회관 201호 | 학생회관 | 201호 | 학생회실 | 25명 | 학생회 | DevCrew (승인됨) |
+| 60주년 기념관 101호 | 60주년 기념관 | 101호 | 세미나실 | 50명 | 학생회 | AI/SW계열, AI/SW학과, AI시스템반도체학과 (승인됨) |
 
 ### 장소 사용 요청 정보
 
-- **요청 그룹**: DevCrew
-- **요청자**: TestUser1
-- **사용 이유**: "매주 목요일 저녁 코딩 스터디를 위해 사용하고 싶습니다."
+- **요청 그룹**: DevCrew, AI/SW계열, AI/SW학과, AI시스템반도체학과
+- **요청자**: TestUser1, castlekong1019@gmail.com
+- **사용 이유**: 스터디, 학과 행사, 세미나, 프로젝트 등
 - **승인 상태**: APPROVED
 - **승인자**: TestUser2
 
@@ -150,20 +162,17 @@ Phase 6: 페르소나별 시간표 생성
 
 **특징**: 반도체 전공으로 심화 기술 습득, 학생회 간부로 상당한 업무 시간
 
-### 시간표 조회 예제
+## 테스트 캘린더 및 예약 정보
 
-```kotlin
-// 특정 사용자의 모든 시간표 조회
-val schedules = personalScheduleService.getSchedules(testUser1)
-
-// 테스트: TestUser1의 월요일 일정 확인
-val mondaySchedules = schedules.filter { it.dayOfWeek == DayOfWeek.MONDAY }
-assert(mondaySchedules.any { it.title == "프로그래밍 1" })
-
-// 테스트: TestUser3의 학생회 활동 시간
-val studentCouncilSchedules = schedules.filter { it.title.contains("학생회") }
-assert(studentCouncilSchedules.size == 2) // 간부회의 + 업무시간
-```
+| 이벤트 제목 | 그룹 | 유형 | 장소 | 예약자 | 날짜/시간 |
+|---|---|---|---|---|---|
+| 주간 알고리즘 스터디 | DevCrew | 비공식 (반복) | 온라인 (텍스트) | TestUser1 | 매주 월요일 19:00-21:00 |
+| 총학생회 정기 회의 | 학생회 | 공식 (반복) | 학생회실 | TestUser2 | 매주 수요일 17:00-18:30 |
+| 임시 회의 | 학생회 | 비공식 | 학생회실 | TestUser3 | 다음 주 화요일 13:00-14:00 |
+| 팀 프로젝트 회의 | DevCrew | 비공식 | 학교 근처 카페 (텍스트) | TestUser1 | 다음 주 수요일 15:00-17:00 |
+| AI/SW계열 개강 총회 | AI/SW계열 | 공식 | 세미나실 | castlekong1019@gmail.com | 다음 주 월요일 18:00-20:00 |
+| 자료구조 특강 | AI/SW학과 | 공식 | 세미나실 | castlekong1019@gmail.com | 다음 주 화요일 15:00-17:00 |
+| 졸업 프로젝트 회의 | AI시스템반도체학과 | 비공식 | 세미나실 | castlekong1019@gmail.com | 다음 주 수요일 10:00-12:00 |
 
 ## 테스트 시나리오별 활용
 
