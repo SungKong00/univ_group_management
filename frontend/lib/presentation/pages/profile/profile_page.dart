@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../demo_calendar/demo_calendar_page.dart';
 import '../dev/selectable_option_card_demo.dart';
-import '../dev/weekly_calendar_demo_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -50,7 +50,7 @@ class ProfilePage extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => const WeeklyCalendarDemoPage(),
+                      builder: (context) => const DemoCalendarPage(),
                     ),
                   );
                 },

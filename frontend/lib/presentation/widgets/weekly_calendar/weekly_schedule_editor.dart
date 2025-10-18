@@ -1,10 +1,10 @@
-
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:vibration/vibration.dart';
+import '../../../core/models/calendar/group_event.dart';
 import '../../../core/theme/app_theme.dart';
 import 'event_painter.dart';
 import 'highlight_painter.dart';
@@ -38,6 +38,7 @@ enum HapticFeedbackType {
 /// - Optional multi-day selection
 /// - Event overlap detection
 /// - Haptic feedback on mobile
+/// - External group events display (read-only)
 class WeeklyScheduleEditor extends StatefulWidget {
   /// Allow selecting time range across multiple days
   final bool allowMultiDaySelection;
@@ -48,11 +49,23 @@ class WeeklyScheduleEditor extends StatefulWidget {
   /// Allow creating overlapping events
   final bool allowEventOverlap;
 
+  /// External group events to display (read-only)
+  final List<GroupEvent>? externalEvents;
+
+  /// Current week start date (Monday) for filtering events
+  final DateTime? weekStart;
+
+  /// Group colors for event rendering
+  final Map<int, Color>? groupColors;
+
   const WeeklyScheduleEditor({
     super.key,
     this.allowMultiDaySelection = false,
     this.isEditable = true,
     this.allowEventOverlap = true,
+    this.externalEvents,
+    this.weekStart,
+    this.groupColors,
   });
 
   @override
@@ -95,6 +108,82 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     _autoScrollTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  // --- External Event Processing ---
+
+  /// Convert GroupEvent to internal Event format
+  /// Filters events within the current week
+  List<Event> _convertGroupEventsToEvents(List<GroupEvent> groupEvents, DateTime weekStart) {
+    final weekEnd = weekStart.add(const Duration(days: 6));
+    final List<Event> convertedEvents = [];
+
+    debugPrint('[WeeklyScheduleEditor] Converting events:');
+    debugPrint('[WeeklyScheduleEditor] Week: $weekStart ~ $weekEnd');
+    debugPrint('[WeeklyScheduleEditor] Input: ${groupEvents.length} events');
+
+    for (final groupEvent in groupEvents) {
+      debugPrint('[Event] ${groupEvent.title}');
+      debugPrint('  Start: ${groupEvent.startDateTime}');
+      debugPrint('  End: ${groupEvent.endDateTime}');
+
+      // Filter events within the current week
+      if (groupEvent.startDateTime.isBefore(weekEnd) && groupEvent.endDateTime.isAfter(weekStart)) {
+        debugPrint('  ✓ Date filter passed');
+
+        // Calculate day (0=Monday, 6=Sunday)
+        int eventDay = groupEvent.startDateTime.weekday - 1;
+        if (eventDay >= _daysInWeek) eventDay = _daysInWeek - 1; // Cap at Sunday
+
+        // Calculate start slot (15-minute intervals)
+        final startHour = groupEvent.startDateTime.hour;
+        final startMinute = groupEvent.startDateTime.minute;
+        final startSlot = (startHour - _startHour) * 4 + (startMinute ~/ 15);
+
+        // Calculate end slot
+        final endHour = groupEvent.endDateTime.hour;
+        final endMinute = groupEvent.endDateTime.minute;
+        int endSlot = (endHour - _startHour) * 4 + (endMinute ~/ 15);
+
+        // Handle all-day events or events extending beyond current view
+        final totalSlots = (_endHour - _startHour) * 4;
+        if (endSlot >= totalSlots) {
+          endSlot = totalSlots - 1;
+        }
+
+        debugPrint('  Day: $eventDay, StartSlot: $startSlot, EndSlot: $endSlot, TotalSlots: $totalSlots');
+
+        if (startSlot < totalSlots && endSlot >= 0 && startSlot <= endSlot) {
+          convertedEvents.add((
+            id: 'ext-${groupEvent.id}', // Prefix to distinguish external events
+            title: groupEvent.title,
+            start: (day: eventDay, slot: startSlot),
+            end: (day: eventDay, slot: endSlot),
+          ));
+          debugPrint('  ✓ Slot filter passed → Added');
+        } else {
+          debugPrint('  ✗ Slot filter failed (startSlot<totalSlots=${startSlot < totalSlots}, endSlot>=0=${endSlot >= 0}, startSlot<=endSlot=${startSlot <= endSlot})');
+        }
+      } else {
+        debugPrint('  ✗ Date filter failed');
+      }
+    }
+
+    debugPrint('[Result] ${convertedEvents.length} events ready for rendering');
+    return convertedEvents;
+  }
+
+  /// Get all events including external group events
+  List<Event> _getAllEvents() {
+    final allEvents = List<Event>.from(_events);
+
+    // Add external group events
+    if (widget.externalEvents != null && widget.weekStart != null) {
+      final externalEvents = _convertGroupEventsToEvents(widget.externalEvents!, widget.weekStart!);
+      allEvents.addAll(externalEvents);
+    }
+
+    return allEvents;
   }
 
   // --- Helper Functions ---
@@ -142,7 +231,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           bool canPlace = true;
           for (final existing in column) {
             final existingStart = existing.start.slot < existing.end.slot ? existing.start.slot : existing.end.slot;
-            final existingEnd = existing.start.slot > existing.end.slot ? existing.start.slot : existing.end.slot;
+            final existingEnd = existing.start.slot > existing.end.slot ? existing.start.slot : event.end.slot;
 
             // Check overlap
             if (eventStart < existingEnd && eventEnd > existingStart) {
@@ -268,11 +357,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     final double slotHeight = _minSlotHeight;
     final int totalSlots = (_endHour - _startHour) * 4;
 
-    // Account for scroll offset
-    final scrollOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
-
     int day = ((position.dx - _timeColumnWidth) / dayColumnWidth).floor();
-    int slot = ((position.dy + scrollOffset - _dayRowHeight) / slotHeight).floor();
+    int slot = ((position.dy - _dayRowHeight) / slotHeight).floor();
 
     day = day.clamp(0, _daysInWeek - 1);
     slot = slot.clamp(0, totalSlots - 1);
@@ -313,11 +399,14 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     return false;
   }
 
-  /// Find all events at a specific cell
+  /// Find all events at a specific cell (including external group events)
   List<Event> _findEventsAtCell(({int day, int slot}) cell) {
     final List<Event> overlappingEvents = [];
 
-    for (final event in _events) {
+    // Get all events including external group events
+    final allEvents = _getAllEvents();
+
+    for (final event in allEvents) {
       final eventStartSlot = event.start.slot < event.end.slot ? event.start.slot : event.end.slot;
       final eventEndSlot = event.start.slot > event.end.slot ? event.start.slot : event.end.slot;
 
@@ -332,11 +421,17 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   // --- Dialogs ---
 
+  /// Check if event is external (read-only)
+  bool _isExternalEvent(Event event) {
+    return event.id.startsWith('ext-');
+  }
+
   /// Show detail view dialog (read-only)
   void _showEventDetailDialog(Event event) {
     final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
     final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
     final dayNames = ['월', '화', '수', '목', '금', '토', '일'];
+    final isExternal = _isExternalEvent(event);
 
     showDialog(
       context: context,
@@ -346,9 +441,26 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         ),
         title: Row(
           children: [
-            Icon(Icons.event, color: Theme.of(context).colorScheme.primary, size: 24),
+            Icon(
+              isExternal ? Icons.group : Icons.event,
+              color: isExternal ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.primary,
+              size: 24,
+            ),
             SizedBox(width: AppSpacing.xxs),
-            Text('일정 상세', style: AppTheme.headlineSmall),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('일정 상세', style: AppTheme.headlineSmall),
+                  if (isExternal)
+                    Text(
+                      '(그룹 일정 - 읽기 전용)',
+                      style: AppTheme.bodySmall.copyWith(color: Colors.grey),
+                    ),
+                ],
+              ),
+            ),
           ],
         ),
         content: Column(
@@ -387,7 +499,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           ],
         ),
         actions: [
-          if (_mode == CalendarMode.edit)
+          if (!isExternal && _mode == CalendarMode.edit)
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -473,6 +585,17 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   }
 
   void _showEditDialog(Event event) {
+    // Prevent editing external events
+    if (_isExternalEvent(event)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('그룹 일정은 수정할 수 없습니다.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     final titleController = TextEditingController(text: event.title);
     showDialog(
       context: context,
@@ -813,7 +936,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                 final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
                 final double contentHeight = _dayRowHeight + (_endHour - _startHour) * 4 * _minSlotHeight;
 
-                final List<({Rect rect, Event event})> eventRects = _events.map((event) {
+                // Get all events including external group events
+                final allEvents = _getAllEvents();
+                final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {
                   return (rect: _cellToRect(event.start, event.end, dayColumnWidth), event: event);
                 }).toList();
 
@@ -913,8 +1038,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
     if (_isOverlapView) {
       // Overlap view: analyze and assign columns
+      // Get all events including external group events for overlap analysis
+      final allEvents = _getAllEvents();
       final overlapInfo = _analyzeOverlappingGroups(
-        _events,
+        allEvents,
         dayColumnWidth,
       );
 

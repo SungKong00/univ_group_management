@@ -18,49 +18,65 @@ class GroupService {
   ///
   /// GET /me/groups
   /// Returns list sorted by level (ascending) then id (ascending)
+  /// Throws exception on error for proper error handling upstream
   Future<List<GroupMembership>> getMyGroups() async {
     try {
-      developer.log('Fetching my groups', name: 'GroupService');
+      developer.log('Fetching my groups from /me/groups', name: 'GroupService');
 
       final response = await _dioClient.get<Map<String, dynamic>>('/me/groups');
 
-      if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
-          if (json is List) {
-            return json
-                .map(
-                  (item) =>
-                      GroupMembership.fromJson(item as Map<String, dynamic>),
-                )
-                .toList();
-          }
-          return <GroupMembership>[];
-        });
+      developer.log(
+        'Received response: statusCode=${response.statusCode}, hasData=${response.data != null}',
+        name: 'GroupService',
+      );
 
-        if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} groups',
-            name: 'GroupService',
-          );
-          return apiResponse.data!;
-        } else {
-          developer.log(
-            'Failed to fetch my groups: ${apiResponse.message}',
-            name: 'GroupService',
-            level: 900,
-          );
-          return [];
-        }
+      if (response.data == null) {
+        throw Exception('Empty response from server');
       }
 
-      return [];
+      final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+        if (json is List) {
+          return json
+              .map(
+                (item) =>
+                    GroupMembership.fromJson(item as Map<String, dynamic>),
+              )
+              .toList();
+        }
+        return <GroupMembership>[];
+      });
+
+      if (!apiResponse.success) {
+        final errorMsg = apiResponse.message ?? 'Unknown error';
+        developer.log(
+          'API returned success=false: $errorMsg',
+          name: 'GroupService',
+          level: 900,
+        );
+        throw Exception(errorMsg);
+      }
+
+      if (apiResponse.data == null) {
+        developer.log(
+          'API returned null data',
+          name: 'GroupService',
+          level: 900,
+        );
+        throw Exception('No data in response');
+      }
+
+      developer.log(
+        'Successfully fetched ${apiResponse.data!.length} groups',
+        name: 'GroupService',
+      );
+      return apiResponse.data!;
     } catch (e) {
       developer.log(
         'Error fetching my groups: $e',
         name: 'GroupService',
-        level: 900,
+        level: 1000,
       );
-      return [];
+      rethrow; // Propagate error for proper handling upstream
     }
   }
 

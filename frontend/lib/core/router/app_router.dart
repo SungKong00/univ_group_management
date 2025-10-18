@@ -11,6 +11,7 @@ import '../../presentation/pages/activity/activity_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
 import '../../presentation/pages/group/group_admin_page.dart';
 import '../../presentation/pages/recruitment/recruitment_detail_page.dart';
+import '../../presentation/pages/demo_calendar/demo_calendar_page.dart';
 import '../../presentation/pages/main/main_layout.dart';
 import '../constants/app_constants.dart';
 import '../services/auth_service.dart';
@@ -43,6 +44,12 @@ final GoRouter appRouter = GoRouter(
       path: AppConstants.onboardingRoute,
       name: 'profile-setup',
       builder: (context, state) => const ProfileSetupPage(),
+    ),
+    // TODO: 임시 데모 페이지 - 나중에 제거 (데모 기능 개발 완료 후)
+    GoRoute(
+      path: '/demo',
+      name: 'demo-calendar',
+      builder: (context, state) => const DemoCalendarPage(),
     ),
     ShellRoute(
       builder: (context, state, child) => MainLayout(child: child),

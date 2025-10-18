@@ -2,6 +2,45 @@
 
 이 파일은 프로젝트의 컨텍스트 문서들이 언제, 어떤 커밋에서 업데이트되었는지 추적합니다.
 
+### 2025-10-19 - 데모 캘린더 기능 수정 및 문서 동기화
+**커밋**: (커밋 예정)
+**유형**: 기능 수정 + 문서 동기화
+**우선순위**: Medium
+**영향 범위**: 프론트엔드 (캘린더, 서비스), 문서 (UI/UX 디자인)
+
+**구현 내용**:
+- **`GroupService` 오류 처리 개선**:
+    - `getMyGroups` 메소드에서 오류 발생 시 빈 리스트를 반환하는 대신, 예외를 다시 던지도록 (`rethrow`) 수정하여 UI 레이어에서 오류를 인지하고 처리할 수 있도록 변경했습니다.
+- **데모 캘린더 UI 개선**:
+    - 그룹 목록 로딩 시 로딩 인디케이터를 표시하고, 오류 발생 시 재시도 버튼과 함께 오류 메시지를 표시하도록 `DemoCalendarPage`와 `GroupPickerBottomSheet`을 개선했습니다.
+- **`WeeklyScheduleEditor` 기능 확장**:
+    - 외부 그룹 일정을 `externalEvents` 파라미터로 받아와 캘린더에 읽기 전용으로 렌더링하는 기능을 추가했습니다.
+    - 외부 일정은 수정/삭제가 불가능하며, 상세 보기 시 "(그룹 일정 - 읽기 전용)" 텍스트를 표시하여 사용자가 명확히 인지할 수 있도록 했습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/ui-ux/weekly-calendar-component-design.md`:
+    - `WeeklyScheduleEditor` 컴포넌트 명세에 `externalEvents`, `weekStart`, `groupColors` 파라미터를 추가했습니다.
+    - 외부 일정을 읽기 전용으로 처리하는 로직과 시각적 구분 방법을 명시했습니다.
+
+**수정된 파일**:
+- `frontend/lib/core/router/app_router.dart`
+- `frontend/lib/core/services/group_calendar_service.dart`
+- `frontend/lib/core/services/group_service.dart`
+- `frontend/lib/presentation/pages/profile/profile_page.dart`
+- `frontend/lib/presentation/widgets/weekly_calendar/weekly_schedule_editor.dart`
+- `docs/ui-ux/weekly-calendar-component-design.md`
+- `DEMO_CALENDAR_FIX_SUMMARY.md` (신규)
+- `DEMO_CALENDAR_TEST_PLAN.md` (신규)
+- `frontend/lib/presentation/pages/demo_calendar/` (신규)
+- `frontend/lib/presentation/widgets/weekly_calendar/external_events_overlay.dart` (신규)
+- `frontend/lib/presentation/widgets/weekly_calendar/group_picker_bottom_sheet.dart` (신규)
+- `frontend/lib/presentation/widgets/weekly_calendar/group_selection_header.dart` (신규)
+- `frontend/lib/presentation/widgets/weekly_calendar/weekly_navigation_header.dart` (신규)
+
+**메모**: 데모 캘린더의 안정성을 높이고, 여러 그룹의 일정을 통합하여 볼 수 있는 기능의 기반을 마련했습니다. 관련 UI/UX 문서도 최신 상태로 업데이트되었습니다.
+
+---
+
 ### 2025-10-18 - 장소-일정 연동 Phase 2 비즈니스 로직 구현
 **커밋**: 5c744a51d4b301b17c9ac7dd6bc075ce1306ceca
 **유형**: 기능 구현 + 문서 동기화

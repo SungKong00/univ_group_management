@@ -33,6 +33,7 @@ class GroupCalendarService {
     required int groupId,
     required DateTime startDate,
     required DateTime endDate,
+    bool enableLogging = true,
   }) async {
     try {
       final response = await _dioClient.get<Map<String, dynamic>>(
@@ -57,10 +58,12 @@ class GroupCalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log(
-          'Fetched ${apiResponse.data!.length} group events for group $groupId',
-          name: 'GroupCalendarService',
-        );
+        if (enableLogging) {
+          developer.log(
+            'Fetched ${apiResponse.data!.length} group events for group $groupId',
+            name: 'GroupCalendarService',
+          );
+        }
         return apiResponse.data!;
       }
 
@@ -68,12 +71,14 @@ class GroupCalendarService {
         apiResponse.message ?? '그룹 일정을 불러오지 못했습니다.',
       );
     } on DioException catch (e) {
-      developer.log(
-        'Failed to load group events for group $groupId: $e',
-        name: 'GroupCalendarService',
-        level: 900,
-        error: e,
-      );
+      if (enableLogging) {
+        developer.log(
+          'Failed to load group events for group $groupId: $e',
+          name: 'GroupCalendarService',
+          level: 900,
+          error: e,
+        );
+      }
       throw Exception(_friendlyMessage(
         e,
         fallback: '그룹 일정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',

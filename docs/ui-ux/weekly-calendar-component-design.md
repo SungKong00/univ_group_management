@@ -106,13 +106,26 @@ WeeklyScheduleEditor(
   mode: ScheduleEditorMode.create, // create | edit
   slotInterval: Duration(minutes: 15), // 15분 또는 5분
   timeRange: (start: 6, end: 24),
-  existingEvents: [...],
+  existingEvents: [...], // 사용자가 직접 생성/편집하는 일정
+  
+  // 외부에서 주입되는 읽기 전용 그룹 일정
+  externalEvents: List<GroupEvent>?, 
+  weekStart: DateTime?, // 외부 일정 필터링 기준
+  groupColors: Map<int, Color>?, // 그룹별 색상
+  
   onEventCreated: (TimeRange range) {
     // 모달 열어서 제목, 설명 등 입력받기
   },
   onEventUpdated: (id, TimeRange range) {},
 )
 ```
+
+**외부 일정 처리 로직**:
+- `externalEvents`로 `GroupEvent` 리스트가 전달되면, `weekStart`를 기준으로 현재 주에 해당하는 일정만 필터링합니다.
+- 필터링된 `GroupEvent`는 내부 `Event` 모델로 변환되어 캘린더에 렌더링됩니다.
+- 이 과정에서 `groupColors` 맵을 참조하여 각 그룹 일정에 맞는 색상을 적용합니다.
+- 외부 일정은 **읽기 전용**으로 취급되며, 클릭 시 상세 정보 다이얼로그가 표시되지만 수정/삭제는 불가능합니다.
+- 다이얼로그에는 "(그룹 일정 - 읽기 전용)"과 같은 문구를 표시하여 사용자가 명확히 인지할 수 있도록 합니다.
 
 #### 1.3 시각적 상태
 | 상태 | 색상 | 설명 |
