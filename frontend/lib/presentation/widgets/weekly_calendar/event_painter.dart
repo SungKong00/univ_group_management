@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 class EventPainter extends CustomPainter {
-  final List<({Rect rect, String title})> events;
+  final List<({Rect rect, String title, int? columnIndex, int? totalColumns})> events;
 
   EventPainter({required this.events});
 
@@ -16,7 +16,7 @@ class EventPainter extends CustomPainter {
     // 1. Earlier start time first (drawn below)
     // 2. If same start time, longer duration first (drawn below)
     // Result: Later/shorter blocks appear on top
-    final sortedEvents = List<({Rect rect, String title})>.from(events)
+    final sortedEvents = List<({Rect rect, String title, int? columnIndex, int? totalColumns})>.from(events)
       ..sort((a, b) {
         // Compare top position (start time)
         final topCompare = a.rect.top.compareTo(b.rect.top);
@@ -29,7 +29,22 @@ class EventPainter extends CustomPainter {
       });
 
     for (final event in sortedEvents) {
-      final rrect = RRect.fromRectAndRadius(event.rect, const Radius.circular(4));
+      Rect eventRect = event.rect;
+
+      // Apply column layout if overlap info is provided
+      if (event.columnIndex != null && event.totalColumns != null && event.totalColumns! > 1) {
+        final columnWidth = event.rect.width / event.totalColumns!;
+        final columnOffset = columnWidth * event.columnIndex!;
+
+        eventRect = Rect.fromLTRB(
+          event.rect.left + columnOffset,
+          event.rect.top,
+          event.rect.left + columnOffset + columnWidth,
+          event.rect.bottom,
+        );
+      }
+
+      final rrect = RRect.fromRectAndRadius(eventRect, const Radius.circular(4));
       canvas.drawRRect(rrect, paint);
 
       final textPainter = TextPainter(
@@ -42,8 +57,8 @@ class EventPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       );
 
-      textPainter.layout(minWidth: 0, maxWidth: event.rect.width - 8); // 4px padding on each side
-      textPainter.paint(canvas, event.rect.topLeft + const Offset(4, 4));
+      textPainter.layout(minWidth: 0, maxWidth: eventRect.width - 8); // 4px padding on each side
+      textPainter.paint(canvas, eventRect.topLeft + const Offset(4, 4));
     }
   }
 

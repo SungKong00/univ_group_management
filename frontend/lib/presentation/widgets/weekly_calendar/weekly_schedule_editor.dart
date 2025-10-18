@@ -71,6 +71,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   // State
   final List<Event> _events = [];
   CalendarMode _mode = CalendarMode.add; // Default to add mode
+  bool _isOverlapView = true; // Default to overlap view (side-by-side)
   bool _isSelecting = false;
   ({int day, int slot})? _startCell;
   ({int day, int slot})? _endCell;
@@ -97,6 +98,82 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   }
 
   // --- Helper Functions ---
+
+  /// Analyze overlapping events and assign column positions
+  /// Returns a map: eventId -> (columnIndex, totalColumns)
+  Map<String, ({int columnIndex, int totalColumns})> _analyzeOverlappingGroups(
+    List<Event> events,
+    double dayColumnWidth,
+  ) {
+    final Map<String, ({int columnIndex, int totalColumns})> result = {};
+
+    // Group events by day
+    final Map<int, List<Event>> eventsByDay = {};
+    for (final event in events) {
+      final day = event.start.day;
+      eventsByDay.putIfAbsent(day, () => []).add(event);
+    }
+
+    // Process each day separately
+    for (final entry in eventsByDay.entries) {
+      final dayEvents = entry.value;
+
+      // Sort by start time, then by duration (longer first)
+      final sortedEvents = List<Event>.from(dayEvents)
+        ..sort((a, b) {
+          final startCompare = a.start.slot.compareTo(b.start.slot);
+          if (startCompare != 0) return startCompare;
+
+          final durationA = (a.end.slot - a.start.slot).abs();
+          final durationB = (b.end.slot - b.start.slot).abs();
+          return durationB.compareTo(durationA);
+        });
+
+      // Find overlapping groups and assign columns (Google Calendar algorithm)
+      final List<List<Event>> columns = [];
+
+      for (final event in sortedEvents) {
+        final eventStart = event.start.slot < event.end.slot ? event.start.slot : event.end.slot;
+        final eventEnd = event.start.slot > event.end.slot ? event.start.slot : event.end.slot;
+
+        // Try to place in existing column
+        bool placed = false;
+        for (final column in columns) {
+          bool canPlace = true;
+          for (final existing in column) {
+            final existingStart = existing.start.slot < existing.end.slot ? existing.start.slot : existing.end.slot;
+            final existingEnd = existing.start.slot > existing.end.slot ? existing.start.slot : existing.end.slot;
+
+            // Check overlap
+            if (eventStart < existingEnd && eventEnd > existingStart) {
+              canPlace = false;
+              break;
+            }
+          }
+
+          if (canPlace) {
+            column.add(event);
+            placed = true;
+            break;
+          }
+        }
+
+        // Create new column if no suitable column found
+        if (!placed) {
+          columns.add([event]);
+        }
+      }
+
+      // Assign column positions
+      for (int colIndex = 0; colIndex < columns.length; colIndex++) {
+        for (final event in columns[colIndex]) {
+          result[event.id] = (columnIndex: colIndex, totalColumns: columns.length);
+        }
+      }
+    }
+
+    return result;
+  }
 
   /// Handle auto-scrolling when drag reaches screen edge
   void _handleEdgeScrolling(Offset localPosition) {
@@ -671,39 +748,59 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Mode selector
+        // Mode selector and overlap view toggle
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: SegmentedButton<CalendarMode>(
-            segments: const [
-              ButtonSegment(
-                value: CalendarMode.add,
-                label: Text('추가 모드'),
-                icon: Icon(Icons.add_circle_outline),
+          child: Row(
+            children: [
+              Expanded(
+                child: SegmentedButton<CalendarMode>(
+                  segments: const [
+                    ButtonSegment(
+                      value: CalendarMode.add,
+                      label: Text('추가 모드'),
+                      icon: Icon(Icons.add_circle_outline),
+                    ),
+                    ButtonSegment(
+                      value: CalendarMode.edit,
+                      label: Text('수정 모드'),
+                      icon: Icon(Icons.edit_outlined),
+                    ),
+                    ButtonSegment(
+                      value: CalendarMode.view,
+                      label: Text('고정 모드'),
+                      icon: Icon(Icons.visibility_outlined),
+                    ),
+                  ],
+                  selected: {_mode},
+                  onSelectionChanged: (Set<CalendarMode> newSelection) {
+                    setState(() {
+                      _mode = newSelection.first;
+                      // Clear any ongoing selection when switching modes
+                      _isSelecting = false;
+                      _startCell = null;
+                      _endCell = null;
+                      _selectionRect = null;
+                      _highlightRect = null;
+                    });
+                  },
+                ),
               ),
-              ButtonSegment(
-                value: CalendarMode.edit,
-                label: Text('수정 모드'),
-                icon: Icon(Icons.edit_outlined),
-              ),
-              ButtonSegment(
-                value: CalendarMode.view,
-                label: Text('고정 모드'),
-                icon: Icon(Icons.visibility_outlined),
+              const SizedBox(width: 8),
+              // Overlap view toggle
+              Tooltip(
+                message: _isOverlapView ? '겹친 일정 펼치기' : '겹친 일정 접기',
+                child: IconButton(
+                  icon: Icon(_isOverlapView ? Icons.view_week : Icons.layers),
+                  onPressed: () {
+                    setState(() {
+                      _isOverlapView = !_isOverlapView;
+                    });
+                  },
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ],
-            selected: {_mode},
-            onSelectionChanged: (Set<CalendarMode> newSelection) {
-              setState(() {
-                _mode = newSelection.first;
-                // Clear any ongoing selection when switching modes
-                _isSelecting = false;
-                _startCell = null;
-                _endCell = null;
-                _selectionRect = null;
-                _highlightRect = null;
-              });
-            },
           ),
         ),
         // Calendar content
@@ -759,7 +856,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       child: GestureDetector(
         onTapDown: (details) => _handleTap(details.localPosition, dayColumnWidth, eventRects),
         behavior: HitTestBehavior.opaque,
-        child: _buildCalendarStack(eventRects),
+        child: _buildCalendarStack(eventRects, dayColumnWidth),
       ),
     );
   }
@@ -805,12 +902,41 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         }
       },
       behavior: HitTestBehavior.opaque,
-      child: _buildCalendarStack(eventRects),
+      child: _buildCalendarStack(eventRects, dayColumnWidth),
     );
   }
 
   /// Common calendar visualization stack
-  Widget _buildCalendarStack(List<({Rect rect, Event event})> eventRects) {
+  Widget _buildCalendarStack(List<({Rect rect, Event event})> eventRects, double dayColumnWidth) {
+    // Prepare event data for EventPainter
+    List<({Rect rect, String title, int? columnIndex, int? totalColumns})> eventData;
+
+    if (_isOverlapView) {
+      // Overlap view: analyze and assign columns
+      final overlapInfo = _analyzeOverlappingGroups(
+        _events,
+        dayColumnWidth,
+      );
+
+      eventData = eventRects.map((e) {
+        final info = overlapInfo[e.event.id];
+        return (
+          rect: e.rect,
+          title: e.event.title,
+          columnIndex: info?.columnIndex,
+          totalColumns: info?.totalColumns,
+        );
+      }).toList();
+    } else {
+      // Compact view: no column layout
+      eventData = eventRects.map((e) => (
+        rect: e.rect,
+        title: e.event.title,
+        columnIndex: null,
+        totalColumns: null,
+      )).toList();
+    }
+
     return Stack(
       children: [
         CustomPaint(
@@ -823,7 +949,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           size: Size.infinite,
         ),
         CustomPaint(
-          painter: EventPainter(events: eventRects.map((e) => (rect: e.rect, title: e.event.title)).toList()),
+          painter: EventPainter(events: eventData),
           size: Size.infinite,
         ),
         if (widget.isEditable) ...[
