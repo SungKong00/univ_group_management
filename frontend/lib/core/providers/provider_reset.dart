@@ -14,6 +14,7 @@ import '../../presentation/pages/member_management/providers/join_request_provid
 import '../../presentation/pages/member_management/providers/member_list_provider.dart';
 import '../../presentation/pages/member_management/providers/role_management_provider.dart';
 import '../../presentation/providers/recruitment_providers.dart';
+import '../../presentation/providers/recruiting_groups_provider.dart';
 
 typedef LogoutResetCallback = void Function(Ref ref);
 
@@ -76,6 +77,7 @@ final _providersToInvalidateOnLogout = <ProviderOrFamily>[
   createRoleProvider,
   updateRoleProvider,
   deleteRoleProvider,
+  recruitingGroupsProvider,
 ];
 
 /// 로그아웃 시 실행할 사용자 정의 초기화 콜백

@@ -4,8 +4,9 @@ import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../providers/home_state_provider.dart';
+import '../../providers/recruiting_groups_provider.dart';
 import '../../widgets/cards/action_card.dart';
-import '../../widgets/cards/group_card.dart';
+import '../../widgets/cards/recruitment_card.dart';
 import 'widgets/group_explore_content_widget.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -140,6 +141,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildRecentGroups(BuildContext context) {
+    final recruitingGroupsState = ref.watch(recruitingGroupsProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -151,7 +154,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               button: true,
               label: '전체 그룹 보기',
               child: TextButton(
-                onPressed: () => ref.read(homeStateProvider.notifier).showGroupExploreWithRecruitingFilter(),
+                onPressed: () => ref
+                    .read(homeStateProvider.notifier)
+                    .showGroupExploreWithRecruitingFilter(),
                 child: const Text('전체 보기'),
               ),
             ),
@@ -160,19 +165,101 @@ class _HomePageState extends ConsumerState<HomePage> {
         const SizedBox(height: AppSpacing.sm),
         SizedBox(
           height: 120,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: 5,
-            itemBuilder: (context, index) => GroupCard(
-              groupName: '샘플 그룹 ${index + 1}',
-              memberCount: 20 + index * 5,
-              isActive: true,
-              avatarText: '그${index + 1}',
-              onTap: () {},
-            ),
-          ),
+          child: _buildRecruitingGroupsList(recruitingGroupsState),
         ),
       ],
+    );
+  }
+
+  Widget _buildRecruitingGroupsList(RecruitingGroupsState state) {
+    // Loading state
+    if (state.isLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: AppColors.brand,
+        ),
+      );
+    }
+
+    // Error state
+    if (state.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: AppColors.error,
+              size: 32,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              state.error!,
+              style: AppTheme.bodySmallTheme(context).copyWith(
+                color: AppColors.error,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            TextButton(
+              onPressed: () {
+                ref.read(recruitingGroupsProvider.notifier).refresh();
+              },
+              child: const Text('다시 시도'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Empty state
+    if (state.recruitments.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              color: AppColors.neutral600,
+              size: 32,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '현재 모집 중인 그룹이 없습니다',
+              style: AppTheme.bodySmallTheme(context).copyWith(
+                color: AppColors.neutral600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Success state - display recruiting groups
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: state.recruitments.length,
+      itemBuilder: (context, index) {
+        final recruitment = state.recruitments[index];
+
+        // Generate avatar text from group name (first 2 characters)
+        final avatarText = recruitment.groupName.length >= 2
+            ? recruitment.groupName.substring(0, 2)
+            : recruitment.groupName;
+
+        return RecruitmentCard(
+          groupName: recruitment.groupName,
+          recruitmentTitle: recruitment.title,
+          applicantCount: recruitment.currentApplicantCount,
+          endDate: recruitment.recruitmentEndDate,
+          showApplicantCount: recruitment.showApplicantCount,
+          avatarText: avatarText,
+          onTap: () {
+            // Navigate to recruitment detail or group page
+            // TODO: Implement navigation to recruitment detail page
+          },
+        );
+      },
     );
   }
 
