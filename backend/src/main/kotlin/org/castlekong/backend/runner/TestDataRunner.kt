@@ -14,10 +14,10 @@ import org.castlekong.backend.dto.SignupProfileRequest
 import org.castlekong.backend.dto.UpdateUsageStatusRequest
 import org.castlekong.backend.entity.GroupPermission
 import org.castlekong.backend.entity.GroupType
-import org.castlekong.backend.entity.PlaceAvailability
+import org.castlekong.backend.entity.PlaceOperatingHours
 import org.castlekong.backend.entity.UsageStatus
 import org.castlekong.backend.entity.User
-import org.castlekong.backend.repository.PlaceAvailabilityRepository
+import org.castlekong.backend.repository.PlaceOperatingHoursRepository
 import org.castlekong.backend.repository.PlaceRepository
 import org.castlekong.backend.service.GoogleUserInfo
 import org.castlekong.backend.service.GroupEventService
@@ -75,7 +75,7 @@ class TestDataRunner(
     private val personalScheduleService: PersonalScheduleService,
     private val groupEventService: GroupEventService,
     private val placeReservationService: PlaceReservationService,
-    private val placeAvailabilityRepository: PlaceAvailabilityRepository,
+    private val placeOperatingHoursRepository: PlaceOperatingHoursRepository,
     private val placeRepository: PlaceRepository,
     private val permissionService: org.castlekong.backend.security.PermissionService,
 ) : ApplicationRunner {
@@ -533,8 +533,6 @@ class TestDataRunner(
             )
         }
 
-
-
         logger.info("-> SUCCESS: Created place and managed usage permissions")
         return CustomPlaces(labPlace.id, seminarRoom.id)
     }
@@ -545,42 +543,71 @@ class TestDataRunner(
      * @param places 커스텀 장소들
      */
     private fun createPlaceAvailabilities(places: CustomPlaces) {
-        logger.info("[6/7] Creating place availabilities...")
+        logger.info("[6/7] Creating place operating hours...")
 
         val labPlace = placeRepository.findById(places.labPlaceId).orElseThrow()
         val seminarRoom = placeRepository.findById(places.seminarRoomId).orElseThrow()
 
-        safeExecute("Creating availabilities for '학생회실'") {
+        safeExecute("Creating operating hours for '학생회실'") {
+            // Monday-Friday: 08:00-21:00
             val weekdays = listOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)
             weekdays.forEach {
-                placeAvailabilityRepository.save(
-                    PlaceAvailability(
+                placeOperatingHoursRepository.save(
+                    PlaceOperatingHours(
                         place = labPlace,
                         dayOfWeek = it,
-                        startTime = LocalTime.of(9, 0),
-                        endTime = LocalTime.of(22, 0)
-                    )
+                        startTime = LocalTime.of(8, 0),
+                        endTime = LocalTime.of(21, 0),
+                        isClosed = false,
+                    ),
+                )
+            }
+            // Saturday, Sunday: Closed
+            val weekends = listOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
+            weekends.forEach {
+                placeOperatingHoursRepository.save(
+                    PlaceOperatingHours(
+                        place = labPlace,
+                        dayOfWeek = it,
+                        startTime = LocalTime.of(8, 0),
+                        endTime = LocalTime.of(21, 0),
+                        isClosed = true,
+                    ),
                 )
             }
         }
 
-        safeExecute("Creating availabilities for '세미나실'") {
+        safeExecute("Creating operating hours for '세미나실'") {
+            // Monday-Friday: 08:00-21:00
             val weekdays = listOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)
             weekdays.forEach {
-                placeAvailabilityRepository.save(
-                    PlaceAvailability(
+                placeOperatingHoursRepository.save(
+                    PlaceOperatingHours(
                         place = seminarRoom,
                         dayOfWeek = it,
-                        startTime = LocalTime.of(9, 0),
-                        endTime = LocalTime.of(22, 0)
-                    )
+                        startTime = LocalTime.of(8, 0),
+                        endTime = LocalTime.of(21, 0),
+                        isClosed = false,
+                    ),
+                )
+            }
+            // Saturday, Sunday: Closed
+            val weekends = listOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
+            weekends.forEach {
+                placeOperatingHoursRepository.save(
+                    PlaceOperatingHours(
+                        place = seminarRoom,
+                        dayOfWeek = it,
+                        startTime = LocalTime.of(8, 0),
+                        endTime = LocalTime.of(21, 0),
+                        isClosed = true,
+                    ),
                 )
             }
         }
 
-        logger.info("-> SUCCESS: Created place availabilities")
+        logger.info("-> SUCCESS: Created place operating hours")
     }
-
 
     /**
      * Phase 7: 페르소나별 시간표 생성
@@ -810,11 +837,12 @@ class TestDataRunner(
                     endTime = LocalTime.of(21, 0),
                     isOfficial = false,
                     color = "#03A9F4",
-                    recurrence = RecurrencePattern(
-                        type = RecurrenceType.WEEKLY,
-                        daysOfWeek = listOf(DayOfWeek.MONDAY)
-                    )
-                )
+                    recurrence =
+                        RecurrencePattern(
+                            type = RecurrenceType.WEEKLY,
+                            daysOfWeek = listOf(DayOfWeek.MONDAY),
+                        ),
+                ),
             )
         }
 
@@ -833,31 +861,33 @@ class TestDataRunner(
                     endTime = LocalTime.of(18, 30),
                     isOfficial = true,
                     color = "#E91E63",
-                    recurrence = RecurrencePattern(
-                        type = RecurrenceType.WEEKLY,
-                        daysOfWeek = listOf(DayOfWeek.WEDNESDAY)
-                    )
-                )
+                    recurrence =
+                        RecurrencePattern(
+                            type = RecurrenceType.WEEKLY,
+                            daysOfWeek = listOf(DayOfWeek.WEDNESDAY),
+                        ),
+                ),
             )
         }
 
         // 시나리오 3: 그룹 이벤트 없는 장소 예약 (총학생회)
         safeExecute("Creating a direct place reservation for Student Council") {
-            val event = groupEventService.createEvent(
-                users.user3,
-                groups.studentCouncilId,
-                CreateGroupEventRequest(
-                    title = "임시 회의",
-                    description = "긴급 회의",
-                    placeId = places.labPlaceId,
-                    startDate = LocalDate.now().plusDays(2),
-                    endDate = LocalDate.now().plusDays(2),
-                    startTime = LocalTime.of(13, 0),
-                    endTime = LocalTime.of(14, 0),
-                    isOfficial = false,
-                    color = "#FFC107"
+            val event =
+                groupEventService.createEvent(
+                    users.user3,
+                    groups.studentCouncilId,
+                    CreateGroupEventRequest(
+                        title = "임시 회의",
+                        description = "긴급 회의",
+                        placeId = places.labPlaceId,
+                        startDate = LocalDate.now().plusDays(2),
+                        endDate = LocalDate.now().plusDays(2),
+                        startTime = LocalTime.of(13, 0),
+                        endTime = LocalTime.of(14, 0),
+                        isOfficial = false,
+                        color = "#FFC107",
+                    ),
                 )
-            )
         }
 
         // 시나리오 4: 예약 불가능한 장소가 포함된 그룹 이벤트
@@ -874,8 +904,8 @@ class TestDataRunner(
                     startTime = LocalTime.of(15, 0),
                     endTime = LocalTime.of(17, 0),
                     isOfficial = false,
-                    color = "#795548"
-                )
+                    color = "#795548",
+                ),
             )
         }
 
@@ -894,8 +924,8 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = true,
-                    color = "#8BC34A"
-                )
+                    color = "#8BC34A",
+                ),
             )
         }
 
@@ -914,8 +944,8 @@ class TestDataRunner(
                     startTime = LocalTime.of(15, 0),
                     endTime = LocalTime.of(17, 0),
                     isOfficial = true,
-                    color = "#00BCD4"
-                )
+                    color = "#00BCD4",
+                ),
             )
         }
 
@@ -934,8 +964,8 @@ class TestDataRunner(
                     startTime = LocalTime.of(10, 0),
                     endTime = LocalTime.of(12, 0),
                     isOfficial = false,
-                    color = "#FF9800"
-                )
+                    color = "#FF9800",
+                ),
             )
         }
 
@@ -953,11 +983,12 @@ class TestDataRunner(
                     endTime = LocalTime.of(21, 0),
                     isOfficial = false,
                     color = "#03A9F4",
-                    recurrence = RecurrencePattern(
-                        type = RecurrenceType.WEEKLY,
-                        daysOfWeek = listOf(DayOfWeek.MONDAY)
-                    )
-                )
+                    recurrence =
+                        RecurrencePattern(
+                            type = RecurrenceType.WEEKLY,
+                            daysOfWeek = listOf(DayOfWeek.MONDAY),
+                        ),
+                ),
             )
         }
 
@@ -975,11 +1006,12 @@ class TestDataRunner(
                     endTime = LocalTime.of(18, 30),
                     isOfficial = true,
                     color = "#E91E63",
-                    recurrence = RecurrencePattern(
-                        type = RecurrenceType.WEEKLY,
-                        daysOfWeek = listOf(DayOfWeek.TUESDAY)
-                    )
-                )
+                    recurrence =
+                        RecurrencePattern(
+                            type = RecurrenceType.WEEKLY,
+                            daysOfWeek = listOf(DayOfWeek.TUESDAY),
+                        ),
+                ),
             )
         }
 
@@ -997,8 +1029,8 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = true,
-                    color = "#00BCD4"
-                )
+                    color = "#00BCD4",
+                ),
             )
             groupEventService.createEvent(
                 owner!!,
@@ -1011,8 +1043,8 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = false,
-                    color = "#00BCD4"
-                )
+                    color = "#00BCD4",
+                ),
             )
             groupEventService.createEvent(
                 owner!!,
@@ -1025,8 +1057,8 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = true,
-                    color = "#00BCD4"
-                )
+                    color = "#00BCD4",
+                ),
             )
         }
 
@@ -1044,8 +1076,8 @@ class TestDataRunner(
                     startTime = LocalTime.of(10, 0),
                     endTime = LocalTime.of(12, 0),
                     isOfficial = false,
-                    color = "#FF9800"
-                )
+                    color = "#FF9800",
+                ),
             )
             groupEventService.createEvent(
                 owner!!,
@@ -1058,8 +1090,8 @@ class TestDataRunner(
                     startTime = LocalTime.of(10, 0),
                     endTime = LocalTime.of(12, 0),
                     isOfficial = false,
-                    color = "#FF9800"
-                )
+                    color = "#FF9800",
+                ),
             )
             groupEventService.createEvent(
                 owner!!,
@@ -1072,14 +1104,13 @@ class TestDataRunner(
                     startTime = LocalTime.of(10, 0),
                     endTime = LocalTime.of(12, 0),
                     isOfficial = true,
-                    color = "#FF9800"
-                )
+                    color = "#FF9800",
+                ),
             )
         }
 
         logger.info("-> SUCCESS: Created group calendar events and reservations")
     }
-
 
     /**
      * 안전한 실행 래퍼 - 에러 로깅 및 재발생

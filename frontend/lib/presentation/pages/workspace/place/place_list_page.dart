@@ -337,9 +337,11 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
   }
 
   void _navigateToAvailabilitySettings(int placeId) {
+    // ignore: deprecated_member_use
     Navigator.push(
       context,
       MaterialPageRoute(
+        // ignore: deprecated_member_use
         builder: (context) => PlaceAvailabilitySettingsPage(
           placeId: placeId,
         ),

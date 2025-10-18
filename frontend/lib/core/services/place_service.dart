@@ -643,10 +643,18 @@ class PlaceService {
     }
   }
 
+  // DEPRECATED: PlaceAvailability 시스템이 PlaceOperatingHours로 대체되었습니다.
+  // 새 시스템은 place_time_repository.dart의 setOperatingHours()를 사용하세요.
+  // 구 엔드포인트: POST /api/places/{placeId}/availabilities (복수 시간대 지원)
+  // 신 엔드포인트: PUT /api/places/{placeId}/operating-hours (요일당 단일 시간대)
+
   /// Set availabilities for a place
   ///
   /// POST /api/places/{placeId}/availabilities
   /// Replaces all existing availabilities with the provided list
+  ///
+  /// DEPRECATED: Use PlaceTimeRepository.setOperatingHours() instead
+  @Deprecated('Use PlaceTimeRepository.setOperatingHours() instead')
   Future<void> setAvailabilities(
     int placeId,
     List<AvailabilityRequest> availabilities,

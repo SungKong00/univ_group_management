@@ -556,6 +556,8 @@ class PlaceReservationService(
     /**
      * 운영 시간 확인 (여러 날짜에 걸친 일정 지원)
      *
+     * 새로운 PlaceOperatingHours 시스템 사용
+     *
      * @param place 장소
      * @param startDateTime 시작 시간
      * @param endDateTime 종료 시간
@@ -571,7 +573,7 @@ class PlaceReservationService(
 
         // 같은 날 예약인 경우
         if (startDate == endDate) {
-            return checkOperatingHoursForSingleDay(place, startDateTime, endDateTime)
+            return checkOperatingHoursForSingleDayNew(place, startDateTime, endDateTime)
         }
 
         // 여러 날에 걸친 예약: 각 날짜별로 검증
@@ -582,7 +584,7 @@ class PlaceReservationService(
             val dayEnd =
                 if (currentDate == endDate) endDateTime else currentDate.atTime(23, 59, 59)
 
-            if (!checkOperatingHoursForSingleDay(place, dayStart, dayEnd)) {
+            if (!checkOperatingHoursForSingleDayNew(place, dayStart, dayEnd)) {
                 return false
             }
 
@@ -593,9 +595,9 @@ class PlaceReservationService(
     }
 
     /**
-     * 단일 날짜 운영 시간 확인
+     * 단일 날짜 운영 시간 확인 (PlaceOperatingHours 기반)
      */
-    private fun checkOperatingHoursForSingleDay(
+    private fun checkOperatingHoursForSingleDayNew(
         place: Place,
         startDateTime: LocalDateTime,
         endDateTime: LocalDateTime,
@@ -604,16 +606,16 @@ class PlaceReservationService(
         val startTime = startDateTime.toLocalTime()
         val endTime = endDateTime.toLocalTime()
 
-        val availabilities = placeAvailabilityRepository.findByPlaceIdAndDayOfWeek(place.id, dayOfWeek)
+        // 해당 요일의 운영 시간 조회
+        val operatingHours = placeOperatingHoursRepository.findByPlaceIdAndDayOfWeek(place.id, dayOfWeek)
+            .orElse(null) ?: return false // 해당 요일 운영 정보 없음
 
-        if (availabilities.isEmpty()) {
-            return false // 해당 요일 운영 안 함
+        if (operatingHours.isClosed) {
+            return false // 해당 요일 휴무
         }
 
-        // 예약 시간이 운영 시간 범위 내에 있는지 확인
-        return availabilities.any { avail ->
-            startTime >= avail.startTime && endTime <= avail.endTime
-        }
+        // 예약 시간이 운영 시간 범위 내에 완전히 포함되는지 확인
+        return operatingHours.fullyContains(startTime, endTime)
     }
 
     // ============ New Time Management Integration (Phase 2) ============

@@ -11,6 +11,11 @@ import '../../../providers/place_provider.dart';
 ///
 /// Allows managing operating hours for a place by day of week.
 /// Each day can have multiple time slots.
+///
+/// DEPRECATED: This page uses the old PlaceAvailability system (multiple time slots per day).
+/// For new implementations, use PlaceOperatingHoursDisplay widget from place_admin feature
+/// which uses the new PlaceOperatingHours system (single time slot per day).
+@Deprecated('Use PlaceOperatingHoursDisplay from place_admin feature instead')
 class PlaceAvailabilitySettingsPage extends ConsumerStatefulWidget {
   final int placeId;
 
@@ -53,6 +58,7 @@ class _PlaceAvailabilitySettingsPageState
           }
 
           // Group availabilities by day of week
+          // ignore: deprecated_member_use
           for (var availability in placeDetail.availabilities) {
             _availabilities[availability.dayOfWeek]!.add(
               AvailabilityEntry(
@@ -500,6 +506,7 @@ class _PlaceAvailabilitySettingsPageState
       }
 
       // Call API
+      // ignore: deprecated_member_use_from_same_package
       await ref.read(placeManagementProvider.notifier).setAvailabilities(
             widget.placeId,
             requests,

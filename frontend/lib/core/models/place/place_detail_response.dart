@@ -4,6 +4,9 @@ import 'place_availability.dart';
 /// Response model for place detail API
 ///
 /// Contains place information, availability schedules, and approved group count
+///
+/// DEPRECATED: availabilities field uses old PlaceAvailability system.
+/// Use PlaceTimeRepository.getOperatingHours() for the new operating hours system.
 class PlaceDetailResponse {
   const PlaceDetailResponse({
     required this.place,
@@ -12,7 +15,12 @@ class PlaceDetailResponse {
   });
 
   final Place place;
+
+  /// DEPRECATED: Use PlaceTimeRepository.getOperatingHours() instead
+  /// This field uses the old PlaceAvailability system (multiple time slots per day)
+  @Deprecated('Use PlaceTimeRepository.getOperatingHours() instead')
   final List<PlaceAvailability> availabilities;
+
   final int approvedGroupCount;
 
   factory PlaceDetailResponse.fromJson(Map<String, dynamic> json) {

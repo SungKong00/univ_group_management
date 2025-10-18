@@ -248,6 +248,9 @@ class PlaceManagementNotifier extends StateNotifier<PlaceManagementState> {
   }
 
   /// Set availabilities for a place
+  ///
+  /// DEPRECATED: Use PlaceTimeRepository.setOperatingHours() instead
+  @Deprecated('Use PlaceTimeRepository.setOperatingHours() instead')
   Future<void> setAvailabilities(
     int placeId,
     List<AvailabilityRequest> availabilities,
@@ -260,6 +263,7 @@ class PlaceManagementNotifier extends StateNotifier<PlaceManagementState> {
         name: 'PlaceManagementNotifier',
       );
 
+      // ignore: deprecated_member_use_from_same_package
       await _placeService.setAvailabilities(placeId, availabilities);
 
       state = state.copyWith(isSettingAvailabilities: false);
