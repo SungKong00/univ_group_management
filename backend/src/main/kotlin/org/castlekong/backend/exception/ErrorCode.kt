@@ -82,6 +82,12 @@ enum class ErrorCode(val message: String) {
     PLACE_USAGE_NOT_APPROVED("장소 사용 권한이 승인되지 않았습니다."),
     BLOCKED_TIME_NOT_FOUND("차단 시간을 찾을 수 없습니다."),
 
+    // Place Time Management (New)
+    OPERATING_HOURS_NOT_FOUND("운영시간을 찾을 수 없습니다."),
+    RESTRICTED_TIME_NOT_FOUND("금지시간을 찾을 수 없습니다."),
+    CLOSURE_NOT_FOUND("임시 휴무를 찾을 수 없습니다."),
+    CLOSURE_ALREADY_EXISTS("해당 날짜에 이미 휴무가 등록되어 있습니다."),
+
     // Place Reservation
     PLACE_RESERVATION_NOT_FOUND("장소 예약을 찾을 수 없습니다."),
     PLACE_TIME_CONFLICT("해당 시간대는 이미 예약되어 있습니다."),

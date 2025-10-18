@@ -36,6 +36,9 @@ class PlaceReservationService(
     private val placeRepository: PlaceRepository,
     private val placeAvailabilityRepository: PlaceAvailabilityRepository,
     private val placeBlockedTimeRepository: PlaceBlockedTimeRepository,
+    private val placeOperatingHoursRepository: PlaceOperatingHoursRepository,
+    private val placeRestrictedTimeRepository: PlaceRestrictedTimeRepository,
+    private val placeClosureRepository: PlaceClosureRepository,
     private val placeUsageGroupRepository: PlaceUsageGroupRepository,
     private val groupEventRepository: GroupEventRepository,
     private val groupMemberRepository: GroupMemberRepository,
@@ -607,6 +610,187 @@ class PlaceReservationService(
         // 예약 시간이 운영 시간 범위 내에 있는지 확인
         return availabilities.any { avail ->
             startTime >= avail.startTime && endTime <= avail.endTime
+        }
+    }
+
+    // ============ New Time Management Integration (Phase 2) ============
+
+    /**
+     * 예약 가능 여부 검증 (신규 시간 관리 시스템)
+     *
+     * 검증 순서: 운영시간 → 금지시간 → 임시휴무 → 기존 예약 충돌
+     *
+     * @param placeId 장소 ID
+     * @param date 예약 날짜
+     * @param startTime 시작 시간
+     * @param endTime 종료 시간
+     * @return true: 예약 가능, false: 예약 불가
+     */
+    fun isReservable(
+        placeId: Long,
+        date: java.time.LocalDate,
+        startTime: java.time.LocalTime,
+        endTime: java.time.LocalTime,
+    ): Boolean {
+        // 1. 운영시간 확인
+        val operatingHours =
+            placeOperatingHoursRepository.findByPlaceIdAndDayOfWeek(placeId, date.dayOfWeek)
+                .orElse(null)
+        if (operatingHours == null || operatingHours.isClosed) {
+            return false // 해당 요일 휴무
+        }
+        if (!operatingHours.fullyContains(startTime, endTime)) {
+            return false // 운영시간 외
+        }
+
+        // 2. 금지시간 확인
+        val restrictedTimes = placeRestrictedTimeRepository.findByPlaceIdAndDayOfWeek(placeId, date.dayOfWeek)
+        for (restricted in restrictedTimes) {
+            if (restricted.overlapsWith(startTime, endTime)) {
+                return false // 금지시간과 겹침
+            }
+        }
+
+        // 3. 임시 휴무 확인
+        val closure = placeClosureRepository.findByPlaceIdAndDate(placeId, date).orElse(null)
+        if (closure != null && closure.overlapsWithTimeRange(date, startTime, endTime)) {
+            return false // 임시 휴무
+        }
+
+        // 4. 기존 예약 충돌 확인
+        val startDateTime = date.atTime(startTime)
+        val endDateTime = date.atTime(endTime)
+        val hasConflict = hasReservationConflict(placeId, startDateTime, endDateTime)
+        if (hasConflict) {
+            return false // 다른 예약과 충돌
+        }
+
+        return true // 예약 가능
+    }
+
+    /**
+     * 예약 가능 시간 슬롯 계산
+     *
+     * 특정 날짜의 예약 가능한 시간대를 계산하여 반환
+     *
+     * @param placeId 장소 ID
+     * @param date 조회 날짜
+     * @return 예약 가능한 시간 슬롯 목록
+     */
+    fun getAvailableSlots(
+        placeId: Long,
+        date: java.time.LocalDate,
+    ): List<TimeSlot> {
+        // 1. 운영시간 확인
+        val operatingHours =
+            placeOperatingHoursRepository.findByPlaceIdAndDayOfWeek(placeId, date.dayOfWeek)
+                .orElse(null)
+        if (operatingHours == null || operatingHours.isClosed) {
+            return emptyList() // 해당 요일 휴무
+        }
+
+        // 2. 임시 휴무 확인
+        val closure = placeClosureRepository.findByPlaceIdAndDate(placeId, date).orElse(null)
+        if (closure != null && closure.isFullDay) {
+            return emptyList() // 전일 휴무
+        }
+
+        // 3. 기본 가용 시간: 운영시간
+        val availableSlots = mutableListOf<TimeSlot>()
+        var currentStart = operatingHours.startTime
+        val operatingEnd = operatingHours.endTime
+
+        // 4. 금지시간 제외
+        val restrictedTimes =
+            placeRestrictedTimeRepository.findByPlaceIdAndDayOfWeek(placeId, date.dayOfWeek)
+                .sortedBy { it.startTime }
+
+        for (restricted in restrictedTimes) {
+            if (currentStart < restricted.startTime) {
+                availableSlots.add(TimeSlot(currentStart, restricted.startTime))
+            }
+            currentStart = maxOf(currentStart, restricted.endTime)
+        }
+
+        // 5. 마지막 슬롯 추가
+        if (currentStart < operatingEnd) {
+            availableSlots.add(TimeSlot(currentStart, operatingEnd))
+        }
+
+        // 6. 부분 임시 휴무 제외
+        if (closure != null && !closure.isFullDay && closure.startTime != null && closure.endTime != null) {
+            availableSlots.removeIf { slot ->
+                slot.overlaps(closure.startTime!!, closure.endTime!!)
+            }
+        }
+
+        // 7. 기존 예약 제외
+        val startDateTime = date.atStartOfDay()
+        val endDateTime = date.atTime(23, 59, 59)
+        val existingReservations =
+            placeReservationRepository.findByPlaceIdAndDateRange(placeId, startDateTime, endDateTime)
+
+        val finalSlots = mutableListOf<TimeSlot>()
+        for (slot in availableSlots) {
+            var slotStart = slot.startTime
+            val slotEnd = slot.endTime
+
+            // 예약과 겹치는 부분 제외
+            val overlappingReservations =
+                existingReservations.filter { reservation ->
+                    val resStart = reservation.getStartDateTime().toLocalTime()
+                    val resEnd = reservation.getEndDateTime().toLocalTime()
+                    !(resEnd.isBefore(slotStart) || resStart.isAfter(slotEnd))
+                }.sortedBy { it.getStartDateTime().toLocalTime() }
+
+            for (reservation in overlappingReservations) {
+                val resStart = reservation.getStartDateTime().toLocalTime()
+                val resEnd = reservation.getEndDateTime().toLocalTime()
+
+                if (slotStart < resStart) {
+                    finalSlots.add(TimeSlot(slotStart, resStart))
+                }
+                slotStart = maxOf(slotStart, resEnd)
+            }
+
+            if (slotStart < slotEnd) {
+                finalSlots.add(TimeSlot(slotStart, slotEnd))
+            }
+        }
+
+        return finalSlots
+    }
+
+    /**
+     * 기존 예약 충돌 확인
+     */
+    private fun hasReservationConflict(
+        placeId: Long,
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime,
+    ): Boolean {
+        val overlappingReservations =
+            placeReservationRepository.findOverlappingReservations(
+                placeId,
+                startDateTime,
+                endDateTime,
+                null,
+            )
+        return overlappingReservations.isNotEmpty()
+    }
+
+    /**
+     * 시간 슬롯 데이터 클래스
+     */
+    data class TimeSlot(
+        val startTime: java.time.LocalTime,
+        val endTime: java.time.LocalTime,
+    ) {
+        fun overlaps(
+            otherStart: java.time.LocalTime,
+            otherEnd: java.time.LocalTime,
+        ): Boolean {
+            return !(endTime.isBefore(otherStart) || startTime.isAfter(otherEnd))
         }
     }
 }
