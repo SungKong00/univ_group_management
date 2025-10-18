@@ -128,6 +128,11 @@ final pageBreadcrumbFromPathProvider = Provider.autoDispose
         return const PageBreadcrumb(title: '프로필 설정');
       }
 
+      // 특수 케이스: 모집 공고 상세 페이지
+      if (routePath.startsWith('/recruitment/')) {
+        return const PageBreadcrumb(title: '모집 공고');
+      }
+
       // 일반 케이스: NavigationConfig에서 제목 가져오기
       final config = NavigationConfig.fromRoute(routePath);
       if (config != null) {

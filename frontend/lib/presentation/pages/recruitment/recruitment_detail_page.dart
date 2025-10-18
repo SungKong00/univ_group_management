@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
@@ -28,13 +27,6 @@ class RecruitmentDetailPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(
-        title: const Text('모집 공고'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
       body: recruitmentAsync.when(
         data: (recruitment) => _buildContent(context, ref, recruitment),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -333,10 +325,6 @@ class RecruitmentDetailPage extends ConsumerWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.lg),
-            ElevatedButton(
-              onPressed: () => context.pop(),
-              child: const Text('돌아가기'),
-            ),
           ],
         ),
       ),

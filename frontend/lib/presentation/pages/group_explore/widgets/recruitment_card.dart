@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/models/recruitment_models.dart';
-import '../providers/recruitment_explore_state_provider.dart';
 
 /// Recruitment Card Widget
 ///
 /// Displays a single recruitment announcement in a card format
-class RecruitmentCard extends ConsumerWidget {
+class RecruitmentCard extends StatelessWidget {
   const RecruitmentCard({
     required this.recruitment,
     super.key,
@@ -17,7 +16,7 @@ class RecruitmentCard extends ConsumerWidget {
   final RecruitmentSummaryResponse recruitment;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -26,7 +25,7 @@ class RecruitmentCard extends ConsumerWidget {
       ),
       child: InkWell(
         onTap: () {
-          ref.read(selectedRecruitmentIdProvider.notifier).state = recruitment.id;
+          context.go('/recruitment/${recruitment.id}');
         },
         borderRadius: BorderRadius.circular(AppRadius.card),
         child: Padding(

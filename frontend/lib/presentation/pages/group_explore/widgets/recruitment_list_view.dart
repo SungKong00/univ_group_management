@@ -5,12 +5,10 @@ import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/recruitment_explore_state_provider.dart';
 import 'recruitment_card.dart';
-import 'recruitment_detail_view.dart';
 
 /// Recruitment List View
 ///
 /// Displays a list of recruitment announcements with infinite scroll pagination
-/// or shows detail view when a recruitment is selected
 class RecruitmentListView extends ConsumerStatefulWidget {
   const RecruitmentListView({super.key});
 
@@ -50,35 +48,6 @@ class _RecruitmentListViewState extends ConsumerState<RecruitmentListView> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedId = ref.watch(selectedRecruitmentIdProvider);
-
-    // Show detail view if a recruitment is selected
-    if (selectedId != null) {
-      return AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        transitionBuilder: (child, animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
-            ),
-          );
-        },
-        child: RecruitmentDetailView(
-          key: ValueKey('detail-$selectedId'),
-          recruitmentId: selectedId,
-          onBack: () {
-            ref.read(selectedRecruitmentIdProvider.notifier).state = null;
-          },
-        ),
-      );
-    }
-
-    // Show list view
     final recruitments = ref.watch(exploreRecruitmentsProvider);
     final isLoading = ref.watch(exploreRecruitmentIsLoadingProvider);
     final hasMore = ref.watch(exploreRecruitmentHasMoreProvider);
