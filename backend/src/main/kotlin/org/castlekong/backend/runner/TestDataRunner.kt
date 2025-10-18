@@ -939,6 +939,144 @@ class TestDataRunner(
             )
         }
 
+        // DevCrew 그룹 추가 일정
+        safeExecute("Creating additional events for DevCrew") {
+            groupEventService.createEvent(
+                users.user1,
+                groups.devCrewId,
+                CreateGroupEventRequest(
+                    title = "DevCrew 정기 스터디",
+                    placeId = places.labPlaceId,
+                    startDate = LocalDate.of(2025, 10, 27),
+                    endDate = LocalDate.of(2025, 11, 24),
+                    startTime = LocalTime.of(19, 0),
+                    endTime = LocalTime.of(21, 0),
+                    isOfficial = false,
+                    color = "#03A9F4",
+                    recurrence = RecurrencePattern(
+                        type = RecurrenceType.WEEKLY,
+                        daysOfWeek = listOf(DayOfWeek.MONDAY)
+                    )
+                )
+            )
+        }
+
+        // 학생회 그룹 추가 일정
+        safeExecute("Creating additional events for Student Council") {
+            groupEventService.createEvent(
+                users.user2,
+                groups.studentCouncilId,
+                CreateGroupEventRequest(
+                    title = "학생회 정기 회의",
+                    placeId = places.labPlaceId,
+                    startDate = LocalDate.of(2025, 10, 28),
+                    endDate = LocalDate.of(2025, 11, 25),
+                    startTime = LocalTime.of(17, 0),
+                    endTime = LocalTime.of(18, 30),
+                    isOfficial = true,
+                    color = "#E91E63",
+                    recurrence = RecurrencePattern(
+                        type = RecurrenceType.WEEKLY,
+                        daysOfWeek = listOf(DayOfWeek.TUESDAY)
+                    )
+                )
+            )
+        }
+
+        // AI/SW학과 그룹 추가 일정
+        safeExecute("Creating additional events for AI/SW department") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")
+            groupEventService.createEvent(
+                owner!!,
+                13, // AI/SW학과 그룹 ID
+                CreateGroupEventRequest(
+                    title = "알고리즘 경진대회 대비 특강",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 10, 29),
+                    endDate = LocalDate.of(2025, 10, 29),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
+                    isOfficial = true,
+                    color = "#00BCD4"
+                )
+            )
+            groupEventService.createEvent(
+                owner!!,
+                13, // AI/SW학과 그룹 ID
+                CreateGroupEventRequest(
+                    title = "코딩 테스트 스터디",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 5),
+                    endDate = LocalDate.of(2025, 11, 5),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
+                    isOfficial = false,
+                    color = "#00BCD4"
+                )
+            )
+            groupEventService.createEvent(
+                owner!!,
+                13, // AI/SW학과 그룹 ID
+                CreateGroupEventRequest(
+                    title = "졸업생 멘토링",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 19),
+                    endDate = LocalDate.of(2025, 11, 19),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
+                    isOfficial = true,
+                    color = "#00BCD4"
+                )
+            )
+        }
+
+        // AI시스템반도체학과 그룹 추가 일정
+        safeExecute("Creating additional events for AI/Semiconductor department") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")
+            groupEventService.createEvent(
+                owner!!,
+                11, // AI시스템반도체학과 그룹 ID
+                CreateGroupEventRequest(
+                    title = "임베디드 시스템 프로젝트 회의",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 10, 30),
+                    endDate = LocalDate.of(2025, 10, 30),
+                    startTime = LocalTime.of(10, 0),
+                    endTime = LocalTime.of(12, 0),
+                    isOfficial = false,
+                    color = "#FF9800"
+                )
+            )
+            groupEventService.createEvent(
+                owner!!,
+                11, // AI시스템반도체학과 그룹 ID
+                CreateGroupEventRequest(
+                    title = "반도체 설계 공모전 준비",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 13),
+                    endDate = LocalDate.of(2025, 11, 13),
+                    startTime = LocalTime.of(10, 0),
+                    endTime = LocalTime.of(12, 0),
+                    isOfficial = false,
+                    color = "#FF9800"
+                )
+            )
+            groupEventService.createEvent(
+                owner!!,
+                11, // AI시스템반도체학과 그룹 ID
+                CreateGroupEventRequest(
+                    title = "캡스톤 디자인 최종 발표 준비",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 27),
+                    endDate = LocalDate.of(2025, 11, 27),
+                    startTime = LocalTime.of(10, 0),
+                    endTime = LocalTime.of(12, 0),
+                    isOfficial = true,
+                    color = "#FF9800"
+                )
+            )
+        }
+
         logger.info("-> SUCCESS: Created group calendar events and reservations")
     }
 
