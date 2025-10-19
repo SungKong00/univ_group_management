@@ -651,7 +651,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             children: [
               // 1. 시각화 영역 (높이 제한 + 스크롤)
               ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 250),
+                constraints: const BoxConstraints(maxHeight: 416),
                 child: SingleChildScrollView(
                   child: Center(
                     child: _OverlappingEventsVisualization(
@@ -688,6 +688,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: List.generate(
                       events.length,
                       (index) {
