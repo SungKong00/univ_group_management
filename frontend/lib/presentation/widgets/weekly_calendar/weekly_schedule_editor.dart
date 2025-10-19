@@ -1411,7 +1411,7 @@ class _OverlappingEventsVisualization extends StatelessWidget {
     final blockWidth = _calculateBlockWidth(modalWidth);
 
     return SizedBox(
-      width: double.maxFinite,
+      width: modalWidth,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1427,7 +1427,7 @@ class _OverlappingEventsVisualization extends StatelessWidget {
 
           // 시간 그리드 + 블록
           Container(
-            width: double.maxFinite,
+            width: modalWidth,
             height: totalHeight,
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.lightOutline),
