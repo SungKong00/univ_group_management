@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_button_styles.dart';
 import '../../../core/models/recruitment_models.dart';
 import '../../../core/models/group_models.dart';
 import 'providers/recruitment_detail_provider.dart';
@@ -333,6 +334,7 @@ class RecruitmentDetailPage extends ConsumerWidget {
 
   Widget _buildBottomBar(BuildContext context, WidgetRef ref, RecruitmentResponse recruitment) {
     final hasApplied = ref.watch(hasAppliedProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return BottomAppBar(
       color: Colors.white,
@@ -343,19 +345,14 @@ class RecruitmentDetailPage extends ConsumerWidget {
             horizontal: AppSpacing.md,
             vertical: AppSpacing.xs,
           ),
-          child: ElevatedButton(
+          child: FilledButton(
+            style: AppButtonStyles.primary(colorScheme),
             onPressed: _canApply(recruitment, hasApplied)
                 ? () => _showApplicationDialog(context, ref, recruitment)
                 : null,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-            ),
             child: Text(
               _getButtonText(recruitment, hasApplied),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ),

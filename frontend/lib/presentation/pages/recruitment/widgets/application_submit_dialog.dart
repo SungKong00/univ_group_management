@@ -26,7 +26,6 @@ class ApplicationSubmitDialog extends ConsumerStatefulWidget {
 class _ApplicationSubmitDialogState
     extends ConsumerState<ApplicationSubmitDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _motivationController = TextEditingController();
   final Map<int, TextEditingController> _answerControllers = {};
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -42,7 +41,6 @@ class _ApplicationSubmitDialogState
 
   @override
   void dispose() {
-    _motivationController.dispose();
     for (final controller in _answerControllers.values) {
       controller.dispose();
     }
@@ -125,25 +123,6 @@ class _ApplicationSubmitDialogState
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.neutral600,
                           ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Motivation (optional)
-                    Text(
-                      '지원 동기 (선택)',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.neutral900,
-                          ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    TextFormField(
-                      controller: _motivationController,
-                      maxLines: 5,
-                      decoration: const InputDecoration(
-                        hintText: '지원 동기를 입력해주세요 (선택 사항)',
-                        border: OutlineInputBorder(),
-                      ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
@@ -332,9 +311,7 @@ class _ApplicationSubmitDialogState
       // Create params
       final params = SubmitApplicationParams(
         recruitmentId: widget.recruitment.id,
-        motivation: _motivationController.text.trim().isNotEmpty
-            ? _motivationController.text.trim()
-            : null,
+        motivation: null,
         questionAnswers: questionAnswers,
       );
 
