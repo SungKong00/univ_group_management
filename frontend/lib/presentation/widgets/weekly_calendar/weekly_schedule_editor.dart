@@ -625,83 +625,46 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           children: [
             Icon(Icons.layers, color: Theme.of(context).colorScheme.primary, size: 24),
             SizedBox(width: AppSpacing.xxs),
-            Text('겹친 일정 (${events.length}개)', style: AppTheme.headlineSmall),
+            Expanded(
+              child: Text('겹친 일정 (${events.length}개)', style: AppTheme.headlineSmall),
+            ),
+            // X 닫기 버튼
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+              tooltip: '닫기',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              iconSize: 24,
+            ),
           ],
         ),
-        content: SizedBox(
-          width: double.maxFinite,
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 600,
+            maxHeight: 500,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. 시각화 영역
-              _OverlappingEventsVisualization(
-                events: events,
-                mode: _mode,
-                dayName: dayNames[events.first.start.day],
-                startHour: _startHour,
-                onEventTap: (event) {
-                  Navigator.of(context).pop();
-                  if (_mode == CalendarMode.view) {
-                    _showEventDetailDialog(event);
-                  } else {
-                    if (_isExternalEvent(event)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('그룹 일정은 수정할 수 없습니다.'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    } else {
-                      _showEditDialog(event);
-                    }
-                  }
-                },
-              ),
-              SizedBox(height: AppSpacing.sm),
-              Divider(height: 1, color: AppColors.lightOutline),
-              SizedBox(height: AppSpacing.sm),
-
-              // 2. 리스트
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: events.length,
-                  separatorBuilder: (context, index) => Divider(
-                    height: 1,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  itemBuilder: (context, index) {
-                    final event = events[index];
-                    final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
-                    final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
-                    final isExternal = _isExternalEvent(event);
-
-                    return ListTile(
-                      contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs, vertical: AppSpacing.xxs / 2),
-                      leading: Container(
-                        width: 4,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: isExternal ? AppColors.action : AppColors.brand,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      title: Text(
-                        event.title,
-                        style: AppTheme.titleMedium,
-                      ),
-                      subtitle: Text(
-                        '${dayNames[event.start.day]} · ${DateFormat.jm().format(startTime)} - ${DateFormat.jm().format(endTime)}',
-                        style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
-                      ),
-                      trailing: Icon(Icons.chevron_right, color: AppColors.neutral400),
-                      onTap: () {
-                        Navigator.of(context).pop();
+              // 1. 시각화 영역 (높이 제한 + 스크롤)
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 250),
+                child: SingleChildScrollView(
+                  child: Center(
+                    child: _OverlappingEventsVisualization(
+                      events: events,
+                      mode: _mode,
+                      dayName: dayNames[events.first.start.day],
+                      startHour: _startHour,
+                      onEventTap: (event) {
+                        // 모달 닫지 않고 새 모달 띄우기 (중첩)
                         if (_mode == CalendarMode.view) {
                           _showEventDetailDialog(event);
                         } else {
-                          if (isExternal) {
+                          if (_isExternalEvent(event)) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('그룹 일정은 수정할 수 없습니다.'),
@@ -713,8 +676,75 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                           }
                         }
                       },
-                    );
-                  },
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              const Divider(height: 1, color: AppColors.lightOutline),
+              const SizedBox(height: AppSpacing.sm),
+
+              // 2. 리스트 (스크롤)
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: List.generate(
+                      events.length,
+                      (index) {
+                        final event = events[index];
+                        final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
+                        final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
+                        final isExternal = _isExternalEvent(event);
+
+                        return Column(
+                          children: [
+                            ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs, vertical: AppSpacing.xxs / 2),
+                              leading: Container(
+                                width: 4,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: isExternal ? AppColors.action : AppColors.brand,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              title: Text(
+                                event.title,
+                                style: AppTheme.titleMedium,
+                              ),
+                              subtitle: Text(
+                                '${dayNames[event.start.day]} · ${DateFormat.jm().format(startTime)} - ${DateFormat.jm().format(endTime)}',
+                                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
+                              ),
+                              trailing: const Icon(Icons.chevron_right, color: AppColors.neutral400),
+                              onTap: () {
+                                // 모달 닫지 않고 새 모달 띄우기 (중첩)
+                                if (_mode == CalendarMode.view) {
+                                  _showEventDetailDialog(event);
+                                } else {
+                                  if (isExternal) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('그룹 일정은 수정할 수 없습니다.'),
+                                        duration: Duration(seconds: 2),
+                                      ),
+                                    );
+                                  } else {
+                                    _showEditDialog(event);
+                                  }
+                                }
+                              },
+                            ),
+                            if (index < events.length - 1)
+                              const Divider(
+                                height: 1,
+                                color: AppColors.lightOutline,
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1321,8 +1351,9 @@ class _OverlappingEventsVisualization extends StatelessWidget {
   static const double _minModalWidth = 400.0;
   static const double _slotHeight = 32.0; // 15분 단위 높이
   static const double _minBlockWidth = 60.0; // 최소 블록 너비
+  static const int _maxDisplayHours = 5; // 최대 표시 시간 범위 (5시간)
 
-  /// 시간 범위 계산 (min start slot ~ max end slot)
+  /// 시간 범위 계산 (min start slot ~ max end slot, 최대 5시간)
   ({int minSlot, int maxSlot}) _calculateTimeRange() {
     int minSlot = events.first.start.slot;
     int maxSlot = events.first.end.slot;
@@ -1332,6 +1363,15 @@ class _OverlappingEventsVisualization extends StatelessWidget {
       final endSlot = math.max(event.start.slot, event.end.slot);
       if (startSlot < minSlot) minSlot = startSlot;
       if (endSlot > maxSlot) maxSlot = endSlot;
+    }
+
+    // 범위가 5시간을 초과하면 조정
+    final slotsInRange = maxSlot - minSlot + 1;
+    final maxSlots = _maxDisplayHours * 4; // 5시간 = 20슬롯 (15분 단위)
+
+    if (slotsInRange > maxSlots) {
+      // 범위를 5시간으로 제한 (가장 먼저 시작하는 일정을 기준으로)
+      maxSlot = minSlot + maxSlots - 1;
     }
 
     return (minSlot: minSlot, maxSlot: maxSlot);
