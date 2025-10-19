@@ -54,7 +54,10 @@ class PlaceOperatingHoursService(
         // 1. 기존 운영시간 전체 삭제
         placeOperatingHoursRepository.deleteByPlaceId(place.id)
 
-        // 2. 새 운영시간 생성
+        // 2. 삭제 즉시 반영 (Unique 제약 충돌 방지)
+        placeOperatingHoursRepository.flush()
+
+        // 3. 새 운영시간 생성
         val operatingHours =
             operatingHoursData.map { (dayOfWeek, data) ->
                 validateOperatingHours(data)
@@ -67,7 +70,7 @@ class PlaceOperatingHoursService(
                 )
             }
 
-        // 3. 저장
+        // 4. 저장
         return placeOperatingHoursRepository.saveAll(operatingHours)
     }
 

@@ -21,10 +21,26 @@ class OperatingHoursResponse {
     return OperatingHoursResponse(
       id: (json['id'] as num).toInt(),
       dayOfWeek: json['dayOfWeek'] as String,
-      startTime: json['startTime'] as String?,
-      endTime: json['endTime'] as String?,
+      startTime: _parseTime(json['startTime']),
+      endTime: _parseTime(json['endTime']),
       isClosed: json['isClosed'] as bool,
     );
+  }
+
+  /// 시간 파싱: "HH:mm:ss" 또는 "HH:mm" → "HH:mm" 변환
+  static String? _parseTime(dynamic time) {
+    if (time == null) return null;
+    if (time is! String) return null;
+
+    // "HH:mm:ss" → "HH:mm" (초 제거)
+    if (time.contains(':')) {
+      final parts = time.split(':');
+      if (parts.length >= 2) {
+        return '${parts[0]}:${parts[1]}';
+      }
+    }
+
+    return time;
   }
 
   Map<String, dynamic> toJson() {
@@ -132,11 +148,19 @@ class RestrictedTimeResponse {
     return RestrictedTimeResponse(
       id: (json['id'] as num).toInt(),
       dayOfWeek: json['dayOfWeek'] as String,
-      startTime: json['startTime'] as String,
-      endTime: json['endTime'] as String,
+      startTime: _parseTime(json['startTime']) ?? '',
+      endTime: _parseTime(json['endTime']) ?? '',
       reason: json['reason'] as String?,
       displayOrder: (json['displayOrder'] as num).toInt(),
     );
+  }
+
+  /// 시간 파싱: "HH:mm:ss" → "HH:mm" 변환
+  static String? _parseTime(dynamic time) {
+    if (time == null) return null;
+    if (time is! String) return null;
+    final parts = time.split(':');
+    return parts.length >= 2 ? '${parts[0]}:${parts[1]}' : time;
   }
 
   Map<String, dynamic> toJson() {
@@ -200,10 +224,18 @@ class PlaceClosureResponse {
       id: (json['id'] as num).toInt(),
       closureDate: json['closureDate'] as String,
       isFullDay: json['isFullDay'] as bool,
-      startTime: json['startTime'] as String?,
-      endTime: json['endTime'] as String?,
+      startTime: _parseTime(json['startTime']),
+      endTime: _parseTime(json['endTime']),
       reason: json['reason'] as String?,
     );
+  }
+
+  /// 시간 파싱: "HH:mm:ss" → "HH:mm" 변환
+  static String? _parseTime(dynamic time) {
+    if (time == null) return null;
+    if (time is! String) return null;
+    final parts = time.split(':');
+    return parts.length >= 2 ? '${parts[0]}:${parts[1]}' : time;
   }
 
   Map<String, dynamic> toJson() {
@@ -319,9 +351,16 @@ class OperatingHoursInfo {
 
   factory OperatingHoursInfo.fromJson(Map<String, dynamic> json) {
     return OperatingHoursInfo(
-      json['startTime'] as String,
-      json['endTime'] as String,
+      _parseTime(json['startTime']) ?? '',
+      _parseTime(json['endTime']) ?? '',
     );
+  }
+
+  static String? _parseTime(dynamic time) {
+    if (time == null) return null;
+    if (time is! String) return null;
+    final parts = time.split(':');
+    return parts.length >= 2 ? '${parts[0]}:${parts[1]}' : time;
   }
 }
 
@@ -335,10 +374,17 @@ class RestrictedTimeInfo {
 
   factory RestrictedTimeInfo.fromJson(Map<String, dynamic> json) {
     return RestrictedTimeInfo(
-      json['startTime'] as String,
-      json['endTime'] as String,
+      _parseTime(json['startTime']) ?? '',
+      _parseTime(json['endTime']) ?? '',
       json['reason'] as String?,
     );
+  }
+
+  static String? _parseTime(dynamic time) {
+    if (time == null) return null;
+    if (time is! String) return null;
+    final parts = time.split(':');
+    return parts.length >= 2 ? '${parts[0]}:${parts[1]}' : time;
   }
 }
 
@@ -354,10 +400,17 @@ class ClosureInfo {
   factory ClosureInfo.fromJson(Map<String, dynamic> json) {
     return ClosureInfo(
       json['isFullDay'] as bool,
-      json['startTime'] as String?,
-      json['endTime'] as String?,
+      _parseTime(json['startTime']),
+      _parseTime(json['endTime']),
       json['reason'] as String?,
     );
+  }
+
+  static String? _parseTime(dynamic time) {
+    if (time == null) return null;
+    if (time is! String) return null;
+    final parts = time.split(':');
+    return parts.length >= 2 ? '${parts[0]}:${parts[1]}' : time;
   }
 }
 
@@ -371,10 +424,17 @@ class ReservationInfo {
 
   factory ReservationInfo.fromJson(Map<String, dynamic> json) {
     return ReservationInfo(
-      json['startTime'] as String,
-      json['endTime'] as String,
+      _parseTime(json['startTime']) ?? '',
+      _parseTime(json['endTime']) ?? '',
       json['groupName'] as String,
     );
+  }
+
+  static String? _parseTime(dynamic time) {
+    if (time == null) return null;
+    if (time is! String) return null;
+    final parts = time.split(':');
+    return parts.length >= 2 ? '${parts[0]}:${parts[1]}' : time;
   }
 }
 
@@ -387,8 +447,15 @@ class TimeSlotInfo {
 
   factory TimeSlotInfo.fromJson(Map<String, dynamic> json) {
     return TimeSlotInfo(
-      json['startTime'] as String,
-      json['endTime'] as String,
+      _parseTime(json['startTime']) ?? '',
+      _parseTime(json['endTime']) ?? '',
     );
+  }
+
+  static String? _parseTime(dynamic time) {
+    if (time == null) return null;
+    if (time is! String) return null;
+    final parts = time.split(':');
+    return parts.length >= 2 ? '${parts[0]}:${parts[1]}' : time;
   }
 }

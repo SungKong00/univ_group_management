@@ -2,6 +2,7 @@ package org.castlekong.backend.repository
 
 import org.castlekong.backend.entity.PlaceOperatingHours
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
@@ -43,5 +44,9 @@ interface PlaceOperatingHoursRepository : JpaRepository<PlaceOperatingHours, Lon
     /**
      * 특정 장소의 모든 운영시간 삭제
      */
-    fun deleteByPlaceId(placeId: Long)
+    @Modifying
+    @Query("DELETE FROM PlaceOperatingHours poh WHERE poh.place.id = :placeId")
+    fun deleteByPlaceId(
+        @Param("placeId") placeId: Long,
+    )
 }

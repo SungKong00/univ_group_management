@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/place_time_models.dart';
 import '../../../../core/providers/place_time_providers.dart';
-import '../../../../core/theme/theme.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// 운영시간 설정 다이얼로그
 ///
@@ -29,6 +30,7 @@ class _PlaceOperatingHoursDialogState
     extends ConsumerState<PlaceOperatingHoursDialog> {
   final Map<String, OperatingHoursItem> _hoursMap = {};
   bool _isLoading = false;
+  bool _isInitializing = true;
 
   static const List<String> _daysOfWeek = [
     'MONDAY',
@@ -53,30 +55,54 @@ class _PlaceOperatingHoursDialogState
   @override
   void initState() {
     super.initState();
-    _initializeHours();
+    _loadOperatingHours();
   }
 
-  void _initializeHours() {
-    // 초기 데이터가 있으면 사용, 없으면 기본값
-    if (widget.initialHours != null && widget.initialHours!.isNotEmpty) {
-      for (final hour in widget.initialHours!) {
-        _hoursMap[hour.dayOfWeek] = OperatingHoursItem(
-          dayOfWeek: hour.dayOfWeek,
-          startTime: hour.startTime,
-          endTime: hour.endTime,
-          isClosed: hour.isClosed,
-        );
+  /// 백엔드에서 최신 운영시간 데이터를 가져옵니다
+  Future<void> _loadOperatingHours() async {
+    setState(() {
+      _isInitializing = true;
+    });
+
+    try {
+      // 백엔드에서 최신 데이터 가져오기
+      final hours = await ref.read(operatingHoursProvider(widget.placeId).future);
+
+      if (hours.isNotEmpty) {
+        // 백엔드 데이터로 초기화
+        for (final hour in hours) {
+          _hoursMap[hour.dayOfWeek] = OperatingHoursItem(
+            dayOfWeek: hour.dayOfWeek,
+            startTime: hour.startTime,
+            endTime: hour.endTime,
+            isClosed: hour.isClosed,
+          );
+        }
+      } else {
+        // 데이터가 없으면 기본값으로 초기화
+        _initializeWithDefaults();
       }
-    } else {
-      // 기본값: 평일 09:00-18:00, 주말 휴무
-      for (final day in _daysOfWeek) {
-        _hoursMap[day] = OperatingHoursItem(
-          dayOfWeek: day,
-          startTime: '09:00',
-          endTime: '18:00',
-          isClosed: day == 'SATURDAY' || day == 'SUNDAY',
-        );
+    } catch (e) {
+      // 오류 발생 시 기본값으로 초기화
+      _initializeWithDefaults();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
       }
+    }
+  }
+
+  void _initializeWithDefaults() {
+    // 기본값: 평일 09:00-18:00, 주말 휴무
+    for (final day in _daysOfWeek) {
+      _hoursMap[day] = OperatingHoursItem(
+        dayOfWeek: day,
+        startTime: '09:00',
+        endTime: '18:00',
+        isClosed: day == 'SATURDAY' || day == 'SUNDAY',
+      );
     }
   }
 
@@ -161,15 +187,23 @@ class _PlaceOperatingHoursDialogState
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('운영시간 설정'),
-      content: SizedBox(
-        width: 500,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: _daysOfWeek.map((day) => _buildDayRow(day)).toList(),
-          ),
-        ),
-      ),
+      content: _isInitializing
+          ? const SizedBox(
+              width: 500,
+              height: 300,
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            )
+          : SizedBox(
+              width: 500,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _daysOfWeek.map((day) => _buildDayRow(day)).toList(),
+                ),
+              ),
+            ),
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
@@ -178,7 +212,7 @@ class _PlaceOperatingHoursDialogState
         ElevatedButton(
           onPressed: _isLoading ? null : _handleSave,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brandPrimary,
+            backgroundColor: AppColors.brand,
             foregroundColor: Colors.white,
           ),
           child: _isLoading
@@ -208,7 +242,7 @@ class _PlaceOperatingHoursDialogState
             width: 60,
             child: Text(
               _dayLabels[dayOfWeek]!,
-              style: AppTypography.bodyMedium,
+              style: AppTheme.bodyMedium,
             ),
           ),
           const SizedBox(width: 12),
@@ -270,13 +304,13 @@ class _PlaceOperatingHoursDialogState
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         side: BorderSide(
-          color: enabled ? AppColors.neutral400 : AppColors.neutral300,
+          color: enabled ? AppColors.lightOutline : AppColors.lightOutline,
         ),
       ),
       child: Text(
         time,
-        style: AppTypography.bodyMedium.copyWith(
-          color: enabled ? AppColors.neutral900 : AppColors.neutral500,
+        style: AppTheme.bodyMedium.copyWith(
+          color: enabled ? AppColors.lightOnSurface : AppColors.disabledTextLight,
         ),
       ),
     );
@@ -318,7 +352,7 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
               children: [
                 Text(
                   '운영시간',
-                  style: AppTypography.titleLarge,
+                  style: AppTheme.titleLarge,
                 ),
                 TextButton.icon(
                   onPressed: () async {
@@ -354,11 +388,11 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
                     return Chip(
                       label: Text(
                         '${_dayLabels[hour.dayOfWeek] ?? hour.dayOfWeek}: ${hour.isClosed ? '휴무' : '${hour.startTime ?? ''}-${hour.endTime ?? ''}'}',
-                        style: AppTypography.bodySmall,
+                        style: AppTheme.bodySmall,
                       ),
                       backgroundColor: hour.isClosed
-                          ? AppColors.neutral200
-                          : AppColors.brandLight,
+                          ? AppColors.disabledBgLight
+                          : AppColors.brandContainerLight,
                     );
                   }).toList(),
                 );

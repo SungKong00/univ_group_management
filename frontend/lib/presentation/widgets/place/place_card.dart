@@ -11,7 +11,7 @@ class PlaceCard extends ConsumerWidget {
   final int groupId;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
-  final VoidCallback? onManageAvailability;
+  final VoidCallback? onManageAvailability; // 운영시간 설정 모달 호출
 
   const PlaceCard({
     required this.place,

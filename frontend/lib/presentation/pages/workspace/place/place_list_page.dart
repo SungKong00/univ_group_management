@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/models/place/place.dart';
+import '../../../../core/models/place_time_models.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../providers/place_provider.dart';
 import '../../../providers/group_permission_provider.dart';
 import '../../../widgets/place/place_card.dart';
 import 'place_form_dialog.dart';
-import 'place_availability_settings_page.dart';
 import 'dialogs/place_usage_request_dialog.dart';
+import '../../../../features/place_admin/presentation/widgets/place_operating_hours_dialog.dart';
+import '../../../../core/providers/place_time_providers.dart';
 
 class PlaceListPage extends ConsumerStatefulWidget {
   final int groupId;
@@ -240,7 +242,7 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
                 groupId: widget.groupId,
                 onEdit: () => _showPlaceFormDialog(place: place),
                 onDelete: () => _deletePlace(place.id),
-                onManageAvailability: () => _navigateToAvailabilitySettings(
+                onManageAvailability: () => _showOperatingHoursDialog(
                   place.id,
                 ),
               );
@@ -336,17 +338,29 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
     }
   }
 
-  void _navigateToAvailabilitySettings(int placeId) {
-    // ignore: deprecated_member_use
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        // ignore: deprecated_member_use
-        builder: (context) => PlaceAvailabilitySettingsPage(
-          placeId: placeId,
-        ),
+  void _showOperatingHoursDialog(int placeId) async {
+    // 기존 운영시간 로드 (비동기 대기)
+    List<OperatingHoursResponse>? existingHours;
+    try {
+      existingHours = await ref.read(operatingHoursProvider(placeId).future);
+    } catch (e) {
+      // 로드 실패 시 null로 진행 (기본값 사용)
+      existingHours = null;
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => PlaceOperatingHoursDialog(
+        placeId: placeId,
+        initialHours: existingHours,
       ),
     );
+
+    if (result == true) {
+      // 성공 시 데이터 새로고침
+      ref.invalidate(operatingHoursProvider(placeId));
+      ref.invalidate(placeDetailProvider(placeId));
+    }
   }
 
   void _showUsageRequestDialog() {
