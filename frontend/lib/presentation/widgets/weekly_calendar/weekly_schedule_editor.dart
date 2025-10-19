@@ -1498,7 +1498,7 @@ class _OverlappingEventsVisualization extends StatelessWidget {
                                           event.title,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: AppTheme.labelLarge.copyWith(
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 10,
                                             fontWeight: FontWeight.w600,
@@ -1510,7 +1510,7 @@ class _OverlappingEventsVisualization extends StatelessWidget {
                                       if (duration > 2)
                                         Text(
                                           '${_formatTime(eventStartSlot)} - ${_formatTime(eventEndSlot + 1)}',
-                                          style: AppTheme.bodySmall.copyWith(
+                                          style: TextStyle(
                                             color: Colors.white.withValues(alpha: 0.85),
                                             fontSize: 9,
                                           ),
@@ -1536,3 +1536,4 @@ class _OverlappingEventsVisualization extends StatelessWidget {
     );
   }
 }
+
