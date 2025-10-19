@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:vibration/vibration.dart';
 import '../../../core/models/calendar/group_event.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import 'event_painter.dart';
 import 'highlight_painter.dart';
@@ -629,43 +630,94 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         ),
         content: SizedBox(
           width: double.maxFinite,
-          child: ListView.separated(
-            shrinkWrap: true,
-            itemCount: events.length,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            itemBuilder: (context, index) {
-              final event = events[index];
-              final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
-              final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
-
-              return ListTile(
-                contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs, vertical: AppSpacing.xxs / 2),
-                leading: Container(
-                  width: 4,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                title: Text(
-                  event.title,
-                  style: AppTheme.titleMedium,
-                ),
-                subtitle: Text(
-                  '${dayNames[event.start.day]} · ${DateFormat.jm().format(startTime)} - ${DateFormat.jm().format(endTime)}',
-                  style: AppTheme.bodySmall.copyWith(color: Colors.grey),
-                ),
-                trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
-                onTap: () {
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. 시각화 영역
+              _OverlappingEventsVisualization(
+                events: events,
+                mode: _mode,
+                dayName: dayNames[events.first.start.day],
+                startHour: _startHour,
+                onEventTap: (event) {
                   Navigator.of(context).pop();
-                  _showEventDetailDialog(event);
+                  if (_mode == CalendarMode.view) {
+                    _showEventDetailDialog(event);
+                  } else {
+                    if (_isExternalEvent(event)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('그룹 일정은 수정할 수 없습니다.'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    } else {
+                      _showEditDialog(event);
+                    }
+                  }
                 },
-              );
-            },
+              ),
+              SizedBox(height: AppSpacing.sm),
+              Divider(height: 1, color: AppColors.lightOutline),
+              SizedBox(height: AppSpacing.sm),
+
+              // 2. 리스트
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: events.length,
+                  separatorBuilder: (context, index) => Divider(
+                    height: 1,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                  itemBuilder: (context, index) {
+                    final event = events[index];
+                    final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
+                    final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
+                    final isExternal = _isExternalEvent(event);
+
+                    return ListTile(
+                      contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs, vertical: AppSpacing.xxs / 2),
+                      leading: Container(
+                        width: 4,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: isExternal ? AppColors.action : AppColors.brand,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      title: Text(
+                        event.title,
+                        style: AppTheme.titleMedium,
+                      ),
+                      subtitle: Text(
+                        '${dayNames[event.start.day]} · ${DateFormat.jm().format(startTime)} - ${DateFormat.jm().format(endTime)}',
+                        style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
+                      ),
+                      trailing: Icon(Icons.chevron_right, color: AppColors.neutral400),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        if (_mode == CalendarMode.view) {
+                          _showEventDetailDialog(event);
+                        } else {
+                          if (isExternal) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('그룹 일정은 수정할 수 없습니다.'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          } else {
+                            _showEditDialog(event);
+                          }
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
         actions: [
@@ -1236,6 +1288,249 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 겹친 일정 시각화 위젯
+///
+/// 주간 뷰의 축소뷰 알고리즘을 사용하여 겹친 일정들을 시간 기반으로 렌더링합니다.
+/// - 왼쪽: 시간 눈금 (시간 범위만큼)
+/// - 오른쪽: 색상 구분된 일정 블록들 (시간 비례 높이)
+class _OverlappingEventsVisualization extends StatelessWidget {
+  const _OverlappingEventsVisualization({
+    required this.events,
+    required this.mode,
+    required this.dayName,
+    required this.startHour,
+    required this.onEventTap,
+  });
+
+  final List<Event> events;
+  final CalendarMode mode;
+  final String dayName;
+  final int startHour;
+  final Function(Event) onEventTap;
+
+  // 시각화 영역 상수
+  static const double _timeColumnWidth = 50.0;
+  static const double _baseBlockWidth = 120.0;
+  static const double _maxModalWidth = 900.0;
+  static const double _minModalWidth = 400.0;
+  static const double _slotHeight = 32.0; // 15분 단위 높이
+  static const double _minBlockWidth = 60.0; // 최소 블록 너비
+
+  /// 시간 범위 계산 (min start slot ~ max end slot)
+  ({int minSlot, int maxSlot}) _calculateTimeRange() {
+    int minSlot = events.first.start.slot;
+    int maxSlot = events.first.end.slot;
+
+    for (final event in events) {
+      final startSlot = math.min(event.start.slot, event.end.slot);
+      final endSlot = math.max(event.start.slot, event.end.slot);
+      if (startSlot < minSlot) minSlot = startSlot;
+      if (endSlot > maxSlot) maxSlot = endSlot;
+    }
+
+    return (minSlot: minSlot, maxSlot: maxSlot);
+  }
+
+  /// 모달 너비 계산
+  double _calculateModalWidth() {
+    final totalWidth = events.length * _baseBlockWidth;
+    return totalWidth.clamp(_minModalWidth, _maxModalWidth);
+  }
+
+  /// 사용 가능한 블록 너비 계산
+  double _calculateBlockWidth(double modalWidth) {
+    final totalWidth = modalWidth - _timeColumnWidth;
+    final blockWidth = totalWidth / events.length;
+    return blockWidth.clamp(_minBlockWidth, _baseBlockWidth);
+  }
+
+  /// 시간을 슬롯에서 시간:분 형식으로 변환
+  String _formatTime(int slot) {
+    final hour = startHour + (slot ~/ 4);
+    final minute = (slot % 4) * 15;
+    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+  }
+
+  /// 일정 블록 색상 결정
+  Color _getEventColor(Event event) {
+    return event.id.startsWith('ext-') ? AppColors.action : AppColors.brand;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final timeRange = _calculateTimeRange();
+    final totalSlots = timeRange.maxSlot - timeRange.minSlot + 1;
+    final totalHeight = totalSlots * _slotHeight;
+    final modalWidth = _calculateModalWidth();
+    final blockWidth = _calculateBlockWidth(modalWidth);
+
+    return SizedBox(
+      width: double.maxFinite,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 날짜 헤더
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: Text(
+              '$dayName요일',
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
+            ),
+          ),
+
+          // 시간 그리드 + 블록
+          Container(
+            width: double.maxFinite,
+            height: totalHeight,
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.lightOutline),
+              borderRadius: BorderRadius.circular(AppRadius.button),
+              color: AppColors.lightBackground,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 왼쪽: 시간 눈금
+                SizedBox(
+                  width: _timeColumnWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: List.generate(totalSlots, (index) {
+                      final slot = timeRange.minSlot + index;
+                      final isHourMark = slot % 4 == 0;
+
+                      return SizedBox(
+                        height: _slotHeight,
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 8, top: 4),
+                            child: isHourMark
+                                ? Text(
+                                    _formatTime(slot),
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: AppColors.neutral500,
+                                      fontSize: 11,
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                // 오른쪽: 일정 블록들
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: math.max(blockWidth * events.length, modalWidth - _timeColumnWidth),
+                      child: Stack(
+                        children: [
+                          // 그리드 라인
+                          Column(
+                            children: List.generate(totalSlots, (index) {
+                              final isHourLine = index % 4 == 0;
+                              return SizedBox(
+                                height: _slotHeight,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      top: BorderSide(
+                                        color: isHourLine
+                                            ? AppColors.lightOutline
+                                            : AppColors.lightOutline.withValues(alpha: 0.35),
+                                        width: isHourLine ? 1 : 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+
+                          // 일정 블록들
+                          ...events.map((event) {
+                            final eventStartSlot = math.min(event.start.slot, event.end.slot);
+                            final eventEndSlot = math.max(event.start.slot, event.end.slot);
+                            final relativeStart = eventStartSlot - timeRange.minSlot;
+                            final duration = eventEndSlot - eventStartSlot + 1;
+
+                            return Positioned(
+                              left: events.indexOf(event) * blockWidth + 4,
+                              top: relativeStart * _slotHeight,
+                              width: blockWidth - 8,
+                              height: duration * _slotHeight - 2,
+                              child: GestureDetector(
+                                onTap: () => onEventTap(event),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: _getEventColor(event).withValues(alpha: 0.85),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: _getEventColor(event),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: _getEventColor(event).withValues(alpha: 0.2),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  padding: const EdgeInsets.all(6),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          event.title,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTheme.labelLarge.copyWith(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      if (duration > 2)
+                                        SizedBox(height: 2),
+                                      if (duration > 2)
+                                        Text(
+                                          '${_formatTime(eventStartSlot)} - ${_formatTime(eventEndSlot + 1)}',
+                                          style: AppTheme.bodySmall.copyWith(
+                                            color: Colors.white.withValues(alpha: 0.85),
+                                            fontSize: 9,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

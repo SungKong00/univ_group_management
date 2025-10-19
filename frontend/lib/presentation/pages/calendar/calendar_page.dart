@@ -9,6 +9,7 @@ import '../../../core/theme/theme.dart';
 import '../../providers/calendar_events_provider.dart';
 import '../../providers/timetable_provider.dart';
 import '../../widgets/buttons/primary_button.dart';
+import '../../widgets/common/compact_tab_bar.dart';
 import 'calendar_week_grid_view.dart';
 import 'widgets/calendar_month_with_sidebar.dart';
 import 'widgets/event_detail_sheet.dart';
@@ -126,29 +127,14 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
   }
 
   Widget _buildTabBar(BuildContext context) {
-    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.lightOutline, width: 1),
-        ),
-        child: TabBar(
-          controller: _tabController,
-          labelColor: theme.colorScheme.primary,
-          unselectedLabelColor: AppColors.neutral500,
-          indicator: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          dividerColor: Colors.transparent,
-          tabs: const [
-            Tab(text: '시간표'),
-            Tab(text: '캘린더'),
-          ],
-        ),
+      child: CompactTabBar(
+        controller: _tabController,
+        tabs: const [
+          CompactTab(label: '시간표'),
+          CompactTab(label: '캘린더'),
+        ],
       ),
     );
   }

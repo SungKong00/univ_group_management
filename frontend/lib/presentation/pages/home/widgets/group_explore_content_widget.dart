@@ -4,6 +4,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../providers/home_state_provider.dart';
+import '../../../widgets/common/compact_tab_bar.dart';
 import '../../group_explore/providers/group_explore_state_provider.dart';
 import '../../group_explore/widgets/group_search_bar.dart';
 import '../../group_explore/widgets/group_filter_chip_bar.dart';
@@ -74,46 +75,14 @@ class _GroupExploreContentWidgetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tab Bar
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.neutral100,
-              borderRadius: BorderRadius.circular(AppRadius.button),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadius.button),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              labelColor: AppColors.brand,
-              unselectedLabelColor: AppColors.neutral600,
-              labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-              tabs: const [
-                Tab(
-                  icon: Icon(Icons.view_list),
-                  text: '리스트',
-                ),
-                Tab(
-                  icon: Icon(Icons.account_tree),
-                  text: '계층 구조',
-                ),
-                Tab(
-                  icon: Icon(Icons.campaign),
-                  text: '모집 공고',
-                ),
-              ],
-            ),
+          // CompactTabBar로 교체
+          CompactTabBar(
+            controller: _tabController,
+            tabs: const [
+              CompactTab(icon: Icons.view_list, label: '리스트'),
+              CompactTab(icon: Icons.account_tree, label: '계층 구조'),
+              CompactTab(icon: Icons.campaign, label: '모집 공고'),
+            ],
           ),
           const SizedBox(height: AppSpacing.md),
 

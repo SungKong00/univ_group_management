@@ -13,6 +13,7 @@ import '../../../providers/focused_date_provider.dart';
 import '../../../providers/group_calendar_provider.dart';
 import '../../../providers/group_permission_provider.dart';
 import '../../../utils/responsive_layout_helper.dart';
+import '../../../widgets/common/compact_tab_bar.dart';
 import '../../../widgets/organisms/organisms.dart';
 import '../../calendar/calendar_week_grid_view.dart';
 import '../../calendar/widgets/calendar_month_with_sidebar.dart';
@@ -89,35 +90,13 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   }
 
   Widget _buildTabBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.neutral200,
-            width: 1,
-          ),
-        ),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        labelColor: AppColors.brand,
-        unselectedLabelColor: AppColors.neutral600,
-        indicatorColor: AppColors.brand,
-        indicatorWeight: 2,
-        labelStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.normal,
-        ),
-        tabs: const [
-          Tab(text: '그룹 캘린더'),
-          Tab(text: '장소 캘린더'),
-        ],
-      ),
+    return CompactTabBar(
+      controller: _tabController,
+      tabs: const [
+        CompactTab(label: '그룹 캘린더'),
+        CompactTab(label: '장소 캘린더'),
+      ],
+      dividerColor: AppColors.neutral200,
     );
   }
 
