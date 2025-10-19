@@ -9,10 +9,10 @@ import '../../../core/theme/theme.dart';
 /// 공간 효율성을 극대화합니다.
 ///
 /// **특징:**
-/// - 아이콘 크기 축소: 20px → 18px
-/// - 텍스트 크기 축소: bodySmall (12px)
-/// - 세로 패딩 최소화: 4px (원래 기본값 보다 20% 축소)
-/// - 최소 터치 영역 유지: 44dp
+/// - 아이콘 크기: 19px
+/// - 텍스트 크기: titleMedium (14px)
+/// - 세로 패딩 최적화: 4px
+/// - 높이: 52dp (적절한 터치 영역 + 여유 공간)
 /// - 간편한 커스터마이징 옵션
 ///
 /// **사용 예시:**
@@ -85,7 +85,7 @@ class CompactTabBar extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            height: 44, // 최소 터치 영역 44dp 유지
+            height: 52, // 적절한 높이 (44dp 최소 + 여유 공간)
             child: TabBar(
               controller: controller,
               onTap: onTap,
@@ -121,9 +121,9 @@ class CompactTabBar extends StatelessWidget {
   /// 컴팩트 탭 콘텐츠 구성
   Widget _buildCompactTabContent(CompactTab tab) {
     return Padding(
-      // 상하 패딩 최소화 (2px)
+      // 상하 패딩 최적화 (4px)
       padding: const EdgeInsets.symmetric(
-        vertical: 2,
+        vertical: 4,
         horizontal: AppSpacing.sm, // 좌우 16px (표준)
       ),
       child: Row(
@@ -135,13 +135,12 @@ class CompactTabBar extends StatelessWidget {
               padding: const EdgeInsets.only(right: 6),
               child: Icon(
                 tab.icon,
-                size: 18, // 18px (20px → 18px로 축소)
+                size: 19, // 19px
               ),
             ),
           Text(
             tab.label,
-            style: AppTheme.bodySmall.copyWith(
-              fontWeight: FontWeight.w500,
+            style: AppTheme.titleMedium.copyWith(
               height: 1.2,
             ),
           ),
