@@ -4,6 +4,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../providers/workspace_state_provider.dart';
+import '../../widgets/common/compact_tab_bar.dart';
 import 'widgets/member_list_section.dart';
 import 'widgets/role_management_section.dart';
 import 'widgets/join_request_section.dart';
@@ -53,23 +54,27 @@ class _MemberManagementPageState extends ConsumerState<MemberManagementPage>
       color: AppColors.neutral100,
       child: Column(
         children: [
-          // 탭 바
-          Container(
-            color: Colors.white,
-            child: TabBar(
-              controller: _tabController,
-              labelColor: AppColors.brand,
-              unselectedLabelColor: AppColors.neutral600,
-              indicatorColor: AppColors.brand,
-              tabs: const [
-                Tab(icon: Icon(Icons.people_outline, size: 20), text: '멤버 목록'),
-                Tab(
-                  icon: Icon(Icons.admin_panel_settings_outlined, size: 20),
-                  text: '역할 관리',
-                ),
-                Tab(icon: Icon(Icons.inbox_outlined, size: 20), text: '가입 신청'),
-              ],
-            ),
+          // 컴팩트 탭 바 (높이 최적화)
+          CompactTabBar(
+            controller: _tabController,
+            tabs: const [
+              CompactTab(
+                icon: Icons.people_outline,
+                label: '멤버 목록',
+              ),
+              CompactTab(
+                icon: Icons.admin_panel_settings_outlined,
+                label: '역할 관리',
+              ),
+              CompactTab(
+                icon: Icons.inbox_outlined,
+                label: '가입 신청',
+              ),
+            ],
+            labelColor: AppColors.brand,
+            unselectedLabelColor: AppColors.neutral600,
+            backgroundColor: Colors.white,
+            indicatorColor: AppColors.brand,
           ),
           // 탭 뷰
           Expanded(
