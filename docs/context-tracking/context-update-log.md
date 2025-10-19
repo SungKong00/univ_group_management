@@ -2,6 +2,36 @@
 
 이 파일은 프로젝트의 컨텍스트 문서들이 언제, 어떤 커밋에서 업데이트되었는지 추적합니다.
 
+### 2025-10-19 - 문서 정리 및 신규 네비게이션 가이드 추가
+**커밋**: (커밋 예정)
+**유형**: 문서 리팩토링 및 추가
+**우선순위**: Medium
+**영향 범위**: 문서 (가이드, 컨텍스트 추적)
+
+**구현 내용**:
+- **임시 문서 삭제**:
+    - 개발 과정에서만 필요했던 `docs/features` 및 `docs/implementation`의 `phase`, `status` 관련 문서 12개를 삭제하여 문서 구조를 정리했습니다.
+- **신규 가이드 추가**:
+    - `docs/implementation/workspace-level-navigation-guide.md`를 추가하여 `WorkspaceView` 기반의 네비게이션 구현 방법과 흔한 오류 해결책을 문서화했습니다.
+- **참조 업데이트**:
+    - `CLAUDE.md`, `frontend-workspace-guide.md`, `workspace-page-implementation-guide.md`, `frontend-specialist.md`, `frontend-debugger.md`에 신규 네비게이션 가이드 참조를 추가했습니다.
+    - 삭제된 임시 문서들을 참조하던 링크들을 `calendar-integration-roadmap.md`, `group-calendar-official-events-roadmap.md` 등의 파일에서 제거했습니다.
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/workspace-level-navigation-guide.md` (신규)
+- ✅ `CLAUDE.md`
+- ✅ `docs/implementation/frontend-workspace-guide.md`
+- ✅ `docs/implementation/workspace-page-implementation-guide.md`
+- ✅ `.claude/agents/frontend-specialist.md`
+- ✅ `.claude/agents/frontend-debugger.md`
+- ✅ `docs/context-tracking/sync-status.md`
+- ✅ `docs/context-tracking/context-update-log.md`
+
+**메모**: 문서 구조를 개선하고, 프론트엔드 네비게이션 개발 시 중요한 가이드를 추가하여 개발 효율성을 높였습니다.
+
+---
+
+
 ### 2025-10-19 - 데모 캘린더 기능 수정 및 문서 동기화
 **커밋**: (커밋 예정)
 **유형**: 기능 수정 + 문서 동기화
