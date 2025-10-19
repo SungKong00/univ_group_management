@@ -12,6 +12,7 @@ import 'event_painter.dart';
 import 'highlight_painter.dart';
 import 'selection_painter.dart';
 import 'time_grid_painter.dart';
+import 'weekly_schedule_editor_painter.dart';
 
 typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end});
 
@@ -1426,7 +1427,7 @@ class _OverlappingEventsVisualization extends StatelessWidget {
             ),
           ),
 
-          // 시간 그리드 + 블록
+          // 시간 그리드 + 블록 (TimeGridPainter 사용)
           Container(
             width: modalWidth,
             height: totalHeight,
@@ -1435,141 +1436,112 @@ class _OverlappingEventsVisualization extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.button),
               color: AppColors.lightBackground,
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 왼쪽: 시간 눈금
-                SizedBox(
-                  width: _timeColumnWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: List.generate(totalSlots, (index) {
-                      final slot = timeRange.minSlot + index;
-                      final isHourMark = slot % 4 == 0;
-
-                      return SizedBox(
-                        height: _slotHeight,
-                        child: Align(
-                          alignment: Alignment.topRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 8, top: 4),
-                            child: isHourMark
-                                ? Text(
-                                    _formatTime(slot),
-                                    style: AppTheme.bodySmall.copyWith(
-                                      color: AppColors.neutral500,
-                                      fontSize: 11,
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.button - 1),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: math.max(
+                    _timeColumnWidth + blockWidth * events.length,
+                    modalWidth,
+                  ),
+                  height: totalHeight,
+                  child: Stack(
+                    children: [
+                      // TimeGridPainter로 시간 눈금 + 그리드 라인 렌더링
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: OverlapModalTimeGridPainter(
+                            minSlot: timeRange.minSlot,
+                            maxSlot: timeRange.maxSlot,
+                            startHour: startHour,
+                            slotHeight: _slotHeight,
+                            timeColumnWidth: _timeColumnWidth,
                           ),
                         ),
-                      );
-                    }),
-                  ),
-                ),
-
-                // 오른쪽: 일정 블록들
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: math.max(blockWidth * events.length, modalWidth - _timeColumnWidth),
-                      child: Stack(
-                        children: [
-                          // 그리드 라인
-                          Column(
-                            children: List.generate(totalSlots, (index) {
-                              final isHourLine = index % 4 == 0;
-                              return SizedBox(
-                                height: _slotHeight,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    border: Border(
-                                      top: BorderSide(
-                                        color: isHourLine
-                                            ? AppColors.lightOutline
-                                            : AppColors.lightOutline.withValues(alpha: 0.35),
-                                        width: isHourLine ? 1 : 0.5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }),
-                          ),
-
-                          // 일정 블록들
-                          ...events.map((event) {
-                            final eventStartSlot = math.min(event.start.slot, event.end.slot);
-                            final eventEndSlot = math.max(event.start.slot, event.end.slot);
-                            final relativeStart = eventStartSlot - timeRange.minSlot;
-                            final duration = eventEndSlot - eventStartSlot + 1;
-
-                            return Positioned(
-                              left: events.indexOf(event) * blockWidth + 4,
-                              top: relativeStart * _slotHeight,
-                              width: blockWidth - 8,
-                              height: duration * _slotHeight - 2,
-                              child: GestureDetector(
-                                onTap: () => onEventTap(event),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: _getEventColor(event).withValues(alpha: 0.85),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: _getEventColor(event),
-                                      width: 1.5,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: _getEventColor(event).withValues(alpha: 0.2),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  padding: const EdgeInsets.all(6),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          event.title,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                      if (duration > 2)
-                                        SizedBox(height: 2),
-                                      if (duration > 2)
-                                        Text(
-                                          '${_formatTime(eventStartSlot)} - ${_formatTime(eventEndSlot + 1)}',
-                                          style: TextStyle(
-                                            color: Colors.white.withValues(alpha: 0.85),
-                                            fontSize: 9,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ],
                       ),
-                    ),
+
+                      // 일정 블록들
+                      ...events.map((event) {
+                        final eventStartSlot = math.min(event.start.slot, event.end.slot);
+                        final eventEndSlot = math.max(event.start.slot, event.end.slot);
+
+                        // 이벤트가 시간 범위 밖에 있으면 렌더링하지 않음
+                        if (eventEndSlot < timeRange.minSlot || eventStartSlot > timeRange.maxSlot) {
+                          return const Positioned(child: SizedBox.shrink());
+                        }
+
+                        final top = (eventStartSlot - timeRange.minSlot) * _slotHeight;
+                        final duration = eventEndSlot - eventStartSlot + 1;
+                        final height = duration * _slotHeight;
+
+                        final totalVisibleHeight = (timeRange.maxSlot - timeRange.minSlot + 1) * _slotHeight;
+
+                        // 뷰포트를 벗어나는 높이 클리핑
+                        final clippedHeight = math.min(top + height, totalVisibleHeight) - top;
+
+                        return Positioned(
+                          left: _timeColumnWidth + events.indexOf(event) * blockWidth + 4,
+                          top: top,
+                          width: blockWidth - 8,
+                          height: clippedHeight - 2, // -2 for padding
+                          child: GestureDetector(
+                            onTap: () => onEventTap(event),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: _getEventColor(event).withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: _getEventColor(event),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: _getEventColor(event).withValues(alpha: 0.2),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.all(6),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      event.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  if (duration > 2)
+                                    SizedBox(height: 2),
+                                  if (duration > 2)
+                                    Text(
+                                      '${_formatTime(eventStartSlot)} - ${_formatTime(eventEndSlot + 1)}',
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.85),
+                                        fontSize: 9,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ],
