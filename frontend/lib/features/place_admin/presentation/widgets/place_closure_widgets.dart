@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/place_time_models.dart';
 import '../../../../core/providers/place_time_providers.dart';
-import '../../../../core/theme/theme.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// 임시 휴무 캘린더 위젯
 ///
@@ -79,7 +80,7 @@ class _PlaceClosureCalendarWidgetState
               children: [
                 Text(
                   '임시 휴무',
-                  style: AppTypography.titleLarge,
+                  style: AppTheme.titleLarge,
                 ),
                 Row(
                   children: [
@@ -90,7 +91,7 @@ class _PlaceClosureCalendarWidgetState
                     ),
                     Text(
                       '${_currentMonth.year}년 ${_currentMonth.month}월',
-                      style: AppTypography.bodyLarge.copyWith(
+                      style: AppTheme.bodyLarge.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -164,7 +165,7 @@ class _PlaceClosureCalendarWidgetState
               child: Center(
                 child: Text(
                   day,
-                  style: AppTypography.labelLarge.copyWith(
+                  style: AppTheme.titleMedium.copyWith(
                     color: AppColors.neutral600,
                   ),
                 ),
@@ -234,7 +235,7 @@ class _PlaceClosureCalendarWidgetState
         decoration: BoxDecoration(
           color: bgColor,
           border: Border.all(
-            color: isToday ? AppColors.brandPrimary : AppColors.neutral300,
+            color: isToday ? AppColors.brand : AppColors.neutral300,
             width: isToday ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(4),
@@ -245,7 +246,7 @@ class _PlaceClosureCalendarWidgetState
             children: [
               Text(
                 '${date.day}',
-                style: AppTypography.bodyMedium.copyWith(
+                style: AppTheme.bodyMedium.copyWith(
                   fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
                   color: hasFullDay
                       ? AppColors.error
@@ -285,7 +286,7 @@ class _PlaceClosureCalendarWidgetState
           ),
         ),
         const SizedBox(width: 6),
-        Text(label, style: AppTypography.bodySmall),
+        Text(label, style: AppTheme.bodySmall),
       ],
     );
   }
@@ -314,10 +315,6 @@ class _PlaceClosureCalendarWidgetState
         },
       ),
     );
-  }
-
-  String _formatDateForApi(DateTime date) {
-    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }
 
@@ -446,16 +443,9 @@ class _AddFullDayClosureDialogState
 
       if (mounted) {
         Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('전일 휴무가 추가되었습니다')),
-        );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
-        );
-      }
+      // 오류는 로그만 출력 (ScaffoldMessenger 사용 금지 - workspace-level 페이지)
     } finally {
       if (mounted) {
         setState(() {
@@ -479,7 +469,7 @@ class _AddFullDayClosureDialogState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('사유 (선택)', style: AppTypography.labelLarge),
+            Text('사유 (선택)', style: AppTheme.titleMedium),
             const SizedBox(height: 8),
             TextFormField(
               controller: _reasonController,
@@ -504,7 +494,7 @@ class _AddFullDayClosureDialogState
         ElevatedButton(
           onPressed: _isLoading ? null : _handleAdd,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brandPrimary,
+            backgroundColor: AppColors.brand,
             foregroundColor: Colors.white,
           ),
           child: _isLoading
@@ -607,16 +597,9 @@ class _AddPartialClosureDialogState
 
       if (mounted) {
         Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('부분 시간 휴무가 추가되었습니다')),
-        );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
-        );
-      }
+      // 오류는 로그만 출력 (ScaffoldMessenger 사용 금지 - workspace-level 페이지)
     } finally {
       if (mounted) {
         setState(() {
@@ -637,7 +620,7 @@ class _AddPartialClosureDialogState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 시간 선택
-            Text('시간', style: AppTypography.labelLarge),
+            Text('시간', style: AppTheme.titleMedium),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -662,7 +645,7 @@ class _AddPartialClosureDialogState
             const SizedBox(height: 16),
 
             // 사유
-            Text('사유 (선택)', style: AppTypography.labelLarge),
+            Text('사유 (선택)', style: AppTheme.titleMedium),
             const SizedBox(height: 8),
             TextFormField(
               controller: _reasonController,
@@ -687,7 +670,7 @@ class _AddPartialClosureDialogState
         ElevatedButton(
           onPressed: _isLoading ? null : _handleAdd,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brandPrimary,
+            backgroundColor: AppColors.brand,
             foregroundColor: Colors.white,
           ),
           child: _isLoading
@@ -747,7 +730,7 @@ class ClosureDetailDialog extends ConsumerWidget {
                     closure.isFullDay
                         ? '전일 휴무'
                         : '${closure.startTime} - ${closure.endTime}',
-                    style: AppTypography.bodyMedium.copyWith(
+                    style: AppTheme.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -758,7 +741,7 @@ class ClosureDetailDialog extends ConsumerWidget {
                       padding: const EdgeInsets.only(top: 4.0),
                       child: Text(
                         closure.reason!,
-                        style: AppTypography.bodySmall.copyWith(
+                        style: AppTheme.bodySmall.copyWith(
                           color: AppColors.neutral600,
                         ),
                       ),
@@ -801,16 +784,9 @@ class ClosureDetailDialog extends ConsumerWidget {
                       if (context.mounted) {
                         onDeleted();
                         Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('휴무가 삭제되었습니다')),
-                        );
                       }
                     } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('오류가 발생했습니다: $e')),
-                        );
-                      }
+                      // 오류는 로그만 출력 (ScaffoldMessenger 사용 금지 - workspace-level 페이지)
                     }
                   }
                 },

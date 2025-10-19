@@ -34,6 +34,7 @@ import '../admin/channel_management_page.dart';
 import '../recruitment_management/recruitment_management_page.dart';
 import '../recruitment_management/application_management_page.dart';
 import 'calendar/group_calendar_page.dart';
+import 'place/place_time_management_page.dart';
 
 class WorkspacePage extends ConsumerStatefulWidget {
   final String? groupId;
@@ -465,6 +466,20 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           return const RecruitmentManagementPage();
         case WorkspaceView.applicationManagement:
           return const ApplicationManagementPage();
+        case WorkspaceView.placeTimeManagement:
+          final placeId = ref.watch(
+            workspaceStateProvider.select((state) => state.selectedPlaceId),
+          );
+          final placeName = ref.watch(
+            workspaceStateProvider.select((state) => state.selectedPlaceName),
+          );
+          if (placeId == null || placeName == null) {
+            return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
+          }
+          return PlaceTimeManagementPage(
+            placeId: placeId,
+            placeName: placeName,
+          );
         case WorkspaceView.channel:
           // Fall through to mobile view switch below
           break;
@@ -587,6 +602,20 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         return const RecruitmentManagementPage();
       case WorkspaceView.applicationManagement:
         return const ApplicationManagementPage();
+      case WorkspaceView.placeTimeManagement:
+        final placeId = ref.watch(
+          workspaceStateProvider.select((state) => state.selectedPlaceId),
+        );
+        final placeName = ref.watch(
+          workspaceStateProvider.select((state) => state.selectedPlaceName),
+        );
+        if (placeId == null || placeName == null) {
+          return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
+        }
+        return PlaceTimeManagementPage(
+          placeId: placeId,
+          placeName: placeName,
+        );
       case WorkspaceView.channel:
         if (!hasSelectedChannel) {
           return const WorkspaceEmptyState(

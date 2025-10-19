@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../../core/enums/calendar_view.dart';
+import '../../../../../core/models/place/place.dart';
 import '../../../../../core/models/place/place_reservation.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
@@ -11,8 +12,9 @@ import '../../../../providers/focused_date_provider.dart';
 import '../../../../providers/group_permission_provider.dart';
 import '../../../../providers/place_calendar_provider.dart';
 import '../../../../providers/place_provider.dart';
+import '../../../../providers/workspace_state_provider.dart';
 import '../../../../utils/responsive_layout_helper.dart';
-import '../../place/place_list_page.dart';
+import '../../../../widgets/place/place_card.dart';
 import 'multi_place_calendar_view.dart';
 import 'place_reservation_dialog.dart';
 import 'place_selector_button.dart';
@@ -656,14 +658,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
   Widget _buildPlaceManageButton(BuildContext context) {
     return IconButton(
       tooltip: '장소 관리',
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PlaceListPage(groupId: widget.groupId),
-          ),
-        );
-      },
+      onPressed: () => _showPlaceListModal(),
       icon: const Icon(Icons.settings),
       color: AppColors.brand,
       iconSize: 24,
@@ -798,5 +793,220 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         notifier.next(1);
         break;
     }
+  }
+
+  /// Show place list modal dialog for selecting a place to manage
+  Future<void> _showPlaceListModal() async {
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: 600,
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+          ),
+          child: Column(
+            children: [
+              // Header with title and close button
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.brand,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(AppRadius.card),
+                    topRight: Radius.circular(AppRadius.card),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.settings,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    const Text(
+                      '장소 관리',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                      tooltip: '닫기',
+                    ),
+                  ],
+                ),
+              ),
+
+              // Place list content - wrapped in Consumer to provide ref context
+              Expanded(
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final placesAsync = ref.watch(placesProvider(widget.groupId));
+
+                    return placesAsync.when(
+                      data: (places) => _buildModalPlaceList(places),
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      error: (error, _) => Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: AppColors.error,
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              const Text(
+                                '오류가 발생했습니다',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.neutral900,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                error.toString(),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.neutral600,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build place list for modal (reusing PlaceListPage structure)
+  Widget _buildModalPlaceList(List<Place> places) {
+    if (places.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.location_off,
+                size: 64,
+                color: AppColors.neutral400,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                '등록된 장소가 없습니다',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.neutral600,
+                    ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                '장소를 추가해주세요',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.neutral500,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Group places by building
+    final groupedPlaces = <String, List<Place>>{};
+    for (final place in places) {
+      groupedPlaces.putIfAbsent(place.building, () => []).add(place);
+    }
+
+    // Sort buildings alphabetically
+    final sortedBuildings = groupedPlaces.keys.toList()..sort();
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      itemCount: sortedBuildings.length,
+      itemBuilder: (context, index) {
+        final building = sortedBuildings[index];
+        final buildingPlaces = groupedPlaces[building]!;
+
+        // Sort places by room number
+        buildingPlaces.sort((a, b) => a.roomNumber.compareTo(b.roomNumber));
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          elevation: 0,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            side: const BorderSide(
+              color: AppColors.neutral300,
+              width: 1,
+            ),
+          ),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xxs,
+            ),
+            childrenPadding: const EdgeInsets.only(
+              bottom: AppSpacing.xxs,
+            ),
+            title: Text(
+              building,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.neutral900,
+              ),
+            ),
+            subtitle: Text(
+              '${buildingPlaces.length}개 장소',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.neutral600,
+              ),
+            ),
+            children: buildingPlaces.map((place) {
+              return PlaceCard(
+                place: place,
+                groupId: widget.groupId,
+                onManageAvailability: () {
+                  // Close modal first
+                  Navigator.of(context).pop();
+                  // Navigate to time management page using WorkspaceProvider
+                  ref.read(workspaceStateProvider.notifier).showPlaceTimeManagementPage(
+                    place.id,
+                    place.displayName,
+                  );
+                },
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
   }
 }

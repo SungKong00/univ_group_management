@@ -21,6 +21,7 @@ enum WorkspaceView {
   channelManagement, // Channel management page view
   recruitmentManagement, // Recruitment management page view
   applicationManagement, // Application management page view (모집 지원자 관리)
+  placeTimeManagement, // Place time management page view (장소 시간 관리)
 }
 
 /// Mobile Workspace View Type (3-step navigation flow)
@@ -53,6 +54,8 @@ class WorkspaceState extends Equatable {
     this.isNarrowDesktopCommentsFullscreen =
         false, // Narrow desktop: comments fullscreen mode
     this.previousView, // Track previous view for back navigation
+    this.selectedPlaceId, // Selected place ID for place time management
+    this.selectedPlaceName, // Selected place name for place time management
   });
 
   final String? selectedGroupId;
@@ -79,6 +82,8 @@ class WorkspaceState extends Equatable {
   isNarrowDesktopCommentsFullscreen; // Narrow desktop: when true, hide posts and show only comments
   final WorkspaceView?
   previousView; // Previous view for back navigation from special views (groupAdmin, memberManagement, etc.)
+  final int? selectedPlaceId; // Selected place ID for place time management
+  final String? selectedPlaceName; // Selected place name for place time management
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -101,6 +106,8 @@ class WorkspaceState extends Equatable {
     List<String>? channelHistory,
     bool? isNarrowDesktopCommentsFullscreen,
     WorkspaceView? previousView,
+    int? selectedPlaceId,
+    String? selectedPlaceName,
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
@@ -127,6 +134,8 @@ class WorkspaceState extends Equatable {
           isNarrowDesktopCommentsFullscreen ??
           this.isNarrowDesktopCommentsFullscreen,
       previousView: previousView ?? this.previousView,
+      selectedPlaceId: selectedPlaceId ?? this.selectedPlaceId,
+      selectedPlaceName: selectedPlaceName ?? this.selectedPlaceName,
     );
   }
 
@@ -156,6 +165,8 @@ class WorkspaceState extends Equatable {
     channelHistory,
     isNarrowDesktopCommentsFullscreen,
     previousView,
+    selectedPlaceId,
+    selectedPlaceName,
   ];
 }
 
@@ -630,6 +641,20 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       isCommentsVisible: false,
       selectedPostId: null,
       isNarrowDesktopCommentsFullscreen: false,
+    );
+  }
+
+  /// Show place time management page view (장소 시간 관리)
+  void showPlaceTimeManagementPage(int placeId, String placeName) {
+    state = state.copyWith(
+      previousView: state.currentView,
+      currentView: WorkspaceView.placeTimeManagement,
+      selectedChannelId: null,
+      isCommentsVisible: false,
+      selectedPostId: null,
+      isNarrowDesktopCommentsFullscreen: false,
+      selectedPlaceId: placeId,
+      selectedPlaceName: placeName,
     );
   }
 

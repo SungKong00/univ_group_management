@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/theme.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../widgets/place_operating_hours_dialog.dart';
 import '../widgets/restricted_time_widgets.dart';
 import '../widgets/place_closure_widgets.dart';
@@ -27,7 +28,7 @@ class PlaceAdminSettingsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('$placeName 관리'),
-        backgroundColor: AppColors.brandPrimary,
+        backgroundColor: AppColors.brand,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -43,15 +44,15 @@ class PlaceAdminSettingsPage extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.info_outline,
-                      color: AppColors.brandPrimary,
+                      color: AppColors.brand,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         '장소의 운영시간, 금지시간, 임시 휴무를 설정하여 예약 가능 시간을 관리할 수 있습니다.',
-                        style: AppTypography.bodySmall.copyWith(
+                        style: AppTheme.bodySmall.copyWith(
                           color: AppColors.neutral700,
                         ),
                       ),
@@ -65,12 +66,12 @@ class PlaceAdminSettingsPage extends StatelessWidget {
             // 섹션 1: 운영시간
             Text(
               '1. 운영시간 설정',
-              style: AppTypography.headlineLarge,
+              style: AppTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             Text(
               '요일별 기본 운영시간을 설정합니다',
-              style: AppTypography.bodySmall.copyWith(
+              style: AppTheme.bodySmall.copyWith(
                 color: AppColors.neutral600,
               ),
             ),
@@ -81,12 +82,12 @@ class PlaceAdminSettingsPage extends StatelessWidget {
             // 섹션 2: 금지시간
             Text(
               '2. 금지시간 설정',
-              style: AppTypography.headlineLarge,
+              style: AppTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             Text(
               '운영시간 내에서 특정 요일의 시간대를 예약 불가로 설정합니다',
-              style: AppTypography.bodySmall.copyWith(
+              style: AppTheme.bodySmall.copyWith(
                 color: AppColors.neutral600,
               ),
             ),
@@ -97,12 +98,12 @@ class PlaceAdminSettingsPage extends StatelessWidget {
             // 섹션 3: 임시 휴무
             Text(
               '3. 임시 휴무 설정',
-              style: AppTypography.headlineLarge,
+              style: AppTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             Text(
               '특정 날짜의 전일 또는 부분 시간대를 예약 불가로 설정합니다',
-              style: AppTypography.bodySmall.copyWith(
+              style: AppTheme.bodySmall.copyWith(
                 color: AppColors.neutral600,
               ),
             ),
@@ -113,12 +114,12 @@ class PlaceAdminSettingsPage extends StatelessWidget {
             // 섹션 4: 예약 가능 시간 조회
             Text(
               '4. 예약 가능 시간 조회',
-              style: AppTypography.headlineLarge,
+              style: AppTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             Text(
               '설정된 규칙에 따라 특정 날짜의 예약 가능 시간을 확인합니다',
-              style: AppTypography.bodySmall.copyWith(
+              style: AppTheme.bodySmall.copyWith(
                 color: AppColors.neutral600,
               ),
             ),

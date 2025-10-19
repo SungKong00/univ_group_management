@@ -184,6 +184,8 @@ PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceBreadcrumbContext context) {
       return const PageBreadcrumb(title: '모집 관리');
     case WorkspaceView.applicationManagement:
       return const PageBreadcrumb(title: '지원자 관리');
+    case WorkspaceView.placeTimeManagement:
+      return const PageBreadcrumb(title: '장소 시간 관리');
     case WorkspaceView.calendar:
       return const PageBreadcrumb(title: '캘린더');
     case WorkspaceView.groupHome:
@@ -217,6 +219,9 @@ PageBreadcrumb _buildMobileBreadcrumb(
   }
   if (context.currentView == WorkspaceView.applicationManagement) {
     return const PageBreadcrumb(title: '지원자 관리', path: ['지원자 관리']);
+  }
+  if (context.currentView == WorkspaceView.placeTimeManagement) {
+    return const PageBreadcrumb(title: '장소 시간 관리', path: ['장소 시간 관리']);
   }
 
   // 현재 뷰 타입에 따라 브레드크럼 형식 결정

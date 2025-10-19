@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/place_time_models.dart';
 import '../../../../core/providers/place_time_providers.dart';
-import '../../../../core/theme/theme.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// 금지시간 목록 위젯
 class RestrictedTimeListWidget extends ConsumerWidget {
@@ -36,12 +37,14 @@ class RestrictedTimeListWidget extends ConsumerWidget {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisSize: MainAxisSize.max,
               children: [
                 Text(
                   '금지시간',
-                  style: AppTypography.titleLarge,
+                  style: AppTheme.titleLarge,
                 ),
-                ElevatedButton.icon(
+                Flexible(
+                  child: ElevatedButton.icon(
                   onPressed: () async {
                     final result = await showDialog<bool>(
                       context: context,
@@ -57,8 +60,10 @@ class RestrictedTimeListWidget extends ConsumerWidget {
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('추가'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
+                    backgroundColor: AppColors.brand,
                     foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
                   ),
                 ),
               ],
@@ -156,14 +161,14 @@ class _RestrictedTimeItem extends ConsumerWidget {
           Chip(
             label: Text(
               _dayLabels[time.dayOfWeek] ?? time.dayOfWeek,
-              style: AppTypography.bodySmall,
+              style: AppTheme.bodySmall,
             ),
             backgroundColor: AppColors.brandLight,
           ),
           const SizedBox(width: 8),
           Text(
             '${time.startTime} - ${time.endTime}',
-            style: AppTypography.bodyMedium.copyWith(
+            style: AppTheme.bodyMedium.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -174,7 +179,7 @@ class _RestrictedTimeItem extends ConsumerWidget {
               padding: const EdgeInsets.only(top: 4.0),
               child: Text(
                 time.reason!,
-                style: AppTypography.bodySmall.copyWith(
+                style: AppTheme.bodySmall.copyWith(
                   color: AppColors.neutral600,
                 ),
               ),
@@ -233,18 +238,10 @@ class _RestrictedTimeItem extends ConsumerWidget {
                     restrictedTimeId: time.id,
                   );
                   await ref.read(deleteRestrictedTimeProvider(params).future);
-
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('금지시간이 삭제되었습니다')),
-                    );
-                  }
+                  // 삭제 성공 시 목록 자동 갱신 (ref.invalidate는 호출 측에서 처리)
                 } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('오류가 발생했습니다: $e')),
-                    );
-                  }
+                  // 에러 발생 시에도 다이얼로그는 닫히지 않음
+                  // TODO: 에러 처리 개선 필요 (Toast 또는 Dialog)
                 }
               }
             },
@@ -348,16 +345,11 @@ class _AddRestrictedTimeDialogState
 
       if (mounted) {
         Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('금지시간이 추가되었습니다')),
-        );
+        // 추가 성공 시 목록 자동 갱신 (ref.invalidate는 호출 측에서 처리)
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
-        );
-      }
+      // 에러 발생 시 다이얼로그는 닫히지 않음
+      // TODO: 에러 처리 개선 필요 (Toast 또는 Dialog)
     } finally {
       if (mounted) {
         setState(() {
@@ -380,7 +372,7 @@ class _AddRestrictedTimeDialogState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 요일 선택
-              Text('요일', style: AppTypography.labelLarge),
+              Text('요일', style: AppTheme.titleMedium),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _selectedDayOfWeek,
@@ -408,7 +400,7 @@ class _AddRestrictedTimeDialogState
               const SizedBox(height: 16),
 
               // 시간 선택
-              Text('시간', style: AppTypography.labelLarge),
+              Text('시간', style: AppTheme.titleMedium),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -433,7 +425,7 @@ class _AddRestrictedTimeDialogState
               const SizedBox(height: 16),
 
               // 사유 입력 (선택)
-              Text('사유 (선택)', style: AppTypography.labelLarge),
+              Text('사유 (선택)', style: AppTheme.titleMedium),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _reasonController,
@@ -459,7 +451,7 @@ class _AddRestrictedTimeDialogState
         ElevatedButton(
           onPressed: _isLoading ? null : _handleAdd,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brandPrimary,
+            backgroundColor: AppColors.brand,
             foregroundColor: Colors.white,
           ),
           child: _isLoading
@@ -578,16 +570,11 @@ class _EditRestrictedTimeDialogState
 
       if (mounted) {
         Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('금지시간이 수정되었습니다')),
-        );
+        // 수정 성공 시 목록 자동 갱신 (ref.invalidate는 호출 측에서 처리)
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
-        );
-      }
+      // 에러 발생 시 다이얼로그는 닫히지 않음
+      // TODO: 에러 처리 개선 필요 (Toast 또는 Dialog)
     } finally {
       if (mounted) {
         setState(() {
@@ -620,7 +607,7 @@ class _EditRestrictedTimeDialogState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 요일 표시 (수정 불가)
-              Text('요일', style: AppTypography.labelLarge),
+              Text('요일', style: AppTheme.titleMedium),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
@@ -635,7 +622,7 @@ class _EditRestrictedTimeDialogState
                 ),
                 child: Text(
                   _dayLabels[widget.time.dayOfWeek] ?? widget.time.dayOfWeek,
-                  style: AppTypography.bodyMedium.copyWith(
+                  style: AppTheme.bodyMedium.copyWith(
                     color: AppColors.neutral600,
                   ),
                 ),
@@ -643,7 +630,7 @@ class _EditRestrictedTimeDialogState
               const SizedBox(height: 16),
 
               // 시간 선택
-              Text('시간', style: AppTypography.labelLarge),
+              Text('시간', style: AppTheme.titleMedium),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -668,7 +655,7 @@ class _EditRestrictedTimeDialogState
               const SizedBox(height: 16),
 
               // 사유 입력 (선택)
-              Text('사유 (선택)', style: AppTypography.labelLarge),
+              Text('사유 (선택)', style: AppTheme.titleMedium),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _reasonController,
@@ -694,7 +681,7 @@ class _EditRestrictedTimeDialogState
         ElevatedButton(
           onPressed: _isLoading ? null : _handleUpdate,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brandPrimary,
+            backgroundColor: AppColors.brand,
             foregroundColor: Colors.white,
           ),
           child: _isLoading

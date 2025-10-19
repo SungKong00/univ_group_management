@@ -125,16 +125,9 @@ class _PlaceOperatingHoursDialogState
 
       if (mounted) {
         Navigator.of(context).pop(true); // true: 성공
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('운영시간이 저장되었습니다')),
-        );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
-        );
-      }
+      // 오류는 로그만 출력 (ScaffoldMessenger 사용 금지 - workspace-level 페이지)
     } finally {
       if (mounted) {
         setState(() {

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/place_time_models.dart';
 import '../../../../core/providers/place_time_providers.dart';
-import '../../../../core/theme/theme.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// 예약 가능 시간 조회 위젯
 ///
@@ -43,7 +44,7 @@ class _AvailableTimesWidgetState extends ConsumerState<AvailableTimesWidget> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: AppColors.brandPrimary,
+              primary: AppColors.brand,
               onPrimary: Colors.white,
             ),
           ),
@@ -91,13 +92,15 @@ class _AvailableTimesWidgetState extends ConsumerState<AvailableTimesWidget> {
               children: [
                 Text(
                   '예약 가능 시간',
-                  style: AppTypography.titleLarge,
+                  style: AppTheme.titleLarge,
                 ),
-                OutlinedButton.icon(
-                  onPressed: _selectDate,
-                  icon: const Icon(Icons.calendar_today, size: 18),
-                  label: Text(
-                    '${_selectedDate.month}/${_selectedDate.day} (${_dayLabels[_selectedDate.weekday == 1 ? 'MONDAY' : _selectedDate.weekday == 2 ? 'TUESDAY' : _selectedDate.weekday == 3 ? 'WEDNESDAY' : _selectedDate.weekday == 4 ? 'THURSDAY' : _selectedDate.weekday == 5 ? 'FRIDAY' : _selectedDate.weekday == 6 ? 'SATURDAY' : 'SUNDAY']})',
+                Flexible(
+                  child: OutlinedButton.icon(
+                    onPressed: _selectDate,
+                    icon: const Icon(Icons.calendar_today, size: 18),
+                    label: Text(
+                      '${_selectedDate.month}/${_selectedDate.day} (${_dayLabels[_selectedDate.weekday == 1 ? 'MONDAY' : _selectedDate.weekday == 2 ? 'TUESDAY' : _selectedDate.weekday == 3 ? 'WEDNESDAY' : _selectedDate.weekday == 4 ? 'THURSDAY' : _selectedDate.weekday == 5 ? 'FRIDAY' : _selectedDate.weekday == 6 ? 'SATURDAY' : 'SUNDAY']})',
+                    ),
                   ),
                 ),
               ],
@@ -142,7 +145,7 @@ class _AvailableTimesWidgetState extends ConsumerState<AvailableTimesWidget> {
               const SizedBox(height: 12),
               Text(
                 '운영하지 않는 요일입니다',
-                style: AppTypography.bodyLarge.copyWith(
+                style: AppTheme.bodyLarge.copyWith(
                   color: AppColors.neutral600,
                 ),
               ),
@@ -159,7 +162,7 @@ class _AvailableTimesWidgetState extends ConsumerState<AvailableTimesWidget> {
           padding: const EdgeInsets.all(48.0),
           child: Text(
             '운영시간이 설정되지 않았습니다',
-            style: AppTypography.bodyLarge.copyWith(
+            style: AppTheme.bodyLarge.copyWith(
               color: AppColors.neutral600,
             ),
           ),
@@ -221,7 +224,7 @@ class _AvailableTimesWidgetState extends ConsumerState<AvailableTimesWidget> {
         // 예약 가능 슬롯
         Text(
           '예약 가능 시간대',
-          style: AppTypography.labelLarge,
+          style: AppTheme.titleMedium,
         ),
         const SizedBox(height: 12),
         if (data.availableSlots.isEmpty)
@@ -230,7 +233,7 @@ class _AvailableTimesWidgetState extends ConsumerState<AvailableTimesWidget> {
               padding: const EdgeInsets.all(24.0),
               child: Text(
                 '예약 가능한 시간대가 없습니다',
-                style: AppTypography.bodyMedium.copyWith(
+                style: AppTheme.bodyMedium.copyWith(
                   color: AppColors.neutral600,
                 ),
               ),
@@ -244,7 +247,7 @@ class _AvailableTimesWidgetState extends ConsumerState<AvailableTimesWidget> {
               return Chip(
                 label: Text(
                   '${slot.startTime} - ${slot.endTime}',
-                  style: AppTypography.bodySmall,
+                  style: AppTheme.bodySmall,
                 ),
                 backgroundColor: AppColors.success.withOpacity(0.1),
                 side: BorderSide(color: AppColors.success),
@@ -271,7 +274,7 @@ class _AvailableTimesWidgetState extends ConsumerState<AvailableTimesWidget> {
         Expanded(
           child: RichText(
             text: TextSpan(
-              style: AppTypography.bodyMedium.copyWith(
+              style: AppTheme.bodyMedium.copyWith(
                 color: AppColors.neutral900,
               ),
               children: [
