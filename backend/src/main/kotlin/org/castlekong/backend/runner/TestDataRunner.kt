@@ -1108,8 +1108,432 @@ class TestDataRunner(
                 ),
             )
         }
-
         logger.info("-> SUCCESS: Created group calendar events and reservations")
+
+        logger.info("[9/9] Creating additional November events...")
+
+        // 1. DevCrew (코딩 동아리)
+        safeExecute("Creating November events for DevCrew") {
+            // 1.1. 특별 세미나: TDD 시작하기
+            groupEventService.createEvent(
+                users.user1,
+                groups.devCrewId,
+                CreateGroupEventRequest(
+                    title = "특별 세미나: TDD 시작하기",
+                    description = "Test-Driven Development (TDD) 기본 개념과 실습",
+                    placeId = places.labPlaceId,
+                    startDate = LocalDate.of(2025, 11, 6),
+                    endDate = LocalDate.of(2025, 11, 6),
+                    startTime = LocalTime.of(19, 0),
+                    endTime = LocalTime.of(21, 0),
+                    isOfficial = true,
+                    color = "#009688",
+                ),
+            )
+            // 1.2. DevCrew 11월 월간 회의
+            groupEventService.createEvent(
+                users.user1,
+                groups.devCrewId,
+                CreateGroupEventRequest(
+                    title = "DevCrew 11월 월간 회의",
+                    description = "11월 활동 계획 및 피드백",
+                    locationText = "온라인 (Discord)",
+                    startDate = LocalDate.of(2025, 11, 3),
+                    endDate = LocalDate.of(2025, 11, 3),
+                    startTime = LocalTime.of(21, 0),
+                    endTime = LocalTime.of(22, 0),
+                    isOfficial = false,
+                    color = "#03A9F4",
+                ),
+            )
+            // 1.3. 프로젝트 'Univ-Manager' 중간 발표
+            groupEventService.createEvent(
+                users.user1,
+                groups.devCrewId,
+                CreateGroupEventRequest(
+                    title = "프로젝트 'Univ-Manager' 중간 발표",
+                    description = "동아리 내부 프로젝트 진행 상황 공유",
+                    placeId = places.labPlaceId,
+                    startDate = LocalDate.of(2025, 11, 20),
+                    endDate = LocalDate.of(2025, 11, 20),
+                    startTime = LocalTime.of(19, 0),
+                    endTime = LocalTime.of(21, 0),
+                    isOfficial = true,
+                    color = "#009688",
+                ),
+            )
+            // 1.4. 선배 개발자 초청 Q&A
+            groupEventService.createEvent(
+                users.user1,
+                groups.devCrewId,
+                CreateGroupEventRequest(
+                    title = "선배 개발자 초청 Q&A",
+                    description = "현업 개발자와의 만남",
+                    placeId = places.labPlaceId,
+                    startDate = LocalDate.of(2025, 11, 12),
+                    endDate = LocalDate.of(2025, 11, 12),
+                    startTime = LocalTime.of(19, 0),
+                    endTime = LocalTime.of(21, 0),
+                    isOfficial = true,
+                    color = "#009688",
+                ),
+            )
+            // 1.5. 함께하는 코딩 & 피자 나잇 (운영시간 초과 테스트)
+            groupEventService.createEvent(
+                users.user1,
+                groups.devCrewId,
+                CreateGroupEventRequest(
+                    title = "함께하는 코딩 & 피자 나잇",
+                    description = "11월 마지막 주 금요일 소셜 이벤트",
+                    locationText = "학생회실 (21시 이후 사용 불가)",
+                    startDate = LocalDate.of(2025, 11, 28),
+                    endDate = LocalDate.of(2025, 11, 28),
+                    startTime = LocalTime.of(19, 0),
+                    endTime = LocalTime.of(22, 0),
+                    isOfficial = false,
+                    color = "#FF5722",
+                ),
+            )
+        }
+
+        // 2. 학생회
+        safeExecute("Creating November events for Student Council") {
+            // 2.1. 11월 전체 학생 대표자 회의
+            groupEventService.createEvent(
+                users.user2,
+                groups.studentCouncilId,
+                CreateGroupEventRequest(
+                    title = "11월 전체 학생 대표자 회의",
+                    description = "각 단과대 및 학과 학생회장 참여",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 7),
+                    endDate = LocalDate.of(2025, 11, 7),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
+                    isOfficial = true,
+                    color = "#E91E63",
+                ),
+            )
+            // 2.2. 학생회 비품 정리 및 대청소 (주말 예약 테스트)
+            groupEventService.createEvent(
+                users.user2,
+                groups.studentCouncilId,
+                CreateGroupEventRequest(
+                    title = "학생회 비품 정리 및 대청소",
+                    description = "주말 예약 테스트용",
+                    locationText = "학생회실 (예약 불가, 텍스트)",
+                    startDate = LocalDate.of(2025, 11, 15),
+                    endDate = LocalDate.of(2025, 11, 15),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(17, 0),
+                    isOfficial = false,
+                    color = "#9E9E9E",
+                ),
+            )
+            // 2.3. 2026년도 학생회장 선거 준비위원회 1차 회의
+            groupEventService.createEvent(
+                users.user2,
+                groups.studentCouncilId,
+                CreateGroupEventRequest(
+                    title = "2026년도 학생회장 선거 준비위원회 1차 회의",
+                    description = "선거 일정 및 규칙 논의",
+                    placeId = places.labPlaceId,
+                    startDate = LocalDate.of(2025, 11, 18),
+                    endDate = LocalDate.of(2025, 11, 18),
+                    startTime = LocalTime.of(19, 0),
+                    endTime = LocalTime.of(20, 30),
+                    isOfficial = true,
+                    color = "#E91E63",
+                ),
+            )
+            // 2.4. 한신대학교 축제 기획 TF 모집 설명회
+            groupEventService.createEvent(
+                users.user2,
+                groups.studentCouncilId,
+                CreateGroupEventRequest(
+                    title = "한신대학교 축제 기획 TF 모집 설명회",
+                    description = "2026년 축제 기획팀 모집",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 21),
+                    endDate = LocalDate.of(2025, 11, 21),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(19, 30),
+                    isOfficial = true,
+                    color = "#E91E63",
+                ),
+            )
+            // 2.5. 학생회실 임시 휴무 지정 (이벤트로만 표현)
+            groupEventService.createEvent(
+                users.user2,
+                groups.studentCouncilId,
+                CreateGroupEventRequest(
+                    title = "학생회실 임시 휴무",
+                    description = "내부 사정으로 인한 임시 휴무",
+                    placeId = places.labPlaceId,
+                    startDate = LocalDate.of(2025, 11, 26),
+                    endDate = LocalDate.of(2025, 11, 26),
+                    startTime = LocalTime.of(8, 0),
+                    endTime = LocalTime.of(21, 0),
+                    isOfficial = true,
+                    color = "#212121",
+                ),
+            )
+        }
+
+        // 3. AI/SW계열
+        safeExecute("Creating November events for AI/SW College") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")!!
+            // 3.1. AI/SW계열 명사 초청 특강: "AI의 미래"
+            groupEventService.createEvent(
+                owner,
+                2,
+                CreateGroupEventRequest(
+                    title = "AI/SW계열 명사 초청 특강: 'AI의 미래'",
+                    description = "외부 전문가 초청 강연",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 4),
+                    endDate = LocalDate.of(2025, 11, 4),
+                    startTime = LocalTime.of(16, 0),
+                    endTime = LocalTime.of(18, 0),
+                    isOfficial = true,
+                    color = "#8BC34A",
+                ),
+            )
+            // 3.2. 2025년 2학기 계열 종강 총회
+            groupEventService.createEvent(
+                owner,
+                2,
+                CreateGroupEventRequest(
+                    title = "2025년 2학기 계열 종강 총회",
+                    description = "학기 마무리 및 성과 보고",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 28),
+                    endDate = LocalDate.of(2025, 11, 28),
+                    startTime = LocalTime.of(16, 0),
+                    endTime = LocalTime.of(18, 0),
+                    isOfficial = true,
+                    color = "#8BC34A",
+                ),
+            )
+            // 3.3. 신입생-재학생 멘토링 프로그램
+            groupEventService.createEvent(
+                owner,
+                2,
+                CreateGroupEventRequest(
+                    title = "신입생-재학생 멘토링 프로그램",
+                    description = "선후배 교류 행사",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 11),
+                    endDate = LocalDate.of(2025, 11, 11),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
+                    isOfficial = true,
+                    color = "#8BC34A",
+                ),
+            )
+            // 3.4. 계열 학생회장 선거 후보자 토론회
+            groupEventService.createEvent(
+                owner,
+                2,
+                CreateGroupEventRequest(
+                    title = "계열 학생회장 선거 후보자 토론회",
+                    description = "2026년 계열 학생회장 선거",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 18),
+                    endDate = LocalDate.of(2025, 11, 18),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
+                    isOfficial = true,
+                    color = "#8BC34A",
+                ),
+            )
+            // 3.5. 계열 연합 코딩 대회 (주말 예약 테스트)
+            groupEventService.createEvent(
+                owner,
+                2,
+                CreateGroupEventRequest(
+                    title = "계열 연합 코딩 대회",
+                    description = "주말 예약 테스트용",
+                    locationText = "세미나실 (예약 불가, 텍스트)",
+                    startDate = LocalDate.of(2025, 11, 22),
+                    endDate = LocalDate.of(2025, 11, 22),
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(18, 0),
+                    isOfficial = true,
+                    color = "#9E9E9E",
+                ),
+            )
+        }
+
+        // 4. AI/SW학과
+        safeExecute("Creating November events for AI/SW Department") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")!!
+            // 4.1. 알고리즘 스터디 그룹 발표회
+            groupEventService.createEvent(
+                owner,
+                13,
+                CreateGroupEventRequest(
+                    title = "알고리즘 스터디 그룹 발표회",
+                    description = "학과 내 스터디 그룹 성과 발표",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 12),
+                    endDate = LocalDate.of(2025, 11, 12),
+                    startTime = LocalTime.of(16, 0),
+                    endTime = LocalTime.of(18, 0),
+                    isOfficial = true,
+                    color = "#00BCD4",
+                ),
+            )
+            // 4.2. 캡스톤 디자인 프로젝트 중간 점검
+            groupEventService.createEvent(
+                owner,
+                13,
+                CreateGroupEventRequest(
+                    title = "캡스톤 디자인 프로젝트 중간 점검",
+                    description = "졸업 프로젝트 진행 상황 점검",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 19),
+                    endDate = LocalDate.of(2025, 11, 19),
+                    startTime = LocalTime.of(16, 0),
+                    endTime = LocalTime.of(18, 0),
+                    isOfficial = true,
+                    color = "#00BCD4",
+                ),
+            )
+            // 4.3. IT 기업 채용 설명회 (네이버)
+            groupEventService.createEvent(
+                owner,
+                13,
+                CreateGroupEventRequest(
+                    title = "IT 기업 채용 설명회 (네이버)",
+                    description = "네이버 개발자 채용 설명회",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 5),
+                    endDate = LocalDate.of(2025, 11, 5),
+                    startTime = LocalTime.of(16, 0),
+                    endTime = LocalTime.of(18, 0),
+                    isOfficial = true,
+                    color = "#00BCD4",
+                ),
+            )
+            // 4.4. 교수님과의 대화 (진로 상담)
+            groupEventService.createEvent(
+                owner,
+                13,
+                CreateGroupEventRequest(
+                    title = "교수님과의 대화 (진로 상담)",
+                    description = "온라인 진로 상담 세션",
+                    locationText = "온라인 (Zoom)",
+                    startDate = LocalDate.of(2025, 11, 25),
+                    endDate = LocalDate.of(2025, 11, 25),
+                    startTime = LocalTime.of(19, 0),
+                    endTime = LocalTime.of(21, 0),
+                    isOfficial = false,
+                    color = "#00BCD4",
+                ),
+            )
+            // 4.5. AI/SW학과 종강 파티
+            groupEventService.createEvent(
+                owner,
+                13,
+                CreateGroupEventRequest(
+                    title = "AI/SW학과 종강 파티",
+                    description = "2025-2학기 종강 파티",
+                    locationText = "학교 근처 식당",
+                    startDate = LocalDate.of(2025, 11, 28),
+                    endDate = LocalDate.of(2025, 11, 28),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
+                    isOfficial = false,
+                    color = "#795548",
+                ),
+            )
+        }
+
+        // 5. AI시스템반도체학과
+        safeExecute("Creating November events for AI/Semiconductor Department") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")!!
+            // 5.1. 임베디드 시스템 설계 프로젝트 최종 발표
+            groupEventService.createEvent(
+                owner,
+                11,
+                CreateGroupEventRequest(
+                    title = "임베디드 시스템 설계 프로젝트 최종 발표",
+                    description = "프로젝트 최종 발표",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 27),
+                    endDate = LocalDate.of(2025, 11, 27),
+                    startTime = LocalTime.of(13, 0),
+                    endTime = LocalTime.of(15, 0),
+                    isOfficial = true,
+                    color = "#FF9800",
+                ),
+            )
+            // 5.2. 반도체 공정 실습 사전 교육
+            groupEventService.createEvent(
+                owner,
+                11,
+                CreateGroupEventRequest(
+                    title = "반도체 공정 실습 사전 교육",
+                    description = "실습 전 이론 교육",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 10),
+                    endDate = LocalDate.of(2025, 11, 10),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
+                    isOfficial = true,
+                    color = "#FF9800",
+                ),
+            )
+            // 5.3. 졸업생 선배와의 만남 (SK하이닉스)
+            groupEventService.createEvent(
+                owner,
+                11,
+                CreateGroupEventRequest(
+                    title = "졸업생 선배와의 만남 (SK하이닉스)",
+                    description = "반도체 기업 현직자 초청 강연",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 24),
+                    endDate = LocalDate.of(2025, 11, 24),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
+                    isOfficial = true,
+                    color = "#FF9800",
+                ),
+            )
+            // 5.4. 시스템반도체 설계 공모전 팀 빌딩
+            groupEventService.createEvent(
+                owner,
+                11,
+                CreateGroupEventRequest(
+                    title = "시스템반도체 설계 공모전 팀 빌딩",
+                    description = "공모전 준비 팀 구성",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 3),
+                    endDate = LocalDate.of(2025, 11, 3),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
+                    isOfficial = false,
+                    color = "#FF9800",
+                ),
+            )
+            // 5.5. 학과 소모임 '칩메이커' 정기 회의
+            groupEventService.createEvent(
+                owner,
+                11,
+                CreateGroupEventRequest(
+                    title = "학과 소모임 '칩메이커' 정기 회의",
+                    description = "소모임 정기 활동",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 17),
+                    endDate = LocalDate.of(2025, 11, 17),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
+                    isOfficial = false,
+                    color = "#FF9800",
+                ),
+            )
+        }
     }
 
     /**
