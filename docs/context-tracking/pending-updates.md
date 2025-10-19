@@ -33,7 +33,6 @@
 ### 게시글/댓글 시스템 문서 동기화
 **상태**: ✅ 완료 (2025-10-05)
 **적용 문서**:
-- frontend-implementation-status.md: 구현 현황 추가
 - api-reference.md: Post/Comment API 상세 추가
 - workspace-pages.md: UI 컴포넌트 정보 추가
 **후속**: 파일 업로드 기능 구현 시 문서 업데이트 필요
@@ -89,14 +88,12 @@
 
 ## ✅ 완료/제거된 항목 (History)
 - (완료 2025-10-13) **캘린더 시스템 통합 로드맵 문서화**: calendar-integration-roadmap.md 신규 생성
-- (완료 2025-10-13) **Phase 번호 충돌 해결**: group-calendar-phase6-ui-improvement.md → phase9로 변경
 - (완료 2025-10-13) **장소 캘린더 Phase 1 완료 반영**: place-calendar-specification.md 업데이트
-- (완료 2025-10-13) **그룹 캘린더 Phase 6 문서화**: group-calendar-phase6-edit-delete.md 신규 생성
 - (완료 2025-10-09) UI/UX 전체 정합성 1차 패스 완료. color-guide와 design-system의 색상/Breakpoint 정의를 일원화하여 중복 및 불일치 해결.
 - (완료 2025-10-09) 개발 워크플로우 문서와 Git 전략 연동 검증 완료. 두 문서 간 내용 일관성 확인.
 - (완료 2025-10-06) 워크스페이스 모바일 반응형 및 브레드크럼 구현 (frontend-guide.md, responsive-design-guide.md, workspace-pages.md 등)
 - (완료 2025-10-06) 캘린더 시스템 설계 결정사항 문서화 (7개 문서 업데이트, 1개 신규 생성)
-- (완료 2025-10-06) 모집/워크스페이스 구현 동기화 (recruitment-system.md, frontend-implementation-status.md, workspace-pages.md)
+- (완료 2025-10-06) 모집/워크스페이스 구현 동기화 (recruitment-system.md, workspace-pages.md)
 - (완료 2025-10-06) 컨트롤러 통합 테스트 패턴 문서화
 - (완료 2025-10-05) 게시글/댓글 시스템 문서 동기화
 - (완료 2025-10-04) 채널 권한 검증 시스템 문서화

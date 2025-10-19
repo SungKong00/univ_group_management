@@ -17,9 +17,9 @@
 - [Part 4](workspace-page-implementation-guide-part4.md): 설계 고려사항, 트러블슈팅, 참조
 
 ## 관련 문서
+- [워크스페이스 레벨 네비게이션 가이드](workspace-level-navigation-guide.md) - 새 가이드
 - [워크스페이스 시스템](../concepts/workspace-channel.md) - 개념 이해
 - [프론트엔드 가이드](frontend-guide.md) - 전반적인 아키텍처
-- [워크스페이스 리팩터링](workspace-refactoring-status.md) - 진행 상황
 
 ## 핵심 아키텍처 이해
 

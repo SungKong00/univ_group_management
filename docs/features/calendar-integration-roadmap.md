@@ -250,7 +250,7 @@ DELETE /api/places/{id}/blocked-times/{bid}    # 차단 시간 삭제
 #### 그룹 캘린더 Phase 9: UI 개선 (선택, 9-13시간)
 **목표**: 다단계 카드 선택 UI 구현
 
-**참고 문서**: [Phase 9 UI 개선 계획](group-calendar-phase9-ui-improvement.md)
+**참고 문서**:
 
 **작업 내용**:
 1. Atoms 구현 (2-3h): SelectableOptionCard
@@ -407,10 +407,7 @@ DELETE /api/places/{id}/blocked-times/{bid}    # 차단 시간 삭제
 - [프론트엔드 가이드](../implementation/frontend-guide.md) - Flutter 구조
 
 ### Phase별 상세 문서
-- [Phase 5 API 연동](group-calendar-phase5-api-integration.md)
-- [Phase 6 수정/삭제](group-calendar-phase6-edit-delete.md)
-- [Phase 7 E2E 테스트](group-calendar-phase7-e2e-tests.md)
-- [Phase 9 UI 개선](group-calendar-phase9-ui-improvement.md)
+
 
 ---
 

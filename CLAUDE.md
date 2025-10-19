@@ -15,9 +15,8 @@
 - **백엔드 개발**: [docs/implementation/backend-guide.md](docs/implementation/backend-guide.md)
 - **프론트엔드 개발**: [docs/implementation/frontend-guide.md](docs/implementation/frontend-guide.md)
 - **워크스페이스 & 네비게이션**: [docs/implementation/frontend-workspace-guide.md](docs/implementation/frontend-workspace-guide.md)
+- **워크스페이스 레벨 네비게이션**: [docs/implementation/workspace-level-navigation-guide.md](docs/implementation/workspace-level-navigation-guide.md) - WorkspaceView 기반 상태 관리 설계
 - **워크스페이스 페이지 추가**: [docs/implementation/workspace-page-implementation-guide.md](docs/implementation/workspace-page-implementation-guide.md) - 새 관리 페이지 추가 완전 가이드 (4부작)
-- **Workspace 리팩터링**: [docs/implementation/workspace-refactoring-status.md](docs/implementation/workspace-refactoring-status.md) - Phase 1-10 진행 상황
-- **그룹 관리자 페이지**: [docs/implementation/group-admin-page-status.md](docs/implementation/group-admin-page-status.md) - 구현 상태 및 다음 작업
 - **API 참조**: [docs/implementation/api-reference.md](docs/implementation/api-reference.md)
 - **데이터베이스**: [docs/implementation/database-reference.md](docs/implementation/database-reference.md)
 
@@ -31,10 +30,7 @@
 
 #### 그룹 캘린더
 - **전체 개발 계획**: [docs/features/group-calendar-development-plan.md](docs/features/group-calendar-development-plan.md) - Phase 1-10 상세 계획
-- **Phase 5** (✅ 완료): [docs/features/group-calendar-phase5-api-integration.md](docs/features/group-calendar-phase5-api-integration.md) - API 연동 완료
-- **Phase 6** (✅ 완료): [docs/features/group-calendar-phase6-edit-delete.md](docs/features/group-calendar-phase6-edit-delete.md) - 수정/삭제 기능
 - **Phase 8** (⏳ 다음): 권한 시스템 통합 (2-3시간)
-- **Phase 9** (📝 대기): [docs/features/group-calendar-phase9-ui-improvement.md](docs/features/group-calendar-phase9-ui-improvement.md) - UI 개선 (설계 완료)
 
 #### 장소 캘린더
 - **상세 명세서**: [docs/features/place-calendar-specification.md](docs/features/place-calendar-specification.md) - 장소 예약 시스템 상세 설계
@@ -91,7 +87,6 @@
 ```
 
 ## 🚀 현재 구현 상태
-> **참고**: 상세한 구현 현황은 [프론트엔드 구현 현황 문서](docs/implementation/frontend-implementation-status.md)에서 실시간으로 관리됩니다.
 
 ## 🆕 2025-10-01 권한 모델 개정 요약
 - 시스템 역할(그룹장 / 교수 / 멤버) 불변성 명시 (이름/우선순위/권한 수정 및 삭제 금지)

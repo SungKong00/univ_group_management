@@ -888,7 +888,6 @@ try {
 - [프론트엔드 가이드](../implementation/frontend-guide.md) - Flutter 구조
 
 ### 기타
-- [Phase 6 완료 보고](group-calendar-phase6-edit-delete.md) - 일정 수정/삭제 구현
 - [테스트 전략](../workflows/testing-strategy.md) - 테스트 작성 가이드
 
 ---

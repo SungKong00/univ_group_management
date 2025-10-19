@@ -47,6 +47,7 @@ You are a Frontend Debugging Specialist, skilled at identifying, analyzing, and 
     - `docs/ui-ux/pages/*.md` (Page-specific UI/UX flow)
     - `docs/implementation/frontend-guide.md` (Component patterns, state management)
     - `docs/implementation/frontend-workspace-guide.md` (Workspace layout, navigation, breadcrumbs, back handling)
+    - `docs/implementation/workspace-level-navigation-guide.md` (for `WorkspaceView` enum-based navigation issues)
     - `docs/concepts/permission-system.md` (If the error is permission-related)
 
 ### ❗ 데이터 파싱 오류 집중 분석

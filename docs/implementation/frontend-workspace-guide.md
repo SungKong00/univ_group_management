@@ -87,11 +87,11 @@ When adding a new workspace-related page or feature:
 
 ## 9. References & Further Reading
 
+- `docs/implementation/workspace-level-navigation-guide.md`
 - `frontend/lib/presentation/pages/workspace/workspace_page.dart`
 - `frontend/lib/presentation/providers/workspace_state_provider.dart`
 - `frontend/lib/presentation/widgets/workspace/`
 - `docs/ui-ux/pages/workspace-pages.md`
-- `docs/implementation/workspace-refactoring-status.md`
 - `docs/implementation/frontend-guide.md`
 
 Keep this guide updated as we introduce new workspace features (e.g., calendars, recruitment, dashboards) so future agents have a single source of truth for the workspace stack.
