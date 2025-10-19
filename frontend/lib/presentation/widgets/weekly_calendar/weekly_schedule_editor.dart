@@ -650,9 +650,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. 시각화 영역 (높이 제한 + 스크롤)
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 416),
+              // 1. 시각화 영역 (리스트 뷰가 제거되어 확장됨)
+              Expanded(
                 child: SingleChildScrollView(
                   child: Center(
                     child: _OverlappingEventsVisualization(
@@ -676,74 +675,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                             _showEditDialog(event);
                           }
                         }
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              const Divider(height: 1, color: AppColors.lightOutline),
-              const SizedBox(height: AppSpacing.sm),
-
-              // 2. 리스트 (스크롤)
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(
-                      events.length,
-                      (index) {
-                        final event = events[index];
-                        final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
-                        final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
-                        final isExternal = _isExternalEvent(event);
-
-                        return Column(
-                          children: [
-                            ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs, vertical: AppSpacing.xxs / 2),
-                              leading: Container(
-                                width: 4,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: isExternal ? AppColors.action : AppColors.brand,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                              title: Text(
-                                event.title,
-                                style: AppTheme.titleMedium,
-                              ),
-                              subtitle: Text(
-                                '${dayNames[event.start.day]} · ${DateFormat.jm().format(startTime)} - ${DateFormat.jm().format(endTime)}',
-                                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
-                              ),
-                              trailing: const Icon(Icons.chevron_right, color: AppColors.neutral400),
-                              onTap: () {
-                                // 모달 닫지 않고 새 모달 띄우기 (중첩)
-                                if (_mode == CalendarMode.view) {
-                                  _showEventDetailDialog(event);
-                                } else {
-                                  if (isExternal) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('그룹 일정은 수정할 수 없습니다.'),
-                                        duration: Duration(seconds: 2),
-                                      ),
-                                    );
-                                  } else {
-                                    _showEditDialog(event);
-                                  }
-                                }
-                              },
-                            ),
-                            if (index < events.length - 1)
-                              const Divider(
-                                height: 1,
-                                color: AppColors.lightOutline,
-                              ),
-                          ],
-                        );
                       },
                     ),
                   ),
