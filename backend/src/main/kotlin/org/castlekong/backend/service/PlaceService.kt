@@ -170,6 +170,39 @@ class PlaceService(
         addAvailabilities(placeId, requests)
     }
 
+    /**
+     * 운영 시간 수정
+     * 기존 운영시간을 삭제하고 새로운 운영시간을 설정한 후, 업데이트된 장소 상세 정보를 반환합니다.
+     *
+     * @param user 요청한 사용자
+     * @param placeId 장소 ID
+     * @param requests 새로운 운영시간 목록
+     * @return 업데이트된 장소 상세 정보
+     * @throws BusinessException PLACE_NOT_FOUND - 장소를 찾을 수 없음
+     * @throws BusinessException FORBIDDEN - 권한 없음
+     * @throws BusinessException INVALID_TIME_RANGE - 잘못된 시간 범위
+     */
+    fun updateAvailabilities(
+        user: User,
+        placeId: Long,
+        requests: List<AvailabilityRequest>,
+    ): PlaceDetailResponse {
+        val place =
+            placeRepository.findActiveById(placeId)
+                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
+
+        checkCalendarManagePermission(user.id!!, place.managingGroup.id)
+
+        // 기존 운영 시간 삭제
+        placeAvailabilityRepository.deleteByPlaceId(placeId)
+
+        // 새 운영 시간 추가
+        addAvailabilities(placeId, requests)
+
+        // 업데이트된 장소 상세 정보 반환
+        return getPlaceDetail(placeId)
+    }
+
     private fun addAvailabilities(
         placeId: Long,
         requests: List<AvailabilityRequest>,

@@ -142,6 +142,34 @@ class AuthService(
 
         return updatedCount
     }
+
+    // 임시 디버그용 메서드 - 이메일로 개발 토큰 생성
+    @Transactional
+    fun generateDevToken(email: String): LoginResponse {
+        val user =
+            userService.findByEmail(email)
+                ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+
+        if (!user.isActive) {
+            throw BusinessException(ErrorCode.UNAUTHORIZED)
+        }
+
+        val authorities = listOf(SimpleGrantedAuthority("ROLE_${user.globalRole.name}"))
+        val authentication: Authentication =
+            UsernamePasswordAuthenticationToken(user.email, null, authorities)
+        val accessToken = jwtTokenProvider.generateAccessToken(authentication)
+        val refreshToken = jwtTokenProvider.generateRefreshToken(authentication)
+
+        logger.debug("Generated dev token for user: {}", email)
+
+        return LoginResponse(
+            accessToken = accessToken,
+            tokenType = "Bearer",
+            expiresIn = 86400000L,
+            user = userService.convertToUserResponse(user),
+            firstLogin = !user.profileCompleted,
+        )
+    }
 }
 
 data class GoogleUserInfo(

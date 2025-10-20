@@ -15,11 +15,14 @@ import org.castlekong.backend.dto.SignupProfileRequest
 import org.castlekong.backend.dto.UpdateUsageStatusRequest
 import org.castlekong.backend.entity.GroupPermission
 import org.castlekong.backend.entity.GroupType
+import org.castlekong.backend.entity.PlaceAvailability
 import org.castlekong.backend.entity.PlaceOperatingHours
 import org.castlekong.backend.entity.UsageStatus
 import org.castlekong.backend.entity.User
+import org.castlekong.backend.repository.PlaceAvailabilityRepository
 import org.castlekong.backend.repository.PlaceOperatingHoursRepository
 import org.castlekong.backend.repository.PlaceRepository
+import org.castlekong.backend.security.PermissionService
 import org.castlekong.backend.service.GoogleUserInfo
 import org.castlekong.backend.service.GroupEventService
 import org.castlekong.backend.service.GroupManagementService
@@ -80,7 +83,8 @@ class TestDataRunner(
     private val placeReservationService: PlaceReservationService,
     private val placeOperatingHoursRepository: PlaceOperatingHoursRepository,
     private val placeRepository: PlaceRepository,
-    private val permissionService: org.castlekong.backend.security.PermissionService,
+    private val permissionService: PermissionService,
+    private val placeAvailabilityRepository: PlaceAvailabilityRepository,
 ) : ApplicationRunner {
     private val logger = LoggerFactory.getLogger(TestDataRunner::class.java)
 
@@ -119,7 +123,7 @@ class TestDataRunner(
             val customPlaces = createPlaces(users, customGroups)
 
             // Phase 6: 장소 운영 시간 생성
-            createPlaceAvailabilities(customPlaces)
+            createPlaceAvailabilities(users, customPlaces)
 
             // Phase 7: 페르소나별 시간표 생성
             createPersonalSchedules(users)
@@ -589,9 +593,10 @@ class TestDataRunner(
     /**
      * Phase 6: 장소 운영 시간 생성
      *
+     * @param users 테스트 사용자들
      * @param places 커스텀 장소들
      */
-    private fun createPlaceAvailabilities(places: CustomPlaces) {
+    private fun createPlaceAvailabilities(users: TestUsers, places: CustomPlaces) {
         logger.info("[6/7] Creating place operating hours...")
 
         val labPlace = placeRepository.findById(places.labPlaceId).orElseThrow()
@@ -656,6 +661,40 @@ class TestDataRunner(
         }
 
         logger.info("-> SUCCESS: Created place operating hours")
+
+        // PlaceAvailability 데이터 추가 (API에서 사용하는 테이블)
+        // setAvailabilities를 사용하여 기존 데이터를 삭제하고 새 데이터를 추가
+        safeExecute("Creating availability for '학생회실'") {
+            // Monday-Friday: 08:00-21:00
+            val weekdays = listOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)
+            val availabilityRequests =
+                weekdays.map {
+                    org.castlekong.backend.dto.AvailabilityRequest(
+                        dayOfWeek = it,
+                        startTime = LocalTime.of(8, 0),
+                        endTime = LocalTime.of(21, 0),
+                        displayOrder = 0,
+                    )
+                }
+            placeService.setAvailabilities(users.user2, labPlace.id, availabilityRequests)
+        }
+
+        safeExecute("Creating availability for '세미나실'") {
+            // Monday-Friday: 08:00-21:00
+            val weekdays = listOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)
+            val availabilityRequests =
+                weekdays.map {
+                    org.castlekong.backend.dto.AvailabilityRequest(
+                        dayOfWeek = it,
+                        startTime = LocalTime.of(8, 0),
+                        endTime = LocalTime.of(21, 0),
+                        displayOrder = 0,
+                    )
+                }
+            placeService.setAvailabilities(users.user2, seminarRoom.id, availabilityRequests)
+        }
+
+        logger.info("-> SUCCESS: Created place availability data")
     }
 
     /**

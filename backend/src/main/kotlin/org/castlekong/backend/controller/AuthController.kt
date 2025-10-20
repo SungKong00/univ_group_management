@@ -113,4 +113,18 @@ class AuthController(
         val updatedCount = authService.resetAllUsersProfileStatus()
         return ApiResponse.success("Updated $updatedCount users' profileCompleted status to false")
     }
+
+    // 임시 디버그용 API - 이메일로 개발 토큰 생성
+    @PostMapping("/debug/generate-token")
+    @Operation(summary = "[DEBUG] 이메일로 개발 토큰 생성", description = "디버그용 API - 개발 환경에서만 사용")
+    fun generateDevToken(
+        @RequestBody payload: Map<String, String>,
+    ): ApiResponse<LoginResponse> {
+        val email =
+            payload["email"]
+                ?: throw ValidationException("email is required")
+
+        val loginResponse = authService.generateDevToken(email)
+        return ApiResponse.success(loginResponse)
+    }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:developer' as developer;
 import '../../../core/theme/app_colors.dart';
 
 /// Paints disabled time slots as gray cells
@@ -32,28 +33,79 @@ class DisabledSlotsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (disabledSlots == null || disabledSlots!.isEmpty) {
+      developer.log(
+        '⚠️ DisabledSlotsPainter: No disabled slots to paint',
+        name: 'DisabledSlotsPainter',
+      );
       return;
     }
+
+    developer.log(
+      '🎨 DisabledSlotsPainter: Painting ${disabledSlots!.length} disabled slots',
+      name: 'DisabledSlotsPainter',
+    );
+    developer.log(
+      '📅 WeekStart: ${weekStart.year}-${weekStart.month}-${weekStart.day} '
+      '${weekStart.hour}:${weekStart.minute}:${weekStart.second}',
+      name: 'DisabledSlotsPainter',
+    );
 
     final paint = Paint()
       ..color = AppColors.neutral300.withOpacity(0.4)
       ..style = PaintingStyle.fill;
+
+    int paintedCount = 0;
+    int mondayMorningCount = 0; // Count Monday morning slots (hour < 9)
+    int filteredByWeekRange = 0; // Count slots filtered by week range check
 
     // Iterate through each disabled slot
     for (final slot in disabledSlots!) {
       // Check if slot is within current week
       if (slot.isBefore(weekStart) ||
           slot.isAfter(weekStart.add(const Duration(days: 7)))) {
+        filteredByWeekRange++;
+        // Log first few filtered Monday slots for debugging
+        if (filteredByWeekRange <= 3 && slot.weekday == 1) {
+          developer.log(
+            '🚫 Filtered by week range: ${slot.year}-${slot.month}-${slot.day} '
+            '${slot.hour}:${slot.minute.toString().padLeft(2, '0')} '
+            '(isBefore: ${slot.isBefore(weekStart)}, '
+            'isAfter: ${slot.isAfter(weekStart.add(const Duration(days: 7)))})',
+            name: 'DisabledSlotsPainter',
+          );
+        }
         continue;
       }
 
-      // Calculate day index (0 = Monday, 6 = Sunday)
-      final dayIndex = slot.weekday - 1;
+      // Calculate day index relative to weekStart (0 = first day of week, 6 = last day)
+      // BUG FIX: Normalize to date-only (remove time) before calculating difference
+      // This prevents time-of-day from affecting the day calculation
+      final slotDateOnly = DateTime(slot.year, slot.month, slot.day);
+      final weekStartDateOnly = DateTime(weekStart.year, weekStart.month, weekStart.day);
+      final dayIndex = slotDateOnly.difference(weekStartDateOnly).inDays;
+
+      // Log first few Monday slots for debugging
+      if (slot.weekday == 1 && mondayMorningCount < 3) {
+        developer.log(
+          '🔍 Monday slot: ${slot.year}-${slot.month}-${slot.day} ${slot.hour}:${slot.minute.toString().padLeft(2, '0')} '
+          '→ dayIndex=$dayIndex (slotDateOnly=${slotDateOnly.month}/${slotDateOnly.day}, '
+          'weekStartDateOnly=${weekStartDateOnly.month}/${weekStartDateOnly.day})',
+          name: 'DisabledSlotsPainter',
+        );
+      }
+
+      // Debug: Log if we find slots outside the current week
       if (dayIndex < 0 || dayIndex >= 7) {
+        developer.log(
+          '⚠️ Slot outside week range: ${slot.month}/${slot.day} ${slot.hour}:${slot.minute.toString().padLeft(2, '0')} '
+          '(dayIndex=$dayIndex, weekStart=${weekStart.month}/${weekStart.day})',
+          name: 'DisabledSlotsPainter',
+          level: 900,
+        );
         continue;
       }
 
-      // Calculate slot index (0 = visibleStartHour:00, 1 = visibleStartHour:15, etc.)
+      // Calculate slot index (0 = visibleStartHour:00, 1 = visibleStartHour:30, etc.)
       final slotHour = slot.hour;
       final slotMinute = slot.minute;
 
@@ -63,21 +115,37 @@ class DisabledSlotsPainter extends CustomPainter {
       }
 
       // Calculate slot index relative to visible start hour
-      // Each hour has 4 slots (0, 15, 30, 45 minutes)
+      // Each hour has 4 slots (0, 15, 30, 45 minutes) - each slot = 15 minutes
       final slotIndex = (slotHour - visibleStartHour) * 4 + (slotMinute ~/ 15);
 
       // Calculate rectangle position
       final left = timeColumnWidth + dayIndex * dayColumnWidth;
       final top = slotIndex * slotHeight;
       final right = left + dayColumnWidth;
-      final bottom = top + slotHeight * 2; // 30 minutes = 2 slots of 15 minutes
+
+      // Each disabled slot represents exactly 15 minutes (1 block)
+      // This ensures uniform rendering without overlap or gaps
+      final blocksToePaint = 1;
+      final bottom = top + slotHeight * blocksToePaint;
+
+      // Track Monday morning slots
+      if (dayIndex == 0 && slotHour < 9) {
+        mondayMorningCount++;
+      }
 
       // Draw gray rectangle
       canvas.drawRect(
         Rect.fromLTRB(left, top, right, bottom),
         paint,
       );
+      paintedCount++;
     }
+
+    developer.log(
+      '✅ DisabledSlotsPainter: Painted $paintedCount slots '
+      '(Monday morning: $mondayMorningCount, filtered by week range: $filteredByWeekRange)',
+      name: 'DisabledSlotsPainter',
+    );
   }
 
   @override

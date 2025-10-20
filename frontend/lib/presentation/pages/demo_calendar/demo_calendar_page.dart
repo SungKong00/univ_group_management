@@ -77,7 +77,9 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
   /// Get week start (Monday) from any date
   DateTime _getWeekStart(DateTime date) {
-    return date.subtract(Duration(days: date.weekday - 1));
+    final monday = date.subtract(Duration(days: date.weekday - 1));
+    // Normalize to 00:00:00 to prevent dayIndex calculation errors
+    return DateTime(monday.year, monday.month, monday.day);
   }
 
   /// Load user's available groups with proper error handling
@@ -270,6 +272,11 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
       // Single place: update immediately and show message
       if (selectedPlaces.length == 1) {
+        developer.log(
+          '🏢 Single place selected: ${selectedPlaces[0].displayName}',
+          name: 'DemoCalendarPage',
+        );
+
         setState(() {
           _selectedPlaces = selectedPlaces;
           _requiredDuration = null; // Reset duration for single place
@@ -285,18 +292,33 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
             ),
           );
 
+          developer.log(
+            '🔄 Calling _calculateDisabledSlots() for single place',
+            name: 'DemoCalendarPage',
+          );
+
           // Calculate disabled slots for single place
           _calculateDisabledSlots();
         }
       }
       // Multiple places: show duration input dialog
       else if (selectedPlaces.length >= 2) {
+        developer.log(
+          '🏢 Multiple places selected: ${selectedPlaces.length} places',
+          name: 'DemoCalendarPage',
+        );
+
         final duration = await showDialog<Duration>(
           context: context,
           builder: (context) => const DurationInputDialog(),
         );
 
         if (duration != null && mounted) {
+          developer.log(
+            '⏱️ Duration selected: ${_formatDuration(duration)}',
+            name: 'DemoCalendarPage',
+          );
+
           setState(() {
             _selectedPlaces = selectedPlaces;
             _requiredDuration = duration;
@@ -312,8 +334,18 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
             ),
           );
 
+          developer.log(
+            '🔄 Calling _calculateDisabledSlots() for multiple places',
+            name: 'DemoCalendarPage',
+          );
+
           // Calculate disabled slots for multiple places
           _calculateDisabledSlots();
+        } else {
+          developer.log(
+            '⚠️ Duration dialog cancelled or widget unmounted',
+            name: 'DemoCalendarPage',
+          );
         }
       }
     });
@@ -339,7 +371,27 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
   /// For single place: Returns unavailable slots (outside operating hours or reserved)
   /// For multiple places: Returns slots where ANY place is unavailable (union)
   Future<void> _calculateDisabledSlots() async {
+    developer.log(
+      '🔍 === _calculateDisabledSlots() CALLED ===',
+      name: 'DemoCalendarPage',
+    );
+
+    developer.log(
+      '📋 Selected places: ${_selectedPlaces.length}',
+      name: 'DemoCalendarPage',
+    );
+    for (final place in _selectedPlaces) {
+      developer.log(
+        '  - Place ID: ${place.id}, Name: ${place.displayName}',
+        name: 'DemoCalendarPage',
+      );
+    }
+
     if (_selectedPlaces.isEmpty) {
+      developer.log(
+        '⚠️ No places selected, clearing disabled slots',
+        name: 'DemoCalendarPage',
+      );
       setState(() {
         _disabledSlots = {};
       });
@@ -348,7 +400,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
     try {
       developer.log(
-        'Calculating disabled slots for ${_selectedPlaces.length} places',
+        '🔍 Calculating disabled slots for ${_selectedPlaces.length} places',
         name: 'DemoCalendarPage',
       );
 
@@ -359,15 +411,35 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
       final Set<DateTime> allDisabledSlots = {};
 
       for (final place in _selectedPlaces) {
+        developer.log(
+          '📡 Fetching place detail for place ${place.id} (${place.displayName})',
+          name: 'DemoCalendarPage',
+        );
+
         // 1. Get place detail (includes availability)
         final placeDetail = await _placeService.getPlaceDetail(place.id);
         if (placeDetail == null) {
           developer.log(
-            'Failed to fetch place detail for place ${place.id}',
+            '❌ Failed to fetch place detail for place ${place.id}',
             name: 'DemoCalendarPage',
             level: 900,
           );
           continue;
+        }
+
+        developer.log(
+          '✅ Successfully fetched place detail for place ${place.id}',
+          name: 'DemoCalendarPage',
+        );
+        developer.log(
+          '📊 Place has ${placeDetail.availabilities.length} availability entries',
+          name: 'DemoCalendarPage',
+        );
+        for (final avail in placeDetail.availabilities) {
+          developer.log(
+            '  - ${avail.dayOfWeek.displayName}: ${avail.startTime.format(context)} ~ ${avail.endTime.format(context)}',
+            name: 'DemoCalendarPage',
+          );
         }
 
         // 2. Get reservations for the week
@@ -467,9 +539,10 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
         );
       }
 
-      // Iterate through 30-minute slots (00:00 ~ 23:30)
+      // Iterate through 15-minute slots (00:00 ~ 23:45)
+      // UI uses 15-minute granularity by splitting 30-minute cells in half
       for (int hour = 0; hour < 24; hour++) {
-        for (int minute = 0; minute < 60; minute += 30) {
+        for (int minute = 0; minute < 60; minute += 15) {
           final slot = DateTime(
             currentDate.year,
             currentDate.month,
@@ -489,6 +562,12 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
             disabled.add(slot);
             continue;
           }
+
+          // TODO: Add PlaceBlockedTime check when backend API is implemented
+          // if (_isBlockedTime(slot, blockedTimes)) {
+          //   disabled.add(slot);
+          //   continue;
+          // }
         }
       }
     }
@@ -548,15 +627,16 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
   /// Check if a TimeOfDay is within a time range
   ///
-  /// IMPORTANT: Checks if a 30-minute slot starting at [time] is fully within [start]-[end].
-  /// A slot is available only if both its start AND end (+30min) are within operating hours.
+  /// IMPORTANT: Checks if a 15-minute slot starting at [time] is fully within [start]-[end].
+  /// A slot is available only if both its start AND end (+15min) are within operating hours.
+  /// Example: Operating hours 09:00-18:00 allows slots from 09:00 to 17:45 (last slot ends at 18:00)
   bool _isTimeInRange(TimeOfDay time, TimeOfDay start, TimeOfDay end) {
     final timeInMinutes = time.hour * 60 + time.minute;
     final startInMinutes = start.hour * 60 + start.minute;
     final endInMinutes = end.hour * 60 + end.minute;
 
-    // Calculate slot end time (+30 minutes)
-    final slotEndInMinutes = timeInMinutes + 30;
+    // Calculate slot end time (+15 minutes)
+    final slotEndInMinutes = timeInMinutes + 15;
 
     // Slot is available if: slot_start >= operating_start AND slot_end <= operating_end
     return timeInMinutes >= startInMinutes && slotEndInMinutes <= endInMinutes;
@@ -567,8 +647,8 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     DateTime slot,
     List<PlaceReservation> reservations,
   ) {
-    // 30-minute slot: [slot, slot+30min)
-    final slotEnd = slot.add(const Duration(minutes: 30));
+    // 15-minute slot: [slot, slot+15min)
+    final slotEnd = slot.add(const Duration(minutes: 15));
 
     for (final reservation in reservations) {
       final resStart = reservation.startDateTime;

@@ -32,6 +32,7 @@ class SecurityConfig(
                 auth
                     .requestMatchers("/api/auth/google").permitAll()
                     .requestMatchers("/api/auth/google/callback").permitAll()
+                    .requestMatchers("/api/auth/debug/**").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
