@@ -690,117 +690,157 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Weekly navigation header with place selector
+          // Row 1: Weekly navigation header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            child: Row(
-              children: [
-                Expanded(
-                  child: WeeklyNavigationHeader(
-                    initialWeekStart: _weekStart,
-                    onWeekChanged: (newWeekStart) {
-                      developer.log(
-                        '📅 Week changed: ${newWeekStart.toString().substring(0, 10)}',
-                        name: 'DemoCalendarPage',
-                      );
-                      developer.log(
-                        '📍 Currently selected places: ${_selectedPlaces.length}',
-                        name: 'DemoCalendarPage',
-                      );
+            child: WeeklyNavigationHeader(
+              initialWeekStart: _weekStart,
+              onWeekChanged: (newWeekStart) {
+                developer.log(
+                  '📅 Week changed: ${newWeekStart.toString().substring(0, 10)}',
+                  name: 'DemoCalendarPage',
+                );
+                developer.log(
+                  '📍 Currently selected places: ${_selectedPlaces.length}',
+                  name: 'DemoCalendarPage',
+                );
 
-                      setState(() {
-                        _weekStart = newWeekStart;
-                      });
+                setState(() {
+                  _weekStart = newWeekStart;
+                });
 
-                      // Reload events for all selected groups with new week
-                      for (final groupId in _selectedGroupIds) {
-                        _loadEventsForGroup(groupId);
-                      }
+                // Reload events for all selected groups with new week
+                for (final groupId in _selectedGroupIds) {
+                  _loadEventsForGroup(groupId);
+                }
 
-                      // Reload place data for new week if places are selected
-                      if (_selectedPlaces.isNotEmpty) {
-                        developer.log(
-                          '🔄 Recalculating disabled slots for new week',
-                          name: 'DemoCalendarPage',
-                        );
-                        _calculateDisabledSlots();
-                      }
-                    },
-                    onAddPressed: (_) => _showGroupPicker(),
-                    showAddButton: true,
-                    showTodayButton: true,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                // Place selection button (compact size)
-                Flexible(
-                  child: SizedBox(
-                    height: 36,
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.place, size: 18),
-                      label: const Text('장소', style: TextStyle(fontSize: 13)),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      onPressed: _showPlacePicker,
-                    ),
-                  ),
-                ),
-              ],
+                // Reload place data for new week if places are selected
+                if (_selectedPlaces.isNotEmpty) {
+                  developer.log(
+                    '🔄 Recalculating disabled slots for new week',
+                    name: 'DemoCalendarPage',
+                  );
+                  _calculateDisabledSlots();
+                }
+              },
+              showAddButton: false,
+              showTodayButton: true,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
 
-          // Selected places chips
-          if (_selectedPlaces.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              child: Wrap(
-                spacing: AppSpacing.xs,
-                runSpacing: AppSpacing.xs,
-                children: _selectedPlaces.map((place) {
-                  return Chip(
-                    avatar: const Icon(Icons.place, size: 16),
-                    label: Text(
-                      '${place.building} ${place.roomNumber}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    onDeleted: () {
-                      setState(() {
-                        _selectedPlaces.removeWhere((p) => p.id == place.id);
-                        _requiredDuration = null;
-                        _calculateDisabledSlots();
-                      });
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${place.building} ${place.roomNumber} 선택이 해제되었습니다',
-                          ),
-                          duration: const Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                    deleteIconColor: AppColors.neutral600,
-                    backgroundColor: AppColors.brandLight,
-                    labelStyle: TextStyle(color: AppColors.neutral900),
-                  );
-                }).toList(),
-              ),
-            ),
-          const SizedBox(height: AppSpacing.sm),
-
-          // Group selection header
+          // Row 2: Chips (left) + Buttons (right)
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: GroupSelectionHeader(
-              selectedGroups: selectedGroupsList,
-              eventCounts: _eventCountByGroup,
-              loadingByGroup: _loadingByGroup,
-              errorByGroup: _errorByGroup,
-              onAddGroupPressed: _showGroupPicker,
-              onRemoveGroupPressed: (groupId) => _toggleGroup(groupId, false),
-              onRetryPressed: _loadEventsForGroup,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            child: Row(
+              children: [
+                // Left: Group chips + Place chips (horizontal scroll)
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        // Group chips
+                        ...selectedGroupsList.map((group) {
+                          final isLoading = _loadingByGroup[group.id] ?? false;
+                          final error = _errorByGroup[group.id];
+                          final eventCount = _eventCountByGroup[group.id] ?? 0;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(right: AppSpacing.xs),
+                            child: Chip(
+                              avatar: CircleAvatar(
+                                backgroundColor: group.color,
+                                radius: 6,
+                              ),
+                              label: Text(
+                                '${group.name} ($eventCount개)',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              deleteIcon: isLoading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : error != null
+                                      ? Tooltip(
+                                          message: '재시도: $error',
+                                          child: const Icon(Icons.error_outline, size: 16),
+                                        )
+                                      : Tooltip(
+                                          message: '제거',
+                                          child: const Icon(Icons.close, size: 16),
+                                        ),
+                              onDeleted: error != null
+                                  ? () => _loadEventsForGroup(group.id)
+                                  : () => _toggleGroup(group.id, false),
+                            ),
+                          );
+                        }).toList(),
+                        // Place chips
+                        ..._selectedPlaces.map((place) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: AppSpacing.xs),
+                            child: Chip(
+                              avatar: const Icon(Icons.place, size: 16),
+                              label: Text(
+                                '${place.building} ${place.roomNumber}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              onDeleted: () {
+                                setState(() {
+                                  _selectedPlaces.removeWhere((p) => p.id == place.id);
+                                  _requiredDuration = null;
+                                  _calculateDisabledSlots();
+                                });
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '${place.building} ${place.roomNumber} 선택이 해제되었습니다',
+                                    ),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                              deleteIconColor: AppColors.neutral600,
+                              backgroundColor: AppColors.brandLight,
+                              labelStyle: TextStyle(color: AppColors.neutral900),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+
+                // Right: Place button
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.place, size: 16),
+                  label: const Text('장소추가', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  ),
+                  onPressed: _showPlacePicker,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+
+                // Right: Group button
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('그룹추가', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  ),
+                  onPressed: _showGroupPicker,
+                ),
+              ],
             ),
           ),
           const SizedBox(height: AppSpacing.md),

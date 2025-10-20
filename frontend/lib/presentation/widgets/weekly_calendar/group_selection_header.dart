@@ -37,6 +37,9 @@ class GroupSelectionHeader extends StatelessWidget {
   /// Callback when retry button is pressed for a group with error
   final Function(int groupId) onRetryPressed;
 
+  /// Show/hide add button
+  final bool showAddButton;
+
   const GroupSelectionHeader({
     super.key,
     required this.selectedGroups,
@@ -46,6 +49,7 @@ class GroupSelectionHeader extends StatelessWidget {
     required this.onAddGroupPressed,
     required this.onRemoveGroupPressed,
     required this.onRetryPressed,
+    this.showAddButton = true,
   });
 
   @override
@@ -101,22 +105,23 @@ class GroupSelectionHeader extends StatelessWidget {
                   }).toList(),
                 ),
         ),
-        const SizedBox(width: AppSpacing.sm),
-
-        // Add button (right side, compact)
-        OutlinedButton.icon(
-          onPressed: onAddGroupPressed,
-          icon: const Icon(Icons.add, size: 16),
-          label: const Text('추가', style: TextStyle(fontSize: 13)),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
+        if (showAddButton) ...[
+          const SizedBox(width: AppSpacing.sm),
+          // Add button (right side, compact)
+          OutlinedButton.icon(
+            onPressed: onAddGroupPressed,
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('추가', style: TextStyle(fontSize: 13)),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 4,
+              ),
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            minimumSize: const Size(0, 32),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-        ),
+        ],
       ],
     );
   }

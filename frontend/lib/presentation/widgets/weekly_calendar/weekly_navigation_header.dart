@@ -113,63 +113,64 @@ class _WeeklyNavigationHeaderState extends State<WeeklyNavigationHeader> {
         vertical: AppSpacing.xs,
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Previous week button
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: _previousWeek,
-            tooltip: '이전 주',
-            iconSize: 24,
-          ),
-
-          // Date range display (expandable space)
-          Expanded(
-            child: Center(
-              child: Text(
+          // Center: Date navigation (< date >)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: _previousWeek,
+                tooltip: '이전 주',
+                iconSize: 24,
+              ),
+              Text(
                 dateRange,
                 style: AppTheme.bodyMedium,
               ),
-            ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: _nextWeek,
+                tooltip: '다음 주',
+                iconSize: 24,
+              ),
+            ],
           ),
 
-          // Next week button
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: _nextWeek,
-            tooltip: '다음 주',
-            iconSize: 24,
-          ),
+          const Spacer(),
 
-          const SizedBox(width: AppSpacing.xs),
-
-          // Today button
-          if (widget.showTodayButton)
-            OutlinedButton(
-              onPressed: _todayWeek,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
+          // Right: Today button (and Add button if needed)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.showTodayButton)
+                OutlinedButton(
+                  onPressed: _todayWeek,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    '오늘',
+                    style: TextStyle(fontSize: 13),
+                  ),
                 ),
-                minimumSize: const Size(0, 32),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: const Text(
-                '오늘',
-                style: TextStyle(fontSize: 13),
-              ),
-            ),
-
-          const SizedBox(width: AppSpacing.xs),
-
-          // Add button
-          if (widget.showAddButton)
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () => widget.onAddPressed?.call(_weekStart),
-              tooltip: '일정 추가',
-              iconSize: 20,
-            ),
+              if (widget.showAddButton)
+                const SizedBox(width: AppSpacing.xs),
+              if (widget.showAddButton)
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () => widget.onAddPressed?.call(_weekStart),
+                  tooltip: '일정 추가',
+                  iconSize: 20,
+                ),
+            ],
+          ),
         ],
       ),
     );
