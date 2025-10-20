@@ -89,6 +89,7 @@ class EventCreateDialog extends StatefulWidget {
 class _EventCreateDialogState extends State<EventCreateDialog> {
   final _titleController = TextEditingController();
   final _customLocationController = TextEditingController();
+  final _dropdownFocusNode = FocusNode();
 
   late LocationType _selectedLocationType;
   int? _selectedPlaceId;
@@ -97,11 +98,27 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
   void initState() {
     super.initState();
 
-    // Auto-fill from filter selection
-    if (widget.preSelectedPlaceId != null) {
+    // Auto-fill location type based on filter selection
+    if (widget.availablePlaces.isNotEmpty) {
+      // If places are filtered (1 or more), default to place selection
       _selectedLocationType = LocationType.place;
-      _selectedPlaceId = widget.preSelectedPlaceId;
+
+      // If only one place is filtered, auto-select it
+      if (widget.preSelectedPlaceId != null) {
+        _selectedPlaceId = widget.preSelectedPlaceId;
+      }
+
+      // Auto-focus dropdown when multiple places are selected (and no pre-selection)
+      // This helps user attention but doesn't auto-open (which is not natively supported)
+      if (widget.availablePlaces.length >= 2 && widget.preSelectedPlaceId == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _dropdownFocusNode.requestFocus();
+          }
+        });
+      }
     } else {
+      // No places filtered, default to none
       _selectedLocationType = LocationType.none;
     }
   }
@@ -110,6 +127,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
   void dispose() {
     _titleController.dispose();
     _customLocationController.dispose();
+    _dropdownFocusNode.dispose();
     super.dispose();
   }
 
@@ -217,6 +235,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
                   )
                 : DropdownButtonFormField<int>(
                     value: _selectedPlaceId,
+                    focusNode: _dropdownFocusNode,
                     decoration: const InputDecoration(
                       isDense: true,
                       border: OutlineInputBorder(),
