@@ -3,7 +3,11 @@ package org.castlekong.backend.controller
 import jakarta.validation.Valid
 import org.castlekong.backend.dto.ApiResponse
 import org.castlekong.backend.dto.AvailabilityRequest
+import org.castlekong.backend.dto.AvailablePlacesAtRequest
+import org.castlekong.backend.dto.AvailablePlacesAtResponse
 import org.castlekong.backend.dto.CreatePlaceRequest
+import org.castlekong.backend.dto.MultiplePlaceAvailabilityRequest
+import org.castlekong.backend.dto.PlaceAvailabilityDto
 import org.castlekong.backend.dto.PlaceDetailResponse
 import org.castlekong.backend.dto.PlaceResponse
 import org.castlekong.backend.dto.RequestUsageRequest
@@ -209,5 +213,36 @@ class PlaceController(
     ): ApiResponse<List<UsageGroupResponse>> {
         val result = placeUsageGroupService.getApprovedGroups(id)
         return ApiResponse.success(result)
+    }
+
+    // ===== Calendar Place Integration (Phase 2) =====
+
+    /**
+     * POST /api/places/availability
+     * 다중 장소 예약 가능 정보 조회 (공개)
+     */
+    @PostMapping("/places/availability")
+    fun getMultiplePlaceAvailability(
+        @Valid @RequestBody request: MultiplePlaceAvailabilityRequest,
+    ): ApiResponse<Map<Long, PlaceAvailabilityDto>> {
+        val result = placeService.getMultiplePlaceAvailability(request.placeIds, request.date)
+        return ApiResponse.success(result)
+    }
+
+    /**
+     * POST /api/places/available-at
+     * 특정 시간대 예약 가능 장소 조회 (공개)
+     */
+    @PostMapping("/places/available-at")
+    fun getAvailablePlacesAt(
+        @Valid @RequestBody request: AvailablePlacesAtRequest,
+    ): ApiResponse<AvailablePlacesAtResponse> {
+        val availablePlaces =
+            placeService.getAvailablePlacesAt(
+                request.placeIds,
+                request.startDateTime,
+                request.endDateTime,
+            )
+        return ApiResponse.success(AvailablePlacesAtResponse(availablePlaces))
     }
 }

@@ -8,6 +8,7 @@ import 'package:vibration/vibration.dart';
 import '../../../core/models/calendar/group_event.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import 'disabled_slots_painter.dart';
 import 'event_painter.dart';
 import 'highlight_painter.dart';
 import 'selection_painter.dart';
@@ -61,6 +62,10 @@ class WeeklyScheduleEditor extends StatefulWidget {
   /// Group colors for event rendering
   final Map<int, Color>? groupColors;
 
+  /// Disabled time slots (for place reservation system)
+  /// Set of DateTime objects representing 30-minute slots that are unavailable
+  final Set<DateTime>? disabledSlots;
+
   const WeeklyScheduleEditor({
     super.key,
     this.allowMultiDaySelection = false,
@@ -69,6 +74,7 @@ class WeeklyScheduleEditor extends StatefulWidget {
     this.externalEvents,
     this.weekStart,
     this.groupColors,
+    this.disabledSlots,
   });
 
   @override
@@ -515,6 +521,28 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     return overlappingEvents;
   }
 
+  /// Check if a cell is disabled (unavailable for selection)
+  bool _isCellDisabled(({int day, int slot}) cell) {
+    if (widget.disabledSlots == null || widget.disabledSlots!.isEmpty) {
+      return false;
+    }
+
+    // Convert cell (day, slot) to DateTime
+    final cellDate = _effectiveWeekStart.add(Duration(days: cell.day));
+    final slotHour = _startHour + (cell.slot ~/ 4);
+    final slotMinute = (cell.slot % 4) * 15;
+
+    final cellDateTime = DateTime(
+      cellDate.year,
+      cellDate.month,
+      cellDate.day,
+      slotHour,
+      slotMinute,
+    );
+
+    return widget.disabledSlots!.contains(cellDateTime);
+  }
+
   // --- Dialogs ---
 
   /// Check if event is external (read-only)
@@ -897,9 +925,22 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _handleTap(Offset position, double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
     if (!widget.isEditable) return;
 
+    final cell = _pixelToCell(position, dayColumnWidth);
+
+    // Check if cell is disabled (gray cell)
+    if (_isCellDisabled(cell)) {
+      // Show snackbar message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이 시간대는 예약할 수 없습니다'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     // Edit mode or View mode: check for overlapping events
     if (_mode == CalendarMode.edit || _mode == CalendarMode.view) {
-      final cell = _pixelToCell(position, dayColumnWidth);
       final overlappingEvents = _findEventsAtCell(cell);
 
       if (overlappingEvents.isNotEmpty) {
@@ -943,10 +984,24 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     // View mode: no interaction
     if (_mode == CalendarMode.view) return;
 
+    final cell = _pixelToCell(position, dayColumnWidth);
+
+    // Check if cell is disabled (gray cell)
+    if (_isCellDisabled(cell)) {
+      // Show snackbar message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이 시간대는 예약할 수 없습니다'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     _triggerHaptic(HapticFeedbackType.medium);
     setState(() {
       _isSelecting = true;
-      _startCell = _pixelToCell(position, dayColumnWidth);
+      _startCell = cell;
       _endCell = _startCell;
       _selectionRect = _cellToRect(_startCell!, _endCell!, dayColumnWidth);
     });
@@ -1234,6 +1289,21 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               ),
             ),
           ),
+          // Disabled slots (gray cells) - painted before events
+          if (widget.disabledSlots != null)
+            Positioned.fill(
+              child: CustomPaint(
+                painter: DisabledSlotsPainter(
+                  disabledSlots: widget.disabledSlots,
+                  weekStart: _effectiveWeekStart,
+                  visibleStartHour: _visibleStartHour,
+                  visibleEndHour: _visibleEndHour,
+                  timeColumnWidth: _timeColumnWidth,
+                  slotHeight: _minSlotHeight,
+                  dayColumnWidth: dayColumnWidth,
+                ),
+              ),
+            ),
           Positioned.fill(
             child: CustomPaint(
               painter: EventPainter(events: eventData),

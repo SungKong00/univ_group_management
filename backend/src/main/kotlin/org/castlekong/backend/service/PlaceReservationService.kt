@@ -607,8 +607,9 @@ class PlaceReservationService(
         val endTime = endDateTime.toLocalTime()
 
         // 해당 요일의 운영 시간 조회
-        val operatingHours = placeOperatingHoursRepository.findByPlaceIdAndDayOfWeek(place.id, dayOfWeek)
-            .orElse(null) ?: return false // 해당 요일 운영 정보 없음
+        val operatingHours =
+            placeOperatingHoursRepository.findByPlaceIdAndDayOfWeek(place.id, dayOfWeek)
+                .orElse(null) ?: return false // 해당 요일 운영 정보 없음
 
         if (operatingHours.isClosed) {
             return false // 해당 요일 휴무

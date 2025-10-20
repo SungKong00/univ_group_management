@@ -44,6 +44,26 @@ You MUST follow the established design system:
 
 ## Technical Implementation Standards
 
+⚠️ Layout Guideline for Flutter (Critical)
+
+When generating or modifying Flutter UI code, always check for layout constraints inside `Row` or `Column`.
+
+- Never place widgets like `Button`, `Container`, or `SizedBox(height: ...)` directly inside a `Row` without width constraints.
+- Always wrap them with `Expanded`, `Flexible`, or `SizedBox(width: ...)`.
+- Otherwise, Flutter throws “BoxConstraints forces an infinite width” errors.
+- Example of bad pattern:
+  Row(
+  children: [
+  SizedBox(height: 44, child: OutlinedButton(...)), // ❌ causes infinite width
+  ],
+  )
+- Example of correct pattern:
+  Row(
+  children: [
+  Flexible(child: SizedBox(height: 44, child: OutlinedButton(...))), // ✅ OK
+  ],
+  )
+
 ### 백엔드 데이터 파싱 검증
 특히, 백엔드 API로부터 데이터를 파싱하여 프론트엔드 모델로 변환하는 과정에서 데이터 타입 불일치나 누락으로 인한 실수가 자주 발생합니다. 데이터 파싱 로직을 작성하거나 수정할 때는 응답(response) 데이터의 구조를 꼼꼼히 검증하고, 예외 처리를 강화하여 안정성을 높여야 합니다.
 

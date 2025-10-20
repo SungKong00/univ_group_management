@@ -15,6 +15,7 @@ import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.PlaceAvailabilityRepository
 import org.castlekong.backend.repository.PlaceRepository
+import org.castlekong.backend.repository.PlaceReservationRepository
 import org.castlekong.backend.repository.PlaceUsageGroupRepository
 import org.castlekong.backend.security.PermissionService
 import org.springframework.stereotype.Service
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional
 class PlaceService(
     private val placeRepository: PlaceRepository,
     private val placeAvailabilityRepository: PlaceAvailabilityRepository,
+    private val placeReservationRepository: PlaceReservationRepository,
     private val placeUsageGroupRepository: PlaceUsageGroupRepository,
     private val groupRepository: GroupRepository,
     private val groupMemberRepository: GroupMemberRepository,
@@ -276,4 +278,111 @@ class PlaceService(
             endTime = endTime,
             displayOrder = displayOrder,
         )
+
+    // ===== Calendar Place Integration (Phase 2) =====
+
+    /**
+     * 다중 장소 예약 가능 정보 조회 (최적화)
+     */
+    @Transactional(readOnly = true)
+    fun getMultiplePlaceAvailability(
+        placeIds: List<Long>,
+        date: java.time.LocalDate,
+    ): Map<Long, org.castlekong.backend.dto.PlaceAvailabilityDto> {
+        // 1. 시작/종료 시간 계산 (해당 날짜의 00:00 ~ 다음 날 00:00)
+        val startDateTime = date.atStartOfDay()
+        val endDateTime = date.plusDays(1).atStartOfDay()
+
+        // 2. 각 장소의 운영시간 조회
+        val availabilitiesByPlace =
+            placeIds
+                .flatMap { placeId -> placeAvailabilityRepository.findByPlaceId(placeId) }
+                .groupBy { it.place.id }
+
+        // 3. 각 장소의 예약 내역 조회 (한 번의 쿼리로 최적화)
+        val reservationsByPlace =
+            placeRepository
+                .findAllById(placeIds)
+                .associateWith { place ->
+                    placeReservationRepository.findByPlaceIdAndDateRange(place.id, startDateTime, endDateTime)
+                }
+
+        // 4. 응답 DTO 생성
+        return placeIds.associateWith { placeId ->
+            val operatingHours =
+                availabilitiesByPlace[placeId]?.map { av ->
+                    org.castlekong.backend.dto.OperatingHourDto(
+                        dayOfWeek = av.dayOfWeek,
+                        startTime = av.startTime,
+                        endTime = av.endTime,
+                    )
+                } ?: emptyList()
+
+            val place = placeRepository.findById(placeId).orElse(null)
+            val reservations =
+                reservationsByPlace[place]?.map { pr ->
+                    org.castlekong.backend.dto.ReservationSimpleDto(
+                        id = pr.id,
+                        startDateTime = pr.groupEvent.startDate,
+                        endDateTime = pr.groupEvent.endDate,
+                        title = pr.groupEvent.title,
+                    )
+                } ?: emptyList()
+
+            org.castlekong.backend.dto.PlaceAvailabilityDto(
+                placeId = placeId,
+                date = date,
+                operatingHours = operatingHours,
+                reservations = reservations,
+            )
+        }
+    }
+
+    /**
+     * 특정 시간대에 예약 가능한 장소 필터링
+     */
+    @Transactional(readOnly = true)
+    fun getAvailablePlacesAt(
+        placeIds: List<Long>,
+        startDateTime: java.time.LocalDateTime,
+        endDateTime: java.time.LocalDateTime,
+    ): List<PlaceResponse> {
+        val availablePlaces = mutableListOf<PlaceResponse>()
+
+        for (placeId in placeIds) {
+            val place =
+                placeRepository.findActiveById(placeId)
+                    .orElse(null) ?: continue
+
+            // 1. 운영시간 체크
+            val dayOfWeek = startDateTime.dayOfWeek
+            val availabilities = placeAvailabilityRepository.findByPlaceId(placeId)
+            val operatingHoursForDay = availabilities.filter { it.dayOfWeek == dayOfWeek }
+
+            if (operatingHoursForDay.isEmpty()) {
+                continue // 해당 요일에 운영하지 않음
+            }
+
+            // 시작/종료 시간이 운영시간 내에 있는지 확인
+            val isWithinOperatingHours =
+                operatingHoursForDay.any { av ->
+                    val startTime = startDateTime.toLocalTime()
+                    val endTime = endDateTime.toLocalTime()
+                    !startTime.isBefore(av.startTime) && !endTime.isAfter(av.endTime)
+                }
+
+            if (!isWithinOperatingHours) {
+                continue // 운영시간 외
+            }
+
+            // 2. 예약 충돌 체크
+            val conflicts = placeReservationRepository.findOverlappingReservations(placeId, startDateTime, endDateTime)
+
+            if (conflicts.isEmpty()) {
+                availablePlaces.add(place.toResponse())
+            }
+        }
+
+        return availablePlaces
+    }
 }

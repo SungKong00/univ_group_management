@@ -1,6 +1,29 @@
-/// Place model representing a physical location that can be reserved
+/// Place model - 장소 정보를 나타내는 모델
+///
+/// Properties:
+/// - id: 장소 ID
+/// - managingGroupId: 관리 그룹 ID
+/// - managingGroupName: 관리 그룹 이름
+/// - building: 건물명
+/// - roomNumber: 방 번호
+/// - alias: 별칭 (예: "공학관 101호")
+/// - displayName: 표시명 (alias가 있으면 alias, 없으면 "building roomNumber")
+/// - capacity: 수용 인원
+/// - createdAt: 생성 시간
+/// - updatedAt: 수정 시간
 class Place {
-  const Place({
+  final int id;
+  final int managingGroupId;
+  final String managingGroupName;
+  final String building;
+  final String roomNumber;
+  final String? alias;
+  final String displayName;
+  final int? capacity;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Place({
     required this.id,
     required this.managingGroupId,
     required this.managingGroupName,
@@ -13,20 +36,7 @@ class Place {
     required this.updatedAt,
   });
 
-  final int id;
-  final int managingGroupId;
-  final String managingGroupName;
-  final String building;
-  final String roomNumber;
-  final String? alias;
-  final String displayName;
-  final int? capacity;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-
-  /// Full location string: "건물 방 번호"
-  String get fullLocation => '$building $roomNumber';
-
+  /// JSON에서 Place 객체 생성
   factory Place.fromJson(Map<String, dynamic> json) {
     return Place(
       id: (json['id'] as num).toInt(),
@@ -42,6 +52,7 @@ class Place {
     );
   }
 
+  /// Place 객체를 JSON으로 변환
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -57,76 +68,23 @@ class Place {
     };
   }
 
-  Place copyWith({
-    int? id,
-    int? managingGroupId,
-    String? managingGroupName,
-    String? building,
-    String? roomNumber,
-    String? alias,
-    String? displayName,
-    int? capacity,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return Place(
-      id: id ?? this.id,
-      managingGroupId: managingGroupId ?? this.managingGroupId,
-      managingGroupName: managingGroupName ?? this.managingGroupName,
-      building: building ?? this.building,
-      roomNumber: roomNumber ?? this.roomNumber,
-      alias: alias ?? this.alias,
-      displayName: displayName ?? this.displayName,
-      capacity: capacity ?? this.capacity,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
+  /// Full location string (building + roomNumber)
+  String get fullLocation => '$building $roomNumber';
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
+  String toString() => 'Place(id: $id, displayName: $displayName, '
+      'building: $building, capacity: $capacity)';
 
-    return other is Place && other.id == id;
-  }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Place && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;
-
-  @override
-  String toString() {
-    return 'Place(id: $id, managingGroup: $managingGroupName, building: $building, roomNumber: $roomNumber, alias: $alias)';
-  }
 }
 
-/// Request payload for creating or updating a place (deprecated - use specific Create/Update classes)
-class PlaceRequest {
-  const PlaceRequest({
-    required this.managingGroupId,
-    required this.building,
-    required this.roomNumber,
-    this.alias,
-    this.capacity,
-  });
-
-  final int managingGroupId;
-  final String building;
-  final String roomNumber;
-  final String? alias;
-  final int? capacity;
-
-  Map<String, dynamic> toJson() {
-    return {
-      'managingGroupId': managingGroupId,
-      'building': building,
-      'roomNumber': roomNumber,
-      if (alias != null && alias!.trim().isNotEmpty) 'alias': alias,
-      if (capacity != null) 'capacity': capacity,
-    };
-  }
-}
-
-/// Request payload for creating a new place
+/// Request payload for creating a place
 class CreatePlaceRequest {
   const CreatePlaceRequest({
     required this.managingGroupId,
@@ -147,31 +105,25 @@ class CreatePlaceRequest {
       'managingGroupId': managingGroupId,
       'building': building,
       'roomNumber': roomNumber,
-      if (alias != null && alias!.trim().isNotEmpty) 'alias': alias,
+      if (alias != null) 'alias': alias,
       if (capacity != null) 'capacity': capacity,
     };
   }
 }
 
-/// Request payload for updating an existing place
+/// Request payload for updating a place
 class UpdatePlaceRequest {
   const UpdatePlaceRequest({
-    this.building,
-    this.roomNumber,
     this.alias,
     this.capacity,
   });
 
-  final String? building;
-  final String? roomNumber;
   final String? alias;
   final int? capacity;
 
   Map<String, dynamic> toJson() {
     return {
-      if (building != null) 'building': building,
-      if (roomNumber != null) 'roomNumber': roomNumber,
-      if (alias != null) 'alias': alias!.trim().isEmpty ? null : alias,
+      if (alias != null) 'alias': alias,
       if (capacity != null) 'capacity': capacity,
     };
   }

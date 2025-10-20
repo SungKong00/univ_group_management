@@ -187,3 +187,69 @@ data class PlaceCalendarResponse(
     val placeName: String,
     val reservations: List<PlaceReservationResponse>,
 )
+
+// ===== Calendar Place Integration DTOs (Phase 2) =====
+
+/**
+ * 다중 장소 예약 가능 정보 조회 요청 DTO
+ */
+data class MultiplePlaceAvailabilityRequest(
+    @field:NotNull(message = "장소 ID 목록은 필수입니다")
+    @field:Size(min = 1, message = "최소 1개 이상의 장소를 선택해야 합니다")
+    val placeIds: List<Long>,
+    @field:NotNull(message = "날짜는 필수입니다")
+    @field:JsonFormat(pattern = "yyyy-MM-dd")
+    val date: java.time.LocalDate,
+)
+
+/**
+ * 특정 시간대 예약 가능 장소 조회 요청 DTO
+ */
+data class AvailablePlacesAtRequest(
+    @field:NotNull(message = "장소 ID 목록은 필수입니다")
+    @field:Size(min = 1, message = "최소 1개 이상의 장소를 선택해야 합니다")
+    val placeIds: List<Long>,
+    @field:NotNull(message = "시작 시간은 필수입니다")
+    val startDateTime: LocalDateTime,
+    @field:NotNull(message = "종료 시간은 필수입니다")
+    val endDateTime: LocalDateTime,
+)
+
+/**
+ * 장소별 예약 가능 정보 응답 DTO
+ */
+data class PlaceAvailabilityDto(
+    val placeId: Long,
+    @field:JsonFormat(pattern = "yyyy-MM-dd")
+    val date: java.time.LocalDate,
+    val operatingHours: List<OperatingHourDto>,
+    val reservations: List<ReservationSimpleDto>,
+)
+
+/**
+ * 운영 시간 DTO (간소화)
+ */
+data class OperatingHourDto(
+    val dayOfWeek: DayOfWeek,
+    @field:JsonFormat(pattern = "HH:mm:ss")
+    val startTime: LocalTime,
+    @field:JsonFormat(pattern = "HH:mm:ss")
+    val endTime: LocalTime,
+)
+
+/**
+ * 예약 정보 DTO (간소화)
+ */
+data class ReservationSimpleDto(
+    val id: Long,
+    val startDateTime: LocalDateTime,
+    val endDateTime: LocalDateTime,
+    val title: String,
+)
+
+/**
+ * 예약 가능 장소 응답 DTO
+ */
+data class AvailablePlacesAtResponse(
+    val availablePlaces: List<PlaceResponse>,
+)
