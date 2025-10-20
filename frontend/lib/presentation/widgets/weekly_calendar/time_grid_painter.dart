@@ -26,8 +26,8 @@ class TimeGridPainter extends CustomPainter {
       ..color = Colors.grey[400]!
       ..strokeWidth = 1.0;
     final Paint halfHourLinePaint = Paint()
-      ..color = Colors.grey[200]!
-      ..strokeWidth = 0.5;
+      ..color = Colors.grey[350]!
+      ..strokeWidth = 0.8;
     final Paint dayColumnPaint = Paint()
       ..color = Colors.grey[300]!
       ..strokeWidth = 0.5;

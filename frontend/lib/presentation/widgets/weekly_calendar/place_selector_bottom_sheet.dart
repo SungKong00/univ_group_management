@@ -76,7 +76,13 @@ class _PlaceSelectorBottomSheetState extends State<PlaceSelectorBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxHeight = screenHeight * 0.6; // 화면 높이의 60%로 제한
+
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: maxHeight,
+      ),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

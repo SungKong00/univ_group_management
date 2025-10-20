@@ -731,14 +731,17 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
                     showTodayButton: true,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md),
-                // Place selection button
+                const SizedBox(width: AppSpacing.sm),
+                // Place selection button (compact size)
                 Flexible(
                   child: SizedBox(
-                    height: 44,
+                    height: 36,
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.place),
-                      label: const Text('장소'),
+                      icon: const Icon(Icons.place, size: 18),
+                      label: const Text('장소', style: TextStyle(fontSize: 13)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
                       onPressed: _showPlacePicker,
                     ),
                   ),
@@ -746,6 +749,45 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
               ],
             ),
           ),
+          const SizedBox(height: AppSpacing.xs),
+
+          // Selected places chips
+          if (_selectedPlaces.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              child: Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                children: _selectedPlaces.map((place) {
+                  return Chip(
+                    avatar: const Icon(Icons.place, size: 16),
+                    label: Text(
+                      '${place.building} ${place.roomNumber}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    onDeleted: () {
+                      setState(() {
+                        _selectedPlaces.removeWhere((p) => p.id == place.id);
+                        _requiredDuration = null;
+                        _calculateDisabledSlots();
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '${place.building} ${place.roomNumber} 선택이 해제되었습니다',
+                          ),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    deleteIconColor: AppColors.neutral600,
+                    backgroundColor: AppColors.brandLight,
+                    labelStyle: TextStyle(color: AppColors.neutral900),
+                  );
+                }).toList(),
+              ),
+            ),
           const SizedBox(height: AppSpacing.sm),
 
           // Group selection header

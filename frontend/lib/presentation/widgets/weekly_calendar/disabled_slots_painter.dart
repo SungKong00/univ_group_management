@@ -51,12 +51,12 @@ class DisabledSlotsPainter extends CustomPainter {
     );
 
     final paint = Paint()
-      ..color = AppColors.neutral300.withOpacity(0.4)
+      ..color = AppColors.neutral300.withOpacity(0.6)
       ..style = PaintingStyle.fill;
 
     int paintedCount = 0;
     int mondayMorningCount = 0; // Count Monday morning slots (hour < 9)
-    int filteredByWeekRange = 0; // Count slots filtered by week range check
+    int filteredByWeekRange = 0; // Count slots filtered by week range
 
     // Iterate through each disabled slot
     for (final slot in disabledSlots!) {

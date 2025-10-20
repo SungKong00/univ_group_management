@@ -4,9 +4,9 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-10-21 (에이전트 가이드 DropdownMenuItem 레이아웃 패턴 추가)
-**총 문서 수**: 47개
-**동기화 완료**: 47개 (100%)
+**마지막 업데이트**: 2025-10-21 (Row/Column 레이아웃 체크리스트 및 에이전트 가이드 강화)
+**총 문서 수**: 48개
+**동기화 완료**: 48개 (100%)
 **업데이트 필요**: 0개 (0%)
 
 ---
@@ -40,6 +40,7 @@
 | `frontend-workspace-guide.md` | ✅ 최신 | 2025-10-17 | `현재` | `showApplicationManagementPage` 예시 추가 |
 | `workspace-level-navigation-guide.md` | ✅ 최신 | 2025-10-19 | `현재` | WorkspaceView 기반 상태 관리 설계 (신규) |
 | `component-reusability-guide.md` | ✅ 최신 | 2025-10-07 | `현재` | SlidePanel, PostPreviewWidget 추가 |
+| `row-column-layout-checklist.md` | ✅ 최신 | 2025-10-21 | `현재` | Row/Column 레이아웃 전용 체크리스트 (신규) |
 | `api-reference.md` | ✅ 최신 | 2025-10-21 | `현재` | PlaceOperatingHours 모델 반영 |
 | `database-reference.md` | ✅ 최신 | 2025-10-21 | `현재` | PlaceOperatingHours 모델 반영 |
 
@@ -106,8 +107,8 @@
 ### `/.claude/agents/` - 에이전트 가이드
 | 파일명 | 상태 | 마지막 동기화 | 관련 커밋 | 비고 |
 |--------|------|---------------|-----------|------|
-| `frontend-specialist.md` | ✅ 최신 | 2025-10-21 | `현재` | DropdownMenuItem 레이아웃 패턴 추가 |
-| `frontend-debugger.md` | ✅ 최신 | 2025-10-21 | `현재` | DropdownMenuItem 디버깅 가이드 추가 |
+| `frontend-specialist.md` | ✅ 최신 | 2025-10-21 | `현재` | Row/Column 레이아웃 가이드 대폭 강화 |
+| `frontend-debugger.md` | ✅ 최신 | 2025-10-21 | `현재` | Row/Column 디버깅 프로세스 명시화 |
 
 ### `/docs/agents/` - 서브 에이전트
 | 파일명 | 상태 | 마지막 동기화 | 관련 커밋 | 비고 |
@@ -131,16 +132,28 @@
 
 ## 🎯 상태별 분류
 
-### ✅ 최신 상태 (47개)
+### ✅ 최신 상태 (48개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
 
 **주요 업데이트 (2025-10-21)**:
-- 에이전트 가이드 DropdownMenuItem 레이아웃 패턴 추가
-  - `.claude/agents/frontend-specialist.md`: DropdownMenuItem 특수 케이스 섹션 추가
-  - `.claude/agents/frontend-debugger.md`: DropdownMenuItem 디버깅 가이드 추가
-  - DropdownMenuItem은 unbounded width constraint를 제공하므로 내부 Row에서 Expanded 사용 금지
-  - 해결책: mainAxisSize: MainAxisSize.min + Flexible 사용
-  - 재발 방지를 위한 명시적 가이드라인 추가
+- Row/Column 레이아웃 체크리스트 및 에이전트 가이드 대폭 강화
+  - 신규 문서: `docs/implementation/row-column-layout-checklist.md` 생성
+    - Row/Column 내 위젯 개발 시 필수 체크리스트
+    - 자주 하는 실수 패턴 5가지와 해결책 (Expanded/Flexible/SizedBox 옵션별)
+    - 에러 발생 시 5단계 진단 프로세스
+    - 중첩된 Row/Column 디버깅 전략
+  - `.claude/agents/frontend-specialist.md` 강화
+    - CRITICAL 섹션으로 승격 (최우선 순위)
+    - 코드 작성 전 필수 체크리스트 추가
+    - 자주 반복되는 실수 패턴 비교표 추가
+    - Row 내 버튼 에러 3가지 해결책 상세 예시
+    - 개발 워크플로우 통합 (작성 전/중/후)
+  - `.claude/agents/frontend-debugger.md` 강화
+    - 에러 메시지별 진단 및 해결 섹션 추가
+    - 3가지 주요 에러 유형별 진단 단계 명시
+    - 빠른 디버깅 5단계 체크리스트
+    - 중첩된 Row/Column 디버깅 전략 추가
+  - 목표: "BoxConstraints forces an infinite width" 에러 재발 방지
 
 **주요 업데이트 (2025-10-19)**:
 - 워크스페이스 레벨 네비게이션 가이드 신규 생성

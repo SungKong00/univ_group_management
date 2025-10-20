@@ -44,47 +44,129 @@ You MUST follow the established design system:
 
 ## Technical Implementation Standards
 
-⚠️ Layout Guideline for Flutter (Critical)
+### ⚠️ CRITICAL: Row/Column Layout Constraints (READ THIS FIRST!)
 
-When generating or modifying Flutter UI code, always check for layout constraints inside `Row` or `Column`.
+**이 규칙을 반복해서 위반하는 에러가 발생하고 있습니다. 모든 Row/Column 코드 작성 전에 반드시 확인하세요!**
 
-- Never place widgets like `Button`, `Container`, or `SizedBox(height: ...)` directly inside a `Row` without width constraints.
-- Always wrap them with `Expanded`, `Flexible`, or `SizedBox(width: ...)`.
-- Otherwise, Flutter throws "BoxConstraints forces an infinite width" errors.
-- Example of bad pattern:
-  Row(
+전체 가이드: [Row/Column Layout Checklist](../../docs/implementation/row-column-layout-checklist.md)
+
+#### 핵심 규칙 (절대 잊지 마세요)
+
+**규칙 1: Row 내부의 모든 위젯은 명시적인 너비 제약 필요**
+- Row는 수평 방향으로 무한한 공간 제공 → 자식이 스스로 너비를 결정할 수 없으면 에러
+
+**규칙 2: Column 내부의 모든 위젯은 명시적인 높이 제약 필요**
+- Column은 수직 방향으로 무한한 공간 제공 → 자식이 스스로 높이를 결정할 수 없으면 에러
+
+#### 코드 작성 전 필수 체크리스트
+
+```markdown
+Row를 사용할 때:
+□ 각 자식에 Expanded, Flexible, 또는 SizedBox(width: ...) 적용했는가?
+□ DropdownMenuItem 내부라면 mainAxisSize: MainAxisSize.min 설정했는가?
+□ DropdownMenuItem 내부라면 Expanded 대신 Flexible 사용했는가?
+
+Column을 사용할 때:
+□ 각 자식에 Expanded, Flexible, 또는 SizedBox(height: ...) 적용했는가?
+□ ListView나 GridView를 자식으로 사용한다면 Expanded로 감쌌는가?
+```
+
+#### 자주 반복되는 실수 패턴 (반드시 암기!)
+
+| 상황 | ❌ 잘못된 코드 | ✅ 올바른 코드 |
+|------|---------------|---------------|
+| Row 내 버튼 | `Row(children: [OutlinedButton(...)])` | `Row(children: [Expanded(child: OutlinedButton(...))])` |
+| Row 내 TextField | `Row(children: [TextField()])` | `Row(children: [Expanded(child: TextField())])` |
+| Column 내 ListView | `Column(children: [ListView(...)])` | `Column(children: [Expanded(child: ListView(...))])` |
+| DropdownMenuItem | `Row(children: [Expanded(...)])` | `Row(mainAxisSize: MainAxisSize.min, children: [Flexible(...)])` |
+
+#### 상세 예시: Row 내 버튼 (가장 흔한 에러)
+
+**❌ 에러 발생 코드:**
+```dart
+Row(
   children: [
-  SizedBox(height: 44, child: OutlinedButton(...)), // ❌ causes infinite width
+    SizedBox(height: 44, child: OutlinedButton(...)),  // 에러!
+    ElevatedButton(...),  // 에러!
   ],
-  )
-- Example of correct pattern:
-  Row(
+)
+// 에러 메시지: "BoxConstraints forces an infinite width"
+```
+
+**✅ 해결책 1: Expanded (공간을 균등하게 나눔)**
+```dart
+Row(
   children: [
-  Flexible(child: SizedBox(height: 44, child: OutlinedButton(...))), // ✅ OK
+    Expanded(child: SizedBox(height: 44, child: OutlinedButton(...))),
+    const SizedBox(width: 8),
+    Expanded(child: ElevatedButton(...)),
   ],
-  )
+)
+```
 
-**Special Case: DropdownMenuItem**
+**✅ 해결책 2: Flexible (콘텐츠에 맞게 조정)**
+```dart
+Row(
+  children: [
+    Flexible(child: SizedBox(height: 44, child: OutlinedButton(...))),
+    const SizedBox(width: 8),
+    Flexible(child: ElevatedButton(...)),
+  ],
+)
+```
 
-DropdownMenuItem provides unbounded width constraints internally. Never use `Expanded` inside DropdownMenuItem's Row.
+**✅ 해결책 3: SizedBox (고정 너비)**
+```dart
+Row(
+  children: [
+    SizedBox(width: 120, height: 44, child: OutlinedButton(...)),
+    const SizedBox(width: 8),
+    SizedBox(width: 120, height: 44, child: ElevatedButton(...)),
+  ],
+)
+```
 
-- Bad pattern:
-  DropdownMenuItem(
-    child: Row(
-      children: [
-        Expanded(child: Text('...')), // ❌ RenderFlex unbounded width error
-      ],
-    ),
-  )
-- Correct pattern:
-  DropdownMenuItem(
-    child: Row(
-      mainAxisSize: MainAxisSize.min, // ✅ Required
-      children: [
-        Flexible(child: Text('...')),  // ✅ Use Flexible, not Expanded
-      ],
-    ),
-  )
+#### 특수 케이스: DropdownMenuItem
+
+DropdownMenuItem은 내부적으로 unbounded width 제약을 제공합니다.
+
+**❌ 에러 발생 코드:**
+```dart
+DropdownMenuItem(
+  child: Row(
+    children: [
+      Expanded(child: Text('옵션')),  // 에러!
+    ],
+  ),
+)
+// 에러: "RenderFlex children have non-zero flex but incoming width constraints are unbounded"
+```
+
+**✅ 올바른 코드:**
+```dart
+DropdownMenuItem(
+  child: Row(
+    mainAxisSize: MainAxisSize.min,  // 필수!
+    children: [
+      Flexible(child: Text('옵션')),  // Expanded 대신 Flexible
+    ],
+  ),
+)
+```
+
+#### 개발 워크플로우
+
+**1. 코드 작성 전**
+- Row/Column 사용 계획 시 위 체크리스트 확인
+- 각 자식의 제약 전략 미리 결정
+
+**2. 코드 작성 중**
+- Row/Column 추가 즉시 자식에 제약 적용
+- 복사/붙여넣기 시 제약이 포함되어 있는지 확인
+
+**3. 코드 리뷰 전**
+- 모든 Row/Column 재검토
+- 제약 누락 여부 확인
 
 ### 백엔드 데이터 파싱 검증
 특히, 백엔드 API로부터 데이터를 파싱하여 프론트엔드 모델로 변환하는 과정에서 데이터 타입 불일치나 누락으로 인한 실수가 자주 발생합니다. 데이터 파싱 로직을 작성하거나 수정할 때는 응답(response) 데이터의 구조를 꼼꼼히 검증하고, 예외 처리를 강화하여 안정성을 높여야 합니다.
