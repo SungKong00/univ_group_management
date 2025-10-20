@@ -699,12 +699,31 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
                   child: WeeklyNavigationHeader(
                     initialWeekStart: _weekStart,
                     onWeekChanged: (newWeekStart) {
+                      developer.log(
+                        '📅 Week changed: ${newWeekStart.toString().substring(0, 10)}',
+                        name: 'DemoCalendarPage',
+                      );
+                      developer.log(
+                        '📍 Currently selected places: ${_selectedPlaces.length}',
+                        name: 'DemoCalendarPage',
+                      );
+
                       setState(() {
                         _weekStart = newWeekStart;
                       });
+
                       // Reload events for all selected groups with new week
                       for (final groupId in _selectedGroupIds) {
                         _loadEventsForGroup(groupId);
+                      }
+
+                      // Reload place data for new week if places are selected
+                      if (_selectedPlaces.isNotEmpty) {
+                        developer.log(
+                          '🔄 Recalculating disabled slots for new week',
+                          name: 'DemoCalendarPage',
+                        );
+                        _calculateDisabledSlots();
                       }
                     },
                     onAddPressed: (_) => _showGroupPicker(),
