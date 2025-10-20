@@ -2,6 +2,7 @@ package org.castlekong.backend.runner
 
 import org.castlekong.backend.dto.CreateApplicationRequest
 import org.castlekong.backend.dto.CreateGroupEventRequest
+import org.castlekong.backend.dto.CreatePersonalEventRequest
 import org.castlekong.backend.dto.CreateGroupRequest
 import org.castlekong.backend.dto.CreateGroupRoleRequest
 import org.castlekong.backend.dto.CreatePersonalScheduleRequest
@@ -24,6 +25,7 @@ import org.castlekong.backend.service.GroupEventService
 import org.castlekong.backend.service.GroupManagementService
 import org.castlekong.backend.service.GroupMemberService
 import org.castlekong.backend.service.GroupRoleService
+import org.castlekong.backend.service.PersonalEventService
 import org.castlekong.backend.service.PersonalScheduleService
 import org.castlekong.backend.service.PlaceReservationService
 import org.castlekong.backend.service.PlaceService
@@ -73,6 +75,7 @@ class TestDataRunner(
     private val placeService: PlaceService,
     private val placeUsageGroupService: PlaceUsageGroupService,
     private val personalScheduleService: PersonalScheduleService,
+    private val personalEventService: PersonalEventService,
     private val groupEventService: GroupEventService,
     private val placeReservationService: PlaceReservationService,
     private val placeOperatingHoursRepository: PlaceOperatingHoursRepository,
@@ -121,7 +124,10 @@ class TestDataRunner(
             // Phase 7: 페르소나별 시간표 생성
             createPersonalSchedules(users)
 
-            // Phase 8: 그룹 캘린더 일정 및 장소 예약 생성
+            // Phase 8: 개인 캘린더 일정 생성
+            createPersonalEvents(users)
+
+            // Phase 9: 그룹 캘린더 일정 및 장소 예약 생성
             createCalendarEventsAndReservations(users, customGroups, customPlaces)
 
             logger.info("=== Test Data Creation Completed Successfully ===")
@@ -675,58 +681,6 @@ class TestDataRunner(
                     color = "#9C27B0",
                 ),
             )
-
-            // 화요일 10:30-12:00 이산수학
-            personalScheduleService.createSchedule(
-                users.user1,
-                CreatePersonalScheduleRequest(
-                    title = "이산수학",
-                    dayOfWeek = DayOfWeek.TUESDAY,
-                    startTime = LocalTime.of(10, 30),
-                    endTime = LocalTime.of(12, 0),
-                    location = "학습관 302호",
-                    color = "#00ACC1",
-                ),
-            )
-
-            // 목요일 09:00-10:30 컴퓨터 구조
-            personalScheduleService.createSchedule(
-                users.user1,
-                CreatePersonalScheduleRequest(
-                    title = "컴퓨터 구조",
-                    dayOfWeek = DayOfWeek.THURSDAY,
-                    startTime = LocalTime.of(9, 0),
-                    endTime = LocalTime.of(10, 30),
-                    location = "학습관 302호",
-                    color = "#00ACC1",
-                ),
-            )
-
-            // 월요일 13:00-14:30 영어 회화 1
-            personalScheduleService.createSchedule(
-                users.user1,
-                CreatePersonalScheduleRequest(
-                    title = "영어 회화 1",
-                    dayOfWeek = DayOfWeek.MONDAY,
-                    startTime = LocalTime.of(13, 0),
-                    endTime = LocalTime.of(14, 30),
-                    location = "어학원 101호",
-                    color = "#7E57C2",
-                ),
-            )
-
-            // 금요일 16:00-18:00 개인 프로젝트: 웹 포트폴리오
-            personalScheduleService.createSchedule(
-                users.user1,
-                CreatePersonalScheduleRequest(
-                    title = "개인 프로젝트: 웹 포트폴리오",
-                    dayOfWeek = DayOfWeek.FRIDAY,
-                    startTime = LocalTime.of(16, 0),
-                    endTime = LocalTime.of(18, 0),
-                    location = "중앙도서관",
-                    color = "#8D6E63",
-                ),
-            )
         }
 
         // TestUser2: 교양과목 + 학생회 활동
@@ -780,58 +734,6 @@ class TestDataRunner(
                     endTime = LocalTime.of(14, 0),
                     location = "학생회실",
                     color = "#FF5722",
-                ),
-            )
-
-            // 월요일 10:30-12:00 리더십과 자기혁신
-            personalScheduleService.createSchedule(
-                users.user2,
-                CreatePersonalScheduleRequest(
-                    title = "리더십과 자기혁신",
-                    dayOfWeek = DayOfWeek.MONDAY,
-                    startTime = LocalTime.of(10, 30),
-                    endTime = LocalTime.of(12, 0),
-                    location = "인문관 201호",
-                    color = "#5C6BC0",
-                ),
-            )
-
-            // 월요일 16:00-18:00 학생회 예산안 검토 회의
-            personalScheduleService.createSchedule(
-                users.user2,
-                CreatePersonalScheduleRequest(
-                    title = "학생회 예산안 검토 회의",
-                    dayOfWeek = DayOfWeek.MONDAY,
-                    startTime = LocalTime.of(16, 0),
-                    endTime = LocalTime.of(18, 0),
-                    location = "학생회실",
-                    color = "#F44336",
-                ),
-            )
-
-            // 금요일 10:00-12:00 교내 봉사활동
-            personalScheduleService.createSchedule(
-                users.user2,
-                CreatePersonalScheduleRequest(
-                    title = "교내 봉사활동",
-                    dayOfWeek = DayOfWeek.FRIDAY,
-                    startTime = LocalTime.of(10, 0),
-                    endTime = LocalTime.of(12, 0),
-                    location = "교내",
-                    color = "#43A047",
-                ),
-            )
-
-            // 목요일 16:00-17:30 축제 부스 운영팀 미팅
-            personalScheduleService.createSchedule(
-                users.user2,
-                CreatePersonalScheduleRequest(
-                    title = "축제 부스 운영팀 미팅",
-                    dayOfWeek = DayOfWeek.THURSDAY,
-                    startTime = LocalTime.of(16, 0),
-                    endTime = LocalTime.of(17, 30),
-                    location = "학생회실",
-                    color = "#F44336",
                 ),
             )
         }
@@ -902,52 +804,56 @@ class TestDataRunner(
                     color = "#FF5722",
                 ),
             )
-
-            // 화요일 09:00-10:30 논리회로설계
-            personalScheduleService.createSchedule(
-                users.user3,
-                CreatePersonalScheduleRequest(
-                    title = "논리회로설계",
-                    dayOfWeek = DayOfWeek.TUESDAY,
-                    startTime = LocalTime.of(9, 0),
-                    endTime = LocalTime.of(10, 30),
-                    location = "공과관 503호",
-                    color = "#00ACC1",
-                ),
-            )
-
-            // 목요일 14:00-16:00 캡스톤 디자인 프로젝트
-            personalScheduleService.createSchedule(
-                users.user3,
-                CreatePersonalScheduleRequest(
-                    title = "캡스톤 디자인 프로젝트",
-                    dayOfWeek = DayOfWeek.THURSDAY,
-                    startTime = LocalTime.of(14, 0),
-                    endTime = LocalTime.of(16, 0),
-                    location = "공과관 Lab",
-                    color = "#8D6E63",
-                ),
-            )
-
-            // 금요일 10:00-11:30 학생회-교직원 간담회
-            personalScheduleService.createSchedule(
-                users.user3,
-                CreatePersonalScheduleRequest(
-                    title = "학생회-교직원 간담회",
-                    dayOfWeek = DayOfWeek.FRIDAY,
-                    startTime = LocalTime.of(10, 0),
-                    endTime = LocalTime.of(11, 30),
-                    location = "본관 회의실",
-                    color = "#F44336",
-                ),
-            )
         }
 
         logger.info("-> SUCCESS: Created personal schedules")
-        logger.info("   - TestUser1: 8 schedules")
-        logger.info("   - TestUser2: 8 schedules")
-        logger.info("   - TestUser3: 8 schedules")
+        logger.info("   - TestUser1: 4 CS courses (프로그래밍, 자료구조, 알고리즘, 스터디)")
+        logger.info("   - TestUser2: 4 schedules (교양과목 + 학생회)")
+        logger.info("   - TestUser3: 5 schedules (반도체전공 + 학생회)")
     }
+
+    private fun createPersonalEvents(users: TestUsers) {
+        logger.info("[8/9] Creating personal events for November...")
+
+        // TestUser1
+        safeExecute("Creating personal events for TestUser1") {
+            personalEventService.createEvent(users.user1, CreatePersonalEventRequest(title = "알고리즘 문제 풀이 (백준)", startDateTime = LocalDateTime.of(2025, 11, 3, 21, 0), endDateTime = LocalDateTime.of(2025, 11, 3, 23, 0), location = "기숙사", color = "#536DFE"))
+            personalEventService.createEvent(users.user1, CreatePersonalEventRequest(title = "헬스", startDateTime = LocalDateTime.of(2025, 11, 4, 7, 0), endDateTime = LocalDateTime.of(2025, 11, 4, 8, 30), location = "학교 헬스장", color = "#009688"))
+            personalEventService.createEvent(users.user1, CreatePersonalEventRequest(title = "영어 스터디 (토익)", startDateTime = LocalDateTime.of(2025, 11, 4, 19, 0), endDateTime = LocalDateTime.of(2025, 11, 4, 21, 0), location = "중앙도서관 스터디룸", color = "#7C4DFF"))
+            personalEventService.createEvent(users.user1, CreatePersonalEventRequest(title = "운영체제 예습", startDateTime = LocalDateTime.of(2025, 11, 5, 19, 0), endDateTime = LocalDateTime.of(2025, 11, 5, 21, 0), location = "중앙도서관", color = "#4CAF50"))
+            personalEventService.createEvent(users.user1, CreatePersonalEventRequest(title = "헬스", startDateTime = LocalDateTime.of(2025, 11, 6, 7, 0), endDateTime = LocalDateTime.of(2025, 11, 6, 8, 30), location = "학교 헬스장", color = "#009688"))
+            personalEventService.createEvent(users.user1, CreatePersonalEventRequest(title = "친구와 저녁 약속", startDateTime = LocalDateTime.of(2025, 11, 6, 20, 0), endDateTime = LocalDateTime.of(2025, 11, 6, 22, 0), location = "학교 앞 식당", color = "#FFC107"))
+            personalEventService.createEvent(users.user1, CreatePersonalEventRequest(title = "본가 방문", startDateTime = LocalDateTime.of(2025, 11, 7, 18, 0), endDateTime = LocalDateTime.of(2025, 11, 7, 23, 0), location = "(이동)", color = "#795548"))
+            personalEventService.createEvent(users.user1, CreatePersonalEventRequest(title = "영화 감상", startDateTime = LocalDateTime.of(2025, 11, 8, 20, 0), endDateTime = LocalDateTime.of(2025, 11, 8, 22, 0), location = "기숙사", color = "#607D8B"))
+        }
+
+        // TestUser2
+        safeExecute("Creating personal events for TestUser2") {
+            personalEventService.createEvent(users.user2, CreatePersonalEventRequest(title = "카페 아르바이트", startDateTime = LocalDateTime.of(2025, 11, 3, 18, 0), endDateTime = LocalDateTime.of(2025, 11, 3, 22, 0), location = "학교 앞 스타벅스", color = "#8D6E63"))
+            personalEventService.createEvent(users.user2, CreatePersonalEventRequest(title = "댄스 동아리 연습", startDateTime = LocalDateTime.of(2025, 11, 4, 19, 0), endDateTime = LocalDateTime.of(2025, 11, 4, 21, 0), location = "학생회관 연습실", color = "#E91E63"))
+            personalEventService.createEvent(users.user2, CreatePersonalEventRequest(title = "카페 아르바이트", startDateTime = LocalDateTime.of(2025, 11, 5, 18, 0), endDateTime = LocalDateTime.of(2025, 11, 5, 22, 0), location = "학교 앞 스타벅스", color = "#8D6E63"))
+            personalEventService.createEvent(users.user2, CreatePersonalEventRequest(title = "댄스 동아리 연습", startDateTime = LocalDateTime.of(2025, 11, 6, 19, 0), endDateTime = LocalDateTime.of(2025, 11, 6, 21, 0), location = "학생회관 연습실", color = "#E91E63"))
+            personalEventService.createEvent(users.user2, CreatePersonalEventRequest(title = "쇼핑", startDateTime = LocalDateTime.of(2025, 11, 7, 18, 0), endDateTime = LocalDateTime.of(2025, 11, 7, 20, 0), location = "시내", color = "#FFEB3B"))
+            personalEventService.createEvent(users.user2, CreatePersonalEventRequest(title = "친구 생일 파티", startDateTime = LocalDateTime.of(2025, 11, 8, 19, 0), endDateTime = LocalDateTime.of(2025, 11, 8, 23, 0), location = "친구 집", color = "#FFC107"))
+            personalEventService.createEvent(users.user2, CreatePersonalEventRequest(title = "과제 (역사와 철학)", startDateTime = LocalDateTime.of(2025, 11, 9, 14, 0), endDateTime = LocalDateTime.of(2025, 11, 9, 17, 0), location = "중앙도서관", color = "#4CAF50"))
+            personalEventService.createEvent(users.user2, CreatePersonalEventRequest(title = "영화 보기 (마블)", startDateTime = LocalDateTime.of(2025, 11, 9, 19, 0), endDateTime = LocalDateTime.of(2025, 11, 9, 22, 0), location = "자취방", color = "#607D8B"))
+        }
+
+        // TestUser3
+        safeExecute("Creating personal events for TestUser3") {
+            personalEventService.createEvent(users.user3, CreatePersonalEventRequest(title = "랩실 연구", startDateTime = LocalDateTime.of(2025, 11, 3, 19, 0), endDateTime = LocalDateTime.of(2025, 11, 3, 22, 0), location = "공과관 Lab", color = "#3F51B5"))
+            personalEventService.createEvent(users.user3, CreatePersonalEventRequest(title = "취업 스터디 (코딩 테스트)", startDateTime = LocalDateTime.of(2025, 11, 4, 19, 0), endDateTime = LocalDateTime.of(2025, 11, 4, 21, 0), location = "중앙도서관 스터디룸", color = "#00BCD4"))
+            personalEventService.createEvent(users.user3, CreatePersonalEventRequest(title = "랩실 연구", startDateTime = LocalDateTime.of(2025, 11, 5, 19, 0), endDateTime = LocalDateTime.of(2025, 11, 5, 22, 0), location = "공과관 Lab", color = "#3F51B5"))
+            personalEventService.createEvent(users.user3, CreatePersonalEventRequest(title = "지도교수님 면담", startDateTime = LocalDateTime.of(2025, 11, 6, 16, 0), endDateTime = LocalDateTime.of(2025, 11, 6, 17, 0), location = "교수 연구실", color = "#9C27B0"))
+            personalEventService.createEvent(users.user3, CreatePersonalEventRequest(title = "취업 스터디 (NCS)", startDateTime = LocalDateTime.of(2025, 11, 7, 19, 0), endDateTime = LocalDateTime.of(2025, 11, 7, 21, 0), location = "중앙도서관 스터디룸", color = "#00BCD4"))
+            personalEventService.createEvent(users.user3, CreatePersonalEventRequest(title = "여자친구와 데이트", startDateTime = LocalDateTime.of(2025, 11, 8, 14, 0), endDateTime = LocalDateTime.of(2025, 11, 8, 20, 0), location = "시내", color = "#E91E63"))
+            personalEventService.createEvent(users.user3, CreatePersonalEventRequest(title = "랩실 연구", startDateTime = LocalDateTime.of(2025, 11, 9, 10, 0), endDateTime = LocalDateTime.of(2025, 11, 9, 18, 0), location = "공과관 Lab", color = "#3F51B5"))
+            personalEventService.createEvent(users.user3, CreatePersonalEventRequest(title = "휴식", startDateTime = LocalDateTime.of(2025, 11, 9, 18, 0), endDateTime = LocalDateTime.of(2025, 11, 9, 23, 0), location = "자취방", color = "#607D8B"))
+        }
+
+        logger.info("-> SUCCESS: Created personal events for November")
+    }
+
 
     /**
      * Phase 8: 그룹 캘린더 일정 및 장소 예약 생성
