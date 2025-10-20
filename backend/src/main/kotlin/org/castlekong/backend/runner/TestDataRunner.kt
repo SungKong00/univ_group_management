@@ -159,7 +159,7 @@ class TestDataRunner(
      * @return 생성된 사용자 목록
      */
     private fun createTestUsers(): TestUsers {
-        logger.info("[1/7] Creating test users (Google OAuth simulation + Profile submission)...")
+        logger.info("[1/9] Creating test users (Google OAuth simulation + Profile submission)...")
 
         // User 1: TestUser1 (AI/SW학과)
         val user1 =
@@ -267,7 +267,7 @@ class TestDataRunner(
      * @return 생성된 커스텀 그룹 정보
      */
     private fun createCustomGroups(users: TestUsers): CustomGroups {
-        logger.info("[2/7] Creating custom groups...")
+        logger.info("[2/9] Creating custom groups...")
 
         // 코딩 동아리 (user1이 그룹장)
         val devCrewGroup =
@@ -324,7 +324,7 @@ class TestDataRunner(
         users: TestUsers,
         groups: CustomGroups,
     ) {
-        logger.info("[3/7] Setting up group memberships and roles...")
+        logger.info("[3/9] Setting up group memberships and roles...")
 
         // user3를 학생회에 추가
         safeExecute("Adding user3 to Student Council") {
@@ -373,7 +373,7 @@ class TestDataRunner(
         users: TestUsers,
         groups: CustomGroups,
     ) {
-        logger.info("[4/7] Creating recruitments and applications...")
+        logger.info("[4/9] Creating recruitments and applications...")
 
         // 학생회 모집 공고 생성 (user2가 작성)
         val recruitment =
@@ -419,7 +419,7 @@ class TestDataRunner(
         users: TestUsers,
         groups: CustomGroups,
     ): CustomPlaces {
-        logger.info("[5/7] Creating places and managing usage permissions...")
+        logger.info("[5/9] Creating places and managing usage permissions...")
 
         // 학생회실 장소 생성 (user2가 관리)
         val labPlace =
@@ -599,7 +599,7 @@ class TestDataRunner(
         users: TestUsers,
         places: CustomPlaces,
     ) {
-        logger.info("[6/7] Creating place operating hours...")
+        logger.info("[6/9] Creating place operating hours...")
 
         val labPlace = placeRepository.findById(places.labPlaceId).orElseThrow()
         val seminarRoom = placeRepository.findById(places.seminarRoomId).orElseThrow()
@@ -651,7 +651,7 @@ class TestDataRunner(
      * @param users 테스트 사용자들
      */
     private fun createPersonalSchedules(users: TestUsers) {
-        logger.info("[7/8] Creating personal schedules based on user personas...")
+        logger.info("[7/9] Creating personal schedules based on user personas...")
 
         // TestUser1: CS 전공 과목 (프로그래밍 중심)
         safeExecute("Creating schedules for TestUser1 (CS courses)") {
@@ -1107,7 +1107,7 @@ class TestDataRunner(
         groups: CustomGroups,
         places: CustomPlaces,
     ) {
-        logger.info("[8/8] Creating group calendar events and reservations...")
+        logger.info("[9/9] Creating group calendar events and reservations...")
 
         val owner = userService.findByEmail("castlekong1019@gmail.com")
 
@@ -1399,7 +1399,7 @@ class TestDataRunner(
         }
         logger.info("-> SUCCESS: Created group calendar events and reservations")
 
-        logger.info("[9/9] Creating additional November events...")
+        logger.info("-> Creating additional November events...")
 
         // 1. DevCrew (코딩 동아리)
         safeExecute("Creating November events for DevCrew") {
