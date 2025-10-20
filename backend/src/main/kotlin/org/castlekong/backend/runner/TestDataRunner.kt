@@ -675,6 +675,58 @@ class TestDataRunner(
                     color = "#9C27B0",
                 ),
             )
+
+            // 화요일 10:30-12:00 이산수학
+            personalScheduleService.createSchedule(
+                users.user1,
+                CreatePersonalScheduleRequest(
+                    title = "이산수학",
+                    dayOfWeek = DayOfWeek.TUESDAY,
+                    startTime = LocalTime.of(10, 30),
+                    endTime = LocalTime.of(12, 0),
+                    location = "학습관 302호",
+                    color = "#00ACC1",
+                ),
+            )
+
+            // 목요일 09:00-10:30 컴퓨터 구조
+            personalScheduleService.createSchedule(
+                users.user1,
+                CreatePersonalScheduleRequest(
+                    title = "컴퓨터 구조",
+                    dayOfWeek = DayOfWeek.THURSDAY,
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(10, 30),
+                    location = "학습관 302호",
+                    color = "#00ACC1",
+                ),
+            )
+
+            // 월요일 13:00-14:30 영어 회화 1
+            personalScheduleService.createSchedule(
+                users.user1,
+                CreatePersonalScheduleRequest(
+                    title = "영어 회화 1",
+                    dayOfWeek = DayOfWeek.MONDAY,
+                    startTime = LocalTime.of(13, 0),
+                    endTime = LocalTime.of(14, 30),
+                    location = "어학원 101호",
+                    color = "#7E57C2",
+                ),
+            )
+
+            // 금요일 16:00-18:00 개인 프로젝트: 웹 포트폴리오
+            personalScheduleService.createSchedule(
+                users.user1,
+                CreatePersonalScheduleRequest(
+                    title = "개인 프로젝트: 웹 포트폴리오",
+                    dayOfWeek = DayOfWeek.FRIDAY,
+                    startTime = LocalTime.of(16, 0),
+                    endTime = LocalTime.of(18, 0),
+                    location = "중앙도서관",
+                    color = "#8D6E63",
+                ),
+            )
         }
 
         // TestUser2: 교양과목 + 학생회 활동
@@ -728,6 +780,58 @@ class TestDataRunner(
                     endTime = LocalTime.of(14, 0),
                     location = "학생회실",
                     color = "#FF5722",
+                ),
+            )
+
+            // 월요일 10:30-12:00 리더십과 자기혁신
+            personalScheduleService.createSchedule(
+                users.user2,
+                CreatePersonalScheduleRequest(
+                    title = "리더십과 자기혁신",
+                    dayOfWeek = DayOfWeek.MONDAY,
+                    startTime = LocalTime.of(10, 30),
+                    endTime = LocalTime.of(12, 0),
+                    location = "인문관 201호",
+                    color = "#5C6BC0",
+                ),
+            )
+
+            // 월요일 16:00-18:00 학생회 예산안 검토 회의
+            personalScheduleService.createSchedule(
+                users.user2,
+                CreatePersonalScheduleRequest(
+                    title = "학생회 예산안 검토 회의",
+                    dayOfWeek = DayOfWeek.MONDAY,
+                    startTime = LocalTime.of(16, 0),
+                    endTime = LocalTime.of(18, 0),
+                    location = "학생회실",
+                    color = "#F44336",
+                ),
+            )
+
+            // 금요일 10:00-12:00 교내 봉사활동
+            personalScheduleService.createSchedule(
+                users.user2,
+                CreatePersonalScheduleRequest(
+                    title = "교내 봉사활동",
+                    dayOfWeek = DayOfWeek.FRIDAY,
+                    startTime = LocalTime.of(10, 0),
+                    endTime = LocalTime.of(12, 0),
+                    location = "교내",
+                    color = "#43A047",
+                ),
+            )
+
+            // 목요일 16:00-17:30 축제 부스 운영팀 미팅
+            personalScheduleService.createSchedule(
+                users.user2,
+                CreatePersonalScheduleRequest(
+                    title = "축제 부스 운영팀 미팅",
+                    dayOfWeek = DayOfWeek.THURSDAY,
+                    startTime = LocalTime.of(16, 0),
+                    endTime = LocalTime.of(17, 30),
+                    location = "학생회실",
+                    color = "#F44336",
                 ),
             )
         }
@@ -798,12 +902,51 @@ class TestDataRunner(
                     color = "#FF5722",
                 ),
             )
+
+            // 화요일 09:00-10:30 논리회로설계
+            personalScheduleService.createSchedule(
+                users.user3,
+                CreatePersonalScheduleRequest(
+                    title = "논리회로설계",
+                    dayOfWeek = DayOfWeek.TUESDAY,
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(10, 30),
+                    location = "공과관 503호",
+                    color = "#00ACC1",
+                ),
+            )
+
+            // 목요일 14:00-16:00 캡스톤 디자인 프로젝트
+            personalScheduleService.createSchedule(
+                users.user3,
+                CreatePersonalScheduleRequest(
+                    title = "캡스톤 디자인 프로젝트",
+                    dayOfWeek = DayOfWeek.THURSDAY,
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
+                    location = "공과관 Lab",
+                    color = "#8D6E63",
+                ),
+            )
+
+            // 금요일 10:00-11:30 학생회-교직원 간담회
+            personalScheduleService.createSchedule(
+                users.user3,
+                CreatePersonalScheduleRequest(
+                    title = "학생회-교직원 간담회",
+                    dayOfWeek = DayOfWeek.FRIDAY,
+                    startTime = LocalTime.of(10, 0),
+                    endTime = LocalTime.of(11, 30),
+                    location = "본관 회의실",
+                    color = "#F44336",
+                ),
+            )
         }
 
         logger.info("-> SUCCESS: Created personal schedules")
-        logger.info("   - TestUser1: 4 CS courses (프로그래밍, 자료구조, 알고리즘, 스터디)")
-        logger.info("   - TestUser2: 4 schedules (교양과목 + 학생회)")
-        logger.info("   - TestUser3: 5 schedules (반도체전공 + 학생회)")
+        logger.info("   - TestUser1: 8 schedules")
+        logger.info("   - TestUser2: 8 schedules")
+        logger.info("   - TestUser3: 8 schedules")
     }
 
     /**
