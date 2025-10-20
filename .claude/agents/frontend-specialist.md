@@ -50,7 +50,7 @@ When generating or modifying Flutter UI code, always check for layout constraint
 
 - Never place widgets like `Button`, `Container`, or `SizedBox(height: ...)` directly inside a `Row` without width constraints.
 - Always wrap them with `Expanded`, `Flexible`, or `SizedBox(width: ...)`.
-- Otherwise, Flutter throws “BoxConstraints forces an infinite width” errors.
+- Otherwise, Flutter throws "BoxConstraints forces an infinite width" errors.
 - Example of bad pattern:
   Row(
   children: [
@@ -62,6 +62,28 @@ When generating or modifying Flutter UI code, always check for layout constraint
   children: [
   Flexible(child: SizedBox(height: 44, child: OutlinedButton(...))), // ✅ OK
   ],
+  )
+
+**Special Case: DropdownMenuItem**
+
+DropdownMenuItem provides unbounded width constraints internally. Never use `Expanded` inside DropdownMenuItem's Row.
+
+- Bad pattern:
+  DropdownMenuItem(
+    child: Row(
+      children: [
+        Expanded(child: Text('...')), // ❌ RenderFlex unbounded width error
+      ],
+    ),
+  )
+- Correct pattern:
+  DropdownMenuItem(
+    child: Row(
+      mainAxisSize: MainAxisSize.min, // ✅ Required
+      children: [
+        Flexible(child: Text('...')),  // ✅ Use Flexible, not Expanded
+      ],
+    ),
   )
 
 ### 백엔드 데이터 파싱 검증

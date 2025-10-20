@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import '../../../core/models/calendar/group_event.dart';
 import '../../../core/models/place/place.dart';
+import '../../../core/models/place/operating_hours_response.dart';
 import '../../../core/models/place/place_availability.dart';
 import '../../../core/models/place/place_reservation.dart';
 import '../../../core/services/group_calendar_service.dart';
@@ -67,6 +68,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
   List<Place> _selectedPlaces = [];
   Duration? _requiredDuration;
   Set<DateTime> _disabledSlots = {};
+  Map<int, Set<DateTime>> _disabledSlotsByPlace = {};
 
   @override
   void initState() {
@@ -409,6 +411,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
       // Collect unavailable slots for all places
       final Set<DateTime> allDisabledSlots = {};
+      final Map<int, Set<DateTime>> disabledSlotsByPlace = {};
 
       for (final place in _selectedPlaces) {
         developer.log(
@@ -432,12 +435,13 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
           name: 'DemoCalendarPage',
         );
         developer.log(
-          '📊 Place has ${placeDetail.availabilities.length} availability entries',
+          '📊 Place has ${placeDetail.operatingHours.length} operating hours entries',
           name: 'DemoCalendarPage',
         );
-        for (final avail in placeDetail.availabilities) {
+        for (final oh in placeDetail.operatingHours) {
+          final status = oh.isClosed ? '(CLOSED)' : '';
           developer.log(
-            '  - ${avail.dayOfWeek.displayName}: ${avail.startTime.format(context)} ~ ${avail.endTime.format(context)}',
+            '  - ${oh.dayOfWeek.displayName}: ${oh.startTime.format(context)} ~ ${oh.endTime.format(context)} $status',
             name: 'DemoCalendarPage',
           );
         }
@@ -451,12 +455,15 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
         // 3. Calculate disabled slots for this place
         final placeDisabledSlots = _calculateDisabledSlotsForPlace(
-          availabilities: placeDetail.availabilities,
+          operatingHours: placeDetail.operatingHours,
           reservations: reservations,
           weekStart: _weekStart,
         );
 
-        // 4. Add to union
+        // 4. Store per-place disabled slots
+        disabledSlotsByPlace[place.id] = placeDisabledSlots;
+
+        // 5. Add to union for global disabled slots
         allDisabledSlots.addAll(placeDisabledSlots);
       }
 
@@ -464,10 +471,12 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
       setState(() {
         _disabledSlots = allDisabledSlots;
+        _disabledSlotsByPlace = disabledSlotsByPlace;
       });
 
       developer.log(
-        'Calculated ${allDisabledSlots.length} disabled slots',
+        'Calculated ${allDisabledSlots.length} total disabled slots '
+        'across ${disabledSlotsByPlace.length} places',
         name: 'DemoCalendarPage',
       );
     } catch (e) {
@@ -494,7 +503,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
   /// Returns a set of DateTime objects representing 30-minute time slots
   /// that are unavailable (outside operating hours or reserved).
   Set<DateTime> _calculateDisabledSlotsForPlace({
-    required List<PlaceAvailability> availabilities,
+    required List<OperatingHoursResponse> operatingHours,
     required List<PlaceReservation> reservations,
     required DateTime weekStart,
   }) {
@@ -510,30 +519,29 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
       // Convert to DayOfWeek enum (MONDAY, TUESDAY, etc.)
       final dayOfWeekEnum = _getDayOfWeekEnum(dayOfWeek);
 
-      // Get availability for this day
-      final dayAvailabilities = availabilities
-          .where((a) => a.dayOfWeek == dayOfWeekEnum)
-          .toList();
+      // Get operating hours for this day
+      final dayOperatingHours = operatingHours
+          .where((oh) => oh.dayOfWeek == dayOfWeekEnum)
+          .firstOrNull;
 
       // Debug log: print operating hours for each day
       developer.log(
         'Day $dayOfWeekEnum (${currentDate.month}/${currentDate.day}): '
-        '${dayAvailabilities.length} availability(s)',
+        'Operating Hours: ${dayOperatingHours != null ? "${dayOperatingHours.startTime.hour.toString().padLeft(2, '0')}:${dayOperatingHours.startTime.minute.toString().padLeft(2, '0')} ~ ${dayOperatingHours.endTime.hour.toString().padLeft(2, '0')}:${dayOperatingHours.endTime.minute.toString().padLeft(2, '0')}" : "CLOSED"}',
         name: 'DemoCalendarPage',
       );
-      if (dayAvailabilities.isNotEmpty) {
-        for (final avail in dayAvailabilities) {
-          developer.log(
-            '  → ${avail.startTime.hour.toString().padLeft(2, '0')}:'
-            '${avail.startTime.minute.toString().padLeft(2, '0')} ~ '
-            '${avail.endTime.hour.toString().padLeft(2, '0')}:'
-            '${avail.endTime.minute.toString().padLeft(2, '0')}',
-            name: 'DemoCalendarPage',
-          );
-        }
+
+      if (dayOperatingHours != null && !dayOperatingHours.isClosed) {
+        developer.log(
+          '  → ${dayOperatingHours.startTime.hour.toString().padLeft(2, '0')}:'
+          '${dayOperatingHours.startTime.minute.toString().padLeft(2, '0')} ~ '
+          '${dayOperatingHours.endTime.hour.toString().padLeft(2, '0')}:'
+          '${dayOperatingHours.endTime.minute.toString().padLeft(2, '0')}',
+          name: 'DemoCalendarPage',
+        );
       } else {
         developer.log(
-          '  ⚠️ No operating hours for this day (all slots will be disabled)',
+          '  ⚠️ Place is closed on this day (all slots will be disabled)',
           name: 'DemoCalendarPage',
           level: 900,
         );
@@ -552,7 +560,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
           );
 
           // Check if slot is outside operating hours
-          if (!_isWithinOperatingHours(slot, dayAvailabilities)) {
+          if (!_isWithinOperatingHours(slot, dayOperatingHours)) {
             disabled.add(slot);
             continue;
           }
@@ -600,26 +608,24 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
   /// Check if a time slot is within operating hours
   ///
-  /// Returns true if the slot falls within any of the availability time ranges
+  /// Returns true if the slot falls within the place's operating hours for that day
   bool _isWithinOperatingHours(
     DateTime slot,
-    List<PlaceAvailability> availabilities,
+    OperatingHoursResponse? operatingHours,
   ) {
-    if (availabilities.isEmpty) {
-      return false; // No availability = closed
+    if (operatingHours == null || operatingHours.isClosed) {
+      return false; // Closed = not available
     }
 
-    for (final availability in availabilities) {
-      final startTime = availability.startTime;
-      final endTime = availability.endTime;
+    final startTime = operatingHours.startTime;
+    final endTime = operatingHours.endTime;
 
-      // Convert slot to TimeOfDay
-      final slotTime = TimeOfDay(hour: slot.hour, minute: slot.minute);
+    // Convert slot to TimeOfDay
+    final slotTime = TimeOfDay(hour: slot.hour, minute: slot.minute);
 
-      // Compare time only (ignore date)
-      if (_isTimeInRange(slotTime, startTime, endTime)) {
-        return true;
-      }
+    // Compare time only (ignore date)
+    if (_isTimeInRange(slotTime, startTime, endTime)) {
+      return true;
     }
 
     return false;
@@ -748,6 +754,9 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
               weekStart: _weekStart,
               groupColors: _getGroupColorsMap(),
               disabledSlots: _disabledSlots,
+              availablePlaces: _selectedPlaces,
+              disabledSlotsByPlace: _disabledSlotsByPlace,
+              preSelectedPlaceId: _selectedPlaces.length == 1 ? _selectedPlaces.first.id : null,
             ),
           ),
         ],

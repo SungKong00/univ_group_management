@@ -6,9 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:vibration/vibration.dart';
 import '../../../core/models/calendar/group_event.dart';
+import '../../../core/models/place/place.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import 'disabled_slots_painter.dart';
+import 'event_create_dialog.dart';
 import 'event_painter.dart';
 import 'highlight_painter.dart';
 import 'selection_painter.dart';
@@ -66,6 +68,15 @@ class WeeklyScheduleEditor extends StatefulWidget {
   /// Set of DateTime objects representing 30-minute slots that are unavailable
   final Set<DateTime>? disabledSlots;
 
+  /// Available places from filter selection (for event creation dialog)
+  final List<Place>? availablePlaces;
+
+  /// Map of place ID to disabled slots for that specific place
+  final Map<int, Set<DateTime>>? disabledSlotsByPlace;
+
+  /// Pre-selected place ID (auto-fill from filter selection)
+  final int? preSelectedPlaceId;
+
   const WeeklyScheduleEditor({
     super.key,
     this.allowMultiDaySelection = false,
@@ -75,6 +86,9 @@ class WeeklyScheduleEditor extends StatefulWidget {
     this.weekStart,
     this.groupColors,
     this.disabledSlots,
+    this.availablePlaces,
+    this.disabledSlotsByPlace,
+    this.preSelectedPlaceId,
   });
 
   @override
@@ -780,82 +794,83 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     );
   }
 
-  void _showCreateDialog(({int day, int slot}) startCell, ({int day, int slot}) endCell) {
-    final titleController = TextEditingController();
-    final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: startCell.slot * 15));
-    final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (endCell.slot + 1) * 15));
+  void _showCreateDialog(({int day, int slot}) startCell, ({int day, int slot}) endCell) async {
+    // Calculate actual DateTime from cell positions and weekStart
+    final weekStart = widget.weekStart ?? DateTime.now();
+    final startDate = weekStart.add(Duration(days: startCell.day));
+    final endDate = weekStart.add(Duration(days: endCell.day));
 
-    showDialog(
+    final startTime = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day,
+      _startHour,
+    ).add(Duration(minutes: startCell.slot * 15));
+
+    final endTime = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+      _startHour,
+    ).add(Duration(minutes: (endCell.slot + 1) * 15));
+
+    final result = await showDialog<EventCreateResult>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('일정 생성'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('요일: ${startCell.day + 1}\n' // Corrected escape for newline
-                '시작: ${DateFormat.jm().format(startTime)}\n' // Corrected escape for newline
-                '종료: ${DateFormat.jm().format(endTime)}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(labelText: '제목'),
-              autofocus: true,
+      builder: (context) => EventCreateDialog(
+        startTime: startTime,
+        endTime: endTime,
+        availablePlaces: widget.availablePlaces ?? [],
+        disabledSlotsByPlace: widget.disabledSlotsByPlace ?? {},
+        preSelectedPlaceId: widget.preSelectedPlaceId,
+      ),
+    );
+
+    if (result == null) return; // User cancelled
+
+    // Check for overlap
+    final isOverlapping = _isOverlapping(startCell, endCell);
+
+    if (!widget.allowEventOverlap && isOverlapping) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('생성 불가'),
+          content: const Text('겹치는 시간에는 일정을 생성할 수 없습니다.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('확인'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              final isOverlapping = _isOverlapping(startCell, endCell);
+      );
+      return;
+    }
 
-              if (!widget.allowEventOverlap && isOverlapping) {
-                Navigator.of(context).pop();
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('생성 불가'),
-                    content: const Text('겹치는 시간에는 일정을 생성할 수 없습니다.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('확인'),
-                      ),
-                    ],
-                  ),
-                );
-                return;
-              }
+    if (isOverlapping && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('경고: 다른 일정과 겹칩니다.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
 
-              if (isOverlapping) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('경고: 다른 일정과 겹칩니다.'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
-              }
+    // Create event with location info
+    // Note: Currently using internal Event typedef - may need to extend for location
+    setState(() {
+      _events.add((
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: result.title,
+        start: startCell,
+        end: endCell,
+      ));
+      _updateVisibleRangeForCurrentState();
+    });
 
-              setState(() {
-                _events.add((
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  title: titleController.text.isNotEmpty ? titleController.text : '제목 없음',
-                  start: startCell,
-                  end: endCell,
-                ));
-                _updateVisibleRangeForCurrentState();
-              });
-              Navigator.of(context).pop();
-            },
-            child: const Text('저장'),
-          ),
-        ],
-      ),
-    );
+    // TODO: Handle location data (result.locationSelection)
+    // This will require extending the Event typedef or creating a proper Event class
   }
 
   // --- Event Handlers ---

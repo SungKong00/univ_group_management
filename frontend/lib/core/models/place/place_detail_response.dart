@@ -1,34 +1,30 @@
 import 'place.dart';
-import 'place_availability.dart';
+import 'operating_hours_response.dart';
 
 /// Response model for place detail API
 ///
-/// Contains place information, availability schedules, and approved group count
-///
-/// DEPRECATED: availabilities field uses old PlaceAvailability system.
-/// Use PlaceTimeRepository.getOperatingHours() for the new operating hours system.
+/// Contains place information, operating hours, and approved group count
 class PlaceDetailResponse {
   const PlaceDetailResponse({
     required this.place,
-    required this.availabilities,
+    required this.operatingHours,
     required this.approvedGroupCount,
   });
 
   final Place place;
 
-  /// DEPRECATED: Use PlaceTimeRepository.getOperatingHours() instead
-  /// This field uses the old PlaceAvailability system (multiple time slots per day)
-  @Deprecated('Use PlaceTimeRepository.getOperatingHours() instead')
-  final List<PlaceAvailability> availabilities;
+  /// Operating hours of the place (single time slot per day of week)
+  /// Consolidated model replacing the old PlaceAvailability system
+  final List<OperatingHoursResponse> operatingHours;
 
   final int approvedGroupCount;
 
   factory PlaceDetailResponse.fromJson(Map<String, dynamic> json) {
     return PlaceDetailResponse(
       place: Place.fromJson(json['place'] as Map<String, dynamic>),
-      availabilities: (json['availabilities'] as List?)
-              ?.map((a) =>
-                  PlaceAvailability.fromJson(a as Map<String, dynamic>))
+      operatingHours: (json['operatingHours'] as List?)
+              ?.map((oh) =>
+                  OperatingHoursResponse.fromJson(oh as Map<String, dynamic>))
               .toList() ??
           [],
       approvedGroupCount: (json['approvedGroupCount'] as num).toInt(),
@@ -38,19 +34,19 @@ class PlaceDetailResponse {
   Map<String, dynamic> toJson() {
     return {
       'place': place.toJson(),
-      'availabilities': availabilities.map((a) => a.toJson()).toList(),
+      'operatingHours': operatingHours.map((oh) => oh.toJson()).toList(),
       'approvedGroupCount': approvedGroupCount,
     };
   }
 
   PlaceDetailResponse copyWith({
     Place? place,
-    List<PlaceAvailability>? availabilities,
+    List<OperatingHoursResponse>? operatingHours,
     int? approvedGroupCount,
   }) {
     return PlaceDetailResponse(
       place: place ?? this.place,
-      availabilities: availabilities ?? this.availabilities,
+      operatingHours: operatingHours ?? this.operatingHours,
       approvedGroupCount: approvedGroupCount ?? this.approvedGroupCount,
     );
   }
@@ -68,7 +64,7 @@ class PlaceDetailResponse {
   @override
   String toString() {
     return 'PlaceDetailResponse(place: ${place.displayName}, '
-        'availabilities: ${availabilities.length}, '
+        'operatingHours: ${operatingHours.length}, '
         'approvedGroupCount: $approvedGroupCount)';
   }
 }

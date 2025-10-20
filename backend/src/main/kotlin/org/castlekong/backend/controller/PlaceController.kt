@@ -2,7 +2,6 @@ package org.castlekong.backend.controller
 
 import jakarta.validation.Valid
 import org.castlekong.backend.dto.ApiResponse
-import org.castlekong.backend.dto.AvailabilityRequest
 import org.castlekong.backend.dto.AvailablePlacesAtRequest
 import org.castlekong.backend.dto.AvailablePlacesAtResponse
 import org.castlekong.backend.dto.CreatePlaceRequest
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -119,39 +117,6 @@ class PlaceController(
         val email = authentication.name
         val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
         placeService.deletePlace(user, id)
-    }
-
-    /**
-     * POST /api/places/{id}/availabilities
-     * 운영 시간 설정 (관리 주체)
-     */
-    @PostMapping("/places/{id}/availabilities")
-    fun setAvailabilities(
-        authentication: Authentication,
-        @PathVariable id: Long,
-        @Valid @RequestBody requests: List<AvailabilityRequest>,
-    ): ApiResponse<Unit> {
-        val email = authentication.name
-        val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
-        placeService.setAvailabilities(user, id, requests)
-        return ApiResponse.success(Unit)
-    }
-
-    /**
-     * PUT /api/places/{id}/availabilities
-     * 운영 시간 수정 (관리 주체)
-     * 기존 운영시간을 삭제하고 새로운 운영시간을 설정한 후, 업데이트된 장소 상세 정보를 반환합니다.
-     */
-    @PutMapping("/places/{id}/availabilities")
-    fun updateAvailabilities(
-        authentication: Authentication,
-        @PathVariable id: Long,
-        @Valid @RequestBody requests: List<AvailabilityRequest>,
-    ): ApiResponse<PlaceDetailResponse> {
-        val email = authentication.name
-        val user = userService.findByEmail(email) ?: throw IllegalStateException("User not found")
-        val updatedPlace = placeService.updateAvailabilities(user, id, requests)
-        return ApiResponse.success(updatedPlace)
     }
 
     // ===== PlaceUsageGroup API =====

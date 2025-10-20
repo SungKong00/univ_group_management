@@ -114,15 +114,21 @@ class CreatePlaceRequest {
 /// Request payload for updating a place
 class UpdatePlaceRequest {
   const UpdatePlaceRequest({
+    this.building,
+    this.roomNumber,
     this.alias,
     this.capacity,
   });
 
+  final String? building;
+  final String? roomNumber;
   final String? alias;
   final int? capacity;
 
   Map<String, dynamic> toJson() {
     return {
+      if (building != null) 'building': building,
+      if (roomNumber != null) 'roomNumber': roomNumber,
       if (alias != null) 'alias': alias,
       if (capacity != null) 'capacity': capacity,
     };

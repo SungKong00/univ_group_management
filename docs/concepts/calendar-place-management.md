@@ -67,7 +67,7 @@
 
 -   **예약 조건**: PlaceUsageGroup APPROVED 상태 + 그룹 멤버 (`isMember()`)
 -   **별도 권한 불필요**: 위 조건만 만족하면 모든 그룹 멤버가 예약 가능
--   **예약 가능 시간**: 관리 주체가 설정한 범위 내 (PlaceAvailability 기준)
+-   **예약 가능 시간**: 관리 주체가 설정한 범위 내 (PlaceOperatingHours 기준)
 
 ## 4. 관리 주체 변경 (권한 이전)
 
@@ -100,21 +100,24 @@
 
 ---
 
-## 6. PlaceAvailability 사용 예시
+## 6. PlaceOperatingHours 사용 예시
 
-**시나리오**: AI/SC 랩실의 운영 시간을 설정합니다.
+**시나리오**: AI/SC 랩실의 운영 시간을 설정합니다. 평일은 오전 9시부터 오후 9시까지 운영하고, 주말은 휴무입니다.
 
-**PlaceAvailability 레코드**:
+**PlaceOperatingHours 레코드**:
 ```
-place_id: 1 (AI/SC 랩실)
-day_of_week: MONDAY, start_time: 09:00, end_time: 18:00
-day_of_week: TUESDAY, start_time: 09:00, end_time: 18:00
-day_of_week: WEDNESDAY, start_time: 09:00, end_time: 18:00
-day_of_week: THURSDAY, start_time: 09:00, end_time: 18:00
-day_of_week: FRIDAY, start_time: 09:00, end_time: 18:00
+// 평일 (월-금)
+place_id: 1, day_of_week: MONDAY, start_time: 09:00, end_time: 21:00, is_closed: false
+place_id: 1, day_of_week: TUESDAY, start_time: 09:00, end_time: 21:00, is_closed: false
+...
+place_id: 1, day_of_week: FRIDAY, start_time: 09:00, end_time: 21:00, is_closed: false
+
+// 주말 (토-일)
+place_id: 1, day_of_week: SATURDAY, start_time: 09:00, end_time: 21:00, is_closed: true
+place_id: 1, day_of_week: SUNDAY, start_time: 09:00, end_time: 21:00, is_closed: true
 ```
 
-**효과**: 평일 09:00-18:00 시간대만 예약 가능하며, 토요일과 일요일은 예약 불가합니다.
+**효과**: 평일 09:00-21:00 시간대만 예약 가능하며, `is_closed` 플래그에 따라 주말은 예약이 차단됩니다. 기존의 `PlaceAvailability`와 달리 요일별로 여러 시간대를 등록할 수 없으며, 하나의 운영 시간과 휴무 여부만 관리하여 시스템을 단순화합니다.
 
 ---
 

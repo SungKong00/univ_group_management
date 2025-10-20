@@ -26,7 +26,8 @@ data class CreatePlaceRequest(
     val alias: String? = null,
     @field:Min(value = 1, message = "수용 인원은 1명 이상이어야 합니다")
     val capacity: Int? = null,
-    val availabilities: List<AvailabilityRequest>? = null,
+    // Note: Operating hours are now set with default values (Mon-Fri 09:00-18:00)
+    // Use PlaceTimeManagementController to customize operating hours after creation
 )
 
 data class UpdatePlaceRequest(
@@ -51,33 +52,12 @@ data class PlaceResponse(
 
 data class PlaceDetailResponse(
     val place: PlaceResponse,
-    val availabilities: List<AvailabilityResponse>,
+    val operatingHours: List<OperatingHoursResponse>,
     val approvedGroupCount: Int,
 )
 
-// ===== Availability DTOs =====
-
-data class AvailabilityRequest(
-    @field:NotNull(message = "요일은 필수입니다")
-    val dayOfWeek: DayOfWeek,
-    @field:NotNull(message = "시작 시간은 필수입니다")
-    @field:JsonFormat(pattern = "HH:mm:ss")
-    val startTime: LocalTime,
-    @field:NotNull(message = "종료 시간은 필수입니다")
-    @field:JsonFormat(pattern = "HH:mm:ss")
-    val endTime: LocalTime,
-    val displayOrder: Int = 0,
-)
-
-data class AvailabilityResponse(
-    val id: Long,
-    val dayOfWeek: DayOfWeek,
-    @field:JsonFormat(pattern = "HH:mm:ss")
-    val startTime: LocalTime,
-    @field:JsonFormat(pattern = "HH:mm:ss")
-    val endTime: LocalTime,
-    val displayOrder: Int,
-)
+// Note: OperatingHoursResponse is now defined in PlaceTimeManagementDto.kt
+// and used in PlaceDetailResponse for backward compatibility
 
 // ===== BlockedTime DTOs =====
 

@@ -789,6 +789,39 @@ context.go('/workspace/${topGroup.id}');
 
 -   `GET /places`: 모든 장소 목록 조회 (공개)
 -   `GET /places/{placeId}`: 특정 장소 상세 정보 조회 (공개)
+        - **설명**: 장소의 기본 정보와 함께 운영 시간, 승인된 사용 그룹 수를 반환합니다.
+        - **응답**: `ApiResponse<PlaceDetailResponse>`
+        - **응답 구조**:
+          ```json
+          {
+            "success": true,
+            "data": {
+              "place": {
+                "id": 1,
+                "managingGroupId": 10,
+                "managingGroupName": "AISC",
+                "building": "60주년 기념관",
+                "roomNumber": "18203",
+                "alias": "AISC랩실",
+                "displayName": "AISC랩실 (60주년 기념관-18203)",
+                "capacity": 30
+              },
+              "operatingHours": [
+                {
+                  "id": 1,
+                  "dayOfWeek": "MONDAY",
+                  "startTime": "09:00:00",
+                  "endTime": "21:00:00",
+                  "isClosed": false
+                }
+                // ... (tuesday to sunday)
+              ],
+              "approvedGroupCount": 5
+            },
+            "error": null
+          }
+          ```
+        - **참고**: 기존 `availabilities` 필드가 `operatingHours`로 변경되었습니다. 클라이언트는 이 새로운 구조에 맞춰야 합니다.
 -   `GET /places/calendar`: 다중 장소 캘린더 조회 (공개)
     -   **쿼리**: `placeIds`, `startDate`, `endDate`
 -   `GET /places/{placeId}/reservations`: 특정 장소의 예약 목록 조회 (공개)

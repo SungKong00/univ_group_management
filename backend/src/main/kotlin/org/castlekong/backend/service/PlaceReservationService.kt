@@ -9,7 +9,6 @@ import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.GroupEventRepository
 import org.castlekong.backend.repository.GroupMemberRepository
-import org.castlekong.backend.repository.PlaceAvailabilityRepository
 import org.castlekong.backend.repository.PlaceBlockedTimeRepository
 import org.castlekong.backend.repository.PlaceClosureRepository
 import org.castlekong.backend.repository.PlaceOperatingHoursRepository
@@ -37,7 +36,6 @@ import java.time.LocalDateTime
 class PlaceReservationService(
     private val placeReservationRepository: PlaceReservationRepository,
     private val placeRepository: PlaceRepository,
-    private val placeAvailabilityRepository: PlaceAvailabilityRepository,
     private val placeBlockedTimeRepository: PlaceBlockedTimeRepository,
     private val placeOperatingHoursRepository: PlaceOperatingHoursRepository,
     private val placeRestrictedTimeRepository: PlaceRestrictedTimeRepository,
@@ -286,26 +284,25 @@ class PlaceReservationService(
 
         // 같은 날 예약인 경우
         if (startDate == endDate) {
-            val availabilities = placeAvailabilityRepository.findByPlaceIdAndDayOfWeek(place.id, startDayOfWeek)
+            val operatingHours =
+                placeOperatingHoursRepository.findByPlaceIdAndDayOfWeek(place.id, startDayOfWeek)
+                    .orElse(null)
 
-            if (availabilities.isEmpty()) {
+            if (operatingHours == null || operatingHours.isClosed) {
                 throw BusinessException(ErrorCode.PLACE_OUTSIDE_OPERATING_HOURS)
             }
 
             // 예약 시간이 운영 시간 범위 내에 있는지 확인
-            val isWithinOperatingHours =
-                availabilities.any { avail ->
-                    startTime >= avail.startTime && endTime <= avail.endTime
-                }
-
-            if (!isWithinOperatingHours) {
+            if (!operatingHours.fullyContains(startTime, endTime)) {
                 throw BusinessException(ErrorCode.PLACE_OUTSIDE_OPERATING_HOURS)
             }
         } else {
             // 여러 날에 걸친 예약은 MVP에서 제한 또는 각 날짜별 검증 필요
             // 현재는 단순화: 시작일 운영시간만 체크
-            val availabilities = placeAvailabilityRepository.findByPlaceIdAndDayOfWeek(place.id, startDayOfWeek)
-            if (availabilities.isEmpty() || !availabilities.any { startTime >= it.startTime }) {
+            val operatingHours =
+                placeOperatingHoursRepository.findByPlaceIdAndDayOfWeek(place.id, startDayOfWeek)
+                    .orElse(null)
+            if (operatingHours == null || operatingHours.isClosed || startTime.isBefore(operatingHours.startTime)) {
                 throw BusinessException(ErrorCode.PLACE_OUTSIDE_OPERATING_HOURS)
             }
         }

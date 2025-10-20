@@ -1,19 +1,18 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.dto.AvailabilityRequest
-import org.castlekong.backend.dto.AvailabilityResponse
 import org.castlekong.backend.dto.CreatePlaceRequest
+import org.castlekong.backend.dto.OperatingHoursResponse
 import org.castlekong.backend.dto.PlaceDetailResponse
 import org.castlekong.backend.dto.PlaceResponse
 import org.castlekong.backend.dto.UpdatePlaceRequest
 import org.castlekong.backend.entity.Place
-import org.castlekong.backend.entity.PlaceAvailability
+import org.castlekong.backend.entity.PlaceOperatingHours
 import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupRepository
-import org.castlekong.backend.repository.PlaceAvailabilityRepository
+import org.castlekong.backend.repository.PlaceOperatingHoursRepository
 import org.castlekong.backend.repository.PlaceRepository
 import org.castlekong.backend.repository.PlaceReservationRepository
 import org.castlekong.backend.repository.PlaceUsageGroupRepository
@@ -25,7 +24,8 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class PlaceService(
     private val placeRepository: PlaceRepository,
-    private val placeAvailabilityRepository: PlaceAvailabilityRepository,
+    private val placeOperatingHoursRepository: PlaceOperatingHoursRepository,
+    private val placeOperatingHoursService: PlaceOperatingHoursService,
     private val placeReservationRepository: PlaceReservationRepository,
     private val placeUsageGroupRepository: PlaceUsageGroupRepository,
     private val groupRepository: GroupRepository,
@@ -63,12 +63,8 @@ class PlaceService(
                 ),
             )
 
-        // 운영 시간 설정
-        if (request.availabilities.isNullOrEmpty()) {
-            createDefaultAvailabilities(place)
-        } else {
-            addAvailabilities(place.id, request.availabilities)
-        }
+        // 운영 시간 설정 (기본값: 월-금 09:00-18:00)
+        createDefaultOperatingHours(place)
 
         return place.toResponse()
     }
@@ -104,12 +100,12 @@ class PlaceService(
             placeRepository.findActiveById(placeId)
                 .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
 
-        val availabilities = placeAvailabilityRepository.findByPlaceId(placeId)
+        val operatingHours = placeOperatingHoursRepository.findByPlaceId(placeId)
         val approvedCount = placeUsageGroupRepository.findApprovedByPlaceId(placeId).size
 
         return PlaceDetailResponse(
             place = place.toResponse(),
-            availabilities = availabilities.map { it.toResponse() },
+            operatingHours = operatingHours.map { it.toResponse() },
             approvedGroupCount = approvedCount,
         )
     }
@@ -149,87 +145,7 @@ class PlaceService(
         placeRepository.save(place)
     }
 
-    /**
-     * 운영 시간 설정
-     */
-    fun setAvailabilities(
-        user: User,
-        placeId: Long,
-        requests: List<AvailabilityRequest>,
-    ) {
-        val place =
-            placeRepository.findActiveById(placeId)
-                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
-
-        checkCalendarManagePermission(user.id!!, place.managingGroup.id)
-
-        // 기존 운영 시간 삭제
-        placeAvailabilityRepository.deleteByPlaceId(placeId)
-
-        // 새 운영 시간 추가
-        addAvailabilities(placeId, requests)
-    }
-
-    /**
-     * 운영 시간 수정
-     * 기존 운영시간을 삭제하고 새로운 운영시간을 설정한 후, 업데이트된 장소 상세 정보를 반환합니다.
-     *
-     * @param user 요청한 사용자
-     * @param placeId 장소 ID
-     * @param requests 새로운 운영시간 목록
-     * @return 업데이트된 장소 상세 정보
-     * @throws BusinessException PLACE_NOT_FOUND - 장소를 찾을 수 없음
-     * @throws BusinessException FORBIDDEN - 권한 없음
-     * @throws BusinessException INVALID_TIME_RANGE - 잘못된 시간 범위
-     */
-    fun updateAvailabilities(
-        user: User,
-        placeId: Long,
-        requests: List<AvailabilityRequest>,
-    ): PlaceDetailResponse {
-        val place =
-            placeRepository.findActiveById(placeId)
-                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
-
-        checkCalendarManagePermission(user.id!!, place.managingGroup.id)
-
-        // 기존 운영 시간 삭제
-        placeAvailabilityRepository.deleteByPlaceId(placeId)
-
-        // 새 운영 시간 추가
-        addAvailabilities(placeId, requests)
-
-        // 업데이트된 장소 상세 정보 반환
-        return getPlaceDetail(placeId)
-    }
-
-    private fun addAvailabilities(
-        placeId: Long,
-        requests: List<AvailabilityRequest>,
-    ) {
-        val place =
-            placeRepository.findById(placeId)
-                .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
-
-        val availabilities =
-            requests.map { req ->
-                if (!req.endTime.isAfter(req.startTime)) {
-                    throw BusinessException(ErrorCode.INVALID_TIME_RANGE)
-                }
-
-                PlaceAvailability(
-                    place = place,
-                    dayOfWeek = req.dayOfWeek,
-                    startTime = req.startTime,
-                    endTime = req.endTime,
-                    displayOrder = req.displayOrder,
-                )
-            }
-
-        placeAvailabilityRepository.saveAll(availabilities)
-    }
-
-    private fun createDefaultAvailabilities(place: Place) {
+    private fun createDefaultOperatingHours(place: Place) {
         val defaultDays =
             listOf(
                 java.time.DayOfWeek.MONDAY,
@@ -241,17 +157,17 @@ class PlaceService(
         val startTime = java.time.LocalTime.of(9, 0)
         val endTime = java.time.LocalTime.of(18, 0)
 
-        val defaultAvailabilities =
+        val operatingHours =
             defaultDays.map { day ->
-                PlaceAvailability(
+                PlaceOperatingHours(
                     place = place,
                     dayOfWeek = day,
                     startTime = startTime,
                     endTime = endTime,
-                    displayOrder = 0,
+                    isClosed = false,
                 )
             }
-        placeAvailabilityRepository.saveAll(defaultAvailabilities)
+        placeOperatingHoursRepository.saveAll(operatingHours)
     }
 
     private fun checkCalendarManagePermission(
@@ -303,13 +219,13 @@ class PlaceService(
             updatedAt = updatedAt,
         )
 
-    private fun PlaceAvailability.toResponse() =
-        AvailabilityResponse(
+    private fun PlaceOperatingHours.toResponse() =
+        OperatingHoursResponse(
             id = id,
             dayOfWeek = dayOfWeek,
             startTime = startTime,
             endTime = endTime,
-            displayOrder = displayOrder,
+            isClosed = isClosed,
         )
 
     // ===== Calendar Place Integration (Phase 2) =====
@@ -327,9 +243,9 @@ class PlaceService(
         val endDateTime = date.plusDays(1).atStartOfDay()
 
         // 2. 각 장소의 운영시간 조회
-        val availabilitiesByPlace =
+        val operatingHoursByPlace =
             placeIds
-                .flatMap { placeId -> placeAvailabilityRepository.findByPlaceId(placeId) }
+                .flatMap { placeId -> placeOperatingHoursRepository.findByPlaceId(placeId) }
                 .groupBy { it.place.id }
 
         // 3. 각 장소의 예약 내역 조회 (한 번의 쿼리로 최적화)
@@ -343,11 +259,11 @@ class PlaceService(
         // 4. 응답 DTO 생성
         return placeIds.associateWith { placeId ->
             val operatingHours =
-                availabilitiesByPlace[placeId]?.map { av ->
+                operatingHoursByPlace[placeId]?.map { oh ->
                     org.castlekong.backend.dto.OperatingHourDto(
-                        dayOfWeek = av.dayOfWeek,
-                        startTime = av.startTime,
-                        endTime = av.endTime,
+                        dayOfWeek = oh.dayOfWeek,
+                        startTime = oh.startTime,
+                        endTime = oh.endTime,
                     )
                 } ?: emptyList()
 
@@ -389,8 +305,8 @@ class PlaceService(
 
             // 1. 운영시간 체크
             val dayOfWeek = startDateTime.dayOfWeek
-            val availabilities = placeAvailabilityRepository.findByPlaceId(placeId)
-            val operatingHoursForDay = availabilities.filter { it.dayOfWeek == dayOfWeek }
+            val operatingHours = placeOperatingHoursRepository.findByPlaceId(placeId)
+            val operatingHoursForDay = operatingHours.filter { it.dayOfWeek == dayOfWeek }
 
             if (operatingHoursForDay.isEmpty()) {
                 continue // 해당 요일에 운영하지 않음
@@ -398,10 +314,8 @@ class PlaceService(
 
             // 시작/종료 시간이 운영시간 내에 있는지 확인
             val isWithinOperatingHours =
-                operatingHoursForDay.any { av ->
-                    val startTime = startDateTime.toLocalTime()
-                    val endTime = endDateTime.toLocalTime()
-                    !startTime.isBefore(av.startTime) && !endTime.isAfter(av.endTime)
+                operatingHoursForDay.any { oh ->
+                    !oh.isClosed && oh.fullyContains(startDateTime.toLocalTime(), endDateTime.toLocalTime())
                 }
 
             if (!isWithinOperatingHours) {

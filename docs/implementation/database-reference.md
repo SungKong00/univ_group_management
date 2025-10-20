@@ -1124,57 +1124,60 @@ CREATE INDEX idx_place_managing ON places(managing_group_id);
 CREATE INDEX idx_place_building ON places(building);
 ```
 
-### 7.1.1. PlaceAvailability 테이블 (장소 운영 시간)
+### 7.1.1. PlaceOperatingHours 테이블 (장소 운영 시간)
 
-장소의 예약 가능한 시간대를 요일별로 정의합니다. (별도 레코드 방식)
+장소의 기본 운영 시간을 요일별로 정의합니다. 각 요일당 하나의 시간대와 휴무 여부만 설정하여 모델을 단순화했습니다.
 
 ```sql
-CREATE TABLE place_availability (
+CREATE TABLE place_operating_hours (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     place_id BIGINT NOT NULL,
-    day_of_week ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY') NOT NULL,
+    day_of_week VARCHAR(10) NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
+    is_closed BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    UNIQUE KEY uk_operating_hours (place_id, day_of_week),
     FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_availability_place ON place_availability(place_id);
-CREATE INDEX idx_availability_day ON place_availability(place_id, day_of_week);
+CREATE INDEX idx_operating_place ON place_operating_hours(place_id);
+CREATE INDEX idx_operating_day ON place_operating_hours(place_id, day_of_week);
 ```
 
-**JPA 엔티티 (PlaceAvailability.kt)**:
+**JPA 엔티티 (PlaceOperatingHours.kt)**:
 
 ```kotlin
 @Entity
-@Table(name = "place_availability")
-class PlaceAvailability(
+@Table(
+    name = "place_operating_hours",
+    uniqueConstraints = [
+        UniqueConstraint(name = "uk_operating_hours", columnNames = ["place_id", "day_of_week"]),
+    ]
+)
+class PlaceOperatingHours(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id", nullable = false)
     var place: Place,
-
     @Enumerated(EnumType.STRING)
-    @Column(name = "day_of_week", nullable = false)
+    @Column(name = "day_of_week", nullable = false, length = 10)
     var dayOfWeek: DayOfWeek,
-
     @Column(name = "start_time", nullable = false)
     var startTime: LocalTime,
-
     @Column(name = "end_time", nullable = false)
     var endTime: LocalTime,
-
+    @Column(name = "is_closed", nullable = false)
+    var isClosed: Boolean = false, // 해당 요일 휴무 여부
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
-    override fun equals(other: Any?) = other is PlaceAvailability && id != 0L && id == other.id
+    // ... methods ...
+    override fun equals(other: Any?) = other is PlaceOperatingHours && id != 0L && id == other.id
     override fun hashCode(): Int = id.hashCode()
 }
 ```
