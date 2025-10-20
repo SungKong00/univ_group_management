@@ -448,7 +448,54 @@ class TestDataRunner(
                 )
             }
 
-        // DevCrew 그룹이 학생회실 사용 요청 (user1이 요청)
+        // ===== 장소 사용 권한 관리 =====
+        // 각 그룹이 장소 사용을 요청하고, 관리 그룹(학생회)이 승인하는 프로세스
+
+        // 1. 한신대학교 (최상위 그룹) - 학생회실 사용 권한
+        safeExecute("Hansin University requesting lab place usage") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")
+            placeUsageGroupService.requestUsage(
+                owner!!,
+                labPlace.id,
+                RequestUsageRequest(
+                    groupId = 1, // 한신대학교 그룹 ID
+                    reason = "대학 전체 행사 및 회의를 위해 사용하고 싶습니다.",
+                ),
+            )
+        }
+
+        safeExecute("Student Council approving Hansin University lab place usage") {
+            placeUsageGroupService.updateUsageStatus(
+                users.user2,
+                labPlace.id,
+                1, // 한신대학교 그룹 ID
+                UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
+            )
+        }
+
+        // 2. 한신대학교 (최상위 그룹) - 세미나실 사용 권한
+        safeExecute("Hansin University requesting seminar room usage") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")
+            placeUsageGroupService.requestUsage(
+                owner!!,
+                seminarRoom.id,
+                RequestUsageRequest(
+                    groupId = 1, // 한신대학교 그룹 ID
+                    reason = "대학 전체 행사 및 대규모 세미나를 위해 사용하고 싶습니다.",
+                ),
+            )
+        }
+
+        safeExecute("Student Council approving Hansin University seminar room usage") {
+            placeUsageGroupService.updateUsageStatus(
+                users.user2,
+                seminarRoom.id,
+                1, // 한신대학교 그룹 ID
+                UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
+            )
+        }
+
+        // 3. DevCrew 그룹 - 학생회실 사용 권한
         safeExecute("DevCrew requesting place usage") {
             placeUsageGroupService.requestUsage(
                 users.user1,
@@ -460,8 +507,7 @@ class TestDataRunner(
             )
         }
 
-        // 학생회에서 사용 승인 (user2가 승인)
-        safeExecute("Student Council approving place usage") {
+        safeExecute("Student Council approving DevCrew place usage") {
             placeUsageGroupService.updateUsageStatus(
                 users.user2,
                 labPlace.id,
@@ -470,30 +516,7 @@ class TestDataRunner(
             )
         }
 
-        // AI/SW학과 그룹이 세미나실 사용 요청
-        safeExecute("AI/SW department requesting seminar room usage") {
-            val owner = userService.findByEmail("castlekong1019@gmail.com")
-            placeUsageGroupService.requestUsage(
-                owner!!,
-                seminarRoom.id,
-                RequestUsageRequest(
-                    groupId = 13, // AI/SW학과 그룹 ID
-                    reason = "학과 특강 및 세미나를 위해 사용하고 싶습니다.",
-                ),
-            )
-        }
-
-        // 학생회에서 AI/SW학과 사용 승인
-        safeExecute("Student Council approving AI/SW department usage") {
-            placeUsageGroupService.updateUsageStatus(
-                users.user2,
-                seminarRoom.id,
-                13, // AI/SW학과 그룹 ID
-                UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
-            )
-        }
-
-        // AI/SW계열 그룹이 세미나실 사용 요청
+        // 4. AI/SW계열 - 세미나실 사용 권한
         safeExecute("AI/SW college requesting seminar room usage") {
             val owner = userService.findByEmail("castlekong1019@gmail.com")
             placeUsageGroupService.requestUsage(
@@ -506,7 +529,6 @@ class TestDataRunner(
             )
         }
 
-        // 학생회에서 AI/SW계열 사용 승인
         safeExecute("Student Council approving AI/SW college usage") {
             placeUsageGroupService.updateUsageStatus(
                 users.user2,
@@ -516,7 +538,7 @@ class TestDataRunner(
             )
         }
 
-        // AI시스템반도체학과 그룹이 세미나실 사용 요청
+        // 5. AI시스템반도체학과 - 세미나실 사용 권한
         safeExecute("AI/Semiconductor department requesting seminar room usage") {
             val owner = userService.findByEmail("castlekong1019@gmail.com")
             placeUsageGroupService.requestUsage(
@@ -529,12 +551,33 @@ class TestDataRunner(
             )
         }
 
-        // 학생회에서 AI시스템반도체학과 사용 승인
         safeExecute("Student Council approving AI/Semiconductor department usage") {
             placeUsageGroupService.updateUsageStatus(
                 users.user2,
                 seminarRoom.id,
                 11, // AI시스템반도체학과 그룹 ID
+                UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
+            )
+        }
+
+        // 6. AI/SW학과 - 세미나실 사용 권한
+        safeExecute("AI/SW department requesting seminar room usage") {
+            val owner = userService.findByEmail("castlekong1019@gmail.com")
+            placeUsageGroupService.requestUsage(
+                owner!!,
+                seminarRoom.id,
+                RequestUsageRequest(
+                    groupId = 13, // AI/SW학과 그룹 ID
+                    reason = "학과 특강 및 세미나를 위해 사용하고 싶습니다.",
+                ),
+            )
+        }
+
+        safeExecute("Student Council approving AI/SW department usage") {
+            placeUsageGroupService.updateUsageStatus(
+                users.user2,
+                seminarRoom.id,
+                13, // AI/SW학과 그룹 ID
                 UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
             )
         }
