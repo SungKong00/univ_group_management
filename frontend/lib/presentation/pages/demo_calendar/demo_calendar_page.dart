@@ -365,13 +365,15 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     }
   }
 
-  /// Calculate disabled time slots based on selected places
+  /// Calculate disabled time slots based on selected places and required duration
   ///
-  /// Queries place availability and reservations for each selected place,
-  /// then calculates the union of unavailable time slots.
+  /// NEW LOGIC:
+  /// - For each 15-minute slot, check if it's a valid START time for a reservation
+  /// - A slot is valid (white) if AT LEAST ONE place can be reserved continuously for the required duration
+  /// - A slot is disabled (gray) if NO place can accommodate the required duration starting from that time
   ///
-  /// For single place: Returns unavailable slots (outside operating hours or reserved)
-  /// For multiple places: Returns slots where ANY place is unavailable (union)
+  /// For single place: No duration required, show all unavailable slots as gray
+  /// For multiple places: Requires duration, only show slots where NO place can start a reservation
   Future<void> _calculateDisabledSlots() async {
     developer.log(
       '🔍 === _calculateDisabledSlots() CALLED ===',
@@ -396,6 +398,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
       );
       setState(() {
         _disabledSlots = {};
+        _disabledSlotsByPlace = {};
       });
       return;
     }
@@ -409,10 +412,12 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
       // Week end: Sunday (6 days from week start)
       final weekEnd = _weekStart.add(const Duration(days: 6));
 
-      // Collect unavailable slots for all places
-      final Set<DateTime> allDisabledSlots = {};
+      // Store per-place data
       final Map<int, Set<DateTime>> disabledSlotsByPlace = {};
+      final Map<int, List<PlaceReservation>> reservationsByPlace = {};
+      final Map<int, List<OperatingHoursResponse>> operatingHoursByPlace = {};
 
+      // Fetch data for all places
       for (final place in _selectedPlaces) {
         developer.log(
           '📡 Fetching place detail for place ${place.id} (${place.displayName})',
@@ -434,17 +439,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
           '✅ Successfully fetched place detail for place ${place.id}',
           name: 'DemoCalendarPage',
         );
-        developer.log(
-          '📊 Place has ${placeDetail.operatingHours.length} operating hours entries',
-          name: 'DemoCalendarPage',
-        );
-        for (final oh in placeDetail.operatingHours) {
-          final status = oh.isClosed ? '(CLOSED)' : '';
-          developer.log(
-            '  - ${oh.dayOfWeek.displayName}: ${oh.startTime.format(context)} ~ ${oh.endTime.format(context)} $status',
-            name: 'DemoCalendarPage',
-          );
-        }
 
         // 2. Get reservations for the week
         final reservations = await _placeService.getReservations(
@@ -453,18 +447,40 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
           endDate: weekEnd,
         );
 
-        // 3. Calculate disabled slots for this place
-        final placeDisabledSlots = _calculateDisabledSlotsForPlace(
-          operatingHours: placeDetail.operatingHours,
-          reservations: reservations,
+        operatingHoursByPlace[place.id] = placeDetail.operatingHours;
+        reservationsByPlace[place.id] = reservations;
+      }
+
+      // Calculate disabled slots based on strategy
+      Set<DateTime> allDisabledSlots = {};
+
+      if (_selectedPlaces.length == 1) {
+        // Single place: Show all unavailable slots as gray
+        final place = _selectedPlaces.first;
+        allDisabledSlots = _calculateDisabledSlotsForSinglePlace(
+          operatingHours: operatingHoursByPlace[place.id] ?? [],
+          reservations: reservationsByPlace[place.id] ?? [],
+          weekStart: _weekStart,
+        );
+        disabledSlotsByPlace[place.id] = allDisabledSlots;
+      } else {
+        // Multiple places with duration: Show only slots where NO place can start
+        allDisabledSlots = _calculateDisabledSlotsForMultiplePlaces(
+          places: _selectedPlaces,
+          operatingHoursByPlace: operatingHoursByPlace,
+          reservationsByPlace: reservationsByPlace,
+          requiredDuration: _requiredDuration,
           weekStart: _weekStart,
         );
 
-        // 4. Store per-place disabled slots
-        disabledSlotsByPlace[place.id] = placeDisabledSlots;
-
-        // 5. Add to union for global disabled slots
-        allDisabledSlots.addAll(placeDisabledSlots);
+        // Calculate per-place disabled slots for validation
+        for (final place in _selectedPlaces) {
+          disabledSlotsByPlace[place.id] = _calculateDisabledSlotsForSinglePlace(
+            operatingHours: operatingHoursByPlace[place.id] ?? [],
+            reservations: reservationsByPlace[place.id] ?? [],
+            weekStart: _weekStart,
+          );
+        }
       }
 
       if (!mounted) return;
@@ -475,7 +491,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
       });
 
       developer.log(
-        'Calculated ${allDisabledSlots.length} total disabled slots '
+        '✅ Calculated ${allDisabledSlots.length} total disabled slots '
         'across ${disabledSlotsByPlace.length} places',
         name: 'DemoCalendarPage',
       );
@@ -498,11 +514,8 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     }
   }
 
-  /// Calculate disabled slots for a single place
-  ///
-  /// Returns a set of DateTime objects representing 30-minute time slots
-  /// that are unavailable (outside operating hours or reserved).
-  Set<DateTime> _calculateDisabledSlotsForPlace({
+  /// Calculate disabled slots for SINGLE place (all unavailable slots)
+  Set<DateTime> _calculateDisabledSlotsForSinglePlace({
     required List<OperatingHoursResponse> operatingHours,
     required List<PlaceReservation> reservations,
     required DateTime weekStart,
@@ -512,11 +525,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     // Iterate through 7 days of the week
     for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
       final currentDate = weekStart.add(Duration(days: dayIndex));
-
-      // Get day of week (1=Monday, 7=Sunday)
       final dayOfWeek = currentDate.weekday;
-
-      // Convert to DayOfWeek enum (MONDAY, TUESDAY, etc.)
       final dayOfWeekEnum = _getDayOfWeekEnum(dayOfWeek);
 
       // Get operating hours for this day
@@ -524,31 +533,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
           .where((oh) => oh.dayOfWeek == dayOfWeekEnum)
           .firstOrNull;
 
-      // Debug log: print operating hours for each day
-      developer.log(
-        'Day $dayOfWeekEnum (${currentDate.month}/${currentDate.day}): '
-        'Operating Hours: ${dayOperatingHours != null ? "${dayOperatingHours.startTime.hour.toString().padLeft(2, '0')}:${dayOperatingHours.startTime.minute.toString().padLeft(2, '0')} ~ ${dayOperatingHours.endTime.hour.toString().padLeft(2, '0')}:${dayOperatingHours.endTime.minute.toString().padLeft(2, '0')}" : "CLOSED"}',
-        name: 'DemoCalendarPage',
-      );
-
-      if (dayOperatingHours != null && !dayOperatingHours.isClosed) {
-        developer.log(
-          '  → ${dayOperatingHours.startTime.hour.toString().padLeft(2, '0')}:'
-          '${dayOperatingHours.startTime.minute.toString().padLeft(2, '0')} ~ '
-          '${dayOperatingHours.endTime.hour.toString().padLeft(2, '0')}:'
-          '${dayOperatingHours.endTime.minute.toString().padLeft(2, '0')}',
-          name: 'DemoCalendarPage',
-        );
-      } else {
-        developer.log(
-          '  ⚠️ Place is closed on this day (all slots will be disabled)',
-          name: 'DemoCalendarPage',
-          level: 900,
-        );
-      }
-
       // Iterate through 15-minute slots (00:00 ~ 23:45)
-      // UI uses 15-minute granularity by splitting 30-minute cells in half
       for (int hour = 0; hour < 24; hour++) {
         for (int minute = 0; minute < 60; minute += 15) {
           final slot = DateTime(
@@ -559,28 +544,149 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
             minute,
           );
 
-          // Check if slot is outside operating hours
-          if (!_isWithinOperatingHours(slot, dayOperatingHours)) {
+          // Check if slot is outside operating hours or reserved
+          if (!_isWithinOperatingHours(slot, dayOperatingHours) ||
+              _overlapsWithReservation(slot, reservations)) {
             disabled.add(slot);
-            continue;
           }
-
-          // Check if slot overlaps with existing reservation
-          if (_overlapsWithReservation(slot, reservations)) {
-            disabled.add(slot);
-            continue;
-          }
-
-          // TODO: Add PlaceBlockedTime check when backend API is implemented
-          // if (_isBlockedTime(slot, blockedTimes)) {
-          //   disabled.add(slot);
-          //   continue;
-          // }
         }
       }
     }
 
     return disabled;
+  }
+
+  /// Calculate disabled slots for MULTIPLE places with required duration
+  ///
+  /// A slot is DISABLED (gray) if NO place can accommodate a continuous reservation
+  /// of the required duration starting from that slot.
+  ///
+  /// A slot is ENABLED (white) if AT LEAST ONE place can accommodate the duration.
+  Set<DateTime> _calculateDisabledSlotsForMultiplePlaces({
+    required List<Place> places,
+    required Map<int, List<OperatingHoursResponse>> operatingHoursByPlace,
+    required Map<int, List<PlaceReservation>> reservationsByPlace,
+    required Duration? requiredDuration,
+    required DateTime weekStart,
+  }) {
+    if (requiredDuration == null) {
+      developer.log(
+        '⚠️ No duration specified for multiple places, returning empty set',
+        name: 'DemoCalendarPage',
+        level: 900,
+      );
+      return {};
+    }
+
+    final Set<DateTime> disabledSlots = {};
+    final int durationMinutes = requiredDuration.inMinutes;
+
+    developer.log(
+      '⏱️ Required duration: $durationMinutes minutes (${durationMinutes ~/ 60}h ${durationMinutes % 60}m)',
+      name: 'DemoCalendarPage',
+    );
+
+    // Iterate through 7 days of the week
+    for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
+      final currentDate = weekStart.add(Duration(days: dayIndex));
+
+      // Iterate through 15-minute slots (00:00 ~ 23:45)
+      for (int hour = 0; hour < 24; hour++) {
+        for (int minute = 0; minute < 60; minute += 15) {
+          final startSlot = DateTime(
+            currentDate.year,
+            currentDate.month,
+            currentDate.day,
+            hour,
+            minute,
+          );
+
+          // Check if ANY place can accommodate the required duration
+          bool anyPlaceAvailable = false;
+
+          for (final place in places) {
+            final operatingHours = operatingHoursByPlace[place.id] ?? [];
+            final reservations = reservationsByPlace[place.id] ?? [];
+
+            if (_canReserveContinuously(
+              startTime: startSlot,
+              durationMinutes: durationMinutes,
+              operatingHours: operatingHours,
+              reservations: reservations,
+            )) {
+              anyPlaceAvailable = true;
+              break; // Found at least one available place
+            }
+          }
+
+          // If NO place is available, mark as disabled
+          if (!anyPlaceAvailable) {
+            disabledSlots.add(startSlot);
+          }
+        }
+      }
+    }
+
+    developer.log(
+      '📊 Calculated ${disabledSlots.length} disabled slots for ${places.length} places with ${durationMinutes}min duration',
+      name: 'DemoCalendarPage',
+    );
+
+    return disabledSlots;
+  }
+
+  /// Check if a place can be reserved continuously for the specified duration
+  ///
+  /// Returns true if the entire time range [startTime, startTime + duration] is available
+  bool _canReserveContinuously({
+    required DateTime startTime,
+    required int durationMinutes,
+    required List<OperatingHoursResponse> operatingHours,
+    required List<PlaceReservation> reservations,
+  }) {
+    final endTime = startTime.add(Duration(minutes: durationMinutes));
+
+    // Check every 15-minute slot within the duration
+    DateTime currentSlot = startTime;
+    while (currentSlot.isBefore(endTime)) {
+      // Get operating hours for this slot's day
+      final dayOfWeekEnum = _getDayOfWeekEnum(currentSlot.weekday);
+      final dayOperatingHours = operatingHours
+          .where((oh) => oh.dayOfWeek == dayOfWeekEnum)
+          .firstOrNull;
+
+      // Check if slot is within operating hours
+      if (!_isWithinOperatingHours(currentSlot, dayOperatingHours)) {
+        return false;
+      }
+
+      // Check if slot overlaps with reservation
+      if (_overlapsWithReservation(currentSlot, reservations)) {
+        return false;
+      }
+
+      currentSlot = currentSlot.add(const Duration(minutes: 15));
+    }
+
+    return true; // All slots in the duration are available
+  }
+
+  /// Calculate disabled slots for a single place
+  ///
+  /// Returns a set of DateTime objects representing 15-minute time slots
+  /// that are unavailable (outside operating hours or reserved).
+  ///
+  /// DEPRECATED: Use _calculateDisabledSlotsForSinglePlace instead
+  Set<DateTime> _calculateDisabledSlotsForPlace({
+    required List<OperatingHoursResponse> operatingHours,
+    required List<PlaceReservation> reservations,
+    required DateTime weekStart,
+  }) {
+    return _calculateDisabledSlotsForSinglePlace(
+      operatingHours: operatingHours,
+      reservations: reservations,
+      weekStart: weekStart,
+    );
   }
 
   /// Convert weekday int (1-7) to DayOfWeek enum
