@@ -363,36 +363,40 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
 
   /// Handle auto-scrolling when drag reaches screen edge
-  /// Uses same coordinate system as _pixelToCell() - localPosition relative to gesture area
+  /// Converts content-absolute coordinates to viewport-relative coordinates
   void _handleEdgeScrolling(Offset localPosition) {
-    // Get the gesture area's RenderBox to find viewport height
+    // 1. Get scroll offset
+    if (!_scrollController.hasClients) return;
+    final scrollOffset = _scrollController.offset;
+
+    // 2. Convert content-absolute Y to viewport-relative Y
+    final viewportRelativeY = localPosition.dy - scrollOffset;
+
+    // 3. Get the State widget's RenderBox to calculate viewport height
     final RenderBox? box = context.findRenderObject() as RenderBox?;
     if (box == null) return;
 
-    final viewportHeight = box.size.height;
+    // Calculate actual viewport height (subtract header height from State widget height)
+    final headerHeight = _dayRowHeight + 60; // Mode selector + header
+    final viewportHeight = box.size.height - headerHeight;
 
-    // Use localPosition.dy directly (same as _pixelToCell)
-    final double positionY = localPosition.dy;
-
-    // Bottom navigation bar height (typically 56-80px)
+    // 4. Edge detection (viewport-relative)
     const navBarHeight = 80.0;
-
-    // Define thresholds for edge detection (based on viewport height)
     final topThreshold = _edgeScrollThreshold;
     final bottomThreshold = viewportHeight - navBarHeight - _edgeScrollThreshold;
 
     bool shouldScroll = false;
     bool scrollDown = false;
 
-    // Check if position is at the edge of the visible content
-    if (positionY < topThreshold) {
+    if (viewportRelativeY < topThreshold) {
       shouldScroll = true;
       scrollDown = false;
-    } else if (positionY > bottomThreshold) {
+    } else if (viewportRelativeY > bottomThreshold) {
       shouldScroll = true;
       scrollDown = true;
     }
 
+    // 5. Execute auto-scroll
     if (shouldScroll) {
       // Start auto-scroll timer if not already running
       _autoScrollTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
