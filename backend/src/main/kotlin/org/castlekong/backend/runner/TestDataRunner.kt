@@ -145,7 +145,8 @@ class TestDataRunner(
      * 특정 테스트 그룹이 이미 존재하면 true 반환
      */
     private fun shouldSkipExecution(): Boolean {
-        return groupManagementService.getAllGroups().any { it.name == "코딩 동아리 'DevCrew'" }
+        return groupManagementService.getAllGroups().any { it.name == "코딩 동아리 'DevCrew'" } ||
+            groupManagementService.getAllGroups().any { it.name == "AI/SW학과 코딩 스터디" }
     }
 
     /**
@@ -307,11 +308,31 @@ class TestDataRunner(
                 )
             }
 
+        // AI/SW학과 코딩 스터디 (user1이 그룹장, AI/SW학과 하위 그룹)
+        // TestDataRunner에서는 직접 그룹을 생성하여 승인된 상태를 시뮬레이션
+        val aiSwCodingStudyGroup =
+            safeExecute("Creating AI/SW Dept Coding Study group (simulating approved state)") {
+                groupManagementService.createGroup(
+                    CreateGroupRequest(
+                        name = "AI/SW학과 코딩 스터디",
+                        parentId = 13, // AI/SW학과 그룹 ID (수정: 2 → 13)
+                        university = "한신대학교",
+                        college = "AI/SW계열",
+                        department = "AI/SW학과",
+                        groupType = GroupType.AUTONOMOUS,
+                        description = "AI/SW학과 학생들을 위한 코딩 스터디",
+                        tags = setOf("코딩", "스터디", "AI/SW학과"),
+                    ),
+                    users.user1.id!!,
+                )
+            }
+
         logger.info("-> SUCCESS: Created custom groups")
         logger.info("   - ${devCrewGroup.name} (owner: ${users.user1.email})")
         logger.info("   - ${studentCouncilGroup.name} (owner: ${users.user2.email})")
+        logger.info("   - ${aiSwCodingStudyGroup.name} (owner: ${users.user1.email}, parent: AI/SW학과)")
 
-        return CustomGroups(devCrewGroup.id, studentCouncilGroup.id)
+        return CustomGroups(devCrewGroup.id, studentCouncilGroup.id, aiSwCodingStudyGroup.id)
     }
 
     /**
@@ -581,6 +602,27 @@ class TestDataRunner(
                 users.user2,
                 seminarRoom.id,
                 13, // AI/SW학과 그룹 ID
+                UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
+            )
+        }
+
+        // 7. AI/SW학과 코딩 스터디 그룹 - 세미나실 사용 권한
+        safeExecute("AI/SW Dept Coding Study group requesting seminar room usage") {
+            placeUsageGroupService.requestUsage(
+                users.user1, // TestUser1 is the owner of AI/SW학과 코딩 스터디
+                seminarRoom.id,
+                RequestUsageRequest(
+                    groupId = groups.aiSwCodingStudyId,
+                    reason = "AI/SW학과 코딩 스터디 정기 모임을 위해 사용하고 싶습니다.",
+                ),
+            )
+        }
+
+        safeExecute("Student Council approving AI/SW Dept Coding Study group usage") {
+            placeUsageGroupService.updateUsageStatus(
+                users.user2, // TestUser2 is the owner of Student Council (managing group)
+                seminarRoom.id,
+                groups.aiSwCodingStudyId,
                 UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
             )
         }
@@ -1397,6 +1439,25 @@ class TestDataRunner(
                 ),
             )
         }
+
+        // AI/SW학과 코딩 스터디 그룹 추가 일정
+        safeExecute("Creating additional events for AI/SW Dept Coding Study group") {
+            groupEventService.createEvent(
+                users.user1,
+                groups.aiSwCodingStudyId,
+                CreateGroupEventRequest(
+                    title = "AI/SW학과 코딩 스터디 정기 모임",
+                    description = "AI/SW학과 코딩 스터디 정기 모임입니다.",
+                    placeId = places.seminarRoomId,
+                    startDate = LocalDate.of(2025, 11, 10),
+                    endDate = LocalDate.of(2025, 11, 10),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
+                    isOfficial = false,
+                    color = "#FFC107",
+                ),
+            )
+        }
         logger.info("-> SUCCESS: Created group calendar events and reservations")
 
         logger.info("-> Creating additional November events...")
@@ -1861,6 +1922,7 @@ class TestDataRunner(
     private data class CustomGroups(
         val devCrewId: Long,
         val studentCouncilId: Long,
+        val aiSwCodingStudyId: Long,
     )
 
     /**

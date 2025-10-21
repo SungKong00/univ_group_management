@@ -118,7 +118,7 @@ Phase 9: 그룹 캘린더 일정 및 장소 예약 생성
 
 ### 장소 사용 요청 정보
 
-- **요청 그룹**: DevCrew, AI/SW계열, AI/SW학과, AI시스템반도체학과
+- **요청 그룹**: DevCrew, AI/SW계열, AI/SW학과, AI시스템반도체학과, AI/SW학과 코딩 스터디
 - **요청자**: TestUser1, castlekong1019@gmail.com
 - **사용 이유**: 스터디, 학과 행사, 세미나, 프로젝트 등
 - **승인 상태**: APPROVED
@@ -284,13 +284,21 @@ placeUsageGroupService.requestUsage(user1, placeId, request) // ✅
 placeUsageGroupService.updateUsageStatus(user2, placeId, groupId, request) // ✅
 ```
 
-### 그룹 생성 및 승인 시나리오
+### 그룹 생성 시나리오 (TestDataRunner)
 ```kotlin
-// 하위 그룹 생성 요청: TestUser1 (AI/SW학과 코딩 스터디 그룹장)
-groupManagementService.createGroup(aiSwCodingStudyRequest, user1Id) // ✅
-
-// 하위 그룹 생성 승인: castlekong1019@gmail.com (AI/SW계열 그룹장)
-groupManagementService.approveGroupCreation(aiSwCodingStudyGroupId, castlekong1019Id) // ✅
+// TestDataRunner에서는 테스트 편의를 위해 하위 그룹을 직접 생성하여 승인된 상태를 시뮬레이션합니다.
+// TestUser1이 AI/SW계열에 하위 그룹 생성 (승인된 상태로)
+groupManagementService.createGroup(
+    CreateGroupRequest(
+        name = "AI/SW학과 코딩 스터디",
+        parentId = 13, // AI/SW학과
+        university = "한신대학교",
+        groupType = GroupType.AUTONOMOUS,
+        description = "AI/SW학과 학생들을 위한 코딩 스터디",
+        tags = setOf("코딩", "스터디", "AI/SW학과")
+    ),
+    user1Id
+) // ✅
 ```
 
 ## 테스트 데이터 확장 가이드
@@ -323,21 +331,22 @@ val newGroup = groupManagementService.createGroup(
 )
 ```
 
-### AI/SW학과 코딩 스터디 그룹 생성 및 승인
+### AI/SW학과 코딩 스터디 그룹 생성 (TestDataRunner)
 ```kotlin
-// TestUser1이 AI/SW계열에 하위 그룹 생성 요청
-val aiSwCodingStudyRequest = CreateGroupRequest(
-    name = "AI/SW학과 코딩 스터디",
-    parentId = 2, // AI/SW계열
-    university = "한신대학교",
-    groupType = GroupType.AUTONOMOUS,
-    description = "AI/SW학과 학생들을 위한 코딩 스터디",
-    tags = setOf("코딩", "스터디", "AI/SW학과")
+// TestDataRunner에서는 테스트 편의를 위해 하위 그룹을 직접 생성하여 승인된 상태를 시뮬레이션합니다.
+val aiSwCodingStudyGroup = groupManagementService.createGroup(
+    CreateGroupRequest(
+        name = "AI/SW학과 코딩 스터디",
+        parentId = 2, // AI/SW계열
+        university = "한신대학교",
+        college = "AI/SW계열",
+        department = "AI/SW학과",
+        groupType = GroupType.AUTONOMOUS,
+        description = "AI/SW학과 학생들을 위한 코딩 스터디",
+        tags = setOf("코딩", "스터디", "AI/SW학과")
+    ),
+    user1Id
 )
-val aiSwCodingStudyGroup = groupManagementService.createGroup(aiSwCodingStudyRequest, user1Id)
-
-// AI/SW계열 그룹장 (castlekong1019@gmail.com)이 승인
-groupManagementService.approveGroupCreation(aiSwCodingStudyGroup.id, castlekong1019Id)
 ```
 
 ## 주의사항
