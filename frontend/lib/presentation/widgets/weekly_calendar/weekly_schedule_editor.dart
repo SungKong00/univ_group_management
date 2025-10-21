@@ -364,27 +364,27 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   /// Handle auto-scrolling when drag reaches screen edge
   void _handleEdgeScrolling(Offset localPosition) {
-    // Convert local coordinates to global screen coordinates
+    // Use local position relative to the scrollable widget (not global screen coordinates)
+    // This ensures consistent edge detection regardless of current scroll offset
+
+    // Get the viewport height of the scrollable area
     final RenderBox? box = context.findRenderObject() as RenderBox?;
     if (box == null) return;
 
-    final globalPosition = box.localToGlobal(localPosition);
-    final screenHeight = MediaQuery.of(context).size.height;
+    final viewportHeight = box.size.height;
 
-    // Bottom navigation bar height (typically 56-80px)
-    const navBarHeight = 80.0;
-
-    // Define thresholds accounting for navigation bar
+    // Define thresholds based on viewport (not screen height)
     final topThreshold = _edgeScrollThreshold;
-    final bottomThreshold = screenHeight - navBarHeight - _edgeScrollThreshold;
+    final bottomThreshold = viewportHeight - _edgeScrollThreshold;
 
     bool shouldScroll = false;
     bool scrollDown = false;
 
-    if (globalPosition.dy < topThreshold) {
+    // Check if position is at the edge of the viewport (local position)
+    if (localPosition.dy < topThreshold) {
       shouldScroll = true;
       scrollDown = false;
-    } else if (globalPosition.dy > bottomThreshold) {
+    } else if (localPosition.dy > bottomThreshold) {
       shouldScroll = true;
       scrollDown = true;
     }
