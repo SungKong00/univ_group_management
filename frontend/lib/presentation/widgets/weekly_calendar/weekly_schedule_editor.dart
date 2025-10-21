@@ -96,6 +96,7 @@ class WeeklyScheduleEditor extends StatefulWidget {
 }
 
 class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
+  final GlobalKey _gestureContentKey = GlobalKey();
   // Grid Geometry
   final double _timeColumnWidth = 50.0;
   final double _dayRowHeight = 50.0;
@@ -113,16 +114,21 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   ({int day, int slot})? _endCell;
   Rect? _selectionRect;
   Rect? _highlightRect;
+  Offset? _activePointerGlobalPosition;
 
   late int _visibleStartHour;
   late int _visibleEndHour;
   bool _hasAppliedInitialScroll = false;
+  double _currentDayColumnWidth = 0;
+  double _currentContentHeight = 0;
 
   // Auto-scroll
   late ScrollController _scrollController;
   Timer? _autoScrollTimer;
   static const double _edgeScrollThreshold = 50.0; // Pixels from edge to trigger scroll
   static const double _scrollSpeed = 5.0; // Pixels per timer tick (reduced from 30.0)
+  int _autoScrollDirection = 0;
+  double _autoScrollDayColumnWidth = 0;
 
   @override
   void initState() {
@@ -136,9 +142,64 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   @override
   void dispose() {
-    _autoScrollTimer?.cancel();
+    _stopAutoScroll();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  RenderBox? get _gestureRenderBox =>
+      _gestureContentKey.currentContext?.findRenderObject() as RenderBox?;
+
+  Offset _globalToGestureLocal(Offset globalPosition) {
+    final renderBox = _gestureRenderBox;
+    if (renderBox == null) {
+      return Offset.zero;
+    }
+    return renderBox.globalToLocal(globalPosition);
+  }
+
+  Offset _clampLocalToContent(Offset position, double dayColumnWidth) {
+    final double maxWidth = math.max(
+      _timeColumnWidth + dayColumnWidth * _daysInWeek,
+      _timeColumnWidth + 1,
+    );
+    final double maxHeight = math.max(_currentContentHeight, 1.0);
+
+    final double clampedX = position.dx.clamp(0.0, maxWidth);
+    final double clampedY = position.dy.clamp(0.0, maxHeight - 1);
+    return Offset(clampedX, clampedY);
+  }
+
+  void _stopAutoScroll() {
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = null;
+    _autoScrollDirection = 0;
+  }
+
+  void _performAutoScrollTick() {
+    if (!_scrollController.hasClients || _autoScrollDirection == 0) {
+      _stopAutoScroll();
+      return;
+    }
+
+    final double maxExtent = _scrollController.position.maxScrollExtent;
+    final double targetOffset = (_scrollController.offset + _autoScrollDirection * _scrollSpeed)
+        .clamp(0.0, maxExtent);
+
+    if (targetOffset == _scrollController.offset) {
+      _stopAutoScroll();
+      return;
+    }
+
+    _scrollController.jumpTo(targetOffset);
+
+    if (_activePointerGlobalPosition != null) {
+      _updateSelectionFromPointer(
+        _activePointerGlobalPosition!,
+        _autoScrollDayColumnWidth,
+        checkAutoScroll: false,
+      );
+    }
   }
 
   DateTime get _effectiveWeekStart => widget.weekStart ?? _getWeekStart(DateTime.now());
@@ -363,57 +424,31 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
 
   /// Handle auto-scrolling when drag reaches screen edge
-  /// Converts content-absolute coordinates to viewport-relative coordinates
-  void _handleEdgeScrolling(Offset localPosition) {
-    // 1. Get scroll offset
+  void _handleEdgeScrolling(Offset globalPosition, double dayColumnWidth) {
     if (!_scrollController.hasClients) return;
-    final scrollOffset = _scrollController.offset;
 
-    // 2. Convert content-absolute Y to viewport-relative Y
-    final viewportRelativeY = localPosition.dy - scrollOffset;
+    final Size screenSize = MediaQuery.of(context).size;
 
-    // 3. Get the State widget's RenderBox to calculate viewport height
-    final RenderBox? box = context.findRenderObject() as RenderBox?;
-    if (box == null) return;
+    const double navBarHeight = 80.0;
+    final double topThreshold = _edgeScrollThreshold;
+    final double bottomThreshold = screenSize.height - navBarHeight - _edgeScrollThreshold;
 
-    // Calculate actual viewport height (subtract header height from State widget height)
-    final headerHeight = _dayRowHeight + 60; // Mode selector + header
-    final viewportHeight = box.size.height - headerHeight;
+    int direction = 0;
 
-    // 4. Edge detection (viewport-relative)
-    const navBarHeight = 80.0;
-    final topThreshold = _edgeScrollThreshold;
-    final bottomThreshold = viewportHeight - navBarHeight - _edgeScrollThreshold;
-
-    bool shouldScroll = false;
-    bool scrollDown = false;
-
-    if (viewportRelativeY < topThreshold) {
-      shouldScroll = true;
-      scrollDown = false;
-    } else if (viewportRelativeY > bottomThreshold) {
-      shouldScroll = true;
-      scrollDown = true;
+    if (globalPosition.dy <= topThreshold) {
+      direction = -1;
+    } else if (globalPosition.dy >= bottomThreshold) {
+      direction = 1;
     }
 
-    // 5. Execute auto-scroll
-    if (shouldScroll) {
-      // Start auto-scroll timer if not already running
-      _autoScrollTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
-        if (_scrollController.hasClients) {
-          final newOffset = scrollDown
-              ? _scrollController.offset + _scrollSpeed
-              : (_scrollController.offset - _scrollSpeed).clamp(0.0, _scrollController.position.maxScrollExtent);
-
-          if (newOffset != _scrollController.offset) {
-            _scrollController.jumpTo(newOffset.clamp(0.0, _scrollController.position.maxScrollExtent));
-          }
-        }
-      });
+    if (direction == 0) {
+      _stopAutoScroll();
     } else {
-      // Stop auto-scroll if not at edge
-      _autoScrollTimer?.cancel();
-      _autoScrollTimer = null;
+      _autoScrollDirection = direction;
+      _autoScrollDayColumnWidth = dayColumnWidth;
+      _autoScrollTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
+        _performAutoScrollTick();
+      });
     }
   }
 
@@ -884,15 +919,16 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   // --- Event Handlers ---
 
   /// Common logic to update selection during drag (used by both web and mobile)
-  void _updateSelectionCell(Offset position, double dayColumnWidth) {
+  void _updateSelectionCell(
+    Offset position,
+    double dayColumnWidth, {
+    bool enableHaptics = false,
+  }) {
     if (!widget.isEditable || _startCell == null) return;
 
-    // Handle auto-scroll at screen edges (mobile only)
-    if (!kIsWeb) {
-      _handleEdgeScrolling(position);
-    }
+    final clampedPosition = _clampLocalToContent(position, dayColumnWidth);
 
-    var currentCell = _pixelToCell(position, dayColumnWidth);
+    var currentCell = _pixelToCell(clampedPosition, dayColumnWidth);
 
     // Restrict to same day if multi-day selection is disabled
     if (!widget.allowMultiDaySelection) {
@@ -900,7 +936,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     }
 
     // Haptic feedback when crossing cell boundary (mobile only)
-    if (!kIsWeb && _endCell != null && currentCell != _endCell) {
+    if (enableHaptics && _endCell != null && currentCell != _endCell) {
       _triggerHaptic(HapticFeedbackType.selection);
     }
 
@@ -927,9 +963,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     final finalStartCell = _startCell;
     final finalEndCell = _endCell;
 
-    // Stop auto-scroll timer
-    _autoScrollTimer?.cancel();
-    _autoScrollTimer = null;
+    _activePointerGlobalPosition = null;
+    _stopAutoScroll();
 
     setState(() {
       _isSelecting = false;
@@ -948,7 +983,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _handleTap(Offset position, double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
     if (!widget.isEditable) return;
 
-    final cell = _pixelToCell(position, dayColumnWidth);
+    final clampedPosition = _clampLocalToContent(position, dayColumnWidth);
+    final cell = _pixelToCell(clampedPosition, dayColumnWidth);
 
     // Check if cell is disabled (gray cell)
     if (_isCellDisabled(cell)) {
@@ -991,7 +1027,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     if (!_isSelecting) {
       setState(() {
         _isSelecting = true;
-        _startCell = _pixelToCell(position, dayColumnWidth);
+        _startCell = _pixelToCell(clampedPosition, dayColumnWidth);
         _endCell = _startCell;
         _selectionRect = _cellToRect(_startCell!, _endCell!, dayColumnWidth);
       });
@@ -1001,13 +1037,15 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   }
 
   /// Handle long press start for mobile
-  void _handleLongPressStart(Offset position, double dayColumnWidth) {
+  void _handleLongPressStart(LongPressStartDetails details, double dayColumnWidth) {
     if (!widget.isEditable) return;
 
     // View mode: no interaction
     if (_mode == CalendarMode.view) return;
 
-    final cell = _pixelToCell(position, dayColumnWidth);
+    final localPosition =
+        _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
+    final cell = _pixelToCell(localPosition, dayColumnWidth);
 
     // Check if cell is disabled (gray cell)
     if (_isCellDisabled(cell)) {
@@ -1022,21 +1060,52 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     }
 
     _triggerHaptic(HapticFeedbackType.medium);
+    _activePointerGlobalPosition = details.globalPosition;
     setState(() {
       _isSelecting = true;
       _startCell = cell;
       _endCell = _startCell;
       _selectionRect = _cellToRect(_startCell!, _endCell!, dayColumnWidth);
+      _highlightRect = _cellToRect(cell, cell, dayColumnWidth);
     });
   }
 
+  void _handleLongPressEnd(LongPressEndDetails details) {
+    _activePointerGlobalPosition = null;
+    _stopAutoScroll();
+  }
+
+  void _updateSelectionFromPointer(
+    Offset globalPosition,
+    double dayColumnWidth, {
+    bool checkAutoScroll = true,
+  }) {
+    if (!widget.isEditable || _startCell == null) return;
+
+    _activePointerGlobalPosition = globalPosition;
+    final localPosition =
+        _clampLocalToContent(_globalToGestureLocal(globalPosition), dayColumnWidth);
+
+    _updateSelectionCell(
+      localPosition,
+      dayColumnWidth,
+      enableHaptics: true,
+    );
+
+    if (checkAutoScroll) {
+      _handleEdgeScrolling(globalPosition, dayColumnWidth);
+    }
+  }
+
   /// Handle mobile tap (for editing existing events only)
-  void _handleMobileTap(Offset position, double dayColumnWidth) {
+  void _handleMobileTap(Offset globalPosition, double dayColumnWidth) {
     if (!widget.isEditable) return;
 
     // Edit mode or View mode: check for overlapping events
     if (_mode == CalendarMode.edit || _mode == CalendarMode.view) {
-      final cell = _pixelToCell(position, dayColumnWidth);
+      final localPosition =
+          _clampLocalToContent(_globalToGestureLocal(globalPosition), dayColumnWidth);
+      final cell = _pixelToCell(localPosition, dayColumnWidth);
       final overlappingEvents = _findEventsAtCell(cell);
 
       if (overlappingEvents.isNotEmpty) {
@@ -1150,6 +1219,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                     final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
                     final double contentHeight = (_visibleEndHour - _visibleStartHour) * 4 * _minSlotHeight;
 
+                    _currentDayColumnWidth = dayColumnWidth;
+                    _currentContentHeight = contentHeight;
+
                     final allEvents = _getAllEvents();
                     final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {
                       return (rect: _cellToRect(event.start, event.end, dayColumnWidth), event: event);
@@ -1217,17 +1289,19 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     double contentHeight,
   ) {
     return GestureDetector(
+      key: _gestureContentKey,
       // Show gray highlight immediately on touch down
       onTapDown: (details) {
         if (_mode == CalendarMode.view) return;
 
-        // Show highlight for touched cell
-        final touchedCell = _pixelToCell(details.localPosition, dayColumnWidth);
+        final localPosition =
+            _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
+        final touchedCell = _pixelToCell(localPosition, dayColumnWidth);
         setState(() {
           _highlightRect = _cellToRect(touchedCell, touchedCell, dayColumnWidth);
         });
         // Handle existing event tap
-        _handleMobileTap(details.localPosition, dayColumnWidth);
+        _handleMobileTap(details.globalPosition, dayColumnWidth);
       },
       onTapUp: (details) {
         // Clear highlight if it was just a tap (not long press)
@@ -1246,13 +1320,19 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         }
       },
       // Long press to start selection
-      onLongPressStart: (details) => _handleLongPressStart(details.localPosition, dayColumnWidth),
-      onLongPressMoveUpdate: (details) => _updateSelectionCell(details.localPosition, dayColumnWidth),
+      onLongPressStart: (details) => _handleLongPressStart(details, dayColumnWidth),
+      onLongPressMoveUpdate: (details) {
+        if (_isSelecting) {
+          _updateSelectionFromPointer(details.globalPosition, dayColumnWidth);
+        }
+      },
       onLongPressEnd: (details) {
         if (_isSelecting) {
           _triggerHaptic(HapticFeedbackType.light);
+          _updateSelectionFromPointer(details.globalPosition, dayColumnWidth, checkAutoScroll: false);
           _completeSelection();
         }
+        _handleLongPressEnd(details);
       },
       behavior: HitTestBehavior.opaque,
       child: _buildCalendarStack(eventRects, dayColumnWidth, contentHeight),
@@ -1573,4 +1653,3 @@ class _OverlappingEventsVisualization extends StatelessWidget {
     );
   }
 }
-
