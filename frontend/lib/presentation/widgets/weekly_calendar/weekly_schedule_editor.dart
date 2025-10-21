@@ -131,6 +131,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   bool _hasAppliedInitialScroll = false;
   double _currentDayColumnWidth = 0;
   double _currentContentHeight = 0;
+  double _currentViewportHeight = 0; // 실제 화면에 보이는 뷰포트 높이
 
   // Auto-scroll
   late ScrollController _scrollController;
@@ -436,19 +437,32 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   /// Handle auto-scrolling when drag reaches screen edge
   void _handleEdgeScrolling(Offset globalPosition, double dayColumnWidth) {
     if (!_scrollController.hasClients) return;
+    if (_currentViewportHeight <= 0) return; // 뷰포트 높이가 아직 설정되지 않음
 
-    final Size screenSize = MediaQuery.of(context).size;
+    // Convert global position to local position (relative to calendar content area)
+    final localPosition = _globalToGestureLocal(globalPosition);
 
-    const double navBarHeight = 80.0;
-    final double topThreshold = _edgeScrollThreshold;
-    final double bottomThreshold = screenSize.height - navBarHeight - _edgeScrollThreshold;
+    // Get current scroll offset
+    final scrollOffset = _scrollController.offset;
+
+    // Calculate viewport-relative Y position
+    // localPosition.dy is relative to the entire content (including scrolled-away parts)
+    // We need to convert it to viewport-relative position
+    final viewportY = localPosition.dy - scrollOffset;
+
+    // Top threshold: 현재 화면에 보이는 영역의 상단 기준
+    const double topThreshold = _edgeScrollThreshold;
+
+    // Bottom threshold: 현재 화면에 보이는 영역의 하단 기준
+    // Use the saved viewport height instead of renderBox size
+    final double bottomThreshold = _currentViewportHeight - _edgeScrollThreshold;
 
     int direction = 0;
 
-    if (globalPosition.dy <= topThreshold) {
-      direction = -1;
-    } else if (globalPosition.dy >= bottomThreshold) {
-      direction = 1;
+    if (viewportY <= topThreshold) {
+      direction = -1; // Scroll up
+    } else if (viewportY >= bottomThreshold) {
+      direction = 1; // Scroll down
     }
 
     if (direction == 0) {
@@ -1327,6 +1341,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
                     _currentDayColumnWidth = dayColumnWidth;
                     _currentContentHeight = contentHeight;
+                    _currentViewportHeight = constraints.maxHeight; // 실제 뷰포트 높이 저장
 
                     final allEvents = _getAllEvents();
                     final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {

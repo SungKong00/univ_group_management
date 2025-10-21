@@ -8,7 +8,8 @@ import '../../../core/theme/app_colors.dart';
 /// already reserved, or blocked by admin).
 ///
 /// Visual Design:
-/// - Background: AppColors.neutral300 with 40% opacity
+/// - Background: AppColors.neutral400 with 45% opacity
+/// - Allows viewing of underlying events (group timetable) through semi-transparency
 /// - No border (uses TimeGridPainter's existing grid lines)
 /// - Non-interactive (parent widget handles click prevention)
 class DisabledSlotsPainter extends CustomPainter {
@@ -51,7 +52,7 @@ class DisabledSlotsPainter extends CustomPainter {
     );
 
     final paint = Paint()
-      ..color = AppColors.neutral300.withOpacity(0.6)
+      ..color = AppColors.neutral400.withOpacity(0.55)
       ..style = PaintingStyle.fill;
 
     int paintedCount = 0;
