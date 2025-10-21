@@ -365,10 +365,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   /// Handle auto-scrolling when drag reaches screen edge
   /// Uses same coordinate system as _pixelToCell() - localPosition relative to gesture area
   void _handleEdgeScrolling(Offset localPosition) {
-    // Get the visible content height (excluding header)
-    final double slotHeight = _minSlotHeight;
-    final int visibleSlots = (_visibleEndHour - _visibleStartHour) * 4;
-    final double contentHeight = visibleSlots * slotHeight;
+    // Get the gesture area's RenderBox to find viewport height
+    final RenderBox? box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+
+    final viewportHeight = box.size.height;
 
     // Use localPosition.dy directly (same as _pixelToCell)
     final double positionY = localPosition.dy;
@@ -376,9 +377,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     // Bottom navigation bar height (typically 56-80px)
     const navBarHeight = 80.0;
 
-    // Define thresholds for edge detection
+    // Define thresholds for edge detection (based on viewport height)
     final topThreshold = _edgeScrollThreshold;
-    final bottomThreshold = contentHeight - navBarHeight - _edgeScrollThreshold;
+    final bottomThreshold = viewportHeight - navBarHeight - _edgeScrollThreshold;
 
     bool shouldScroll = false;
     bool scrollDown = false;
