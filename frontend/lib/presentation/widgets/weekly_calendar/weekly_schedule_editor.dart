@@ -124,6 +124,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   static const double _edgeScrollThreshold = 50.0; // Pixels from edge to trigger scroll
   static const double _scrollSpeed = 5.0; // Pixels per timer tick (reduced from 30.0)
 
+  // Reference to scrollable viewport for edge scroll detection
+  final GlobalKey _scrollViewKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -363,30 +366,44 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
 
   /// Handle auto-scrolling when drag reaches screen edge
+  /// Based on the scrollable viewport (SingleChildScrollView) bounds, not screen edge
   void _handleEdgeScrolling(Offset localPosition) {
-    // Use local position relative to the scrollable widget (not global screen coordinates)
-    // This ensures consistent edge detection regardless of current scroll offset
+    // Get the scrollable viewport's RenderBox
+    final RenderBox? scrollViewBox = _scrollViewKey.currentContext?.findRenderObject() as RenderBox?;
+    if (scrollViewBox == null) return;
 
-    // Get the viewport height of the scrollable area
-    final RenderBox? box = context.findRenderObject() as RenderBox?;
-    if (box == null) return;
+    // Get the global position of the scrollable viewport (top-left corner)
+    final scrollViewGlobalPosition = scrollViewBox.localToGlobal(Offset.zero);
+    final scrollViewTopInGlobal = scrollViewGlobalPosition.dy;
+    final scrollViewBottomInGlobal = scrollViewTopInGlobal + scrollViewBox.size.height;
 
-    final viewportHeight = box.size.height;
+    // Get the global position of the current touch point
+    final RenderBox? currentBox = context.findRenderObject() as RenderBox?;
+    if (currentBox == null) return;
 
-    // Define thresholds based on viewport (not screen height)
+    final touchGlobalPosition = currentBox.localToGlobal(localPosition);
+    final touchYInGlobal = touchGlobalPosition.dy;
+
+    // Calculate position relative to the scrollable viewport
+    final positionInScrollView = touchYInGlobal - scrollViewTopInGlobal;
+    final scrollViewHeight = scrollViewBox.size.height;
+
+    // Define thresholds for edge detection within the scrollable viewport
     final topThreshold = _edgeScrollThreshold;
-    final bottomThreshold = viewportHeight - _edgeScrollThreshold;
+    final bottomThreshold = scrollViewHeight - _edgeScrollThreshold;
 
     bool shouldScroll = false;
     bool scrollDown = false;
 
-    // Check if position is at the edge of the viewport (local position)
-    if (localPosition.dy < topThreshold) {
-      shouldScroll = true;
-      scrollDown = false;
-    } else if (localPosition.dy > bottomThreshold) {
-      shouldScroll = true;
-      scrollDown = true;
+    // Check if touch is within the scrollable viewport and at the edge
+    if (touchYInGlobal >= scrollViewTopInGlobal && touchYInGlobal <= scrollViewBottomInGlobal) {
+      if (positionInScrollView < topThreshold) {
+        shouldScroll = true;
+        scrollDown = false;
+      } else if (positionInScrollView > bottomThreshold) {
+        shouldScroll = true;
+        scrollDown = true;
+      }
     }
 
     if (shouldScroll) {
@@ -1150,6 +1167,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                     WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
 
                     return SingleChildScrollView(
+                      key: _scrollViewKey,
                       controller: _scrollController,
                       physics: _isSelecting ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
                       child: SizedBox(
