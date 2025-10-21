@@ -1571,7 +1571,15 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             ),
           ),
 
-          // 2. Disabled slots (gray cells) - painted BEFORE preview
+          // 2. Events
+          Positioned.fill(
+            child: CustomPaint(
+              painter: EventPainter(events: eventData),
+            ),
+          ),
+
+          // 3. Disabled slots (gray cells) - painted AFTER events but BEFORE preview
+          // This ensures preview blocks are visible above disabled slots
           if (widget.disabledSlots != null)
             Positioned.fill(
               child: CustomPaint(
@@ -1587,12 +1595,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               ),
             ),
 
-          // 3. Events
-          Positioned.fill(
-            child: CustomPaint(
-              painter: EventPainter(events: eventData),
-            ),
-          ),
 
           // 4. Interactive overlays (only when editable)
           if (widget.isEditable) ...[
