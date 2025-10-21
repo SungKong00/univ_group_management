@@ -12,6 +12,7 @@ import '../../../core/theme/app_theme.dart';
 import 'disabled_slots_painter.dart';
 import 'event_create_dialog.dart';
 import 'event_painter.dart';
+import 'fixed_duration_preview_painter.dart';
 import 'highlight_painter.dart';
 import 'selection_painter.dart';
 import 'time_grid_painter.dart';
@@ -77,6 +78,10 @@ class WeeklyScheduleEditor extends StatefulWidget {
   /// Pre-selected place ID (auto-fill from filter selection)
   final int? preSelectedPlaceId;
 
+  /// Required duration for fixed-duration mode (multiple places selected)
+  /// When set, enables single-click reservation with fixed time blocks
+  final Duration? requiredDuration;
+
   const WeeklyScheduleEditor({
     super.key,
     this.allowMultiDaySelection = false,
@@ -89,6 +94,7 @@ class WeeklyScheduleEditor extends StatefulWidget {
     this.availablePlaces,
     this.disabledSlotsByPlace,
     this.preSelectedPlaceId,
+    this.requiredDuration,
   });
 
   @override
@@ -115,6 +121,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   Rect? _selectionRect;
   Rect? _highlightRect;
   Offset? _activePointerGlobalPosition;
+
+  // Fixed Duration Mode state
+  Rect? _durationPreviewRect; // Preview rect for fixed duration mode
+  ({int day, int slot})? _previewStartCell; // Current preview start cell
 
   late int _visibleStartHour;
   late int _visibleEndHour;
@@ -598,6 +608,102 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     );
 
     return widget.disabledSlots!.contains(cellDateTime);
+  }
+
+  // --- Fixed Duration Mode Helpers ---
+
+  /// Check if we're in fixed duration mode
+  bool get _isFixedDurationMode => widget.requiredDuration != null;
+
+  /// Calculate end cell from start cell based on required duration (same day only)
+  ({int day, int slot})? _calculateFixedDurationEndCell(({int day, int slot}) startCell) {
+    if (widget.requiredDuration == null) return null;
+
+    final int durationSlots = (widget.requiredDuration!.inMinutes / 15).ceil();
+    final int endSlot = startCell.slot + durationSlots - 1;
+
+    // Ensure we don't exceed 24 hours (96 slots)
+    if (endSlot >= (_endHour - _startHour) * 4) {
+      return null; // Duration exceeds day boundary
+    }
+
+    return (day: startCell.day, slot: endSlot);
+  }
+
+  /// Check if fixed duration selection is valid (no disabled slots, same day only)
+  bool _isFixedDurationSelectionValid(({int day, int slot}) startCell) {
+    final endCell = _calculateFixedDurationEndCell(startCell);
+    if (endCell == null) return false;
+
+    // Only check if the START cell is valid (white cell)
+    // Allow preview even if end cells contain disabled slots
+    // The user can see the preview and decide whether to book
+
+    // Check if start cell is disabled
+    if (_isCellDisabled(startCell)) return false;
+
+    // Check for event overlap at start cell only (if overlap is not allowed)
+    if (!widget.allowEventOverlap && _findEventsAtCell(startCell).isNotEmpty) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /// Update fixed duration preview based on current pointer position
+  void _updateFixedDurationPreview(Offset localPosition, double dayColumnWidth) {
+    if (!_isFixedDurationMode) return;
+
+    final cell = _pixelToCell(localPosition, dayColumnWidth);
+
+    // Check if cell is disabled - hide preview on grey cells
+    if (_isCellDisabled(cell)) {
+      setState(() {
+        _durationPreviewRect = null;
+        _previewStartCell = null;
+      });
+      return;
+    }
+
+    final endCell = _calculateFixedDurationEndCell(cell);
+    if (endCell == null || !_isFixedDurationSelectionValid(cell)) {
+      setState(() {
+        _durationPreviewRect = null;
+        _previewStartCell = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _previewStartCell = cell;
+      _durationPreviewRect = _cellToRect(cell, endCell, dayColumnWidth);
+    });
+  }
+
+  /// Clear fixed duration preview
+  void _clearFixedDurationPreview() {
+    if (_durationPreviewRect != null || _previewStartCell != null) {
+      setState(() {
+        _durationPreviewRect = null;
+        _previewStartCell = null;
+      });
+    }
+  }
+
+  /// Confirm fixed duration selection and open event dialog
+  void _confirmFixedDurationSelection() {
+    if (_previewStartCell == null) return;
+
+    final startCell = _previewStartCell!;
+    final endCell = _calculateFixedDurationEndCell(startCell);
+
+    if (endCell == null || !_isFixedDurationSelectionValid(startCell)) return;
+
+    // Clear preview
+    _clearFixedDurationPreview();
+
+    // Show event creation dialog
+    _showCreateDialog(startCell, endCell);
   }
 
   // --- Dialogs ---
@@ -1260,6 +1366,13 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       onHover: (event) {
         if (!widget.isEditable || _mode == CalendarMode.view) return;
 
+        // Fixed Duration Mode: Show preview on hover
+        if (_isFixedDurationMode) {
+          _updateFixedDurationPreview(event.localPosition, dayColumnWidth);
+          return;
+        }
+
+        // Normal Mode: existing behavior
         if (_isSelecting) {
           _updateSelectionCell(event.localPosition, dayColumnWidth);
         } else {
@@ -1270,12 +1383,26 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         }
       },
       onExit: (event) {
+        // Fixed Duration Mode: Clear preview on exit
+        if (_isFixedDurationMode) {
+          _clearFixedDurationPreview();
+        }
+
         setState(() {
           _highlightRect = null;
         });
       },
       child: GestureDetector(
-        onTapDown: (details) => _handleTap(details.localPosition, dayColumnWidth, eventRects),
+        onTapDown: (details) {
+          // Fixed Duration Mode: Confirm on click
+          if (_isFixedDurationMode && widget.isEditable && _mode != CalendarMode.view) {
+            _confirmFixedDurationSelection();
+            return;
+          }
+
+          // Normal Mode: existing behavior
+          _handleTap(details.localPosition, dayColumnWidth, eventRects);
+        },
         behavior: HitTestBehavior.opaque,
         child: _buildCalendarStack(eventRects, dayColumnWidth, contentHeight),
       ),
@@ -1297,21 +1424,42 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         final localPosition =
             _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
         final touchedCell = _pixelToCell(localPosition, dayColumnWidth);
-        setState(() {
-          _highlightRect = _cellToRect(touchedCell, touchedCell, dayColumnWidth);
-        });
+
+        // Fixed Duration Mode: Show preview immediately on touch
+        if (_isFixedDurationMode) {
+          _updateFixedDurationPreview(localPosition, dayColumnWidth);
+        } else {
+          // Normal Mode: existing highlight behavior
+          setState(() {
+            _highlightRect = _cellToRect(touchedCell, touchedCell, dayColumnWidth);
+          });
+        }
+
         // Handle existing event tap
         _handleMobileTap(details.globalPosition, dayColumnWidth);
       },
       onTapUp: (details) {
-        // Clear highlight if it was just a tap (not long press)
+        // Fixed Duration Mode: Confirm on tap release
+        if (_isFixedDurationMode && !_isSelecting) {
+          _confirmFixedDurationSelection();
+        }
+
+        // Clear highlight/preview if it was just a tap (not long press)
         if (!_isSelecting) {
+          if (_isFixedDurationMode) {
+            _clearFixedDurationPreview();
+          }
           setState(() {
             _highlightRect = null;
           });
         }
       },
       onTapCancel: () {
+        // Fixed Duration Mode: Clear preview on cancel
+        if (_isFixedDurationMode) {
+          _clearFixedDurationPreview();
+        }
+
         // Clear highlight if tap was cancelled
         if (!_isSelecting) {
           setState(() {
@@ -1319,20 +1467,49 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           });
         }
       },
-      // Long press to start selection
-      onLongPressStart: (details) => _handleLongPressStart(details, dayColumnWidth),
+      // Long press to start selection (Normal Mode) or move preview (Fixed Duration Mode)
+      onLongPressStart: (details) {
+        if (_isFixedDurationMode) {
+          // Fixed Duration Mode: Haptic feedback and show preview
+          _triggerHaptic(HapticFeedbackType.medium);
+          final localPosition =
+              _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
+          _updateFixedDurationPreview(localPosition, dayColumnWidth);
+          _activePointerGlobalPosition = details.globalPosition;
+        } else {
+          // Normal Mode: existing behavior
+          _handleLongPressStart(details, dayColumnWidth);
+        }
+      },
       onLongPressMoveUpdate: (details) {
-        if (_isSelecting) {
+        if (_isFixedDurationMode) {
+          // Fixed Duration Mode: Update preview position as user drags
+          _activePointerGlobalPosition = details.globalPosition;
+          final localPosition =
+              _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
+          _updateFixedDurationPreview(localPosition, dayColumnWidth);
+
+          // Handle edge scrolling
+          _handleEdgeScrolling(details.globalPosition, dayColumnWidth);
+        } else if (_isSelecting) {
+          // Normal Mode: existing behavior
           _updateSelectionFromPointer(details.globalPosition, dayColumnWidth);
         }
       },
       onLongPressEnd: (details) {
-        if (_isSelecting) {
+        if (_isFixedDurationMode) {
+          // Fixed Duration Mode: Confirm selection and clear state
+          _triggerHaptic(HapticFeedbackType.light);
+          _confirmFixedDurationSelection();
+          _activePointerGlobalPosition = null;
+          _stopAutoScroll();
+        } else if (_isSelecting) {
+          // Normal Mode: existing behavior
           _triggerHaptic(HapticFeedbackType.light);
           _updateSelectionFromPointer(details.globalPosition, dayColumnWidth, checkAutoScroll: false);
           _completeSelection();
+          _handleLongPressEnd(details);
         }
-        _handleLongPressEnd(details);
       },
       behavior: HitTestBehavior.opaque,
       child: _buildCalendarStack(eventRects, dayColumnWidth, contentHeight),
@@ -1380,6 +1557,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       height: contentHeight,
       child: Stack(
         children: [
+          // 1. Grid lines (base layer)
           Positioned.fill(
             child: CustomPaint(
               painter: TimeGridPainter(
@@ -1392,7 +1570,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               ),
             ),
           ),
-          // Disabled slots (gray cells) - painted before events
+
+          // 2. Disabled slots (gray cells) - painted BEFORE preview
           if (widget.disabledSlots != null)
             Positioned.fill(
               child: CustomPaint(
@@ -1407,17 +1586,34 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                 ),
               ),
             ),
+
+          // 3. Events
           Positioned.fill(
             child: CustomPaint(
               painter: EventPainter(events: eventData),
             ),
           ),
+
+          // 4. Interactive overlays (only when editable)
           if (widget.isEditable) ...[
+            // 4a. Fixed Duration Mode Preview - renders ABOVE disabled slots
+            // This allows preview to be visible even when hovering over areas
+            // that will extend into disabled slots
+            if (_durationPreviewRect != null)
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: FixedDurationPreviewPainter(previewRect: _durationPreviewRect),
+                ),
+              ),
+
+            // 4b. Highlight (current cell)
             Positioned.fill(
               child: CustomPaint(
                 painter: HighlightPainter(highlightRect: _highlightRect),
               ),
             ),
+
+            // 4c. Selection (normal mode selection rect)
             Positioned.fill(
               child: CustomPaint(
                 painter: SelectionPainter(selection: _selectionRect),

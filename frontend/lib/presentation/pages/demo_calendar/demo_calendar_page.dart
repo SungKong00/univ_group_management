@@ -964,6 +964,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
               availablePlaces: _selectedPlaces,
               disabledSlotsByPlace: _disabledSlotsByPlace,
               preSelectedPlaceId: _selectedPlaces.length == 1 ? _selectedPlaces.first.id : null,
+              requiredDuration: _selectedPlaces.length >= 2 ? _requiredDuration : null, // Fixed Duration Mode
             ),
           ),
         ],
