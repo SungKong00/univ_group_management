@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 
@@ -78,6 +79,10 @@ class _TimeSpinnerState extends State<TimeSpinner> {
   // FocusNode
   final _hourFocusNode = FocusNode();
   final _minuteFocusNode = FocusNode();
+
+  // 드래그 누적값
+  double _dragAccumulator = 0.0;
+  static const double _dragThreshold = 15.0; // 15px마다 1회 변경
 
   @override
   void initState() {
@@ -216,27 +221,62 @@ class _TimeSpinnerState extends State<TimeSpinner> {
           onPressed: widget.enabled ? onIncrement : null,
         ),
         const SizedBox(height: AppSpacing.xxs),
-        // Value display (with tap-to-edit)
-        GestureDetector(
-          onTap: () {
-            if (!widget.enabled) return;
-            // 시간/분 구분하여 편집 모드 전환
-            if (label == '시') {
-              setState(() {
-                _isEditingHour = true;
-                _hourController.clear(); // 기존 값 클리어
-              });
-              _hourFocusNode.requestFocus(); // 포커스 자동 설정
-            } else {
-              setState(() {
-                _isEditingMinute = true;
-                _minuteController.clear();
-              });
-              _minuteFocusNode.requestFocus();
+        // Value display (with tap-to-edit, mouse wheel, and drag support)
+        Listener(
+          onPointerSignal: (event) {
+            // 마우스 휠 이벤트 처리 (즉각 반응)
+            if (event is PointerScrollEvent && widget.enabled) {
+              if (event.scrollDelta.dy > 0) {
+                // 아래로 스크롤: 값 감소
+                onDecrement();
+              } else if (event.scrollDelta.dy < 0) {
+                // 위로 스크롤: 값 증가
+                onIncrement();
+              }
             }
           },
-          child: Container(
-            width: 56,
+          child: GestureDetector(
+            onTap: () {
+              if (!widget.enabled) return;
+              // 시간/분 구분하여 편집 모드 전환
+              if (label == '시') {
+                setState(() {
+                  _isEditingHour = true;
+                  _hourController.clear(); // 기존 값 클리어
+                });
+                _hourFocusNode.requestFocus(); // 포커스 자동 설정
+              } else {
+                setState(() {
+                  _isEditingMinute = true;
+                  _minuteController.clear();
+                });
+                _minuteFocusNode.requestFocus();
+              }
+            },
+            onVerticalDragUpdate: (details) {
+              // 드래그 인터랙션 처리 (누적 방식)
+              if (!widget.enabled) return;
+
+              _dragAccumulator += details.delta.dy;
+
+              while (_dragAccumulator.abs() > _dragThreshold) {
+                if (_dragAccumulator < 0) {
+                  // 위로 드래그: 증가
+                  onIncrement();
+                  _dragAccumulator += _dragThreshold;
+                } else {
+                  // 아래로 드래그: 감소
+                  onDecrement();
+                  _dragAccumulator -= _dragThreshold;
+                }
+              }
+            },
+            onVerticalDragEnd: (_) {
+              // 드래그 종료 시 누적값 리셋
+              _dragAccumulator = 0.0;
+            },
+            child: Container(
+            width: 64,
             height: 44,
             decoration: BoxDecoration(
               // 편집 모드: 하이라이트 배경
@@ -291,6 +331,7 @@ class _TimeSpinnerState extends State<TimeSpinner> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+            ),
           ),
         ),
         const SizedBox(height: 4),
@@ -378,7 +419,7 @@ class _SpinnerButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 56,
+      width: 64,
       height: 32,
       child: IconButton(
         icon: Icon(icon, size: 20),

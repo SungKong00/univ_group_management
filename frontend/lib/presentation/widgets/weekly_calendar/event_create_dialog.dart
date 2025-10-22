@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/place/place.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
-import '../common/time_spinner.dart';
+import '../common/cupertino_time_picker.dart';
 
 /// Result data returned from EventCreateDialog
 class EventCreateResult {
@@ -417,13 +417,13 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
                   ),
                   const SizedBox(height: AppSpacing.md),
 
-                  // Time spinners
+                  // Time pickers
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      // Start time spinner
+                      // Start time picker
                       Flexible(
-                        child: TimeSpinner(
+                        child: CupertinoTimePicker(
                           label: '시작 시간',
                           initialTime: _startTime,
                           onTimeChanged: _handleStartTimeChange,
@@ -432,9 +432,9 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.md),
-                      // End time spinner
+                      // End time picker
                       Flexible(
-                        child: TimeSpinner(
+                        child: CupertinoTimePicker(
                           label: '종료 시간',
                           initialTime: _endTime,
                           onTimeChanged: _handleEndTimeChange,
