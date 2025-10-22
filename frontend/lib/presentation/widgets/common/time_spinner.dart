@@ -5,13 +5,15 @@ import '../../../core/theme/theme.dart';
 /// Reusable Time Spinner Component
 ///
 /// A compact time picker UI that allows users to select hours and minutes
-/// using increment/decrement buttons (spinner style).
+/// using increment/decrement buttons (spinner style) or direct keyboard input.
 ///
 /// Features:
 /// - Hour spinner (0-23)
-/// - Minute spinner (0-59, 15-minute intervals)
-/// - Compact vertical layout
-/// - Keyboard input support
+/// - Minute spinner (0-59)
+/// - Two input modes:
+///   - Free input mode: Any minute value (0-59)
+///   - Interval mode: Fixed intervals (1, 5, 10, 15, or 30 minutes)
+/// - Direct keyboard input support
 /// - Callback on time change
 ///
 /// Design:
@@ -35,6 +37,11 @@ class TimeSpinner extends StatefulWidget {
   /// Label text (optional, e.g., "시작 시간")
   final String? label;
 
+  /// Free input mode (default: false = interval mode)
+  /// - true: Any minute value (0-59), arrow buttons ±1
+  /// - false: Fixed intervals, arrow buttons ±interval
+  final bool freeInputMode;
+
   const TimeSpinner({
     super.key,
     required this.initialTime,
@@ -42,6 +49,7 @@ class TimeSpinner extends StatefulWidget {
     this.minuteInterval = 15,
     this.enabled = true,
     this.label,
+    this.freeInputMode = false,
   }) : assert(
           minuteInterval == 1 ||
               minuteInterval == 5 ||
@@ -75,7 +83,10 @@ class _TimeSpinnerState extends State<TimeSpinner> {
   void initState() {
     super.initState();
     _selectedHour = widget.initialTime.hour;
-    _selectedMinute = _roundToInterval(widget.initialTime.minute);
+    // Free mode: use exact minute, Interval mode: round to interval
+    _selectedMinute = widget.freeInputMode
+        ? widget.initialTime.minute
+        : _roundToInterval(widget.initialTime.minute);
   }
 
   @override
@@ -84,7 +95,10 @@ class _TimeSpinnerState extends State<TimeSpinner> {
     if (widget.initialTime != oldWidget.initialTime) {
       setState(() {
         _selectedHour = widget.initialTime.hour;
-        _selectedMinute = _roundToInterval(widget.initialTime.minute);
+        // Free mode: use exact minute, Interval mode: round to interval
+        _selectedMinute = widget.freeInputMode
+            ? widget.initialTime.minute
+            : _roundToInterval(widget.initialTime.minute);
       });
     }
   }
@@ -137,7 +151,9 @@ class _TimeSpinnerState extends State<TimeSpinner> {
   void _incrementMinute() {
     if (!widget.enabled) return;
     setState(() {
-      _selectedMinute = (_selectedMinute + widget.minuteInterval) % 60;
+      // Free mode: increment by 1, Interval mode: increment by interval
+      final increment = widget.freeInputMode ? 1 : widget.minuteInterval;
+      _selectedMinute = (_selectedMinute + increment) % 60;
       _notifyTimeChange();
     });
   }
@@ -146,7 +162,9 @@ class _TimeSpinnerState extends State<TimeSpinner> {
   void _decrementMinute() {
     if (!widget.enabled) return;
     setState(() {
-      _selectedMinute = (_selectedMinute - widget.minuteInterval + 60) % 60;
+      // Free mode: decrement by 1, Interval mode: decrement by interval
+      final decrement = widget.freeInputMode ? 1 : widget.minuteInterval;
+      _selectedMinute = (_selectedMinute - decrement + 60) % 60;
       _notifyTimeChange();
     });
   }
@@ -171,7 +189,8 @@ class _TimeSpinnerState extends State<TimeSpinner> {
     final parsed = int.tryParse(value);
     if (parsed != null && parsed >= 0 && parsed <= 59) {
       setState(() {
-        _selectedMinute = _roundToInterval(parsed);
+        // Free mode: use exact value, Interval mode: round to interval
+        _selectedMinute = widget.freeInputMode ? parsed : _roundToInterval(parsed);
       });
       _notifyTimeChange();
     }
