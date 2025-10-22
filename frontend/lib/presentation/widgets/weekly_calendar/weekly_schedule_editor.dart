@@ -20,6 +20,56 @@ import 'weekly_schedule_editor_painter.dart';
 
 typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end, DateTime? startTime, DateTime? endTime});
 
+/// Calculate event position (top, height) based on DateTime or slot
+///
+/// **Shared utility for calendar rendering**
+/// - DateTime-based (precise minute positioning) if available
+/// - Slot-based (15-minute granularity) as fallback
+///
+/// Parameters:
+/// - [event]: Event with start/end times
+/// - [slotHeight]: Height of a 15-minute slot in pixels
+/// - [referenceStartHour]: Hour offset for the visible range (e.g., 0 for full day, 9 for 9am start)
+/// - [minSlot]: Optional minimum slot offset (for modal's cropped time range)
+({double top, double height}) calculateEventPosition({
+  required Event event,
+  required double slotHeight,
+  required int referenceStartHour,
+  int? minSlot,
+}) {
+  if (event.startTime != null && event.endTime != null) {
+    // DateTime-based precise calculation
+    final startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
+    final endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
+
+    // Reference point: start of visible range (accounting for minSlot if provided)
+    final referenceMinutes = referenceStartHour * 60 + (minSlot ?? 0) * 15;
+
+    // Calculate offset from reference point
+    final minutesFromReference = startMinutes - referenceMinutes;
+    final top = (minutesFromReference / 15.0) * slotHeight;
+
+    // Calculate duration
+    final durationMinutes = endMinutes - startMinutes;
+    final height = (durationMinutes / 15.0) * slotHeight;
+
+    return (top: top, height: height);
+  } else {
+    // Slot-based fallback (15-minute granularity)
+    final eventStartSlot = math.min(event.start.slot, event.end.slot);
+    final eventEndSlot = math.max(event.start.slot, event.end.slot);
+
+    final top = minSlot != null
+        ? (eventStartSlot - minSlot) * slotHeight
+        : (eventStartSlot - referenceStartHour * 4) * slotHeight;
+
+    final duration = eventEndSlot - eventStartSlot + 1;
+    final height = duration * slotHeight;
+
+    return (top: top, height: height);
+  }
+}
+
 /// Calendar interaction mode
 enum CalendarMode {
   add,   // Add new events (ignores existing event blocks)
@@ -564,33 +614,23 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   }
 
   /// Precise minute-based rect calculation for events with DateTime
+  /// Uses shared calculateEventPosition() utility
   Rect _eventToRectPrecise(Event event, double dayColumnWidth) {
-    final startTime = event.startTime!;
-    final endTime = event.endTime!;
-
-    // Calculate pixels per minute (15 minutes = _minSlotHeight pixels)
-    final double pixelPerMinute = _minSlotHeight / 15.0;
-
-    // Calculate minutes from visible start hour
-    final int startMinutesFromMidnight = startTime.hour * 60 + startTime.minute;
-    final int endMinutesFromMidnight = endTime.hour * 60 + endTime.minute;
-    final int visibleStartMinutes = _visibleStartHour * 60;
-
-    final int startMinutesFromVisible = startMinutesFromMidnight - visibleStartMinutes;
-    final int endMinutesFromVisible = endMinutesFromMidnight - visibleStartMinutes;
-
-    // Calculate pixel positions
-    final double top = startMinutesFromVisible * pixelPerMinute;
-    final double bottom = endMinutesFromVisible * pixelPerMinute;
+    // Use shared utility function for position calculation
+    final position = calculateEventPosition(
+      event: event,
+      slotHeight: _minSlotHeight,
+      referenceStartHour: _visibleStartHour,
+    );
 
     // Day position (use the day from the cell for consistency)
     final int day = event.start.day;
 
     return Rect.fromLTRB(
       _timeColumnWidth + day * dayColumnWidth,
-      top,
+      position.top,
       _timeColumnWidth + (day + 1) * dayColumnWidth,
-      bottom,
+      position.top + position.height,
     );
   }
   int _eventStartSlot(Event event) => math.min(event.start.slot, event.end.slot);
@@ -1848,9 +1888,23 @@ class _OverlappingEventsVisualization extends StatelessWidget {
                           return const Positioned(child: SizedBox.shrink());
                         }
 
-                        final top = (eventStartSlot - timeRange.minSlot) * _slotHeight;
-                        final duration = eventEndSlot - eventStartSlot + 1;
-                        final height = duration * _slotHeight;
+                        // 🟢 사용: 공통 위치 계산 함수 (calculateEventPosition)
+                        // - DateTime 기반 정확한 계산 (분 단위)
+                        // - slot 기반 fallback (15분 단위)
+                        final position = calculateEventPosition(
+                          event: event,
+                          slotHeight: _slotHeight,
+                          referenceStartHour: startHour,
+                          minSlot: timeRange.minSlot,
+                        );
+
+                        final double top = position.top;
+                        final double height = position.height;
+
+                        // duration: slot 단위 길이 (텍스트 표시 조건용)
+                        final int duration = event.startTime != null && event.endTime != null
+                            ? ((event.endTime!.difference(event.startTime!).inMinutes) / 15.0).ceil()
+                            : eventEndSlot - eventStartSlot + 1;
 
                         final totalVisibleHeight = (timeRange.maxSlot - timeRange.minSlot + 1) * _slotHeight;
 
