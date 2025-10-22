@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/place/place.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
+import '../common/time_spinner.dart';
 
 /// Result data returned from EventCreateDialog
 class EventCreateResult {
@@ -94,9 +95,17 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
   late LocationType _selectedLocationType;
   int? _selectedPlaceId;
 
+  // Time editing state
+  late DateTime _startTime;
+  late DateTime _endTime;
+
   @override
   void initState() {
     super.initState();
+
+    // Initialize time values
+    _startTime = widget.startTime;
+    _endTime = widget.endTime;
 
     // Auto-fill location type based on filter selection
     if (widget.availablePlaces.isNotEmpty) {
@@ -131,6 +140,30 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
     super.dispose();
   }
 
+  /// Handle start time change
+  void _handleStartTimeChange(DateTime newStartTime) {
+    setState(() {
+      _startTime = newStartTime;
+
+      // Automatically adjust end time if it's before the new start time
+      if (_endTime.isBefore(_startTime) || _endTime.isAtSameMomentAs(_startTime)) {
+        _endTime = _startTime.add(const Duration(minutes: 15));
+      }
+    });
+  }
+
+  /// Handle end time change
+  void _handleEndTimeChange(DateTime newEndTime) {
+    setState(() {
+      _endTime = newEndTime;
+
+      // Automatically adjust start time if it's after the new end time
+      if (_startTime.isAfter(_endTime) || _startTime.isAtSameMomentAs(_endTime)) {
+        _startTime = _endTime.subtract(const Duration(minutes: 15));
+      }
+    });
+  }
+
   /// Check if a place is available for the selected time
   bool _isPlaceAvailable(int placeId) {
     final placeDisabledSlots = widget.disabledSlotsByPlace[placeId];
@@ -140,9 +173,9 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
 
     // Calculate all 15-minute slots within the event time range
     final eventSlots = <DateTime>{};
-    DateTime currentSlot = widget.startTime;
+    DateTime currentSlot = _startTime;
 
-    while (currentSlot.isBefore(widget.endTime)) {
+    while (currentSlot.isBefore(_endTime)) {
       eventSlots.add(currentSlot);
       currentSlot = currentSlot.add(const Duration(minutes: 15));
     }
@@ -350,7 +383,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Time display (read-only)
+            // Time editing section
             Container(
               padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
@@ -360,24 +393,46 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Date display (read-only)
                   Row(
                     children: [
-                      const Icon(Icons.access_time, size: 16, color: AppColors.lightSecondary),
+                      const Icon(Icons.calendar_today, size: 16, color: AppColors.lightSecondary),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
-                        '시작: ${DateFormat('M/d (E) HH:mm', 'ko_KR').format(widget.startTime)}',
-                        style: const TextStyle(fontSize: 13),
+                        DateFormat('M월 d일 (E)', 'ko_KR').format(_startTime),
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppColors.neutral700,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Time spinners
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      const SizedBox(width: 24), // Align with icon
-                      Text(
-                        '종료: ${DateFormat('M/d (E) HH:mm', 'ko_KR').format(widget.endTime)}',
-                        style: const TextStyle(fontSize: 13),
+                      // Start time spinner
+                      Flexible(
+                        child: TimeSpinner(
+                          label: '시작 시간',
+                          initialTime: _startTime,
+                          onTimeChanged: _handleStartTimeChange,
+                          minuteInterval: 15,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      // End time spinner
+                      Flexible(
+                        child: TimeSpinner(
+                          label: '종료 시간',
+                          initialTime: _endTime,
+                          onTimeChanged: _handleEndTimeChange,
+                          minuteInterval: 15,
+                        ),
                       ),
                     ],
                   ),
