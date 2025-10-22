@@ -9,10 +9,14 @@ import '../common/time_spinner.dart';
 class EventCreateResult {
   final String title;
   final LocationSelection locationSelection;
+  final DateTime? startTime;  // Updated time from dialog
+  final DateTime? endTime;    // Updated time from dialog
 
   const EventCreateResult({
     required this.title,
     required this.locationSelection,
+    this.startTime,
+    this.endTime,
   });
 }
 
@@ -369,6 +373,8 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
     final result = EventCreateResult(
       title: title,
       locationSelection: locationSelection,
+      startTime: _startTime, // Pass updated start time
+      endTime: _endTime,     // Pass updated end time
     );
 
     Navigator.of(context).pop(result);

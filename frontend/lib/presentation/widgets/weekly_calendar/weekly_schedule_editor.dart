@@ -18,7 +18,7 @@ import 'selection_painter.dart';
 import 'time_grid_painter.dart';
 import 'weekly_schedule_editor_painter.dart';
 
-typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end});
+typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end, DateTime? startTime, DateTime? endTime});
 
 /// Calendar interaction mode
 enum CalendarMode {
@@ -341,6 +341,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             title: groupEvent.title,
             start: (day: eventDay, slot: startSlot),
             end: (day: eventDay, slot: endSlot),
+            startTime: groupEvent.startDateTime,  // Add DateTime for precise rendering
+            endTime: groupEvent.endDateTime,      // Add DateTime for precise rendering
           ));
           debugPrint('  ✓ Added: ${groupEvent.title} (Day: $eventDay, ${startSlot}-${endSlot})');
         }
@@ -549,6 +551,48 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     );
   }
 
+  /// Convert Event to Rect with precise minute-level positioning
+  /// Uses DateTime if available, falls back to slot-based calculation
+  Rect _eventToRect(Event event, double dayColumnWidth) {
+    // If event has precise DateTime, use minute-based calculation
+    if (event.startTime != null && event.endTime != null) {
+      return _eventToRectPrecise(event, dayColumnWidth);
+    }
+
+    // Fallback to slot-based calculation (15-minute granularity)
+    return _cellToRect(event.start, event.end, dayColumnWidth);
+  }
+
+  /// Precise minute-based rect calculation for events with DateTime
+  Rect _eventToRectPrecise(Event event, double dayColumnWidth) {
+    final startTime = event.startTime!;
+    final endTime = event.endTime!;
+
+    // Calculate pixels per minute (15 minutes = _minSlotHeight pixels)
+    final double pixelPerMinute = _minSlotHeight / 15.0;
+
+    // Calculate minutes from visible start hour
+    final int startMinutesFromMidnight = startTime.hour * 60 + startTime.minute;
+    final int endMinutesFromMidnight = endTime.hour * 60 + endTime.minute;
+    final int visibleStartMinutes = _visibleStartHour * 60;
+
+    final int startMinutesFromVisible = startMinutesFromMidnight - visibleStartMinutes;
+    final int endMinutesFromVisible = endMinutesFromMidnight - visibleStartMinutes;
+
+    // Calculate pixel positions
+    final double top = startMinutesFromVisible * pixelPerMinute;
+    final double bottom = endMinutesFromVisible * pixelPerMinute;
+
+    // Day position (use the day from the cell for consistency)
+    final int day = event.start.day;
+
+    return Rect.fromLTRB(
+      _timeColumnWidth + day * dayColumnWidth,
+      top,
+      _timeColumnWidth + (day + 1) * dayColumnWidth,
+      bottom,
+    );
+  }
   int _eventStartSlot(Event event) => math.min(event.start.slot, event.end.slot);
 
   int _eventEndSlotExclusive(Event event) => math.max(event.start.slot, event.end.slot) + 1;
@@ -729,8 +773,12 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   /// Show detail view dialog (read-only)
   void _showEventDetailDialog(Event event) {
-    final startTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
-    final endTime = DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
+    // 🟢 수정: event.startTime/endTime 우선 사용 (정확한 분 단위)
+    // 없으면 slot 기반 계산 사용 (fallback)
+    final startTime = event.startTime ??
+        DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
+    final endTime = event.endTime ??
+        DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
     final dayNames = ['월', '화', '수', '목', '금', '토', '일'];
     final isExternal = _isExternalEvent(event);
 
@@ -944,6 +992,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                     title: titleController.text,
                     start: event.start,
                     end: event.end,
+                    startTime: event.startTime,  // Preserve DateTime
+                    endTime: event.endTime,      // Preserve DateTime
                   );
                   _updateVisibleRangeForCurrentState();
                 }
@@ -990,6 +1040,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
     if (result == null) return; // User cancelled
 
+    // Extract updated times from dialog result (if user modified them)
+    final finalStartTime = result.startTime ?? startTime;
+    final finalEndTime = result.endTime ?? endTime;
+
     // Check for overlap
     final isOverlapping = _isOverlapping(startCell, endCell);
 
@@ -999,7 +1053,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('생성 불가'),
-          content: const Text('겹치는 시간에는 일정을 생성할 수 없습니다.'),
+          content: const Text('겹치는 시��에는 일정을 생성할 수 없습니다.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -1020,14 +1074,15 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       );
     }
 
-    // Create event with location info
-    // Note: Currently using internal Event typedef - may need to extend for location
+    // Create event with DateTime info for precise rendering
     setState(() {
       _events.add((
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: result.title,
         start: startCell,
         end: endCell,
+        startTime: finalStartTime,  // Store precise time
+        endTime: finalEndTime,      // Store precise time
       ));
       _updateVisibleRangeForCurrentState();
     });
@@ -1345,7 +1400,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
                     final allEvents = _getAllEvents();
                     final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {
-                      return (rect: _cellToRect(event.start, event.end, dayColumnWidth), event: event);
+                      return (rect: _eventToRect(event, dayColumnWidth), event: event);
                     }).toList();
 
                     WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
@@ -1709,7 +1764,12 @@ class _OverlappingEventsVisualization extends StatelessWidget {
     return blockWidth.clamp(_minBlockWidth, _baseBlockWidth);
   }
 
-  /// 시간을 슬롯에서 시간:분 형식으로 변환
+  /// DateTime을 시간:분 형식으로 변환 (정확한 분 단위)
+  String _formatTimeFromDateTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// 시간을 슬롯에서 시간:분 형식으로 변환 (15분 단위)
   String _formatTime(int slot) {
     final hour = startHour + (slot ~/ 4);
     final minute = (slot % 4) * 15;
@@ -1783,7 +1843,7 @@ class _OverlappingEventsVisualization extends StatelessWidget {
                         final eventStartSlot = math.min(event.start.slot, event.end.slot);
                         final eventEndSlot = math.max(event.start.slot, event.end.slot);
 
-                        // 이벤트가 시간 범위 밖에 있으면 렌더링하지 않음
+                        // 이벤트가 시간 ���위 밖에 있으면 렌더링하지 않음
                         if (eventEndSlot < timeRange.minSlot || eventStartSlot > timeRange.maxSlot) {
                           return const Positioned(child: SizedBox.shrink());
                         }
@@ -1841,7 +1901,11 @@ class _OverlappingEventsVisualization extends StatelessWidget {
                                     SizedBox(height: 2),
                                   if (duration > 2)
                                     Text(
-                                      '${_formatTime(eventStartSlot)} - ${_formatTime(eventEndSlot + 1)}',
+                                      // 🟢 수정: event.startTime/endTime 우선 사용 (정확한 분 단위)
+                                      // 없으면 slot 기반 계산 (fallback)
+                                      event.startTime != null && event.endTime != null
+                                          ? '${_formatTimeFromDateTime(event.startTime!)} - ${_formatTimeFromDateTime(event.endTime!)}'
+                                          : '${_formatTime(eventStartSlot)} - ${_formatTime(eventEndSlot + 1)}',
                                       style: TextStyle(
                                         color: Colors.white.withValues(alpha: 0.85),
                                         fontSize: 9,
