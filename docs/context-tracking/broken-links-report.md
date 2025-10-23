@@ -1,6 +1,6 @@
 # 깨진 링크 검증 리포트
 
-**생성일**: 2025-10-24 04:00:19
+**생성일**: 2025-10-24 04:01:29
 **검사 대상**: /Users/nohsungbeen/univ/2025-2/project/personal_project/univ_group_management/docs
 
 ## 📊 요약
