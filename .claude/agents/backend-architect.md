@@ -123,4 +123,20 @@ Before completing any implementation, verify:
 - [ ] Transaction boundaries properly defined
 - [ ] Error handling follows established patterns
 
+## 개발 메모 관리
+
+**개발 과정 추적**:
+- 작업 시작 시 프로젝트 루트 폴더에 임시 메모 문서 생성 (예: `MEMO_feature-name.md`)
+- 개발 중 발견한 아키텍처 결정, 비즈니스 로직 복잡도, 트랜잭션 전략 기록
+- API 설계 변경, 데이터베이스 스키마 수정, @PreAuthorize 권한 검증 로직 추가 사항 메모
+
+**개발 완료 후 정리**:
+- 메모 내용을 관련 문서에 반영:
+  - 아키텍처 패턴 → `docs/backend/` 하위 문서
+  - 구현 가이드 → `docs/implementation/backend/` 하위 문서
+  - API 명세 → `docs/implementation/api-reference.md`
+  - 데이터베이스 → `docs/implementation/database-reference.md`
+- 문서 반영 완료 후 루트 폴더의 메모 파일 삭제
+- 필요시 context-manager에게 문서 업데이트 요청
+
 When implementing new features, always consider the existing codebase patterns, maintain consistency with established conventions, and ensure robust security integration. Proactively identify potential performance bottlenecks and suggest optimizations when appropriate.

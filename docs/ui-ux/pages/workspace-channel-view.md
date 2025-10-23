@@ -14,96 +14,44 @@
 -   **스크롤**: 채팅 앱과 같이, 가장 최신 게시글이 있는 화면 하단에서 시작합니다. 사용자는 **위로 스크롤**하여 이전 게시글을 계속 불러올 수 있습니다 (Reverse Infinite Scroll).
 -   **모바일**: 전체 화면 전환 플로우를 따릅니다. ([navigation-and-page-flow.md](navigation-and-page-flow.md) 참조)
 
-## 2. 게시글 구성 요소 (구현 완료 - 2025-10-05)
+## 2. 게시글 구성
 
 게시글은 제목과 내용을 구분하지 않는 연속적인 메시지 형태입니다.
 
-### 2.1. 구현된 컴포넌트
+### 2.1. 컴포넌트
 
-- `PostCard`: 단일 게시글 카드 (작성자 정보, 본문, 댓글 버튼)
-- `PostList`: 게시글 목록 (채팅형 역방향 무한 스크롤, 날짜 구분선)
-- `PostComposer`: 게시글 작성 입력창 (권한 기반)
-- `DateDivider`: 날짜 구분선 (한국어 로케일)
-- `PostSkeleton`: 로딩 스켈레톤
+PostCard (단일 게시글), PostList (역방향 무한 스크롤), PostComposer (작성 입력창), DateDivider (날짜 구분선), PostSkeleton (로딩)
 
-### 2.2. 디자인 구조
+### 2.2. 디자인
 
-1.  **작성자 정보**: 좌측에 작성자의 프로필 이미지, 우측 상단에 닉네임과 작성 시간(예: "오후 3:15")을 표시합니다.
-2.  **날짜 구분선**: 날짜가 바뀔 경우, 게시글 사이에 "── 2025년 9월 29일 ──"과 같은 구분선을 삽입하여 시각적으로 분리합니다.
-3.  **메시지 본문**: 텍스트 기반의 메시지를 표시합니다.
-4.  **댓글 버튼**: 게시글 하단에 반응형 너비의 직사각형 버튼을 배치합니다.
-    -   **반응형 너비**: 모바일(≤600px)에서는 게시글 폭의 70%, 웹(>600px)에서는 최대 800px
-    -   **레이아웃**: 왼쪽에 아이콘과 텍스트, 오른쪽 끝에 ">" 아이콘 (spaceBetween 정렬)
-    -   **외부 여백**: 버튼 우측에 64px 여백으로 댓글창과 간격 확보
-    -   **댓글이 없을 때**: "댓글 작성하기" 텍스트를 표시합니다.
-    -   **댓글이 있을 때**: "N개의 댓글 • M분 전" 형식으로 댓글 수와 마지막 댓글이 달린 시간을 함께 표시합니다.
-    -   **마우스 호버 시**: "댓글 펼치기"로 텍스트가 변경되며, 브랜드 컬러 테두리가 나타납니다.
+**구조**: 프로필 이미지, 닉네임, 작성 시간, 메시지 본문, 댓글 버튼
+**날짜 구분선**: "── 2025년 9월 29일 ──" 형식
+**댓글 버튼**: 반응형 너비 (모바일 ≤600px: 게시글 폭 70%, 웹 >600px: 최대 800px), 좌측 아이콘+텍스트, 우측 ">", 우측 64px 여백. 댓글 없을 때 "댓글 작성하기", 있을 때 "N개의 댓글 • M분 전". 호버 시 "댓글 펼치기"로 변경, 브랜드 컬러 테두리
 
-### 2.3. 권한 기반 UI 제어
+### 2.3. 권한 및 입력
 
-- `POST_WRITE` 권한이 있을 때만 게시글 작성 입력창 표시
-- `COMMENT_WRITE` 권한이 있을 때만 댓글 작성 버튼 활성화
-- 권한이 없는 경우 "이 채널에 글을 작성할 권한이 없습니다" 메시지 표시
+**권한**: POST_WRITE (작성 입력창 표시), COMMENT_WRITE (댓글 버튼 활성화)
+**키보드**: Enter (전송), Shift+Enter (줄바꿈)
+**구현**: frontend/lib/presentation/widgets/post/
 
-### 2.4. 키보드 입력
+## 3. 댓글 시스템
 
-- Enter: 게시글/댓글 전송
-- Shift + Enter: 줄바꿈
+웹/모바일 모두에서 원본 게시글 미리보기 기능을 제공하여 사용자가 댓글 컨텍스트를 명확히 인지할 수 있습니다.
 
-### 2.5. 구현 위치
+### 3.1. 컴포넌트
 
-- `frontend/lib/presentation/widgets/post/post_card.dart`
-- `frontend/lib/presentation/widgets/post/post_list.dart`
-- `frontend/lib/presentation/widgets/post/post_composer.dart`
-- `frontend/lib/presentation/widgets/post/date_divider.dart`
-- `frontend/lib/presentation/widgets/post/post_skeleton.dart`
+CommentList (댓글 목록), CommentComposer (작성 입력창), PostPreviewCard (게시글 미리보기), CollapsibleContent (더보기/접기 위젯)
 
-## 3. 댓글 시스템 (UX 개선 - 2025-10-06)
+### 3.2. 플랫폼별 구조
 
-게시글에 대한 댓글을 확인하고 작성하는 시스템입니다. 웹과 모바일 환경 모두에서 사용자 편의성을 위해 **원본 게시글 미리보기** 기능을 제공합니다.
+**웹 (데스크톱)**: 우측 슬라이드 사이드바. 상단: 원본 게시글 미리보기 (작성자 프로필, 이름, 시간, CollapsibleContent 본문), 중단: CommentList, 하단: CommentComposer
+**모바일**: 전체 화면 전환. 상단: PostPreviewCard, 중단: CommentList, 하단: CommentComposer
 
-### 3.1. 핵심 UX 개선
+### 3.3. 권한
 
--   사용자가 댓글을 확인할 때, 화면 상단에 원본 게시글의 내용(작성자, 본문 등)이 함께 표시됩니다. 이를 통해 사용자는 어떤 게시글에 대한 댓글을 보고 있는지 명확하게 인지할 수 있습니다.
+COMMENT_WRITE 권한 보유 시에만 댓글 작성창 활성화
 
-### 3.2. 구현된 컴포넌트
-
--   `CommentList`: 댓글 목록 (웹/모바일 공통)
--   `CommentComposer`: 댓글 작성 입력창 (웹/모바일 공통)
--   `PostPreviewCard`: 모바일 댓글 뷰 상단에 표시되는 게시글 미리보기 카드
--   `CollapsibleContent`: 긴 게시글 본문을 '더보기/접기' 할 수 있는 공통 위젯
-
-### 3.3. 플랫폼별 디자인 구조
-
-#### 웹 (데스크톱) 댓글 사이드바
-
-화면 우측에서 슬라이드되어 나타나는 사이드바 형태입니다.
-
--   **상단**: 원본 게시글 미리보기가 표시됩니다.
-    -   **헤더**: 작성자 프로필, 이름, 작성 시간을 보여줍니다.
-    -   **본문**: `CollapsibleContent` 위젯을 사용하여 긴 내용은 자동으로 접히고, '더보기'를 통해 펼쳐볼 수 있습니다.
--   **중단**: 댓글 목록(`CommentList`)이 시간순으로 표시됩니다.
--   **하단**: 댓글 작성창(`CommentComposer`)이 위치합니다.
-
-#### 모바일 댓글 뷰
-
-게시글의 댓글 버튼 클릭 시, 전체 화면 페이지로 전환됩니다.
-
--   **상단**: `PostPreviewCard` 위젯을 사용하여 원본 게시글을 카드로 명확하게 표시합니다.
--   **중단**: 그 아래로 댓글 목록(`CommentList`)이 이어집니다.
--   **하단**: 댓글 작성창(`CommentComposer`)이 위치합니다.
-
-### 3.4. 권한 제어
-
--   `COMMENT_WRITE` 권한이 있을 때만 댓글 작성창이 활성화됩니다.
-
-### 3.5. 구현 위치
-
--   `frontend/lib/presentation/pages/workspace/workspace_page.dart` (웹 사이드바)
--   `frontend/lib/presentation/widgets/workspace/mobile_post_comments_view.dart` (모바일 뷰)
--   `frontend/lib/presentation/widgets/post/post_preview_card.dart`
--   `frontend/lib/presentation/widgets/common/collapsible_content.dart`
--   `frontend/lib/presentation/widgets/comment/` (댓글 관련 위젯)
+**구현**: frontend/lib/presentation/pages/workspace/, frontend/lib/presentation/widgets/workspace/, frontend/lib/presentation/widgets/comment/
 
 ## 관련 문서
 

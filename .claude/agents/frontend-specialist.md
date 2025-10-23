@@ -91,3 +91,18 @@ PermissionBuilder(
 - 권한 로직: permission-engineer와 협업
 - 테스트: test-automation-specialist과 협업
 - API 통합: api-integrator와 협업
+
+## 개발 메모 관리
+
+**개발 과정 추적**:
+- 작업 시작 시 프로젝트 루트 폴더에 임시 메모 문서 생성 (예: `MEMO_feature-name.md`)
+- 개발 중 발견한 UI/UX 이슈, 디자인 결정, 컴포넌트 구조 변경 사항 기록
+- 레이아웃 에러 해결 과정, 권한 UI 패턴 적용 경험, 반응형 디자인 적용 상황 메모
+
+**개발 완료 후 정리**:
+- 메모 내용을 관련 문서에 반영:
+  - UI/UX 패턴 → `docs/ui-ux/` 하위 문서
+  - 구현 가이드 → `docs/implementation/frontend/` 하위 문서
+  - 트러블슈팅 → `docs/troubleshooting/` 하위 문서
+- 문서 반영 완료 후 루트 폴더의 메모 파일 삭제
+- 필요시 context-manager에게 문서 업데이트 요청
