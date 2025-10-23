@@ -1211,8 +1211,8 @@ class TestDataRunner(
                         title = "임시 회의",
                         description = "긴급 회의",
                         placeId = places.labPlaceId,
-                        startDate = LocalDate.now().plusDays(2),
-                        endDate = LocalDate.now().plusDays(2),
+                        startDate = getNextWeekday(daysToAdd = 2),
+                        endDate = getNextWeekday(daysToAdd = 2),
                         startTime = LocalTime.of(13, 0),
                         endTime = LocalTime.of(14, 0),
                         isOfficial = false,
@@ -1230,8 +1230,8 @@ class TestDataRunner(
                     title = "팀 프로젝트 회의",
                     description = "학교 근처 카페에서 진행",
                     locationText = "학교 근처 카페",
-                    startDate = LocalDate.now().plusDays(3),
-                    endDate = LocalDate.now().plusDays(3),
+                    startDate = getNextWeekday(daysToAdd = 3),
+                    endDate = getNextWeekday(daysToAdd = 3),
                     startTime = LocalTime.of(15, 0),
                     endTime = LocalTime.of(17, 0),
                     isOfficial = false,
@@ -1620,8 +1620,8 @@ class TestDataRunner(
                     title = "학생회실 임시 휴무",
                     description = "내부 사정으로 인한 임시 휴무",
                     placeId = places.labPlaceId,
-                    startDate = LocalDate.of(2025, 11, 26),
-                    endDate = LocalDate.of(2025, 11, 26),
+                    startDate = LocalDate.of(2025, 11, 27),  // 충돌 방지: 11/26(수) → 11/27(목)
+                    endDate = LocalDate.of(2025, 11, 27),
                     startTime = LocalTime.of(8, 0),
                     endTime = LocalTime.of(21, 0),
                     isOfficial = true,
@@ -1884,6 +1884,21 @@ class TestDataRunner(
                 ),
             )
         }
+    }
+
+    /**
+     * 다음 평일(월~금) 찾기
+     *
+     * @param from 기준 날짜
+     * @param daysToAdd 추가할 일수 (기본값: 0 = 오늘부터 시작)
+     * @return 다음 평일 날짜
+     */
+    private fun getNextWeekday(from: LocalDate = LocalDate.now(), daysToAdd: Int = 0): LocalDate {
+        var date = from.plusDays(daysToAdd.toLong())
+        while (date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY) {
+            date = date.plusDays(1)
+        }
+        return date
     }
 
     /**
