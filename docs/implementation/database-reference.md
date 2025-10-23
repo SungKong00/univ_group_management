@@ -564,7 +564,7 @@ INSERT INTO groups (id, name, owner_id, parent_id, ...) VALUES (2, 'AI/SW계열'
 
 > **개발 우선순위**: Phase 6 이후 예정
 > **상태**: 스키마 설계 완료 (2025-10-07), 구현 예정
-> **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md) | [설계 결정사항](../concepts/calendar-design-decisions.md) | [장소 관리](../concepts/calendar-place-management.md)
+> **관련 문서**: [캘린더 통합](../concepts/calendar-integration.md) | [캘린더 핵심 설계](../backend/calendar-core-design.md) | [장소 캘린더 시스템](../concepts/place-calendar-system.md)
 
 캘린더 시스템은 학교 시간표, 개인 일정, 그룹 일정, 장소 예약을 관리하는 9개 엔티티로 구성됩니다.
 
@@ -1643,7 +1643,7 @@ fun createReservation(request: CreateReservationRequest): PlaceReservationDto {
 ## 관련 문서
 
 ### 백엔드 구현
-- **백엔드 가이드**: [backend-guide.md](backend-guide.md)
+- **백엔드 가이드**: [backend/README.md](backend/README.md)
 - **API 참조**: [api-reference.md](api-reference.md)
 
 ### 도메인 개념
@@ -1653,7 +1653,7 @@ fun createReservation(request: CreateReservationRequest): PlaceReservationDto {
 - **워크스페이스**: [../concepts/workspace-channel.md](../concepts/workspace-channel.md)
 - **사용자 여정**: [../concepts/user-lifecycle.md](../concepts/user-lifecycle.md)
 - **모집 시스템**: [../concepts/recruitment-system.md](../concepts/recruitment-system.md)
-- **캘린더 시스템**: [../concepts/calendar-system.md](../concepts/calendar-system.md)
+- **캘린더 통합**: [../concepts/calendar-integration.md](../concepts/calendar-integration.md)
 
 ### 문제 해결
 - **권한 에러**: [../troubleshooting/permission-errors.md](../troubleshooting/permission-errors.md)

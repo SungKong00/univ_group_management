@@ -3,7 +3,7 @@
 > **버전**: 1.0
 > **작성일**: 2025-10-12
 > **상태**: 계획 확정
-> **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md) | [설계 결정사항](../concepts/calendar-design-decisions.md) | [장소 관리](../concepts/calendar-place-management.md)
+> **관련 문서**: [그룹 캘린더 시스템](../concepts/group-calendar-system.md) | [캘린더 핵심 설계](../backend/calendar-core-design.md) | [장소 캘린더 시스템](../concepts/place-calendar-system.md)
 
 ---
 
@@ -1276,21 +1276,21 @@ class _GroupEventFormDialogState extends State<GroupEventFormDialog> {
 
 장소 캘린더는 별도 개발 계획으로 관리됩니다:
 - [장소 캘린더 개발 명세서](place-calendar-specification.md) - 상세 설계 및 구현 계획
-- [장소 관리 시스템](../concepts/calendar-place-management.md) - 개념 및 권한 설계
+- [장소 캘린더 시스템](../concepts/place-calendar-system.md) - 개념 및 권한 설계
 
 ---
 
 ## 8. 관련 문서
 
 ### 개념 문서
-- [캘린더 시스템](../concepts/calendar-system.md) - 전체 시스템 개요
-- [설계 결정사항](../concepts/calendar-design-decisions.md) - 아키텍처 결정
-- [장소 관리](../concepts/calendar-place-management.md) - 장소 예약 권한
+- [그룹 캘린더 시스템](../concepts/group-calendar-system.md) - 그룹 일정 개요
+- [캘린더 핵심 설계](../backend/calendar-core-design.md) - 아키텍처 결정
+- [장소 캘린더 시스템](../concepts/place-calendar-system.md) - 장소 예약 권한
 
 ### 구현 가이드
 - [개인 캘린더 MVP](personal-calendar-mvp.md) - 기존 구현 참조
-- [백엔드 가이드](../implementation/backend-guide.md) - 3레이어 아키텍처
-- [프론트엔드 가이드](../implementation/frontend-guide.md) - Flutter 구조
+- [백엔드 가이드](../implementation/backend/README.md) - 3레이어 아키텍처
+- [프론트엔드 가이드](../implementation/frontend/README.md) - Flutter 구조
 - [API 참조](../implementation/api-reference.md) - REST API 규칙
 - [데이터베이스 참조](../implementation/database-reference.md) - 캘린더 스키마
 

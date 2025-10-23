@@ -16,8 +16,8 @@
 
 ### Step 2: 구현 (Implement)
 - **기술 가이드 준수**:
-    - **백엔드**: [백엔드 구현 가이드](../implementation/backend-guide.md)에 명시된 아키텍처와 패턴을 따릅니다.
-    - **프론트엔드**: [프론트엔드 구현 가이드](../implementation/frontend-guide.md)에 명시된 아키텍처와 UI 패턴을 따릅니다.
+    - **백엔드**: [백엔드 구현 가이드](../implementation/backend/README.md)에 명시된 아키텍처와 패턴을 따릅니다.
+    - **프론트엔드**: [프론트엔드 구현 가이드](../implementation/frontend/README.md)에 명시된 아키텍처와 UI 패턴을 따릅니다.
 - **커밋**: [커밋 컨벤션](../conventions/commit-conventions.md)에 따라 작업 단위를 명확히 하여 자주 커밋합니다.
 
 ### Step 3: 테스트 (Test)

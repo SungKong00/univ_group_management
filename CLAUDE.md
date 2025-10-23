@@ -7,19 +7,54 @@
 - **그룹 계층**: [docs/concepts/group-hierarchy.md](docs/concepts/group-hierarchy.md)
 - **권한 시스템**: [docs/concepts/permission-system.md](docs/concepts/permission-system.md)
 - **워크스페이스**: [docs/concepts/workspace-channel.md](docs/concepts/workspace-channel.md)
-- **캘린더 시스템** (Phase 6): [docs/concepts/calendar-system.md](docs/concepts/calendar-system.md)
-  - **설계 결정사항**: [docs/concepts/calendar-design-decisions.md](docs/concepts/calendar-design-decisions.md)
-- **장소 관리** (Phase 6): [docs/concepts/calendar-place-management.md](docs/concepts/calendar-place-management.md)
+- **사용자 여정**: [docs/concepts/user-lifecycle.md](docs/concepts/user-lifecycle.md)
+- **모집 시스템**: [docs/concepts/recruitment-system.md](docs/concepts/recruitment-system.md)
+- **캘린더 시스템** (Phase 6):
+  - **개인 캘린더**: [docs/concepts/personal-calendar-system.md](docs/concepts/personal-calendar-system.md) - 시간표 & 개인 일정
+  - **그룹 캘린더**: [docs/concepts/group-calendar-system.md](docs/concepts/group-calendar-system.md) - 그룹 공유 일정
+  - **장소 캘린더**: [docs/concepts/place-calendar-system.md](docs/concepts/place-calendar-system.md) - 장소 예약 관리
+  - **캘린더 통합**: [docs/concepts/calendar-integration.md](docs/concepts/calendar-integration.md) - 세 캘린더의 유기적 연동
 
 ### 개발 가이드
-- **백엔드 개발**: [docs/implementation/backend-guide.md](docs/implementation/backend-guide.md)
-- **프론트엔드 개발**: [docs/implementation/frontend-guide.md](docs/implementation/frontend-guide.md)
-- **워크스페이스 & 네비게이션**: [docs/implementation/frontend-workspace-guide.md](docs/implementation/frontend-workspace-guide.md)
-- **워크스페이스 레벨 네비게이션**: [docs/implementation/workspace-level-navigation-guide.md](docs/implementation/workspace-level-navigation-guide.md) - WorkspaceView 기반 상태 관리 설계
-- **워크스페이스 페이지 추가**: [docs/implementation/workspace-page-implementation-guide.md](docs/implementation/workspace-page-implementation-guide.md) - 새 관리 페이지 추가 완전 가이드 (4부작)
-- **Row/Column 레이아웃 체크리스트**: [docs/implementation/row-column-layout-checklist.md](docs/implementation/row-column-layout-checklist.md) - Flutter 레이아웃 제약 에러 방지 필수 가이드
-- **API 참조**: [docs/implementation/api-reference.md](docs/implementation/api-reference.md)
-- **데이터베이스**: [docs/implementation/database-reference.md](docs/implementation/database-reference.md)
+
+#### 백엔드
+- **기술 설계** (100줄 내):
+  - [도메인 모델](docs/backend/domain-model.md) - 핵심 엔티티와 관계
+  - [API 설계](docs/backend/api-design.md) - REST API 설계 원칙
+  - [인증 시스템](docs/backend/authentication.md) - Google OAuth2 + JWT
+  - [캘린더 핵심 설계](docs/backend/calendar-core-design.md) - 권한, 반복, 예외, 참여자 관리
+  - [캘린더 특수 설계](docs/backend/calendar-specialized-design.md) - 시간표, 장소 예약, 최적화, 동시성
+- **구현 가이드** (100줄 내, 9개 파일):
+  - [가이드 인덱스](docs/implementation/backend/README.md) - 백엔드 구현 가이드 네비게이션
+  - [개발 환경](docs/implementation/backend/development-setup.md) - H2 DB, 동시성, 데이터 초기화
+  - [아키텍처](docs/implementation/backend/architecture.md) - 3레이어, 표준 응답, 캐시 무효화
+  - [인증](docs/implementation/backend/authentication.md) - JWT 필터, 권한 체크
+  - [권한 검증](docs/implementation/backend/permission-checking.md) - 권한 로직, 매트릭스
+  - [트랜잭션](docs/implementation/backend/transaction-patterns.md) - 기본 패턴, 전파 레벨
+  - [Best-Effort](docs/implementation/backend/best-effort-pattern.md) - REQUIRES_NEW 사용법
+  - [예외 처리](docs/implementation/backend/exception-handling.md) - 예외 처리 전략
+  - [테스트](docs/implementation/backend/testing.md) - 통합 테스트, 보안 테스트
+
+#### 프론트엔드 (100줄 내, 8개 파일)
+- **프론트엔드 가이드 인덱스**: [docs/implementation/frontend/README.md](docs/implementation/frontend/README.md)
+- **아키텍처**: [docs/implementation/frontend/architecture.md](docs/implementation/frontend/architecture.md) - 기술 스택, 디렉토리 구조, 레이어 분리
+- **인증 시스템**: [docs/implementation/frontend/authentication.md](docs/implementation/frontend/authentication.md) - Google OAuth, 자동 로그인, 토큰 관리
+- **상태 관리**: [docs/implementation/frontend/state-management.md](docs/implementation/frontend/state-management.md) - Riverpod, Provider 초기화, 액션 패턴
+- **디자인 시스템**: [docs/implementation/frontend/design-system.md](docs/implementation/frontend/design-system.md) - Toss 기반 토큰, 버튼 스타일, 재사용성
+- **컴포넌트 구현**: [docs/implementation/frontend/components.md](docs/implementation/frontend/components.md) - 게시글/댓글, CollapsibleContent, 권한 UI
+- **반응형 디자인**: [docs/implementation/frontend/responsive-design.md](docs/implementation/frontend/responsive-design.md) - 브레이크포인트, 적응형 레이아웃
+- **성능 최적화**: [docs/implementation/frontend/performance.md](docs/implementation/frontend/performance.md) - 앱 시작 성능, 개선 계획
+
+#### 워크스페이스 페이지 구현 (4개 파일, 100줄 내)
+- **구현 가이드**: [docs/implementation/workspace-page-implementation-guide.md](docs/implementation/workspace-page-implementation-guide.md) - 개요, 체크리스트 1-4단계
+- **체크리스트**: [docs/implementation/workspace-page-checklist.md](docs/implementation/workspace-page-checklist.md) - 체크리스트 5-10단계, 실수 TOP 10
+- **상태 관리**: [docs/implementation/workspace-state-management.md](docs/implementation/workspace-state-management.md) - WorkspaceView 기반 상태 설계
+- **트러블슈팅**: [docs/implementation/workspace-troubleshooting.md](docs/implementation/workspace-troubleshooting.md) - 문제 해결 가이드
+
+#### 참조 문서 (100줄 예외)
+- **Row/Column 체크리스트**: [docs/implementation/row-column-layout-checklist.md](docs/implementation/row-column-layout-checklist.md) - Flutter 레이아웃 에러 방지 (자주 하는 실수 참조용)
+- **API 참조**: [docs/implementation/api-reference.md](docs/implementation/api-reference.md) - REST API 명세 (참조 문서)
+- **데이터베이스**: [docs/implementation/database-reference.md](docs/implementation/database-reference.md) - 테이블 스키마 (참조 문서)
 
 ### 기능별 개발 계획
 
@@ -39,7 +74,21 @@
 - **Phase 2** (⏳ 다음): 프론트엔드 기본 구현 (6-8시간)
 
 ### UI/UX 설계
-- **디자인 시스템**: [docs/ui-ux/concepts/design-system.md](docs/ui-ux/concepts/design-system.md)
+- **디자인 시스템**: [docs/ui-ux/concepts/design-system.md](docs/ui-ux/concepts/design-system.md) - 전체 디자인 시스템 개요
+  - [디자인 원칙](docs/ui-ux/concepts/design-principles.md) - 디자인 철학 및 패턴
+  - [디자인 토큰](docs/ui-ux/concepts/design-tokens.md) - 구체적인 디자인 값
+  - [컬러 가이드](docs/ui-ux/concepts/color-guide.md) - 컬러 팔레트 및 사용 지침
+  - [반응형 가이드](docs/ui-ux/concepts/responsive-design-guide.md) - 반응형 레이아웃 상세
+- **페이지 명세**:
+  - [워크스페이스 페이지](docs/ui-ux/pages/workspace-pages.md) - 워크스페이스 전체 구조
+    - [채널 뷰](docs/ui-ux/pages/workspace-channel-view.md) - 게시글 및 댓글 시스템
+    - [관리 페이지](docs/ui-ux/pages/workspace-admin-pages.md) - 그룹/멤버/지원자 관리
+  - [채널 페이지](docs/ui-ux/pages/channel-pages.md) - 채널 권한 및 생성 플로우
+  - [모집 페이지](docs/ui-ux/pages/recruitment-pages.md) - 모집 시스템 페이지
+    - [사용자 페이지](docs/ui-ux/pages/recruitment-user-pages.md) - 공고 리스트, 상세, 지원 현황
+    - [관리자 페이지](docs/ui-ux/pages/recruitment-admin-pages.md) - 공고 작성, 지원자 관리
+  - [네비게이션](docs/ui-ux/pages/navigation-and-page-flow.md) - 기본 네비게이션 구조
+    - [워크스페이스 플로우](docs/ui-ux/pages/workspace-navigation-flow.md) - 워크스페이스 특수 플로우
 
 ### 개발 워크플로우
 - **개발 프로세스**: [docs/workflows/development-flow.md](docs/workflows/development-flow.md)
@@ -126,12 +175,12 @@ flutter run -d chrome --web-hostname localhost --web-port 5173
 4. [git-strategy.md](docs/conventions/git-strategy.md) - Git 전략 및 브랜치 규칙
 
 ### 백엔드 개발 시
-1. [backend-guide.md](docs/implementation/backend-guide.md) - 아키텍처 패턴
-2. [api-reference.md](docs/implementation/api-reference.md) - API 규칙
-3. [database-reference.md](docs/implementation/database-reference.md) - 데이터 모델
+1. [backend/README.md](docs/implementation/backend/README.md) - 백엔드 구현 가이드 인덱스
+2. [api-reference.md](docs/implementation/api-reference.md) - API 규칙 (참조 문서)
+3. [database-reference.md](docs/implementation/database-reference.md) - 데이터 모델 (참조 문서)
 
 ### 프론트엔드 개발 시
-1. [frontend-guide.md](docs/implementation/frontend-guide.md) - 아키텍처 가이드
+1. [frontend/README.md](docs/implementation/frontend/README.md) - 프론트엔드 구현 가이드 인덱스
 2. [design-system.md](docs/ui-ux/concepts/design-system.md) - UI/UX 가이드
 
 ## 📝 문서 관리 규칙

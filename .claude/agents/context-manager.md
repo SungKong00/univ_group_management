@@ -83,12 +83,26 @@ Your core responsibilities include:
 
 **Key Management Files:**
 - CLAUDE.md: Master navigation and quick reference hub
-- markdown-guidelines.md: Documentation standards and conventions
-- **All files in `docs/` directory, especially the tracking system:**
+- markdown-guidelines.md: Documentation standards and conventions (백엔드 코드 참조 정책 포함)
+- **All files in `docs/` directory, especially:**
+  - `docs/backend/` - Technical architecture (신규, 100줄 내 개념+코드참조)
   - `docs/context-tracking/sync-status.md`
   - `docs/context-tracking/pending-updates.md`
   - `docs/context-tracking/context-update-log.md`
 - Sub-agent configuration files in `.claude/agents/`
+
+**문서 작성 및 검증 규칙:**
+- **모든 문서**: 100줄 이내, 구현 상세 코드 절대 포함 금지
+- **concepts/**: 코드 참조 완전히 제거, 서비스 원리와 흐름 설명에만 집중
+- **backend/ + implementation/**: 파일 경로 + 클래스/함수명만 (상세 구현은 Read 도구로 확인)
+- **모든 문서 작성 후**: markdown-guidelines.md의 체크리스트 반드시 확인
+
+**검증 단계:**
+작성자가 체크리스트를 완료했더라도, 다음 항목을 추가로 확인:
+1. 100줄 초과 여부 (초과 시 파일 분할 지시)
+2. concepts/ 문서에 코드 블록/코드 참조 포함 여부 (발견 시 제거 지시)
+3. implementation/ 문서에 20줄 이상 코드 블록 포함 여부 (발견 시 파일 경로+함수명으로 수정 지시)
+4. 구현 상세 코드 포함 여부 (발견 시 거절, 사용자 보고)
 
 **Standard Document Template Structure:**
 1. Title with brief description

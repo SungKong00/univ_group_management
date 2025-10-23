@@ -358,8 +358,8 @@ val aiSwCodingStudyGroup = groupManagementService.createGroup(
 
 ## 관련 문서
 
-- **테스트 전략**: [testing-strategy.md](testing-strategy.md)
+- **테스트 전략**: [../workflows/testing-strategy.md](../workflows/testing-strategy.md)
 - **데이터베이스 참조**: [../implementation/database-reference.md](../implementation/database-reference.md)
 - **권한 시스템**: [../concepts/permission-system.md](../concepts/permission-system.md)
 - **모집 시스템**: [../concepts/recruitment-system.md](../concepts/recruitment-system.md)
-- **장소 관리**: [../concepts/calendar-place-management.md](../concepts/calendar-place-management.md)
+- **장소 관리**: [../concepts/place-calendar-system.md](../concepts/place-calendar-system.md)

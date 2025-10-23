@@ -745,7 +745,7 @@ context.go('/workspace/${topGroup.id}');
 ## 캘린더 API (v1.4)
 
 > **상태**: 장소 예약 API 구현 완료, 그 외 설계 단계
-> **관련 문서**: [캘린더 시스템](../concepts/calendar-system.md)
+> **관련 문서**: [캘린더 통합](../concepts/calendar-integration.md)
 
 ### 장소 및 예약 API (`/api`)
 

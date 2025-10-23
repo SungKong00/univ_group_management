@@ -79,8 +79,8 @@
 ```markdown
 영향받는 문서 자동 식별:
 1. 변경된 파일 경로 기반 매핑:
-   - backend/src/** → docs/implementation/backend-guide.md, api-reference.md
-   - frontend/lib/** → docs/implementation/frontend-guide.md, ui-ux/**
+   - backend/src/** → do../implementation/backend/README.md, api-reference.md
+   - frontend/lib/** → do../implementation/frontend/README.md, ui-ux/**
    - **/auth/** → docs/concepts/permission-system.md
    - **/group/** → docs/concepts/group-hierarchy.md, workspace-channel.md
 
@@ -106,7 +106,7 @@
 
 2. 간접 영향 문서:
    - 관련 개념이나 워크플로우에 영향을 주는 문서들
-   - 예: 권한 로직 변경 → backend-guide.md, troubleshooting/**
+   - 예: 권한 로직 변경 → backend/README.md, troubleshooting/**
 
 3. 일관성 확인 필요 문서:
    - 변경으로 인해 내용이 모순될 수 있는 문서들

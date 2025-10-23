@@ -3,7 +3,7 @@
 > **버전**: 1.0
 > **작성일**: 2025-10-13
 > **상태**: 계획 확정
-> **관련 문서**: [그룹 캘린더 개발 계획](group-calendar-development-plan.md) | [장소 캘린더 명세](place-calendar-specification.md) | [캘린더 시스템](../concepts/calendar-system.md)
+> **관련 문서**: [그룹 캘린더 개발 계획](group-calendar-development-plan.md) | [장소 캘린더 명세](place-calendar-specification.md) | [캘린더 통합](../concepts/calendar-integration.md)
 
 ---
 
@@ -396,15 +396,15 @@ DELETE /api/places/{id}/blocked-times/{bid}    # 차단 시간 삭제
 ## 📝 관련 문서
 
 ### 개념 문서
-- [캘린더 시스템](../concepts/calendar-system.md) - 전체 시스템 개요
-- [장소 관리](../concepts/calendar-place-management.md) - 장소 권한 및 예약
+- [캘린더 통합](../concepts/calendar-integration.md) - 전체 시스템 개요
+- [장소 캘린더 시스템](../concepts/place-calendar-system.md) - 장소 권한 및 예약
 - [권한 시스템](../concepts/permission-system.md) - CALENDAR_MANAGE 권한
 
 ### 구현 가이드
 - [그룹 캘린더 개발 계획](group-calendar-development-plan.md) - Phase 1-10 상세 계획
 - [장소 캘린더 명세](place-calendar-specification.md) - 장소 시스템 상세 설계
-- [백엔드 가이드](../implementation/backend-guide.md) - 3레이어 아키텍처
-- [프론트엔드 가이드](../implementation/frontend-guide.md) - Flutter 구조
+- [백엔드 가이드](../implementation/backend/README.md) - 3레이어 아키텍처
+- [프론트엔드 가이드](../implementation/frontend/README.md) - Flutter 구조
 
 ### Phase별 상세 문서
 

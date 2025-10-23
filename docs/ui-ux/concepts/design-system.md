@@ -1,311 +1,133 @@
 # 디자인 시스템 가이드 (Design System Guide)
 
-본 문서는 우리 제품의 디자인 철학과 일관된 사용자 경험을 위한 핵심 원칙, 그리고 실제 구현에 사용될 시각적/상호작용 규칙과 구체적인 디자인 토큰 값을 모두 정의합니다.
+본 문서는 우리 제품의 디자인 시스템 전체 개요와 관련 문서들의 네비게이션 허브입니다.
 
----
+## 개요
 
-## 1. 코어 원칙 (제품 철학)
+디자인 시스템은 일관되고 효율적인 사용자 경험을 제공하기 위한 디자인 원칙, 시각적 스타일, 컴포넌트 패턴의 체계적인 모음입니다. 이 시스템은 디자인과 개발 간의 일관성을 보장하며, 제품의 확장성과 유지보수성을 높입니다.
 
--   **Simplicity First:** 사용자가 "배우지 않아도" 바로 쓸 수 있도록, 불필요한 UI와 복잡성을 제거하는 것을 최우선으로 합니다. ￼
--   **One Thing Per Page:** '한 화면 = 한 가지 메시지' 원칙을 따릅니다. 사용자의 핵심 작업과 관련 없는 정보나 컨트롤은 과감히 제거하거나 다음 단계로 이동시킵니다. ￼
--   **Tap & Scroll 중심 흐름:** 좌우 스와이프나 카루셀(Carousel) 사용을 최소화하고, 사용자가 예측 가능한 세로 스크롤 중심으로 단순한 플로우를 구성합니다. ￼
--   **Easy to Answer:** 사용자가 현재 상태, 선택지, 다음 행동을 즉시 파악하여 바로 결정을 내릴 수 있도록 UI 구조와 문구를 설계합니다. ￼
--   **Value First, Cost Later:** 사용자가 여러 단계를 거쳐야 할 경우, 그 끝에 "얻게 될 가치"를 먼저 구체적으로 보여줍니다. (예: '30% 할인'보다 '5,000원 할인'으로 표시) ￼
--   **일관된 라이팅(Writing):** 짧고 명확하게, 동사로 행동을 유도하고, 숫자는 구체적으로 표현합니다. 팀 전체가 동일한 원칙으로 문구를 작성합니다. ￼
+## 디자인 시스템 구성 요소
 
----
+우리의 디자인 시스템은 세 가지 핵심 레이어로 구성됩니다:
 
-## 2. 레이아웃 및 패턴 규칙
+### 1. 디자인 원칙 (Design Principles)
+**문서**: [design-principles.md](design-principles.md)
 
--   **레이아웃 그리드:** 4pt 기반 시스템을 사용하며, 모든 간격과 크기는 8pt의 배수를 기본으로 합니다. 섹션 상하 패딩은 24px, 32px, 48px 등을 사용합니다.
--   **정보 구조(IA):** '한 화면 = 한 가지 메시지' 원칙에 따라, 보조 정보는 접거나(Accordion) 다음 단계로 넘겨 점진적으로 공개합니다(Progressive Disclosure). ￼
--   **네비게이션:** 상단에는 단일 AppBar를 사용하고, 하위 탭은 최대 3개로 제한합니다. 좌우 제스처나 카루셀을 지양하고 세로 스크롤을 중심으로 설계합니다. ￼
--   **비주얼 우선순위:** ①핵심 가치 카드(사용자가 얻는 이익) → ②주요 행동 버튼 → ③세부 정보 순서로 배치하여 'Value First' 원칙을 시각적으로 구현합니다. ￼
--   **상태 설계:** 모든 인터랙티브 컴포넌트는 `기본(default)`, `hover`, `active`, `disabled`, `focus` 상태를 반드시 정의합니다. 포커스 링은 2px 두께의 브랜드 컬러를 사용하며, WCAG AA 대비 기준을 충족해야 합니다.
--   **빈 상태(Empty State):** 콘텐츠가 없을 경우, 사용자가 다음에 할 행동 1가지를 명확히 제시하고, 샘플(더미) 데이터를 함께 보여주어 기능의 가치를 미리 상상할 수 있게 돕습니다. ￼
+디자인 철학과 사용자 경험의 기본 원칙을 정의합니다:
+- 코어 원칙 (Simplicity First, One Thing Per Page, Easy to Answer)
+- 레이아웃 및 패턴 규칙
+- 타이포그래피 및 라이팅 원칙
+- 컬러 및 접근성 지침
+- 인터랙션 및 모션 가이드
+- 정보 화면 설계 패턴
+- 콘텐츠 및 이모지 사용 규칙
 
----
+### 2. 디자인 토큰 (Design Tokens)
+**문서**: [design-tokens.md](design-tokens.md)
 
-## 3. 타이포그래피 및 라이팅
+디자인 원칙을 구현하기 위한 구체적인 값들을 정의합니다:
+- 컬러 시스템 (브랜드, 중성, 시스템 컬러)
+- 타이포그래피 스케일
+- 간격 시스템
+- 모서리 반경
+- 애니메이션 타이밍
+- 컴포넌트 규격
+- 반응형 브레이크포인트
 
--   **크고 단순하게:** 제목은 한 줄로, 핵심 메시지만을 전달합니다. 본문은 가급적 2~3문장 이내로 간결하게 작성합니다.
--   **숫자 표현:** "30% 할인"보다 "5,000원 할인"처럼 사용자가 즉시 체감할 수 있도록 구체화합니다. 통화, 퍼센트, 단위 표기를 일관되게 유지합니다. ￼
--   **버튼 레이블:** "계좌 연결하기", "바로 조회"처럼 동사로 시작하여 사용자의 행동을 명확히 유도합니다.
--   **Title + Description 패턴 (위계 + 친근함):**
-    -   카드, 액션 버튼, 기능 소개 영역에서는 **2단계 문구 구조**를 사용합니다.
-    -   **Title (강조)**: 짧고 명확한 동사/명사 표현으로 행동이나 기능을 즉시 파악할 수 있게 합니다.
-        -   예: "그룹 생성", "그룹 탐색", "워크스페이스"
-        -   스타일: `titleLarge` (16px, w600) 또는 `headlineSmall` (18px, w600), `neutral900`
-    -   **Description (부드러운 안내)**: Title 아래에 친근하고 설명적인 문구로 "힘을 뺀" 안내를 제공합니다.
-        -   예: "새로운 그룹을 만들어보세요", "관심있는 그룹을 찾아보세요"
-        -   스타일: `bodySmall` (12px, w400), `neutral600` (회색 계열로 시각적 위계 구분)
-    -   **적용 원칙:**
-        -   이 패턴은 "위계(Hierarchy)" 원칙과 "Easy to Answer" 원칙을 동시에 충족합니다.
-        -   Title만으로는 명확성을, Description으로는 친근함과 안내를 제공합니다.
-        -   **주의:** "버튼 레이블은 동사로만"이라는 오해로 Description을 삭제하지 마세요. 두 단계 구조가 더 나은 UX를 제공합니다.
--   **오류/가이드 문구:** "왜 오류가 났는가"보다 "지금 무엇을 해야 하는지"에 대한 답을 제공하는 방식으로 작성합니다 (Easy to Answer 원칙). ￼
--   **팀 공통 원칙 준수:** 토스의 8가지 라이팅 원칙처럼, 팀 차원의 짧고 명확한 규칙 세트를 마련하고 모두가 준수합니다. ￼
+### 3. 반응형 디자인
+**문서**: [responsive-design-guide.md](responsive-design-guide.md)
 
----
+다양한 디바이스와 화면 크기에 대응하는 방법을 정의합니다:
+- 브레이크포인트 정의
+- 적응형 레이아웃 패턴
+- 반응형 컴포넌트 구현
 
-## 4. 컬러 및 접근성
+### 4. 컬러 시스템
+**문서**: [color-guide.md](color-guide.md)
 
--   **대비:** 텍스트와 배경의 명도 대비는 **WCAG AA 기준인 4.5:1 이상**을 확보합니다. 주요 버튼(보라 `#6A1B9A`) 위 텍스트는 항상 흰색(`#FFFFFF`)을 사용합니다.
--   **사용 비율:** `Grayscale 70-80% / Brand Color 20-30%` 비율을 유지합니다. 브랜드 색상은 CTA나 중요한 강조 요소에만 제한적으로 사용하여 힘을 실어줍니다.
--   **포커스:** 키보드 사용자를 위해 포커스 링은 2px 두께의 `--color-focus` 변수를 사용합니다. 스크린리더 사용자를 위해, 중요한 상태 변화는 `aria-live` 속성을 활용하여 즉시 피드백을 제공합니다.
+컬러 팔레트와 사용 지침을 상세히 정의합니다:
+- 브랜드 컬러 사용 지침
+- 접근성 가이드라인
+- 컬러 조합 예시
 
----
+## 핵심 컴포넌트 가이드
 
-## 5. 인터랙션 및 모션
+디자인 시스템의 주요 컴포넌트들:
 
--   **원칙:** 빠르고 단순하게, 120–180ms 사이의 짧은 지속시간과 `ease-out` 중심의 가속 곡선을 사용합니다. 상태 변화는 주로 투명도(fade)나 미세한 상승(elevation) 효과로 표현합니다.
--   **탭 효과:** 모바일에서는 순간적인 잉크(ripple) 또는 밝기 변화 효과를, 웹에서는 경계선 강조 효과를 사용합니다.
--   **스크롤 진입 효과:** 스크롤 시 새로운 섹션이 나타날 때, 8–12px 아래에서 위로 부드럽게 올라오며 투명도가 변하는 효과(120ms)를 적용합니다. 과도한 패럴랙스나 카드 회전 효과는 금지합니다.
+### 버튼 (Button)
+-   **Primary:** 보라색 배경 + 흰색 텍스트
+-   **Secondary:** 투명 배경 + 보라색 텍스트 + 보라색 윤곽선
+-   **크기:** Large (상하 패딩 16/20px), Medium (12/16px), Small (8/12px)
 
----
+### 카드 (Card)
+-   **속성:** 내부 여백 16/24px, 모서리 둥글기 20px, 그림자 elevation-1
+-   **구조:** 헤더(아이콘+제목) → 내용 → 행동(Primary 버튼 1개)
+-   **ActionCard:** Title + Description 패턴 적용
 
-## 6. 핵심 컴포넌트 가이드
+### 폼 (Form)
+-   **구조:** 라벨은 항상 한 줄로, 플레이스홀더는 입력 예시 표시
+-   **상태:** 포커스 시 2px 보라색 링, 에러 시 위험 색상 표시
 
-### 6.1. 버튼 (Button)
+### 드롭다운 (Dropdown)
+-   **구조:** 트리거 버튼 + 드롭다운 리스트
+-   **계층 표시:** level × 16px 들여쓰기
+-   **정렬:** 계층적 정렬 (DFS 기반)
 
--   **Primary:** 보라색(`--color-brand-primary`) 배경 + 흰색 텍스트. Hover 시에는 더 진한 보라색(`--color-brand-strong`)을 사용합니다.
--   **Secondary:** 투명 배경 + 보라색 텍스트 + 보라색 윤곽선(`--color-border`).
--   **Danger/Neutral:** 상태에 따라 정의된 `--color-state-danger` 등의 변수를 사용합니다.
--   **크기:** Large (상하 패딩 16/20px), Medium (12/16px), Small (8/12px) 세 가지 크기를 정의합니다. 모서리는 둥근 형태(`--radius-pill`)를 기본으로 합니다.
+### 헤더 (Header)
+-   **원칙:** 명시적 제목 우선 (Explicit Title First)
+-   **구조:** 2단 계층 - 제목(Title) + 역할(Role) + 경로(Path)
 
-### 6.2. 카드 (Card)
+## 구현 참조
 
--   **속성:** 내부 여백 16/24px, 모서리 둥글기 `--radius-lg`, 그림자 `--elev-1`, 배경색 `--color-bg-elevated`.
--   **구조:** 헤더(아이콘+제목) → 내용(핵심 숫자 또는 1~2 문장) → 행동(Primary 버튼 1개)의 명확한 순서를 따릅니다.
--   **ActionCard 구조 (Title + Description 패턴 적용):**
-    -   **레이아웃:**
-        1.  아이콘 (32px, `brandPrimary` 색상으로 시각적 집중)
-        2.  Title: "그룹 생성" (`titleLarge`, 16px, w600, `neutral900`)
-        3.  Description: "새로운 그룹을 만들어보세요" (`bodySmall`, 12px, w400, `neutral600`)
-    -   **간격:** 아이콘 → Title 사이 12px, Title → Description 사이 4px
-    -   **효과:** 이 2단계 구조를 통해 명확성(Title)과 친근함(Description)을 동시에 제공합니다.
-    -   **구현 예시 (Flutter):**
-        ```dart
-        ActionCard(
-          icon: Icons.add,
-          title: '그룹 생성',              // ← 명확한 행동
-          description: '새로운 그룹을 만들어보세요',  // ← 친근한 안내
-          onTap: () => navigateToCreate(),
-        )
-        ```
+### Flutter/Dart 구현
+디자인 토큰은 다음과 같은 Flutter 클래스로 구현됩니다:
+- `AppColors`: 컬러 시스템
+- `AppTypography`: 타이포그래피 스케일
+- `AppSpacing`: 간격 시스템
+- `AppRadius`: 모서리 반경
+- `AppMotion`: 애니메이션 타이밍
+- `AppComponents`: 컴포넌트 규격
 
-### 6.3. 폼 (Form)
-
--   **구조:** 라벨은 항상 한 줄로, 플레이스홀더는 힌트가 아닌 입력 예시를 보여주는 용도로만 사용합니다. 에러 메시지는 해결 방법을 반드시 포함해야 합니다.
--   **상태:** 포커스 시 2px 보라색 링과 테두리를 강조하고, 에러 발생 시 `--color-state-danger` 색상을 사용합니다.
-
-### 6.4. 드롭다운 (Dropdown)
-
--   **구조:**
-    -   트리거 버튼: 선택된 항목 + 아이콘(▼/▲)
-    -   드롭다운 리스트: 인라인 또는 모달 형태
-    -   계층 구조 표시: level × 16px 들여쓰기
--   **속성:**
-    -   배경: `Colors.white`
-    -   보더: `neutral300`, 1px
-    -   그림자: Material `elevation: 4`
-    -   아이템 높이: 44px (터치 최적화)
-    -   아이템 패딩: horizontal 12px, vertical 8px
--   **상태:**
-    -   기본: `neutral700` 텍스트
-    -   Hover: `neutral100` 배경
-    -   선택됨: `actionTonalBg` 배경 + `action` 텍스트
-    -   비활성: `neutral500` 텍스트
--   **정렬 방식:**
-    -   **계층적 정렬 (DFS 기반)**: 부모-자식 관계 유지
-    -   부모 그룹 바로 아래에 자식 그룹들이 표시됨
-    -   같은 부모의 자식들은 id 오름차순 정렬
-    -   예: 대학 → 학부1 → 학과1-1 → 학과1-2 → 학부2 → 학과2-1
--   **구현 예시 (Flutter):**
-    ```dart
-    GroupDropdown(
-      currentGroupId: '1',
-      currentGroupName: '컴퓨터공학과',
-      // 드롭다운 클릭 시 그룹 목록 표시
-      // 선택 시 자동으로 워크스페이스 전환
-      // DFS 정렬로 계층 구조 유지
-    )
-    ```
-
-### 6.5. 헤더 (Header)
-
--   **원칙: 명시적 제목 우선 (Explicit Title First)**
-    -   페이지의 목적이 "워크스페이스", "댓글" 등 명확한 제목으로 정의될 경우, 이를 최상단에 `titleLarge`로 크게 표시하여 사용자가 현재 컨텍스트를 즉시 인지하도록 합니다.
-    -   명시적인 제목이 없는 일반적인 경우에는, 기존처럼 그룹/채널 경로만 간결하게 표시하여 `Simplicity`를 유지합니다.
-
--   **구조: 2단 계층 구조 및 역할 표시**
-    1.  **제목 (Title)**: `titleLarge` (20px/600) 스타일로 페이지의 명시적 제목 또는 현재 그룹명을 표시합니다.
-    2.  **역할 (Role)**: 제목 옆에 `bodySmall` (12px/400, `neutral600`) 스타일로 현재 그룹 내 사용자의 역할(예: "(그룹장)")을 표시하여 컨텍스트를 보강합니다.
-    3.  **경로 (Path)**: 제목 아래에 `bodySmall` (12px/400, `neutral600`) 스타일로 현재 위치 경로를 표시합니다. (예: "컴퓨터공학과 > 정기 회의")
-
--   **구현 예시 (Flutter - WorkspaceHeader):**
-    ```dart
-    // breadcrumb.title이 "댓글"과 같이 명시적 제목을 가질 경우
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 1. 제목 + 2. 역할
-        Row(
-          children: [
-            Text("댓글", style: AppTheme.titleLarge),
-            SizedBox(width: 4),
-            Text("(그룹장)", style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600)),
-          ],
-        ),
-        SizedBox(height: 4),
-        // 3. 경로
-        Text("컴퓨터공학과 > 정기 회의", style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600)),
-      ],
-    )
-
-    // breadcrumb.title이 없는 일반적인 경우
-    // 단일 행으로 그룹/채널 경로와 역할 표시
-    Row(
-      children: [
-        GroupDropdown(...),
-        SizedBox(width: 4),
-        Text("(그룹장)", style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600)), // 역할
-        Text(" > "),
-        Text("정기 회의"),
-      ],
-    )
-    ```
-
----
-
-## 7. 정보 화면 설계 패턴 (토스 철학 적용)
-
-1.  **가치 먼저 제시 (히어로/카드):** "이번 달 평균보다 ₩18,200 절약했어요"처럼 사용자가 얻는 구체적인 가치를 화면 최상단에 먼저 보여줍니다. ￼
-2.  **주요 행동 1개만 제시:** "자세히 보기" 같은 모호한 표현 대신, "영수증 불러오기"처럼 즉시 결과를 얻을 수 있는 동사를 사용합니다 (Easy to Answer). ￼
-3.  **세부 정보는 아래로:** 추가적인 그래프나 목록은 스크롤을 통해 자연스럽게 탐색하도록 유도하고, 불필요한 모달(Modal) 사용은 지양합니다 (Tap & Scroll). ￼
-4.  **빈 상태(Empty State) 활용:** 더미 예시 데이터를 보여주어 기능이 활성화되었을 때의 모습을 미리 상상하게 합니다. (예: "내 또래는 평균 12% 절약하고 있어요" 그래프 예시) ￼
-
----
-
-## 8. 콘텐츠 및 이모지
-
--   복잡한 감정이나 상태는 간결한 이모지나 아이콘으로 보조할 수 있습니다. (토스는 자체 제작한 Tossface를 사용)
--   외부에서는 시스템 기본 이모지 또는 일관된 아이콘 세트를 사용하되, 의미를 보조하는 용도로만 제한적으로 사용하고 과용을 금지합니다.
-
----
-
-## 9. 디자인 토큰 (Design Tokens)
-
-본 섹션은 디자인 철학을 실제 코드로 구현하기 위한 구체적인 값(토큰)을 정의합니다.
-
-### 9.1. 컬러 시스템 (AppColors)
-
-#### 브랜드 컬러
-```dart
-primary:     #5C068C   // 메인 브랜드 컬러 (학교 공식: Pantone 2597 CVC)
-brandStrong: #4B0672   // Hover/Active 등 진한 보라(톤 다운)
-brandLight:  #F2E8FA   // 톤 컨테이너/칩/강조 배경(연보라 틴트)
+### 구현 위치
+```
+frontend/lib/core/theme/
+├── app_colors.dart
+├── app_typography.dart
+├── app_spacing.dart
+├── app_radius.dart
+├── app_motion.dart
+└── app_components.dart
 ```
 
-#### 중성 컬러 (Neutral)
-```dart
-neutral900: #0F172A   // 제목, 가장 중요한 텍스트
-neutral800: #1E293B   // 섹션 타이틀
-neutral700: #334155   // 본문 텍스트
-neutral600: #64748B   // 보조 텍스트/아이콘
-neutral500: #94A3B8   // 서브 아이콘, 비활성 텍스트
-neutral400: #CBD5E1   // 얕은 보더/디바이더
-neutral300: #E2E8F0   // 카드 보더/섹션 분리
-neutral200: #EEF2F6   // 카드/패널 표면 구분
-neutral100: #F8FAFC   // 페이지 베이스 배경
-```
+## 사용 가이드
 
-#### 시스템 컬러
-```dart
-// 액션(행동) — 버튼/링크/선택 상태는 블루로 통일
-actionPrimary:  #1D4ED8   // 주요 CTA/링크
-actionHover:    #0F3CC9   // Hover/포커스 시
-actionTonalBg:  #EAF2FF   // 선택 배경/하이라이트 표면
+### 1. 새로운 기능 디자인 시
+1. [design-principles.md](design-principles.md)에서 핵심 원칙 확인
+2. [design-tokens.md](design-tokens.md)에서 사용할 토큰 값 확인
+3. [responsive-design-guide.md](responsive-design-guide.md)에서 반응형 규칙 확인
 
-// 상태(의미 고정)
-success:        #10B981   // 성공/활성
-warning:        #F59E0B   // 경고
-error:          #E63946   // 오류/위험(가독성 좋은 레드)
+### 2. 컴포넌트 구현 시
+1. 디자인 토큰에서 정의된 값 사용
+2. 모든 인터랙티브 상태 (default, hover, active, disabled, focus) 구현
+3. WCAG AA 접근성 기준 준수
 
-// 접근성
-focusRing:      rgba(92, 6, 140, 0.45)  // 브랜드 보라 Focus Ring(2px 권장)
-```
+### 3. 컬러 사용 시
+1. [color-guide.md](color-guide.md)에서 적절한 컬러 확인
+2. Grayscale 70-80% / Brand Color 20-30% 비율 유지
+3. WCAG AA 대비 기준 (4.5:1) 준수
 
-### 9.2. 타이포그래피 (AppTypography)
+## 관련 페이지 문서
 
-#### 폰트 패밀리
-- **영문/숫자**: Inter (Geometric Sans-serif)
-- **한글**: Noto Sans KR (가독성 최적화)
+디자인 시스템이 적용된 주요 페이지들:
+- [워크스페이스 페이지](../pages/workspace-pages.md) - 워크스페이스 콘텐츠 페이지
+- [채널 페이지](../pages/channel-pages.md) - 채널 권한 및 생성 플로우
+- [모집 페이지](../pages/recruitment-pages.md) - 모집 공고 관련 페이지
+- [네비게이션 및 페이지 플로우](../pages/navigation-and-page-flow.md) - 전체 네비게이션 구조
 
-#### 타이포그래피 스케일
-```dart
-displayLarge: 32px/700   // 메인 제목
-displayMedium: 28px/700  // 섹션 제목
-headlineLarge: 22px/600  // 카드 헤더
-titleLarge: 16px/600     // 버튼, 중요 액션
-bodyLarge: 16px/400      // 기본 본문
-bodyMedium: 14px/400     // 보조 텍스트
-labelLarge: 14px/600     // 폼 레이블
-```
+## 업데이트 정책
 
-### 9.3. 간격 시스템 (AppSpacing)
-
-#### 8px 기반 스케일
-```dart
-xxs: 8px    // 최소 간격
-xs: 12px    // 텍스트 간 여백
-sm: 16px    // 컴포넌트 내부 여백
-md: 24px    // 컴포넌트 간 여백
-lg: 32px    // 섹션 간 여백
-xl: 48px    // 대형 섹션 구분
-```
-
-#### 레이아웃 오프셋
-```dart
-offsetMin: 96px   // 모바일 수직 여백
-offsetMax: 120px  // 데스크톱 수직 여백
-```
-
-### 9.4. 모서리 반경 (AppRadius)
-```dart
-card: 20px     // 카드 컴포넌트
-button: 12px   // 버튼 요소
-input: 12px    // 입력 필드
-```
-
-### 9.5. 애니메이션 (AppMotion)
-```dart
-quick: 120ms          // 빠른 상호작용
-standard: 160ms       // 표준 전환
-easing: easeOutCubic  // 자연스러운 곡선
-```
-
-### 9.6. 컴포넌트 규격 (AppComponents)
-
-#### 버튼 시스템
-```dart
-buttonHeight: 52px           // 터치 최적화 높이
-loginCardMaxWidth: 420px     // 로그인 카드 최대 너비
-```
-
-#### 로고 시스템
-```dart
-logoSize: 56px       // 브랜드 로고 크기
-logoRadius: 16px     // 로고 모서리
-logoIconSize: 28px   // 내부 아이콘
-```
-
-### 9.7. 반응형 지원 (Responsive)
-
-#### 브레이크포인트
-```dart
-MOBILE: 0-450px
-TABLET: 451-800px
-DESKTOP: 801-1920px
-4K: 1921px+
-```
+디자인 시스템 변경 시:
+1. 해당 문서 업데이트 (design-principles.md, design-tokens.md 등)
+2. 구현 코드 반영 (frontend/lib/core/theme/)
+3. 영향받는 페이지 문서 확인 및 업데이트
+4. 컨텍스트 추적 시스템에 변경 기록

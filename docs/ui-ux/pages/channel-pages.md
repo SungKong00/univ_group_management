@@ -89,13 +89,7 @@
 - 역할 태그: aria-pressed 속성 활용
 - 오류 표시: role=alert
 
-## 7. 상태 다이어그램 (요약)
-```
-그룹 생성 → (기본 2채널 + 템플릿 권한) → 활성
-사용자 채널 생성 → (0바인딩) → 권한 편집 → 활성
-활성 → 보관 → 복원/삭제
-```
-## 8. 관련 문서
+## 관련 문서
 - 개념: ../../concepts/channel-permissions.md
 - 권한 시스템: ../../concepts/permission-system.md
 - 워크스페이스: ../../concepts/workspace-channel.md

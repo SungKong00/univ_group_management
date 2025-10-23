@@ -90,5 +90,5 @@
 
 -   [네비게이션 및 페이지 흐름](navigation-and-page-flow.md)
 -   [워크스페이스 페이지](workspace-pages.md)
--   [멤버 관리 페이지](../member_management/member_management_page.md) (신규)
--   [컴포넌트 재사용 가이드](../../implementation/component-reusability-guide.md)
+-   멤버 관리 페이지 (신규)
+-   [컴포넌트 재사용 가이드](../../implementation/frontend/components.md)

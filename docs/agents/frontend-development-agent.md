@@ -209,7 +209,7 @@ src/ (또는 lib/)
 ⚠️ 모든 구현 전 재사용성 가이드 검토 필수
 
 재사용성 체크리스트:
-□ [컴포넌트 재사용성 가이드](../implementation/component-reusability-guide.md) 숙지
+□ [컴포넌트 재사용성 가이드](../implementation/frontend/components.md) 숙지
 □ 동일한 UI 패턴이 3곳 이상에서 사용되는지 확인
 □ 디자인 토큰(AppColors, AppSpacing 등) 활용 계획
 □ 컴포넌트 분리 전략 수립 (하드코딩 → 토큰화 → 컴포넌트화 → 완전한 재사용)
@@ -467,10 +467,10 @@ WCAG 2.1 AA 기준:
 항상 최신 문서를 참조하여 개발하세요:
 
 - **프로젝트 컨텍스트**: [CLAUDE.md](../../CLAUDE.md)
-- **재사용성 가이드**: [docs/implementation/component-reusability-guide.md](../implementation/component-reusability-guide.md) ⭐ 필수
+- **재사용성 가이드**: [do../implementation/frontend/components.md](../implementation/frontend/components.md) ⭐ 필수
 - **디자인 시스템**: [docs/ui-ux/concepts/design-system.md](../ui-ux/concepts/design-system.md)
 - **개발 워크플로우**: [docs/workflows/development-flow.md](../workflows/development-flow.md)
-- **프론트엔드 가이드**: [docs/implementation/frontend-guide.md](../implementation/frontend-guide.md)
+- **프론트엔드 가이드**: [do../implementation/frontend/README.md](../implementation/frontend/README.md)
 
 ---
 

@@ -801,8 +801,8 @@ val customRole = TestDataFactory.createTestGroupRole(
 - **개발 워크플로우**: [development-flow.md](development-flow.md)
 
 ### 구현 참조
-- **백엔드 가이드**: [../implementation/backend-guide.md](../implementation/backend-guide.md)
-- **프론트엔드 가이드**: [../implementation/frontend-guide.md](../implementation/frontend-guide.md)
+- **백엔드 가이드**: [../implementation/backend/README.md](../implementation/backend/README.md)
+- **프론트엔드 가이드**: [../implementation/frontend/README.md](../implementation/frontend/README.md)
 
 ### 문제 해결
 - **일반적 에러**: [../troubleshooting/common-errors.md](../troubleshooting/common-errors.md)

@@ -90,11 +90,11 @@ org.springframework.dao.DataIntegrityViolationException: could not execute state
 
 1.  **H2 DB 시퀀스 불일치 (로컬 개발)**
     -   **원인**: `data.sql`로 수동 삽입한 ID와 DB의 자동 증가(auto-increment) 카운터가 충돌.
-    -   **해결**: `data.sql` 마지막에 `ALTER TABLE ... RESTART WITH ...` 쿼리를 추가하여 다음 ID를 명시적으로 지정. 자세한 내용은 [백엔드 가이드 - H2 DB ID 충돌 해결](../implementation/backend-guide.md#h2-db-id-충돌-primary-key-violation-해결) 참조.
+    -   **해결**: `data.sql` 마지막에 `ALTER TABLE ... RESTART WITH ...` 쿼리를 추가하여 다음 ID를 명시적으로 지정. 자세한 내용은 [백엔드 가이드 - H2 DB ID 충돌 해결](../implementation/backend/development-setup.md) 참조.
 
 2.  **사용자 동시 생성 (Concurrency Issue)**
     -   **원인**: 여러 요청이 동시에 같은 이메일로 가입을 시도하여 DB의 `UNIQUE` 제약조건 위반.
-    -   **해결**: 사용자 생성 로직(`findOrCreateUser`)에서 `saveAndFlush`를 `try-catch`로 감싸고, `DataIntegrityViolationException` 발생 시 해당 사용자를 다시 조회하여 반환. 자세한 내용은 [백엔드 가이드 - 사용자 동시 생성 시 동시성 처리](../implementation/backend-guide.md#사용자-동시-생성-시-동시성-처리) 참조.
+    -   **해결**: 사용자 생성 로직(`findOrCreateUser`)에서 `saveAndFlush`를 `try-catch`로 감싸고, `DataIntegrityViolationException` 발생 시 해당 사용자를 다시 조회하여 반환. 자세한 내용은 [백엔드 가이드 - 동시성 처리](../implementation/backend/development-setup.md) 참조.
 
 3.  **잘못된 요청 본문 (Invalid Request Body)**
     -   **증상**: `HttpMessageNotReadableException`이 발생하며, 서버 로그에 `FAIL_TO_PARSE`와 유사한 메시지 기록.
@@ -215,8 +215,8 @@ fun submitSignupProfile(...): User {
 ```
 
 **관련 문서:**
-- [백엔드 가이드 - 트랜잭션 전파 레벨](../implementation/backend-guide.md#트랜잭션-전파-레벨)
-- [백엔드 가이드 - 예외 처리 전략](../implementation/backend-guide.md#예외-처리)
+- [백엔드 가이드 - 트랜잭션 전파 레벨](../implementation/backend/transaction-patterns.md)
+- [백엔드 가이드 - 예외 처리 전략](../implementation/backend/exception-handling.md)
 
 ## 프론트엔드 에러
 
@@ -385,7 +385,7 @@ final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref)
 - `lib/presentation/providers/calendar_events_provider.dart` - 캘린더 스냅샷 초기화
 - `lib/presentation/providers/auth_provider.dart` - 로그아웃 로직
 
-**참고:** [프론트엔드 가이드 - Provider 초기화 시스템](../implementation/frontend-guide.md#상태-관리-패턴)
+**참고:** [프론트엔드 가이드 - Provider 초기화 시스템](../implementation/frontend/README.md#상태-관리-패턴)
 
 ## API 통신 에러
 
@@ -636,8 +636,8 @@ flutter pub get
 - **권한 에러**: [permission-errors.md](permission-errors.md)
 
 ### 구현 참조
-- **백엔드 가이드**: [../implementation/backend-guide.md](../implementation/backend-guide.md)
-- **프론트엔드 가이드**: [../implementation/frontend-guide.md](../implementation/frontend-guide.md)
+- **백엔드 구현 가이드**: [../implementation/backend/README.md](../implementation/backend/README.md)
+- **프론트엔드 가이드**: [../implementation/frontend/README.md](../implementation/frontend/README.md)
 - **API 참조**: [../implementation/api-reference.md](../implementation/api-reference.md)
 
 ### 개발 프로세스

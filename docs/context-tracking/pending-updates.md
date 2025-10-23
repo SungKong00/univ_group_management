@@ -26,7 +26,7 @@
 - permission-system.md: RBAC 통합 확정
 - calendar-place-management.md: 장소 권한 통합 방식 명시
 - database-reference.md: 캘린더 테이블 섹션 추가
-- backend-guide.md: 캘린더 구현 가이드 추가
+- backend/README.md: 캘린더 구현 가이드 추가
 - api-reference.md: 캘린더 API 계획 추가
 **후속**: Phase 6 진입 시 엔티티 클래스 및 API 구현
 
@@ -41,7 +41,7 @@
 **상태**: ✅ 완료 (2025-10-04)
 **적용 문서**:
 - permission-system.md: Spring Security 통합 가이드
-- backend-guide.md: Security Layer 설계 결정
+- backend/README.md: Security Layer 설계 결정
 **후속**: 없음
 
 ---

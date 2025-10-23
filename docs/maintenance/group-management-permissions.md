@@ -71,8 +71,8 @@
 ## 🔗 관련 문서
 
 - [권한 시스템 개념](../concepts/permission-system.md)
-- [프론트엔드 가이드](../implementation/frontend-guide.md)
-- [백엔드 가이드](../implementation/backend-guide.md)
+- [프론트엔드 가이드](../implementation/frontend/README.md)
+- [백엔드 가이드](../implementation/backend/README.md)
 
 ## 📌 중요 노트
 

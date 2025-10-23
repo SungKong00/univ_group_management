@@ -3,7 +3,7 @@
 ## 📋 개요
 
 **목적**: 대학 내 장소(강의실, 동아리방 등)의 예약 및 관리 시스템
-**관련 문서**: [장소 관리 개념](../concepts/calendar-place-management.md), [캘린더 시스템](../concepts/calendar-system.md)
+**관련 문서**: [장소 캘린더 시스템](../concepts/place-calendar-system.md), [캘린더 통합](../concepts/calendar-integration.md)
 **상태**: Phase 1 백엔드 구현 완료, Phase 2 프론트엔드 대기
 
 ---
@@ -297,7 +297,7 @@ if (currentUser.hasPermission(CALENDAR_MANAGE) &&
 - **미래 예약 존재**: 경고 후 진행 (사용자 확인 필요)
 
 ## 참조
-- [캘린더 시스템](../concepts/calendar-system.md)
-- [장소 관리 개념](../concepts/calendar-place-management.md)
+- [장소 캘린더 시스템](../concepts/place-calendar-system.md)
+- [캘린더 통합](../concepts/calendar-integration.md)
 - [권한 시스템](../concepts/permission-system.md)
 - [그룹 캘린더 개발 계획](group-calendar-development-plan.md)

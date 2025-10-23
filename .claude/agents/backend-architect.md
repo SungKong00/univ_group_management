@@ -109,9 +109,17 @@ class FeatureService(
 **Key Context Files to Reference:**
 - docs/concepts/permission-system.md - RBAC + individual override system
 - docs/concepts/group-hierarchy.md - Group structure and inheritance rules
+- docs/backend/ - Technical architecture and design (100줄 내 개념+코드참조)
 - docs/implementation/backend-guide.md - Architecture patterns and standards
 - docs/implementation/api-reference.md - REST API design guidelines
 - docs/implementation/database-reference.md - Entity design patterns
+
+**Code Reference Policy:**
+구현 상세를 참조할 때는 파일 경로와 클래스/메서드명을 제시하여
+Claude가 직접 Read 도구로 확인할 수 있도록 합니다:
+- ✅ `GroupService` 의 `createGroup()` 메서드 (경로: backend/src/main/kotlin/.../service/GroupService.kt)
+- ✅ `PermissionEvaluator` 클래스의 권한 검증 로직
+- ❌ 문서에 전체 구현 코드 포함
 
 **Quality Assurance Checklist:**
 Before completing any implementation, verify:

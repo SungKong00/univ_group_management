@@ -96,7 +96,7 @@
 - **그룹 조직 구조**: [group-hierarchy.md](group-hierarchy.md) - 대학 조직과 그룹 관계
 - **권한과 역할**: [permission-system.md](permission-system.md) - 누가 무엇을 할 수 있는지
 - **소통 공간**: [workspace-channel.md](workspace-channel.md) - 워크스페이스와 채널 활용법
-- **캘린더 시스템**: [calendar-system.md](calendar-system.md) - 일정 관리 및 장소 예약 (Phase 6)
+- **캘린더 시스템**: [calendar-integration.md](calendar-integration.md) - 일정 관리 및 장소 예약 (Phase 6)
 - **멤버 모집**: [recruitment-system.md](recruitment-system.md) - 그룹 가입 과정
 - **사용자 과정**: [user-lifecycle.md](user-lifecycle.md) - 가입부터 활동까지
 - **채널 권한**: [channel-permissions.md](channel-permissions.md) - 채널별 접근 제어

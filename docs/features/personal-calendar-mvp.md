@@ -766,10 +766,10 @@ CAL_021: "이벤트를 찾을 수 없습니다."
 
 ## 14. 관련 문서
 
-- [캘린더 시스템 개념](../concepts/calendar-system.md) - 전체 시스템 개요
-- [캘린더 설계 결정사항](../concepts/calendar-design-decisions.md) - 아키텍처 결정
-- [백엔드 개발 가이드](../implementation/backend-guide.md) - 3레이어 아키텍처
-- [프론트엔드 개발 가이드](../implementation/frontend-guide.md) - Flutter 구조
+- [개인 캘린더 시스템](../concepts/personal-calendar-system.md) - 개인 일정 관리
+- [캘린더 핵심 설계](../backend/calendar-core-design.md) - 아키텍처 결정
+- [백엔드 개발 가이드](../implementation/backend/README.md) - 3레이어 아키텍처
+- [프론트엔드 개발 가이드](../implementation/frontend/README.md) - Flutter 구조
 - [API 참조](../implementation/api-reference.md) - REST API 규칙
 - [데이터베이스 참조](../implementation/database-reference.md) - 스키마 상세
 
