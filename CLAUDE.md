@@ -67,7 +67,6 @@
 
 ### 문제 해결
 - **권한 에러**: [docs/troubleshooting/permission-errors.md](docs/troubleshooting/permission-errors.md)
-- **일반적 에러**: [docs/troubleshooting/common-errors.md](docs/troubleshooting/common-errors.md)
 
 ## 📋 프로젝트 개요
 
