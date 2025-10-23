@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 
-/// Reusable Time Spinner Component
+/// Reusable Time Spinner Component (Mobile-optimized)
 ///
-/// A compact time picker UI that allows users to select hours and minutes
-/// using increment/decrement buttons (spinner style) or direct keyboard input.
+/// A compact time picker UI for mobile that allows users to select hours and minutes
+/// using increment/decrement arrow buttons.
 ///
 /// Features:
 /// - Hour spinner (0-23)
 /// - Minute spinner (0-59)
 /// - Two input modes:
-///   - Free input mode: Any minute value (0-59)
-///   - Interval mode: Fixed intervals (1, 5, 10, 15, or 30 minutes)
-/// - Direct keyboard input support
+///   - Free input mode: Arrow buttons ±1 minute
+///   - Interval mode: Arrow buttons ±interval (15, 30 minutes, etc.)
 /// - Callback on time change
 ///
 /// Design:
@@ -68,21 +66,18 @@ class _TimeSpinnerState extends State<TimeSpinner> {
   late int _selectedHour;
   late int _selectedMinute;
 
-  // 편집 모드 상태
+  // Edit mode state
   bool _isEditingHour = false;
   bool _isEditingMinute = false;
+  bool _hasError = false;
 
-  // TextField 컨트롤러
-  final _hourController = TextEditingController();
-  final _minuteController = TextEditingController();
+  // Text editing controllers
+  final TextEditingController _hourController = TextEditingController();
+  final TextEditingController _minuteController = TextEditingController();
 
-  // FocusNode
-  final _hourFocusNode = FocusNode();
-  final _minuteFocusNode = FocusNode();
-
-  // 드래그 누적값
-  double _dragAccumulator = 0.0;
-  static const double _dragThreshold = 15.0; // 15px마다 1회 변경
+  // Focus nodes
+  final FocusNode _hourFocusNode = FocusNode();
+  final FocusNode _minuteFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -92,6 +87,19 @@ class _TimeSpinnerState extends State<TimeSpinner> {
     _selectedMinute = widget.freeInputMode
         ? widget.initialTime.minute
         : _roundToInterval(widget.initialTime.minute);
+
+    // Listen to focus changes
+    _hourFocusNode.addListener(_onHourFocusChange);
+    _minuteFocusNode.addListener(_onMinuteFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _hourController.dispose();
+    _minuteController.dispose();
+    _hourFocusNode.dispose();
+    _minuteFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -108,18 +116,118 @@ class _TimeSpinnerState extends State<TimeSpinner> {
     }
   }
 
-  @override
-  void dispose() {
-    _hourController.dispose();
-    _minuteController.dispose();
-    _hourFocusNode.dispose();
-    _minuteFocusNode.dispose();
-    super.dispose();
-  }
-
-  /// Round minute to the nearest interval
+  /// Round minute to the nearest interval (Floor)
   int _roundToInterval(int minute) {
     return (minute ~/ widget.minuteInterval) * widget.minuteInterval;
+  }
+
+  /// Focus change handler for hour
+  void _onHourFocusChange() {
+    if (!_hourFocusNode.hasFocus && _isEditingHour) {
+      _submitHourEdit();
+    }
+  }
+
+  /// Focus change handler for minute
+  void _onMinuteFocusChange() {
+    if (!_minuteFocusNode.hasFocus && _isEditingMinute) {
+      _submitMinuteEdit();
+    }
+  }
+
+  /// Enter edit mode for hour
+  void _startEditingHour() {
+    if (!widget.enabled) return;
+    setState(() {
+      _isEditingHour = true;
+      _hasError = false;
+      _hourController.text = _selectedHour.toString().padLeft(2, '0');
+    });
+    // Request focus and select all text
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _hourFocusNode.requestFocus();
+      _hourController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _hourController.text.length,
+      );
+    });
+  }
+
+  /// Enter edit mode for minute
+  void _startEditingMinute() {
+    if (!widget.enabled) return;
+    setState(() {
+      _isEditingMinute = true;
+      _hasError = false;
+      _minuteController.text = _selectedMinute.toString().padLeft(2, '0');
+    });
+    // Request focus and select all text
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _minuteFocusNode.requestFocus();
+      _minuteController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _minuteController.text.length,
+      );
+    });
+  }
+
+  /// Submit hour edit
+  void _submitHourEdit() {
+    final inputValue = _hourController.text.trim();
+    final parsedValue = int.tryParse(inputValue);
+
+    if (parsedValue == null || parsedValue < 0 || parsedValue > 23) {
+      // Invalid input - show error and restore
+      setState(() {
+        _hasError = true;
+      });
+      // Restore after a brief delay
+      Future.delayed(const Duration(milliseconds: 300), () {
+        setState(() {
+          _isEditingHour = false;
+          _hasError = false;
+        });
+      });
+    } else {
+      // Valid input
+      setState(() {
+        _selectedHour = parsedValue;
+        _isEditingHour = false;
+        _hasError = false;
+      });
+      _notifyTimeChange();
+    }
+  }
+
+  /// Submit minute edit
+  void _submitMinuteEdit() {
+    final inputValue = _minuteController.text.trim();
+    final parsedValue = int.tryParse(inputValue);
+
+    if (parsedValue == null || parsedValue < 0 || parsedValue > 59) {
+      // Invalid input - show error and restore
+      setState(() {
+        _hasError = true;
+      });
+      // Restore after a brief delay
+      Future.delayed(const Duration(milliseconds: 300), () {
+        setState(() {
+          _isEditingMinute = false;
+          _hasError = false;
+        });
+      });
+    } else {
+      // Valid input - apply interval rounding if needed
+      final finalMinute = widget.freeInputMode
+          ? parsedValue
+          : _roundToInterval(parsedValue);
+      setState(() {
+        _selectedMinute = finalMinute;
+        _isEditingMinute = false;
+        _hasError = false;
+      });
+      _notifyTimeChange();
+    }
   }
 
   /// Notify parent of time change
@@ -137,6 +245,14 @@ class _TimeSpinnerState extends State<TimeSpinner> {
   /// Increment hour
   void _incrementHour() {
     if (!widget.enabled) return;
+    // Exit edit mode if active
+    if (_isEditingHour) {
+      setState(() {
+        _isEditingHour = false;
+        _hasError = false;
+      });
+      return;
+    }
     setState(() {
       _selectedHour = (_selectedHour + 1) % 24;
       _notifyTimeChange();
@@ -146,6 +262,14 @@ class _TimeSpinnerState extends State<TimeSpinner> {
   /// Decrement hour
   void _decrementHour() {
     if (!widget.enabled) return;
+    // Exit edit mode if active
+    if (_isEditingHour) {
+      setState(() {
+        _isEditingHour = false;
+        _hasError = false;
+      });
+      return;
+    }
     setState(() {
       _selectedHour = (_selectedHour - 1 + 24) % 24;
       _notifyTimeChange();
@@ -155,8 +279,16 @@ class _TimeSpinnerState extends State<TimeSpinner> {
   /// Increment minute
   void _incrementMinute() {
     if (!widget.enabled) return;
+    // Exit edit mode if active
+    if (_isEditingMinute) {
+      setState(() {
+        _isEditingMinute = false;
+        _hasError = false;
+      });
+      return;
+    }
     setState(() {
-      // Free mode: increment by 1, Interval mode: increment by interval
+      // Free mode: +1, Interval mode: +interval
       final increment = widget.freeInputMode ? 1 : widget.minuteInterval;
       _selectedMinute = (_selectedMinute + increment) % 60;
       _notifyTimeChange();
@@ -166,42 +298,19 @@ class _TimeSpinnerState extends State<TimeSpinner> {
   /// Decrement minute
   void _decrementMinute() {
     if (!widget.enabled) return;
+    // Exit edit mode if active
+    if (_isEditingMinute) {
+      setState(() {
+        _isEditingMinute = false;
+        _hasError = false;
+      });
+      return;
+    }
     setState(() {
-      // Free mode: decrement by 1, Interval mode: decrement by interval
+      // Free mode: -1, Interval mode: -interval
       final decrement = widget.freeInputMode ? 1 : widget.minuteInterval;
       _selectedMinute = (_selectedMinute - decrement + 60) % 60;
       _notifyTimeChange();
-    });
-  }
-
-  /// Handle hour input from TextField
-  void _validateAndApplyHour(String value) {
-    final parsed = int.tryParse(value);
-    if (parsed != null && parsed >= 0 && parsed <= 23) {
-      setState(() {
-        _selectedHour = parsed;
-      });
-      _notifyTimeChange();
-    }
-    // Invalid input: revert to previous value (silent recovery)
-    setState(() {
-      _isEditingHour = false;
-    });
-  }
-
-  /// Handle minute input from TextField
-  void _validateAndApplyMinute(String value) {
-    final parsed = int.tryParse(value);
-    if (parsed != null && parsed >= 0 && parsed <= 59) {
-      setState(() {
-        // Free mode: use exact value, Interval mode: round to interval
-        _selectedMinute = widget.freeInputMode ? parsed : _roundToInterval(parsed);
-      });
-      _notifyTimeChange();
-    }
-    // Invalid input: revert to previous value (silent recovery)
-    setState(() {
-      _isEditingMinute = false;
     });
   }
 
@@ -211,6 +320,11 @@ class _TimeSpinnerState extends State<TimeSpinner> {
     required int value,
     required VoidCallback onIncrement,
     required VoidCallback onDecrement,
+    required bool isEditing,
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required VoidCallback onTap,
+    required VoidCallback onSubmit,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -221,79 +335,28 @@ class _TimeSpinnerState extends State<TimeSpinner> {
           onPressed: widget.enabled ? onIncrement : null,
         ),
         const SizedBox(height: AppSpacing.xxs),
-        // Value display (with tap-to-edit, mouse wheel, and drag support)
-        Listener(
-          onPointerSignal: (event) {
-            // 마우스 휠 이벤트 처리 (즉각 반응)
-            if (event is PointerScrollEvent && widget.enabled) {
-              if (event.scrollDelta.dy > 0) {
-                // 아래로 스크롤: 값 감소
-                onDecrement();
-              } else if (event.scrollDelta.dy < 0) {
-                // 위로 스크롤: 값 증가
-                onIncrement();
-              }
-            }
-          },
-          child: GestureDetector(
-            onTap: () {
-              if (!widget.enabled) return;
-              // 시간/분 구분하여 편집 모드 전환
-              if (label == '시') {
-                setState(() {
-                  _isEditingHour = true;
-                  _hourController.clear(); // 기존 값 클리어
-                });
-                _hourFocusNode.requestFocus(); // 포커스 자동 설정
-              } else {
-                setState(() {
-                  _isEditingMinute = true;
-                  _minuteController.clear();
-                });
-                _minuteFocusNode.requestFocus();
-              }
-            },
-            onVerticalDragUpdate: (details) {
-              // 드래그 인터랙션 처리 (누적 방식)
-              if (!widget.enabled) return;
-
-              _dragAccumulator += details.delta.dy;
-
-              while (_dragAccumulator.abs() > _dragThreshold) {
-                if (_dragAccumulator < 0) {
-                  // 위로 드래그: 증가
-                  onIncrement();
-                  _dragAccumulator += _dragThreshold;
-                } else {
-                  // 아래로 드래그: 감소
-                  onDecrement();
-                  _dragAccumulator -= _dragThreshold;
-                }
-              }
-            },
-            onVerticalDragEnd: (_) {
-              // 드래그 종료 시 누적값 리셋
-              _dragAccumulator = 0.0;
-            },
-            child: Container(
+        // Value display (clickable) or TextField (editing mode)
+        InkWell(
+          onTap: widget.enabled ? onTap : null,
+          borderRadius: BorderRadius.circular(AppRadius.button),
+          child: Container(
             width: 64,
             height: 44,
             decoration: BoxDecoration(
-              // 편집 모드: 하이라이트 배경
-              color: (label == '시' && _isEditingHour) || (label == '분' && _isEditingMinute)
-                  ? AppColors.brandLight // 연한 퍼플 하이라이트
-                  : (widget.enabled ? AppColors.surface : AppColors.neutral100),
+              color: widget.enabled ? AppColors.surface : AppColors.neutral100,
               borderRadius: BorderRadius.circular(AppRadius.button),
               border: Border.all(
-                color: widget.enabled ? AppColors.lightOutline : AppColors.neutral300,
+                color: _hasError
+                    ? Colors.red
+                    : (widget.enabled ? AppColors.lightOutline : AppColors.neutral300),
                 width: 1,
               ),
             ),
             alignment: Alignment.center,
-            child: (label == '시' && _isEditingHour)
+            child: isEditing
                 ? TextField(
-                    controller: _hourController,
-                    focusNode: _hourFocusNode,
+                    controller: controller,
+                    focusNode: focusNode,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
                     style: AppTheme.headlineMedium.copyWith(
@@ -304,34 +367,15 @@ class _TimeSpinnerState extends State<TimeSpinner> {
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
                     ),
-                    onSubmitted: _validateAndApplyHour,
-                    onTapOutside: (_) => _validateAndApplyHour(_hourController.text),
+                    onSubmitted: (_) => onSubmit(),
                   )
-                : (label == '분' && _isEditingMinute)
-                    ? TextField(
-                        controller: _minuteController,
-                        focusNode: _minuteFocusNode,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        style: AppTheme.headlineMedium.copyWith(
-                          color: AppColors.neutral900,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        onSubmitted: _validateAndApplyMinute,
-                        onTapOutside: (_) => _validateAndApplyMinute(_minuteController.text),
-                      )
-                    : Text(
-                        value.toString().padLeft(2, '0'),
-                        style: AppTheme.headlineMedium.copyWith(
-                          color: widget.enabled ? AppColors.neutral900 : AppColors.neutral500,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-            ),
+                : Text(
+                    value.toString().padLeft(2, '0'),
+                    style: AppTheme.headlineMedium.copyWith(
+                      color: widget.enabled ? AppColors.neutral900 : AppColors.neutral500,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
         ),
         const SizedBox(height: 4),
@@ -378,6 +422,11 @@ class _TimeSpinnerState extends State<TimeSpinner> {
               value: _selectedHour,
               onIncrement: _incrementHour,
               onDecrement: _decrementHour,
+              isEditing: _isEditingHour,
+              controller: _hourController,
+              focusNode: _hourFocusNode,
+              onTap: _startEditingHour,
+              onSubmit: _submitHourEdit,
             ),
             const SizedBox(width: AppSpacing.sm),
             // Colon separator
@@ -398,6 +447,11 @@ class _TimeSpinnerState extends State<TimeSpinner> {
               value: _selectedMinute,
               onIncrement: _incrementMinute,
               onDecrement: _decrementMinute,
+              isEditing: _isEditingMinute,
+              controller: _minuteController,
+              focusNode: _minuteFocusNode,
+              onTap: _startEditingMinute,
+              onSubmit: _submitMinuteEdit,
             ),
           ],
         ),

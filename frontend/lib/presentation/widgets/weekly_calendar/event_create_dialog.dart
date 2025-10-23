@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/place/place.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../common/cupertino_time_picker.dart';
+import '../common/time_spinner.dart';
 
 /// Result data returned from EventCreateDialog
 class EventCreateResult {
@@ -417,30 +419,46 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
                   ),
                   const SizedBox(height: AppSpacing.md),
 
-                  // Time pickers
+                  // Time pickers (platform-specific)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       // Start time picker
                       Flexible(
-                        child: CupertinoTimePicker(
-                          label: '시작 시간',
-                          initialTime: _startTime,
-                          onTimeChanged: _handleStartTimeChange,
-                          minuteInterval: 15,
-                          freeInputMode: widget.availablePlaces.isEmpty,
-                        ),
+                        child: kIsWeb
+                            ? TimeSpinner(
+                                label: '시작 시간',
+                                initialTime: _startTime,
+                                onTimeChanged: _handleStartTimeChange,
+                                minuteInterval: 15,
+                                freeInputMode: widget.availablePlaces.isEmpty,
+                              )
+                            : CupertinoTimePicker(
+                                label: '시작 시간',
+                                initialTime: _startTime,
+                                onTimeChanged: _handleStartTimeChange,
+                                minuteInterval: 15,
+                                freeInputMode: widget.availablePlaces.isEmpty,
+                              ),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       // End time picker
                       Flexible(
-                        child: CupertinoTimePicker(
-                          label: '종료 시간',
-                          initialTime: _endTime,
-                          onTimeChanged: _handleEndTimeChange,
-                          minuteInterval: 15,
-                          freeInputMode: widget.availablePlaces.isEmpty,
-                        ),
+                        child: kIsWeb
+                            ? TimeSpinner(
+                                label: '종료 시간',
+                                initialTime: _endTime,
+                                onTimeChanged: _handleEndTimeChange,
+                                minuteInterval: 15,
+                                freeInputMode: widget.availablePlaces.isEmpty,
+                              )
+                            : CupertinoTimePicker(
+                                label: '종료 시간',
+                                initialTime: _endTime,
+                                onTimeChanged: _handleEndTimeChange,
+                                minuteInterval: 15,
+                                freeInputMode: widget.availablePlaces.isEmpty,
+                              ),
                       ),
                     ],
                   ),
