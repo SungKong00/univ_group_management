@@ -50,7 +50,7 @@ class PlaceRestrictedTime(
     @Column(name = "end_time", nullable = false)
     var endTime: LocalTime,
     @Column(name = "reason", length = 100)
-    var reason: String? = null, // 예: "점심시간", "시설 휴게시간"
+    var reason: String? = null,
     @Column(name = "display_order", nullable = false)
     var displayOrder: Int = 0,
     @Column(name = "created_at", nullable = false, updatable = false)

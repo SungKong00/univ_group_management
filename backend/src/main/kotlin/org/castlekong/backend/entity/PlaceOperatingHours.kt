@@ -59,7 +59,7 @@ class PlaceOperatingHours(
     @Column(name = "end_time", nullable = false)
     var endTime: LocalTime,
     @Column(name = "is_closed", nullable = false)
-    var isClosed: Boolean = false, // 해당 요일 휴무 여부
+    var isClosed: Boolean = false,
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = false)

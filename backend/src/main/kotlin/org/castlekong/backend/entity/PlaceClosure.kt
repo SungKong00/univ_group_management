@@ -43,14 +43,13 @@ class PlaceClosure(
     @Column(name = "closure_date", nullable = false)
     var closureDate: LocalDate,
     @Column(name = "is_full_day", nullable = false)
-    var isFullDay: Boolean = true, // 전일 휴무 여부
-    // 부분 시간 휴무인 경우 (isFullDay = false)
+    var isFullDay: Boolean = true,
     @Column(name = "start_time")
     var startTime: LocalTime? = null,
     @Column(name = "end_time")
     var endTime: LocalTime? = null,
     @Column(name = "reason", length = 200)
-    var reason: String? = null, // 휴무 사유
+    var reason: String? = null,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     var createdBy: User,
