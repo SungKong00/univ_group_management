@@ -1,3 +1,36 @@
+### 2025-10-24 - 백엔드 최적화 패턴 문서화
+
+**유형**: 문서 동기화 (백엔드 구현 가이드 강화)
+**우선순위**: High
+**영향 범위**: 백엔드 문서 (3개)
+
+**구현 내용**:
+- **domain-model.md 업데이트** (58줄 → 67줄)
+  - "JPA 엔티티 설계" 섹션 추가
+  - Group 엔티티 특징: 일반 class, ID 기반 equals/hashCode, 필드 직접 수정 방식
+- **architecture.md 업데이트** (87줄 → 95줄)
+  - "JPA 엔티티 패턴" 섹션 추가: data class 지양 이유 및 패턴
+  - "성능 최적화 패턴" 섹션 추가: N+1 쿼리 해결, 계층 쿼리 최적화
+- **transaction-patterns.md 업데이트** (79줄 → 97줄)
+  - "엔티티 수정 패턴" 섹션 추가: copy() vs 필드 직접 수정 비교
+- **MEMO_backend_analysis_2025-10-24.md 업데이트**
+  - Section 3 (Repository N+1 쿼리) 문서화 완료 표시
+  - Phase 3 변경 이력 추가
+
+**동기화 완료 문서**:
+- ✅ `docs/backend/domain-model.md`
+- ✅ `docs/implementation/backend/architecture.md`
+- ✅ `docs/implementation/backend/transaction-patterns.md`
+- ✅ `MEMO_backend_analysis_2025-10-24.md`
+
+**다음 단계**:
+- Repository N+1 쿼리 실제 코드 구현 (예상 2-3시간)
+- JPA 엔티티 data class 제거 (User, GroupMember, Channel)
+
+**메모**: 모든 문서 100줄 이내 원칙 준수 확인 완료. 백엔드 최적화 가이드 체계화.
+
+---
+
 ### 2025-10-24 - StateView 구현 및 문서화
 
 **유형**: 컴포넌트 구현 + 문서 동기화
