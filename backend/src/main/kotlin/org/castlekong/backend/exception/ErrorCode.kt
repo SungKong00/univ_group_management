@@ -102,4 +102,11 @@ enum class ErrorCode(val message: String) {
     RESERVATION_CONFLICT("이미 예약된 시간대입니다."),
     NO_PLACE_PERMISSION("장소 사용 권한이 없습니다."),
     INVALID_LOCATION_MODE("locationText와 placeId는 동시에 사용할 수 없습니다."),
+
+    // Event Participant
+    PARTICIPANT_NOT_FOUND("참여자를 찾을 수 없습니다."),
+
+    // Event Exception
+    EXCEPTION_NOT_FOUND("일정 예외를 찾을 수 없습니다."),
+    EXCEPTION_ALREADY_EXISTS("해당 날짜에 이미 예외가 존재합니다."),
 }
