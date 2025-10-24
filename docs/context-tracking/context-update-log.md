@@ -1,3 +1,78 @@
+### 2025-10-24 - 필터 시스템 버그 수정 및 범용 구조 확립
+
+**유형**: 버그 수정 + 아키텍처 개선 + 문서화
+**우선순위**: High
+**커밋**: 16c064d
+**영향 범위**: 프론트엔드 (29개 파일), 문서 (3개)
+
+**핵심 변경사항**:
+1. **Sentinel Value Pattern 적용**
+   - MemberFilter, GroupExploreFilter copyWith() 개선
+   - nullable 필드를 명시적으로 null로 설정 가능
+   - 파라미터 생략/null 전달/값 전달 세 가지 상태 구분
+
+2. **범용 필터 시스템 구조화**
+   - FilterModel 인터페이스 정의
+   - GenericFilterNotifier 추상 클래스 (서버 필터링)
+   - LocalFilterNotifier 추상 클래스 (클라이언트 필터링)
+   - UnifiedGroupProvider (하이브리드 필터링)
+
+3. **API 응답 파싱 로직 개선**
+   - 표준 ApiResponse (data 키) 우선 지원
+   - Spring Data Page (content 키) 하위 호환
+   - 범용 파싱으로 여러 응답 구조 지원
+
+4. **버그 수정**
+   - 그룹 타입 필터 대소문자 불일치 해결
+   - 필터 칩 선택/해제 시각적 피드백 개선
+   - 필터 해제 시 null 설정 불가 문제 해결
+
+**테스트 및 문서화**:
+- FilterModel 테스트 자동화 (18개 테스트, 모두 통과)
+- filter-model-guide.md 구현 가이드 추가 (169줄)
+- README.md, CLAUDE.md 업데이트
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/frontend/filter-model-guide.md` (신규, 169줄)
+- ✅ `docs/implementation/frontend/README.md`
+- ✅ `CLAUDE.md`
+
+**영향받은 파일**:
+- **신규 파일** (11개):
+  - lib/core/models/group_explore_filter.dart
+  - lib/core/models/paged_response.dart
+  - lib/core/providers/generic/ (3개)
+  - lib/core/providers/group_explore/ (1개)
+  - lib/core/providers/unified_group_provider.dart
+  - lib/core/services/group_explore_service.dart
+  - lib/presentation/pages/group_explore/providers/unified_group_selectors.dart
+  - lib/presentation/pages/member_management/providers/member_actions_provider.dart
+  - test/core/models/filter_model_test.dart
+- **수정 파일** (16개):
+  - lib/core/models/member_filter.dart
+  - lib/core/providers/member/ (3개)
+  - lib/presentation/pages/group_explore/ (5개)
+  - lib/presentation/pages/member_management/ (4개)
+  - lib/presentation/pages/home/widgets/group_explore_content_widget.dart
+  - lib/presentation/providers/home_state_provider.dart
+- **삭제 파일** (1개):
+  - lib/presentation/pages/group_explore/providers/group_explore_state_provider.dart
+
+**통계**:
+- 추가: 1,931줄
+- 삭제: 361줄
+- 순증가: 1,570줄
+- 테스트 커버리지: 18개 테스트 (100% 통과)
+
+**다음 단계**:
+- 다른 필터 구현 시 FilterModel 인터페이스 활용
+- LocalFilterNotifier 패턴 다른 페이지에 적용
+- 필터 성능 최적화 (디바운싱, 캐싱)
+
+**메모**: Sentinel Value Pattern은 Dart의 `??` 연산자 한계를 극복하는 핵심 패턴. 향후 모든 FilterModel 구현 시 필수 적용.
+
+---
+
 ### 2025-10-24 - 멤버 필터 문서 분할 및 100줄 준수
 
 **유형**: 문서 리팩토링 (100줄 원칙 준수)
