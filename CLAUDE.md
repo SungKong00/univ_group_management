@@ -170,6 +170,15 @@ flutter run -d chrome --web-hostname localhost --web-port 5173
 ./gradlew test
 ```
 
+## ⚠️ 개발 진행 중 주의사항
+
+### 커밋 관련
+- **작업 중 마음대로 커밋하지 말 것**: 단계별 작업 완료 후 최종 커밋만 수행
+- **커밋 전 반드시 확인**: `git status`로 변경사항 확인 및 검토
+- **컨텍스트 추적 업데이트**: 커밋 후 [context-tracking/](docs/context-tracking/) 폴더의 문서 상태 업데이트
+- **커밋 메시지 컨벤션 준수**: [커밋 규칙](docs/conventions/commit-conventions.md) 참고
+- **문서 동기화 확인**: 코드 변경 시 관련 문서도 함께 업데이트
+
 ## 📚 컨텍스트 가이드
 
 ### 개발 시작 전 필독
