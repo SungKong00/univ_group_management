@@ -33,7 +33,7 @@ class GroupRequestService(
     private val groupJoinRequestRepository: GroupJoinRequestRepository,
     private val subGroupRequestRepository: SubGroupRequestRepository,
     private val groupMapper: GroupMapper,
-    private val groupManagementService: GroupManagementService,
+    private val groupInitializationService: GroupInitializationService,
 ) {
     // === 하위 그룹 생성 신청 관련 메서드들 ===
 
@@ -131,7 +131,7 @@ class GroupRequestService(
                     groupType = request.requestedGroupType,
                     maxMembers = request.requestedMaxMembers,
                 )
-            groupManagementService.createGroup(createGroupRequest, request.requester.id)
+            groupInitializationService.createGroupWithDefaults(createGroupRequest, request.requester.id)
         }
 
         val memberCount = groupMemberRepository.countByGroupId(request.parentGroup.id).toInt()

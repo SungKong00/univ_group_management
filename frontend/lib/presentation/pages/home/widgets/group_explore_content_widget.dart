@@ -5,6 +5,7 @@ import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../providers/home_state_provider.dart';
 import '../../../widgets/common/compact_tab_bar.dart';
+import '../../../widgets/common/section_card.dart';
 import '../../../../core/providers/unified_group_provider.dart';
 import '../../../../presentation/pages/group_explore/providers/unified_group_selectors.dart';
 import '../../group_explore/widgets/group_search_bar.dart';
@@ -118,13 +119,11 @@ class _GroupExploreContentWidgetState
 
         // Error Banner (if any)
         if (errorMessage != null) ...[
-          Container(
+          SectionCard(
             padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppRadius.button),
-              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-            ),
+            backgroundColor: AppColors.error.withValues(alpha: 0.1),
+            borderRadius: AppRadius.button,
+            showShadow: false,
             child: Row(
               children: [
                 Icon(
@@ -170,13 +169,11 @@ class _GroupExploreContentWidgetState
 
           // Error Banner (if any)
           if (errorMessage != null) ...[
-            Container(
+            SectionCard(
               padding: const EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppRadius.button),
-                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-              ),
+              backgroundColor: AppColors.error.withValues(alpha: 0.1),
+              borderRadius: AppRadius.button,
+              showShadow: false,
               child: Row(
                 children: [
                   Icon(

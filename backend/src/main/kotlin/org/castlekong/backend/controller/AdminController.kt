@@ -14,7 +14,7 @@ import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.GroupRoleRepository
 import org.castlekong.backend.repository.SubGroupRequestRepository
-import org.castlekong.backend.service.GroupManagementService
+import org.castlekong.backend.service.GroupInitializationService
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -33,7 +33,7 @@ class AdminController(
     private val groupMemberRepository: GroupMemberRepository,
     private val groupRoleRepository: GroupRoleRepository,
     private val groupRepository: GroupRepository,
-    private val groupManagementService: GroupManagementService,
+    private val groupInitializationService: GroupInitializationService,
     private val groupMapper: org.castlekong.backend.service.GroupMapper,
 ) {
     @GetMapping("/join-requests")
@@ -111,7 +111,7 @@ class AdminController(
             )
         if (status == SubGroupRequestStatus.APPROVED) {
             val parent = groupRepository.findById(r.parentGroup.id).orElseThrow()
-            groupManagementService.createGroup(
+            groupInitializationService.createGroupWithDefaults(
                 CreateGroupRequest(
                     name = r.requestedGroupName,
                     description = r.requestedGroupDescription,

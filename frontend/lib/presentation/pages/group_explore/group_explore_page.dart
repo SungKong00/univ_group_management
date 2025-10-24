@@ -4,6 +4,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/providers/unified_group_provider.dart';
+import '../../widgets/common/section_card.dart';
 import 'providers/unified_group_selectors.dart';
 import 'widgets/group_search_bar.dart';
 import 'widgets/group_filter_chip_bar.dart';
@@ -61,13 +62,11 @@ class _GroupExplorePageState extends ConsumerState<GroupExplorePage> {
 
               // Error Banner (if any)
               if (errorMessage != null) ...[
-                Container(
+                SectionCard(
                   padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppRadius.button),
-                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                  ),
+                  backgroundColor: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: AppRadius.button,
+                  showShadow: false,
                   child: Row(
                     children: [
                       Icon(

@@ -6,6 +6,7 @@ import '../../../../core/theme/theme.dart';
 import '../../../providers/my_groups_provider.dart';
 import '../../../providers/workspace_state_provider.dart';
 import '../../../widgets/dialogs/create_subgroup_dialog.dart';
+import '../../../widgets/section_card.dart';
 
 /// 그룹 홈 페이지
 ///
@@ -249,72 +250,36 @@ class GroupHomeView extends ConsumerWidget {
   }
 
   Widget _buildUnreadPostsSection(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with badge
-            Row(
-              children: [
-                Icon(
-                  Icons.notifications_outlined,
-                  size: 24,
-                  color: AppColors.brand,
-                ),
-                SizedBox(width: AppSpacing.xxs),
-                Text(
-                  '읽지 않은 글',
-                  style: AppTheme.headlineSmall.copyWith(
-                    color: AppColors.lightOnSurface,
-                  ),
-                ),
-                SizedBox(width: AppSpacing.xxs),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xxs,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.brandLight,
-                    borderRadius: BorderRadius.circular(AppComponents.badgeRadius),
-                  ),
-                  child: Text(
-                    '3',
-                    style: AppTheme.bodySmall.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: AppSpacing.sm),
-
-            // Unread post list (skeleton)
-            _buildPostItem(
-              icon: Icons.article_outlined,
-              title: '새로운 공지사항: 2025년 정기 총회 안내',
-              channel: '공지사항',
-              time: '2시간 전',
-            ),
-            Divider(height: AppSpacing.sm),
-            _buildPostItem(
-              icon: Icons.forum_outlined,
-              title: '프로젝트 회의 결과 공유',
-              channel: '일반',
-              time: '5시간 전',
-            ),
-            Divider(height: AppSpacing.sm),
-            _buildPostItem(
-              icon: Icons.event_outlined,
-              title: '다음 주 정기 모임 일정 투표',
-              channel: '행사',
-              time: '1일 전',
-            ),
-          ],
-        ),
+    return SectionCard(
+      title: '읽지 않은 글',
+      icon: Icons.notifications_outlined,
+      iconColor: AppColors.brand,
+      badge: '3',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Unread post list (skeleton)
+          _buildPostItem(
+            icon: Icons.article_outlined,
+            title: '새로운 공지사항: 2025년 정기 총회 안내',
+            channel: '공지사항',
+            time: '2시간 전',
+          ),
+          Divider(height: AppSpacing.sm),
+          _buildPostItem(
+            icon: Icons.forum_outlined,
+            title: '프로젝트 회의 결과 공유',
+            channel: '일반',
+            time: '5시간 전',
+          ),
+          Divider(height: AppSpacing.sm),
+          _buildPostItem(
+            icon: Icons.event_outlined,
+            title: '다음 주 정기 모임 일정 투표',
+            channel: '행사',
+            time: '1일 전',
+          ),
+        ],
       ),
     );
   }
@@ -391,114 +356,72 @@ class GroupHomeView extends ConsumerWidget {
   }
 
   Widget _buildCalendarWidget(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_month_outlined,
-                  size: 20,
-                  color: AppColors.action,
-                ),
-                SizedBox(width: AppSpacing.xxs),
-                Text(
-                  '달력',
-                  style: AppTheme.titleLarge.copyWith(
-                    color: AppColors.lightOnSurface,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: AppSpacing.sm),
-
-            // Calendar placeholder (skeleton)
-            Container(
-              height: 280,
-              decoration: BoxDecoration(
-                color: AppColors.lightBackground,
-                borderRadius: BorderRadius.circular(AppRadius.input),
-                border: Border.all(
-                  color: AppColors.lightOutline,
+    return SectionCard(
+      title: '달력',
+      icon: Icons.calendar_month_outlined,
+      iconColor: AppColors.action,
+      child: Container(
+        height: 280,
+        decoration: BoxDecoration(
+          color: AppColors.lightBackground,
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          border: Border.all(
+            color: AppColors.lightOutline,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 48,
+                color: AppColors.neutral400,
+              ),
+              SizedBox(height: AppSpacing.xxs),
+              Text(
+                '달력 위젯 (구현 예정)',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppColors.neutral600,
                 ),
               ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.calendar_today_outlined,
-                      size: 48,
-                      color: AppColors.neutral400,
-                    ),
-                    SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      '달력 위젯 (구현 예정)',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: AppColors.neutral600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildScheduleWidget(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.event_note_outlined,
-                  size: 20,
-                  color: AppColors.success,
-                ),
-                SizedBox(width: AppSpacing.xxs),
-                Text(
-                  '일정',
-                  style: AppTheme.titleLarge.copyWith(
-                    color: AppColors.lightOnSurface,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: AppSpacing.sm),
-
-            // Schedule items (skeleton)
-            _buildScheduleItem(
-              date: '10/15',
-              day: '화',
-              title: '프로젝트 중간 발표',
-              time: '14:00',
-            ),
-            Divider(height: AppSpacing.sm),
-            _buildScheduleItem(
-              date: '10/18',
-              day: '금',
-              title: '정기 모임',
-              time: '18:00',
-            ),
-            Divider(height: AppSpacing.sm),
-            _buildScheduleItem(
-              date: '10/22',
-              day: '화',
-              title: '워크샵',
-              time: '10:00',
-            ),
-          ],
-        ),
+    return SectionCard(
+      title: '일정',
+      icon: Icons.event_note_outlined,
+      iconColor: AppColors.success,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Schedule items (skeleton)
+          _buildScheduleItem(
+            date: '10/15',
+            day: '화',
+            title: '프로젝트 중간 발표',
+            time: '14:00',
+          ),
+          Divider(height: AppSpacing.sm),
+          _buildScheduleItem(
+            date: '10/18',
+            day: '금',
+            title: '정기 모임',
+            time: '18:00',
+          ),
+          Divider(height: AppSpacing.sm),
+          _buildScheduleItem(
+            date: '10/22',
+            day: '화',
+            title: '워크샵',
+            time: '10:00',
+          ),
+        ],
       ),
     );
   }

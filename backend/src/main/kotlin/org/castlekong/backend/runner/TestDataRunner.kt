@@ -22,9 +22,10 @@ import org.castlekong.backend.repository.PlaceRepository
 import org.castlekong.backend.security.PermissionService
 import org.castlekong.backend.service.GoogleUserInfo
 import org.castlekong.backend.service.GroupEventService
-import org.castlekong.backend.service.GroupManagementService
+import org.castlekong.backend.service.GroupInitializationService
 import org.castlekong.backend.service.GroupMemberService
 import org.castlekong.backend.service.GroupRoleService
+import org.castlekong.backend.service.GroupService
 import org.castlekong.backend.service.PersonalEventService
 import org.castlekong.backend.service.PersonalScheduleService
 import org.castlekong.backend.service.PlaceOperatingHoursService
@@ -69,7 +70,8 @@ import java.time.LocalTime
 @Order(2)
 class TestDataRunner(
     private val userService: UserService,
-    private val groupManagementService: GroupManagementService,
+    private val groupService: GroupService,
+    private val groupInitializationService: GroupInitializationService,
     private val groupMemberService: GroupMemberService,
     private val groupRoleService: GroupRoleService,
     private val recruitmentService: RecruitmentService,
@@ -144,8 +146,8 @@ class TestDataRunner(
      * 특정 테스트 그룹이 이미 존재하면 true 반환
      */
     private fun shouldSkipExecution(): Boolean {
-        return groupManagementService.getAllGroups().any { it.name == "코딩 동아리 'DevCrew'" } ||
-            groupManagementService.getAllGroups().any { it.name == "AI/SW학과 코딩 스터디" }
+        return groupService.getAllGroups().any { it.name == "코딩 동아리 'DevCrew'" } ||
+            groupService.getAllGroups().any { it.name == "AI/SW학과 코딩 스터디" }
     }
 
     /**
@@ -272,7 +274,7 @@ class TestDataRunner(
         // 코딩 동아리 (user1이 그룹장)
         val devCrewGroup =
             safeExecute("Creating DevCrew group") {
-                groupManagementService.createGroup(
+                groupInitializationService.createGroupWithDefaults(
                     CreateGroupRequest(
                         name = "코딩 동아리 'DevCrew'",
                         parentId = 1,
@@ -290,7 +292,7 @@ class TestDataRunner(
         // 학생회 (user2가 그룹장)
         val studentCouncilGroup =
             safeExecute("Creating Student Council group") {
-                groupManagementService.createGroup(
+                groupInitializationService.createGroupWithDefaults(
                     CreateGroupRequest(
                         name = "학생회",
                         parentId = 1,
@@ -309,7 +311,7 @@ class TestDataRunner(
         // TestDataRunner에서는 직접 그룹을 생성하여 승인된 상태를 시뮬레이션
         val aiSwCodingStudyGroup =
             safeExecute("Creating AI/SW Dept Coding Study group (simulating approved state)") {
-                groupManagementService.createGroup(
+                groupInitializationService.createGroupWithDefaults(
                     CreateGroupRequest(
                         name = "AI/SW학과 코딩 스터디",
                         // AI/SW학과 그룹 ID (수정: 2 → 13)

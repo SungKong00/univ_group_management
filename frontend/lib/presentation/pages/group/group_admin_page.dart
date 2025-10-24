@@ -10,6 +10,7 @@ import '../../providers/current_group_provider.dart';
 import '../../providers/my_groups_provider.dart';
 import '../../widgets/dialogs/edit_group_dialog.dart';
 import '../../widgets/cards/action_card.dart';
+import '../../widgets/common/section_card.dart';
 import 'widgets/subgroup_request_section.dart';
 import 'providers/subgroup_request_provider.dart';
 
@@ -434,19 +435,8 @@ class _AdminSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SectionCard(
       padding: EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

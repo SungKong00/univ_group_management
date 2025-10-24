@@ -9,6 +9,7 @@ import '../../providers/recruiting_groups_provider.dart';
 import '../../widgets/cards/action_card.dart';
 import '../../widgets/cards/recruitment_card.dart';
 import '../../widgets/common/section_header.dart';
+import '../../widgets/section_card.dart';
 import 'widgets/group_explore_content_widget.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -264,14 +265,12 @@ class _HomePageState extends ConsumerState<HomePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader(title: '최근 활동'),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Column(
-              children: List.generate(
-                3,
-                (index) => _buildActivityItem(context, index),
-              ),
+        SectionCard(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Column(
+            children: List.generate(
+              3,
+              (index) => _buildActivityItem(context, index),
             ),
           ),
         ),

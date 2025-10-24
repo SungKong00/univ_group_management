@@ -7,6 +7,7 @@ import '../../../core/theme/app_button_styles.dart';
 import '../../../core/models/recruitment_models.dart';
 import '../../../core/models/group_models.dart';
 import '../../widgets/common/state_view.dart';
+import '../../widgets/section_card.dart';
 import 'providers/recruitment_detail_provider.dart';
 import 'widgets/application_submit_dialog.dart';
 
@@ -89,50 +90,48 @@ class RecruitmentDetailPage extends ConsumerWidget {
   }
 
   Widget _buildGroupInfoSection(BuildContext context, RecruitmentResponse recruitment) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 32,
-              backgroundColor: AppColors.brand.withValues(alpha: 0.1),
-              child: Icon(Icons.group, size: 32, color: AppColors.brand),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    recruitment.group.name,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _buildGroupPath(recruitment.group),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.neutral600,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.people, size: 16, color: AppColors.neutral600),
-                      const SizedBox(width: 4),
-                      Text(
-                        '멤버 ${recruitment.group.memberCount}명',
-                        style: Theme.of(context).textTheme.bodySmall,
+    return SectionCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 32,
+            backgroundColor: AppColors.brand.withValues(alpha: 0.1),
+            child: Icon(Icons.group, size: 32, color: AppColors.brand),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  recruitment.group.name,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _buildGroupPath(recruitment.group),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.neutral600,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.people, size: 16, color: AppColors.neutral600),
+                    const SizedBox(width: 4),
+                    Text(
+                      '멤버 ${recruitment.group.memberCount}명',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
