@@ -192,18 +192,28 @@ SectionCard(
 )
 ```
 
-**적용 현황**: 2개 파일 (약 16줄 감소)
+**적용 현황**: 8개 파일 (약 187줄 감소)
+
+**Phase 1 (초기 구현)**: 2개 파일 (약 16줄 감소)
 - member_filter_panel.dart (Container + BoxDecoration → SectionCard)
 - recruitment_management_page.dart (_QuestionCard 위젯)
+
+**Phase 2 (섹션 컴포넌트)**: 6개 파일 (약 171줄 감소)
+- subgroup_request_section.dart
+- join_request_section.dart
+- member_list_section.dart
+- recruitment_application_section.dart
+- role_management_section.dart
+- recruitment_management_page.dart (추가 적용)
 
 **코드 영향**:
 - 변경 전: Container + padding + decoration (10줄)
 - 변경 후: SectionCard (1줄)
-- 줄 감소: 파일당 8-10줄
+- 줄 감소: 파일당 8-10줄, 섹션 컴포넌트는 20-40줄
 
 **확장 가능성**:
 - 60개 파일에서 Container + BoxDecoration 패턴 발견
-- 점진적 적용으로 100-150줄 추가 감소 가능
+- 추가 점진적 적용으로 100-150줄 추가 감소 가능
 
 ## CompactTabBar - 높이 최적화 탭 바
 
