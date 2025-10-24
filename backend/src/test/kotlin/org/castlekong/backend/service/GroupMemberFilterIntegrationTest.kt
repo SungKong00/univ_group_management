@@ -333,6 +333,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = null,
                 groupIds = null,
                 grades = null,
@@ -356,6 +358,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = leaderRole.id.toString(),
                 groupIds = null,
                 grades = null,
@@ -379,6 +383,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = "${leaderRole.id},${professorRole.id}",
                 groupIds = null,
                 grades = null,
@@ -402,6 +408,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = leaderRole.id.toString(),
                 groupIds = "${subGroup1.id}",
                 grades = "1,2",
@@ -425,6 +433,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = null,
                 groupIds = null,
                 grades = "2",
@@ -448,6 +458,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = null,
                 groupIds = null,
                 grades = "1,2",
@@ -471,6 +483,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = null,
                 groupIds = null,
                 grades = null,
@@ -494,6 +508,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = null,
                 groupIds = null,
                 grades = "1",
@@ -518,6 +534,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = null,
                 groupIds = subGroup1.id.toString(),
                 grades = null,
@@ -542,6 +560,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = null,
                 groupIds = "${subGroup1.id},${subGroup2.id}",
                 grades = null,
@@ -566,6 +586,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = null,
                 groupIds = subGroup1.id.toString(),
                 grades = "1",
@@ -589,6 +611,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = null,
                 groupIds = subGroup2.id.toString(),
                 grades = "2,3",
@@ -612,6 +636,8 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
+                groupId = parentGroup.id,
+                userId = leader.id,
                 roleIds = null,
                 groupIds = subGroup1.id.toString(),
                 // AI 학회에는 3학년이 없음

@@ -127,8 +127,7 @@ class GroupInitializationRunner(
 
         // Step 3: Mark group as initialized
         logger.info("[${group.id}] Step 3/4: Marking group as initialized...")
-        val updatedGroup = group.copy(defaultChannelsCreated = true)
-        groupRepository.save(updatedGroup)
+        group.defaultChannelsCreated = true
 
         logger.info("[${group.id}] ✅ Group initialization completed successfully")
     }

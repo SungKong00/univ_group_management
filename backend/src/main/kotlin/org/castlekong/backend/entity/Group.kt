@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "groups")
-data class Group(
+class Group(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -47,7 +47,7 @@ data class Group(
     @Column(name = "max_members")
     val maxMembers: Int? = null,
     @Column(name = "default_channels_created", nullable = false)
-    val defaultChannelsCreated: Boolean = false,
+    var defaultChannelsCreated: Boolean = false,
     @ElementCollection(targetClass = String::class, fetch = FetchType.EAGER)
     @CollectionTable(name = "group_tags", joinColumns = [JoinColumn(name = "group_id")])
     @Column(name = "tag", nullable = false, length = 50)
@@ -59,7 +59,15 @@ data class Group(
     // 소프트 삭제(보존 기간) 지원을 위한 필드
     @Column(name = "deleted_at")
     val deletedAt: LocalDateTime? = null,
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Group) return false
+        return id != 0L && id == other.id
+    }
+
+    override fun hashCode(): Int = id.hashCode()
+}
 
 enum class GroupType {
     AUTONOMOUS, // 자율그룹
