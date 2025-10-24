@@ -9,6 +9,7 @@
 - **워크스페이스**: [docs/concepts/workspace-channel.md](docs/concepts/workspace-channel.md)
 - **사용자 여정**: [docs/concepts/user-lifecycle.md](docs/concepts/user-lifecycle.md)
 - **모집 시스템**: [docs/concepts/recruitment-system.md](docs/concepts/recruitment-system.md)
+- **멤버 필터링**: [docs/concepts/member-list-system.md](docs/concepts/member-list-system.md) - 멤버 조회 및 필터링
 - **캘린더 시스템** (Phase 6):
   - **개인 캘린더**: [docs/concepts/personal-calendar-system.md](docs/concepts/personal-calendar-system.md) - 시간표 & 개인 일정
   - **그룹 캘린더**: [docs/concepts/group-calendar-system.md](docs/concepts/group-calendar-system.md) - 그룹 공유 일정
@@ -42,6 +43,7 @@
 - **상태 관리**: [docs/implementation/frontend/state-management.md](docs/implementation/frontend/state-management.md) - Riverpod, Provider 초기화, 액션 패턴
 - **디자인 시스템**: [docs/implementation/frontend/design-system.md](docs/implementation/frontend/design-system.md) - Toss 기반 토큰, 버튼 스타일, 재사용성
 - **컴포넌트 구현**: [docs/implementation/frontend/components.md](docs/implementation/frontend/components.md) - 게시글/댓글, CollapsibleContent, 권한 UI
+- **멤버 필터 구현**: [docs/implementation/frontend/member-list-implementation.md](docs/implementation/frontend/member-list-implementation.md) - 멤버 필터링 시스템 구현
 - **반응형 디자인**: [docs/implementation/frontend/responsive-design.md](docs/implementation/frontend/responsive-design.md) - 브레이크포인트, 적응형 레이아웃
 - **성능 최적화**: [docs/implementation/frontend/performance.md](docs/implementation/frontend/performance.md) - 앱 시작 성능, 개선 계획
 
@@ -79,6 +81,8 @@
   - [디자인 토큰](docs/ui-ux/concepts/design-tokens.md) - 구체적인 디자인 값
   - [컬러 가이드](docs/ui-ux/concepts/color-guide.md) - 컬러 팔레트 및 사용 지침
   - [반응형 가이드](docs/ui-ux/concepts/responsive-design-guide.md) - 반응형 레이아웃 상세
+- **컴포넌트 명세**:
+  - [멤버 필터](docs/ui-ux/components/member-list-component.md) - 멤버 필터링 UI 컴포넌트
 - **페이지 명세**:
   - [워크스페이스 페이지](docs/ui-ux/pages/workspace-pages.md) - 워크스페이스 전체 구조
     - [채널 뷰](docs/ui-ux/pages/workspace-channel-view.md) - 게시글 및 댓글 시스템
