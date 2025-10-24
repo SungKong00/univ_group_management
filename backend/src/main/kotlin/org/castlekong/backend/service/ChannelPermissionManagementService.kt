@@ -140,8 +140,13 @@ class ChannelPermissionManagementService(
                 ?: throw IllegalArgumentException("Channel role binding not found: $bindingId")
 
         val updatedBinding =
-            binding.copy(
+            ChannelRoleBinding(
+                id = binding.id,
+                channel = binding.channel,
+                groupRole = binding.groupRole,
                 permissions = request.permissions ?: binding.permissions,
+                createdAt = binding.createdAt,
+                updatedAt = binding.updatedAt,
             )
 
         val savedBinding = channelRoleBindingRepository.save(updatedBinding)

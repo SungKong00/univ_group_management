@@ -21,7 +21,7 @@ import java.time.LocalDateTime
         UniqueConstraint(columnNames = ["group_id", "name"]),
     ],
 )
-data class Channel(
+class Channel(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -47,7 +47,11 @@ data class Channel(
     val createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now(),
-)
+) {
+    override fun equals(other: Any?) = other is Channel && id != 0L && id == other.id
+
+    override fun hashCode(): Int = id.hashCode()
+}
 
 enum class ChannelType {
     TEXT,

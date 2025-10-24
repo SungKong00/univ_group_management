@@ -19,7 +19,7 @@ import java.time.LocalDateTime
         UniqueConstraint(columnNames = ["group_id", "user_id"]),
     ],
 )
-data class GroupMember(
+class GroupMember(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -34,4 +34,8 @@ data class GroupMember(
     val role: GroupRole,
     @Column(name = "joined_at", nullable = false)
     val joinedAt: LocalDateTime = LocalDateTime.now(),
-)
+) {
+    override fun equals(other: Any?) = other is GroupMember && id != 0L && id == other.id
+
+    override fun hashCode(): Int = id.hashCode()
+}

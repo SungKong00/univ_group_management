@@ -171,8 +171,19 @@ class ContentControllerTest {
             ?: throw IllegalStateException("Auto-generated TEXT channel not found")
 
         // 기본 채널에 workspace 연결 (업데이트)
-        // 참고: data class이므로 copy로 업데이트
-        val updatedChannel = channel.copy(workspace = workspace)
+        val updatedChannel =
+            Channel(
+                id = channel.id,
+                group = channel.group,
+                workspace = workspace,
+                name = channel.name,
+                description = channel.description,
+                type = channel.type,
+                displayOrder = channel.displayOrder,
+                createdBy = channel.createdBy,
+                createdAt = channel.createdAt,
+                updatedAt = channel.updatedAt,
+            )
         channelRepository.save(updatedChannel)
         channel = updatedChannel
 

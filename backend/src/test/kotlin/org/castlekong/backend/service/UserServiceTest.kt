@@ -293,16 +293,26 @@ class UserServiceTest {
                 )
 
             val updatedUser =
-                user.copy(
+                User(
+                    id = user.id,
                     name = request.name,
+                    email = user.email,
+                    password = user.password,
+                    globalRole = GlobalRole.STUDENT,
+                    isActive = user.isActive,
                     nickname = request.nickname,
+                    profileImageUrl = user.profileImageUrl,
+                    bio = user.bio,
+                    profileCompleted = true,
+                    emailVerified = user.emailVerified,
                     college = request.college,
                     department = request.dept,
                     studentNo = request.studentNo,
-                    academicYear = request.academicYear,
                     schoolEmail = request.schoolEmail,
-                    globalRole = GlobalRole.STUDENT,
-                    profileCompleted = true,
+                    professorStatus = user.professorStatus,
+                    academicYear = request.academicYear,
+                    createdAt = user.createdAt,
+                    updatedAt = user.updatedAt,
                 )
 
             every { userRepository.findById(userId) } returns Optional.of(user)
@@ -373,16 +383,26 @@ class UserServiceTest {
                 )
 
             val updatedUser =
-                user.copy(
+                User(
+                    id = user.id,
                     name = request.name,
+                    email = user.email,
+                    password = user.password,
+                    globalRole = GlobalRole.STUDENT,
+                    isActive = user.isActive,
                     nickname = request.nickname,
+                    profileImageUrl = user.profileImageUrl,
+                    bio = user.bio,
+                    profileCompleted = true,
+                    emailVerified = user.emailVerified,
                     college = request.college,
                     department = request.dept,
                     studentNo = request.studentNo,
-                    academicYear = request.academicYear,
                     schoolEmail = request.schoolEmail,
-                    globalRole = GlobalRole.STUDENT,
-                    profileCompleted = true,
+                    professorStatus = user.professorStatus,
+                    academicYear = request.academicYear,
+                    createdAt = user.createdAt,
+                    updatedAt = user.updatedAt,
                 )
 
             every { userRepository.findById(userId) } returns Optional.of(user)

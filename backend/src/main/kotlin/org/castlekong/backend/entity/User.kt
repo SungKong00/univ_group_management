@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 @Entity
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener::class)
-data class User(
+class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -65,7 +65,11 @@ data class User(
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now(),
-)
+) {
+    override fun equals(other: Any?) = other is User && id != 0L && id == other.id
+
+    override fun hashCode(): Int = id.hashCode()
+}
 
 enum class GlobalRole {
     STUDENT,

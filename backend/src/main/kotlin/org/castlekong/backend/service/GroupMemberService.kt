@@ -500,7 +500,14 @@ class GroupMemberService(
             throw BusinessException(ErrorCode.INVALID_REQUEST)
         }
 
-        val updated = groupMember.copy(role = newRole)
+        val updated =
+            GroupMember(
+                id = groupMember.id,
+                group = groupMember.group,
+                user = groupMember.user,
+                role = newRole,
+                joinedAt = groupMember.joinedAt,
+            )
         val saved = groupMemberRepository.save(updated)
         permissionService.invalidate(groupId, targetUserId)
         return groupMapper.toGroupMemberResponse(saved)
@@ -541,7 +548,15 @@ class GroupMemberService(
 
         if (existingMember.isPresent) {
             // 이미 멤버라면 역할을 지도교수로 변경
-            val updated = existingMember.get().copy(role = professorRole)
+            val member = existingMember.get()
+            val updated =
+                GroupMember(
+                    id = member.id,
+                    group = member.group,
+                    user = member.user,
+                    role = professorRole,
+                    joinedAt = member.joinedAt,
+                )
             val saved = groupMemberRepository.save(updated)
             permissionService.invalidate(groupId, professorUserId)
             return groupMapper.toGroupMemberResponse(saved)
@@ -589,7 +604,14 @@ class GroupMemberService(
             groupRoleRepository.findByGroupIdAndName(groupId, "멤버")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
-        val updated = groupMember.copy(role = memberRole)
+        val updated =
+            GroupMember(
+                id = groupMember.id,
+                group = groupMember.group,
+                user = groupMember.user,
+                role = memberRole,
+                joinedAt = groupMember.joinedAt,
+            )
         groupMemberRepository.save(updated)
         permissionService.invalidate(groupId, professorUserId)
     }

@@ -112,12 +112,26 @@ class UserService(
                 .orElseThrow { IllegalArgumentException("사용자를 찾을 수 없습니다: $userId") }
 
         val updatedUser =
-            user.copy(
+            User(
+                id = user.id,
+                name = user.name,
+                email = user.email,
+                password = user.password,
                 globalRole = GlobalRole.valueOf(request.globalRole),
+                isActive = user.isActive,
                 nickname = request.nickname,
                 profileImageUrl = request.profileImageUrl,
                 bio = request.bio,
                 profileCompleted = true,
+                emailVerified = user.emailVerified,
+                college = user.college,
+                department = user.department,
+                studentNo = user.studentNo,
+                schoolEmail = user.schoolEmail,
+                professorStatus = user.professorStatus,
+                academicYear = user.academicYear,
+                createdAt = user.createdAt,
+                updatedAt = user.updatedAt,
             )
 
         return userRepository.save(updatedUser)
@@ -160,17 +174,26 @@ class UserService(
 
         // 계열 또는 학과 정보 업데이트
         val updated =
-            user.copy(
+            User(
+                id = user.id,
                 name = req.name,
+                email = user.email,
+                password = user.password,
+                globalRole = finalRole,
+                isActive = user.isActive,
                 nickname = req.nickname,
+                profileImageUrl = user.profileImageUrl,
+                bio = user.bio,
+                profileCompleted = true,
+                emailVerified = user.emailVerified,
                 college = req.college,
                 department = req.dept,
                 studentNo = req.studentNo,
-                academicYear = req.academicYear,
                 schoolEmail = req.schoolEmail,
-                globalRole = finalRole,
                 professorStatus = professorStatus,
-                profileCompleted = true,
+                academicYear = req.academicYear,
+                createdAt = user.createdAt,
+                updatedAt = user.updatedAt,
             )
 
         val saved = userRepository.save(updated)
@@ -351,9 +374,49 @@ class UserService(
             }
         val updated =
             if (desiredRole == GlobalRole.PROFESSOR) {
-                user.copy(professorStatus = ProfessorStatus.PENDING)
+                User(
+                    id = user.id,
+                    name = user.name,
+                    email = user.email,
+                    password = user.password,
+                    globalRole = user.globalRole,
+                    isActive = user.isActive,
+                    nickname = user.nickname,
+                    profileImageUrl = user.profileImageUrl,
+                    bio = user.bio,
+                    profileCompleted = user.profileCompleted,
+                    emailVerified = user.emailVerified,
+                    college = user.college,
+                    department = user.department,
+                    studentNo = user.studentNo,
+                    schoolEmail = user.schoolEmail,
+                    professorStatus = ProfessorStatus.PENDING,
+                    academicYear = user.academicYear,
+                    createdAt = user.createdAt,
+                    updatedAt = user.updatedAt,
+                )
             } else {
-                user.copy(globalRole = desiredRole, professorStatus = null)
+                User(
+                    id = user.id,
+                    name = user.name,
+                    email = user.email,
+                    password = user.password,
+                    globalRole = desiredRole,
+                    isActive = user.isActive,
+                    nickname = user.nickname,
+                    profileImageUrl = user.profileImageUrl,
+                    bio = user.bio,
+                    profileCompleted = user.profileCompleted,
+                    emailVerified = user.emailVerified,
+                    college = user.college,
+                    department = user.department,
+                    studentNo = user.studentNo,
+                    schoolEmail = user.schoolEmail,
+                    professorStatus = null,
+                    academicYear = user.academicYear,
+                    createdAt = user.createdAt,
+                    updatedAt = user.updatedAt,
+                )
             }
         userRepository.save(updated)
     }

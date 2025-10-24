@@ -287,10 +287,16 @@ class ContentService(
         validateChannelManagePermission(channel.group.id, userId)
         val type = request.type?.let { runCatching { ChannelType.valueOf(it) }.getOrNull() } ?: channel.type
         val updated =
-            channel.copy(
+            Channel(
+                id = channel.id,
+                group = channel.group,
+                workspace = channel.workspace,
                 name = request.name ?: channel.name,
                 description = request.description ?: channel.description,
                 type = type,
+                displayOrder = channel.displayOrder,
+                createdBy = channel.createdBy,
+                createdAt = channel.createdAt,
                 updatedAt = LocalDateTime.now(),
             )
         return toChannelResponse(channelRepository.save(updated))

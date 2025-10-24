@@ -3,6 +3,7 @@ package org.castlekong.backend.service
 import org.castlekong.backend.dto.LoginResponse
 import org.castlekong.backend.dto.RefreshTokenResponse
 import org.castlekong.backend.dto.UserResponse
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.security.JwtTokenProvider
@@ -133,7 +134,28 @@ class AuthService(
 
         users.forEach { user ->
             if (user.profileCompleted) {
-                val updatedUser = user.copy(profileCompleted = false)
+                val updatedUser =
+                    User(
+                        id = user.id,
+                        name = user.name,
+                        email = user.email,
+                        password = user.password,
+                        globalRole = user.globalRole,
+                        isActive = user.isActive,
+                        nickname = user.nickname,
+                        profileImageUrl = user.profileImageUrl,
+                        bio = user.bio,
+                        profileCompleted = false,
+                        emailVerified = user.emailVerified,
+                        college = user.college,
+                        department = user.department,
+                        studentNo = user.studentNo,
+                        schoolEmail = user.schoolEmail,
+                        professorStatus = user.professorStatus,
+                        academicYear = user.academicYear,
+                        createdAt = user.createdAt,
+                        updatedAt = user.updatedAt,
+                    )
                 userService.save(updatedUser)
                 updatedCount++
                 logger.debug("Reset profileCompleted for user: {}", user.email)

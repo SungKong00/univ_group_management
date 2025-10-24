@@ -27,7 +27,7 @@ import java.time.LocalDateTime
         UniqueConstraint(columnNames = ["channel_id", "group_role_id"]),
     ],
 )
-data class ChannelRoleBinding(
+class ChannelRoleBinding(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -56,6 +56,10 @@ data class ChannelRoleBinding(
     @Column(name = "updated_at", nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
+    override fun equals(other: Any?) = other is ChannelRoleBinding && id != 0L && id == other.id
+
+    override fun hashCode(): Int = id.hashCode()
+
     /**
      * 특정 권한 보유 여부 확인
      */
