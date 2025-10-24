@@ -42,7 +42,7 @@
 - **인증 시스템**: [docs/implementation/frontend/authentication.md](docs/implementation/frontend/authentication.md) - Google OAuth, 자동 로그인, 토큰 관리
 - **상태 관리**: [docs/implementation/frontend/state-management.md](docs/implementation/frontend/state-management.md) - Riverpod, Provider 초기화, 액션 패턴
 - **디자인 시스템**: [docs/implementation/frontend/design-system.md](docs/implementation/frontend/design-system.md) - Toss 기반 토큰, 버튼 스타일, 재사용성
-- **컴포넌트 구현**: [docs/implementation/frontend/components.md](docs/implementation/frontend/components.md) - 게시글/댓글, CollapsibleContent, 권한 UI
+- **컴포넌트 구현**: [docs/implementation/frontend/components.md](docs/implementation/frontend/components.md) - StateView, 게시글/댓글, CollapsibleContent, 권한 UI
 - **멤버 필터 구현**: [docs/implementation/frontend/member-list-implementation.md](docs/implementation/frontend/member-list-implementation.md) - 멤버 필터링 시스템 구현
 - **반응형 디자인**: [docs/implementation/frontend/responsive-design.md](docs/implementation/frontend/responsive-design.md) - 브레이크포인트, 적응형 레이아웃
 - **성능 최적화**: [docs/implementation/frontend/performance.md](docs/implementation/frontend/performance.md) - 앱 시작 성능, 개선 계획

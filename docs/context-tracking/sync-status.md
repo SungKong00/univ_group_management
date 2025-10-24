@@ -53,7 +53,7 @@
 | `authentication.md` | ✅ 최신 | 2025-10-24 | Google OAuth, 자동 로그인, 토큰 관리 |
 | `state-management.md` | ✅ 최신 | 2025-10-24 | Riverpod, Provider 초기화, 액션 패턴 |
 | `design-system.md` | ✅ 최신 | 2025-10-24 | Toss 기반 토큰, 버튼 스타일, 재사용성 |
-| `components.md` | ✅ 최신 | 2025-10-24 | 게시글/댓글, CollapsibleContent, 권한 UI |
+| `components.md` | ✅ 최신 | 2025-10-24 | StateView, 게시글/댓글, CollapsibleContent, 권한 UI (98줄) |
 | `responsive-design.md` | ✅ 최신 | 2025-10-24 | 브레이크포인트, 적응형 레이아웃 |
 | `performance.md` | ✅ 최신 | 2025-10-24 | 앱 시작 성능, 개선 계획 |
 
@@ -166,6 +166,10 @@
 모든 코드 변경사항이 반영되어 동기화된 문서들
 
 **주요 업데이트 (2025-10-24)**:
+- **StateView 컴포넌트 구현 및 문서화**
+  - StateView 위젯 신규 생성 (267줄) - AsyncValue 통합 상태 처리
+  - 3개 페이지 적용으로 147줄 감소 (channel_list_section, role_management_section, recruitment_management_page)
+  - components.md 업데이트 (120줄 → 98줄, 100줄 원칙 준수)
 - **에이전트 최적화 및 UI/UX 문서 분할 완료**
   - Pre-Task Protocol 공통화 (docs/agents/pre-task-protocol.md 신규)
   - 테스트 패턴 공통화 (docs/agents/test-patterns.md 신규)
