@@ -9,10 +9,11 @@ import '../../presentation/providers/my_groups_provider.dart';
 import '../../presentation/providers/timetable_provider.dart';
 import '../../presentation/providers/workspace_state_provider.dart';
 import '../../presentation/pages/group/providers/subgroup_request_provider.dart';
-import '../../presentation/pages/group_explore/providers/group_explore_state_provider.dart';
+import '../providers/unified_group_provider.dart';
 import '../../presentation/pages/member_management/providers/join_request_provider.dart';
-import '../../presentation/pages/member_management/providers/member_list_provider.dart';
+import '../../presentation/pages/member_management/providers/member_actions_provider.dart';
 import '../../presentation/pages/member_management/providers/role_management_provider.dart';
+import '../providers/member/member_list_provider.dart';
 import '../../presentation/providers/recruitment_providers.dart';
 import '../../presentation/providers/recruiting_groups_provider.dart';
 
@@ -51,7 +52,7 @@ final _providersToInvalidateOnLogout = <ProviderOrFamily>[
   calendarViewProvider,
   focusedDateProvider,
   timetableStateProvider,
-  groupExploreStateProvider,
+  unifiedGroupProvider,
   workspaceStateProvider,
   groupCalendarProvider,
   activeRecruitmentProvider,
@@ -70,7 +71,8 @@ final _providersToInvalidateOnLogout = <ProviderOrFamily>[
   joinRequestListProvider,
   approveJoinRequestProvider,
   rejectJoinRequestProvider,
-  memberListProvider,
+  filteredGroupMembersProvider,
+  allGroupMembersProvider,
   updateMemberRoleProvider,
   removeMemberProvider,
   roleListProvider,

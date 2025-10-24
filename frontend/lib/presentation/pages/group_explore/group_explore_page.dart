@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
-import 'providers/group_explore_state_provider.dart';
+import '../../../core/providers/unified_group_provider.dart';
+import 'providers/unified_group_selectors.dart';
 import 'widgets/group_search_bar.dart';
 import 'widgets/group_filter_chip_bar.dart';
 import 'widgets/group_explore_list.dart';
@@ -24,14 +25,14 @@ class _GroupExplorePageState extends ConsumerState<GroupExplorePage> {
     super.initState();
     // Initialize state: load first page of groups
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(groupExploreStateProvider.notifier).initialize();
+      ref.read(unifiedGroupProvider.notifier).initialize();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
-    final errorMessage = ref.watch(exploreErrorMessageProvider);
+    final errorMessage = ref.watch(groupErrorProvider);
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,

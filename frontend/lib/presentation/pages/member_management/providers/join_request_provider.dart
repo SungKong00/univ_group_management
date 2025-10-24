@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/member_models.dart';
 import '../../../../core/repositories/repository_providers.dart';
-import 'member_list_provider.dart';
+import '../../../../core/providers/member/member_list_provider.dart';
 
 /// 가입 신청 목록 Provider
 final joinRequestListProvider =
@@ -45,7 +45,7 @@ final approveJoinRequestProvider = FutureProvider.autoDispose
 
       // 성공 후 신청 목록 및 멤버 목록 새로고침
       ref.invalidate(joinRequestListProvider(params.groupId));
-      ref.invalidate(memberListProvider(params.groupId));
+      ref.invalidate(filteredGroupMembersProvider(params.groupId));
     });
 
 /// 가입 신청 거절 Provider

@@ -5,7 +5,8 @@ import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../providers/home_state_provider.dart';
 import '../../../widgets/common/compact_tab_bar.dart';
-import '../../group_explore/providers/group_explore_state_provider.dart';
+import '../../../../core/providers/unified_group_provider.dart';
+import '../../../../presentation/pages/group_explore/providers/unified_group_selectors.dart';
 import '../../group_explore/widgets/group_search_bar.dart';
 import '../../group_explore/widgets/group_filter_chip_bar.dart';
 import '../../group_explore/widgets/group_explore_list.dart';
@@ -52,7 +53,7 @@ class _GroupExploreContentWidgetState
 
     // Initialize state: load first page of groups
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(groupExploreStateProvider.notifier).initialize();
+      ref.read(unifiedGroupProvider.notifier).initialize();
     });
   }
 
@@ -65,7 +66,7 @@ class _GroupExploreContentWidgetState
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
-    final errorMessage = ref.watch(exploreErrorMessageProvider);
+    final errorMessage = ref.watch(groupErrorProvider);
 
     return Padding(
       padding: EdgeInsets.symmetric(

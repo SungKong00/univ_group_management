@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../providers/group_explore_state_provider.dart';
+import '../../../../core/providers/group_explore/group_explore_filter_provider.dart';
 
 /// Group Search Bar
 ///
@@ -33,13 +33,13 @@ class _GroupSearchBarState extends ConsumerState<GroupSearchBar> {
 
     // Start new timer (500ms delay)
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      ref.read(groupExploreStateProvider.notifier).search(query);
+      ref.read(groupExploreFilterProvider.notifier).setSearchQuery(query);
     });
   }
 
   void _onClear() {
     _controller.clear();
-    ref.read(groupExploreStateProvider.notifier).search('');
+    ref.read(groupExploreFilterProvider.notifier).setSearchQuery('');
   }
 
   @override

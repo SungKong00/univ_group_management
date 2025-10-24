@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../providers/group_explore_state_provider.dart';
+import '../../../../core/providers/group_explore/group_explore_filter_provider.dart';
 
 /// Group Filter Chip Bar
 ///
@@ -12,8 +12,8 @@ class GroupFilterChipBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final filters = ref.watch(exploreFiltersProvider);
-    final groupTypes = (filters['groupTypes'] as List<String>?) ?? [];
+    final filter = ref.watch(groupExploreFilterProvider);
+    final groupTypes = filter.groupTypes ?? [];
 
     return Wrap(
       spacing: AppSpacing.xxs,
@@ -22,25 +22,22 @@ class GroupFilterChipBar extends ConsumerWidget {
         // Recruiting Filter
         FilterChip(
           label: const Text('모집중'),
-          selected: filters['recruiting'] == true,
+          selected: filter.recruiting == true,
           onSelected: (selected) {
-            ref.read(groupExploreStateProvider.notifier).updateFilter(
-                  'recruiting',
-                  selected ? true : null,
-                );
+            ref.read(groupExploreFilterProvider.notifier).toggleRecruiting();
           },
           selectedColor: AppColors.brandLight,
           checkmarkColor: AppColors.brand,
           backgroundColor: AppColors.neutral100,
           labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: filters['recruiting'] == true
+                color: filter.recruiting == true
                     ? AppColors.brand
                     : AppColors.neutral700,
               ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.button),
             side: BorderSide(
-              color: filters['recruiting'] == true
+              color: filter.recruiting == true
                   ? AppColors.brand
                   : AppColors.neutral300,
             ),
@@ -55,25 +52,20 @@ class GroupFilterChipBar extends ConsumerWidget {
               groupTypes.contains('DEPARTMENT'),
           onSelected: (selected) {
             // Toggle all three types together
-            final newFilters = Map<String, dynamic>.from(ref.read(exploreFiltersProvider));
-            final currentTypes = List<String>.from((newFilters['groupTypes'] as List<String>?) ?? []);
-
+            final current = groupTypes.toList();
             if (selected) {
-              // Add all university-related types
-              if (!currentTypes.contains('UNIVERSITY')) currentTypes.add('UNIVERSITY');
-              if (!currentTypes.contains('COLLEGE')) currentTypes.add('COLLEGE');
-              if (!currentTypes.contains('DEPARTMENT')) currentTypes.add('DEPARTMENT');
+              if (!current.contains('UNIVERSITY')) current.add('UNIVERSITY');
+              if (!current.contains('COLLEGE')) current.add('COLLEGE');
+              if (!current.contains('DEPARTMENT')) current.add('DEPARTMENT');
             } else {
-              // Remove all university-related types
-              currentTypes.removeWhere((type) =>
+              current.removeWhere((type) =>
                   type == 'UNIVERSITY' || type == 'COLLEGE' || type == 'DEPARTMENT');
             }
-
-            newFilters['groupTypes'] = currentTypes;
-            ref.read(groupExploreStateProvider.notifier).updateFilter(
-                  'groupTypes',
-                  currentTypes.isEmpty ? null : currentTypes,
-                );
+            ref.read(groupExploreFilterProvider.notifier).updateFilter(
+              (f) => f.copyWith(
+                groupTypes: current.isEmpty ? null : current,
+              ),
+            );
           },
           selectedColor: AppColors.brandLight,
           checkmarkColor: AppColors.brand,
@@ -129,7 +121,7 @@ class GroupFilterChipBar extends ConsumerWidget {
       label: Text(label),
       selected: isSelected,
       onSelected: (selected) {
-        ref.read(groupExploreStateProvider.notifier).toggleGroupType(type);
+        ref.read(groupExploreFilterProvider.notifier).toggleGroupType(type);
       },
       selectedColor: AppColors.brandLight,
       checkmarkColor: AppColors.brand,

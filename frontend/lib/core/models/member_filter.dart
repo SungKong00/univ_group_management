@@ -3,7 +3,9 @@
 /// 역할, 소속 그룹, 학년, 학번(입학년도) 기준으로 멤버를 필터링하기 위한 모델
 library;
 
-class MemberFilter {
+import '../providers/generic/filter_model.dart';
+
+class MemberFilter implements FilterModel {
   final List<int>? roleIds; // 역할 ID 목록
   final List<int>? groupIds; // 소속 그룹 ID 목록
   final List<int>? grades; // 학년 목록
@@ -19,7 +21,8 @@ class MemberFilter {
   /// API 쿼리 파라미터로 변환
   ///
   /// 예: {'roleIds': '1,2', 'grades': '2,3'}
-  Map<String, String> toQueryParameters() {
+  @override
+  Map<String, dynamic> toQueryParameters() {
     final params = <String, String>{};
     if (roleIds != null && roleIds!.isNotEmpty) {
       params['roleIds'] = roleIds!.join(',');
@@ -37,6 +40,7 @@ class MemberFilter {
   }
 
   /// 필터 활성 여부
+  @override
   bool get isActive =>
       (roleIds?.isNotEmpty ?? false) ||
       (groupIds?.isNotEmpty ?? false) ||
@@ -61,19 +65,46 @@ class MemberFilter {
   /// copyWith 메서드
   ///
   /// 불변 객체 패턴을 위한 복사 메서드
+  ///
+  /// **중요**: nullable 필드를 명시적으로 null로 설정하려면
+  /// `_Wrapped<T>` 패턴을 사용합니다. 이를 통해 "파라미터 전달 안함"과
+  /// "명시적 null 전달"을 구분할 수 있습니다.
+  ///
+  /// **사용 예시**:
+  /// ```dart
+  /// // 기존 값 유지 (파라미터 전달 안함)
+  /// filter.copyWith(groupIds: [1, 2])
+  ///
+  /// // null로 초기화 (명시적 null 전달)
+  /// filter.copyWith(roleIds: _Wrapped.value(null), groupIds: [1, 2])
+  /// ```
+  @override
   MemberFilter copyWith({
-    List<int>? roleIds,
-    List<int>? groupIds,
-    List<int>? grades,
-    List<int>? years,
+    Object? roleIds = _undefined,
+    Object? groupIds = _undefined,
+    Object? grades = _undefined,
+    Object? years = _undefined,
   }) {
     return MemberFilter(
-      roleIds: roleIds ?? this.roleIds,
-      groupIds: groupIds ?? this.groupIds,
-      grades: grades ?? this.grades,
-      years: years ?? this.years,
+      roleIds: roleIds == _undefined
+          ? this.roleIds
+          : (roleIds as List<int>?),
+      groupIds: groupIds == _undefined
+          ? this.groupIds
+          : (groupIds as List<int>?),
+      grades: grades == _undefined
+          ? this.grades
+          : (grades as List<int>?),
+      years: years == _undefined
+          ? this.years
+          : (years as List<int>?),
     );
   }
+
+  /// undefined 센티널 값
+  ///
+  /// copyWith에서 "파라미터 전달 안함"을 나타내는 특수 값입니다.
+  static const _undefined = Object();
 
   @override
   bool operator ==(Object other) {

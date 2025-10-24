@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../providers/group_explore_state_provider.dart';
+import '../../../../core/providers/unified_group_provider.dart';
+import '../providers/unified_group_selectors.dart';
 import 'group_explore_card.dart';
 
 /// Group Explore List
 ///
-/// Displays a scrollable list/grid of groups with infinite scroll pagination.
+/// Displays a scrollable list/grid of groups using the unified group provider.
 class GroupExploreList extends ConsumerStatefulWidget {
   const GroupExploreList({super.key});
 
@@ -32,21 +33,34 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
   }
 
   void _onScroll() {
-    // Load more when user scrolls near the bottom (200px threshold)
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      ref.read(groupExploreStateProvider.notifier).loadMore();
+    final usePagination = ref.read(usePaginationProvider);
+
+    // 전체 로드 모드면 무한 스크롤 비활성화
+    if (!usePagination) return;
+
+    if (_isNearBottom()) {
+      ref.read(unifiedGroupProvider.notifier).loadMore();
     }
+  }
+
+  bool _isNearBottom() {
+    if (!_scrollController.hasClients) return false;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+    return currentScroll >= (maxScroll * 0.9);
   }
 
   @override
   Widget build(BuildContext context) {
-    final groups = ref.watch(exploreGroupsProvider);
-    final isLoading = ref.watch(exploreIsLoadingProvider);
-    final hasMore = ref.watch(exploreHasMoreProvider);
+    final groups = ref.watch(listViewGroupsProvider);
+    final isLoading = ref.watch(groupLoadingProvider);
+    final isLoadingMore = ref.watch(isLoadingMoreProvider);
+
+    print('🔍 [DEBUG] GroupExploreList.build() - groups: ${groups.length}, isLoading: $isLoading, isLoadingMore: $isLoadingMore');
 
     // Empty state
     if (groups.isEmpty && !isLoading) {
+      print('🔍 [DEBUG] 빈 상태 표시: groups.isEmpty && !isLoading');
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -73,13 +87,15 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
 
     // Initial loading state
     if (groups.isEmpty && isLoading) {
+      print('🔍 [DEBUG] 로딩 표시: groups.isEmpty && isLoading');
       return const Center(child: CircularProgressIndicator());
     }
 
-    return _buildGroupGrid(groups, isLoading, hasMore);
+    print('🔍 [DEBUG] 그룹 그리드 렌더링: ${groups.length}개 그룹');
+    return _buildGroupGrid(groups, isLoadingMore);
   }
 
-  Widget _buildGroupGrid(List<dynamic> groups, bool isLoading, bool hasMore) {
+  Widget _buildGroupGrid(List<dynamic> groups, bool isLoadingMore) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final double screenWidth = constraints.maxWidth;
@@ -102,7 +118,7 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
                   child: GroupExploreCard(group: group),
                 );
               }),
-              if (hasMore && isLoading)
+              if (isLoadingMore)
                 SizedBox(
                   width: screenWidth,
                   child: Center(

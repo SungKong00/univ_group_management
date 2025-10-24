@@ -5,6 +5,7 @@ import '../../../../core/theme/theme.dart';
 import '../../../../core/providers/member/member_filter_provider.dart';
 import '../../../../core/providers/member/member_filter_options_provider.dart';
 import '../../../../core/providers/member/member_count_provider.dart';
+import '../../../../core/models/member_filter.dart';
 import '../providers/role_management_provider.dart';
 import '../../../components/chips/input_chip.dart';
 import '../../../components/chips/app_chip.dart';
@@ -242,7 +243,7 @@ class _AppliedFilters extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () => filterNotifier.reset(),
+              onPressed: () => filterNotifier.reset(MemberFilter()),
               child: const Text('모두 지우기'),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.error,
@@ -570,7 +571,7 @@ class _ActionSection extends ConsumerWidget {
               // 초기화 버튼 (드래프트 필터 있을 때만)
               if (draftFilter.isActive)
                 TextButton.icon(
-                  onPressed: () => filterNotifier.reset(),
+                  onPressed: () => filterNotifier.reset(MemberFilter()),
                   icon: const Icon(Icons.refresh, size: 16),
                   label: const Text('초기화'),
                   style: TextButton.styleFrom(

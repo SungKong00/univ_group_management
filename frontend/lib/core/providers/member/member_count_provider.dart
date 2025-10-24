@@ -23,7 +23,7 @@ final memberCountProvider = FutureProvider.family<int, _MemberCountParams>(
     // 필터가 있으면 필터링된 멤버 개수 조회
     final members = await memberRepository.getGroupMembers(
       params.groupId,
-      queryParameters: params.filter.toQueryParameters(),
+      queryParameters: params.filter.toQueryParameters() as Map<String, String>,
     );
     return members.length;
   },

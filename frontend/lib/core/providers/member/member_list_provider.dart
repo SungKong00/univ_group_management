@@ -29,7 +29,7 @@ final filteredGroupMembersProvider = FutureProvider.autoDispose
   // 필터 적용하여 조회
   return memberRepository.getGroupMembers(
     groupId,
-    queryParameters: filter.toQueryParameters(),
+    queryParameters: filter.toQueryParameters() as Map<String, String>,
   );
 });
 

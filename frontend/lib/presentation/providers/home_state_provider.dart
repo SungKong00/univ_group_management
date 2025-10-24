@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:developer' as developer;
 import '../../core/services/local_storage.dart';
-import '../pages/group_explore/providers/group_explore_state_provider.dart';
+import '../../core/providers/group_explore/group_explore_filter_provider.dart';
 
 /// Home View Types
 enum HomeView {
@@ -221,7 +221,7 @@ class HomeStateNotifier extends StateNotifier<HomeState> {
     _saveToLocalStorage();
 
     // Then, activate the recruiting filter
-    _ref.read(groupExploreStateProvider.notifier).updateFilter('recruiting', true);
+    _ref.read(groupExploreFilterProvider.notifier).toggleRecruiting();
   }
 
   /// Show dashboard view

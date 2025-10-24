@@ -8,8 +8,8 @@ import '../../../../core/providers/member/member_filter_provider.dart';
 import '../../../widgets/member/member_avatar.dart';
 import '../../../widgets/member/role_dropdown.dart';
 import '../../../widgets/common/state_view.dart';
-import '../providers/member_list_provider.dart';
 import '../providers/role_management_provider.dart';
+import '../providers/member_actions_provider.dart';
 import 'member_filter_panel.dart';
 
 /// 멤버 목록 섹션
@@ -519,8 +519,8 @@ class _MemberTableRow extends ConsumerWidget {
         ).future,
       );
 
-      // 성공 후 목록 새로고침
-      ref.invalidate(memberListProvider(groupId));
+      // ✅ 성공 후 목록 새로고침 (올바른 Provider)
+      ref.invalidate(filteredGroupMembersProvider(groupId));
 
       // 성공 SnackBar 표시
       if (context.mounted) {
