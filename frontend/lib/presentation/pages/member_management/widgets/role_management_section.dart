@@ -6,6 +6,7 @@ import '../../../../core/models/member_models.dart';
 import '../providers/role_management_provider.dart';
 import '../../../widgets/dialogs/create_role_dialog.dart';
 import '../../../widgets/dialogs/edit_role_dialog.dart';
+import '../../../widgets/common/state_view.dart';
 
 /// 역할 관리 섹션
 ///
@@ -24,37 +25,27 @@ class RoleManagementSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final rolesAsync = ref.watch(roleListProvider(groupId));
 
-    return rolesAsync.when(
-      data: (roles) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 역할 목록
-          _buildRoleList(context, ref, roles),
-          const SizedBox(height: 16),
-          // 커스텀 역할 추가 버튼
-          OutlinedButton.icon(
-            onPressed: () => _showCreateRoleDialog(context, ref),
-            icon: const Icon(Icons.add, size: 20),
-            label: const Text('커스텀 역할 추가'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              side: BorderSide(color: AppColors.brand),
-              foregroundColor: AppColors.brand,
-            ),
-          ),
-        ],
-      ),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 48, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text('역할 목록을 불러올 수 없습니다', style: AppTheme.bodyLarge),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 역할 목록
+        StateView<List<GroupRole>>(
+          value: rolesAsync,
+          builder: (context, roles) => _buildRoleList(context, ref, roles),
         ),
-      ),
+        const SizedBox(height: 16),
+        // 커스텀 역할 추가 버튼
+        OutlinedButton.icon(
+          onPressed: () => _showCreateRoleDialog(context, ref),
+          icon: const Icon(Icons.add, size: 20),
+          label: const Text('커스텀 역할 추가'),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            side: BorderSide(color: AppColors.brand),
+            foregroundColor: AppColors.brand,
+          ),
+        ),
+      ],
     );
   }
 

@@ -11,6 +11,7 @@ import '../../providers/recruitment_providers.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../workspace/widgets/workspace_state_view.dart';
 import '../../widgets/common/collapsible_content.dart';
+import '../../widgets/common/state_view.dart';
 
 class RecruitmentManagementPage extends ConsumerStatefulWidget {
   const RecruitmentManagementPage({super.key});
@@ -340,13 +341,10 @@ class _ActiveRecruitmentSectionState
       title: '활성 모집 공고',
       description: '현재 진행 중인 모집 공고를 확인하고 관리하세요.',
       isEmphasized: true,
-      child: widget.activeRecruitment.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, __) => _ErrorMessage(
-          message: '활성 모집 공고를 불러오는 중 오류가 발생했습니다: $error',
-          onRetry: () => ref.invalidate(activeRecruitmentProvider(widget.groupId)),
-        ),
-        data: (recruitment) {
+      child: StateView<RecruitmentResponse?>(
+        value: widget.activeRecruitment,
+        onRetry: () => ref.invalidate(activeRecruitmentProvider(widget.groupId)),
+        builder: (context, recruitment) {
           if (recruitment == null || _isEditing) {
             return RecruitmentForm(
               groupId: widget.groupId,
@@ -1096,56 +1094,29 @@ class _ArchivedRecruitmentSectionState
           ),
           if (_isExpanded) ...[
             SizedBox(height: AppSpacing.md),
-            widget.archivedRecruitments.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, __) => _ErrorMessage(
-                message: '아카이브 목록을 불러오는 중 오류가 발생했습니다: $error',
-                onRetry: () {
-                  // Invalidate the provider to trigger a refresh
-                  final groupIdStr = ref.read(currentGroupIdProvider);
-                  if (groupIdStr != null) {
-                    final groupId = int.tryParse(groupIdStr);
-                    if (groupId != null) {
-                      ref.invalidate(archivedRecruitmentsProvider(groupId));
-                    }
+            StateView<List<ArchivedRecruitmentResponse>>(
+              value: widget.archivedRecruitments,
+              emptyChecker: (recruitments) => recruitments.isEmpty,
+              emptyIcon: Icons.inbox_outlined,
+              emptyTitle: '아직 종료된 모집이 없습니다',
+              onRetry: () {
+                final groupIdStr = ref.read(currentGroupIdProvider);
+                if (groupIdStr != null) {
+                  final groupId = int.tryParse(groupIdStr);
+                  if (groupId != null) {
+                    ref.invalidate(archivedRecruitmentsProvider(groupId));
                   }
-                },
-              ),
-              data: (recruitments) {
-                if (recruitments.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.inbox_outlined,
-                            size: 48,
-                            color: AppColors.neutral400,
-                          ),
-                          SizedBox(height: AppSpacing.xs),
-                          Text(
-                            '아직 종료된 모집이 없습니다',
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: AppColors.neutral600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
                 }
-
-                return Column(
-                  children: [
-                    for (final recruitment in recruitments)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: _ArchivedRecruitmentTile(recruitment: recruitment),
-                      ),
-                  ],
-                );
               },
+              builder: (context, recruitments) => Column(
+                children: [
+                  for (final recruitment in recruitments)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: _ArchivedRecruitmentTile(recruitment: recruitment),
+                    ),
+                ],
+              ),
             ),
           ],
         ],
@@ -1820,60 +1791,6 @@ class _StatusBadge extends StatelessWidget {
         style: Theme.of(context).textTheme.labelMedium!.copyWith(
           color: color,
         ),
-      ),
-    );
-  }
-}
-
-class _ErrorMessage extends StatelessWidget {
-  const _ErrorMessage({
-    required this.message,
-    this.onRetry,
-  });
-
-  final String message;
-  final VoidCallback? onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppRadius.card / 2),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.error_outline, color: AppColors.error, size: 20),
-              SizedBox(width: AppSpacing.xs),
-              Expanded(
-                child: Text(
-                  message,
-                  style: AppTheme.bodySmall.copyWith(color: AppColors.error),
-                ),
-              ),
-            ],
-          ),
-          if (onRetry != null) ...[
-            SizedBox(height: AppSpacing.xs),
-            TextButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('다시 시도'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.error,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xs,
-                  vertical: 4,
-                ),
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }

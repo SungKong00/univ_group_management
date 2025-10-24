@@ -9,6 +9,7 @@ import '../../../providers/my_groups_provider.dart';
 import '../../../providers/workspace_state_provider.dart';
 import '../../../widgets/dialogs/create_channel_dialog.dart';
 import '../../../widgets/dialogs/channel_permissions_dialog.dart';
+import '../../../widgets/common/state_view.dart';
 import '../providers/channel_management_provider.dart';
 
 /// 채널 목록 섹션
@@ -61,20 +62,13 @@ class ChannelListSection extends ConsumerWidget {
         ),
         SizedBox(height: AppSpacing.md),
         // 채널 목록
-        channelsAsync.when(
-          data: (channels) {
-            if (channels.isEmpty) {
-              return _buildEmptyState();
-            }
-            return _buildChannelList(channels);
-          },
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(AppSpacing.lg),
-              child: CircularProgressIndicator(),
-            ),
-          ),
-          error: (error, stack) => _buildErrorState(error.toString()),
+        StateView<List<Channel>>(
+          value: channelsAsync,
+          emptyChecker: (channels) => channels.isEmpty,
+          emptyIcon: Icons.tag,
+          emptyTitle: '채널이 없습니다',
+          emptyDescription: '새 채널을 추가하여 시작하세요',
+          builder: (context, channels) => _buildChannelList(channels),
         ),
       ],
     );
@@ -211,55 +205,6 @@ class ChannelListSection extends ConsumerWidget {
         ),
       );
     }
-  }
-
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.tag, size: 64, color: AppColors.neutral400),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              '채널이 없습니다',
-              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              '새 채널을 추가하여 시작하세요',
-              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String error) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              '채널 목록을 불러올 수 없습니다',
-              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              error,
-              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _handleCreateChannel(BuildContext context, WidgetRef ref) async {
