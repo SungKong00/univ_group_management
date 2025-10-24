@@ -11,11 +11,12 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import jakarta.persistence.Version
 import java.time.LocalDateTime
 
 @Entity
 @Table(name = "group_events")
-data class GroupEvent(
+class GroupEvent(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -55,6 +56,9 @@ data class GroupEvent(
     val recurrenceRule: String? = null,
     @Column(length = 7, nullable = false)
     val color: String = "#3B82F6",
+    @Version
+    @Column(nullable = false)
+    val version: Long = 0,
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = false)
@@ -67,6 +71,14 @@ data class GroupEvent(
                 "(locationText='$locationText', place.id=${place?.id})"
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is GroupEvent) return false
+        return id != 0L && id == other.id
+    }
+
+    override fun hashCode(): Int = id.hashCode()
 }
 
 enum class EventType {

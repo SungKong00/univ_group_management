@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class GroupServiceIntegrationTest {
     @Autowired
-    private lateinit var groupManagementService: GroupManagementService
+    private lateinit var groupService: org.castlekong.backend.service.GroupService
 
     @Autowired
     private lateinit var groupMemberService: GroupMemberService
@@ -72,7 +72,7 @@ class GroupServiceIntegrationTest {
             )
 
         // when
-        val response = groupManagementService.createGroup(request, testUser.id)
+        val response = groupService.createGroup(request, testUser.id)
 
         // then
         assertThat(response.id).isGreaterThan(0)
@@ -103,10 +103,10 @@ class GroupServiceIntegrationTest {
                 name = "조회 테스트 그룹",
                 description = "조회 테스트용 그룹입니다",
             )
-        val createdGroup = groupManagementService.createGroup(request, testUser.id)
+        val createdGroup = groupService.createGroup(request, testUser.id)
 
         // when
-        val response = groupManagementService.getGroup(createdGroup.id)
+        val response = groupService.getGroup(createdGroup.id)
 
         // then
         assertThat(response.id).isEqualTo(createdGroup.id)
@@ -122,7 +122,7 @@ class GroupServiceIntegrationTest {
         val nonExistentGroupId = 999L
 
         // when & then
-        assertThatThrownBy { groupManagementService.getGroup(nonExistentGroupId) }
+        assertThatThrownBy { groupService.getGroup(nonExistentGroupId) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GROUP_NOT_FOUND)
     }
@@ -133,13 +133,13 @@ class GroupServiceIntegrationTest {
         // given
         val request1 = CreateGroupRequest(name = "그룹 1")
         val request2 = CreateGroupRequest(name = "그룹 2")
-        groupManagementService.createGroup(request1, testUser.id)
-        groupManagementService.createGroup(request2, testUser.id)
+        groupService.createGroup(request1, testUser.id)
+        groupService.createGroup(request2, testUser.id)
 
         val pageable = PageRequest.of(0, 10)
 
         // when
-        val response = groupManagementService.getGroups(pageable)
+        val response = groupService.getGroups(pageable)
 
         // then
         assertThat(response.content).hasSizeGreaterThanOrEqualTo(2)
@@ -151,7 +151,7 @@ class GroupServiceIntegrationTest {
     fun joinGroup_Success() {
         // given
         val groupRequest = CreateGroupRequest(name = "가입 테스트 그룹")
-        val createdGroup = groupManagementService.createGroup(groupRequest, testUser.id)
+        val createdGroup = groupService.createGroup(groupRequest, testUser.id)
 
         val newUser =
             userRepository.save(
@@ -181,7 +181,7 @@ class GroupServiceIntegrationTest {
     fun joinGroup_AlreadyMember() {
         // given
         val groupRequest = CreateGroupRequest(name = "중복 가입 테스트 그룹")
-        val createdGroup = groupManagementService.createGroup(groupRequest, testUser.id)
+        val createdGroup = groupService.createGroup(groupRequest, testUser.id)
 
         // when & then (그룹 생성자는 이미 멤버이므로)
         assertThatThrownBy { groupMemberService.joinGroup(createdGroup.id, testUser.id) }
@@ -194,7 +194,7 @@ class GroupServiceIntegrationTest {
     fun leaveGroup_Success() {
         // given
         val groupRequest = CreateGroupRequest(name = "탈퇴 테스트 그룹")
-        val createdGroup = groupManagementService.createGroup(groupRequest, testUser.id)
+        val createdGroup = groupService.createGroup(groupRequest, testUser.id)
 
         val newUser =
             userRepository.save(
@@ -222,7 +222,7 @@ class GroupServiceIntegrationTest {
     fun leaveGroup_OwnerCannotLeave() {
         // given
         val groupRequest = CreateGroupRequest(name = "소유자 탈퇴 테스트 그룹")
-        val createdGroup = groupManagementService.createGroup(groupRequest, testUser.id)
+        val createdGroup = groupService.createGroup(groupRequest, testUser.id)
 
         // when & then
         assertThatThrownBy { groupMemberService.leaveGroup(createdGroup.id, testUser.id) }
@@ -235,7 +235,7 @@ class GroupServiceIntegrationTest {
     fun getGroupMembers_Success() {
         // given
         val groupRequest = CreateGroupRequest(name = "멤버 조회 테스트 그룹")
-        val createdGroup = groupManagementService.createGroup(groupRequest, testUser.id)
+        val createdGroup = groupService.createGroup(groupRequest, testUser.id)
 
         val newUser =
             userRepository.save(

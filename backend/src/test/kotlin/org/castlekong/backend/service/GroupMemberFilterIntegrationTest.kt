@@ -333,7 +333,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = null,
                 groupIds = null,
@@ -344,7 +343,7 @@ class GroupMemberFilterIntegrationTest {
 
         // then
         assertThat(result.content).hasSize(5)
-        assertThat(result.content.map { it.user.name })
+        assertThat(result.content.map { (it as org.castlekong.backend.dto.GroupMemberResponse).user.name })
             .containsExactlyInAnyOrder("그룹장", "교수님", "학생1", "학생2", "학생3")
     }
 
@@ -358,7 +357,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = leaderRole.id.toString(),
                 groupIds = null,
@@ -369,8 +367,8 @@ class GroupMemberFilterIntegrationTest {
 
         // then
         assertThat(result.content).hasSize(1)
-        assertThat(result.content[0].user.name).isEqualTo("그룹장")
-        assertThat(result.content[0].role.name).isEqualTo("그룹장")
+        assertThat((result.content[0] as org.castlekong.backend.dto.GroupMemberResponse).user.name).isEqualTo("그룹장")
+        assertThat((result.content[0] as org.castlekong.backend.dto.GroupMemberResponse).role.name).isEqualTo("그룹장")
     }
 
     @Test
@@ -383,7 +381,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = "${leaderRole.id},${professorRole.id}",
                 groupIds = null,
@@ -394,7 +391,7 @@ class GroupMemberFilterIntegrationTest {
 
         // then
         assertThat(result.content).hasSize(2)
-        assertThat(result.content.map { it.user.name })
+        assertThat(result.content.map { (it as org.castlekong.backend.dto.GroupMemberResponse).user.name })
             .containsExactlyInAnyOrder("그룹장", "교수님")
     }
 
@@ -408,7 +405,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = leaderRole.id.toString(),
                 groupIds = "${subGroup1.id}",
@@ -420,7 +416,7 @@ class GroupMemberFilterIntegrationTest {
         // then
         // 역할 필터만 적용되고 다른 필터는 무시됨
         assertThat(result.content).hasSize(1)
-        assertThat(result.content[0].user.name).isEqualTo("그룹장")
+        assertThat((result.content[0] as org.castlekong.backend.dto.GroupMemberResponse).user.name).isEqualTo("그룹장")
     }
 
     @Test
@@ -433,7 +429,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = null,
                 groupIds = null,
@@ -444,8 +439,8 @@ class GroupMemberFilterIntegrationTest {
 
         // then
         assertThat(result.content).hasSize(1)
-        assertThat(result.content[0].user.name).isEqualTo("학생2")
-        assertThat(result.content[0].user.academicYear).isEqualTo(2)
+        assertThat((result.content[0] as org.castlekong.backend.dto.GroupMemberResponse).user.name).isEqualTo("학생2")
+        assertThat((result.content[0] as org.castlekong.backend.dto.GroupMemberResponse).user.academicYear).isEqualTo(2)
     }
 
     @Test
@@ -458,7 +453,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = null,
                 groupIds = null,
@@ -469,7 +463,7 @@ class GroupMemberFilterIntegrationTest {
 
         // then
         assertThat(result.content).hasSize(2)
-        assertThat(result.content.map { it.user.name })
+        assertThat(result.content.map { (it as org.castlekong.backend.dto.GroupMemberResponse).user.name })
             .containsExactlyInAnyOrder("학생1", "학생2")
     }
 
@@ -483,7 +477,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = null,
                 groupIds = null,
@@ -494,8 +487,8 @@ class GroupMemberFilterIntegrationTest {
 
         // then
         assertThat(result.content).hasSize(1)
-        assertThat(result.content[0].user.name).isEqualTo("학생2")
-        assertThat(result.content[0].user.studentNo).startsWith("2024")
+        assertThat((result.content[0] as org.castlekong.backend.dto.GroupMemberResponse).user.name).isEqualTo("학생2")
+        assertThat((result.content[0] as org.castlekong.backend.dto.GroupMemberResponse).user.studentNo).startsWith("2024")
     }
 
     @Test
@@ -508,7 +501,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = null,
                 groupIds = null,
@@ -520,7 +512,7 @@ class GroupMemberFilterIntegrationTest {
         // then
         // 1학년(학생1) OR 24학번(학생2) = 2명
         assertThat(result.content).hasSize(2)
-        assertThat(result.content.map { it.user.name })
+        assertThat(result.content.map { (it as org.castlekong.backend.dto.GroupMemberResponse).user.name })
             .containsExactlyInAnyOrder("학생1", "학생2")
     }
 
@@ -534,7 +526,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = null,
                 groupIds = subGroup1.id.toString(),
@@ -546,7 +537,7 @@ class GroupMemberFilterIntegrationTest {
         // then
         // AI 학회 멤버: 그룹장, 학생1
         assertThat(result.content).hasSize(2)
-        assertThat(result.content.map { it.user.name })
+        assertThat(result.content.map { (it as org.castlekong.backend.dto.GroupMemberResponse).user.name })
             .containsExactlyInAnyOrder("그룹장", "학생1")
     }
 
@@ -560,7 +551,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = null,
                 groupIds = "${subGroup1.id},${subGroup2.id}",
@@ -572,7 +562,7 @@ class GroupMemberFilterIntegrationTest {
         // then
         // AI 학회 OR 프로그래밍 동아리: 그룹장, 학생1, 학생2
         assertThat(result.content).hasSize(3)
-        assertThat(result.content.map { it.user.name })
+        assertThat(result.content.map { (it as org.castlekong.backend.dto.GroupMemberResponse).user.name })
             .containsExactlyInAnyOrder("그룹장", "학생1", "학생2")
     }
 
@@ -586,7 +576,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = null,
                 groupIds = subGroup1.id.toString(),
@@ -598,7 +587,7 @@ class GroupMemberFilterIntegrationTest {
         // then
         // AI 학회 AND 1학년 = 학생1만
         assertThat(result.content).hasSize(1)
-        assertThat(result.content[0].user.name).isEqualTo("학생1")
+        assertThat((result.content[0] as org.castlekong.backend.dto.GroupMemberResponse).user.name).isEqualTo("학생1")
     }
 
     @Test
@@ -611,7 +600,6 @@ class GroupMemberFilterIntegrationTest {
         val result =
             groupMemberService.getGroupMembersWithFilter(
                 groupId = parentGroup.id,
-                groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = null,
                 groupIds = subGroup2.id.toString(),
@@ -623,7 +611,7 @@ class GroupMemberFilterIntegrationTest {
         // then
         // 프로그래밍 동아리 AND (2학년 OR 3학년) = 학생2만 (학생3은 프로그래밍 동아리 아님)
         assertThat(result.content).hasSize(1)
-        assertThat(result.content[0].user.name).isEqualTo("학생2")
+        assertThat((result.content[0] as org.castlekong.backend.dto.GroupMemberResponse).user.name).isEqualTo("학생2")
     }
 
     @Test
@@ -635,7 +623,6 @@ class GroupMemberFilterIntegrationTest {
         // when
         val result =
             groupMemberService.getGroupMembersWithFilter(
-                groupId = parentGroup.id,
                 groupId = parentGroup.id,
                 userId = leader.id,
                 roleIds = null,

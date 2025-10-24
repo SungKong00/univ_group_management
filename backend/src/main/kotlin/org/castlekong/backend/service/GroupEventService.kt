@@ -268,7 +268,10 @@ class GroupEventService(
                 val newEnd = existing.endDate.toLocalDate().atTime(actualEndTime)
 
                 val updated =
-                    existing.copy(
+                    GroupEvent(
+                        id = existing.id,
+                        group = existing.group,
+                        creator = existing.creator,
                         title = request.title.trim(),
                         description = request.description?.trim(),
                         locationText = request.locationText?.trim(),
@@ -277,7 +280,13 @@ class GroupEventService(
                         startDate = newStart,
                         endDate = newEnd,
                         isAllDay = request.isAllDay,
+                        isOfficial = existing.isOfficial,
+                        eventType = existing.eventType,
+                        seriesId = existing.seriesId,
+                        recurrenceRule = existing.recurrenceRule,
                         color = normalizeColor(request.color),
+                        version = existing.version,
+                        createdAt = existing.createdAt,
                         updatedAt = LocalDateTime.now(),
                     )
                 val saved = groupEventRepository.save(updated)
@@ -301,7 +310,10 @@ class GroupEventService(
                         val newStart = event.startDate.toLocalDate().atTime(actualStartTime)
                         val newEnd = event.endDate.toLocalDate().atTime(actualEndTime)
 
-                        event.copy(
+                        GroupEvent(
+                            id = event.id,
+                            group = event.group,
+                            creator = event.creator,
                             title = request.title.trim(),
                             description = request.description?.trim(),
                             locationText = request.locationText?.trim(),
@@ -310,7 +322,13 @@ class GroupEventService(
                             startDate = newStart,
                             endDate = newEnd,
                             isAllDay = request.isAllDay,
+                            isOfficial = event.isOfficial,
+                            eventType = event.eventType,
+                            seriesId = event.seriesId,
+                            recurrenceRule = event.recurrenceRule,
                             color = normalizeColor(request.color),
+                            version = event.version,
+                            createdAt = event.createdAt,
                             updatedAt = LocalDateTime.now(),
                         )
                     }

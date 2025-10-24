@@ -64,13 +64,33 @@ class GroupPermissionControllerIntegrationTest {
         val suffix = System.nanoTime().toString()
 
         // 그룹장 (모든 권한 보유)
-        owner =
-            userRepository.save(
-                TestDataFactory.createTestUser(
-                    name = "그룹장",
-                    email = "owner-perm-$suffix@example.com",
-                ).copy(profileCompleted = true),
+        val ownerBase = TestDataFactory.createTestUser(
+            name = "그룹장",
+            email = "owner-perm-$suffix@example.com",
+        )
+        owner = userRepository.save(
+            User(
+                id = ownerBase.id,
+                name = ownerBase.name,
+                email = ownerBase.email,
+                password = ownerBase.password,
+                globalRole = ownerBase.globalRole,
+                isActive = ownerBase.isActive,
+                nickname = ownerBase.nickname,
+                profileImageUrl = ownerBase.profileImageUrl,
+                bio = ownerBase.bio,
+                profileCompleted = true,
+                emailVerified = ownerBase.emailVerified,
+                college = ownerBase.college,
+                department = ownerBase.department,
+                studentNo = ownerBase.studentNo,
+                schoolEmail = ownerBase.schoolEmail,
+                professorStatus = ownerBase.professorStatus,
+                academicYear = ownerBase.academicYear,
+                createdAt = ownerBase.createdAt,
+                updatedAt = ownerBase.updatedAt,
             )
+        )
 
         // 일반 멤버 (권한 없음)
         member =

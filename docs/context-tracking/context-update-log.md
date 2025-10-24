@@ -1,3 +1,42 @@
+### 2025-10-25 (C) - GroupEvent 엔티티 JPA 개선 및 테스트 수정
+
+**유형**: 리팩토링 + 테스트 수정
+**우선순위**: High
+**영향 범위**: 백엔드 엔티티 (1개), 서비스 (1개), 테스트 (13개), 문서 (2개)
+
+**코드 변경사항**:
+1. **GroupEvent.kt**: data class → 일반 class 전환, @Version 필드 추가 (낙관적 락)
+2. **GroupEventService.kt**: copy() 메서드 → 생성자 호출로 변경
+3. **application.yml**: hibernate.jdbc.batch_size 30 → 50 증가
+4. **테스트 13개 파일**: User copy() → 생성자 호출, 컴파일 에러 수정
+   - ContentControllerTest, GroupEventControllerIntegrationTest, GroupPermissionControllerIntegrationTest
+   - MeControllerTest, RecruitmentControllerTest, ContentServiceIntegrationTest
+   - GroupEventServiceTest, GroupMemberFilterIntegrationTest, GroupMemberServiceIntegrationTest
+   - GroupRequestServiceIntegrationTest, GroupRoleServiceIntegrationTest
+   - GroupServiceIntegrationTest, RecruitmentServiceIntegrationTest, UserServiceTest
+
+**업데이트된 문서**:
+1. **docs/backend/domain-model.md** (69→72줄)
+   - Calendar Entity 섹션에 GroupEvent 추가
+   - JPA 엔티티 설계 섹션에 GroupEvent 추가 (낙관적 락 설명)
+
+2. **docs/implementation/backend/architecture.md** (100→101줄)
+   - 적용 완료 엔티티 목록에 GroupEvent 추가 (낙관적 락 설명)
+
+**문서 동기화 상태**:
+- ✅ domain-model.md: 최신 (72줄)
+- ✅ architecture.md: 최신 (101줄)
+
+**이유**:
+- JPA Lazy Loading 프록시 충돌 방지
+- copy() 메서드로 인한 영속성 컨텍스트 분리 문제 해결
+- 낙관적 락으로 동시 수정 충돌 방지
+
+**다음 단계**:
+- 나머지 캘린더 엔티티(EventParticipant, EventException)도 동일 패턴 적용 검토
+
+---
+
 ### 2025-10-25 (B) - 백엔드 최적화 문서화 완료
 
 **유형**: 문서화

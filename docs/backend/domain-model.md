@@ -39,6 +39,7 @@ Calendar 확장 (2025-10):
 - `Channel.kt`, `Post.kt`, `Comment.kt`
 
 **Calendar Entity** (2025-10 신규):
+- `GroupEvent.kt` - 그룹 일정 (일반 class, @Version 낙관적 락 포함)
 - `EventParticipant.kt` - 그룹 일정 참여자 관리
   - ParticipantStatus: PENDING, ACCEPTED, REJECTED, TENTATIVE
   - UniqueConstraint: (group_event_id, user_id)
@@ -56,10 +57,11 @@ Calendar 확장 (2025-10):
 ## JPA 엔티티 설계 (2025-10 개선)
 
 **data class → 일반 class 전환:**
-- `Group.kt`, `User.kt`, `GroupMember.kt`, `Channel.kt`, `ChannelRoleBinding.kt`
+- `Group.kt`, `User.kt`, `GroupMember.kt`, `Channel.kt`, `ChannelRoleBinding.kt`, `GroupEvent.kt`
 - ID 기반 equals/hashCode 구현
 - 이유: Lazy Loading 프록시 충돌 방지, JPA 영속성 안정성
 - 효과: Set/Map 컬렉션 안정성, copy() 부작용 제거
+- GroupEvent: @Version 필드 추가로 낙관적 락 적용
 
 ## 관련 문서
 

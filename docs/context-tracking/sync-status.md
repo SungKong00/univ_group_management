@@ -4,7 +4,7 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-10-25 (백엔드 최적화 문서화 완료)
+**마지막 업데이트**: 2025-10-25 (GroupEvent JPA 개선 및 테스트 수정)
 **총 문서 수**: 98개
 **동기화 완료**: 98개 (100%)
 **업데이트 필요**: 0개 (0%)
@@ -26,7 +26,7 @@
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
 | `README.md` | ✅ 최신 | 2025-10-24 | 백엔드 가이드 인덱스 |
-| `domain-model.md` | ✅ 최신 | 2025-10-25 | EventParticipant, EventException 추가 |
+| `domain-model.md` | ✅ 최신 | 2025-10-25 | GroupEvent JPA 개선, 낙관적 락 추가 |
 | `api-design.md` | ✅ 최신 | 2025-10-24 | REST API 설계 원칙 |
 | `authentication.md` | ✅ 최신 | 2025-10-24 | Google OAuth2 + JWT |
 | `calendar-core-design.md` | ✅ 최신 | 2025-10-24 | 권한, 반복, 예외, 참여자 관리 |
@@ -37,7 +37,7 @@
 |--------|------|---------------|------|
 | `README.md` | ✅ 최신 | 2025-10-25 | 최근 개선사항 섹션 추가 |
 | `development-setup.md` | ✅ 최신 | 2025-10-24 | H2 DB, 동시성, 데이터 초기화 |
-| `architecture.md` | ✅ 최신 | 2025-10-25 | 서비스 분리, JPA 개선, N+1 해결 |
+| `architecture.md` | ✅ 최신 | 2025-10-25 | GroupEvent 적용 완료 엔티티 추가 |
 | `authentication.md` | ✅ 최신 | 2025-10-24 | JWT 필터, 권한 체크 |
 | `permission-checking.md` | ✅ 최신 | 2025-10-24 | 권한 로직, 매트릭스 |
 | `transaction-patterns.md` | ✅ 최신 | 2025-10-24 | 기본 패턴, 전파 레벨 |
@@ -178,7 +178,12 @@
 모든 코드 변경사항이 반영되어 동기화된 문서들
 
 **주요 업데이트 (2025-10-25)**:
-- **백엔드 최적화 문서화**
+- **GroupEvent JPA 개선 및 테스트 수정**
+  - domain-model.md: GroupEvent JPA 개선, @Version 낙관적 락 추가 (69→72줄)
+  - architecture.md: GroupEvent 적용 완료 엔티티 목록 추가 (100→101줄)
+  - 코드 변경: GroupEvent data class → class, GroupEventService copy() 제거
+  - 테스트 수정: 13개 파일 User copy() → 생성자 호출
+- **백엔드 최적화 문서화** (이전)
   - architecture.md: 서비스 분리, JPA 개선, N+1 해결 추가 (95→100줄)
   - domain-model.md: EventParticipant, EventException 엔티티 추가 (67→69줄)
   - database-reference.md: 캘린더 엔티티 JPA 구현 반영

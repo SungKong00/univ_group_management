@@ -61,13 +61,33 @@ class RecruitmentServiceIntegrationTest {
     @BeforeEach
     fun setUp() {
         val suffix = System.nanoTime().toString()
-        owner =
-            userRepository.save(
-                TestDataFactory.createTestUser(
-                    name = "그룹장",
-                    email = "owner-recruit+$suffix@example.com",
-                ).copy(profileCompleted = true),
+        val ownerBase = TestDataFactory.createTestUser(
+            name = "그룹장",
+            email = "owner-recruit+$suffix@example.com",
+        )
+        owner = userRepository.save(
+            User(
+                id = ownerBase.id,
+                name = ownerBase.name,
+                email = ownerBase.email,
+                password = ownerBase.password,
+                globalRole = ownerBase.globalRole,
+                isActive = ownerBase.isActive,
+                nickname = ownerBase.nickname,
+                profileImageUrl = ownerBase.profileImageUrl,
+                bio = ownerBase.bio,
+                profileCompleted = true,
+                emailVerified = ownerBase.emailVerified,
+                college = ownerBase.college,
+                department = ownerBase.department,
+                studentNo = ownerBase.studentNo,
+                schoolEmail = ownerBase.schoolEmail,
+                professorStatus = ownerBase.professorStatus,
+                academicYear = ownerBase.academicYear,
+                createdAt = ownerBase.createdAt,
+                updatedAt = ownerBase.updatedAt,
             )
+        )
 
         applicant =
             userRepository.save(

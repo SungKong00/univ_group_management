@@ -78,9 +78,10 @@ Repository Layer (데이터 접근)
 - Set/Map 컬렉션 사용 시 hashCode 변경으로 오작동
 
 **적용 완료 엔티티**:
-- `Group.kt`, `User.kt`, `GroupMember.kt`, `Channel.kt`, `ChannelRoleBinding.kt`
+- `Group.kt`, `User.kt`, `GroupMember.kt`, `Channel.kt`, `ChannelRoleBinding.kt`, `GroupEvent.kt`
 - ID 기반 equals/hashCode, 필드 직접 수정 패턴 사용
 - JPA 영속성 안정성 및 Lazy Loading 호환성 개선
+- GroupEvent: @Version 필드 추가로 낙관적 락 적용
 
 ## 성능 최적화 패턴
 

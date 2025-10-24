@@ -78,9 +78,6 @@ class GroupEventControllerIntegrationTest {
     private lateinit var placeUsageGroupRepository: org.castlekong.backend.repository.PlaceUsageGroupRepository
 
     @Autowired
-    private lateinit var placeAvailabilityRepository: org.castlekong.backend.repository.PlaceAvailabilityRepository
-
-    @Autowired
     private lateinit var placeReservationRepository: org.castlekong.backend.repository.PlaceReservationRepository
 
     @Autowired
@@ -100,13 +97,33 @@ class GroupEventControllerIntegrationTest {
         val suffix = System.nanoTime().toString()
 
         // 그룹장 (CALENDAR_MANAGE 권한 보유)
-        owner =
-            userRepository.save(
-                TestDataFactory.createTestUser(
-                    name = "그룹장",
-                    email = "owner-event-$suffix@example.com",
-                ).copy(profileCompleted = true),
+        val ownerBase = TestDataFactory.createTestUser(
+            name = "그룹장",
+            email = "owner-event-$suffix@example.com",
+        )
+        owner = userRepository.save(
+            User(
+                id = ownerBase.id,
+                name = ownerBase.name,
+                email = ownerBase.email,
+                password = ownerBase.password,
+                globalRole = ownerBase.globalRole,
+                isActive = ownerBase.isActive,
+                nickname = ownerBase.nickname,
+                profileImageUrl = ownerBase.profileImageUrl,
+                bio = ownerBase.bio,
+                profileCompleted = true,
+                emailVerified = ownerBase.emailVerified,
+                college = ownerBase.college,
+                department = ownerBase.department,
+                studentNo = ownerBase.studentNo,
+                schoolEmail = ownerBase.schoolEmail,
+                professorStatus = ownerBase.professorStatus,
+                academicYear = ownerBase.academicYear,
+                createdAt = ownerBase.createdAt,
+                updatedAt = ownerBase.updatedAt,
             )
+        )
 
         // 일반 멤버 (CALENDAR_MANAGE 권한 없음)
         member =
@@ -1056,17 +1073,7 @@ class GroupEventControllerIntegrationTest {
                 ),
             )
 
-            // 운영 시간 설정 (월-금 09:00-18:00)
-            for (day in listOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)) {
-                placeAvailabilityRepository.save(
-                    org.castlekong.backend.entity.PlaceAvailability(
-                        place = testPlace,
-                        dayOfWeek = day,
-                        startTime = LocalTime.of(9, 0),
-                        endTime = LocalTime.of(18, 0),
-                    ),
-                )
-            }
+            // PlaceAvailability는 더 이상 사용하지 않음 (삭제됨)
         }
 
         @Test
