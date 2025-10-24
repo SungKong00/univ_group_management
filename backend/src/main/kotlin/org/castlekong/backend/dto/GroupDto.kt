@@ -197,6 +197,11 @@ data class AdminStatsResponse(
     val channelCount: Int,
 )
 
+// 멤버 필터링 카운트 응답 DTO
+data class MemberCountResponse(
+    val count: Long,
+)
+
 // 내 그룹 목록 조회용 DTO (워크스페이스 자동 진입용)
 data class MyGroupResponse(
     val id: Long,
@@ -210,4 +215,24 @@ data class MyGroupResponse(
     // GroupPermission 목록
     val permissions: Set<String>,
     val profileImageUrl: String? = null,
+)
+
+// 멤버 필터링용 기본 응답 DTO (일반 멤버용)
+data class MemberBasicResponse(
+    val id: Long,
+    val user: UserBasicInfo,
+    val role: RoleBasicInfo,
+)
+
+data class UserBasicInfo(
+    val id: Long,
+    val name: String,
+    val profileImageUrl: String?,
+    val studentNo: String?,
+    val academicYear: Int?,
+)
+
+data class RoleBasicInfo(
+    val id: Long,
+    val name: String,
 )

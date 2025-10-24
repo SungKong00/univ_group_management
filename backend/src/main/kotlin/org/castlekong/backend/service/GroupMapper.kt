@@ -85,6 +85,25 @@ class GroupMapper(
         )
     }
 
+    fun toMemberBasicResponse(groupMember: GroupMember): org.castlekong.backend.dto.MemberBasicResponse {
+        return org.castlekong.backend.dto.MemberBasicResponse(
+            id = groupMember.id,
+            user =
+                org.castlekong.backend.dto.UserBasicInfo(
+                    id = groupMember.user.id,
+                    name = groupMember.user.name,
+                    profileImageUrl = groupMember.user.profileImageUrl,
+                    studentNo = groupMember.user.studentNo,
+                    academicYear = groupMember.user.academicYear,
+                ),
+            role =
+                org.castlekong.backend.dto.RoleBasicInfo(
+                    id = groupMember.role.id,
+                    name = groupMember.role.name,
+                ),
+        )
+    }
+
     fun toGroupRoleResponse(groupRole: GroupRole): GroupRoleResponse {
         return GroupRoleResponse(
             id = groupRole.id,

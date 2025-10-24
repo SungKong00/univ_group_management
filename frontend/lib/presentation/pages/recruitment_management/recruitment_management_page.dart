@@ -12,6 +12,7 @@ import '../../providers/workspace_state_provider.dart';
 import '../workspace/widgets/workspace_state_view.dart';
 import '../../widgets/common/collapsible_content.dart';
 import '../../widgets/common/state_view.dart';
+import '../../widgets/common/section_card.dart';
 
 class RecruitmentManagementPage extends ConsumerStatefulWidget {
   const RecruitmentManagementPage({super.key});
@@ -1654,21 +1655,14 @@ class _QuestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.neutral300, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
+    return SectionCard(
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.neutral300, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -1727,6 +1721,7 @@ class _QuestionCard extends StatelessWidget {
             },
           ),
         ],
+        ),
       ),
     );
   }

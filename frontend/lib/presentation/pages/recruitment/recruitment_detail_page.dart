@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../../../core/models/recruitment_models.dart';
 import '../../../core/models/group_models.dart';
+import '../../widgets/common/state_view.dart';
 import 'providers/recruitment_detail_provider.dart';
 import 'widgets/application_submit_dialog.dart';
 
@@ -28,10 +29,12 @@ class RecruitmentDetailPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: recruitmentAsync.when(
-        data: (recruitment) => _buildContent(context, ref, recruitment),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => _buildError(context, error),
+      body: StateView<RecruitmentResponse>(
+        value: recruitmentAsync,
+        loadingMessage: '모집 공고를 불러오는 중...',
+        errorMessageExtractor: (error) => '모집 공고를 불러올 수 없습니다',
+        onRetry: () => ref.invalidate(recruitmentDetailProvider(recruitmentIdInt)),
+        builder: (context, recruitment) => _buildContent(context, ref, recruitment),
       ),
       bottomNavigationBar: recruitmentAsync.maybeWhen(
         data: (recruitment) => _buildBottomBar(context, ref, recruitment),
@@ -293,41 +296,6 @@ class RecruitmentDetailPage extends ConsumerWidget {
             );
           }),
         ],
-      ),
-    );
-  }
-
-  Widget _buildError(BuildContext context, Object error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              '모집 공고를 불러올 수 없습니다',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.neutral900,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              error.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.neutral600,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-        ),
       ),
     );
   }

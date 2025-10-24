@@ -8,7 +8,10 @@ import '../network/dio_client.dart';
 /// MVP: Mock 데이터 제공
 /// Phase 2: API 연동 시 GroupService와 통합
 abstract class MemberRepository {
-  Future<List<GroupMember>> getGroupMembers(int groupId);
+  Future<List<GroupMember>> getGroupMembers(
+    int groupId, {
+    Map<String, String>? queryParameters,
+  });
   Future<GroupMember> updateMemberRole(int groupId, String userId, int roleId);
   Future<void> removeMember(int groupId, String userId);
 }
@@ -18,15 +21,19 @@ class ApiMemberRepository implements MemberRepository {
   final DioClient _dioClient = DioClient();
 
   @override
-  Future<List<GroupMember>> getGroupMembers(int groupId) async {
+  Future<List<GroupMember>> getGroupMembers(
+    int groupId, {
+    Map<String, String>? queryParameters,
+  }) async {
     try {
       developer.log(
-        'Fetching members for group $groupId',
+        'Fetching members for group $groupId with filters: $queryParameters',
         name: 'ApiMemberRepository',
       );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/members',
+        queryParameters: queryParameters,
       );
 
       if (response.data != null) {
@@ -281,9 +288,55 @@ class MockMemberRepository implements MemberRepository {
   };
 
   @override
-  Future<List<GroupMember>> getGroupMembers(int groupId) async {
+  Future<List<GroupMember>> getGroupMembers(
+    int groupId, {
+    Map<String, String>? queryParameters,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 300)); // 네트워크 지연 시뮬레이션
-    return _membersByGroup[groupId] ?? [];
+
+    var members = _membersByGroup[groupId] ?? [];
+
+    // 필터가 없으면 전체 반환
+    if (queryParameters == null || queryParameters.isEmpty) {
+      return members;
+    }
+
+    // 역할 필터 적용
+    if (queryParameters.containsKey('roleIds')) {
+      final roleIds = queryParameters['roleIds']!
+          .split(',')
+          .map((id) => int.parse(id))
+          .toList();
+      members = members.where((m) => roleIds.contains(m.roleId)).toList();
+    }
+
+    // 학년 필터 적용
+    if (queryParameters.containsKey('grades')) {
+      final grades = queryParameters['grades']!
+          .split(',')
+          .map((g) => int.parse(g))
+          .toList();
+      members = members
+          .where((m) => m.academicYear != null && grades.contains(m.academicYear))
+          .toList();
+    }
+
+    // 학번 필터 적용
+    if (queryParameters.containsKey('years')) {
+      final years = queryParameters['years']!
+          .split(',')
+          .map((y) => int.parse(y))
+          .toList();
+      members = members.where((m) {
+        if (m.studentNo == null || m.studentNo!.length < 4) return false;
+        final studentYear = int.tryParse(m.studentNo!.substring(0, 4));
+        return studentYear != null && years.contains(studentYear);
+      }).toList();
+    }
+
+    // 소속 그룹 필터는 Mock에서는 구현 생략 (실제 API에서만 필요)
+
+    return members;
   }
 
   @override

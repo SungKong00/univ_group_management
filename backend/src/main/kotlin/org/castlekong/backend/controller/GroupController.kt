@@ -13,6 +13,7 @@ import org.castlekong.backend.dto.GroupResponse
 import org.castlekong.backend.dto.GroupRoleResponse
 import org.castlekong.backend.dto.GroupSummaryResponse
 import org.castlekong.backend.dto.JoinGroupRequest
+import org.castlekong.backend.dto.MemberCountResponse
 import org.castlekong.backend.dto.PagedApiResponse
 import org.castlekong.backend.dto.PaginationInfo
 import org.castlekong.backend.dto.PlaceResponse
@@ -197,14 +198,52 @@ class GroupController(
     }
 
     @GetMapping("/{groupId}/members")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "그룹 멤버 목록 조회",
+        description = "그룹 멤버 목록을 조회합니다. 관리자(MEMBER_MANAGE 권한)는 전체 정보(email 포함), 일반 멤버는 기본 정보만 반환됩니다.",
+    )
     fun getGroupMembers(
         @PathVariable groupId: Long,
+        @RequestParam(required = false) roleIds: String?,
+        @RequestParam(required = false) groupIds: String?,
+        @RequestParam(required = false) grades: String?,
+        @RequestParam(required = false) years: String?,
         pageable: Pageable,
-    ): PagedApiResponse<GroupMemberResponse> {
-        val response = groupMemberService.getGroupMembers(groupId, pageable)
+        authentication: Authentication,
+    ): PagedApiResponse<Any> {
+        val user = getUserByEmail(authentication.name)
+
+        val response =
+            groupMemberService.getGroupMembersWithFilter(
+                groupId = groupId,
+                userId = user.id,
+                roleIds = roleIds,
+                groupIds = groupIds,
+                grades = grades,
+                years = years,
+                pageable = pageable,
+            )
+
         val pagination = PaginationInfo.fromSpringPage(response)
         return PagedApiResponse.success(response.content, pagination)
+    }
+
+    @GetMapping("/{groupId}/members/count")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "그룹 멤버 수 조회 (필터링 지원)",
+        description = "필터링 조건에 맞는 그룹 멤버 수를 조회합니다. 멤버 필터 UI의 실시간 카운트에 사용됩니다. 권한 요구사항: 그룹 멤버",
+    )
+    fun countGroupMembers(
+        @PathVariable groupId: Long,
+        @RequestParam(required = false) roleIds: String?,
+        @RequestParam(required = false) groupIds: String?,
+        @RequestParam(required = false) grades: String?,
+        @RequestParam(required = false) years: String?,
+    ): ApiResponse<MemberCountResponse> {
+        val count = groupMemberService.countFilteredMembers(groupId, roleIds, groupIds, grades, years)
+        return ApiResponse.success(MemberCountResponse(count))
     }
 
     // 내 멤버십 조회 (멤버 여부 판별용)

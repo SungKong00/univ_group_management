@@ -116,7 +116,9 @@ interface GroupRoleRepository : JpaRepository<GroupRole, Long> {
 }
 
 @Repository
-interface GroupMemberRepository : JpaRepository<GroupMember, Long> {
+interface GroupMemberRepository :
+    JpaRepository<GroupMember, Long>,
+    org.springframework.data.jpa.repository.JpaSpecificationExecutor<GroupMember> {
     fun findByGroupIdAndUserId(
         groupId: Long,
         userId: Long,

@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 import '../models/group_models.dart';
 import '../models/auth_models.dart';
+import '../models/user_models.dart';
 import '../models/place/place.dart';
 import '../network/dio_client.dart';
 
@@ -417,6 +418,60 @@ class GroupService {
     } catch (e) {
       developer.log(
         'Error fetching available places: $e',
+        name: 'GroupService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
+  /// Get sub-groups (children) of a group
+  ///
+  /// GET /api/groups/{groupId}/sub-groups
+  /// Returns list of groups that are direct children of the specified group
+  Future<List<GroupSummaryResponse>> getSubGroups(int groupId) async {
+    try {
+      developer.log(
+        'Fetching sub-groups for group $groupId',
+        name: 'GroupService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/groups/$groupId/sub-groups',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map(
+                  (item) => GroupSummaryResponse.fromJson(item as Map<String, dynamic>),
+                )
+                .toList();
+          }
+          return <GroupSummaryResponse>[];
+        });
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} sub-groups',
+            name: 'GroupService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch sub-groups: ${apiResponse.message}',
+            name: 'GroupService',
+            level: 900,
+          );
+          throw Exception(apiResponse.message ?? 'Failed to fetch sub-groups');
+        }
+      }
+
+      return [];
+    } catch (e) {
+      developer.log(
+        'Error fetching sub-groups: $e',
         name: 'GroupService',
         level: 900,
       );

@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../demo_calendar/demo_calendar_page.dart';
 import '../dev/selectable_option_card_demo.dart';
+import '../demo_member_filter_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -56,6 +57,18 @@ class ProfilePage extends StatelessWidget {
                 },
                 icon: const Icon(Icons.calendar_month),
                 label: const Text('주간 캘린더 데모'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const DemoMemberFilterPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.filter_list),
+                label: const Text('멤버 필터 데모'),
               ),
             ],
           ],

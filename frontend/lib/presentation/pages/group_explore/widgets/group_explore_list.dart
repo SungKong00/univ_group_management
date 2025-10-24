@@ -51,23 +51,19 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: AppColors.neutral400,
+            Icon(Icons.search_off, size: 64, color: AppColors.neutral400),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              '검색 결과가 없습니다',
+              style: AppTheme.headlineSmallTheme(context).copyWith(
+                color: AppColors.neutral900,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              '검색 결과가 없습니다',
-              style: AppTheme.titleMediumTheme(context).copyWith(
-                color: AppColors.neutral600,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(
               '다른 검색어나 필터를 시도해보세요',
               style: AppTheme.bodyMediumTheme(context).copyWith(
-                color: AppColors.neutral500,
+                color: AppColors.neutral600,
               ),
             ),
           ],
@@ -77,11 +73,13 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
 
     // Initial loading state
     if (groups.isEmpty && isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
+    return _buildGroupGrid(groups, isLoading, hasMore);
+  }
+
+  Widget _buildGroupGrid(List<dynamic> groups, bool isLoading, bool hasMore) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final double screenWidth = constraints.maxWidth;

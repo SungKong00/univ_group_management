@@ -267,6 +267,134 @@ class GroupMemberService(
             .map { groupMapper.toGroupMemberResponse(it) }
     }
 
+    /**
+     * 그룹 멤버 목록 조회 (필터링 지원, 권한별 DTO 반환)
+     *
+     * @param groupId 그룹 ID
+     * @param userId 현재 사용자 ID
+     * @param roleIds 역할 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param groupIds 하위 그룹 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param grades 학년 목록 (쉼표 구분 문자열, 선택적)
+     * @param years 학번 목록 (쉼표 구분 문자열, 선택적, 예: "24,25")
+     * @param pageable 페이징 정보
+     * @return 필터링된 멤버 목록 (페이징, 관리자는 GroupMemberResponse, 일반 멤버는 MemberBasicResponse)
+     */
+    fun getGroupMembersWithFilter(
+        groupId: Long,
+        userId: Long,
+        roleIds: String?,
+        groupIds: String?,
+        grades: String?,
+        years: String?,
+        pageable: Pageable,
+    ): Page<Any> {
+        // 그룹 존재 여부 확인
+        if (!groupRepository.existsById(groupId)) {
+            throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
+        }
+
+        // 권한 확인: MEMBER_MANAGE 권한이 있는지 체크
+        val hasMemberManagePermission =
+            try {
+                val permissions = permissionService.getEffective(groupId, userId, ::systemRolePermissions)
+                permissions.contains(GroupPermission.MEMBER_MANAGE)
+            } catch (e: BusinessException) {
+                // 멤버가 아닌 경우 권한 없음
+                false
+            }
+
+        // 파라미터 파싱
+        val roleIdList = parseToLongList(roleIds)
+        val groupIdList = parseToLongList(groupIds)
+        val gradeList = parseToIntList(grades)
+        val yearList = parseToStringList(years)
+
+        // Specification 생성
+        val spec =
+            org.castlekong.backend.repository.GroupMemberSpecification.filterMembers(
+                groupId = groupId,
+                roleIds = roleIdList,
+                groupIds = groupIdList,
+                grades = gradeList,
+                years = yearList,
+            )
+
+        // 필터링된 멤버 조회
+        val members = groupMemberRepository.findAll(spec, pageable)
+
+        // 권한에 따라 다른 DTO로 매핑
+        return if (hasMemberManagePermission) {
+            // 관리자: 전체 정보 (email 포함) 반환
+            members.map { groupMapper.toGroupMemberResponse(it) }
+        } else {
+            // 일반 멤버: 기본 정보만 (email 제외) 반환
+            members.map { groupMapper.toMemberBasicResponse(it) }
+        }
+    }
+
+    /**
+     * 그룹 멤버 수 조회 (필터링 지원)
+     *
+     * @param groupId 그룹 ID
+     * @param roleIds 역할 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param groupIds 하위 그룹 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param grades 학년 목록 (쉼표 구분 문자열, 선택적)
+     * @param years 학번 목록 (쉼표 구분 문자열, 선택적, 예: "24,25")
+     * @return 필터링된 멤버 수
+     */
+    fun countFilteredMembers(
+        groupId: Long,
+        roleIds: String?,
+        groupIds: String?,
+        grades: String?,
+        years: String?,
+    ): Long {
+        // 그룹 존재 여부 확인
+        if (!groupRepository.existsById(groupId)) {
+            throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
+        }
+
+        // 파라미터 파싱
+        val roleIdList = parseToLongList(roleIds)
+        val groupIdList = parseToLongList(groupIds)
+        val gradeList = parseToIntList(grades)
+        val yearList = parseToStringList(years)
+
+        // Specification 생성 (getGroupMembersWithFilter와 동일한 로직)
+        val spec =
+            org.castlekong.backend.repository.GroupMemberSpecification.filterMembers(
+                groupId = groupId,
+                roleIds = roleIdList,
+                groupIds = groupIdList,
+                grades = gradeList,
+                years = yearList,
+            )
+
+        return groupMemberRepository.count(spec)
+    }
+
+    private fun parseToLongList(input: String?): List<Long>? {
+        if (input.isNullOrBlank()) return null
+        return input.split(',')
+            .mapNotNull { it.trim().toLongOrNull() }
+            .takeIf { it.isNotEmpty() }
+    }
+
+    private fun parseToIntList(input: String?): List<Int>? {
+        if (input.isNullOrBlank()) return null
+        return input.split(',')
+            .mapNotNull { it.trim().toIntOrNull() }
+            .takeIf { it.isNotEmpty() }
+    }
+
+    private fun parseToStringList(input: String?): List<String>? {
+        if (input.isNullOrBlank()) return null
+        return input.split(',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .takeIf { it.isNotEmpty() }
+    }
+
     fun getMyMembership(
         groupId: Long,
         userId: Long,

@@ -8,6 +8,7 @@ import '../../providers/home_state_provider.dart';
 import '../../providers/recruiting_groups_provider.dart';
 import '../../widgets/cards/action_card.dart';
 import '../../widgets/cards/recruitment_card.dart';
+import '../../widgets/common/section_header.dart';
 import 'widgets/group_explore_content_widget.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -92,8 +93,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('빠른 실행', style: AppTheme.headlineSmallTheme(context)),
-        const SizedBox(height: AppSpacing.sm),
+        const SectionHeader(title: '빠른 실행'),
         isDesktop
             ? Row(
                 children: [
@@ -147,23 +147,19 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('모집 중인 그룹', style: AppTheme.headlineSmallTheme(context)),
-            Semantics(
-              button: true,
-              label: '전체 그룹 보기',
-              child: TextButton(
-                onPressed: () => ref
-                    .read(homeStateProvider.notifier)
-                    .showGroupExploreWithRecruitingFilter(),
-                child: const Text('전체 보기'),
-              ),
+        SectionHeader(
+          title: '모집 중인 그룹',
+          trailing: Semantics(
+            button: true,
+            label: '전체 그룹 보기',
+            child: TextButton(
+              onPressed: () => ref
+                  .read(homeStateProvider.notifier)
+                  .showGroupExploreWithRecruitingFilter(),
+              child: const Text('전체 보기'),
             ),
-          ],
+          ),
         ),
-        const SizedBox(height: AppSpacing.sm),
         SizedBox(
           height: 120,
           child: _buildRecruitingGroupsList(recruitingGroupsState),
@@ -267,8 +263,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('최근 활동', style: AppTheme.headlineSmallTheme(context)),
-        const SizedBox(height: AppSpacing.sm),
+        const SectionHeader(title: '최근 활동'),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.sm),

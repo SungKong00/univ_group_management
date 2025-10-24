@@ -344,64 +344,77 @@ return StateView<List<User>>(
 );
 ```
 
-#### 3.2 ❌ `SectionHeader` 컴포넌트 (미구현)
+#### 3.2 ✅ `SectionHeader` 컴포넌트 (구현 완료)
+**파일**: `/frontend/lib/presentation/widgets/common/section_header.dart`
 **목적:** 섹션 제목과 설명을 일관되게 표시
+**구현일**: 2025-10-24
+
+**구현 상태**:
+- 구현 완료 ✅
+- 사용 위치: 1개 파일 (home_page.dart - 3곳)
+- 코드 감소: 9줄 감소
+- 특징: title + subtitle + trailing 지원, 하단 간격 자동 포함
 
 **사용 예시:**
 ```dart
-// 현재 (반복 코드)
-Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Text('빠른 실행', style: AppTheme.headlineSmall),
-    const SizedBox(height: AppSpacing.sm),
-  ],
+// 기본 사용
+SectionHeader(title: '빠른 실행')
+
+// trailing 버튼 추가
+SectionHeader(
+  title: '모집 중인 그룹',
+  trailing: TextButton(
+    onPressed: () {},
+    child: Text('전체 보기'),
+  ),
 )
 
-// 개선 후
+// 부제목 추가
 SectionHeader(
-  title: '빠른 실행',
-  subtitle: '자주 사용하는 기능을 바로 실행하세요', // 선택사항
-  trailing: TextButton('전체 보기', onPressed: ...),  // 선택사항
+  title: '내 그룹',
+  subtitle: '현재 참여 중인 그룹 목록입니다',
 )
 ```
 
 **장점:**
-- 10군데 이상의 중복 코드 제거
+- 10군데 이상의 중복 코드 제거 가능
 - 일관된 간격과 스타일
 - 옵션으로 오른쪽 버튼 추가 가능
 
-#### 3.3 ❌ `SectionCard` 컴포넌트 (미구현)
+#### 3.3 ✅ `SectionCard` 컴포넌트 (구현 완료)
+**파일**: `/frontend/lib/presentation/widgets/common/section_card.dart`
 **목적:** 흰색 카드 컨테이너를 재사용
+**구현일**: 2025-10-24
+
+**구현 상태**:
+- 구현 완료 ✅
+- 사용 위치: 2개 파일 (member_filter_panel, recruitment_management_page)
+- 코드 감소: 약 16줄 감소
+- 특징: Container + BoxDecoration 패턴 자동화, 커스터마이징 가능
 
 **사용 예시:**
 ```dart
-// 현재 (반복 코드)
-Container(
-  padding: EdgeInsets.all(AppSpacing.md),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(AppRadius.card),
-    boxShadow: [...],
-  ),
-  child: MyContent(),
-)
-
-// 개선 후
+// 기본 사용
 SectionCard(
   child: MyContent(),
 )
 
-// 옵션 추가 가능
+// 커스텀 패딩
 SectionCard(
-  padding: AppSpacing.lg,  // 커스텀 패딩
-  showShadow: false,       // 그림자 제거
-  child: MyContent(),
+  padding: EdgeInsets.all(AppSpacing.lg),
+  child: MyWidget(),
+)
+
+// 그림자 없음
+SectionCard(
+  showShadow: false,
+  child: MyWidget(),
 )
 ```
 
 **장점:**
-- 6군데 이상의 중복 제거
+- 60개 파일에서 Container + BoxDecoration 패턴 발견
+- 점진적 적용으로 100-150줄 추가 감소 가능
 - 일관된 카드 스타일
 - 쉽게 수정 가능
 

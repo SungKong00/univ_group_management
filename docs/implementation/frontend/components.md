@@ -115,6 +115,96 @@ final permissions = await channelService.getMyPermissions(channelId);
 if (permissions.contains('POST_WRITE')) PostComposer()
 ```
 
+## SectionHeader - 섹션 헤더 컴포넌트
+
+**파일**: presentation/widgets/common/section_header.dart
+**구현일**: 2025-10-24
+
+**목적**: 페이지 내 섹션 제목을 일관되게 표시하는 재사용 가능한 컴포넌트
+
+**주요 기능**:
+- 제목 + 부제목 + trailing 위젯 지원
+- 기본 스타일: headlineSmall (18px, w600)
+- 하단 간격 자동 포함 (AppSpacing.sm = 16px)
+- 커스터마이징 가능한 타이포그래피
+
+**사용 예시**:
+
+```dart
+// 기본 사용
+SectionHeader(title: '빠른 실행')
+
+// trailing 버튼 추가
+SectionHeader(
+  title: '모집 중인 그룹',
+  trailing: TextButton(
+    onPressed: () {},
+    child: Text('전체 보기'),
+  ),
+)
+
+// 부제목 추가
+SectionHeader(
+  title: '내 그룹',
+  subtitle: '현재 참여 중인 그룹 목록입니다',
+)
+```
+
+**적용 현황**: 1개 파일 (9줄 감소)
+- home_page.dart (3곳: 빠른 실행, 모집 중인 그룹, 최근 활동)
+
+**코드 영향**:
+- 변경 전: Text + SizedBox (2줄)
+- 변경 후: SectionHeader (1줄)
+- 줄 감소: 페이지당 3-6줄
+
+## SectionCard - 섹션 카드 컴포넌트
+
+**파일**: presentation/widgets/common/section_card.dart
+**구현일**: 2025-10-24
+
+**목적**: 일관된 스타일의 카드 컨테이너를 제공하는 재사용 가능한 컴포넌트
+
+**주요 기능**:
+- Container + BoxDecoration 패턴 자동화
+- 기본 스타일: 패딩 24px, 모서리 20px, 그림자 elevation-1
+- 커스터마이징 가능한 패딩, 배경색, 그림자
+- 일관된 디자인 토큰 적용
+
+**사용 예시**:
+
+```dart
+// 기본 사용
+SectionCard(
+  child: Text('카드 내용'),
+)
+
+// 커스텀 패딩
+SectionCard(
+  padding: EdgeInsets.all(AppSpacing.lg),
+  child: MyWidget(),
+)
+
+// 그림자 없음
+SectionCard(
+  showShadow: false,
+  child: MyWidget(),
+)
+```
+
+**적용 현황**: 2개 파일 (약 16줄 감소)
+- member_filter_panel.dart (Container + BoxDecoration → SectionCard)
+- recruitment_management_page.dart (_QuestionCard 위젯)
+
+**코드 영향**:
+- 변경 전: Container + padding + decoration (10줄)
+- 변경 후: SectionCard (1줄)
+- 줄 감소: 파일당 8-10줄
+
+**확장 가능성**:
+- 60개 파일에서 Container + BoxDecoration 패턴 발견
+- 점진적 적용으로 100-150줄 추가 감소 가능
+
 ## CompactTabBar - 높이 최적화 탭 바
 
 **파일**: presentation/widgets/common/compact_tab_bar.dart

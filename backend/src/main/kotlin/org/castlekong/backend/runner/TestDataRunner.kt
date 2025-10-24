@@ -15,7 +15,6 @@ import org.castlekong.backend.dto.SignupProfileRequest
 import org.castlekong.backend.dto.UpdateUsageStatusRequest
 import org.castlekong.backend.entity.GroupPermission
 import org.castlekong.backend.entity.GroupType
-import org.castlekong.backend.entity.PlaceOperatingHours
 import org.castlekong.backend.entity.UsageStatus
 import org.castlekong.backend.entity.User
 import org.castlekong.backend.repository.PlaceOperatingHoursRepository
@@ -276,7 +275,6 @@ class TestDataRunner(
                 groupManagementService.createGroup(
                     CreateGroupRequest(
                         name = "코딩 동아리 'DevCrew'",
-                        // 한신대학교
                         parentId = 1,
                         university = "한신대학교",
                         college = null,
@@ -295,7 +293,6 @@ class TestDataRunner(
                 groupManagementService.createGroup(
                     CreateGroupRequest(
                         name = "학생회",
-                        // 한신대학교
                         parentId = 1,
                         university = "한신대학교",
                         college = null,
@@ -315,7 +312,8 @@ class TestDataRunner(
                 groupManagementService.createGroup(
                     CreateGroupRequest(
                         name = "AI/SW학과 코딩 스터디",
-                        parentId = 13, // AI/SW학과 그룹 ID (수정: 2 → 13)
+                        // AI/SW학과 그룹 ID (수정: 2 → 13)
+                        parentId = 13,
                         university = "한신대학교",
                         college = "AI/SW계열",
                         department = "AI/SW학과",
@@ -482,7 +480,8 @@ class TestDataRunner(
                 owner!!,
                 labPlace.id,
                 RequestUsageRequest(
-                    groupId = 1, // 한신대학교 그룹 ID
+                    // 한신대학교 그룹 ID
+                    groupId = 1,
                     reason = "대학 전체 행사 및 회의를 위해 사용하고 싶습니다.",
                 ),
             )
@@ -492,7 +491,8 @@ class TestDataRunner(
             placeUsageGroupService.updateUsageStatus(
                 users.user2,
                 labPlace.id,
-                1, // 한신대학교 그룹 ID
+                // 한신대학교 그룹 ID
+                1,
                 UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
             )
         }
@@ -504,7 +504,8 @@ class TestDataRunner(
                 owner!!,
                 seminarRoom.id,
                 RequestUsageRequest(
-                    groupId = 1, // 한신대학교 그룹 ID
+                    // 한신대학교 그룹 ID
+                    groupId = 1,
                     reason = "대학 전체 행사 및 대규모 세미나를 위해 사용하고 싶습니다.",
                 ),
             )
@@ -514,7 +515,8 @@ class TestDataRunner(
             placeUsageGroupService.updateUsageStatus(
                 users.user2,
                 seminarRoom.id,
-                1, // 한신대학교 그룹 ID
+                // 한신대학교 그룹 ID
+                1,
                 UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
             )
         }
@@ -547,7 +549,8 @@ class TestDataRunner(
                 owner!!,
                 seminarRoom.id,
                 RequestUsageRequest(
-                    groupId = 2, // AI/SW계열 그룹 ID
+                    // AI/SW계열 그룹 ID
+                    groupId = 2,
                     reason = "계열 단위 행사를 위해 사용하고 싶습니다.",
                 ),
             )
@@ -557,7 +560,8 @@ class TestDataRunner(
             placeUsageGroupService.updateUsageStatus(
                 users.user2,
                 seminarRoom.id,
-                2, // AI/SW계열 그룹 ID
+                // AI/SW계열 그룹 ID
+                2,
                 UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
             )
         }
@@ -569,7 +573,8 @@ class TestDataRunner(
                 owner!!,
                 seminarRoom.id,
                 RequestUsageRequest(
-                    groupId = 11, // AI시스템반도체학과 그룹 ID
+                    // AI시스템반도체학과 그룹 ID
+                    groupId = 11,
                     reason = "전공 스터디 및 프로젝트를 위해 사용하고 싶습니다.",
                 ),
             )
@@ -579,7 +584,8 @@ class TestDataRunner(
             placeUsageGroupService.updateUsageStatus(
                 users.user2,
                 seminarRoom.id,
-                11, // AI시스템반도체학과 그룹 ID
+                // AI시스템반도체학과 그룹 ID
+                11,
                 UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
             )
         }
@@ -591,7 +597,8 @@ class TestDataRunner(
                 owner!!,
                 seminarRoom.id,
                 RequestUsageRequest(
-                    groupId = 13, // AI/SW학과 그룹 ID
+                    // AI/SW학과 그룹 ID
+                    groupId = 13,
                     reason = "학과 특강 및 세미나를 위해 사용하고 싶습니다.",
                 ),
             )
@@ -601,7 +608,8 @@ class TestDataRunner(
             placeUsageGroupService.updateUsageStatus(
                 users.user2,
                 seminarRoom.id,
-                13, // AI/SW학과 그룹 ID
+                // AI/SW학과 그룹 ID
+                13,
                 UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
             )
         }
@@ -609,7 +617,8 @@ class TestDataRunner(
         // 7. AI/SW학과 코딩 스터디 그룹 - 세미나실 사용 권한
         safeExecute("AI/SW Dept Coding Study group requesting seminar room usage") {
             placeUsageGroupService.requestUsage(
-                users.user1, // TestUser1 is the owner of AI/SW학과 코딩 스터디
+                // TestUser1 is the owner of AI/SW학과 코딩 스터디
+                users.user1,
                 seminarRoom.id,
                 RequestUsageRequest(
                     groupId = groups.aiSwCodingStudyId,
@@ -620,7 +629,8 @@ class TestDataRunner(
 
         safeExecute("Student Council approving AI/SW Dept Coding Study group usage") {
             placeUsageGroupService.updateUsageStatus(
-                users.user2, // TestUser2 is the owner of Student Council (managing group)
+                // TestUser2 is the owner of Student Council (managing group)
+                users.user2,
                 seminarRoom.id,
                 groups.aiSwCodingStudyId,
                 UpdateUsageStatusRequest(status = UsageStatus.APPROVED),
@@ -1245,7 +1255,8 @@ class TestDataRunner(
             val nextMonday = LocalDate.now().plusWeeks(1).with(DayOfWeek.MONDAY)
             groupEventService.createEvent(
                 owner!!,
-                2, // AI/SW계열 그룹 ID
+                // AI/SW계열 그룹 ID
+                2,
                 CreateGroupEventRequest(
                     title = "AI/SW계열 개강 총회",
                     description = "2025년 2학기 개강 총회입니다. 모든 계열 학생들은 참석해주세요.",
@@ -1265,7 +1276,8 @@ class TestDataRunner(
             val nextTuesday = LocalDate.now().plusWeeks(1).with(DayOfWeek.TUESDAY)
             groupEventService.createEvent(
                 owner!!,
-                13, // AI/SW학과 그룹 ID
+                // AI/SW학과 그룹 ID
+                13,
                 CreateGroupEventRequest(
                     title = "자료구조 특강",
                     description = "외부 전문가를 초빙하여 진행하는 자료구조 특강입니다.",
@@ -1285,7 +1297,8 @@ class TestDataRunner(
             val nextWednesday = LocalDate.now().plusWeeks(1).with(DayOfWeek.WEDNESDAY)
             groupEventService.createEvent(
                 owner!!,
-                11, // AI시스템반도체학과 그룹 ID
+                // AI시스템반도체학과 그룹 ID
+                11,
                 CreateGroupEventRequest(
                     title = "졸업 프로젝트 회의",
                     description = "캡스톤 디자인 팀 프로젝트 회의",
@@ -1351,7 +1364,8 @@ class TestDataRunner(
             val owner = userService.findByEmail("castlekong1019@gmail.com")
             groupEventService.createEvent(
                 owner!!,
-                13, // AI/SW학과 그룹 ID
+                // AI/SW학과 그룹 ID
+                13,
                 CreateGroupEventRequest(
                     title = "알고리즘 경진대회 대비 특강",
                     placeId = places.seminarRoomId,
@@ -1365,7 +1379,8 @@ class TestDataRunner(
             )
             groupEventService.createEvent(
                 owner!!,
-                13, // AI/SW학과 그룹 ID
+                // AI/SW학과 그룹 ID
+                13,
                 CreateGroupEventRequest(
                     title = "코딩 테스트 스터디",
                     placeId = places.seminarRoomId,
@@ -1379,7 +1394,8 @@ class TestDataRunner(
             )
             groupEventService.createEvent(
                 owner!!,
-                13, // AI/SW학과 그룹 ID
+                // AI/SW학과 그룹 ID
+                13,
                 CreateGroupEventRequest(
                     title = "졸업생 멘토링",
                     placeId = places.seminarRoomId,
@@ -1398,7 +1414,8 @@ class TestDataRunner(
             val owner = userService.findByEmail("castlekong1019@gmail.com")
             groupEventService.createEvent(
                 owner!!,
-                11, // AI시스템반도체학과 그룹 ID
+                // AI시스템반도체학과 그룹 ID
+                11,
                 CreateGroupEventRequest(
                     title = "임베디드 시스템 프로젝트 회의",
                     placeId = places.seminarRoomId,
@@ -1412,7 +1429,8 @@ class TestDataRunner(
             )
             groupEventService.createEvent(
                 owner!!,
-                11, // AI시스템반도체학과 그룹 ID
+                // AI시스템반도체학과 그룹 ID
+                11,
                 CreateGroupEventRequest(
                     title = "반도체 설계 공모전 준비",
                     placeId = places.seminarRoomId,
@@ -1426,7 +1444,8 @@ class TestDataRunner(
             )
             groupEventService.createEvent(
                 owner!!,
-                11, // AI시스템반도체학과 그룹 ID
+                // AI시스템반도체학과 그룹 ID
+                11,
                 CreateGroupEventRequest(
                     title = "캡스톤 디자인 최종 발표 준비",
                     placeId = places.seminarRoomId,
@@ -1620,7 +1639,8 @@ class TestDataRunner(
                     title = "학생회실 임시 휴무",
                     description = "내부 사정으로 인한 임시 휴무",
                     placeId = places.labPlaceId,
-                    startDate = LocalDate.of(2025, 11, 27),  // 충돌 방지: 11/26(수) → 11/27(목)
+                    // 충돌 방지: 11/26(수) → 11/27(목)
+                    startDate = LocalDate.of(2025, 11, 27),
                     endDate = LocalDate.of(2025, 11, 27),
                     startTime = LocalTime.of(8, 0),
                     endTime = LocalTime.of(21, 0),
@@ -1636,6 +1656,7 @@ class TestDataRunner(
             // 3.1. AI/SW계열 명사 초청 특강: "AI의 미래"
             groupEventService.createEvent(
                 owner,
+                // AI/SW계열 그룹 ID
                 2,
                 CreateGroupEventRequest(
                     title = "AI/SW계열 명사 초청 특강: 'AI의 미래'",
@@ -1652,6 +1673,7 @@ class TestDataRunner(
             // 3.2. 2025년 2학기 계열 종강 총회
             groupEventService.createEvent(
                 owner,
+                // AI/SW계열 그룹 ID
                 2,
                 CreateGroupEventRequest(
                     title = "2025년 2학기 계열 종강 총회",
@@ -1668,6 +1690,7 @@ class TestDataRunner(
             // 3.3. 신입생-재학생 멘토링 프로그램
             groupEventService.createEvent(
                 owner,
+                // AI/SW계열 그룹 ID
                 2,
                 CreateGroupEventRequest(
                     title = "신입생-재학생 멘토링 프로그램",
@@ -1684,6 +1707,7 @@ class TestDataRunner(
             // 3.4. 계열 학생회장 선거 후보자 토론회
             groupEventService.createEvent(
                 owner,
+                // AI/SW계열 그룹 ID
                 2,
                 CreateGroupEventRequest(
                     title = "계열 학생회장 선거 후보자 토론회",
@@ -1700,6 +1724,7 @@ class TestDataRunner(
             // 3.5. 계열 연합 코딩 대회 (주말 예약 테스트)
             groupEventService.createEvent(
                 owner,
+                // AI/SW계열 그룹 ID
                 2,
                 CreateGroupEventRequest(
                     title = "계열 연합 코딩 대회",
@@ -1721,6 +1746,7 @@ class TestDataRunner(
             // 4.1. 알고리즘 스터디 그룹 발표회
             groupEventService.createEvent(
                 owner,
+                // AI/SW학과 그룹 ID
                 13,
                 CreateGroupEventRequest(
                     title = "알고리즘 스터디 그룹 발표회",
@@ -1737,6 +1763,7 @@ class TestDataRunner(
             // 4.2. 캡스톤 디자인 프로젝트 중간 점검
             groupEventService.createEvent(
                 owner,
+                // AI/SW학과 그룹 ID
                 13,
                 CreateGroupEventRequest(
                     title = "캡스톤 디자인 프로젝트 중간 점검",
@@ -1753,6 +1780,7 @@ class TestDataRunner(
             // 4.3. IT 기업 채용 설명회 (네이버)
             groupEventService.createEvent(
                 owner,
+                // AI/SW학과 그룹 ID
                 13,
                 CreateGroupEventRequest(
                     title = "IT 기업 채용 설명회 (네이버)",
@@ -1769,6 +1797,7 @@ class TestDataRunner(
             // 4.4. 교수님과의 대화 (진로 상담)
             groupEventService.createEvent(
                 owner,
+                // AI/SW학과 그룹 ID
                 13,
                 CreateGroupEventRequest(
                     title = "교수님과의 대화 (진로 상담)",
@@ -1785,6 +1814,7 @@ class TestDataRunner(
             // 4.5. AI/SW학과 종강 파티
             groupEventService.createEvent(
                 owner,
+                // AI/SW학과 그룹 ID
                 13,
                 CreateGroupEventRequest(
                     title = "AI/SW학과 종강 파티",
@@ -1806,6 +1836,7 @@ class TestDataRunner(
             // 5.1. 임베디드 시스템 설계 프로젝트 최종 발표
             groupEventService.createEvent(
                 owner,
+                // AI시스템반도체학과 그룹 ID
                 11,
                 CreateGroupEventRequest(
                     title = "임베디드 시스템 설계 프로젝트 최종 발표",
@@ -1822,6 +1853,7 @@ class TestDataRunner(
             // 5.2. 반도체 공정 실습 사전 교육
             groupEventService.createEvent(
                 owner,
+                // AI시스템반도체학과 그룹 ID
                 11,
                 CreateGroupEventRequest(
                     title = "반도체 공정 실습 사전 교육",
@@ -1838,6 +1870,7 @@ class TestDataRunner(
             // 5.3. 졸업생 선배와의 만남 (SK하이닉스)
             groupEventService.createEvent(
                 owner,
+                // AI시스템반도체학과 그룹 ID
                 11,
                 CreateGroupEventRequest(
                     title = "졸업생 선배와의 만남 (SK하이닉스)",
@@ -1854,6 +1887,7 @@ class TestDataRunner(
             // 5.4. 시스템반도체 설계 공모전 팀 빌딩
             groupEventService.createEvent(
                 owner,
+                // AI시스템반도체학과 그룹 ID
                 11,
                 CreateGroupEventRequest(
                     title = "시스템반도체 설계 공모전 팀 빌딩",
@@ -1870,6 +1904,7 @@ class TestDataRunner(
             // 5.5. 학과 소모임 '칩메이커' 정기 회의
             groupEventService.createEvent(
                 owner,
+                // AI시스템반도체학과 그룹 ID
                 11,
                 CreateGroupEventRequest(
                     title = "학과 소모임 '칩메이커' 정기 회의",
@@ -1893,7 +1928,10 @@ class TestDataRunner(
      * @param daysToAdd 추가할 일수 (기본값: 0 = 오늘부터 시작)
      * @return 다음 평일 날짜
      */
-    private fun getNextWeekday(from: LocalDate = LocalDate.now(), daysToAdd: Int = 0): LocalDate {
+    private fun getNextWeekday(
+        from: LocalDate = LocalDate.now(),
+        daysToAdd: Int = 0,
+    ): LocalDate {
         var date = from.plusDays(daysToAdd.toLong())
         while (date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY) {
             date = date.plusDays(1)
