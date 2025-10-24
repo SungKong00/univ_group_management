@@ -4,7 +4,7 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-10-24 (멤버 필터 문서 분할 및 100줄 준수 완료)
+**마지막 업데이트**: 2025-10-25 (백엔드 최적화 문서화 완료)
 **총 문서 수**: 98개
 **동기화 완료**: 98개 (100%)
 **업데이트 필요**: 0개 (0%)
@@ -26,7 +26,7 @@
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
 | `README.md` | ✅ 최신 | 2025-10-24 | 백엔드 가이드 인덱스 |
-| `domain-model.md` | ✅ 최신 | 2025-10-24 | 핵심 엔티티와 관계 |
+| `domain-model.md` | ✅ 최신 | 2025-10-25 | EventParticipant, EventException 추가 |
 | `api-design.md` | ✅ 최신 | 2025-10-24 | REST API 설계 원칙 |
 | `authentication.md` | ✅ 최신 | 2025-10-24 | Google OAuth2 + JWT |
 | `calendar-core-design.md` | ✅ 최신 | 2025-10-24 | 권한, 반복, 예외, 참여자 관리 |
@@ -35,9 +35,9 @@
 ### `/docs/implementation/backend/` - 백엔드 구현 가이드 (9개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
-| `README.md` | ✅ 최신 | 2025-10-24 | 백엔드 구현 가이드 인덱스 |
+| `README.md` | ✅ 최신 | 2025-10-25 | 최근 개선사항 섹션 추가 |
 | `development-setup.md` | ✅ 최신 | 2025-10-24 | H2 DB, 동시성, 데이터 초기화 |
-| `architecture.md` | ✅ 최신 | 2025-10-24 | 3레이어, 표준 응답, 캐시 무효화 |
+| `architecture.md` | ✅ 최신 | 2025-10-25 | 서비스 분리, JPA 개선, N+1 해결 |
 | `authentication.md` | ✅ 최신 | 2025-10-24 | JWT 필터, 권한 체크 |
 | `permission-checking.md` | ✅ 최신 | 2025-10-24 | 권한 로직, 매트릭스 |
 | `transaction-patterns.md` | ✅ 최신 | 2025-10-24 | 기본 패턴, 전파 레벨 |
@@ -66,7 +66,7 @@
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
 | `api-reference.md` | ✅ 최신 | 2025-10-24 | REST API 명세 (참조 문서, 100줄 예외) |
-| `database-reference.md` | ✅ 최신 | 2025-10-24 | 테이블 스키마 (참조 문서, 100줄 예외) |
+| `database-reference.md` | ✅ 최신 | 2025-10-25 | EventParticipant, EventException JPA 엔티티 업데이트 |
 | `row-column-layout-checklist.md` | ✅ 최신 | 2025-10-24 | Flutter 레이아웃 에러 방지 |
 | `workspace-page-implementation-guide.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 페이지 구현 가이드 |
 | `workspace-page-checklist.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 체크리스트 |
@@ -162,9 +162,9 @@
 ### `/docs/context-tracking/` - 컨텍스트 추적 (7개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
-| `context-update-log.md` | ✅ 최신 | 2025-10-21 | 컨텍스트 업데이트 로그 |
+| `context-update-log.md` | ✅ 최신 | 2025-10-25 | 2025-10-25 (B) 백엔드 문서화 로그 추가 |
 | `pending-updates.md` | ✅ 최신 | 2025-10-06 | 대기 중인 업데이트 목록 |
-| `sync-status.md` | ✅ 최신 | 2025-10-24 | 현재 파일 (전체 재구축) |
+| `sync-status.md` | ✅ 최신 | 2025-10-25 | 백엔드 문서 상태 업데이트 |
 | `broken-links-report.md` | ✅ 최신 | 2025-10-24 | 깨진 링크 리포트 (0개 달성) |
 | `link-mapping-table.md` | ✅ 최신 | 2025-10-24 | 링크 매핑 테이블 |
 | `documentation-improvement-action-plan.md` | ✅ 최신 | 2025-10-24 | 문서 개선 액션 플랜 |
@@ -174,8 +174,16 @@
 
 ## 🎯 상태별 분류
 
-### ✅ 최신 상태 (93개)
+### ✅ 최신 상태 (98개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
+
+**주요 업데이트 (2025-10-25)**:
+- **백엔드 최적화 문서화**
+  - architecture.md: 서비스 분리, JPA 개선, N+1 해결 추가 (95→100줄)
+  - domain-model.md: EventParticipant, EventException 엔티티 추가 (67→69줄)
+  - database-reference.md: 캘린더 엔티티 JPA 구현 반영
+  - backend/README.md: 최근 개선사항 섹션 추가 (29→52줄)
+  - 반영 커밋: a31c898, 8426f94, e6a98b2, 62b673d, f923d4a
 
 **주요 업데이트 (2025-10-24)**:
 - **백엔드 최적화 패턴 문서화** (신규)

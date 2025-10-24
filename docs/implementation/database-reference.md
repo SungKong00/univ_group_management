@@ -966,52 +966,46 @@ CREATE INDEX idx_participant_user ON event_participants(user_id);
 CREATE INDEX idx_participant_status ON event_participants(user_id, status);
 ```
 
-**JPA 엔티티 (EventParticipant.kt)**:
+**JPA 엔티티 (EventParticipant.kt)** - 2025-10 구현 완료:
 
 ```kotlin
 @Entity
 @Table(
     name = "event_participants",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["event_id", "user_id"])]
+    uniqueConstraints = [UniqueConstraint(columnNames = ["group_event_id", "user_id"])]
 )
 class EventParticipant(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    val id: Long = 0,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false)
-    var event: GroupEvent,
+    @JoinColumn(name = "group_event_id", nullable = false)
+    val groupEvent: GroupEvent,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    var user: User,
+    val user: User,
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    var status: ParticipantStatus = ParticipantStatus.PENDING,
+    @Column(nullable = false, length = 20)
+    val status: ParticipantStatus = ParticipantStatus.PENDING,
 
-    @Column(name = "decline_reason", columnDefinition = "TEXT")
-    var declineReason: String? = null,
-
-    @Column(name = "notification_sent", nullable = false)
-    var notificationSent: Boolean = false,
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now(),
+    @Column(name = "created_at", nullable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now(),
-) {
-    override fun equals(other: Any?) = other is EventParticipant && id != 0L && id == other.id
-    override fun hashCode(): Int = id.hashCode()
-}
+    val updatedAt: LocalDateTime = LocalDateTime.now(),
+)
 
 enum class ParticipantStatus {
-    PENDING,   // 대기 (초대됨)
-    ACCEPTED,  // 참여
-    DECLINED   // 불참
+    PENDING,    // 초대됨 (아직 응답 안 함)
+    ACCEPTED,   // 수락 (참여 확정)
+    REJECTED,   // 거절 (불참)
+    TENTATIVE   // 미정 (참석 여부 불확실)
 }
 ```
+
+**구현 위치**: `backend/src/main/kotlin/org/castlekong/backend/entity/EventParticipant.kt`
 
 ---
 
@@ -1044,54 +1038,50 @@ CREATE INDEX idx_exception_parent ON event_exceptions(parent_event_id);
 CREATE INDEX idx_exception_date ON event_exceptions(parent_event_id, exception_date);
 ```
 
-**JPA 엔티티 (EventException.kt)**:
+**JPA 엔티티 (EventException.kt)** - 2025-10 구현 완료:
 
 ```kotlin
 @Entity
 @Table(
     name = "event_exceptions",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["parent_event_id", "exception_date"])]
+    uniqueConstraints = [UniqueConstraint(columnNames = ["group_event_id", "exception_date"])]
 )
 class EventException(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    val id: Long = 0,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_event_id", nullable = false)
-    var parentEvent: GroupEvent,
+    @JoinColumn(name = "group_event_id", nullable = false)
+    val groupEvent: GroupEvent,
 
     @Column(name = "exception_date", nullable = false)
-    var exceptionDate: LocalDate,
+    val exceptionDate: LocalDate,
 
-    // 오버라이드할 필드
-    @Column(name = "new_title", length = 200)
-    var newTitle: String? = null,
-
-    @Column(name = "new_description", columnDefinition = "TEXT")
-    var newDescription: String? = null,
-
-    @Column(name = "new_location", length = 100)
-    var newLocation: String? = null,
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    val type: ExceptionType = ExceptionType.CANCELLED,
 
     @Column(name = "new_start_time")
-    var newStartTime: LocalTime? = null,
+    val newStartTime: LocalDateTime? = null,
 
     @Column(name = "new_end_time")
-    var newEndTime: LocalTime? = null,
+    val newEndTime: LocalDateTime? = null,
 
-    @Column(name = "is_cancelled", nullable = false)
-    var isCancelled: Boolean = false,
+    @Column(name = "modified_description", columnDefinition = "TEXT")
+    val modifiedDescription: String? = null,
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now(),
+    @Column(columnDefinition = "TEXT")
+    val reason: String? = null,
+)
 
-    @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now(),
-) {
-    override fun equals(other: Any?) = other is EventException && id != 0L && id == other.id
-    override fun hashCode(): Int = id.hashCode()
+enum class ExceptionType {
+    CANCELLED,    // 해당 날짜 일정 취소
+    RESCHEDULED,  // 일정 시간 변경 (newStartTime, newEndTime 필수)
+    MODIFIED      // 일정 내용 변경 (modifiedDescription 필수)
 }
 ```
+
+**구현 위치**: `backend/src/main/kotlin/org/castlekong/backend/entity/EventException.kt`
 
 ---
 

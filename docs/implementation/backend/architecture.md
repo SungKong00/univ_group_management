@@ -22,8 +22,15 @@ Repository Layer (데이터 접근)
 ### Service Layer
 **역할**: 비즈니스 로직 실행, 트랜잭션 관리
 **위치**: `backend/src/main/kotlin/.../service/`
-**패턴**: `@Service`, `@Transactional(readOnly = true/false)`
+**패턴**: `@Service`, `@Transactional(readOnly = true/false)`, 단일 책임 원칙(SRP)
 **예시**: `GroupService.createGroup()` - 검증 → 엔티티 저장 → 연관 데이터 생성
+
+**서비스 분리 패턴** (2025-10 개선):
+- `GroupService`: 그룹 CRUD 및 검색
+- `GroupHierarchyService`: 그룹 계층 구조 조회
+- `GroupDeletionService`: 그룹 삭제 및 관련 데이터 정리
+- `GroupInitializationService`: 그룹 생성 오케스트레이션 (역할/채널 초기화)
+- 각 서비스는 명확한 단일 책임, 트랜잭션 경계 분리
 
 ### Repository Layer
 **역할**: 데이터베이스 CRUD 작업
@@ -62,7 +69,7 @@ Repository Layer (데이터 접근)
 
 ## JPA 엔티티 패턴
 
-### data class 지양
+### data class 지양 (2025-10 개선)
 **원칙**: JPA 엔티티는 일반 class 사용, ID 기반 equals/hashCode 구현
 
 **이유**:
@@ -70,23 +77,21 @@ Repository Layer (데이터 접근)
 - copy() 메서드는 새 객체 생성 → JPA 영속성 컨텍스트 분리
 - Set/Map 컬렉션 사용 시 hashCode 변경으로 오작동
 
-**구현 예시**: `Group.kt` (data class → class로 변경 완료)
+**적용 완료 엔티티**:
+- `Group.kt`, `User.kt`, `GroupMember.kt`, `Channel.kt`, `ChannelRoleBinding.kt`
+- ID 기반 equals/hashCode, 필드 직접 수정 패턴 사용
+- JPA 영속성 안정성 및 Lazy Loading 호환성 개선
 
 ## 성능 최적화 패턴
 
-### N+1 쿼리 해결
-**문제**: 페이징 쿼리에 JOIN FETCH 사용 시 MultipleBagFetchException
+### N+1 쿼리 해결 (2025-10 개선)
+**해결**: 페이징 + JOIN FETCH 분리 (1. ID 조회 → 2. IN 절 상세 조회)
+**위치**: `GroupRepositories.kt` - `findByGroupIdWithDetails()`
+**효과**: 멤버 조회 301→2 쿼리 (Repository 최적화)
 
-**해결**: 페이징 + JOIN FETCH 분리
-1. ID만 먼저 조회 (Pageable)
-2. IN 절로 상세 조회 (JOIN FETCH)
-
-**구현 위치**: `GroupRepositories.kt` - `findByGroupIdWithDetails()`
-
-### 계층 쿼리 최적화
-**구현**: WITH RECURSIVE 사용 (PostgreSQL CTE)
+### 계층 쿼리
+**구현**: WITH RECURSIVE (PostgreSQL CTE)
 **위치**: `GroupRepository.findAllDescendantIds()`
-**효과**: N번 쿼리 → 1번 쿼리로 계층 조회
 
 ## 관련 문서
 - [권한 검증](./permission-checking.md) - 권한 검증 로직

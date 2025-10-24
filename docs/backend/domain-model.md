@@ -17,6 +17,10 @@ User [1:N] GroupMember [N:1] Group [1:1] Workspace [1:N] Channel [1:N] Post [1:N
                         GroupRole [1:N] GroupMember
                              ↓
                     GroupPermission (Set)
+
+Calendar 확장 (2025-10):
+  GroupEvent [1:N] EventParticipant [N:1] User
+  GroupEvent [1:N] EventException (반복 일정 예외)
 ```
 
 ## 주요 설계 원칙
@@ -30,17 +34,17 @@ User [1:N] GroupMember [N:1] Group [1:1] Workspace [1:N] Channel [1:N] Post [1:N
 
 ## 코드 참조
 
-**Entity 파일:**
-- `backend/src/main/kotlin/org/castlekong/backend/entity/User.kt`
-- `backend/src/main/kotlin/org/castlekong/backend/entity/Group.kt`
-- `backend/src/main/kotlin/org/castlekong/backend/entity/GroupMember.kt`
-- `backend/src/main/kotlin/org/castlekong/backend/entity/GroupRole.kt`
-- `backend/src/main/kotlin/org/castlekong/backend/entity/Channel.kt`
-- `backend/src/main/kotlin/org/castlekong/backend/entity/Post.kt`
+**핵심 Entity:**
+- `User.kt`, `Group.kt`, `GroupMember.kt`, `GroupRole.kt`
+- `Channel.kt`, `Post.kt`, `Comment.kt`
 
-**관계 메서드:**
-- `GroupRole` 의 `permissions` (@ElementCollection)
-- `ChannelRoleBinding` 의 권한 매핑
+**Calendar Entity** (2025-10 신규):
+- `EventParticipant.kt` - 그룹 일정 참여자 관리
+  - ParticipantStatus: PENDING, ACCEPTED, REJECTED, TENTATIVE
+  - UniqueConstraint: (group_event_id, user_id)
+- `EventException.kt` - 반복 일정 예외 처리
+  - ExceptionType: CANCELLED, RESCHEDULED, MODIFIED
+  - UniqueConstraint: (group_event_id, exception_date)
 
 ## 특수 엔티티
 
@@ -49,15 +53,13 @@ User [1:N] GroupMember [N:1] Group [1:1] Workspace [1:N] Channel [1:N] Post [1:N
 - `SubGroupRequest` - 하위 그룹 생성 신청
 - `EmailVerification` - 학교 이메일 인증
 
-## JPA 엔티티 설계
+## JPA 엔티티 설계 (2025-10 개선)
 
-**Group 엔티티 특징:**
-- **일반 class** 사용 (data class 아님)
+**data class → 일반 class 전환:**
+- `Group.kt`, `User.kt`, `GroupMember.kt`, `Channel.kt`, `ChannelRoleBinding.kt`
 - ID 기반 equals/hashCode 구현
-- 이유: JPA 영속성 안정성, copy() 메서드 부작용 방지
-- 패턴: 필드 직접 수정 방식 사용
-
-**구현 위치**: `backend/src/main/kotlin/.../entity/Group.kt`
+- 이유: Lazy Loading 프록시 충돌 방지, JPA 영속성 안정성
+- 효과: Set/Map 컬렉션 안정성, copy() 부작용 제거
 
 ## 관련 문서
 

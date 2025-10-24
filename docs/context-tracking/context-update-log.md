@@ -1,4 +1,56 @@
-### 2025-10-25 - SectionCard Phase 1 적용 완료
+### 2025-10-25 (B) - 백엔드 최적화 문서화 완료
+
+**유형**: 문서화
+**우선순위**: High
+**영향 범위**: 백엔드 문서 (4개), 컨텍스트 추적 (2개)
+
+**업데이트된 문서**:
+1. **docs/implementation/backend/architecture.md** (95→100줄)
+   - 서비스 계층 분리 패턴 추가 (GroupService, GroupHierarchyService, GroupDeletionService, GroupInitializationService)
+   - JPA 엔티티 패턴 개선 (data class → class, ID 기반 equals/hashCode)
+   - N+1 쿼리 해결 성과 추가 (멤버 조회 301→2 쿼리)
+
+2. **docs/backend/domain-model.md** (67→69줄)
+   - Calendar 확장 관계도 추가 (EventParticipant, EventException)
+   - Calendar Entity 섹션 신규 추가 (ParticipantStatus, ExceptionType enum)
+   - JPA 엔티티 설계 개선사항 반영
+
+3. **docs/implementation/database-reference.md** (참조 문서, 100줄 예외)
+   - EventParticipant JPA 엔티티 업데이트 (실제 구현 반영)
+   - EventException JPA 엔티티 업데이트 (실제 구현 반영)
+   - 구현 위치 정보 추가
+
+4. **docs/implementation/backend/README.md** (29→52줄)
+   - "최근 개선사항 (2025-10)" 섹션 신규 추가
+   - 서비스 계층 분리, JPA 엔티티 개선, 성능 최적화, 캘린더 엔티티 완성 요약
+
+5. **docs/context-tracking/context-update-log.md** (본 파일)
+   - 2025-10-25 (B) 로그 추가
+
+6. **docs/context-tracking/sync-status.md**
+   - 백엔드 문서 상태 업데이트
+
+**반영된 코드 변경사항**:
+- **커밋 a31c898**: GroupManagementService → 4개 서비스 분리
+- **커밋 8426f94**: User, GroupMember, Channel, ChannelRoleBinding data class 제거
+- **커밋 e6a98b2**: EventParticipant, EventException 엔티티 구현 완료
+- **커밋 62b673d, f923d4a**: Group 엔티티 최적화, N+1 쿼리 해결
+
+**문서 동기화 상태**:
+- ✅ architecture.md: 최신 (100줄 준수)
+- ✅ domain-model.md: 최신 (69줄)
+- ✅ database-reference.md: 최신 (참조 문서)
+- ✅ backend/README.md: 최신 (52줄)
+
+**다음 단계**:
+- 그룹 캘린더 Phase 8: 권한 시스템 통합 (2-3시간)
+- 장소 캘린더 Phase 2: 프론트엔드 기본 구현 (6-8시간)
+
+**메모**: 4개 커밋의 백엔드 개선사항을 문서에 완전히 반영. 모든 가이드 문서가 100줄 이내 원칙 준수.
+
+---
+
+### 2025-10-25 (A) - SectionCard Phase 1 적용 완료
 
 **유형**: 리팩토링 + 최적화
 **우선순위**: Medium
