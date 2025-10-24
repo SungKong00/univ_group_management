@@ -50,37 +50,46 @@ Repository Layer (데이터 접근)
 
 ## 권한 캐시 무효화 패턴
 
-### 이벤트 기반 무효화
-채널 권한 변경 시 Spring `ApplicationEventPublisher`를 통해 이벤트 발행 → `ChannelPermissionCacheManager`가 캐시 무효화 처리.
-
-**무효화 트리거 이벤트**:
-- `ChannelRoleBindingChangedEvent`: 채널-역할 바인딩 변경
-- `GroupRoleChangedEvent`: 그룹 역할 변경
-- `GroupMemberChangedEvent`: 멤버 역할 변경
-
-**구현 위치**:
-- 이벤트 발행: 각 Service 메서드
-- 이벤트 수신: `ChannelPermissionCacheManager`
-
-**패턴**: 서비스에서 이벤트 발행 → 캐시 매니저에서 `@EventListener`로 수신 → `evictChannelCache()` 호출
+**트리거 이벤트**: ChannelRoleBindingChanged, GroupRoleChanged, GroupMemberChanged
+**구현**: Spring `ApplicationEventPublisher` → `ChannelPermissionCacheManager` (`@EventListener`)
+**패턴**: 서비스 이벤트 발행 → 캐시 매니저 수신 → `evictChannelCache()` 호출
 
 ## 컨텐츠 삭제 벌크 순서
 
-### Workspace/Channel 삭제 시 순서
-```
-ChannelRoleBinding → Comments → Posts → Channels
-```
+**순서**: ChannelRoleBinding → Comments → Posts → Channels
+**이유**: N+1 방지, 외래 키 제약 순수
+**구현**: `commentRepository.deleteByIdIn(commentIds)` (ID 집합 기반)
+
+## JPA 엔티티 패턴
+
+### data class 지양
+**원칙**: JPA 엔티티는 일반 class 사용, ID 기반 equals/hashCode 구현
 
 **이유**:
-- N+1 문제 방지
-- TransientObjectException 방지
-- 외래 키 제약 순서 준수
+- data class의 equals()는 모든 필드 기반 → Lazy Loading 프록시 충돌
+- copy() 메서드는 새 객체 생성 → JPA 영속성 컨텍스트 분리
+- Set/Map 컬렉션 사용 시 hashCode 변경으로 오작동
 
-**구현**: ID 집합 기반 bulk query 사용
-- `commentRepository.deleteByIdIn(commentIds)`
-- `postRepository.deleteByIdIn(postIds)`
+**구현 예시**: `Group.kt` (data class → class로 변경 완료)
+
+## 성능 최적화 패턴
+
+### N+1 쿼리 해결
+**문제**: 페이징 쿼리에 JOIN FETCH 사용 시 MultipleBagFetchException
+
+**해결**: 페이징 + JOIN FETCH 분리
+1. ID만 먼저 조회 (Pageable)
+2. IN 절로 상세 조회 (JOIN FETCH)
+
+**구현 위치**: `GroupRepositories.kt` - `findByGroupIdWithDetails()`
+
+### 계층 쿼리 최적화
+**구현**: WITH RECURSIVE 사용 (PostgreSQL CTE)
+**위치**: `GroupRepository.findAllDescendantIds()`
+**효과**: N번 쿼리 → 1번 쿼리로 계층 조회
 
 ## 관련 문서
 - [권한 검증](./permission-checking.md) - 권한 검증 로직
 - [트랜잭션 패턴](./transaction-patterns.md) - 트랜잭션 관리
 - [데이터베이스 참조](../database-reference.md) - 스키마 구조
+- [도메인 모델](../../backend/domain-model.md) - JPA 엔티티 설계

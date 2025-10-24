@@ -72,7 +72,26 @@ DEBUG o.s.t.s.TransactionAspectSupport: Creating new transaction with name [User
 DEBUG o.s.t.s.TransactionAspectSupport: Completing transaction for [UserService.createUser]
 ```
 
+## 엔티티 수정 패턴
+
+### copy() vs 필드 직접 수정
+
+**data class 엔티티** (피해야 함):
+```kotlin
+val updatedGroup = group.copy(name = "새 이름")
+groupRepository.save(updatedGroup)  // 새 객체 생성 → 영속성 분리
+```
+
+**일반 class 엔티티** (권장):
+```kotlin
+group.name = "새 이름"  // 필드 직접 수정 → 트랜잭션 종료 시 자동 반영
+// save() 호출 불필요 (Dirty Checking)
+```
+
+**Group 엔티티 사례**: `GroupManagementService.createGroup()` - 중복 저장 제거 완료
+
 ## 관련 문서
 - [Best-Effort 패턴](./best-effort-pattern.md) - REQUIRES_NEW 사용법
 - [예외 처리](./exception-handling.md) - 트랜잭션 롤백 처리
 - [개발 환경 설정](./development-setup.md) - 동시성 처리
+- [아키텍처](./architecture.md) - JPA 엔티티 패턴

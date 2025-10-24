@@ -49,6 +49,16 @@ User [1:N] GroupMember [N:1] Group [1:1] Workspace [1:N] Channel [1:N] Post [1:N
 - `SubGroupRequest` - 하위 그룹 생성 신청
 - `EmailVerification` - 학교 이메일 인증
 
+## JPA 엔티티 설계
+
+**Group 엔티티 특징:**
+- **일반 class** 사용 (data class 아님)
+- ID 기반 equals/hashCode 구현
+- 이유: JPA 영속성 안정성, copy() 메서드 부작용 방지
+- 패턴: 필드 직접 수정 방식 사용
+
+**구현 위치**: `backend/src/main/kotlin/.../entity/Group.kt`
+
 ## 관련 문서
 
 - [권한 시스템](../concepts/permission-system.md) - RBAC 개념
