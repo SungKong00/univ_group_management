@@ -7,6 +7,7 @@ import '../providers/role_management_provider.dart';
 import '../../../widgets/dialogs/create_role_dialog.dart';
 import '../../../widgets/dialogs/edit_role_dialog.dart';
 import '../../../widgets/common/state_view.dart';
+import '../../../widgets/common/section_card.dart';
 
 /// 역할 관리 섹션
 ///
@@ -178,14 +179,14 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SectionCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.neutral300),
-      ),
-      child: Column(
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.neutral300),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -206,15 +207,14 @@ class _RoleCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         if (role.isSystemRole)
-                          Container(
+                          SectionCard(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
                               vertical: 2,
                             ),
-                            decoration: BoxDecoration(
-                              color: AppColors.neutral200,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
+                            backgroundColor: AppColors.neutral200,
+                            borderRadius: 4,
+                            showShadow: false,
                             child: const Text(
                               '시스템',
                               style: TextStyle(
@@ -264,6 +264,7 @@ class _RoleCard extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 }
@@ -275,12 +276,11 @@ class _PermissionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SectionCard(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.brand.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
+      backgroundColor: AppColors.brand.withValues(alpha: 0.1),
+      borderRadius: 6,
+      showShadow: false,
       child: Text(
         _formatPermissionName(permission),
         style: TextStyle(
@@ -310,12 +310,11 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SectionCard(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.neutral100,
-        borderRadius: BorderRadius.circular(6),
-      ),
+      backgroundColor: AppColors.neutral100,
+      borderRadius: 6,
+      showShadow: false,
       child: Text(
         label,
         style: const TextStyle(

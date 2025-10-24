@@ -8,6 +8,7 @@ import '../../../../core/providers/member/member_filter_provider.dart';
 import '../../../widgets/member/member_avatar.dart';
 import '../../../widgets/member/role_dropdown.dart';
 import '../../../widgets/common/state_view.dart';
+import '../../../widgets/common/section_card.dart';
 import '../providers/role_management_provider.dart';
 import '../providers/member_actions_provider.dart';
 import 'member_filter_panel.dart';
@@ -231,25 +232,22 @@ class MemberListSection extends ConsumerWidget {
   ) {
     final filter = ref.watch(memberFilterStateProvider(groupId));
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.neutral300),
-      ),
-      child: Column(
+    return SectionCard(
+      padding: EdgeInsets.zero,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.neutral300),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        child: Column(
         children: [
           // 결과 카운트 (필터 활성화 시에만 표시)
           if (filter.isActive)
-            Container(
+            SectionCard(
               padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: AppColors.neutral100,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(AppRadius.card),
-                  topRight: Radius.circular(AppRadius.card),
-                ),
-              ),
+              backgroundColor: AppColors.neutral100,
+              borderRadius: AppRadius.card,
+              showShadow: false,
               child: Row(
                 children: [
                   Icon(
@@ -269,17 +267,11 @@ class MemberListSection extends ConsumerWidget {
               ),
             ),
           // 테이블 헤더
-          Container(
+          SectionCard(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.neutral100,
-              borderRadius: filter.isActive
-                  ? BorderRadius.zero
-                  : const BorderRadius.only(
-                      topLeft: Radius.circular(AppRadius.card),
-                      topRight: Radius.circular(AppRadius.card),
-                    ),
-            ),
+            backgroundColor: AppColors.neutral100,
+            borderRadius: filter.isActive ? 0 : AppRadius.card,
+            showShadow: false,
             child: Row(
               children: [
                 const Expanded(
@@ -359,6 +351,7 @@ class MemberListSection extends ConsumerWidget {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -374,14 +367,14 @@ class MemberListSection extends ConsumerWidget {
       children: [
         // 결과 카운트 (필터 활성화 시에만 표시)
         if (filter.isActive)
-          Container(
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: AppColors.neutral100,
-              borderRadius: BorderRadius.circular(AppRadius.button),
-            ),
-            child: Row(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: SectionCard(
+              padding: const EdgeInsets.all(12),
+              backgroundColor: AppColors.neutral100,
+              borderRadius: AppRadius.button,
+              showShadow: false,
+              child: Row(
               children: [
                 Icon(
                   Icons.info_outline,
@@ -399,6 +392,7 @@ class MemberListSection extends ConsumerWidget {
               ],
             ),
           ),
+        ),
         // 멤버 카드 목록
         ListView.separated(
           shrinkWrap: true,
@@ -651,14 +645,14 @@ class _MemberCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
+    return SectionCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.neutral300),
-      ),
-      child: Column(
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.neutral300),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 이름과 역할
@@ -736,6 +730,7 @@ class _MemberCard extends ConsumerWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }

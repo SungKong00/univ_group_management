@@ -5,6 +5,7 @@ import '../../../../core/models/member_models.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../widgets/member/member_avatar.dart';
+import '../../../widgets/common/section_card.dart';
 import '../providers/recruitment_application_provider.dart';
 import '../providers/role_management_provider.dart';
 
@@ -141,13 +142,7 @@ class _ApplicationCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final rolesAsync = ref.watch(roleListProvider(groupId));
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.neutral300),
-      ),
+    return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

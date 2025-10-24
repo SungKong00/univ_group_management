@@ -1035,20 +1035,8 @@ class _ArchivedRecruitmentSectionState
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    return SectionCard(
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1143,22 +1131,14 @@ class _ArchivedRecruitmentTile extends ConsumerWidget {
     return InkWell(
       onTap: () => _showDetailModal(context, ref),
       borderRadius: BorderRadius.circular(AppRadius.card),
-      child: Container(
-        width: double.infinity,
+      child: SectionCard(
         padding: const EdgeInsets.all(AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: AppColors.neutral200),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.neutral200),
+            borderRadius: BorderRadius.circular(AppRadius.card),
+          ),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -1213,6 +1193,7 @@ class _ArchivedRecruitmentTile extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -1428,24 +1409,16 @@ class _SectionContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    return SectionCard(
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: isEmphasized
-            ? Border.all(color: AppColors.brand.withValues(alpha: 0.2), width: 2)
+      child: Container(
+        decoration: isEmphasized
+            ? BoxDecoration(
+                border: Border.all(color: AppColors.brand.withValues(alpha: 0.2), width: 2),
+                borderRadius: BorderRadius.circular(AppRadius.card),
+              )
             : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isEmphasized ? 0.08 : 0.04),
-            blurRadius: isEmphasized ? 12 : 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -1478,6 +1451,7 @@ class _SectionContainer extends StatelessWidget {
           SizedBox(height: AppSpacing.md),
           child,
         ],
+      ),
       ),
     );
   }
@@ -1564,16 +1538,14 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    return SectionCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
-      decoration: BoxDecoration(
-        color: AppColors.brandLight,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-      ),
+      backgroundColor: AppColors.brandLight,
+      borderRadius: AppRadius.sm,
+      showShadow: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1608,17 +1580,20 @@ class _QuestionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SectionCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: 8,
       ),
-      decoration: BoxDecoration(
-        color: AppColors.neutral100,
-        borderRadius: BorderRadius.circular(AppRadius.card / 2),
-        border: Border.all(color: AppColors.neutral200),
-      ),
-      child: Row(
+      backgroundColor: AppColors.neutral100,
+      borderRadius: AppRadius.card / 2,
+      showShadow: false,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.neutral200),
+          borderRadius: BorderRadius.circular(AppRadius.card / 2),
+        ),
+        child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -1637,6 +1612,7 @@ class _QuestionChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -1667,15 +1643,14 @@ class _QuestionCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
+              SectionCard(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.xs,
                   vertical: 6,
                 ),
-                decoration: BoxDecoration(
-                  color: AppColors.brandLight,
-                  borderRadius: BorderRadius.circular(AppRadius.button / 2),
-                ),
+                backgroundColor: AppColors.brandLight,
+                borderRadius: AppRadius.button / 2,
+                showShadow: false,
                 child: Text(
                   '질문 ${index + 1}',
                   style: Theme.of(context).textTheme.labelLarge!.copyWith(
@@ -1738,15 +1713,14 @@ class _ChipText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SectionCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: 6,
       ),
-      decoration: BoxDecoration(
-        color: AppColors.brandLight,
-        borderRadius: BorderRadius.circular(AppRadius.card / 2),
-      ),
+      backgroundColor: AppColors.brandLight,
+      borderRadius: AppRadius.card / 2,
+      showShadow: false,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1772,15 +1746,14 @@ class _StatusBadge extends StatelessWidget {
     final label = _statusLabel(status);
     final color = _statusColor(status);
 
-    return Container(
+    return SectionCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xs,
         vertical: 6,
       ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppRadius.card / 2),
-      ),
+      backgroundColor: color.withValues(alpha: 0.12),
+      borderRadius: AppRadius.card / 2,
+      showShadow: false,
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium!.copyWith(

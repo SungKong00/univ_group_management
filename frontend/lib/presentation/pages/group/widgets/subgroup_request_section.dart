@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/models/group_models.dart';
 import '../../../widgets/member/member_avatar.dart';
+import '../../../widgets/common/section_card.dart';
 import '../providers/subgroup_request_provider.dart';
 
 /// 하위 그룹 생성 신청 섹션
@@ -84,13 +85,7 @@ class _SubGroupRequestCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.neutral300),
-      ),
+    return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
