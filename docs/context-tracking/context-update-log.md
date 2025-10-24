@@ -1,3 +1,60 @@
+### 2025-10-24 - 멤버 필터 문서 분할 및 100줄 준수
+
+**유형**: 문서 리팩토링 (100줄 원칙 준수)
+**우선순위**: High
+**영향 범위**: 프론트엔드 문서 (9개), UI/UX 문서 (2개), 기능 문서 (1개)
+
+**리팩토링 내용**:
+- **member-list-implementation.md** (341줄 → 100줄)
+  - Phase 1 기본 필터링만 유지
+  - Phase 2-3 내용은 member-filter-advanced-features.md로 이동
+- **components.md** (270줄 → 280줄)
+  - Chip 컴포넌트 섹션 추가 (AppChip, AppInputChip)
+  - chip-components.md로 상세 링크
+- **member-list-component.md** (192줄 → 62줄)
+  - 개요만 유지
+  - 상세 내용은 member-filter-ui-spec.md로 분할
+- **state-management.md** (105줄 → 111줄)
+  - 관련 문서 링크 추가 (advanced-state-patterns.md)
+
+**신규 생성 문서 (5개)**:
+1. **member-filter-advanced-features.md** (97줄)
+   - Phase 2-3 멤버 필터링 고급 기능
+   - AppChip, 로컬 필터링, 멀티 선택 UI
+2. **chip-components.md** (97줄)
+   - AppChip, AppInputChip 상세 구현
+   - Props, 스타일, 접근성
+3. **member-filter-ui-spec.md** (99줄)
+   - 필터 패널 상세 UI/UX 명세
+   - 상호작용 규칙, 디자인 토큰
+4. **advanced-state-patterns.md** (92줄)
+   - Unified Provider, LocalFilterNotifier 패턴
+   - Generic Filtering, 성능 최적화
+5. **group-explore-hybrid-strategy.md** (95줄)
+   - 하이브리드 페이지네이션 전략
+   - 서버/클라이언트 필터링 최적화
+
+**CLAUDE.md 업데이트**:
+- 프론트엔드 섹션: 9개 → 13개 파일
+- 그룹 탐색 시스템 섹션 추가
+- 멤버 필터 UI 명세 링크 추가
+
+**동기화 완료 문서**:
+- ✅ `docs/implementation/frontend/member-list-implementation.md` (100줄)
+- ✅ `docs/implementation/frontend/member-filter-advanced-features.md` (신규, 97줄)
+- ✅ `docs/implementation/frontend/chip-components.md` (신규, 97줄)
+- ✅ `docs/implementation/frontend/advanced-state-patterns.md` (신규, 92줄)
+- ✅ `docs/implementation/frontend/components.md` (280줄)
+- ✅ `docs/implementation/frontend/state-management.md` (111줄)
+- ✅ `docs/ui-ux/components/member-list-component.md` (62줄)
+- ✅ `docs/ui-ux/components/member-filter-ui-spec.md` (신규, 99줄)
+- ✅ `docs/features/group-explore-hybrid-strategy.md` (신규, 95줄)
+- ✅ `CLAUDE.md`
+
+**메모**: 모든 신규 문서 100줄 이내 원칙 준수. 기존 문서 과도한 길이 문제 해결. 상호 참조 링크 추가로 네비게이션 개선.
+
+---
+
 ### 2025-10-24 - 백엔드 최적화 패턴 문서화
 
 **유형**: 문서 동기화 (백엔드 구현 가이드 강화)

@@ -238,6 +238,27 @@ CompactTabBar(
 - MemberManagementPage (멤버 목록 / 역할 관리 / 가입 신청)
 - 기타 탭 기반 페이지
 
+## Chip 컴포넌트 (AppChip, AppInputChip)
+
+**목적**: 태그, 필터, 라벨 표시를 위한 커스텀 Chip 컴포넌트
+
+### AppChip (읽기 전용)
+- 태그, 배지 표시
+- 삭제 가능 (onDeleted 콜백)
+- 디자인 토큰 통합
+
+### AppInputChip (선택 가능)
+- 필터 선택/해제
+- 선택 상태 스타일링
+- 비활성화 지원
+
+**상세 문서**: [Chip 컴포넌트](chip-components.md)
+
+**적용 현황**:
+- 멤버 필터 패널 (역할, 그룹, 학년/학번)
+- 그룹 탐색 필터 (카테고리, 검색)
+- 적용된 필터 칩 바
+
 ## 네비게이션 컴포넌트
 
 - **BreadcrumbWidget**: 단순 제목 표시

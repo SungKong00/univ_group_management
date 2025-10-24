@@ -36,14 +36,18 @@
   - [예외 처리](docs/implementation/backend/exception-handling.md) - 예외 처리 전략
   - [테스트](docs/implementation/backend/testing.md) - 통합 테스트, 보안 테스트
 
-#### 프론트엔드 (100줄 내, 8개 파일)
+#### 프론트엔드 (100줄 내, 13개 파일)
 - **프론트엔드 가이드 인덱스**: [docs/implementation/frontend/README.md](docs/implementation/frontend/README.md)
 - **아키텍처**: [docs/implementation/frontend/architecture.md](docs/implementation/frontend/architecture.md) - 기술 스택, 디렉토리 구조, 레이어 분리
 - **인증 시스템**: [docs/implementation/frontend/authentication.md](docs/implementation/frontend/authentication.md) - Google OAuth, 자동 로그인, 토큰 관리
 - **상태 관리**: [docs/implementation/frontend/state-management.md](docs/implementation/frontend/state-management.md) - Riverpod, Provider 초기화, 액션 패턴
+- **고급 상태 패턴**: [docs/implementation/frontend/advanced-state-patterns.md](docs/implementation/frontend/advanced-state-patterns.md) - Unified Provider, LocalFilterNotifier
+- **필터 모델 구현**: [docs/implementation/frontend/filter-model-guide.md](docs/implementation/frontend/filter-model-guide.md) - FilterModel, Sentinel Value Pattern, copyWith() 패턴
 - **디자인 시스템**: [docs/implementation/frontend/design-system.md](docs/implementation/frontend/design-system.md) - Toss 기반 토큰, 버튼 스타일, 재사용성
-- **컴포넌트 구현**: [docs/implementation/frontend/components.md](docs/implementation/frontend/components.md) - StateView, 게시글/댓글, CollapsibleContent, 권한 UI
-- **멤버 필터 구현**: [docs/implementation/frontend/member-list-implementation.md](docs/implementation/frontend/member-list-implementation.md) - 멤버 필터링 시스템 구현
+- **컴포넌트 구현**: [docs/implementation/frontend/components.md](docs/implementation/frontend/components.md) - StateView, 게시글/댓글, CollapsibleContent, Chip
+- **Chip 컴포넌트**: [docs/implementation/frontend/chip-components.md](docs/implementation/frontend/chip-components.md) - AppChip, AppInputChip 상세
+- **멤버 필터 Phase 1**: [docs/implementation/frontend/member-list-implementation.md](docs/implementation/frontend/member-list-implementation.md) - 기본 필터링 구현
+- **멤버 필터 Phase 2-3**: [docs/implementation/frontend/member-filter-advanced-features.md](docs/implementation/frontend/member-filter-advanced-features.md) - 고급 필터 기능
 - **반응형 디자인**: [docs/implementation/frontend/responsive-design.md](docs/implementation/frontend/responsive-design.md) - 브레이크포인트, 적응형 레이아웃
 - **성능 최적화**: [docs/implementation/frontend/performance.md](docs/implementation/frontend/performance.md) - 앱 시작 성능, 개선 계획
 
@@ -75,6 +79,9 @@
 - **Phase 1** (✅ 완료): 백엔드 기본 구현 (엔티티, 레포지토리, 서비스, 컨트롤러)
 - **Phase 2** (⏳ 다음): 프론트엔드 기본 구현 (6-8시간)
 
+#### 그룹 탐색 시스템
+- **하이브리드 전략**: [docs/features/group-explore-hybrid-strategy.md](docs/features/group-explore-hybrid-strategy.md) - 서버/클라이언트 필터링 최적화
+
 ### UI/UX 설계
 - **디자인 시스템**: [docs/ui-ux/concepts/design-system.md](docs/ui-ux/concepts/design-system.md) - 전체 디자인 시스템 개요
   - [디자인 원칙](docs/ui-ux/concepts/design-principles.md) - 디자인 철학 및 패턴
@@ -82,7 +89,8 @@
   - [컬러 가이드](docs/ui-ux/concepts/color-guide.md) - 컬러 팔레트 및 사용 지침
   - [반응형 가이드](docs/ui-ux/concepts/responsive-design-guide.md) - 반응형 레이아웃 상세
 - **컴포넌트 명세**:
-  - [멤버 필터](docs/ui-ux/components/member-list-component.md) - 멤버 필터링 UI 컴포넌트
+  - [멤버 필터 개요](docs/ui-ux/components/member-list-component.md) - 멤버 필터링 UI 컴포넌트 개요
+  - [멤버 필터 UI 명세](docs/ui-ux/components/member-filter-ui-spec.md) - 필터 패널 상세 UI 명세
 - **페이지 명세**:
   - [워크스페이스 페이지](docs/ui-ux/pages/workspace-pages.md) - 워크스페이스 전체 구조
     - [채널 뷰](docs/ui-ux/pages/workspace-channel-view.md) - 게시글 및 댓글 시스템
