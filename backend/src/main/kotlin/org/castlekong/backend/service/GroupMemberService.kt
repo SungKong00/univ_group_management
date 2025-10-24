@@ -263,8 +263,20 @@ class GroupMemberService(
             throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
         }
 
-        return groupMemberRepository.findByGroupId(groupId, pageable)
-            .map { groupMapper.toGroupMemberResponse(it) }
+        // N+1 문제 해결: ID만 페이징 조회 → 상세 정보 JOIN FETCH
+        val idsPage = groupMemberRepository.findIdsByGroupId(groupId, pageable)
+        if (idsPage.content.isEmpty()) {
+            return Page.empty(pageable)
+        }
+
+        val members = groupMemberRepository.findByIdsWithDetails(idsPage.content)
+        val memberResponses = members.map { groupMapper.toGroupMemberResponse(it) }
+
+        return org.springframework.data.domain.PageImpl(
+            memberResponses,
+            pageable,
+            idsPage.totalElements,
+        )
     }
 
     /**
@@ -319,17 +331,30 @@ class GroupMemberService(
                 years = yearList,
             )
 
-        // 필터링된 멤버 조회
-        val members = groupMemberRepository.findAll(spec, pageable)
+        // N+1 문제 해결: Phase 1 - ID만 페이징 조회
+        val idsPage = groupMemberRepository.findAll(spec, pageable).map { it.id }
+        if (idsPage.content.isEmpty()) {
+            return org.springframework.data.domain.Page.empty(pageable)
+        }
+
+        // N+1 문제 해결: Phase 2 - 상세 정보 JOIN FETCH로 한 번에 조회
+        val members = groupMemberRepository.findByIdsWithDetails(idsPage.content)
 
         // 권한에 따라 다른 DTO로 매핑
-        return if (hasMemberManagePermission) {
-            // 관리자: 전체 정보 (email 포함) 반환
-            members.map { groupMapper.toGroupMemberResponse(it) }
-        } else {
-            // 일반 멤버: 기본 정보만 (email 제외) 반환
-            members.map { groupMapper.toMemberBasicResponse(it) }
-        }
+        val memberResponses =
+            if (hasMemberManagePermission) {
+                // 관리자: 전체 정보 (email 포함) 반환
+                members.map { groupMapper.toGroupMemberResponse(it) }
+            } else {
+                // 일반 멤버: 기본 정보만 (email 제외) 반환
+                members.map { groupMapper.toMemberBasicResponse(it) }
+            }
+
+        return org.springframework.data.domain.PageImpl(
+            memberResponses,
+            pageable,
+            idsPage.totalElements,
+        )
     }
 
     /**
@@ -612,18 +637,50 @@ class GroupMemberService(
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // Group 엔티티의 owner 변경
-        val updatedGroup = group.copy(owner = newOwner, updatedAt = LocalDateTime.now())
+        val updatedGroup =
+            Group(
+                id = group.id,
+                name = group.name,
+                description = group.description,
+                profileImageUrl = group.profileImageUrl,
+                owner = newOwner,
+                parent = group.parent,
+                university = group.university,
+                college = group.college,
+                department = group.department,
+                groupType = group.groupType,
+                maxMembers = group.maxMembers,
+                defaultChannelsCreated = group.defaultChannelsCreated,
+                tags = group.tags,
+                createdAt = group.createdAt,
+                updatedAt = LocalDateTime.now(),
+                deletedAt = group.deletedAt,
+            )
         groupRepository.save(updatedGroup)
 
         // 이전 그룹장을 일반 멤버로 강등
         val currentOwnerMember =
             groupMemberRepository.findByGroupIdAndUserId(groupId, currentOwnerId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
-        val demotedOwner = currentOwnerMember.copy(role = memberRole)
+        val demotedOwner =
+            GroupMember(
+                id = currentOwnerMember.id,
+                group = currentOwnerMember.group,
+                user = currentOwnerMember.user,
+                role = memberRole,
+                joinedAt = currentOwnerMember.joinedAt,
+            )
         groupMemberRepository.save(demotedOwner)
 
         // 새 그룹장을 OWNER 역할로 승급
-        val promotedMember = newOwnerMember.copy(role = ownerRole)
+        val promotedMember =
+            GroupMember(
+                id = newOwnerMember.id,
+                group = newOwnerMember.group,
+                user = newOwnerMember.user,
+                role = ownerRole,
+                joinedAt = newOwnerMember.joinedAt,
+            )
         val savedMember = groupMemberRepository.save(promotedMember)
 
         // 권한 캐시 무효화
@@ -653,11 +710,36 @@ class GroupMemberService(
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // Group 엔티티의 owner 변경
-        val updatedGroup = group.copy(owner = successor.user, updatedAt = LocalDateTime.now())
+        val updatedGroup =
+            Group(
+                id = group.id,
+                name = group.name,
+                description = group.description,
+                profileImageUrl = group.profileImageUrl,
+                owner = successor.user,
+                parent = group.parent,
+                university = group.university,
+                college = group.college,
+                department = group.department,
+                groupType = group.groupType,
+                maxMembers = group.maxMembers,
+                defaultChannelsCreated = group.defaultChannelsCreated,
+                tags = group.tags,
+                createdAt = group.createdAt,
+                updatedAt = LocalDateTime.now(),
+                deletedAt = group.deletedAt,
+            )
         groupRepository.save(updatedGroup)
 
         // 승계자를 OWNER 역할로 변경
-        val updatedMember = successor.copy(role = ownerRole)
+        val updatedMember =
+            GroupMember(
+                id = successor.id,
+                group = successor.group,
+                user = successor.user,
+                role = ownerRole,
+                joinedAt = successor.joinedAt,
+            )
         val savedMember = groupMemberRepository.save(updatedMember)
 
         permissionService.invalidate(groupId, successor.user.id)

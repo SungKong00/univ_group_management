@@ -93,8 +93,8 @@ class GroupManagementService(
         // 기본 채널 생성 및 권한 바인딩 설정
         channelInitializationService.createDefaultChannels(savedGroup, roles.first, roles.second, roles.third)
 
-        // 기본 채널 생성 완료 플래그 설정
-        groupRepository.save(savedGroup.copy(defaultChannelsCreated = true))
+        // 기본 채널 생성 완료 플래그 설정 (필드 직접 수정, 중복 저장 제거)
+        savedGroup.defaultChannelsCreated = true
 
         return groupMapper.toGroupResponse(savedGroup)
     }
@@ -139,7 +139,8 @@ class GroupManagementService(
             channelInitializationService.ensureDefaultChannelsExist(group, ownerRole, advisorRole, memberRole)
 
         if (wasCreated) {
-            groupRepository.save(group.copy(defaultChannelsCreated = true))
+            // 필드 직접 수정 (중복 저장 제거)
+            group.defaultChannelsCreated = true
         }
     }
 
@@ -190,7 +191,13 @@ class GroupManagementService(
         return when (group.groupType) {
             GroupType.UNIVERSITY, GroupType.COLLEGE -> {
                 // 대학교나 계열인 경우 하위 그룹 멤버들도 포함하여 집계
-                groupMemberRepository.countMembersWithHierarchy(group.id)
+                // H2 호환: 2단계 쿼리 (하위 그룹 ID 조회 + IN 쿼리)
+                val descendantIds = groupRepository.findAllDescendantIds(group.id)
+                if (descendantIds.isEmpty()) {
+                    0L
+                } else {
+                    groupMemberRepository.countByGroupIdIn(descendantIds)
+                }
             }
 
             else -> {
@@ -215,15 +222,25 @@ class GroupManagementService(
             throw BusinessException(ErrorCode.FORBIDDEN)
         }
 
+        // 새 Group 객체 생성 (data class copy() 제거됨)
         val updatedGroup =
-            group.copy(
+            Group(
+                id = group.id,
                 name = request.name ?: group.name,
                 description = request.description ?: group.description,
                 profileImageUrl = request.profileImageUrl ?: group.profileImageUrl,
+                owner = group.owner,
+                parent = group.parent,
+                university = group.university,
+                college = group.college,
+                department = group.department,
                 groupType = request.groupType ?: group.groupType,
                 maxMembers = request.maxMembers ?: group.maxMembers,
+                defaultChannelsCreated = group.defaultChannelsCreated,
                 tags = request.tags ?: group.tags,
+                createdAt = group.createdAt,
                 updatedAt = LocalDateTime.now(),
+                deletedAt = group.deletedAt,
             )
 
         return groupMapper.toGroupResponse(groupRepository.save(updatedGroup))
@@ -243,11 +260,25 @@ class GroupManagementService(
             throw BusinessException(ErrorCode.FORBIDDEN)
         }
 
-        // 소프트 딜리트: deletedAt 필드 설정
+        // 소프트 딜리트: deletedAt 필드 설정 (새 Group 객체 생성)
         val deletedGroup =
-            group.copy(
-                deletedAt = LocalDateTime.now(),
+            Group(
+                id = group.id,
+                name = group.name,
+                description = group.description,
+                profileImageUrl = group.profileImageUrl,
+                owner = group.owner,
+                parent = group.parent,
+                university = group.university,
+                college = group.college,
+                department = group.department,
+                groupType = group.groupType,
+                maxMembers = group.maxMembers,
+                defaultChannelsCreated = group.defaultChannelsCreated,
+                tags = group.tags,
+                createdAt = group.createdAt,
                 updatedAt = LocalDateTime.now(),
+                deletedAt = LocalDateTime.now(),
             )
         groupRepository.save(deletedGroup)
 

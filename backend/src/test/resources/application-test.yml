@@ -23,6 +23,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        use_sql_comments: true
         dialect: org.hibernate.dialect.H2Dialect
 
   # 테스트 환경에서는 data.sql 실행하지 않음

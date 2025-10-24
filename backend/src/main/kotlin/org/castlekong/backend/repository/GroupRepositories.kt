@@ -78,18 +78,16 @@ interface GroupRepository : JpaRepository<Group, Long> {
         @Param("groupIds") groupIds: List<Long>,
     ): Int
 
-    // H2 호환 버전 - 최대 3단계 하위 그룹 조회
+    // WITH RECURSIVE - 무한 깊이 지원 (PostgreSQL, MySQL 8.0+, H2 1.4.200+)
     @Query(
         """
-        SELECT DISTINCT g.id FROM groups g WHERE
-        g.parent_id = :groupId
-        OR g.parent_id IN (SELECT g1.id FROM groups g1 WHERE g1.parent_id = :groupId)
-        OR g.parent_id IN (
-            SELECT g2.id FROM groups g2
-            INNER JOIN groups g1 ON g2.parent_id = g1.id
-            WHERE g1.parent_id = :groupId
+        WITH RECURSIVE descendants(id) AS (
+            SELECT id FROM groups WHERE parent_id = :groupId
+            UNION ALL
+            SELECT g.id FROM groups g
+            INNER JOIN descendants d ON g.parent_id = d.id
         )
-        ORDER BY g.id
+        SELECT id FROM descendants ORDER BY id
     """,
         nativeQuery = true,
     )
@@ -133,6 +131,28 @@ interface GroupMemberRepository :
         pageable: Pageable,
     ): Page<GroupMember>
 
+    // N+1 문제 해결을 위한 분리된 쿼리 메서드들
+    @Query("SELECT gm.id FROM GroupMember gm WHERE gm.group.id = :groupId ORDER BY gm.joinedAt DESC")
+    fun findIdsByGroupId(
+        @Param("groupId") groupId: Long,
+        pageable: Pageable,
+    ): Page<Long>
+
+    @Query(
+        """
+        SELECT DISTINCT gm FROM GroupMember gm
+        JOIN FETCH gm.group
+        JOIN FETCH gm.user
+        JOIN FETCH gm.role r
+        LEFT JOIN FETCH r.permissions
+        WHERE gm.id IN :ids
+        ORDER BY gm.joinedAt DESC
+    """,
+    )
+    fun findByIdsWithDetails(
+        @Param("ids") ids: List<Long>,
+    ): List<GroupMember>
+
     fun findByUserId(userId: Long): List<GroupMember>
 
     // 내 그룹 목록 조회 (워크스페이스 자동 진입용) - JOIN FETCH 최적화
@@ -166,42 +186,30 @@ interface GroupMemberRepository :
     )
     fun findSuccessionCandidates(groupId: Long): List<GroupMember>
 
-    // 계층구조 포함 멤버 수 집계 (H2 호환 버전)
+    // H2 호환: Application 레벨에서 하위 그룹 ID 조회 후 IN 쿼리 사용
     @Query(
         """
-        SELECT COUNT(DISTINCT gm.user_id)
-        FROM group_members gm
-        WHERE gm.group_id = :groupId
-        OR gm.group_id IN (
-            SELECT g1.id FROM groups g1 WHERE g1.parent_id = :groupId
-            UNION ALL
-            SELECT g2.id FROM groups g2
-            INNER JOIN groups g1 ON g2.parent_id = g1.id
-            WHERE g1.parent_id = :groupId
-            UNION ALL
-            SELECT g3.id FROM groups g3
-            INNER JOIN groups g2 ON g3.parent_id = g2.id
-            INNER JOIN groups g1 ON g2.parent_id = g1.id
-            WHERE g1.parent_id = :groupId
-        )
+        SELECT COUNT(DISTINCT user_id)
+        FROM group_members
+        WHERE group_id IN :groupIds
     """,
         nativeQuery = true,
     )
-    fun countMembersWithHierarchy(groupId: Long): Long
+    fun countByGroupIdIn(
+        @Param("groupIds") groupIds: List<Long>,
+    ): Long
 
-    // 특정 그룹의 모든 상위 그룹 조회 (최대 3단계)
+    // WITH RECURSIVE - 무한 깊이 지원 (PostgreSQL, MySQL 8.0+, H2 1.4.200+)
     @Query(
         """
-        SELECT DISTINCT g.id FROM groups g WHERE
-        (g.id = (SELECT parent_id FROM groups WHERE id = :groupId))
-        OR (g.id = (SELECT g2.parent_id FROM groups g2
-                    INNER JOIN groups g1 ON g2.id = g1.parent_id
-                    WHERE g1.id = :groupId))
-        OR (g.id = (SELECT g3.parent_id FROM groups g3
-                    INNER JOIN groups g2 ON g3.id = g2.parent_id
-                    INNER JOIN groups g1 ON g2.id = g1.parent_id
-                    WHERE g1.id = :groupId))
-        ORDER BY g.id
+        WITH RECURSIVE ancestors(id) AS (
+            SELECT parent_id as id FROM groups WHERE id = :groupId AND parent_id IS NOT NULL
+            UNION ALL
+            SELECT g.parent_id FROM groups g
+            INNER JOIN ancestors a ON g.id = a.id
+            WHERE g.parent_id IS NOT NULL
+        )
+        SELECT id FROM ancestors WHERE id IS NOT NULL ORDER BY id
     """,
         nativeQuery = true,
     )
