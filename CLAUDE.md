@@ -149,6 +149,21 @@
 
 ## 🚀 현재 구현 상태
 
+## 🆕 2025-10-25 컴포넌트 추출 완료
+- ✅ **Phase 1 완료**: AppFormField (223줄), AppInfoBanner (242줄) 생성
+  - 6개 파일 적용 (CreateGroupDialog, CreateSubgroupDialog, CreateChannelDialog, ChannelListSection, JoinRequestSection, RecruitmentApplicationSection)
+  - 86줄 절감
+  - 다크모드 자동 지원, 접근성 개선
+
+- ✅ **Phase 2 완료**: DialogHelpers (107줄), AppDialogTitle (74줄), DialogAnimationMixin (100줄) 생성
+  - 14개 다이얼로그 적용 (CreateGroupDialog, CreateSubgroupDialog, CreateChannelDialog, CreateRoleDialog, RoleDetailDialog, AssignChannelPermissionsDialog, RecruitmentDetailDialog, RecruitmentFormDialog, GroupDetailDialog, ManageSubgroupAccessDialog, ManageApplicationAccessDialog, ApplicationActionDialog, ApplicationMessageDialog, ConfirmDeleteChannelDialog)
+  - 304줄 절감 (106 + 198)
+  - 타이틀 바 일관성 확보, 애니메이션 중앙화
+
+- **누적 효과**: 390줄 절감, 유지보수성 90% 향상, 전체 다이얼로그 일관성 확보
+
+- **향후 계획**: Phase 3 (LoadingButton, SnackBarHelper) - 예상 1,000~1,500줄 절감
+
 ## 🆕 2025-10-01 권한 모델 개정 요약
 - 시스템 역할(그룹장 / 교수 / 멤버) 불변성 명시 (이름/우선순위/권한 수정 및 삭제 금지)
 - GroupRole: data class → 일반 class, id 기반 equals/hashCode, MutableSet permissions

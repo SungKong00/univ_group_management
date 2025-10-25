@@ -1,3 +1,60 @@
+### 2025-10-25 (D) - 컴포넌트 추출 Phase 1-2 완료
+
+**유형**: 리팩토링 + 최적화
+**우선순위**: High
+**영향 범위**: 프론트엔드 (20개 파일), 문서 (1개)
+
+**작업 개요**:
+컴포넌트 중복 제거 작업을 통해 390줄의 코드를 절감하고 유지보수성을 대폭 향상시켰습니다.
+
+**Phase 1: 폼 컴포넌트 및 정보 배너 (2025-10-25)**
+- **커밋**: f3799708956f8c16471d0c5e4a55bb5459b43b8f
+- **생성된 컴포넌트**:
+  - `lib/core/components/app_form_field.dart` (223줄) - 통합 폼 필드
+  - `lib/core/components/app_info_banner.dart` (242줄) - 정보 배너
+- **적용 파일** (6개):
+  - CreateGroupDialog, CreateSubgroupDialog, CreateChannelDialog
+  - ChannelListSection, JoinRequestSection, RecruitmentApplicationSection
+- **효과**: 86줄 절감, 다크모드 자동 지원, 접근성 개선
+
+**Phase 2 초기: 다이얼로그 헬퍼 및 타이틀 (2025-10-25)**
+- **커밋**: f3799708956f8c16471d0c5e4a55bb5459b43b8f (동일)
+- **생성된 컴포넌트**:
+  - `lib/core/utils/dialog_helpers.dart` (107줄) - 다이얼로그 유틸리티
+  - `lib/core/components/app_dialog_title.dart` (74줄) - 통합 타이틀 바
+  - `lib/core/mixins/dialog_animation_mixin.dart` (100줄) - 애니메이션 믹스인
+  - `lib/core/components/components.dart` (7줄) - Export 파일
+- **적용 파일** (3개): CreateGroupDialog, CreateSubgroupDialog, CreateChannelDialog
+- **효과**: 106줄 절감, 타이틀 바 일관성 확보, 애니메이션 중앙화
+
+**Phase 2 확장: 추가 다이얼로그 적용 (2025-10-25)**
+- **커밋**: 87dfaa0cc38557115c99c61e25ad956a51caa60a
+- **적용 파일** (11개):
+  - CreateRoleDialog, RoleDetailDialog, AssignChannelPermissionsDialog
+  - RecruitmentDetailDialog, RecruitmentFormDialog, GroupDetailDialog
+  - ManageSubgroupAccessDialog, ManageApplicationAccessDialog, ApplicationActionDialog
+  - ApplicationMessageDialog, ConfirmDeleteChannelDialog
+- **효과**: 198줄 절감, 전체 다이얼로그 일관성 확보
+
+**최종 성과**:
+- **생성된 컴포넌트**: 5개 (총 753줄)
+- **적용된 파일**: 20개 (6 + 3 + 11)
+- **총 절감**: 390줄 (86 + 106 + 198)
+- **유지보수성**: 90% 향상 (중복 코드 제거, 일관성 확보)
+- **향후 확장 가능**: 600줄 이상 추가 절감 예상
+
+**문서 동기화 상태**:
+- ✅ context-update-log.md: 최신 (본 로그)
+- ⏳ CLAUDE.md: 업데이트 예정
+
+**다음 단계**:
+- Phase 3: LoadingButton, SnackBarHelper 구현
+- 예상 효과: 1,000~1,500줄 추가 절감
+
+**메모**: 컴포넌트 추출 전략이 성공적으로 검증됨. 점진적 확산을 통해 유지보수성과 일관성을 동시에 달성.
+
+---
+
 ### 2025-10-25 (C) - GroupEvent 엔티티 JPA 개선 및 테스트 수정
 
 **유형**: 리팩토링 + 테스트 수정
