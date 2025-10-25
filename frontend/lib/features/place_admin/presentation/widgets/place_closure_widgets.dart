@@ -4,6 +4,7 @@ import '../../../../core/models/place_time_models.dart';
 import '../../../../core/providers/place_time_providers.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/components/components.dart';
 
 /// 임시 휴무 캘린더 위젯
 ///
@@ -469,18 +470,10 @@ class _AddFullDayClosureDialogState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('사유 (선택)', style: AppTheme.titleMedium),
-            const SizedBox(height: 8),
-            TextFormField(
+            AppFormField(
+              label: '사유 (선택)',
               controller: _reasonController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: '휴무 사유를 입력하세요',
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-              ),
+              hintText: '휴무 사유를 입력하세요',
               maxLines: 2,
             ),
           ],
@@ -645,18 +638,10 @@ class _AddPartialClosureDialogState
             const SizedBox(height: 16),
 
             // 사유
-            Text('사유 (선택)', style: AppTheme.titleMedium),
-            const SizedBox(height: 8),
-            TextFormField(
+            AppFormField(
+              label: '사유 (선택)',
               controller: _reasonController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: '휴무 사유를 입력하세요',
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-              ),
+              hintText: '휴무 사유를 입력하세요',
               maxLines: 2,
             ),
           ],

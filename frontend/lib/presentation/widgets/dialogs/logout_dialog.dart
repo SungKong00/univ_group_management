@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/dialog_helpers.dart';
+import '../../../core/components/app_dialog_title.dart';
+import '../../../core/mixins/dialog_animation_mixin.dart';
 import '../buttons/error_button.dart';
 import '../buttons/neutral_outlined_button.dart';
 
@@ -25,93 +28,56 @@ class LogoutDialog extends StatefulWidget {
 }
 
 class _LogoutDialogState extends State<LogoutDialog>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-
+    with SingleTickerProviderStateMixin, DialogAnimationMixin {
   @override
   void initState() {
     super.initState();
-
-    // 진입 애니메이션: 페이드인 120ms + 스케일 0.95 → 1.0
-    _animationController = AnimationController(
-      duration: AppMotion.quick,
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
-    );
-
-    _animationController.forward();
+    initDialogAnimation();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    disposeDialogAnimation();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Dialog(
-              backgroundColor: AppColors.surface,
-              surfaceTintColor: Colors.transparent,
-              elevation: AppElevation.dialog,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.dialog),
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppComponents.dialogMaxWidth,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildTitle(),
-                      const SizedBox(height: AppSpacing.sm),
-                      _buildDescription(),
-                      const SizedBox(height: AppSpacing.md),
-                      _buildActions(),
-                    ],
-                  ),
-                ),
-              ),
+    return buildAnimatedDialog(
+      Dialog(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: AppElevation.dialog,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.dialog),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppComponents.dialogMaxWidth,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildTitle(),
+                const SizedBox(height: AppSpacing.sm),
+                _buildDescription(),
+                const SizedBox(height: AppSpacing.md),
+                _buildActions(),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   /// 타이틀: "로그아웃" (18-20 bold, onSurface)
   Widget _buildTitle() {
-    return Semantics(
-      header: true,
-      child: Text(
-        '로그아웃',
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppColors.onSurface,
-          height: 1.35,
-        ),
-      ),
+    return const AppDialogTitle(
+      title: '로그아웃',
     );
   }
 
@@ -167,12 +133,9 @@ class _LogoutDialogState extends State<LogoutDialog>
 ///   // 로그아웃 로직 실행
 /// }
 /// ```
-Future<bool> showLogoutDialog(BuildContext context) async {
-  final result = await showDialog<bool>(
-    context: context,
-    barrierDismissible: true,
-    builder: (BuildContext context) => const LogoutDialog(),
+Future<bool> showLogoutDialog(BuildContext context) {
+  return AppDialogHelpers.showConfirm(
+    context,
+    dialog: const LogoutDialog(),
   );
-
-  return result ?? false;
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/components/app_info_banner.dart';
 import '../../pages/member_management/providers/role_management_provider.dart';
 import 'confirm_cancel_actions.dart';
 
@@ -311,16 +312,8 @@ class _CreateRoleDialogState extends ConsumerState<CreateRoleDialog>
   }
 
   Widget _buildErrorMessage() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppRadius.input),
-      ),
-      child: Text(
-        _errorMessage!,
-        style: const TextStyle(fontSize: 13, color: AppColors.error),
-      ),
+    return AppInfoBanner.error(
+      message: _errorMessage!,
     );
   }
 

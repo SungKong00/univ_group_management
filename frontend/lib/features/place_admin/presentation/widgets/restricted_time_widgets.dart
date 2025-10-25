@@ -4,6 +4,7 @@ import '../../../../core/models/place_time_models.dart';
 import '../../../../core/providers/place_time_providers.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/components/app_form_field.dart';
 
 /// 금지시간 목록 위젯
 class RestrictedTimeListWidget extends ConsumerWidget {
@@ -425,18 +426,10 @@ class _AddRestrictedTimeDialogState
               const SizedBox(height: 16),
 
               // 사유 입력 (선택)
-              Text('사유 (선택)', style: AppTheme.titleMedium),
-              const SizedBox(height: 8),
-              TextFormField(
+              AppFormField(
+                label: '사유 (선택)',
                 controller: _reasonController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: '금지 사유를 입력하세요',
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
+                hintText: '금지 사유를 입력하세요',
                 maxLines: 2,
               ),
             ],
@@ -655,18 +648,10 @@ class _EditRestrictedTimeDialogState
               const SizedBox(height: 16),
 
               // 사유 입력 (선택)
-              Text('사유 (선택)', style: AppTheme.titleMedium),
-              const SizedBox(height: 8),
-              TextFormField(
+              AppFormField(
+                label: '사유 (선택)',
                 controller: _reasonController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: '금지 사유를 입력하세요',
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
+                hintText: '금지 사유를 입력하세요',
                 maxLines: 2,
               ),
             ],

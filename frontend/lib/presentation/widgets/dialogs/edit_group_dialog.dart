@@ -5,6 +5,10 @@ import '../../../core/models/group_models.dart';
 import '../../../core/services/group_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/dialog_helpers.dart';
+import '../../../core/components/app_info_banner.dart';
+import '../../../core/components/app_dialog_title.dart';
+import '../../../core/mixins/dialog_animation_mixin.dart';
 import '../buttons/primary_button.dart';
 import '../buttons/neutral_outlined_button.dart';
 
@@ -36,11 +40,7 @@ class EditGroupDialog extends ConsumerStatefulWidget {
 }
 
 class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-
+    with SingleTickerProviderStateMixin, DialogAnimationMixin {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
@@ -65,25 +65,12 @@ class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
     _isRecruiting = widget.currentIsRecruiting;
 
     // 진입 애니메이션
-    _animationController = AnimationController(
-      duration: AppMotion.quick,
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
-    );
-
-    _animationController.forward();
+    initDialogAnimation();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    disposeDialogAnimation();
     _nameController.dispose();
     _descriptionController.dispose();
     _tagsController.dispose();
@@ -143,73 +130,55 @@ class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Dialog(
-              backgroundColor: AppColors.surface,
-              surfaceTintColor: Colors.transparent,
-              elevation: AppElevation.dialog,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.dialog),
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppComponents.dialogMaxWidth,
-                ),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildTitle(),
-                          const SizedBox(height: AppSpacing.md),
-                          _buildNameField(),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildDescriptionField(),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTagsField(),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildRecruitingSwitch(),
-                          if (_errorMessage != null) ...[
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildErrorMessage(),
-                          ],
-                          const SizedBox(height: AppSpacing.md),
-                          _buildActions(),
-                        ],
-                      ),
-                    ),
-                  ),
+    return buildAnimatedDialog(
+      Dialog(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: AppElevation.dialog,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.dialog),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppComponents.dialogMaxWidth,
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTitle(),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNameField(),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildDescriptionField(),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildTagsField(),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildRecruitingSwitch(),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildErrorMessage(),
+                    ],
+                    const SizedBox(height: AppSpacing.md),
+                    _buildActions(),
+                  ],
                 ),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   Widget _buildTitle() {
-    return Semantics(
-      header: true,
-      child: const Text(
-        '그룹 정보 수정',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppColors.onSurface,
-          height: 1.35,
-        ),
-      ),
+    return const AppDialogTitle(
+      title: '그룹 정보 수정',
     );
   }
 
@@ -332,16 +301,8 @@ class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
   }
 
   Widget _buildErrorMessage() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppRadius.input),
-      ),
-      child: Text(
-        _errorMessage!,
-        style: const TextStyle(fontSize: 13, color: AppColors.error),
-      ),
+    return AppInfoBanner.error(
+      message: _errorMessage!,
     );
   }
 
@@ -382,11 +343,10 @@ Future<bool> showEditGroupDialog(
   String? currentDescription,
   required bool currentIsRecruiting,
   Set<String>? currentTags,
-}) async {
-  final result = await showDialog<bool>(
-    context: context,
-    barrierDismissible: true,
-    builder: (BuildContext context) => EditGroupDialog(
+}) {
+  return AppDialogHelpers.showConfirm(
+    context,
+    dialog: EditGroupDialog(
       groupId: groupId,
       currentName: currentName,
       currentDescription: currentDescription,
@@ -394,6 +354,4 @@ Future<bool> showEditGroupDialog(
       currentTags: currentTags,
     ),
   );
-
-  return result ?? false;
 }

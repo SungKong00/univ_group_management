@@ -5,6 +5,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/models/channel_models.dart';
 import '../../../core/services/channel_service.dart';
+import '../../../core/utils/dialog_helpers.dart';
+import '../../../core/components/app_info_banner.dart';
+import '../../../core/components/app_dialog_title.dart';
+import '../../../core/mixins/dialog_animation_mixin.dart';
 import 'confirm_cancel_actions.dart';
 
 /// 채널 생성 다이얼로그
@@ -30,11 +34,7 @@ class CreateChannelDialog extends ConsumerStatefulWidget {
 }
 
 class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-
+    with SingleTickerProviderStateMixin, DialogAnimationMixin {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
@@ -50,25 +50,12 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
     _descriptionController = TextEditingController();
 
     // 진입 애니메이션
-    _animationController = AnimationController(
-      duration: AppMotion.quick,
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
-    );
-
-    _animationController.forward();
+    initDialogAnimation();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    disposeDialogAnimation();
     _nameController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -118,71 +105,53 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Dialog(
-              backgroundColor: AppColors.surface,
-              surfaceTintColor: Colors.transparent,
-              elevation: AppElevation.dialog,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.dialog),
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppComponents.dialogMaxWidth,
-                ),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildTitle(),
-                          const SizedBox(height: AppSpacing.md),
-                          _buildNameField(),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildDescriptionField(),
-                          const SizedBox(height: AppSpacing.md),
-                          _buildWarningBanner(),
-                          if (_errorMessage != null) ...[
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildErrorMessage(),
-                          ],
-                          const SizedBox(height: AppSpacing.md),
-                          _buildActions(),
-                        ],
-                      ),
-                    ),
-                  ),
+    return buildAnimatedDialog(
+      Dialog(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: AppElevation.dialog,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.dialog),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppComponents.dialogMaxWidth,
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTitle(),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNameField(),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildDescriptionField(),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildWarningBanner(),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildErrorMessage(),
+                    ],
+                    const SizedBox(height: AppSpacing.md),
+                    _buildActions(),
+                  ],
                 ),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   Widget _buildTitle() {
-    return Semantics(
-      header: true,
-      child: const Text(
-        '새 채널 만들기',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppColors.onSurface,
-          height: 1.35,
-        ),
-      ),
+    return const AppDialogTitle(
+      title: '새 채널 만들기',
     );
   }
 
@@ -255,51 +224,14 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
   }
 
   Widget _buildWarningBanner() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.1),
-        border: Border.all(
-          color: AppColors.warning.withValues(alpha: 0.3),
-          width: 1,
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.input),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.info_outline,
-            color: AppColors.warning,
-            size: 20,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Text(
-              '채널 생성 후 권한 설정이 필요합니다. 권한을 설정하기 전까지는 아무도 이 채널을 볼 수 없습니다.',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.onSurface.withValues(alpha: 0.8),
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return AppInfoBanner.warning(
+      message: '채널 생성 후 권한 설정이 필요합니다. 권한을 설정하기 전까지는 아무도 이 채널을 볼 수 없습니다.',
     );
   }
 
   Widget _buildErrorMessage() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppRadius.input),
-      ),
-      child: Text(
-        _errorMessage!,
-        style: const TextStyle(fontSize: 13, color: AppColors.error),
-      ),
+    return AppInfoBanner.error(
+      message: _errorMessage!,
     );
   }
 
@@ -324,15 +256,12 @@ Future<Channel?> showCreateChannelDialog(
   BuildContext context, {
   required int workspaceId,
   required int groupId,
-}) async {
-  final result = await showDialog<Channel>(
-    context: context,
-    barrierDismissible: true,
-    builder: (BuildContext context) => CreateChannelDialog(
+}) {
+  return AppDialogHelpers.show<Channel>(
+    context,
+    dialog: CreateChannelDialog(
       workspaceId: workspaceId,
       groupId: groupId,
     ),
   );
-
-  return result;
 }
