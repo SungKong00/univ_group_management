@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
 import '../../../../../core/models/place/place_reservation.dart';
+import '../../../../../core/components/app_dialog_title.dart';
 import '../../../../providers/place_calendar_provider.dart';
 import '../../../../providers/group_calendar_provider.dart';
 
@@ -83,16 +84,11 @@ class _PlaceReservationDialogState
                     size: 28,
                   ),
                   const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '장소 예약',
-                    style: AppTheme.headlineSmall.copyWith(
-                      color: AppColors.neutral900,
+                  Expanded(
+                    child: AppDialogTitle(
+                      title: '장소 예약',
+                      onClose: () => Navigator.of(context).pop(),
                     ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),

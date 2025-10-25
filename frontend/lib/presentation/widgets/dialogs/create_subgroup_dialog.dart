@@ -5,6 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/services/group_service.dart';
 import '../../../core/models/group_models.dart';
+import '../../../core/components/app_dialog_title.dart';
+import '../../../core/mixins/dialog_animation_mixin.dart';
 import '../buttons/primary_button.dart';
 import '../buttons/neutral_outlined_button.dart';
 
@@ -35,11 +37,7 @@ class CreateSubgroupDialog extends ConsumerStatefulWidget {
 }
 
 class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-
+    with SingleTickerProviderStateMixin, DialogAnimationMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -50,27 +48,12 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
   @override
   void initState() {
     super.initState();
-
-    // 진입 애니메이션: 페이드인 120ms + 스케일 0.95 → 1.0
-    _animationController = AnimationController(
-      duration: AppMotion.quick,
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
-    );
-
-    _animationController.forward();
+    initDialogAnimation();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    disposeDialogAnimation();
     _nameController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -143,17 +126,8 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 900;
 
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: isWide ? _buildDesktopDialog() : _buildMobileDialog(),
-          ),
-        );
-      },
+    return buildAnimatedDialog(
+      isWide ? _buildDesktopDialog() : _buildMobileDialog(),
     );
   }
 
@@ -209,7 +183,10 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
         children: [
           // 헤더 (데스크톱용)
           if (MediaQuery.of(context).size.width > 900) ...[
-            _buildHeader(),
+            AppDialogTitle(
+              title: '하위 그룹 만들기',
+              onClose: () => Navigator.of(context).pop(false),
+            ),
             const SizedBox(height: AppSpacing.md),
           ],
 
@@ -237,31 +214,6 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
           _buildActions(),
         ],
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '하위 그룹 만들기',
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppColors.onSurface,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '새로운 하위 조직을 만들어 팀을 확장하세요',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: AppColors.neutral600,
-          ),
-        ),
-      ],
     );
   }
 

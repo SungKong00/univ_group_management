@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/models/recruitment_models.dart';
+import '../../../../core/components/app_dialog_title.dart';
 import '../providers/recruitment_detail_provider.dart';
 
 /// Application Submit Dialog
@@ -219,20 +220,9 @@ class _ApplicationSubmitDialogState
   Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '지원서 작성',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
+      child: AppDialogTitle(
+        title: '지원서 작성',
+        onClose: () => Navigator.of(context).pop(),
       ),
     );
   }

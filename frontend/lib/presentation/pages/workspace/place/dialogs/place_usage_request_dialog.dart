@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/components/app_dialog_title.dart';
 import '../../../../providers/place_provider.dart';
 
 /// Dialog for requesting place usage permission
@@ -38,12 +39,9 @@ class _PlaceUsageRequestDialogState
     final placesAsync = ref.watch(placesProvider(widget.groupId));
 
     return AlertDialog(
-      title: Text(
-        '장소 예약 권한 신청',
-        style: AppTheme.titleLarge.copyWith(
-          color: AppColors.neutral900,
-          fontWeight: FontWeight.w600,
-        ),
+      title: AppDialogTitle(
+        title: '장소 예약 권한 신청',
+        onClose: () => Navigator.pop(context),
       ),
       content: SingleChildScrollView(
         child: SizedBox(

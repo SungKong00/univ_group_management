@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/place/place.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/components/app_dialog_title.dart';
 import '../../../providers/place_provider.dart';
 
 class PlaceFormDialog extends ConsumerStatefulWidget {
@@ -57,11 +58,9 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
     final isEditing = widget.place != null;
 
     return AlertDialog(
-      title: Text(
-        isEditing ? '장소 수정' : '새 장소 추가',
-        style: AppTheme.headlineSmall.copyWith(
-          color: AppColors.neutral900,
-        ),
+      title: AppDialogTitle(
+        title: isEditing ? '장소 수정' : '새 장소 추가',
+        onClose: () => Navigator.of(context).pop(),
       ),
       content: SingleChildScrollView(
         child: Form(

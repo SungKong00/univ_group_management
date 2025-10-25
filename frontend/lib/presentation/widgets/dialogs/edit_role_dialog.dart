@@ -5,6 +5,8 @@ import '../../../core/models/member_models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/components/app_info_banner.dart';
+import '../../../core/components/app_dialog_title.dart';
+import '../../../core/mixins/dialog_animation_mixin.dart';
 import '../../pages/member_management/providers/role_management_provider.dart';
 import 'confirm_cancel_actions.dart';
 
@@ -29,11 +31,7 @@ class EditRoleDialog extends ConsumerStatefulWidget {
 }
 
 class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-
+    with SingleTickerProviderStateMixin, DialogAnimationMixin {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
@@ -65,18 +63,7 @@ class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
       _nameController = TextEditingController();
       _descriptionController = TextEditingController();
       _permissions = {};
-      _animationController = AnimationController(
-        duration: AppMotion.quick,
-        vsync: this,
-      );
-      _fadeAnimation = Tween<double>(
-        begin: 0.0,
-        end: 1.0,
-      ).animate(_animationController);
-      _scaleAnimation = Tween<double>(
-        begin: 0.95,
-        end: 1.0,
-      ).animate(_animationController);
+      initDialogAnimation();
       return;
     }
 
@@ -96,26 +83,12 @@ class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
       ),
     };
 
-    // 진입 애니메이션
-    _animationController = AnimationController(
-      duration: AppMotion.quick,
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: AppMotion.easing),
-    );
-
-    _animationController.forward();
+    initDialogAnimation();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    disposeDialogAnimation();
     _nameController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -172,34 +145,31 @@ class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
       return const SizedBox.shrink();
     }
 
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Dialog(
-              backgroundColor: AppColors.surface,
-              surfaceTintColor: Colors.transparent,
-              elevation: AppElevation.dialog,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.dialog),
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppComponents.dialogMaxWidth,
-                ),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildTitle(),
+    return buildAnimatedDialog(
+      Dialog(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: AppElevation.dialog,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.dialog),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppComponents.dialogMaxWidth,
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppDialogTitle(
+                      title: '역할 수정',
+                      onClose: () => Navigator.of(context).pop(false),
+                    ),
                           const SizedBox(height: AppSpacing.md),
                           _buildNameField(),
                           const SizedBox(height: AppSpacing.sm),
@@ -212,29 +182,11 @@ class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
                           ],
                           const SizedBox(height: AppSpacing.md),
                           _buildActions(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
               ),
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTitle() {
-    return Semantics(
-      header: true,
-      child: const Text(
-        '역할 수정',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppColors.onSurface,
-          height: 1.35,
         ),
       ),
     );

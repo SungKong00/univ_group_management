@@ -7,7 +7,7 @@ import '../../../core/theme/app_button_styles.dart';
 import '../../../core/models/recruitment_models.dart';
 import '../../../core/models/group_models.dart';
 import '../../widgets/common/state_view.dart';
-import '../../widgets/section_card.dart';
+import '../../widgets/common/section_card.dart';
 import 'providers/recruitment_detail_provider.dart';
 import 'widgets/application_submit_dialog.dart';
 

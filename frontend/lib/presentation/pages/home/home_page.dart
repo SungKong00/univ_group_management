@@ -9,7 +9,7 @@ import '../../providers/recruiting_groups_provider.dart';
 import '../../widgets/cards/action_card.dart';
 import '../../widgets/cards/recruitment_card.dart';
 import '../../widgets/common/section_header.dart';
-import '../../widgets/section_card.dart';
+import '../../widgets/common/section_card.dart';
 import 'widgets/group_explore_content_widget.dart';
 
 class HomePage extends ConsumerStatefulWidget {

@@ -6,7 +6,7 @@ import '../../../../core/theme/theme.dart';
 import '../../../providers/my_groups_provider.dart';
 import '../../../providers/workspace_state_provider.dart';
 import '../../../widgets/dialogs/create_subgroup_dialog.dart';
-import '../../../widgets/section_card.dart';
+import '../../../widgets/common/section_card.dart';
 
 /// 그룹 홈 페이지
 ///
@@ -251,13 +251,45 @@ class GroupHomeView extends ConsumerWidget {
 
   Widget _buildUnreadPostsSection(BuildContext context) {
     return SectionCard(
-      title: '읽지 않은 글',
-      icon: Icons.notifications_outlined,
-      iconColor: AppColors.brand,
-      badge: '3',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
+          Row(
+            children: [
+              Icon(
+                Icons.notifications_outlined,
+                size: 20,
+                color: AppColors.brand,
+              ),
+              SizedBox(width: AppSpacing.xxs),
+              Text(
+                '읽지 않은 글',
+                style: AppTheme.headlineSmall.copyWith(
+                  color: AppColors.lightOnSurface,
+                ),
+              ),
+              SizedBox(width: AppSpacing.xxs),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xxs,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.brandContainerLight,
+                  borderRadius: BorderRadius.circular(100.0),
+                ),
+                child: Text(
+                  '3',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppColors.brand,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppSpacing.md),
           // Unread post list (skeleton)
           _buildPostItem(
             icon: Icons.article_outlined,
@@ -357,49 +389,85 @@ class GroupHomeView extends ConsumerWidget {
 
   Widget _buildCalendarWidget(BuildContext context) {
     return SectionCard(
-      title: '달력',
-      icon: Icons.calendar_month_outlined,
-      iconColor: AppColors.action,
-      child: Container(
-        height: 280,
-        decoration: BoxDecoration(
-          color: AppColors.lightBackground,
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          border: Border.all(
-            color: AppColors.lightOutline,
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
             children: [
               Icon(
-                Icons.calendar_today_outlined,
-                size: 48,
-                color: AppColors.neutral400,
+                Icons.calendar_month_outlined,
+                size: 20,
+                color: AppColors.action,
               ),
-              SizedBox(height: AppSpacing.xxs),
+              SizedBox(width: AppSpacing.xxs),
               Text(
-                '달력 위젯 (구현 예정)',
-                style: AppTheme.bodyMedium.copyWith(
-                  color: AppColors.neutral600,
+                '달력',
+                style: AppTheme.headlineSmall.copyWith(
+                  color: AppColors.lightOnSurface,
                 ),
               ),
             ],
           ),
-        ),
+          SizedBox(height: AppSpacing.md),
+          // Calendar content
+          Container(
+            height: 280,
+            decoration: BoxDecoration(
+              color: AppColors.lightBackground,
+              borderRadius: BorderRadius.circular(AppRadius.input),
+              border: Border.all(
+                color: AppColors.lightOutline,
+              ),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    size: 48,
+                    color: AppColors.neutral400,
+                  ),
+                  SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    '달력 위젯 (구현 예정)',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppColors.neutral600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildScheduleWidget(BuildContext context) {
     return SectionCard(
-      title: '일정',
-      icon: Icons.event_note_outlined,
-      iconColor: AppColors.success,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
+          Row(
+            children: [
+              Icon(
+                Icons.event_note_outlined,
+                size: 20,
+                color: AppColors.success,
+              ),
+              SizedBox(width: AppSpacing.xxs),
+              Text(
+                '일정',
+                style: AppTheme.headlineSmall.copyWith(
+                  color: AppColors.lightOnSurface,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppSpacing.md),
           // Schedule items (skeleton)
           _buildScheduleItem(
             date: '10/15',

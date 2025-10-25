@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/models/calendar_models.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../../core/components/app_dialog_title.dart';
 import '../../../widgets/dialogs/confirm_cancel_actions.dart';
 
 Future<PersonalScheduleRequest?> showScheduleFormDialog(
@@ -61,9 +62,9 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
     final textTheme = theme.textTheme;
 
     return AlertDialog(
-      title: Text(
-        _isEditing ? '일정 수정' : '개인 일정 추가',
-        style: textTheme.titleLarge,
+      title: AppDialogTitle(
+        title: _isEditing ? '일정 수정' : '개인 일정 추가',
+        onClose: () => Navigator.of(context).pop(),
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.dialog),

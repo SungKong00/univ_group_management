@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/models/calendar_models.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../../core/components/app_dialog_title.dart';
 import '../../../widgets/dialogs/confirm_cancel_actions.dart';
 
 Future<PersonalEventRequest?> showEventFormDialog(
@@ -92,9 +93,9 @@ class _EventFormDialogState extends State<_EventFormDialog> {
     final textTheme = Theme.of(context).textTheme;
 
     return AlertDialog(
-      title: Text(
-        _isEditing ? '이벤트 수정' : '이벤트 추가',
-        style: textTheme.titleLarge,
+      title: AppDialogTitle(
+        title: _isEditing ? '이벤트 수정' : '이벤트 추가',
+        onClose: () => Navigator.of(context).pop(),
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.dialog),

@@ -7,6 +7,7 @@ import '../../../../../core/models/calendar_models.dart';
 import '../../../../../core/models/place/place.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
+import '../../../../../core/components/app_dialog_title.dart';
 import '../../../../widgets/dialogs/confirm_cancel_actions.dart';
 import 'location_selector.dart';
 import 'recurrence_selector.dart';
@@ -164,9 +165,9 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
     final textTheme = Theme.of(context).textTheme;
 
     return AlertDialog(
-      title: Text(
-        _isEditing ? '그룹 일정 수정' : '그룹 일정 추가',
-        style: textTheme.titleLarge,
+      title: AppDialogTitle(
+        title: _isEditing ? '그룹 일정 수정' : '그룹 일정 추가',
+        onClose: () => Navigator.of(context).pop(),
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.dialog),
