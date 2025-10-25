@@ -31,7 +31,7 @@ class GroupService(
     fun createGroup(
         request: CreateGroupRequest,
         ownerId: Long,
-    ): Group {
+    ): GroupResponse {
         val owner =
             userRepository.findById(ownerId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
@@ -58,7 +58,8 @@ class GroupService(
                 tags = request.tags,
             )
 
-        return groupRepository.save(group)
+        val savedGroup = groupRepository.save(group)
+        return groupMapper.toGroupResponse(savedGroup)
     }
 
     fun getGroup(groupId: Long): GroupResponse {

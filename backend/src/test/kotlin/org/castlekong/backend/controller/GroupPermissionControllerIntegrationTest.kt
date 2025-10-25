@@ -61,12 +61,10 @@ class GroupPermissionControllerIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        val suffix = System.nanoTime().toString()
-
         // 그룹장 (모든 권한 보유)
         val ownerBase = TestDataFactory.createTestUser(
             name = "그룹장",
-            email = "owner-perm-$suffix@example.com",
+            email = TestDataFactory.uniqueEmail("owner-perm"),
         )
         owner = userRepository.save(
             User(
@@ -97,7 +95,7 @@ class GroupPermissionControllerIntegrationTest {
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "일반 멤버",
-                    email = "member-perm-$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("member-perm"),
                 ),
             )
 
@@ -106,7 +104,7 @@ class GroupPermissionControllerIntegrationTest {
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "비멤버",
-                    email = "nonmember-perm-$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("nonmember-perm"),
                 ),
             )
 

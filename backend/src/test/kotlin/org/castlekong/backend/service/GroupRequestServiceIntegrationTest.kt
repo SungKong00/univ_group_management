@@ -61,10 +61,9 @@ class GroupRequestServiceIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        val suffix = System.nanoTime().toString()
         val ownerBase = TestDataFactory.createTestUser(
             name = "그룹장",
-            email = "owner-request+$suffix@example.com",
+            email = TestDataFactory.uniqueEmail("owner-request"),
         )
         owner = userRepository.save(
             User(
@@ -94,7 +93,7 @@ class GroupRequestServiceIntegrationTest {
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "요청자",
-                    email = "requester+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("requester"),
                 ),
             )
 
@@ -102,7 +101,7 @@ class GroupRequestServiceIntegrationTest {
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "지원자",
-                    email = "applicant+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("applicant"),
                 ),
             )
 

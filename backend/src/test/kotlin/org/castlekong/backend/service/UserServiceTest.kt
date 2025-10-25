@@ -107,7 +107,7 @@ class UserServiceTest {
             val result = userService.findOrCreateUser(googleUserInfo)
 
             // Then
-            assertThat(result).isEqualTo(existingUser)
+            assertThat(result).isSameAs(existingUser)
             verify { userRepository.findByEmail(googleUserInfo.email) }
             verify(exactly = 0) { userRepository.save(any()) }
             verify(exactly = 0) { userRepository.saveAndFlush(any()) }
@@ -278,7 +278,7 @@ class UserServiceTest {
             // Given
             val userId = 1L
             val user = TestDataFactory.createTestUser(id = userId)
-            val owner = TestDataFactory.createTestUser(id = 99L, email = "owner@test.com")
+            val owner = TestDataFactory.createTestUser(id = 99L, email = TestDataFactory.uniqueEmail("owner"))
 
             // 그룹 계층 구조: 한신대학교 -> AI/SW계열 -> AI/SW학과
             val university =
@@ -356,6 +356,7 @@ class UserServiceTest {
                     "AI/SW학과",
                 )
             } returns listOf(department)
+            every { groupMemberRepository.findByGroupIdAndUserId(any(), userId) } returns Optional.empty()
             every { groupMemberService.joinGroup(3L, userId) } returns mockk()
             every { groupMemberService.joinGroup(2L, userId) } returns mockk()
             every { groupMemberService.joinGroup(1L, userId) } returns mockk()
@@ -380,7 +381,7 @@ class UserServiceTest {
             // Given
             val userId = 1L
             val user = TestDataFactory.createTestUser(id = userId)
-            val owner = TestDataFactory.createTestUser(id = 99L, email = "owner@test.com")
+            val owner = TestDataFactory.createTestUser(id = 99L, email = TestDataFactory.uniqueEmail("college-owner"))
 
             val university =
                 TestDataFactory.createTestGroup(
@@ -446,6 +447,7 @@ class UserServiceTest {
                     null,
                 )
             } returns listOf(college)
+            every { groupMemberRepository.findByGroupIdAndUserId(any(), userId) } returns Optional.empty()
             every { groupMemberService.joinGroup(2L, userId) } returns mockk()
             every { groupMemberService.joinGroup(1L, userId) } returns mockk()
 

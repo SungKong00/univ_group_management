@@ -15,6 +15,7 @@ import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.GroupEventRepository
 import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.PlaceRepository
 import org.castlekong.backend.security.PermissionService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -31,6 +32,7 @@ class GroupEventService(
     private val groupMemberRepository: GroupMemberRepository,
     private val permissionService: PermissionService,
     private val objectMapper: ObjectMapper,
+    private val placeRepository: PlaceRepository,
     private val placeReservationService: PlaceReservationService,
 ) {
     /**
@@ -217,15 +219,21 @@ class GroupEventService(
         eventEnd: LocalDateTime,
         seriesId: String?,
         recurrenceRule: String?,
-    ): GroupEvent =
-        GroupEvent(
+    ): GroupEvent {
+        // Phase 2: placeId가 있으면 Place 엔티티 조회
+        val place =
+            request.placeId?.let { placeId ->
+                placeRepository.findActiveById(placeId)
+                    .orElseThrow { BusinessException(ErrorCode.PLACE_NOT_FOUND) }
+            }
+
+        return GroupEvent(
             group = group,
             creator = creator,
             title = request.title.trim(),
             description = request.description?.trim(),
             locationText = request.locationText?.trim(),
-            // Phase 2: place 연동 (placeId가 있으면 null로 남김 - 이후 설정)
-            place = null,
+            place = place,
             startDate = eventStart,
             endDate = eventEnd,
             isAllDay = request.isAllDay,
@@ -237,6 +245,7 @@ class GroupEventService(
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now(),
         )
+    }
 
     /**
      * 일정 수정 (이 일정만 vs 반복 전체)
@@ -704,8 +713,17 @@ class GroupEventService(
             title = title,
             description = description,
             locationText = locationText,
-            placeId = place?.id,
-            placeName = place?.getDisplayName(),
+            place =
+                place?.let {
+                    org.castlekong.backend.dto.PlaceInfo(
+                        id = it.id,
+                        building = it.building,
+                        roomNumber = it.roomNumber,
+                        alias = it.alias,
+                        capacity = it.capacity,
+                        managingGroupName = it.managingGroup.name,
+                    )
+                },
             startDate = startDate,
             endDate = endDate,
             isAllDay = isAllDay,

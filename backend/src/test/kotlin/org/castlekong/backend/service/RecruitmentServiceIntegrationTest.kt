@@ -60,10 +60,9 @@ class RecruitmentServiceIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        val suffix = System.nanoTime().toString()
         val ownerBase = TestDataFactory.createTestUser(
             name = "그룹장",
-            email = "owner-recruit+$suffix@example.com",
+            email = TestDataFactory.uniqueEmail("owner-recruit"),
         )
         owner = userRepository.save(
             User(
@@ -93,7 +92,7 @@ class RecruitmentServiceIntegrationTest {
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "지원자",
-                    email = "applicant-recruit+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("applicant-recruit"),
                 ),
             )
 

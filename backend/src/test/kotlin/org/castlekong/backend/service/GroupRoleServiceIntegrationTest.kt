@@ -48,10 +48,9 @@ class GroupRoleServiceIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        val suffix = System.nanoTime().toString()
         val ownerBase = TestDataFactory.createTestUser(
             name = "그룹장",
-            email = "owner-role+$suffix@example.com",
+            email = TestDataFactory.uniqueEmail("owner-role"),
         )
         owner = userRepository.save(
             User(
@@ -81,7 +80,7 @@ class GroupRoleServiceIntegrationTest {
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "구성원",
-                    email = "member-role+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("member-role"),
                 ),
             )
 

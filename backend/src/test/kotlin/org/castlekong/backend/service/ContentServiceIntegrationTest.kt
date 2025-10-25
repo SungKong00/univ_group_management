@@ -79,10 +79,9 @@ class ContentServiceIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        val suffix = System.nanoTime().toString()
         val ownerBase = TestDataFactory.createTestUser(
             name = "그룹장",
-            email = "owner-content+$suffix@example.com",
+            email = TestDataFactory.uniqueEmail("owner-content"),
         )
         owner = userRepository.save(
             User(
@@ -112,7 +111,7 @@ class ContentServiceIntegrationTest {
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "멤버",
-                    email = "member-content+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("member-content"),
                 ),
             )
 
@@ -120,7 +119,7 @@ class ContentServiceIntegrationTest {
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "외부인",
-                    email = "outsider-content+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("outsider-content"),
                 ),
             )
 

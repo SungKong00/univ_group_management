@@ -9,6 +9,7 @@ import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.GroupRoleRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -18,6 +19,7 @@ import java.time.LocalDateTime
 @Transactional
 class GroupInitializationService(
     private val groupService: GroupService,
+    private val groupRepository: GroupRepository,
     private val groupRoleRepository: GroupRoleRepository,
     private val groupMemberRepository: GroupMemberRepository,
     private val groupRoleInitializationService: GroupRoleInitializationService,
@@ -29,15 +31,19 @@ class GroupInitializationService(
         ownerId: Long,
     ): GroupResponse {
         // 1. 그룹 엔티티 생성 (순수 CRUD)
-        val savedGroup = groupService.createGroup(request, ownerId)
+        val response = groupService.createGroup(request, ownerId)
 
-        // 2. 기본 역할 생성 및 소유자 추가
+        // 2. 엔티티 재조회 (기본 역할 및 채널 생성을 위해)
+        val savedGroup = groupRepository.findById(response.id)
+            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+
+        // 3. 기본 역할 생성 및 소유자 추가
         val (ownerRole, advisorRole, memberRole) = createDefaultRolesAndAddOwner(savedGroup, savedGroup.owner)
 
-        // 3. 기본 채널 생성 및 권한 바인딩 설정
+        // 4. 기본 채널 생성 및 권한 바인딩 설정
         channelInitializationService.createDefaultChannels(savedGroup, ownerRole, advisorRole, memberRole)
 
-        // 4. 기본 채널 생성 완료 플래그 설정
+        // 5. 기본 채널 생성 완료 플래그 설정
         savedGroup.defaultChannelsCreated = true
 
         return groupMapper.toGroupResponse(savedGroup)

@@ -5,8 +5,10 @@ import org.castlekong.backend.dto.CreatePersonalScheduleRequest
 import org.castlekong.backend.dto.UpdatePersonalScheduleRequest
 import org.castlekong.backend.entity.PersonalSchedule
 import org.castlekong.backend.entity.User
+import org.castlekong.backend.fixture.TestDataFactory
 import org.castlekong.backend.repository.PersonalScheduleRepository
 import org.castlekong.backend.repository.UserRepository
+import org.castlekong.backend.security.JwtTokenProvider
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,8 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.security.test.context.support.WithMockUser
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -41,23 +41,22 @@ class PersonalTimetableControllerTest {
     @Autowired
     lateinit var personalScheduleRepository: PersonalScheduleRepository
 
+    @Autowired
+    lateinit var jwtTokenProvider: JwtTokenProvider
+
     private lateinit var owner: User
     private lateinit var anotherUser: User
-
-    companion object {
-        private const val OWNER_EMAIL = "timetable-owner@test.com"
-        private const val ANOTHER_EMAIL = "timetable-another@test.com"
-    }
+    private lateinit var ownerToken: String
+    private lateinit var anotherToken: String
 
     @BeforeEach
     fun setUp() {
         personalScheduleRepository.deleteAll()
-        userRepository.deleteAll()
         owner =
             userRepository.save(
                 User(
                     name = "Owner",
-                    email = OWNER_EMAIL,
+                    email = TestDataFactory.uniqueEmail("timetable-owner"),
                     password = "password",
                     profileCompleted = true,
                 ),
@@ -66,15 +65,26 @@ class PersonalTimetableControllerTest {
             userRepository.save(
                 User(
                     name = "Another",
-                    email = ANOTHER_EMAIL,
+                    email = TestDataFactory.uniqueEmail("timetable-another"),
                     password = "password",
                     profileCompleted = true,
                 ),
             )
+        ownerToken = generateToken(owner)
+        anotherToken = generateToken(anotherUser)
+    }
+
+    private fun generateToken(user: User): String {
+        val authentication =
+            org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                user.email,
+                null,
+                listOf(org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_${user.globalRole.name}")),
+            )
+        return jwtTokenProvider.generateAccessToken(authentication)
     }
 
     @Test
-    @WithMockUser(username = OWNER_EMAIL)
     fun `should list schedules ordered by day and time`() {
         personalScheduleRepository.save(
             PersonalSchedule(
@@ -98,16 +108,18 @@ class PersonalTimetableControllerTest {
         )
 
         mockMvc
-            .perform(get("/api/timetable"))
+            .perform(
+                get("/api/timetable")
+                    .header("Authorization", "Bearer $ownerToken"),
+            )
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.length()?").value(2))
+            .andExpect(jsonPath("$.data.length()").value(2))
             .andExpect(jsonPath("$.data[0].dayOfWeek").value("MONDAY"))
             .andExpect(jsonPath("$.data[0].title").value("오전 수업"))
             .andExpect(jsonPath("$.data[1].dayOfWeek").value("FRIDAY"))
     }
 
     @Test
-    @WithMockUser(username = OWNER_EMAIL)
     fun `should create personal schedule`() {
         val request =
             CreatePersonalScheduleRequest(
@@ -122,6 +134,7 @@ class PersonalTimetableControllerTest {
         mockMvc
             .perform(
                 post("/api/timetable")
+                    .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)),
             )
@@ -161,7 +174,7 @@ class PersonalTimetableControllerTest {
         mockMvc
             .perform(
                 put("/api/timetable/{id}", schedule.id)
-                    .with(SecurityMockMvcRequestPostProcessors.user(ANOTHER_EMAIL))
+                    .header("Authorization", "Bearer $anotherToken")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateRequest)),
             )
@@ -169,7 +182,6 @@ class PersonalTimetableControllerTest {
     }
 
     @Test
-    @WithMockUser(username = OWNER_EMAIL)
     fun `should delete schedule`() {
         val schedule =
             personalScheduleRepository.save(
@@ -184,14 +196,16 @@ class PersonalTimetableControllerTest {
             )
 
         mockMvc
-            .perform(delete("/api/timetable/{id}", schedule.id))
+            .perform(
+                delete("/api/timetable/{id}", schedule.id)
+                    .header("Authorization", "Bearer $ownerToken"),
+            )
             .andExpect(status().isNoContent)
 
         assertEquals(0, personalScheduleRepository.count())
     }
 
     @Test
-    @WithMockUser(username = OWNER_EMAIL)
     fun `should reject invalid time`() {
         val request =
             CreatePersonalScheduleRequest(
@@ -206,6 +220,7 @@ class PersonalTimetableControllerTest {
         mockMvc
             .perform(
                 post("/api/timetable")
+                    .header("Authorization", "Bearer $ownerToken")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)),
             )

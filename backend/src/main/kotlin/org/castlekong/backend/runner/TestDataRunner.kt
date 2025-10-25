@@ -65,8 +65,10 @@ import java.time.LocalTime
  * 9. 그룹 캘린더 일정 및 장소 예약 생성
  *
  * @Order(2) - GroupInitializationRunner 이후 실행
+ * @Profile("!test") - 백엔드 통합 테스트에서는 비활성화 (E2E/dev 환경에서만 실행)
  */
 @Component
+@org.springframework.context.annotation.Profile("!test")
 @Order(2)
 class TestDataRunner(
     private val userService: UserService,

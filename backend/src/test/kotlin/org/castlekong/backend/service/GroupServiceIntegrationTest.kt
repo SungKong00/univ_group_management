@@ -29,6 +29,9 @@ class GroupServiceIntegrationTest {
     private lateinit var groupService: org.castlekong.backend.service.GroupService
 
     @Autowired
+    private lateinit var groupInitializationService: GroupInitializationService
+
+    @Autowired
     private lateinit var groupMemberService: GroupMemberService
 
     @Autowired
@@ -72,7 +75,7 @@ class GroupServiceIntegrationTest {
             )
 
         // when
-        val response = groupService.createGroup(request, testUser.id)
+        val response = groupInitializationService.createGroupWithDefaults(request, testUser.id)
 
         // then
         assertThat(response.id).isGreaterThan(0)
@@ -103,13 +106,13 @@ class GroupServiceIntegrationTest {
                 name = "조회 테스트 그룹",
                 description = "조회 테스트용 그룹입니다",
             )
-        val createdGroup = groupService.createGroup(request, testUser.id)
+        val createdResponse = groupInitializationService.createGroupWithDefaults(request, testUser.id)
 
         // when
-        val response = groupService.getGroup(createdGroup.id)
+        val response = groupService.getGroup(createdResponse.id)
 
         // then
-        assertThat(response.id).isEqualTo(createdGroup.id)
+        assertThat(response.id).isEqualTo(createdResponse.id)
         assertThat(response.name).isEqualTo("조회 테스트 그룹")
         assertThat(response.description).isEqualTo("조회 테스트용 그룹입니다")
         assertThat(response.owner.id).isEqualTo(testUser.id)
@@ -133,8 +136,8 @@ class GroupServiceIntegrationTest {
         // given
         val request1 = CreateGroupRequest(name = "그룹 1")
         val request2 = CreateGroupRequest(name = "그룹 2")
-        groupService.createGroup(request1, testUser.id)
-        groupService.createGroup(request2, testUser.id)
+        groupInitializationService.createGroupWithDefaults(request1, testUser.id)
+        groupInitializationService.createGroupWithDefaults(request2, testUser.id)
 
         val pageable = PageRequest.of(0, 10)
 
@@ -151,13 +154,13 @@ class GroupServiceIntegrationTest {
     fun joinGroup_Success() {
         // given
         val groupRequest = CreateGroupRequest(name = "가입 테스트 그룹")
-        val createdGroup = groupService.createGroup(groupRequest, testUser.id)
+        val createdResponse = groupInitializationService.createGroupWithDefaults(groupRequest, testUser.id)
 
         val newUser =
             userRepository.save(
                 User(
                     name = "새로운 사용자",
-                    email = "new@example.com",
+                    email = TestDataFactory.uniqueEmail("new"),
                     password = "hashedPassword",
                     globalRole = GlobalRole.STUDENT,
                     profileCompleted = true,
@@ -165,14 +168,14 @@ class GroupServiceIntegrationTest {
             )
 
         // when
-        val response = groupMemberService.joinGroup(createdGroup.id, newUser.id)
+        val response = groupMemberService.joinGroup(createdResponse.id, newUser.id)
 
         // then
         assertThat(response.user.id).isEqualTo(newUser.id)
         assertThat(response.role.name).isEqualTo("멤버")
 
         // 데이터베이스에서 확인
-        val groupMember = groupMemberRepository.findByGroupIdAndUserId(createdGroup.id, newUser.id)
+        val groupMember = groupMemberRepository.findByGroupIdAndUserId(createdResponse.id, newUser.id)
         assertThat(groupMember).isPresent
     }
 
@@ -181,10 +184,10 @@ class GroupServiceIntegrationTest {
     fun joinGroup_AlreadyMember() {
         // given
         val groupRequest = CreateGroupRequest(name = "중복 가입 테스트 그룹")
-        val createdGroup = groupService.createGroup(groupRequest, testUser.id)
+        val createdResponse = groupInitializationService.createGroupWithDefaults(groupRequest, testUser.id)
 
         // when & then (그룹 생성자는 이미 멤버이므로)
-        assertThatThrownBy { groupMemberService.joinGroup(createdGroup.id, testUser.id) }
+        assertThatThrownBy { groupMemberService.joinGroup(createdResponse.id, testUser.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ALREADY_GROUP_MEMBER)
     }
@@ -194,26 +197,26 @@ class GroupServiceIntegrationTest {
     fun leaveGroup_Success() {
         // given
         val groupRequest = CreateGroupRequest(name = "탈퇴 테스트 그룹")
-        val createdGroup = groupService.createGroup(groupRequest, testUser.id)
+        val createdResponse = groupInitializationService.createGroupWithDefaults(groupRequest, testUser.id)
 
         val newUser =
             userRepository.save(
                 User(
                     name = "탈퇴할 사용자",
-                    email = "leave@example.com",
+                    email = TestDataFactory.uniqueEmail("leave"),
                     password = "hashedPassword",
                     globalRole = GlobalRole.STUDENT,
                     profileCompleted = true,
                 ),
             )
 
-        groupMemberService.joinGroup(createdGroup.id, newUser.id)
+        groupMemberService.joinGroup(createdResponse.id, newUser.id)
 
         // when
-        groupMemberService.leaveGroup(createdGroup.id, newUser.id)
+        groupMemberService.leaveGroup(createdResponse.id, newUser.id)
 
         // then
-        val groupMember = groupMemberRepository.findByGroupIdAndUserId(createdGroup.id, newUser.id)
+        val groupMember = groupMemberRepository.findByGroupIdAndUserId(createdResponse.id, newUser.id)
         assertThat(groupMember).isNotPresent
     }
 
@@ -222,10 +225,10 @@ class GroupServiceIntegrationTest {
     fun leaveGroup_OwnerCannotLeave() {
         // given
         val groupRequest = CreateGroupRequest(name = "소유자 탈퇴 테스트 그룹")
-        val createdGroup = groupService.createGroup(groupRequest, testUser.id)
+        val createdResponse = groupInitializationService.createGroupWithDefaults(groupRequest, testUser.id)
 
         // when & then
-        assertThatThrownBy { groupMemberService.leaveGroup(createdGroup.id, testUser.id) }
+        assertThatThrownBy { groupMemberService.leaveGroup(createdResponse.id, testUser.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GROUP_OWNER_CANNOT_LEAVE)
     }
@@ -235,24 +238,24 @@ class GroupServiceIntegrationTest {
     fun getGroupMembers_Success() {
         // given
         val groupRequest = CreateGroupRequest(name = "멤버 조회 테스트 그룹")
-        val createdGroup = groupService.createGroup(groupRequest, testUser.id)
+        val createdResponse = groupInitializationService.createGroupWithDefaults(groupRequest, testUser.id)
 
         val newUser =
             userRepository.save(
                 User(
                     name = "추가 멤버",
-                    email = "member@example.com",
+                    email = TestDataFactory.uniqueEmail("member"),
                     password = "hashedPassword",
                     globalRole = GlobalRole.STUDENT,
                     profileCompleted = true,
                 ),
             )
-        groupMemberService.joinGroup(createdGroup.id, newUser.id)
+        groupMemberService.joinGroup(createdResponse.id, newUser.id)
 
         val pageable = PageRequest.of(0, 10)
 
         // when
-        val response = groupMemberService.getGroupMembers(createdGroup.id, pageable)
+        val response = groupMemberService.getGroupMembers(createdResponse.id, pageable)
 
         // then
         assertThat(response.content).hasSize(2)

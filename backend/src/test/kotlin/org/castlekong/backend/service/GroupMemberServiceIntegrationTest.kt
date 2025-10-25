@@ -50,10 +50,9 @@ class GroupMemberServiceIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        val suffix = System.nanoTime().toString()
         val ownerBase = TestDataFactory.createTestUser(
             name = "그룹장",
-            email = "owner+$suffix@example.com",
+            email = TestDataFactory.uniqueEmail("owner"),
             globalRole = GlobalRole.STUDENT,
         )
         owner = userRepository.save(
@@ -84,7 +83,7 @@ class GroupMemberServiceIntegrationTest {
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "학생",
-                    email = "student+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("student"),
                 ),
             )
 
@@ -92,7 +91,7 @@ class GroupMemberServiceIntegrationTest {
             userRepository.save(
                 TestDataFactory.createProfessorUser(
                     name = "교수",
-                    email = "professor+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("professor"),
                 ),
             )
     }
@@ -268,7 +267,7 @@ class GroupMemberServiceIntegrationTest {
         val group = createGroupWithRoles("테스트 그룹", owner)
         groupMemberService.joinGroup(group.id, student.id)
         val anotherUser =
-            userRepository.save(TestDataFactory.createStudentUser(name = "다른학생", email = "another@example.com"))
+            userRepository.save(TestDataFactory.createStudentUser(name = "다른학생", email = TestDataFactory.uniqueEmail("another")))
         groupMemberService.joinGroup(group.id, anotherUser.id)
 
         // When & Then
@@ -426,7 +425,7 @@ class GroupMemberServiceIntegrationTest {
     fun handleOwnerAbsence_Success() {
         // Given
         val group = createGroupWithRoles("테스트 그룹", owner)
-        val oldMember = userRepository.save(TestDataFactory.createStudentUser(name = "옛날멤버", email = "old@example.com"))
+        val oldMember = userRepository.save(TestDataFactory.createStudentUser(name = "옛날멤버", email = TestDataFactory.uniqueEmail("old")))
         groupMemberService.joinGroup(group.id, oldMember.id)
         Thread.sleep(10) // 가입 시간 차이 보장
         groupMemberService.joinGroup(group.id, student.id)

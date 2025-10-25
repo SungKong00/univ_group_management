@@ -23,10 +23,8 @@ data class GroupEventResponse(
     // ===== 장소 통합 (3가지 모드) =====
     // Mode B: 수동 입력 장소
     val locationText: String?,
-    // Mode C: 선택된 장소 ID
-    val placeId: Long?,
-    // Mode C: 장소 표시명 (건물-방번호)
-    val placeName: String?,
+    // Mode C: 중첩 객체로 반환 (테스트 호환성)
+    val place: PlaceInfo?,
     val startDate: LocalDateTime,
     val endDate: LocalDateTime,
     val isAllDay: Boolean,
@@ -37,6 +35,18 @@ data class GroupEventResponse(
     val color: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
+)
+
+/**
+ * 장소 정보 DTO (Mode C)
+ */
+data class PlaceInfo(
+    val id: Long,
+    val building: String,
+    val roomNumber: String,
+    val alias: String?,
+    val capacity: Int?,
+    val managingGroupName: String,
 )
 
 /**

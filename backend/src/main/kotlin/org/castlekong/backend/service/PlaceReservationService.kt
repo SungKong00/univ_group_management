@@ -460,25 +460,21 @@ class PlaceReservationService(
         }
 
         // 4. 예약 충돌 확인
+        val allOverlapping =
+            placeReservationRepository.findOverlappingReservations(
+                place.id,
+                startDateTime,
+                endDateTime,
+                null, // excludeReservationId는 null (eventId 기반 필터링은 아래에서 처리)
+            )
+
         val conflictingReservations =
             if (excludeEventId != null) {
-                // 수정 시: 자기 자신 제외하고 검증
-                placeReservationRepository.findOverlappingReservations(
-                    place.id,
-                    startDateTime,
-                    endDateTime,
-                    excludeEventId,
-                )
+                // 수정 시: 자기 자신(eventId) 제외
+                allOverlapping.filter { it.groupEvent.id != excludeEventId }
             } else {
                 // 생성 시: 모든 예약과 비교
-                placeReservationRepository.findByPlaceIdAndDateRange(
-                    place.id,
-                    startDateTime,
-                    endDateTime,
-                ).filter { reservation ->
-                    reservation.groupEvent.startDate < endDateTime &&
-                        reservation.groupEvent.endDate > startDateTime
-                }
+                allOverlapping
             }
 
         if (conflictingReservations.isNotEmpty()) {

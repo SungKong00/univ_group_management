@@ -7,6 +7,7 @@ import org.castlekong.backend.entity.GroupMember
 import org.castlekong.backend.entity.GroupRole
 import org.castlekong.backend.entity.GroupType
 import org.castlekong.backend.entity.User
+import org.castlekong.backend.fixture.TestDataFactory
 import org.castlekong.backend.repository.GroupMemberRepository
 import org.castlekong.backend.repository.GroupRepository
 import org.castlekong.backend.repository.GroupRoleRepository
@@ -61,7 +62,7 @@ class GroupMemberFilterIntegrationTest {
             userRepository.save(
                 User(
                     name = "그룹장",
-                    email = "leader@test.com",
+                    email = TestDataFactory.uniqueEmail("leader"),
                     password = "password",
                     globalRole = GlobalRole.STUDENT,
                     academicYear = 4,
@@ -76,7 +77,7 @@ class GroupMemberFilterIntegrationTest {
             userRepository.save(
                 User(
                     name = "교수님",
-                    email = "prof@test.com",
+                    email = TestDataFactory.uniqueEmail("prof"),
                     password = "password",
                     globalRole = GlobalRole.PROFESSOR,
                     academicYear = null,
@@ -91,7 +92,7 @@ class GroupMemberFilterIntegrationTest {
             userRepository.save(
                 User(
                     name = "학생1",
-                    email = "student1@test.com",
+                    email = TestDataFactory.uniqueEmail("student1"),
                     password = "password",
                     globalRole = GlobalRole.STUDENT,
                     academicYear = 1,
@@ -106,7 +107,7 @@ class GroupMemberFilterIntegrationTest {
             userRepository.save(
                 User(
                     name = "학생2",
-                    email = "student2@test.com",
+                    email = TestDataFactory.uniqueEmail("student2"),
                     password = "password",
                     globalRole = GlobalRole.STUDENT,
                     academicYear = 2,
@@ -121,7 +122,7 @@ class GroupMemberFilterIntegrationTest {
             userRepository.save(
                 User(
                     name = "학생3",
-                    email = "student3@test.com",
+                    email = TestDataFactory.uniqueEmail("student3"),
                     password = "password",
                     globalRole = GlobalRole.STUDENT,
                     academicYear = 3,
@@ -181,7 +182,7 @@ class GroupMemberFilterIntegrationTest {
                     group = parentGroup,
                     name = "그룹장",
                     priority = 100,
-                    permissions = mutableSetOf(),
+                    permissions = mutableSetOf(org.castlekong.backend.entity.GroupPermission.MEMBER_MANAGE),
                 ),
             )
 
@@ -191,7 +192,7 @@ class GroupMemberFilterIntegrationTest {
                     group = parentGroup,
                     name = "교수",
                     priority = 90,
-                    permissions = mutableSetOf(),
+                    permissions = mutableSetOf(org.castlekong.backend.entity.GroupPermission.MEMBER_MANAGE),
                 ),
             )
 
