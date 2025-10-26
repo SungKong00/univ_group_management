@@ -9,7 +9,10 @@
 - **워크스페이스**: [docs/concepts/workspace-channel.md](docs/concepts/workspace-channel.md)
 - **사용자 여정**: [docs/concepts/user-lifecycle.md](docs/concepts/user-lifecycle.md)
 - **모집 시스템**: [docs/concepts/recruitment-system.md](docs/concepts/recruitment-system.md)
-- **멤버 필터링**: [docs/concepts/member-list-system.md](docs/concepts/member-list-system.md) - 멤버 조회 및 필터링
+- **멤버 시스템**:
+  - **멤버 필터링**: [docs/concepts/member-list-system.md](docs/concepts/member-list-system.md) - 멤버 조회 및 필터링
+  - **멤버 선택 플로우**: [docs/features/member-selection-flow.md](docs/features/member-selection-flow.md) - DYNAMIC/STATIC 하이브리드 방식
+  - **Preview API**: [docs/features/member-selection-preview-api.md](docs/features/member-selection-preview-api.md) - Step 2 API 명세
 - **캘린더 시스템** (Phase 6):
   - **개인 캘린더**: [docs/concepts/personal-calendar-system.md](docs/concepts/personal-calendar-system.md) - 시간표 & 개인 일정
   - **그룹 캘린더**: [docs/concepts/group-calendar-system.md](docs/concepts/group-calendar-system.md) - 그룹 공유 일정
@@ -48,6 +51,7 @@
 - **Chip 컴포넌트**: [docs/implementation/frontend/chip-components.md](docs/implementation/frontend/chip-components.md) - AppChip, AppInputChip 상세
 - **멤버 필터 Phase 1**: [docs/implementation/frontend/member-list-implementation.md](docs/implementation/frontend/member-list-implementation.md) - 기본 필터링 구현
 - **멤버 필터 Phase 2-3**: [docs/implementation/frontend/member-filter-advanced-features.md](docs/implementation/frontend/member-filter-advanced-features.md) - 고급 필터 기능
+- **멤버 선택 구현**: [docs/implementation/frontend/member-selection-implementation.md](docs/implementation/frontend/member-selection-implementation.md) - Step 1-3 구현 (DYNAMIC/STATIC)
 - **반응형 디자인**: [docs/implementation/frontend/responsive-design.md](docs/implementation/frontend/responsive-design.md) - 브레이크포인트, 적응형 레이아웃
 - **성능 최적화**: [docs/implementation/frontend/performance.md](docs/implementation/frontend/performance.md) - 앱 시작 성능, 개선 계획
 
