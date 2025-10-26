@@ -476,13 +476,13 @@ class _AppliedFilters extends StatelessWidget {
             ),
             TextButton(
               onPressed: () => filterNotifier.reset(MemberFilter()),
-              child: const Text('모두 지우기'),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.error,
                 padding: EdgeInsets.zero,
                 minimumSize: const Size(0, 0),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
+              child: const Text('모두 지우기'),
             ),
           ],
         ),
@@ -560,10 +560,10 @@ class _ActionSection extends ConsumerWidget {
               if (isDraftDirty)
                 TextButton(
                   onPressed: () => filterNotifier.cancel(),
-                  child: const Text('취소'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.neutral600,
                   ),
+                  child: const Text('취소'),
                 ),
 
               if (isDraftDirty) const SizedBox(width: AppSpacing.sm),
@@ -596,7 +596,7 @@ class _ActionSection extends ConsumerWidget {
         decoration: BoxDecoration(
           color: AppColors.actionTonalBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.action.withOpacity(0.2)),
+          border: Border.all(color: AppColors.action.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -645,7 +645,7 @@ class _ActionSection extends ConsumerWidget {
       error: (error, stack) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.1),
+          color: AppColors.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -670,7 +670,7 @@ class _ActionSection extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.1),
+        color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
