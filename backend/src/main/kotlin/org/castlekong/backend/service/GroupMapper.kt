@@ -5,6 +5,7 @@ import org.castlekong.backend.dto.GroupMemberResponse
 import org.castlekong.backend.dto.GroupResponse
 import org.castlekong.backend.dto.GroupRoleResponse
 import org.castlekong.backend.dto.GroupSummaryResponse
+import org.castlekong.backend.dto.MemberPreviewDto
 import org.castlekong.backend.dto.SubGroupRequestResponse
 import org.castlekong.backend.dto.UserSummaryResponse
 import org.castlekong.backend.entity.Group
@@ -163,6 +164,19 @@ class GroupMapper(
             reviewedAt = request.reviewedAt,
             createdAt = request.createdAt,
             updatedAt = request.updatedAt,
+        )
+    }
+
+    fun toMemberPreviewDto(groupMember: GroupMember): MemberPreviewDto {
+        val user = groupMember.user
+        // studentNo에서 year 추출 (예: "2024001" -> 24)
+        val year = user.studentNo?.take(4)?.toIntOrNull()?.let { it % 100 }
+        return MemberPreviewDto(
+            id = groupMember.id,
+            name = user.name,
+            grade = user.academicYear,
+            year = year,
+            roleName = groupMember.role.name,
         )
     }
 }

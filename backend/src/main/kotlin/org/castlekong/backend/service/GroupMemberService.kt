@@ -1,6 +1,7 @@
 package org.castlekong.backend.service
 
 import org.castlekong.backend.dto.GroupMemberResponse
+import org.castlekong.backend.dto.MemberPreviewResponse
 import org.castlekong.backend.dto.MyGroupResponse
 import org.castlekong.backend.entity.GlobalRole
 import org.castlekong.backend.entity.Group
@@ -818,5 +819,66 @@ class GroupMemberService(
             current = current.parent
         }
         return level
+    }
+
+    /**
+     * 멤버 선택 Preview API
+     * 필터 조건에 맞는 멤버 수와 샘플 3명 조회
+     *
+     * @param groupId 그룹 ID
+     * @param roleIds 역할 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param groupIds 하위 그룹 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param grades 학년 목록 (쉼표 구분 문자열, 선택적)
+     * @param years 학번 목록 (쉼표 구분 문자열, 선택적, 예: "24,25")
+     * @return 멤버 수와 샘플 목록
+     */
+    fun previewMembers(
+        groupId: Long,
+        roleIds: String?,
+        groupIds: String?,
+        grades: String?,
+        years: String?,
+    ): MemberPreviewResponse {
+        // 그룹 존재 여부 확인
+        if (!groupRepository.existsById(groupId)) {
+            throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
+        }
+
+        // 파라미터 파싱
+        val roleIdList = parseToLongList(roleIds)
+        val groupIdList = parseToLongList(groupIds)
+        val gradeList = parseToIntList(grades)
+        val yearList = parseToStringList(years)
+
+        // Specification 생성
+        val spec =
+            org.castlekong.backend.repository.GroupMemberSpecification.filterMembers(
+                groupId = groupId,
+                roleIds = roleIdList,
+                groupIds = groupIdList,
+                grades = gradeList,
+                years = yearList,
+            )
+
+        // COUNT 쿼리 실행
+        val totalCount = groupMemberRepository.count(spec).toInt()
+
+        // 샘플 3명 조회 (ID만 먼저 조회)
+        val samplePageable = org.springframework.data.domain.PageRequest.of(0, 3)
+        val sampleIds = groupMemberRepository.findAll(spec, samplePageable).map { it.id }.content
+
+        // 샘플 데이터 JOIN FETCH로 조회
+        val samples =
+            if (sampleIds.isNotEmpty()) {
+                groupMemberRepository.findByIdsWithDetailsForPreview(sampleIds)
+                    .map { groupMapper.toMemberPreviewDto(it) }
+            } else {
+                emptyList()
+            }
+
+        return MemberPreviewResponse(
+            totalCount = totalCount,
+            samples = samples,
+        )
     }
 }

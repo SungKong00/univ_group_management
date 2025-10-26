@@ -14,6 +14,7 @@ import org.castlekong.backend.dto.GroupRoleResponse
 import org.castlekong.backend.dto.GroupSummaryResponse
 import org.castlekong.backend.dto.JoinGroupRequest
 import org.castlekong.backend.dto.MemberCountResponse
+import org.castlekong.backend.dto.MemberPreviewResponse
 import org.castlekong.backend.dto.PagedApiResponse
 import org.castlekong.backend.dto.PaginationInfo
 import org.castlekong.backend.dto.PlaceResponse
@@ -250,6 +251,23 @@ class GroupController(
     ): ApiResponse<MemberCountResponse> {
         val count = groupMemberService.countFilteredMembers(groupId, roleIds, groupIds, grades, years)
         return ApiResponse.success(MemberCountResponse(count))
+    }
+
+    @GetMapping("/{groupId}/members/preview")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "멤버 선택 Preview (필터 미리보기)",
+        description = "필터 조건에 맞는 멤버 수와 샘플 3명을 조회합니다. 멤버 선택 플로우 Step 2에서 DYNAMIC/STATIC 카드 표시에 사용됩니다. 권한 요구사항: 그룹 멤버",
+    )
+    fun previewMembers(
+        @PathVariable groupId: Long,
+        @RequestParam(required = false) roleIds: String?,
+        @RequestParam(required = false) groupIds: String?,
+        @RequestParam(required = false) grades: String?,
+        @RequestParam(required = false) years: String?,
+    ): ApiResponse<MemberPreviewResponse> {
+        val preview = groupMemberService.previewMembers(groupId, roleIds, groupIds, grades, years)
+        return ApiResponse.success(preview)
     }
 
     // 내 멤버십 조회 (멤버 여부 판별용)

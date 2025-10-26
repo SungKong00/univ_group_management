@@ -637,4 +637,181 @@ class GroupMemberFilterIntegrationTest {
         // then
         assertThat(result.content).isEmpty()
     }
+
+    // === Preview API Tests ===
+
+    @Test
+    @DisplayName("Preview API: 필터 없이 전체 멤버 미리보기")
+    fun testPreviewAllMembers() {
+        // when
+        val preview =
+            groupMemberService.previewMembers(
+                groupId = parentGroup.id,
+                roleIds = null,
+                groupIds = null,
+                grades = null,
+                years = null,
+            )
+
+        // then
+        assertThat(preview.totalCount).isEqualTo(5)
+        assertThat(preview.samples).hasSizeLessThanOrEqualTo(3) // 최대 3개 샘플
+        assertThat(preview.samples.map { it.name }).allMatch { it in listOf("그룹장", "교수님", "학생1", "학생2", "학생3") }
+    }
+
+    @Test
+    @DisplayName("Preview API: 역할 필터 - 그룹장만")
+    fun testPreviewByRole() {
+        // when
+        val preview =
+            groupMemberService.previewMembers(
+                groupId = parentGroup.id,
+                roleIds = leaderRole.id.toString(),
+                groupIds = null,
+                grades = null,
+                years = null,
+            )
+
+        // then
+        assertThat(preview.totalCount).isEqualTo(1)
+        assertThat(preview.samples).hasSize(1)
+        assertThat(preview.samples[0].name).isEqualTo("그룹장")
+        assertThat(preview.samples[0].roleName).isEqualTo("그룹장")
+    }
+
+    @Test
+    @DisplayName("Preview API: 학년 필터 - 1학년 OR 2학년")
+    fun testPreviewByGrade() {
+        // when
+        val preview =
+            groupMemberService.previewMembers(
+                groupId = parentGroup.id,
+                roleIds = null,
+                groupIds = null,
+                grades = "1,2",
+                years = null,
+            )
+
+        // then
+        assertThat(preview.totalCount).isEqualTo(2)
+        assertThat(preview.samples).hasSize(2)
+        assertThat(preview.samples.map { it.name }).containsExactlyInAnyOrder("학생1", "학생2")
+        assertThat(preview.samples.map { it.grade }).containsExactlyInAnyOrder(1, 2)
+    }
+
+    @Test
+    @DisplayName("Preview API: 학번 필터 - 24학번")
+    fun testPreviewByYear() {
+        // when
+        val preview =
+            groupMemberService.previewMembers(
+                groupId = parentGroup.id,
+                roleIds = null,
+                groupIds = null,
+                grades = null,
+                years = "24",
+            )
+
+        // then
+        assertThat(preview.totalCount).isEqualTo(1)
+        assertThat(preview.samples).hasSize(1)
+        assertThat(preview.samples[0].name).isEqualTo("학생2")
+        assertThat(preview.samples[0].year).isEqualTo(24)
+    }
+
+    @Test
+    @DisplayName("Preview API: 소속 그룹 필터 - AI 학회")
+    fun testPreviewBySubGroup() {
+        // when
+        val preview =
+            groupMemberService.previewMembers(
+                groupId = parentGroup.id,
+                roleIds = null,
+                groupIds = subGroup1.id.toString(),
+                grades = null,
+                years = null,
+            )
+
+        // then
+        assertThat(preview.totalCount).isEqualTo(2)
+        assertThat(preview.samples).hasSize(2)
+        assertThat(preview.samples.map { it.name }).containsExactlyInAnyOrder("그룹장", "학생1")
+    }
+
+    @Test
+    @DisplayName("Preview API: 복합 필터 - 소속 그룹 AND 학년")
+    fun testPreviewByComplexFilter() {
+        // when
+        val preview =
+            groupMemberService.previewMembers(
+                groupId = parentGroup.id,
+                roleIds = null,
+                groupIds = subGroup1.id.toString(),
+                grades = "1",
+                years = null,
+            )
+
+        // then
+        assertThat(preview.totalCount).isEqualTo(1)
+        assertThat(preview.samples).hasSize(1)
+        assertThat(preview.samples[0].name).isEqualTo("학생1")
+        assertThat(preview.samples[0].grade).isEqualTo(1)
+    }
+
+    @Test
+    @DisplayName("Preview API: 결과 없음")
+    fun testPreviewWithNoResults() {
+        // when
+        val preview =
+            groupMemberService.previewMembers(
+                groupId = parentGroup.id,
+                roleIds = null,
+                groupIds = subGroup1.id.toString(),
+                grades = "3", // AI 학회에는 3학년이 없음
+                years = null,
+            )
+
+        // then
+        assertThat(preview.totalCount).isEqualTo(0)
+        assertThat(preview.samples).isEmpty()
+    }
+
+    @Test
+    @DisplayName("Preview API: 샘플 최대 3개 제한")
+    fun testPreviewSampleLimit() {
+        // given: 5명의 멤버가 있음
+        // when
+        val preview =
+            groupMemberService.previewMembers(
+                groupId = parentGroup.id,
+                roleIds = null,
+                groupIds = null,
+                grades = null,
+                years = null,
+            )
+
+        // then
+        assertThat(preview.totalCount).isEqualTo(5)
+        assertThat(preview.samples).hasSizeLessThanOrEqualTo(3) // 최대 3개만 반환
+    }
+
+    @Test
+    @DisplayName("Preview API: year 변환 테스트 (studentNo -> year)")
+    fun testPreviewYearConversion() {
+        // when
+        val preview =
+            groupMemberService.previewMembers(
+                groupId = parentGroup.id,
+                roleIds = null,
+                groupIds = null,
+                grades = null,
+                years = "25",
+            )
+
+        // then
+        assertThat(preview.totalCount).isEqualTo(1)
+        assertThat(preview.samples).hasSize(1)
+        assertThat(preview.samples[0].name).isEqualTo("학생1")
+        assertThat(preview.samples[0].year).isEqualTo(25) // studentNo "20250001" -> year 25
+    }
 }

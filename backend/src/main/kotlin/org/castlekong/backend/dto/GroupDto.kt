@@ -236,3 +236,17 @@ data class RoleBasicInfo(
     val id: Long,
     val name: String,
 )
+
+// 멤버 선택 Preview API용 DTO
+data class MemberPreviewResponse(
+    val totalCount: Int,
+    val samples: List<MemberPreviewDto>,
+)
+
+data class MemberPreviewDto(
+    val id: Long,
+    val name: String,
+    val grade: Int?,
+    val year: Int?,
+    val roleName: String,
+)

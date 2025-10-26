@@ -230,6 +230,20 @@ interface GroupMemberRepository :
         @Param("userId") userId: Long,
         @Param("groupIds") groupIds: List<Long>,
     ): List<Long>
+
+    // 멤버 선택 Preview API용 메서드
+    @Query(
+        """
+        SELECT DISTINCT gm FROM GroupMember gm
+        JOIN FETCH gm.user
+        JOIN FETCH gm.role
+        WHERE gm.id IN :ids
+        ORDER BY gm.joinedAt DESC
+    """,
+    )
+    fun findByIdsWithDetailsForPreview(
+        @Param("ids") ids: List<Long>,
+    ): List<GroupMember>
 }
 
 @Repository
