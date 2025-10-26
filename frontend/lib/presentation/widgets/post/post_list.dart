@@ -34,9 +34,11 @@ class _PostListState extends ConsumerState<PostList> {
   final ScrollController _scrollController = ScrollController();
 
   // 마지막(최신) 게시물을 상단 정렬하기 위한 키
-  final GlobalKey _lastPostKey = GlobalKey();
+  // GlobalKey를 사용하되, channelId 기반으로 unique하게 생성하여
+  // 로그아웃/재로그인 시 Duplicate GlobalKey 에러 방지
+  late final GlobalKey _lastPostKey;
   // 최신 날짜의 헤더 높이를 측정하기 위한 키
-  final GlobalKey _lastDateHeaderKey = GlobalKey();
+  late final GlobalKey _lastDateHeaderKey;
 
   List<Post> _posts = [];
   Map<DateTime, List<Post>> _groupedPosts = {};
@@ -51,6 +53,9 @@ class _PostListState extends ConsumerState<PostList> {
   @override
   void initState() {
     super.initState();
+    // channelId 기반으로 unique한 GlobalKey 생성
+    _lastPostKey = GlobalKey(debugLabel: 'lastPost_${widget.channelId}');
+    _lastDateHeaderKey = GlobalKey(debugLabel: 'lastDateHeader_${widget.channelId}');
     _loadPosts();
     _scrollController.addListener(_onScroll);
   }

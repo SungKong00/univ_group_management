@@ -9,6 +9,7 @@ import '../../../../core/models/member_filter.dart';
 import '../providers/role_management_provider.dart';
 import '../../../components/chips/input_chip.dart';
 import '../../../components/chips/app_chip.dart';
+import '../../../components/popovers/multi_select_popover.dart';
 import '../../../widgets/common/section_card.dart';
 
 /// 멤버 필터 패널
@@ -65,14 +66,79 @@ class MemberFilterPanel extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
           ],
 
-          // 역할 필터 - draftFilter 기반
+          // 역할 필터 - MultiSelectPopover 적용
           rolesAsync.when(
-            data: (roles) => _RoleFilter(
-              groupId: groupId,
-              roles: roles,
-              filter: draftFilter,
-              filterNotifier: filterNotifier,
-            ),
+            data: (roles) {
+              // 역할 필터 활성화 여부
+              final isEnabled = !draftFilter.isGroupFilterActive &&
+                  !draftFilter.isGradeFilterActive &&
+                  !draftFilter.isYearFilterActive;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '역할',
+                          style: AppTheme.titleMedium.copyWith(
+                            color: isEnabled
+                                ? AppColors.neutral800
+                                : AppColors.neutral400,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      if (!isEnabled)
+                        Semantics(
+                          label: '다른 필터 사용 중에는 역할 필터를 사용할 수 없습니다',
+                          child: Tooltip(
+                            message: '다른 필터 사용 중에는 역할 필터를 사용할 수 없습니다',
+                            child: Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: AppColors.neutral400,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  if (isEnabled)
+                    MultiSelectPopover(
+                      label: '역할',
+                      items: roles,
+                      selectedItems: roles
+                          .where((r) => draftFilter.roleIds?.contains(r.id) ?? false)
+                          .toList(),
+                      itemLabel: (role) => role.name,
+                      onChanged: (selectedRoles) {
+                        // 선택된 역할 ID 리스트 생성
+                        final selectedIds = selectedRoles.map((r) => r.id).toList();
+                        // 역할 필터 업데이트 (다른 필터 초기화 포함)
+                        filterNotifier.updateDraft((filter) {
+                          return filter.copyWith(
+                            roleIds: selectedIds.isEmpty ? null : selectedIds,
+                            groupIds: null,
+                            grades: null,
+                            years: null,
+                          );
+                        });
+                      },
+                      emptyLabel: '전체',
+                    )
+                  else
+                    Text(
+                      '다른 필터를 해제하면 역할 필터를 사용할 수 있습니다',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppColors.neutral500,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              );
+            },
             loading: () => const Center(
               child: Padding(
                 padding: EdgeInsets.all(16.0),
@@ -92,16 +158,77 @@ class MemberFilterPanel extends ConsumerWidget {
           const Divider(height: 1),
           const SizedBox(height: AppSpacing.md),
 
-          // 소속 그룹 필터 - draftFilter 기반
+          // 소속 그룹 필터 - MultiSelectPopover 적용
           subGroupsAsync.when(
-            data: (subGroups) => subGroups.isEmpty
-                ? const SizedBox.shrink()
-                : _GroupFilter(
-                    groupId: groupId,
-                    subGroups: subGroups,
-                    filter: draftFilter,
-                    filterNotifier: filterNotifier,
+            data: (subGroups) {
+              if (subGroups.isEmpty) return const SizedBox.shrink();
+
+              // 그룹 필터 활성화 여부
+              final isEnabled = !draftFilter.isRoleFilterActive;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '소속 그룹',
+                          style: AppTheme.titleMedium.copyWith(
+                            color: isEnabled
+                                ? AppColors.neutral800
+                                : AppColors.neutral400,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      if (!isEnabled)
+                        Semantics(
+                          label: '역할 필터 사용 중에는 그룹 필터를 사용할 수 없습니다',
+                          child: Tooltip(
+                            message: '역할 필터 사용 중에는 그룹 필터를 사용할 수 없습니다',
+                            child: Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: AppColors.neutral400,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  if (isEnabled)
+                    MultiSelectPopover(
+                      label: '그룹',
+                      items: subGroups,
+                      selectedItems: subGroups
+                          .where((g) => draftFilter.groupIds?.contains(g.id) ?? false)
+                          .toList(),
+                      itemLabel: (group) => group.name,
+                      onChanged: (selectedGroups) {
+                        // 선택된 그룹 ID 리스트 생성
+                        final selectedIds = selectedGroups.map((g) => g.id).toList();
+                        // 그룹 필터 업데이트 (역할 필터 초기화 포함)
+                        filterNotifier.updateDraft((filter) {
+                          return filter.copyWith(
+                            roleIds: null,
+                            groupIds: selectedIds.isEmpty ? null : selectedIds,
+                          );
+                        });
+                      },
+                      emptyLabel: '전체',
+                    )
+                  else
+                    Text(
+                      '역할 필터를 해제하면 그룹 필터를 사용할 수 있습니다',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppColors.neutral500,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              );
+            },
             loading: () => const SizedBox.shrink(),
             error: (error, _) => const SizedBox.shrink(),
           ),
@@ -112,12 +239,117 @@ class MemberFilterPanel extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
           ],
 
-          // 학년/학번 필터 - draftFilter 기반
-          _GradeYearFilter(
-            groupId: groupId,
-            filter: draftFilter,
-            filterNotifier: filterNotifier,
-            availableYears: availableYears,
+          // 학년/학번 필터 - MultiSelectPopover 적용
+          Builder(
+            builder: (context) {
+              // 학년/학번 필터 활성화 여부
+              final isEnabled = !draftFilter.isRoleFilterActive;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '학년 또는 학번',
+                          style: AppTheme.titleMedium.copyWith(
+                            color: isEnabled
+                                ? AppColors.neutral800
+                                : AppColors.neutral400,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      if (!isEnabled)
+                        Semantics(
+                          label: '역할 필터 사용 중에는 학년/학번 필터를 사용할 수 없습니다',
+                          child: Tooltip(
+                            message: '역할 필터 사용 중에는 학년/학번 필터를 사용할 수 없습니다',
+                            child: Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: AppColors.neutral400,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    '학년과 학번은 함께 선택 가능합니다 (OR 관계)',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: isEnabled
+                          ? AppColors.neutral600
+                          : AppColors.neutral400,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // 학년 필터
+                  if (isEnabled) ...[
+                    Text(
+                      '학년',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppColors.neutral700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    MultiSelectPopover<int>(
+                      label: '학년',
+                      items: availableGrades,
+                      selectedItems: draftFilter.grades ?? [],
+                      itemLabel: (grade) => gradeLabels[grade] ?? '$grade학년',
+                      onChanged: (selectedGrades) {
+                        // 학년 필터 업데이트 (역할 필터 초기화 포함)
+                        filterNotifier.updateDraft((filter) {
+                          return filter.copyWith(
+                            roleIds: null,
+                            grades: selectedGrades.isEmpty ? null : selectedGrades,
+                          );
+                        });
+                      },
+                      emptyLabel: '전체',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // 학번 필터
+                    Text(
+                      '학번 (입학년도)',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppColors.neutral700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    MultiSelectPopover<int>(
+                      label: '학번',
+                      items: availableYears,
+                      selectedItems: draftFilter.years ?? [],
+                      itemLabel: (year) => '$year년',
+                      onChanged: (selectedYears) {
+                        // 학번 필터 업데이트 (역할 필터 초기화 포함)
+                        filterNotifier.updateDraft((filter) {
+                          return filter.copyWith(
+                            roleIds: null,
+                            years: selectedYears.isEmpty ? null : selectedYears,
+                          );
+                        });
+                      },
+                      emptyLabel: '전체',
+                    ),
+                  ] else
+                    Text(
+                      '역할 필터를 해제하면 학년/학번 필터를 사용할 수 있습니다',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppColors.neutral500,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: AppSpacing.lg),
@@ -271,263 +503,6 @@ class _AppliedFilters extends StatelessWidget {
   }
 }
 
-/// 역할 필터 섹션
-class _RoleFilter extends StatelessWidget {
-  final int groupId;
-  final List roles;
-  final dynamic filter;
-  final dynamic filterNotifier;
-
-  const _RoleFilter({
-    required this.groupId,
-    required this.roles,
-    required this.filter,
-    required this.filterNotifier,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // 역할 필터 활성화 여부
-    final isEnabled = !filter.isGroupFilterActive &&
-        !filter.isGradeFilterActive &&
-        !filter.isYearFilterActive;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                '역할',
-                style: AppTheme.titleMedium.copyWith(
-                  color: isEnabled ? AppColors.neutral800 : AppColors.neutral400,
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            if (!isEnabled)
-              Semantics(
-                label: '다른 필터 사용 중에는 역할 필터를 사용할 수 없습니다',
-                child: Tooltip(
-                  message: '다른 필터 사용 중에는 역할 필터를 사용할 수 없습니다',
-                  child: Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: AppColors.neutral400,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: roles.map((role) {
-            final isSelected = filter.roleIds?.contains(role.id) ?? false;
-            return Semantics(
-              label: '역할 필터: ${role.name}',
-              selected: isSelected,
-              button: true,
-              child: AppChip(
-                label: role.name,
-                selected: isSelected,
-                onSelected: isEnabled ? (_) => filterNotifier.toggleRole(role.id) : null,
-                variant: AppChipVariant.primary,
-                enabled: isEnabled,
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-}
-
-/// 소속 그룹 필터 섹션
-class _GroupFilter extends StatelessWidget {
-  final int groupId;
-  final List subGroups;
-  final dynamic filter;
-  final dynamic filterNotifier;
-
-  const _GroupFilter({
-    required this.groupId,
-    required this.subGroups,
-    required this.filter,
-    required this.filterNotifier,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // 그룹 필터 활성화 여부
-    final isEnabled = !filter.isRoleFilterActive;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                '소속 그룹',
-                style: AppTheme.titleMedium.copyWith(
-                  color: isEnabled ? AppColors.neutral800 : AppColors.neutral400,
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            if (!isEnabled)
-              Semantics(
-                label: '역할 필터 사용 중에는 그룹 필터를 사용할 수 없습니다',
-                child: Tooltip(
-                  message: '역할 필터 사용 중에는 그룹 필터를 사용할 수 없습니다',
-                  child: Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: AppColors.neutral400,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: subGroups.map((group) {
-            final isSelected = filter.groupIds?.contains(group.id) ?? false;
-            return Semantics(
-              label: '소속 그룹 필터: ${group.name}',
-              selected: isSelected,
-              button: true,
-              child: AppChip(
-                label: group.name,
-                leadingIcon: Icons.group,
-                selected: isSelected,
-                onSelected: isEnabled ? (_) => filterNotifier.toggleGroup(group.id) : null,
-                enabled: isEnabled,
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-}
-
-/// 학년/학번 필터 섹션
-class _GradeYearFilter extends StatelessWidget {
-  final int groupId;
-  final dynamic filter;
-  final dynamic filterNotifier;
-  final List<int> availableYears;
-
-  const _GradeYearFilter({
-    required this.groupId,
-    required this.filter,
-    required this.filterNotifier,
-    required this.availableYears,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // 학년/학번 필터 활성화 여부
-    final isEnabled = !filter.isRoleFilterActive;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                '학년 또는 학번',
-                style: AppTheme.titleMedium.copyWith(
-                  color: isEnabled ? AppColors.neutral800 : AppColors.neutral400,
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            if (!isEnabled)
-              Semantics(
-                label: '역할 필터 사용 중에는 학년/학번 필터를 사용할 수 없습니다',
-                child: Tooltip(
-                  message: '역할 필터 사용 중에는 학년/학번 필터를 사용할 수 없습니다',
-                  child: Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: AppColors.neutral400,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          '학년과 학번은 함께 선택 가능합니다 (OR 관계)',
-          style: AppTheme.bodySmall.copyWith(
-            color: isEnabled ? AppColors.neutral600 : AppColors.neutral400,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-
-        // 학년 필터
-        Text(
-          '학년',
-          style: AppTheme.bodySmall.copyWith(
-            color: isEnabled ? AppColors.neutral700 : AppColors.neutral400,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: availableGrades.map((grade) {
-            final isSelected = filter.grades?.contains(grade) ?? false;
-            final label = gradeLabels[grade] ?? '$grade학년';
-            return AppChip(
-              label: label,
-              selected: isSelected,
-              onSelected: isEnabled ? (_) => filterNotifier.toggleGrade(grade) : null,
-              variant: AppChipVariant.success,
-              enabled: isEnabled,
-            );
-          }).toList(),
-        ),
-
-        const SizedBox(height: AppSpacing.md),
-
-        // 학번 필터
-        Text(
-          '학번 (입학년도)',
-          style: AppTheme.bodySmall.copyWith(
-            color: isEnabled ? AppColors.neutral700 : AppColors.neutral400,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: availableYears.map((year) {
-            final isSelected = filter.years?.contains(year) ?? false;
-            return AppChip(
-              label: '$year년',
-              selected: isSelected,
-              onSelected: isEnabled ? (_) => filterNotifier.toggleYear(year) : null,
-              variant: AppChipVariant.success,
-              size: AppChipSize.small,
-              enabled: isEnabled,
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-}
 
 /// 하단 액션 영역 (Phase 1 + Phase 3)
 ///

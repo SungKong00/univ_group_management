@@ -1,6 +1,6 @@
 # 멤버 필터 컴포넌트 개요 (Member Filter Component Overview)
 
-멤버 목록 필터링 및 표시를 위한 UI 컴포넌트 개요입니다.
+멤버 목록 필터링, 선택, 표시를 위한 UI 컴포넌트 개요입니다.
 
 ## 컴포넌트 계층
 
@@ -54,8 +54,13 @@ MemberListView
 
 ## 상세 문서
 
-- **필터 UI 상세**: [멤버 필터 UI 명세](member-filter-ui-spec.md)
-- **구현 가이드**: [멤버 필터 구현 - Phase 1](../../implementation/frontend/member-list-implementation.md)
-- **고급 기능**: [멤버 필터 고급 기능](../../implementation/frontend/member-filter-advanced-features.md)
-- **Chip 컴포넌트**: [Chip 컴포넌트](../../implementation/frontend/chip-components.md)
-- **디자인 시스템**: [디자인 시스템](../concepts/design-system.md)
+- **멤버 선택 시스템** (신규):
+  - [멤버 선택 플로우](../../features/member-selection-flow.md) - DYNAMIC/STATIC 하이브리드 방식
+  - [프론트엔드 구현](../../implementation/frontend/member-selection-implementation.md) - Step 1-3 구현
+- **멤버 필터링 UI**:
+  - [멤버 필터 UI 명세](member-filter-ui-spec.md)
+  - [멤버 필터 구현 - Phase 1](../../implementation/frontend/member-list-implementation.md)
+  - [멤버 필터 고급 기능](../../implementation/frontend/member-filter-advanced-features.md)
+- **관련 컴포넌트**:
+  - [Chip 컴포넌트](../../implementation/frontend/chip-components.md)
+  - [디자인 시스템](../concepts/design-system.md)

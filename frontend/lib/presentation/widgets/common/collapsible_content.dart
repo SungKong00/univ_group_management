@@ -61,8 +61,8 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
   // to the scrollable, and only create the RawScrollbar after it has been
   // attached (hasClients == true). This avoids the runtime warning.
   late final ScrollController _controller;
-  final GlobalKey<RawScrollbarState> _rawScrollbarKey =
-      GlobalKey<RawScrollbarState>();
+  // GlobalKey 제거: RawScrollbar에서 key는 필수가 아니며,
+  // 로그아웃/재로그인 시 Duplicate GlobalKey 에러를 방지
   // Flag and timer to briefly show the scrollbar thumb when content is expanded
   bool _showThumb = false;
   Timer? _hideThumbTimer;
@@ -196,7 +196,6 @@ class _CollapsibleContentState extends State<CollapsibleContent> {
             }
 
             return RawScrollbar(
-              key: _rawScrollbarKey,
               controller: _controller,
               thumbVisibility: _showThumb,
               radius: const Radius.circular(8),

@@ -1,16 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../demo_calendar/demo_calendar_page.dart';
 import '../dev/selectable_option_card_demo.dart';
-import '../demo_member_filter_page.dart';
+import '../member_management/member_filter_page.dart';
+import '../../providers/my_groups_provider.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       body: Center(
@@ -60,15 +62,36 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const DemoMemberFilterPage(),
-                    ),
-                  );
+                onPressed: () async {
+                  try {
+                    // 한신대학교 그룹 조회
+                    final myGroups = await ref.read(myGroupsProvider.future);
+                    final hanshin = myGroups.firstWhere(
+                      (g) => g.name == '한신대학교',
+                      orElse: () => throw Exception('한신대학교 그룹을 찾을 수 없습니다'),
+                    );
+
+                    if (context.mounted) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              MemberFilterPage(groupId: hanshin.id),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('에러 발생: ${e.toString()}'),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  }
                 },
                 icon: const Icon(Icons.filter_list),
-                label: const Text('멤버 필터 데모'),
+                label: const Text('멤버 필터 데모 (Step 1-3)'),
               ),
             ],
           ],

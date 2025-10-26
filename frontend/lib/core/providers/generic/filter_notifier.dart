@@ -92,6 +92,15 @@ abstract class GenericFilterNotifier<TFilter extends FilterModel>
     state = state.copyWith() as TFilter;
   }
 
+  /// 필터 즉시 적용 (Draft 없이)
+  ///
+  /// 드래프트 우회하고 state를 직접 설정합니다.
+  /// 단순한 필터 선택 시나리오에서 사용됩니다.
+  void setFilter(TFilter filter) {
+    state = filter;
+    _draftFilter = filter; // Draft도 동기화
+  }
+
   /// 적용 버튼 클릭 시 호출
   ///
   /// 드래프트 필터를 실제 상태로 복사하여 API 호출을 트리거합니다.

@@ -12,6 +12,7 @@ import '../../presentation/pages/profile/profile_page.dart';
 import '../../presentation/pages/group/group_admin_page.dart';
 import '../../presentation/pages/recruitment/recruitment_detail_page.dart';
 import '../../presentation/pages/demo_calendar/demo_calendar_page.dart';
+import '../../presentation/pages/demo/multi_select_popover_demo_page.dart';
 import '../../presentation/pages/main/main_layout.dart';
 import '../constants/app_constants.dart';
 import '../services/auth_service.dart';
@@ -50,6 +51,11 @@ final GoRouter appRouter = GoRouter(
       path: '/demo',
       name: 'demo-calendar',
       builder: (context, state) => const DemoCalendarPage(),
+    ),
+    GoRoute(
+      path: '/demo-popover',
+      name: 'demo-popover',
+      builder: (context, state) => const MultiSelectPopoverDemoPage(),
     ),
     ShellRoute(
       builder: (context, state, child) => MainLayout(child: child),

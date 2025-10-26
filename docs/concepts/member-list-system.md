@@ -76,10 +76,11 @@ AND
 - 학년별 조회 (학년별 통계)
 - 소속 그룹별 조회 (하위 그룹 활동 파악)
 
-### 2. 일정 참여자 선택 (Phase 8+)
-- "운영진만 초대" (역할 필터)
-- "1학년 오리엔테이션" (학년 필터)
-- "AI 학회 소속 2학년" (복합 필터)
+### 2. 멤버 선택 시스템 (일정/공지/장소 예약)
+- **하이브리드 선택 플로우**: DYNAMIC(조건 저장) / STATIC(명단 저장)
+- **DYNAMIC 예시**: "운영진만 초대" (역할 필터) → 신규 운영진 자동 포함
+- **STATIC 예시**: "특정 12명 선택" → 필터 후 수동 편집
+- **상세**: [멤버 선택 플로우](../features/member-selection-flow.md)
 
 ### 3. 통계/분석 화면
 - 역할별 분포
@@ -122,7 +123,13 @@ GET /api/groups/{groupId}/members?roleIds=1,2&groupIds=10,20&grades=2,3&years=24
 
 ## 관련 문서
 
-- [멤버 필터 UI 설계](../ui-ux/components/member-list-component.md) - UI/UX 컴포넌트
-- [멤버 필터 구현](../implementation/frontend/member-list-implementation.md) - 프론트엔드 구현
-- [권한 시스템](permission-system.md) - 멤버 역할 및 권한
-- [그룹 계층](group-hierarchy.md) - 그룹 구조 및 멤버십
+- **멤버 선택 시스템**:
+  - [멤버 선택 플로우](../features/member-selection-flow.md) - DYNAMIC/STATIC 하이브리드 방식
+  - [Preview API 명세](../features/member-selection-preview-api.md) - Step 2 API 설계
+  - [프론트엔드 구현](../implementation/frontend/member-selection-implementation.md) - Step 1-3 구현
+- **멤버 필터링 UI**:
+  - [멤버 필터 UI 설계](../ui-ux/components/member-list-component.md) - UI/UX 컴포넌트
+  - [멤버 필터 구현](../implementation/frontend/member-list-implementation.md) - 기본 필터링
+- **관련 개념**:
+  - [권한 시스템](permission-system.md) - 멤버 역할 및 권한
+  - [그룹 계층](group-hierarchy.md) - 그룹 구조 및 멤버십
