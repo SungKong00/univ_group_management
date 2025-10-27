@@ -497,9 +497,7 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
     // For single events, validate that end time is after start time
     if (_recurrence == null) {
       if (!_endDateTime.isAfter(_startDateTime)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('종료 시간은 시작 시간보다 이후여야 합니다.')),
-        );
+        AppSnackBar.info(context, '종료 시간은 시작 시간보다 이후여야 합니다.');
         return;
       }
     }
@@ -509,9 +507,7 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
       final startDateOnly = _normalizeDateTime(_startDateTime);
       final endDateOnly = _normalizeDateTime(_endDateTime);
       if (endDateOnly.isBefore(startDateOnly)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('반복 종료 날짜는 시작 날짜 이후여야 합니다.')),
-        );
+        AppSnackBar.info(context, '반복 종료 날짜는 시작 날짜 이후여야 합니다.');
         return;
       }
     }

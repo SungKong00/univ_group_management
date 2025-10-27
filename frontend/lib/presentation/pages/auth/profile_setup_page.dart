@@ -268,9 +268,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       setState(() {
         _emailVerified = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(emailError), backgroundColor: AppColors.error),
-      );
+      AppSnackBar.error(context, emailError);
       return;
     }
 
@@ -288,17 +286,10 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       }
       _startOtpCountdown();
       _otpController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('인증 코드를 발송했어요. 5분 안에 입력해주세요.')),
-      );
+      AppSnackBar.info(context, '인증 코드를 발송했어요. 5분 안에 입력해주세요.');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_cleanMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, _cleanMessage(e));
       }
     } finally {
       if (mounted) {
@@ -314,12 +305,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     final code = _otpController.text.trim();
 
     if (code.length != 6 || int.tryParse(code) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('6자리 인증 코드를 정확히 입력해주세요.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, '6자리 인증 코드를 정확히 입력해주세요.');
       return;
     }
 
@@ -346,12 +332,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       FocusScope.of(context).unfocus();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_cleanMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, _cleanMessage(e));
       }
     } finally {
       if (mounted) {
@@ -402,23 +383,13 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     }
 
     if (_nicknameStatus != NicknameStatus.available) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('사용 가능한 닉네임을 확인해주세요.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, '사용 가능한 닉네임을 확인해주세요.');
       return;
     }
 
     // 임시로 이메일 인증 조건 비활성화 (개발용)
     // if (!_emailVerified) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('학교 이메일 인증을 완료해주세요.'),
-    //       backgroundColor: AppColors.error,
-    //     ),
-    //   );
+    AppSnackBar.error(context, '학교 이메일 인증을 완료해주세요.');
     //   return;
     // }
 
@@ -426,12 +397,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     final email = _schoolEmailController.text.trim();
 
     if (_selectedAcademicYear == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('학년을 선택해주세요.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, '학년을 선택해주세요.');
       return;
     }
 
@@ -472,12 +438,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       context.go(AppConstants.homeRoute);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_cleanMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, _cleanMessage(e));
       }
     } finally {
       if (mounted) {

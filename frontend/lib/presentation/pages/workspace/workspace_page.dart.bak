@@ -654,7 +654,12 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     });
 
     if (context.mounted) {
-      AppSnackBar.info(context, '게시글이 작성되었습니다');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('게시글이 작성되었습니다'),
+          duration: Duration(milliseconds: 500),
+        ),
+      );
     }
   }
 
@@ -679,7 +684,12 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     });
 
     if (context.mounted) {
-      AppSnackBar.info(context, '댓글이 작성되었습니다');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('댓글이 작성되었습니다'),
+          duration: Duration(milliseconds: 500),
+        ),
+      );
     }
   }
 

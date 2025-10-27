@@ -265,13 +265,7 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoggingOut = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('로그아웃 실패: $e'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppSnackBar.error(context, '로그아웃 실패: $e');
     }
   }
 }

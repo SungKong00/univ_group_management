@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/snack_bar_helper.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
 import '../../../../../core/models/place/place_reservation.dart';
@@ -243,12 +244,7 @@ class _PlaceReservationDialogState
         _selectedDate == null ||
         _startTime == null ||
         _endTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('모든 필드를 입력해주세요'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, '모든 필드를 입력해주세요');
       return;
     }
 
@@ -256,12 +252,7 @@ class _PlaceReservationDialogState
     final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
     final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
     if (startMinutes >= endMinutes) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('종료 시간은 시작 시간보다 늦어야 합니다'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, '종료 시간은 시작 시간보다 늦어야 합니다');
       return;
     }
 
@@ -319,12 +310,7 @@ class _PlaceReservationDialogState
 
       if (mounted) {
         Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('예약이 성공적으로 추가되었습니다'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        AppSnackBar.success(context, '예약이 성공적으로 추가되었습니다');
       }
     } catch (e) {
       if (mounted) {
@@ -333,12 +319,7 @@ class _PlaceReservationDialogState
         // TODO: 향후 개선 - GroupEvent 생성 성공 후 PlaceReservation 실패 시
         // GroupEvent 삭제 API 호출하여 롤백 구현
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('예약 실패: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '예약 실패: $e');
       }
     }
   }

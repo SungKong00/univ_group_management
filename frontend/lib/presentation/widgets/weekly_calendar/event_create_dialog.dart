@@ -331,12 +331,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
   void _handleSave() {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('제목을 입력해주세요'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, '제목을 입력해주세요');
       return;
     }
 
@@ -349,24 +344,14 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
       case LocationType.custom:
         final customLoc = _customLocationController.text.trim();
         if (customLoc.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('장소를 입력해주세요'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          AppSnackBar.error(context, '장소를 입력해주세요');
           return;
         }
         locationSelection = LocationSelection.custom(customLoc);
         break;
       case LocationType.place:
         if (_selectedPlaceId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('장소를 선택해주세요'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          AppSnackBar.error(context, '장소를 선택해주세요');
           return;
         }
         locationSelection = LocationSelection.place(_selectedPlaceId!);

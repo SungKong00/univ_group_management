@@ -346,13 +346,9 @@ class _RequestCard extends ConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '승인 실패: ${e.toString().replaceFirst('Exception: ', '')}',
-              ),
-              backgroundColor: AppColors.error,
-            ),
+          AppSnackBar.error(
+            context,
+            '승인 실패: ${e.toString().replaceFirst('Exception: ', '')}',
           );
         }
       }
@@ -468,13 +464,9 @@ class _RequestCard extends ConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '거절 실패: ${e.toString().replaceFirst('Exception: ', '')}',
-              ),
-              backgroundColor: AppColors.error,
-            ),
+          AppSnackBar.error(
+            context,
+            '거절 실패: ${e.toString().replaceFirst('Exception: ', '')}',
           );
         }
       }
@@ -673,13 +665,9 @@ class _ApprovedGroupsList extends ConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '권한 취소 실패: ${e.toString().replaceFirst('Exception: ', '')}',
-              ),
-              backgroundColor: AppColors.error,
-            ),
+          AppSnackBar.error(
+            context,
+            '권한 취소 실패: ${e.toString().replaceFirst('Exception: ', '')}',
           );
         }
       }

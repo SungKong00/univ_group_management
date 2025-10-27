@@ -412,12 +412,7 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
         .toList();
 
     if (selectedIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('최소 1명 이상 선택해주세요'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, '최소 1명 이상 선택해주세요');
       return;
     }
 

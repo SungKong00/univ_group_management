@@ -52,12 +52,7 @@ class _EditRoleDialogState extends ConsumerState<EditRoleDialog>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           Navigator.of(context).pop(false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('시스템 역할은 수정할 수 없습니다'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          AppSnackBar.error(context, '시스템 역할은 수정할 수 없습니다');
         }
       });
       // 초기화는 해야 dispose 시 에러 방지

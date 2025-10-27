@@ -357,12 +357,7 @@ class _ApplicationCard extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('승인 처리 중 오류가 발생했습니다: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '승인 처리 중 오류가 발생했습니다: $e');
       }
     }
   }
@@ -399,22 +394,14 @@ class _ApplicationCard extends ConsumerWidget {
         );
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('${application.applicant.name}님의 지원을 거절했습니다')),
-          );
+          AppSnackBar.info(context, '${application.applicant.name}님의 지원을 거절했습니다');
 
           // 지원자 목록 새로고침
           ref.invalidate(recruitmentApplicationsProvider(recruitmentId));
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('거절 처리 중 오류가 발생했습니다: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          AppSnackBar.error(context, '거절 처리 중 오류가 발생했습니다: $e');
         }
       }
     }

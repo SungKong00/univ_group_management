@@ -959,12 +959,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                           _showEventDetailDialog(event);
                         } else {
                           if (_isExternalEvent(event)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('그룹 일정은 수정할 수 없습니다.'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
+                            AppSnackBar.info(context, '그룹 일정은 수정할 수 없습니다.');
                           } else {
                             _showEditDialog(event);
                           }
@@ -990,12 +985,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _showEditDialog(Event event) {
     // Prevent editing external events
     if (_isExternalEvent(event)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('그룹 일정은 수정할 수 없습니다.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      AppSnackBar.info(context, '그룹 일정은 수정할 수 없습니다.');
       return;
     }
 
@@ -1107,12 +1097,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     }
 
     if (isOverlapping && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('경고: 다른 일정과 겹칩니다.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      AppSnackBar.warning(context, '경고: 다른 일정과 겹칩니다.');
     }
 
     // Create event with DateTime info for precise rendering
@@ -1205,12 +1190,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     // Check if cell is disabled (gray cell)
     if (_isCellDisabled(cell)) {
       // Show snackbar message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('이 시간대는 예약할 수 없습니다'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      AppSnackBar.info(context, '이 시간대는 예약할 수 없습니다');
       return;
     }
 
@@ -1266,12 +1246,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     // Check if cell is disabled (gray cell)
     if (_isCellDisabled(cell)) {
       // Show snackbar message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('이 시간대는 예약할 수 없습니다'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      AppSnackBar.info(context, '이 시간대는 예약할 수 없습니다');
       return;
     }
 

@@ -323,11 +323,9 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
         ref.invalidate(placesProvider);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('삭제 실패: ${e.toString().replaceFirst('Exception: ', '')}'),
-              backgroundColor: AppColors.error,
-            ),
+          AppSnackBar.error(
+            context,
+            '삭제 실패: ${e.toString().replaceFirst('Exception: ', '')}',
           );
         }
       }

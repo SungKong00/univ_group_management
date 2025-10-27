@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/utils/snack_bar_helper.dart';
+import '../../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -429,9 +429,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('일정이 추가되었습니다')),
-          );
+          AppSnackBar.info(context, '일정이 추가되었습니다');
         }
       } catch (e) {
         if (mounted) {
@@ -708,9 +706,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('일정이 수정되었습니다')),
-          );
+          AppSnackBar.info(context, '일정이 수정되었습니다');
         }
       } catch (e) {
         if (mounted) {
@@ -766,9 +762,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('일정이 삭제되었습니다')),
-          );
+          AppSnackBar.info(context, '일정이 삭제되었습니다');
         }
       } catch (e) {
         if (mounted) {

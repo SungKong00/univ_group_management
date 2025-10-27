@@ -221,13 +221,7 @@ class _UserAvatarButtonState extends ConsumerState<_UserAvatarButton> {
       // 로그아웃 성공 시 AuthProvider가 자동으로 로그인 페이지로 리디렉션
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('로그아웃 실패: $e'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppSnackBar.error(context, '로그아웃 실패: $e');
     }
   }
 

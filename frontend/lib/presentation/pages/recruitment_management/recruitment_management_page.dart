@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -69,12 +70,7 @@ class _RecruitmentManagementPageState
       final validationError = data.validate();
       if (validationError != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(validationError),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, validationError);
         return;
       }
 
@@ -87,22 +83,11 @@ class _RecruitmentManagementPageState
 
       // 4. Success feedback
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('모집 공고가 성공적으로 생성되었습니다.'),
-          backgroundColor: AppColors.brand,
-        ),
-      );
+      AppSnackBar.info(context, '모집 공고가 성공적으로 생성되었습니다.');
     } catch (e) {
       // 5. Error handling
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('모집 공고 생성 실패: $e'),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 5),
-        ),
-      );
+      AppSnackBar.error(context, '모집 공고 생성 실패: $e');
     }
   }
 
@@ -116,12 +101,7 @@ class _RecruitmentManagementPageState
       final validationError = data.validate();
       if (validationError != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(validationError),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, validationError);
         return;
       }
 
@@ -137,22 +117,11 @@ class _RecruitmentManagementPageState
 
       // 4. Success feedback
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('모집 공고가 성공적으로 수정되었습니다.'),
-          backgroundColor: AppColors.brand,
-        ),
-      );
+      AppSnackBar.info(context, '모집 공고가 성공적으로 수정되었습니다.');
     } catch (e) {
       // 5. Error handling
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('모집 공고 수정 실패: $e'),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 5),
-        ),
-      );
+      AppSnackBar.error(context, '모집 공고 수정 실패: $e');
     }
   }
 
@@ -174,22 +143,11 @@ class _RecruitmentManagementPageState
 
       // 3. Success feedback
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('모집이 성공적으로 종료되었습니다.'),
-          backgroundColor: AppColors.brand,
-        ),
-      );
+      AppSnackBar.info(context, '모집이 성공적으로 종료되었습니다.');
     } catch (e) {
       // 4. Error handling
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('모집 종료 실패: $e'),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 5),
-        ),
-      );
+      AppSnackBar.error(context, '모집 종료 실패: $e');
     }
   }
 
@@ -211,22 +169,11 @@ class _RecruitmentManagementPageState
 
       // 3. Success feedback
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('모집 공고가 성공적으로 삭제되었습니다.'),
-          backgroundColor: AppColors.brand,
-        ),
-      );
+      AppSnackBar.info(context, '모집 공고가 성공적으로 삭제되었습니다.');
     } catch (e) {
       // 4. Error handling
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('모집 공고 삭제 실패: $e'),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 5),
-        ),
-      );
+      AppSnackBar.error(context, '모집 공고 삭제 실패: $e');
     }
   }
 
@@ -794,9 +741,7 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
       maxApplicants = int.tryParse(maxApplicantsText);
       if (maxApplicants == null || maxApplicants <= 0) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('모집 인원은 양의 정수로 입력해주세요.')),
-        );
+        AppSnackBar.info(context, '모집 인원은 양의 정수로 입력해주세요.');
         return;
       }
     }
@@ -826,9 +771,7 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
         await widget.onSubmit!(data);
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('모집 공고 제출 로직이 준비 중입니다.')),
-          );
+          AppSnackBar.info(context, '모집 공고 제출 로직이 준비 중입니다.');
         }
       }
     } finally {

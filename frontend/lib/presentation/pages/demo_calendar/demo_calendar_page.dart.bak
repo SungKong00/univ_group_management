@@ -112,7 +112,12 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
       // Show success message if groups found
       if (groups.isNotEmpty) {
-        AppSnackBar.info(context, '${groups.length}개의 그룹을 불러왔습니다');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${groups.length}개의 그룹을 불러왔습니다'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       }
     } catch (e) {
       developer.log(
@@ -130,7 +135,16 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
       });
 
       // Show error snackbar with retry option
-      AppSnackBar.info(context, '그룹 목록 로드 실패: $errorMessage');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('그룹 목록 로드 실패: $errorMessage'),
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: '재시도',
+            onPressed: _loadAvailableGroups,
+          ),
+        ),
+      );
     }
   }
 
@@ -249,7 +263,12 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
       // Handle the returned data from BottomSheet
       if (selectedPlaces == null || selectedPlaces.isEmpty) {
         if (mounted) {
-          AppSnackBar.info(context, '선택된 장소가 없습니다');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('선택된 장소가 없습니다'),
+              duration: Duration(seconds: 2),
+            ),
+          );
         }
         return;
       }
@@ -267,9 +286,14 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
         });
 
         if (mounted) {
-          AppSnackBar.info(context, 
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
                 '${selectedPlaces[0].building} ${selectedPlaces[0].roomNumber}가 선택되었습니다',
-              );
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
 
           developer.log(
             '🔄 Calling _calculateDisabledSlots() for single place',
@@ -304,9 +328,13 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
           });
 
           // Display selected places and duration
-          AppSnackBar.info(
-            context,
-            '${selectedPlaces.length}개의 장소 선택 완료 (소요시간: ${_formatDuration(duration)})',
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${selectedPlaces.length}개의 장소 선택 완료 (소요시간: ${_formatDuration(duration)})',
+              ),
+              duration: const Duration(seconds: 2),
+            ),
           );
 
           developer.log(
@@ -477,7 +505,13 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
       if (!mounted) return;
 
-      AppSnackBar.error(context, '예약 가능 시간 계산 실패: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('예약 가능 시간 계산 실패: $e'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -868,9 +902,14 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
                                   _calculateDisabledSlots();
                                 });
 
-                                AppSnackBar.info(context, 
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
                                       '${place.building} ${place.roomNumber} 선택이 해제되었습니다',
-                                    );
+                                    ),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
                               },
                               deleteIconColor: AppColors.neutral600,
                               backgroundColor: AppColors.brandLight,

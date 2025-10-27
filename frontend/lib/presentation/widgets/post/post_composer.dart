@@ -92,9 +92,7 @@ class _PostComposerState extends State<PostComposer> {
                     ? null
                     : () {
                         // TODO: 파일 첨부 기능 (백엔드 구현 후)
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('파일 첨부 기능은 준비 중입니다')),
-                        );
+                        AppSnackBar.info(context, '파일 첨부 기능은 준비 중입니다');
                       },
                 icon: const Icon(Icons.attach_file),
                 color: isDisabled ? AppColors.neutral400 : AppColors.neutral600,

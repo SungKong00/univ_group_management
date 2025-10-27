@@ -397,9 +397,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
 
               if (!apiResponse.success || apiResponse.data == null) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('워크스페이스를 찾을 수 없습니다')),
-                  );
+                  AppSnackBar.info(context, '워크스페이스를 찾을 수 없습니다');
                 }
                 return;
               }
@@ -437,27 +435,12 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
 
                   // 성공 메시지 표시
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '채널 "${channel.name}"이(가) 생성되고 권한이 설정되었습니다',
-                        ),
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
+                    AppSnackBar.info(context, '채널 "${channel.name}"이(가) 생성되었습니다');
                   }
                 } else {
                   // 권한 설정이 취소되거나 실패한 경우
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '채널 "${channel.name}"이(가) 생성되었으나 권한 설정이 필요합니다',
-                        ),
-                        backgroundColor: AppColors.warning,
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
+                    AppSnackBar.info(context, '채널 "${channel.name}"이(가) 생성되었지만 권한 설정은 나중에 해주세요');
                   }
                 }
               }

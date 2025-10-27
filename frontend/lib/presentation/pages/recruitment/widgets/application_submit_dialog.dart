@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/snack_bar_helper.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/models/recruitment_models.dart';
@@ -306,12 +307,7 @@ class _ApplicationSubmitDialogState
       if (mounted) {
         Navigator.of(context).pop();
         widget.onSubmitSuccess();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('지원이 완료되었습니다'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        AppSnackBar.success(context, '지원이 완료되었습니다');
       }
     } catch (e) {
       // Error handling

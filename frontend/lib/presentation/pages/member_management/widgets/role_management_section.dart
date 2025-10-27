@@ -129,13 +129,9 @@ class RoleManagementSection extends ConsumerWidget {
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '역할 삭제 실패: ${e.toString().replaceAll('Exception: ', '')}',
-                      ),
-                      backgroundColor: AppColors.error,
-                    ),
+                  AppSnackBar.error(
+                    context,
+                    '역할 삭제 실패: ${e.toString().replaceAll('Exception: ', '')}',
                   );
                 }
               }

@@ -344,7 +344,18 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation>
               .read(workspaceStateProvider.notifier)
               .setError('워크스페이스를 불러올 수 없습니다');
 
-          AppSnackBar.error(context, '워크스페이스를 불러오는 중 오류가 발생했습니다');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('워크스페이스를 불러오는 중 오류가 발생했습니다'),
+              backgroundColor: AppColors.error,
+              action: SnackBarAction(
+                label: '다시 시도',
+                textColor: Colors.white,
+                onPressed: () => _handleItemTap(context, ref, config),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
         }
       } finally {
         ref.read(workspaceStateProvider.notifier).setLoadingState(false);

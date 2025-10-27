@@ -95,7 +95,12 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
       if (!mounted) return;
       final snackMessage = next.snackbarMessage;
       if (snackMessage != null && snackMessage != previous?.snackbarMessage) {
-        AppSnackBar.error(context, snackMessage);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(snackMessage),
+            backgroundColor: next.snackbarIsError ? AppColors.error : null,
+          ),
+        );
         ref.read(timetableStateProvider.notifier).clearSnackbar();
       }
     });
@@ -177,7 +182,12 @@ class TimetableTab extends ConsumerWidget {
             isBusy: isBusy,
             onCreate: () => _handleCreate(context, notifier, isBusy),
             onShowCourseComingSoon: () {
-              AppSnackBar.info(context, '🚧 추후 구현 예정입니다');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('🚧 추후 구현 예정입니다'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
             },
             onRefresh: () {
               notifier.refresh();
@@ -545,7 +555,12 @@ class _CalendarTabState extends ConsumerState<CalendarTab> {
     ref.listen<CalendarEventsState>(calendarEventsProvider, (previous, next) {
       final message = next.snackbarMessage;
       if (message != null && message != previous?.snackbarMessage) {
-        AppSnackBar.error(context, message);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: next.snackbarIsError ? AppColors.error : null,
+          ),
+        );
         notifier.clearSnackbar();
       }
     });

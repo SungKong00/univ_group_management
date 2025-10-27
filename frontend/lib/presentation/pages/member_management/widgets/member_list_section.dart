@@ -524,12 +524,7 @@ class _MemberTableRow extends ConsumerWidget {
     } catch (e) {
       // 에러 SnackBar 표시
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('역할 변경에 실패했습니다: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '역할 변경에 실패했습니다: $e');
       }
     }
   }
@@ -590,9 +585,6 @@ class _MemberTableRow extends ConsumerWidget {
   }
 
   Future<void> _handleRemoveMember(BuildContext context, WidgetRef ref) async {
-    // context를 미리 저장 (async 중에 context 접근을 피하기 위해)
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
     try {
       await ref.read(
         removeMemberProvider(
@@ -603,21 +595,15 @@ class _MemberTableRow extends ConsumerWidget {
         ).future,
       );
 
-      // 성공 SnackBar 표시
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text('${member.userName}님을 그룹에서 제거했습니다'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      // 성공 SnackBar 표시 (context.mounted 사용)
+      if (context.mounted) {
+        AppSnackBar.success(context, '${member.userName}님을 그룹에서 제거했습니다');
+      }
     } catch (e) {
-      // 에러 SnackBar 표시
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text('멤버 제거에 실패했습니다: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      // 에러 SnackBar 표시 (context.mounted 사용)
+      if (context.mounted) {
+        AppSnackBar.error(context, '멤버 제거에 실패했습니다: $e');
+      }
     }
   }
 

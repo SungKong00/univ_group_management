@@ -477,13 +477,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
 
         // Success: Show success message
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('예약이 취소되었습니다'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
+          AppSnackBar.success(context, '예약이 취소되었습니다');
         }
       } catch (e) {
         // Error: Show detailed error message
@@ -499,18 +493,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
             errorMessage = '$errorMessage: $errorString';
           }
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: AppColors.error,
-              duration: const Duration(seconds: 4),
-              action: SnackBarAction(
-                label: '확인',
-                textColor: Colors.white,
-                onPressed: () {},
-              ),
-            ),
-          );
+          AppSnackBar.error(context, errorMessage);
         }
       }
     }

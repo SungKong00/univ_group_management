@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/models/place/place.dart';
@@ -296,14 +297,9 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
       if (mounted) {
         Navigator.pop(context);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        AppSnackBar.success(context, 
               widget.place == null ? '장소가 추가되었습니다' : '장소가 수정되었습니다',
-            ),
-            backgroundColor: AppColors.success,
-          ),
-        );
+            );
 
         // Call callback to refresh list
         widget.onSaved?.call();
@@ -312,14 +308,7 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
       setState(() => _isSubmitting = false);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${widget.place == null ? '추가' : '수정'} 실패: ${e.toString().replaceFirst('Exception: ', '')}',
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '${widget.place == null ? '추가' : '수정'} 실패: ${e.toString()}');
       }
     }
   }

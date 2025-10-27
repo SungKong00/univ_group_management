@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/utils/snack_bar_helper.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -191,7 +191,12 @@ class GroupHomeView extends ConsumerWidget {
               final selectedGroupId = workspaceState.selectedGroupId;
 
               if (selectedGroupId == null) {
-                AppSnackBar.info(context, '그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
                 return;
               }
 
@@ -200,7 +205,12 @@ class GroupHomeView extends ConsumerWidget {
               final myGroups = myGroupsAsync.value;
 
               if (myGroups == null) {
-                AppSnackBar.info(context, '그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
                 return;
               }
 
