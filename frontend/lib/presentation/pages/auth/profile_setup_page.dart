@@ -13,6 +13,7 @@ import '../../../core/services/onboarding_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/buttons/primary_button.dart';
+import '../../widgets/buttons/outlined_link_button.dart';
 
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
@@ -326,9 +327,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         _otpRemaining = null;
       });
       _otpController.clear();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('인증이 완료되었어요.')));
+      AppSnackBar.success(context, '인증이 완료되었어요.');
       FocusScope.of(context).unfocus();
     } catch (e) {
       if (mounted) {
@@ -432,9 +431,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         return;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('프로필 설정이 완료되었어요.')));
+      AppSnackBar.success(context, '프로필 설정이 완료되었어요.');
       context.go(AppConstants.homeRoute);
     } catch (e) {
       if (mounted) {
@@ -1018,17 +1015,10 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   const SizedBox(height: AppTheme.spacing12),
                   SizedBox(
                     height: 48,
-                    child: OutlinedButton(
-                      onPressed: _emailVerified || _isSendingOtp
-                          ? null
-                          : _sendOtp,
-                      child: _isSendingOtp
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(_otpRemaining == null ? '인증 코드 받기' : '재전송'),
+                    child: OutlinedLinkButton(
+                      text: _otpRemaining == null ? '인증 코드 받기' : '재전송',
+                      onPressed: _emailVerified || _isSendingOtp ? null : _sendOtp,
+                      isLoading: _isSendingOtp,
                     ),
                   ),
                 ],
@@ -1053,22 +1043,10 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     ),
                     child: SizedBox(
                       height: 48,
-                      child: OutlinedButton(
-                        onPressed: _emailVerified || _isSendingOtp
-                            ? null
-                            : _sendOtp,
-                        child: _isSendingOtp
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                _otpRemaining == null ? '인증 코드 받기' : '재전송',
-                                style: const TextStyle(fontSize: 14),
-                              ),
+                      child: OutlinedLinkButton(
+                        text: _otpRemaining == null ? '인증 코드 받기' : '재전송',
+                        onPressed: _emailVerified || _isSendingOtp ? null : _sendOtp,
+                        isLoading: _isSendingOtp,
                       ),
                     ),
                   ),
@@ -1110,22 +1088,16 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     const SizedBox(height: AppTheme.spacing12),
                     SizedBox(
                       height: 48,
-                      child: FilledButton(
+                      child: PrimaryButton(
+                        text: '확인',
                         onPressed:
                             !_isVerifyingOtp &&
                                 _otpRemaining != null &&
                                 _otpRemaining != Duration.zero
                             ? _verifyOtp
                             : null,
-                        child: _isVerifyingOtp
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('확인'),
+                        isLoading: _isVerifyingOtp,
+                        width: double.infinity,
                       ),
                     ),
                   ],
@@ -1151,22 +1123,15 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                       ),
                       child: SizedBox(
                         height: 48,
-                        child: FilledButton(
+                        child: PrimaryButton(
+                          text: '확인',
                           onPressed:
                               !_isVerifyingOtp &&
                                   _otpRemaining != null &&
                                   _otpRemaining != Duration.zero
                               ? _verifyOtp
                               : null,
-                          child: _isVerifyingOtp
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text('확인'),
+                          isLoading: _isVerifyingOtp,
                         ),
                       ),
                     ),

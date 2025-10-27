@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/theme.dart';
+import '../utils/snack_bar_helper.dart';
 import 'app_form_field.dart';
 import 'app_info_banner.dart';
 
@@ -138,9 +139,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
               message: '닫기 버튼이 있는 경고 메시지입니다.',
               showCloseButton: true,
               onClose: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('배너가 닫혔습니다')),
-                );
+                AppSnackBar.info(context, '배너가 닫혔습니다');
               },
             ),
             const SizedBox(height: AppSpacing.md),
@@ -157,9 +156,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
               message: '이 작업은 되돌릴 수 없습니다.',
               action: TextButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('액션 버튼이 클릭되었습니다')),
-                  );
+                  AppSnackBar.info(context, '액션 버튼이 클릭되었습니다');
                 },
                 child: const Text('자세히 보기'),
               ),
