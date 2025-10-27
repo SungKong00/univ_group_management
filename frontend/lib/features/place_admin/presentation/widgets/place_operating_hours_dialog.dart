@@ -4,6 +4,9 @@ import '../../../../core/models/place_time_models.dart';
 import '../../../../core/providers/place_time_providers.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../presentation/widgets/buttons/primary_button.dart';
+import '../../../../presentation/widgets/buttons/neutral_outlined_button.dart';
+import '../../../../presentation/widgets/buttons/outlined_link_button.dart';
 
 /// 운영시간 설정 다이얼로그
 ///
@@ -198,26 +201,15 @@ class _PlaceOperatingHoursDialogState
               ),
             ),
       actions: [
-        TextButton(
+        NeutralOutlinedButton(
+          text: '취소',
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('취소'),
         ),
-        ElevatedButton(
+        PrimaryButton(
+          text: '저장',
+          variant: PrimaryButtonVariant.brand,
+          isLoading: _isLoading,
           onPressed: _isLoading ? null : _handleSave,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brand,
-            foregroundColor: Colors.white,
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text('저장'),
         ),
       ],
     );
@@ -261,11 +253,9 @@ class _PlaceOperatingHoursDialogState
 
           // 시작 시간
           Expanded(
-            child: _buildTimeButton(
-              label: '시작',
-              time: hours.startTime ?? '09:00',
-              enabled: !hours.isClosed,
-              onTap: () => _selectTime(dayOfWeek, true),
+            child: OutlinedLinkButton(
+              text: hours.startTime ?? '09:00',
+              onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, true) : null,
             ),
           ),
           const SizedBox(width: 8),
@@ -274,11 +264,9 @@ class _PlaceOperatingHoursDialogState
 
           // 종료 시간
           Expanded(
-            child: _buildTimeButton(
-              label: '종료',
-              time: hours.endTime ?? '18:00',
-              enabled: !hours.isClosed,
-              onTap: () => _selectTime(dayOfWeek, false),
+            child: OutlinedLinkButton(
+              text: hours.endTime ?? '18:00',
+              onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, false) : null,
             ),
           ),
         ],
@@ -286,28 +274,6 @@ class _PlaceOperatingHoursDialogState
     );
   }
 
-  Widget _buildTimeButton({
-    required String label,
-    required String time,
-    required bool enabled,
-    required VoidCallback onTap,
-  }) {
-    return OutlinedButton(
-      onPressed: enabled ? onTap : null,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        side: BorderSide(
-          color: enabled ? AppColors.lightOutline : AppColors.lightOutline,
-        ),
-      ),
-      child: Text(
-        time,
-        style: AppTheme.bodyMedium.copyWith(
-          color: enabled ? AppColors.lightOnSurface : AppColors.disabledTextLight,
-        ),
-      ),
-    );
-  }
 }
 
 /// 운영시간 표시 + 수정 버튼 위젯
@@ -347,7 +313,9 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
                   '운영시간',
                   style: AppTheme.titleLarge,
                 ),
-                TextButton.icon(
+                OutlinedLinkButton(
+                  text: '설정 수정',
+                  icon: const Icon(Icons.edit, size: 18),
                   onPressed: () async {
                     final result = await showDialog<bool>(
                       context: context,
@@ -363,8 +331,6 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
                       ref.invalidate(operatingHoursProvider(placeId));
                     }
                   },
-                  icon: const Icon(Icons.edit, size: 18),
-                  label: const Text('설정 수정'),
                 ),
               ],
             ),

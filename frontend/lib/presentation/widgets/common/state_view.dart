@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../buttons/primary_button.dart';
 
 /// 범용 상태 관리 위젯
 ///
@@ -144,22 +145,11 @@ class StateView<T> extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: AppSpacing.lg),
-              ElevatedButton(
+              PrimaryButton(
+                text: '다시 시도',
+                variant: PrimaryButtonVariant.action,
+                width: 120,
                 onPressed: onRetry,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.action,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(120, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.button),
-                  ),
-                ),
-                child: Text(
-                  '다시 시도',
-                  style: AppTheme.titleMediumTheme(context).copyWith(
-                    color: Colors.white,
-                  ),
-                ),
               ),
             ],
           ],
@@ -201,22 +191,11 @@ class StateView<T> extends StatelessWidget {
             ],
             if (onEmptyAction != null && emptyActionLabel != null) ...[
               const SizedBox(height: AppSpacing.lg),
-              ElevatedButton(
+              PrimaryButton(
+                text: emptyActionLabel!,
+                variant: PrimaryButtonVariant.action,
+                width: 160,
                 onPressed: onEmptyAction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.action,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(160, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.button),
-                  ),
-                ),
-                child: Text(
-                  emptyActionLabel!,
-                  style: AppTheme.titleMediumTheme(context).copyWith(
-                    color: Colors.white,
-                  ),
-                ),
               ),
             ],
           ],

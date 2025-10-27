@@ -5,6 +5,10 @@ import '../../../../core/providers/place_time_providers.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/components/components.dart';
+import '../../../../presentation/widgets/buttons/primary_button.dart';
+import '../../../../presentation/widgets/buttons/error_button.dart';
+import '../../../../presentation/widgets/buttons/neutral_outlined_button.dart';
+import '../../../../presentation/widgets/buttons/outlined_link_button.dart';
 
 /// 임시 휴무 캘린더 위젯
 ///
@@ -358,9 +362,9 @@ class AddClosureDialogSelector extends StatelessWidget {
         ],
       ),
       actions: [
-        TextButton(
+        NeutralOutlinedButton(
+          text: '취소',
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
         ),
       ],
     );
@@ -480,26 +484,15 @@ class _AddFullDayClosureDialogState
         ),
       ),
       actions: [
-        TextButton(
+        NeutralOutlinedButton(
+          text: '취소',
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('취소'),
         ),
-        ElevatedButton(
+        PrimaryButton(
+          text: '추가',
+          variant: PrimaryButtonVariant.brand,
+          isLoading: _isLoading,
           onPressed: _isLoading ? null : _handleAdd,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brand,
-            foregroundColor: Colors.white,
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text('추가'),
         ),
       ],
     );
@@ -618,9 +611,9 @@ class _AddPartialClosureDialogState
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: OutlinedLinkButton(
+                    text: _formatTime(_startTime),
                     onPressed: () => _selectTime(true),
-                    child: Text(_formatTime(_startTime)),
                   ),
                 ),
                 const Padding(
@@ -628,9 +621,9 @@ class _AddPartialClosureDialogState
                   child: Text('-'),
                 ),
                 Expanded(
-                  child: OutlinedButton(
+                  child: OutlinedLinkButton(
+                    text: _formatTime(_endTime),
                     onPressed: () => _selectTime(false),
-                    child: Text(_formatTime(_endTime)),
                   ),
                 ),
               ],
@@ -648,26 +641,15 @@ class _AddPartialClosureDialogState
         ),
       ),
       actions: [
-        TextButton(
+        NeutralOutlinedButton(
+          text: '취소',
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('취소'),
         ),
-        ElevatedButton(
+        PrimaryButton(
+          text: '추가',
+          variant: PrimaryButtonVariant.brand,
+          isLoading: _isLoading,
           onPressed: _isLoading ? null : _handleAdd,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brand,
-            foregroundColor: Colors.white,
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text('추가'),
         ),
       ],
     );
@@ -742,17 +724,13 @@ class ClosureDetailDialog extends ConsumerWidget {
                       title: const Text('휴무 삭제'),
                       content: const Text('이 휴무를 삭제하시겠습니까?'),
                       actions: [
-                        TextButton(
+                        NeutralOutlinedButton(
+                          text: '취소',
                           onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('취소'),
                         ),
-                        ElevatedButton(
+                        ErrorButton(
+                          text: '삭제',
                           onPressed: () => Navigator.of(context).pop(true),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.error,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('삭제'),
                         ),
                       ],
                     ),
@@ -781,9 +759,9 @@ class ClosureDetailDialog extends ConsumerWidget {
         ),
       ),
       actions: [
-        TextButton(
+        NeutralOutlinedButton(
+          text: '닫기',
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('닫기'),
         ),
       ],
     );
