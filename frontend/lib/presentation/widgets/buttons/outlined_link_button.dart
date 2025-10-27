@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../../../core/theme/app_colors.dart';
+import 'button_loading_child.dart';
 
 class OutlinedLinkButton extends StatelessWidget {
   final String text;
@@ -33,25 +34,27 @@ class OutlinedLinkButton extends StatelessWidget {
       ButtonVariant.outlined => OutlinedButton(
         style: AppButtonStyles.outlined(colorScheme),
         onPressed: isEnabled ? onPressed : null,
-        child: _OutlinedChild(
+        child: ButtonLoadingChild(
           text: text,
           icon: icon,
           isLoading: isLoading,
           textStyle: AppTheme.bodyMediumTheme(
             context,
           ).copyWith(color: AppColors.brand, fontWeight: FontWeight.w500),
+          indicatorColor: AppColors.brand,
         ),
       ),
       ButtonVariant.tonal => FilledButton(
         style: AppButtonStyles.tonal(colorScheme),
         onPressed: isEnabled ? onPressed : null,
-        child: _OutlinedChild(
+        child: ButtonLoadingChild(
           text: text,
           icon: icon,
           isLoading: isLoading,
           textStyle: AppTheme.bodyMediumTheme(
             context,
           ).copyWith(color: AppColors.brand, fontWeight: FontWeight.w500),
+          indicatorColor: AppColors.brand,
         ),
       ),
     };
@@ -64,62 +67,6 @@ class OutlinedLinkButton extends StatelessWidget {
     );
   }
 }
-
-class _OutlinedChild extends StatelessWidget {
-  final String text;
-  final Widget? icon;
-  final bool isLoading;
-  final TextStyle textStyle;
-
-  const _OutlinedChild({
-    required this.text,
-    required this.icon,
-    required this.isLoading,
-    required this.textStyle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return SizedBox(
-        width: AppComponents.progressIndicatorSize,
-        height: AppComponents.progressIndicatorSize,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.brand),
-        ),
-      );
-    }
-
-    if (icon == null) {
-      return Text(text, style: textStyle, textAlign: TextAlign.center);
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconTheme(
-          data: IconThemeData(
-            size: AppComponents.googleIconSize,
-            color: textStyle.color,
-          ),
-          child: icon!,
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Flexible(
-          child: Text(
-            text,
-            style: textStyle,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class AdminLoginButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;

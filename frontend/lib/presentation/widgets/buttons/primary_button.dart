@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../../../core/theme/app_colors.dart';
 import '../icons/google_logo.dart';
+import 'button_loading_child.dart';
 
 enum PrimaryButtonVariant { action, brand }
 
@@ -48,7 +49,7 @@ class PrimaryButton extends StatelessWidget {
         child: FilledButton(
           style: buttonStyle,
           onPressed: isEnabled ? onPressed : null,
-          child: _PrimaryButtonChild(
+          child: ButtonLoadingChild(
             text: text,
             icon: icon,
             isLoading: isLoading,
@@ -91,7 +92,7 @@ class GoogleSignInButton extends StatelessWidget {
         child: OutlinedButton(
           style: AppButtonStyles.google(colorScheme),
           onPressed: isEnabled ? onPressed : null,
-          child: _PrimaryButtonChild(
+          child: ButtonLoadingChild(
             text: 'Google로 계속하기',
             icon: const GoogleLogo(size: AppComponents.googleIconSize),
             isLoading: isLoading,
@@ -105,63 +106,6 @@ class GoogleSignInButton extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _PrimaryButtonChild extends StatelessWidget {
-  final String text;
-  final Widget? icon;
-  final bool isLoading;
-  final TextStyle textStyle;
-  final Color indicatorColor;
-
-  const _PrimaryButtonChild({
-    required this.text,
-    required this.icon,
-    required this.isLoading,
-    required this.textStyle,
-    required this.indicatorColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return SizedBox(
-        width: AppComponents.progressIndicatorSize,
-        height: AppComponents.progressIndicatorSize,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(indicatorColor),
-        ),
-      );
-    }
-
-    if (icon == null) {
-      return Text(text, style: textStyle, textAlign: TextAlign.center);
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconTheme(
-          data: IconThemeData(
-            size: AppComponents.googleIconSize,
-            color: textStyle.color,
-          ),
-          child: icon!,
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Flexible(
-          child: Text(
-            text,
-            style: textStyle,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 }
