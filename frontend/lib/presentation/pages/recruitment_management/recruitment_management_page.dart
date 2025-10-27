@@ -15,6 +15,9 @@ import '../../widgets/common/collapsible_content.dart';
 import '../../widgets/common/state_view.dart';
 import '../../widgets/common/section_card.dart';
 import '../../widgets/buttons/primary_button.dart';
+import '../../widgets/buttons/neutral_outlined_button.dart';
+import '../../widgets/buttons/error_button.dart';
+import '../../widgets/buttons/outlined_link_button.dart';
 
 class RecruitmentManagementPage extends ConsumerStatefulWidget {
   const RecruitmentManagementPage({super.key});
@@ -41,18 +44,24 @@ class _RecruitmentManagementPageState
           title: Text(title),
           content: Text(message),
           actions: [
-            TextButton(
+            NeutralOutlinedButton(
+              text: '취소',
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('취소'),
+              width: 100,
             ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: FilledButton.styleFrom(
-                backgroundColor: confirmColor,
-                foregroundColor: Colors.white,
+            if (confirmColor == AppColors.error)
+              ErrorButton(
+                text: confirmLabel,
+                onPressed: () => Navigator.of(context).pop(true),
+                width: 100,
+              )
+            else
+              PrimaryButton(
+                text: confirmLabel,
+                onPressed: () => Navigator.of(context).pop(true),
+                variant: PrimaryButtonVariant.action,
+                width: 100,
               ),
-              child: Text(confirmLabel),
-            ),
           ],
         );
       },
@@ -422,45 +431,26 @@ class RecruitmentDetailsCard extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            FilledButton(
+            PrimaryButton(
+              text: '모집 공고 수정',
               onPressed: onEdit,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brand,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-              ),
-              child: const Text('모집 공고 수정'),
+              variant: PrimaryButtonVariant.brand,
             ),
             SizedBox(height: AppSpacing.xs),
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: OutlinedLinkButton(
+                    text: '모집 종료',
                     onPressed: onClose,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                    ),
-                    child: const Text('모집 종료'),
+                    variant: ButtonVariant.outlined,
                   ),
                 ),
                 SizedBox(width: AppSpacing.xs),
                 Expanded(
-                  child: TextButton(
+                  child: ErrorButton(
+                    text: '모집 삭제',
                     onPressed: onDelete,
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.error,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: AppSpacing.sm,
-                      ),
-                    ),
-                    child: const Text('모집 삭제'),
                   ),
                 ),
               ],
@@ -869,13 +859,14 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
           if (_selectedEndDate != null)
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(
+              child: ErrorButton(
+                text: '마감일 삭제',
                 onPressed: () {
                   setState(() {
                     _selectedEndDate = null;
                   });
                 },
-                child: const Text('마감일 삭제'),
+                width: 120,
               ),
             ),
           SwitchListTile.adaptive(
@@ -909,22 +900,20 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
                 onRemove: () => _removeQuestion(i),
               ),
             ),
-          OutlinedButton.icon(
+          OutlinedLinkButton(
+            text: '질문 추가 (${_questionControllers.length}/20)',
             onPressed: _questionControllers.length < 20 ? _addQuestion : null,
+            variant: ButtonVariant.outlined,
             icon: const Icon(Icons.add),
-            label: Text('질문 추가 (${_questionControllers.length}/20)'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.brand,
-              side: BorderSide(color: AppColors.brand.withValues(alpha: 0.5)),
-            ),
           ),
           SizedBox(height: AppSpacing.md),
           Row(
             children: [
               if (widget.onCancel != null)
-                TextButton(
+                NeutralOutlinedButton(
+                  text: '취소',
                   onPressed: _isSubmitting ? null : widget.onCancel,
-                  child: const Text('취소'),
+                  width: 100,
                 ),
               const Spacer(),
               Flexible(
@@ -1163,9 +1152,10 @@ class RecruitmentDetailModal extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: AppSpacing.md),
-              TextButton(
+              NeutralOutlinedButton(
+                text: '닫기',
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('닫기'),
+                width: 100,
               ),
             ],
           ),
@@ -1298,17 +1288,11 @@ class RecruitmentDetailModal extends ConsumerWidget {
               SizedBox(height: AppSpacing.sm),
               Align(
                 alignment: Alignment.centerRight,
-                child: FilledButton(
+                child: PrimaryButton(
+                  text: '닫기',
                   onPressed: () => Navigator.of(context).pop(),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brand,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                  ),
-                  child: const Text('닫기'),
+                  variant: PrimaryButtonVariant.brand,
+                  width: 100,
                 ),
               ),
             ],
@@ -1587,20 +1571,10 @@ class _QuestionCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              OutlinedButton.icon(
+              ErrorButton(
+                text: '삭제',
                 onPressed: onRemove,
-                icon: const Icon(Icons.delete_outline, size: 18),
-                label: const Text('삭제'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs,
-                    vertical: 8,
-                  ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
+                width: 80,
               ),
             ],
           ),

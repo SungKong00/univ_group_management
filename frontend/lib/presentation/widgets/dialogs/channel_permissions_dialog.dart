@@ -8,6 +8,7 @@ import '../../../core/repositories/role_repository.dart';
 import '../../../core/services/channel_service.dart';
 import '../../../core/components/app_dialog_title.dart';
 import '../../../core/mixins/dialog_animation_mixin.dart';
+import '../buttons/neutral_outlined_button.dart';
 import 'confirm_cancel_actions.dart';
 
 /// 채널 권한 설정 다이얼로그
@@ -223,9 +224,10 @@ class _ChannelPermissionsDialogState
             style: const TextStyle(fontSize: 13, color: AppColors.error),
           ),
           const SizedBox(height: AppSpacing.sm),
-          TextButton(
+          NeutralOutlinedButton(
+            text: '다시 시도',
             onPressed: _loadRoles,
-            child: const Text('다시 시도'),
+            width: 120,
           ),
         ],
       ),

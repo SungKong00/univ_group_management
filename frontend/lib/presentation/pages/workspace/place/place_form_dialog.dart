@@ -8,6 +8,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/components/app_dialog_title.dart';
 import '../../../widgets/buttons/primary_button.dart';
+import '../../../widgets/buttons/neutral_outlined_button.dart';
 import '../../../providers/place_provider.dart';
 
 class PlaceFormDialog extends ConsumerStatefulWidget {
@@ -235,14 +236,10 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        NeutralOutlinedButton(
+          text: '취소',
           onPressed: _isSubmitting ? null : () => Navigator.pop(context),
-          child: Text(
-            '취소',
-            style: AppTheme.titleLarge.copyWith(
-              color: _isSubmitting ? AppColors.neutral400 : AppColors.neutral600,
-            ),
-          ),
+          width: 100,
         ),
         PrimaryButton(
           text: isEditing ? '수정' : '추가',

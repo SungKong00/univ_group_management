@@ -5,6 +5,8 @@ import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/snack_bar_helper.dart';
 import '../../../../../core/components/app_dialog_title.dart';
+import '../../../../widgets/buttons/primary_button.dart';
+import '../../../../widgets/buttons/neutral_outlined_button.dart';
 import '../../../../providers/place_provider.dart';
 
 /// Dialog for requesting place usage permission
@@ -191,46 +193,16 @@ class _PlaceUsageRequestDialogState
         ),
       ),
       actions: [
-        TextButton(
+        NeutralOutlinedButton(
+          text: '취소',
           onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: Text(
-            '취소',
-            style: AppTheme.titleLarge.copyWith(
-              color: AppColors.neutral600,
-            ),
-          ),
+          width: 100,
         ),
-        ElevatedButton(
-          onPressed: _selectedPlaceId != null && !_isLoading
-              ? _handleSubmit
-              : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brand,
-            disabledBackgroundColor: AppColors.neutral300,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.button),
-            ),
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-          ),
-          child: _isLoading
-              ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
-                  ),
-                )
-              : Text(
-                  '신청',
-                  style: AppTheme.titleLarge.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+        PrimaryButton(
+          text: '신청',
+          isLoading: _isLoading,
+          onPressed: _selectedPlaceId != null ? _handleSubmit : null,
+          variant: PrimaryButtonVariant.brand,
         ),
       ],
     );
