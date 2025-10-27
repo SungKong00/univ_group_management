@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/models/place/place.dart';
@@ -315,12 +316,7 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
         await ref.read(placeManagementProvider.notifier).deletePlace(placeId);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('장소가 삭제되었습니다'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          AppSnackBar.success(context, '장소가 삭제되었습니다');
         }
 
         // Refresh place list

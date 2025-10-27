@@ -4,6 +4,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
 import '../../../../../core/models/place/place_reservation.dart';
 import '../../../../../core/components/app_dialog_title.dart';
+import '../../../../widgets/buttons/primary_button.dart';
 import '../../../../providers/place_calendar_provider.dart';
 import '../../../../providers/group_calendar_provider.dart';
 
@@ -217,18 +218,12 @@ class _PlaceReservationDialogState
                     child: const Text('취소'),
                   ),
                   const SizedBox(width: AppSpacing.xs),
-                  ElevatedButton(
-                    onPressed: _isSubmitting ? null : _handleSubmit,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(100, 44),
-                    ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('예약하기'),
+                  PrimaryButton(
+                    text: '예약하기',
+                    isLoading: _isSubmitting,
+                    onPressed: _handleSubmit,
+                    variant: PrimaryButtonVariant.action,
+                    width: 100,
                   ),
                 ],
               ),

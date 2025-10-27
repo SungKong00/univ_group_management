@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -52,12 +53,7 @@ class _PostComposerState extends State<PostComposer> {
     } catch (e) {
       // 에러 처리는 부모 컴포넌트에서 처리
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('게시글 전송 실패: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '게시글 전송 실패: ${e.toString()}');
       }
     } finally {
       if (mounted) {

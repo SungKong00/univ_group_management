@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/models/member_models.dart';
+import '../../../../core/utils/snack_bar_helper.dart';
 import '../../../widgets/member/member_avatar.dart';
 import '../../../widgets/common/section_card.dart';
 import '../providers/join_request_provider.dart';
@@ -230,21 +231,11 @@ class _JoinRequestCard extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${request.userName}님의 가입을 승인했습니다'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        AppSnackBar.success(context, '${request.userName}님의 가입을 승인했습니다');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('승인 처리 중 오류가 발생했습니다: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '승인 처리 중 오류가 발생했습니다: $e');
       }
     }
   }
@@ -278,18 +269,11 @@ class _JoinRequestCard extends ConsumerWidget {
         );
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${request.userName}님의 가입 신청을 거절했습니다')),
-          );
+          AppSnackBar.info(context, '${request.userName}님의 가입 신청을 거절했습니다');
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('거절 처리 중 오류가 발생했습니다: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          AppSnackBar.error(context, '거절 처리 중 오류가 발생했습니다: $e');
         }
       }
     }

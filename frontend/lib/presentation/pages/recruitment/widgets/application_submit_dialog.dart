@@ -4,6 +4,7 @@ import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/models/recruitment_models.dart';
 import '../../../../core/components/app_dialog_title.dart';
+import '../../../widgets/buttons/primary_button.dart';
 import '../providers/recruitment_detail_provider.dart';
 
 /// Application Submit Dialog
@@ -252,18 +253,11 @@ class _ApplicationSubmitDialogState
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               flex: 2,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _handleSubmit,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Text('제출하기'),
+              child: PrimaryButton(
+                text: '제출하기',
+                isLoading: _isSubmitting,
+                onPressed: _handleSubmit,
+                variant: PrimaryButtonVariant.action,
               ),
             ),
           ],

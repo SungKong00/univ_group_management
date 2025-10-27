@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import '../../../core/utils/snack_bar_helper.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -114,22 +115,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     } on PlatformException catch (error) {
       if (mounted) {
         final message = error.message ?? 'Google 로그인 초기화 중 오류가 발생했습니다.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('로그인 실패: $message'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '로그인 실패: $message');
       }
     } catch (e) {
       if (mounted) {
         final message = e.toString().replaceFirst('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('로그인 실패: $message'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '로그인 실패: $message');
       }
     } finally {
       if (mounted) {
@@ -153,12 +144,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       await _handlePostLogin(loginResponse);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('테스트 로그인 실패: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '테스트 로그인 실패: $e');
       }
     } finally {
       if (mounted) {
@@ -359,12 +345,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       await _handlePostLogin(loginResponse);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('테스트 로그인 실패: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '테스트 로그인 실패: $e');
       }
     } finally {
       if (mounted) {

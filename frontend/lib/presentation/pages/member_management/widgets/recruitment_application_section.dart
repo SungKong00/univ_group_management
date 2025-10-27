@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/recruitment_models.dart';
 import '../../../../core/models/member_models.dart';
@@ -349,12 +350,7 @@ class _ApplicationCard extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${application.applicant.name}님의 지원을 승인했습니다'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        AppSnackBar.success(context, '${application.applicant.name}님의 지원을 승인했습니다');
 
         // 지원자 목록 새로고침
         ref.invalidate(recruitmentApplicationsProvider(recruitmentId));

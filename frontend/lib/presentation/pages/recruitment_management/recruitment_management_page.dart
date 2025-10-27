@@ -13,6 +13,7 @@ import '../workspace/widgets/workspace_state_view.dart';
 import '../../widgets/common/collapsible_content.dart';
 import '../../widgets/common/state_view.dart';
 import '../../widgets/common/section_card.dart';
+import '../../widgets/buttons/primary_button.dart';
 
 class RecruitmentManagementPage extends ConsumerStatefulWidget {
   const RecruitmentManagementPage({super.key});
@@ -984,28 +985,11 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
                 ),
               const Spacer(),
               Flexible(
-                child: FilledButton(
-                  onPressed: _isSubmitting ? null : _handleSubmit,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brand,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.xs,
-                    ),
-                  ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          ),
-                        )
-                      : Text(widget.submitLabel),
+                child: PrimaryButton(
+                  text: widget.submitLabel,
+                  isLoading: _isSubmitting,
+                  onPressed: _handleSubmit,
+                  variant: PrimaryButtonVariant.brand,
                 ),
               ),
             ],

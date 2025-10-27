@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -81,12 +82,7 @@ class ProfilePage extends ConsumerWidget {
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('에러 발생: ${e.toString()}'),
-                          backgroundColor: AppColors.error,
-                        ),
-                      );
+                      AppSnackBar.error(context, '에러 발생: ${e.toString()}');
                     }
                   }
                 },

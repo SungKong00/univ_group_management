@@ -7,6 +7,7 @@ import '../../../core/services/group_service.dart';
 import '../../../core/models/group_models.dart';
 import '../../../core/components/app_dialog_title.dart';
 import '../../../core/mixins/dialog_animation_mixin.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import '../buttons/primary_button.dart';
 import '../buttons/neutral_outlined_button.dart';
 
@@ -82,14 +83,10 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
       if (!mounted) return;
 
       // 성공 메시지
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '하위 그룹 생성 요청이 완료되었습니다.\n관리자 승인 후 그룹이 생성됩니다.',
-          ),
-          backgroundColor: AppColors.success,
-          duration: const Duration(seconds: 3),
-        ),
+      AppSnackBar.success(
+        context,
+        '하위 그룹 생성 요청이 완료되었습니다.\n관리자 승인 후 그룹이 생성됩니다.',
+        duration: const Duration(seconds: 3),
       );
 
       Navigator.of(context).pop(true);
@@ -112,12 +109,10 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
         errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 3),
-        ),
+      AppSnackBar.error(
+        context,
+        errorMessage,
+        duration: const Duration(seconds: 3),
       );
     }
   }

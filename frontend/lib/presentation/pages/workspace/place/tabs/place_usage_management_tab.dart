@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/models/place/place.dart';
@@ -341,12 +342,7 @@ class _RequestCard extends ConsumerWidget {
         ref.invalidate(approvedUsageGroupsProvider(placeId));
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('승인되었습니다'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          AppSnackBar.success(context, '승인되었습니다');
         }
       } catch (e) {
         if (context.mounted) {
@@ -468,12 +464,7 @@ class _RequestCard extends ConsumerWidget {
         ref.invalidate(pendingUsageRequestsProvider(placeId));
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('거절되었습니다'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          AppSnackBar.success(context, '거절되었습니다');
         }
       } catch (e) {
         if (context.mounted) {
@@ -678,12 +669,7 @@ class _ApprovedGroupsList extends ConsumerWidget {
 
         if (context.mounted) {
           final deletedCount = result['deletedReservations'] ?? 0;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('권한이 취소되었습니다 (예약 $deletedCount개 취소됨)'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          AppSnackBar.success(context, '권한이 취소되었습니다 (예약 $deletedCount개 취소됨)');
         }
       } catch (e) {
         if (context.mounted) {

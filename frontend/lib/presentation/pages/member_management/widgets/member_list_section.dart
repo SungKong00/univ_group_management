@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
@@ -518,12 +519,7 @@ class _MemberTableRow extends ConsumerWidget {
 
       // 성공 SnackBar 표시
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${member.userName}님의 역할이 변경되었습니다'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        AppSnackBar.success(context, '${member.userName}님의 역할이 변경되었습니다');
       }
     } catch (e) {
       // 에러 SnackBar 표시

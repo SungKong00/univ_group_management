@@ -226,7 +226,7 @@ class AppChip extends StatelessWidget {
 
       case AppChipVariant.success:
         return _ChipColors(
-          backgroundColor: AppColors.success.withOpacity(0.1),
+          backgroundColor: AppColors.success.withValues(alpha: 0.1),
           selectedBackgroundColor: AppColors.success,
           foregroundColor: AppColors.success,
           selectedForegroundColor: Colors.white,
@@ -235,7 +235,7 @@ class AppChip extends StatelessWidget {
 
       case AppChipVariant.warning:
         return _ChipColors(
-          backgroundColor: AppColors.warning.withOpacity(0.1),
+          backgroundColor: AppColors.warning.withValues(alpha: 0.1),
           selectedBackgroundColor: AppColors.warning,
           foregroundColor: AppColors.warning,
           selectedForegroundColor: Colors.white,
@@ -244,7 +244,7 @@ class AppChip extends StatelessWidget {
 
       case AppChipVariant.error:
         return _ChipColors(
-          backgroundColor: AppColors.error.withOpacity(0.1),
+          backgroundColor: AppColors.error.withValues(alpha: 0.1),
           selectedBackgroundColor: AppColors.error,
           foregroundColor: AppColors.error,
           selectedForegroundColor: Colors.white,
@@ -252,7 +252,6 @@ class AppChip extends StatelessWidget {
         );
 
       case AppChipVariant.defaultVariant:
-      default:
         return _ChipColors(
           backgroundColor: AppColors.neutral100,
           selectedBackgroundColor: AppColors.brandLight,
@@ -287,7 +286,6 @@ class AppChip extends StatelessWidget {
         );
 
       case AppChipSize.medium:
-      default:
         return _ChipSizeSpecs(
           fontSize: 14,
           iconSize: 16,

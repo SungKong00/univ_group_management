@@ -6,6 +6,7 @@ import '../../../../core/models/place/place.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/components/app_dialog_title.dart';
+import '../../../widgets/buttons/primary_button.dart';
 import '../../../providers/place_provider.dart';
 
 class PlaceFormDialog extends ConsumerStatefulWidget {
@@ -242,37 +243,11 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
             ),
           ),
         ),
-        ElevatedButton(
-          onPressed: _isSubmitting ? null : _handleSubmit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brand,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: AppColors.neutral300,
-            disabledForegroundColor: AppColors.neutral500,
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.button),
-            ),
-          ),
-          child: _isSubmitting
-              ? SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Text(
-                  isEditing ? '수정' : '추가',
-                  style: AppTheme.titleLarge.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+        PrimaryButton(
+          text: isEditing ? '수정' : '추가',
+          isLoading: _isSubmitting,
+          onPressed: _handleSubmit,
+          variant: PrimaryButtonVariant.brand,
         ),
       ],
     );

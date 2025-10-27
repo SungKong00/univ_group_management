@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -434,9 +435,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('일정 추가 실패: ${e.toString()}')),
-          );
+          AppSnackBar.info(context, '일정 추가 실패: ${e.toString()}');
         }
       }
     }
@@ -715,9 +714,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('일정 수정 실패: ${e.toString()}')),
-          );
+          AppSnackBar.info(context, '일정 수정 실패: ${e.toString()}');
         }
       }
     }
@@ -775,9 +772,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('일정 삭제 실패: ${e.toString()}')),
-          );
+          AppSnackBar.info(context, '일정 삭제 실패: ${e.toString()}');
         }
       }
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
@@ -80,12 +81,7 @@ class RoleManagementSection extends ConsumerWidget {
     final success = await showCreateRoleDialog(context, groupId: groupId);
 
     if (success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('역할이 생성되었습니다'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      AppSnackBar.success(context, '역할이 생성되었습니다');
       // Provider가 자동으로 새로고침됨
     }
   }
@@ -102,12 +98,7 @@ class RoleManagementSection extends ConsumerWidget {
     );
 
     if (success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('역할이 수정되었습니다'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      AppSnackBar.success(context, '역할이 수정되었습니다');
       // Provider가 자동으로 새로고침됨
     }
   }
@@ -134,12 +125,7 @@ class RoleManagementSection extends ConsumerWidget {
                 );
 
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('역할이 삭제되었습니다'),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
+                  AppSnackBar.success(context, '역할이 삭제되었습니다');
                 }
               } catch (e) {
                 if (context.mounted) {

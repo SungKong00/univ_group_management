@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/channel_models.dart';
 import '../../../core/models/page_breadcrumb.dart';
@@ -462,9 +463,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
               }
             } catch (e) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('오류가 발생했습니다: $e')),
-                );
+                AppSnackBar.info(context, '오류가 발생했습니다: $e');
               }
             }
           },

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/utils/snack_bar_helper.dart';
 import '../../../../../core/components/app_dialog_title.dart';
 import '../../../../providers/place_provider.dart';
 
@@ -251,11 +250,23 @@ class _PlaceUsageRequestDialogState
 
       if (mounted) {
         Navigator.pop(context);
-        AppSnackBar.success(context, '권한 신청이 완료되었습니다');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('권한 신청이 완료되었습니다'),
+            backgroundColor: AppColors.success,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context, '신청 실패: ${e.toString().replaceFirst('Exception: ', '')}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '신청 실패: ${e.toString().replaceFirst('Exception: ', '')}',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     } finally {
       if (mounted) {

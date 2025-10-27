@@ -5,6 +5,7 @@ import '../../../../core/theme/theme.dart';
 import '../../../../core/models/channel_models.dart';
 import '../../../../core/models/auth_models.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/utils/snack_bar_helper.dart';
 import '../../../providers/my_groups_provider.dart';
 import '../../../providers/workspace_state_provider.dart';
 import '../../../widgets/dialogs/create_channel_dialog.dart';
@@ -198,12 +199,7 @@ class ChannelListSection extends ConsumerWidget {
     );
 
     if (result && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('채널 "${channel.name}" 권한이 업데이트되었습니다'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      AppSnackBar.info(context, '채널 "${channel.name}" 권한이 업데이트되었습니다');
     }
   }
 
@@ -230,9 +226,7 @@ class ChannelListSection extends ConsumerWidget {
 
       if (!apiResponse.success || apiResponse.data == null) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('워크스페이스를 찾을 수 없습니다')),
-          );
+          AppSnackBar.error(context, '워크스페이스를 찾을 수 없습니다');
         }
         return;
       }
@@ -271,23 +265,19 @@ class ChannelListSection extends ConsumerWidget {
 
           // 성공 메시지
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content:
-                    Text('채널 "${channel.name}"이(가) 생성되고 권한이 설정되었습니다'),
-                duration: const Duration(seconds: 3),
-              ),
+            AppSnackBar.success(
+              context,
+              '채널 "${channel.name}"이(가) 생성되고 권한이 설정되었습니다',
+              duration: const Duration(seconds: 3),
             );
           }
         } else {
           // 권한 설정 취소
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('채널 "${channel.name}"이(가) 생성되었으나 권한 설정이 필요합니다'),
-                backgroundColor: AppColors.warning,
-                duration: const Duration(seconds: 3),
-              ),
+            AppSnackBar.warning(
+              context,
+              '채널 "${channel.name}"이(가) 생성되었으나 권한 설정이 필요합니다',
+              duration: const Duration(seconds: 3),
             );
           }
           // 목록 새로고침
@@ -296,9 +286,7 @@ class ChannelListSection extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
-        );
+        AppSnackBar.error(context, '오류가 발생했습니다: $e');
       }
     }
   }

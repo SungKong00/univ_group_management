@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -47,12 +48,7 @@ class _CommentComposerState extends State<CommentComposer> {
       _controller.clear();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('댓글 전송 실패: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '댓글 전송 실패: ${e.toString()}');
       }
     } finally {
       if (mounted) {
