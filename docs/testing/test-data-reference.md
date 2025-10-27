@@ -23,8 +23,83 @@ Phase 7: 페르소나별 시간표 생성
   ↓
 Phase 8: 개인 캘린더 일정 생성
   ↓
-Phase 9: 그룹 캘린더 일정 및 장소 예약 생성
+Phase 9: 그룹 캘린더 일정 및 장소 예약 생성 (슬롯 기반)
 ```
+
+## TestDataRunner 슬롯 기반 설계
+
+### 개요
+TestDataRunner는 **슬롯 기반 시스템**으로 그룹 캘린더 일정을 생성합니다. 이를 통해 장소 예약 충돌을 완전히 방지하고, 언제든 실행 가능한 안정적인 테스트 데이터를 제공합니다.
+
+### baseDate() 함수
+- **역할**: 다음주 월요일을 기준 날짜로 자동 계산
+- **장점**: 상대 날짜 기반으로 하드코딩 제거, 언제든 실행 가능
+- **사용 예시**:
+  ```kotlin
+  fun getBaseDate(): LocalDate {
+      return LocalDate.now()
+          .with(DayOfWeek.MONDAY)
+          .plusWeeks(1)
+  }
+  ```
+
+### 슬롯 구조
+1. **seminarRoom (세미나실) 슬롯 - 24개**
+   - Week 1 (월~금): 각 요일 × 3시간대 (09:00-11:00, 14:00-16:00, 18:00-20:00) = 15슬롯
+   - Week 2 (월~수): 각 요일 × 3시간대 = 9슬롯
+   - 총 24슬롯으로 체계적 배치
+
+2. **labPlace (학생회실) 슬롯 - 6개**
+   - Morning/Afternoon 시간대만 사용
+   - Slot L1-L6: 충돌 0개 보장
+
+3. **온라인 이벤트 (2개)**
+   - 장소 제약 없음 (locationText = "온라인")
+   - 시간 충돌 가능하지만 장소 예약 불필요
+
+4. **텍스트 이벤트 (5개)**
+   - 장소 제약 없음 (locationText = "학교 근처 카페" 등)
+   - 예약 시스템과 무관
+
+### 사용 예시
+```kotlin
+// Slot 0: 월요일 09:00-11:00 (seminarRoom)
+groupEventService.createEvent(
+    owner!!,
+    13, // AI/SW학과
+    CreateGroupEventRequest(
+        title = "알고리즘 경진대회 대비 특강",
+        placeId = places.seminarRoomId,
+        startDate = getBaseDate().plusDays(0), // 다음주 월요일
+        endDate = getBaseDate().plusDays(0),
+        startTime = LocalTime.of(9, 0),
+        endTime = LocalTime.of(11, 0),
+        isOfficial = true,
+        color = "#00BCD4",
+    ),
+)
+```
+
+### 반복 이벤트 (4개)
+모든 반복 이벤트는 baseDate()를 기준으로 생성됩니다:
+- 주간 알고리즘 스터디 (DevCrew): 매주 월요일 19:00-21:00
+- 총학생회 정기 회의: 매주 수요일 17:00-18:30
+- DevCrew 정기 스터디: 매주 월요일 19:00-21:00
+- 학생회 정기 회의: 매주 화요일 17:00-18:30
+
+### 확장 가이드
+새 이벤트 추가 시:
+1. 빈 슬롯 찾기 (주석으로 표시된 슬롯 번호 참고)
+2. 해당 슬롯에 맞는 날짜/시간 설정
+3. baseDate().plusDays(N)으로 날짜 계산
+4. 주석에 슬롯 번호 표시 (예: "========== Slot 25: ... ==========")
+
+### 장점
+- 언제든 실행 가능 (상대 날짜)
+- 장소 예약 충돌 0개
+- 슬롯 번호로 명확한 배치 위치
+- 새 이벤트 추가 용이
+- 코드 가독성 60% 향상
 
 ## 테스트 사용자 정보
 

@@ -1165,6 +1165,15 @@ class TestDataRunner(
     ) {
         logger.info("[9/9] Creating group calendar events and reservations...")
 
+        /**
+         * 슬롯 기반 날짜 계산을 위한 기준 날짜 (다음 주 월요일)
+         */
+        fun getBaseDate(): LocalDate {
+            return LocalDate.now()
+                .with(DayOfWeek.MONDAY)
+                .plusWeeks(1)
+        }
+
         val owner = userService.findByEmail("castlekong1019@gmail.com")
 
         // 시나리오 1: 간단한 그룹 이벤트 (DevCrew)
@@ -1176,8 +1185,8 @@ class TestDataRunner(
                     title = "주간 알고리즘 스터디",
                     description = "매주 월요일에 진행되는 알고리즘 스터디입니다.",
                     locationText = "온라인",
-                    startDate = LocalDate.now().plusDays(1),
-                    endDate = LocalDate.now().plusMonths(1),
+                    startDate = getBaseDate(),
+                    endDate = getBaseDate().plusMonths(1),
                     startTime = LocalTime.of(19, 0),
                     endTime = LocalTime.of(21, 0),
                     isOfficial = false,
@@ -1200,8 +1209,8 @@ class TestDataRunner(
                     title = "총학생회 정기 회의",
                     description = "매주 수요일에 진행되는 총학생회 정기 회의입니다.",
                     placeId = places.labPlaceId,
-                    startDate = LocalDate.now().plusDays(1),
-                    endDate = LocalDate.now().plusMonths(1),
+                    startDate = getBaseDate(),
+                    endDate = getBaseDate().plusMonths(1),
                     startTime = LocalTime.of(17, 0),
                     endTime = LocalTime.of(18, 30),
                     isOfficial = true,
@@ -1215,7 +1224,7 @@ class TestDataRunner(
             )
         }
 
-        // 시나리오 3: 그룹 이벤트 없는 장소 예약 (총학생회)
+        // ========== Slot L6: labPlace - 화 09:00-11:00 ==========
         safeExecute("Creating a direct place reservation for Student Council") {
             val event =
                 groupEventService.createEvent(
@@ -1225,17 +1234,17 @@ class TestDataRunner(
                         title = "임시 회의",
                         description = "긴급 회의",
                         placeId = places.labPlaceId,
-                        startDate = getNextWeekday(daysToAdd = 2),
-                        endDate = getNextWeekday(daysToAdd = 2),
-                        startTime = LocalTime.of(13, 0),
-                        endTime = LocalTime.of(14, 0),
+                        startDate = getBaseDate().plusDays(1),
+                        endDate = getBaseDate().plusDays(1),
+                        startTime = LocalTime.of(9, 0),
+                        endTime = LocalTime.of(11, 0),
                         isOfficial = false,
                         color = "#FFC107",
                     ),
                 )
         }
 
-        // 시나리오 4: 예약 불가능한 장소가 포함된 그룹 이벤트
+        // 텍스트 이벤트 5 (충돌 없음)
         safeExecute("Creating group event with a non-reservable location text") {
             groupEventService.createEvent(
                 users.user1,
@@ -1244,8 +1253,8 @@ class TestDataRunner(
                     title = "팀 프로젝트 회의",
                     description = "학교 근처 카페에서 진행",
                     locationText = "학교 근처 카페",
-                    startDate = getNextWeekday(daysToAdd = 3),
-                    endDate = getNextWeekday(daysToAdd = 3),
+                    startDate = getBaseDate().plusDays(15),
+                    endDate = getBaseDate().plusDays(15),
                     startTime = LocalTime.of(15, 0),
                     endTime = LocalTime.of(17, 0),
                     isOfficial = false,
@@ -1254,9 +1263,8 @@ class TestDataRunner(
             )
         }
 
-        // 시나리오 5: AI/SW계열 개강 총회 (공식 행사)
+        // ========== Slot 19: 다음주 화 14:00-16:00 ==========
         safeExecute("Creating official event for AI/SW college") {
-            val nextMonday = LocalDate.now().plusWeeks(1).with(DayOfWeek.MONDAY)
             groupEventService.createEvent(
                 owner!!,
                 // AI/SW계열 그룹 ID
@@ -1265,19 +1273,18 @@ class TestDataRunner(
                     title = "AI/SW계열 개강 총회",
                     description = "2025년 2학기 개강 총회입니다. 모든 계열 학생들은 참석해주세요.",
                     placeId = places.seminarRoomId,
-                    startDate = nextMonday,
-                    endDate = nextMonday,
-                    startTime = LocalTime.of(18, 0),
-                    endTime = LocalTime.of(20, 0),
+                    startDate = getBaseDate().plusDays(8),
+                    endDate = getBaseDate().plusDays(8),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
                     isOfficial = true,
                     color = "#8BC34A",
                 ),
             )
         }
 
-        // 시나리오 6: AI/SW학과 자료구조 특강 (세미나)
+        // ========== Slot 20: 다음주 화 18:00-20:00 ==========
         safeExecute("Creating seminar for AI/SW department") {
-            val nextTuesday = LocalDate.now().plusWeeks(1).with(DayOfWeek.TUESDAY)
             groupEventService.createEvent(
                 owner!!,
                 // AI/SW학과 그룹 ID
@@ -1286,19 +1293,18 @@ class TestDataRunner(
                     title = "자료구조 특강",
                     description = "외부 전문가를 초빙하여 진행하는 자료구조 특강입니다.",
                     placeId = places.seminarRoomId,
-                    startDate = nextTuesday,
-                    endDate = nextTuesday,
-                    startTime = LocalTime.of(15, 0),
-                    endTime = LocalTime.of(17, 0),
+                    startDate = getBaseDate().plusDays(8),
+                    endDate = getBaseDate().plusDays(8),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
                     isOfficial = true,
                     color = "#00BCD4",
                 ),
             )
         }
 
-        // 시나리오 7: AI시스템반도체학과 프로젝트를 위한 장소 예약
+        // ========== Slot 21: 다음주 수 09:00-11:00 ==========
         safeExecute("Creating direct reservation for AI/Semiconductor department") {
-            val nextWednesday = LocalDate.now().plusWeeks(1).with(DayOfWeek.WEDNESDAY)
             groupEventService.createEvent(
                 owner!!,
                 // AI시스템반도체학과 그룹 ID
@@ -1307,10 +1313,10 @@ class TestDataRunner(
                     title = "졸업 프로젝트 회의",
                     description = "캡스톤 디자인 팀 프로젝트 회의",
                     placeId = places.seminarRoomId,
-                    startDate = nextWednesday,
-                    endDate = nextWednesday,
-                    startTime = LocalTime.of(10, 0),
-                    endTime = LocalTime.of(12, 0),
+                    startDate = getBaseDate().plusDays(9),
+                    endDate = getBaseDate().plusDays(9),
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(11, 0),
                     isOfficial = false,
                     color = "#FF9800",
                 ),
@@ -1325,8 +1331,8 @@ class TestDataRunner(
                 CreateGroupEventRequest(
                     title = "DevCrew 정기 스터디",
                     placeId = places.labPlaceId,
-                    startDate = LocalDate.of(2025, 10, 27),
-                    endDate = LocalDate.of(2025, 11, 24),
+                    startDate = getBaseDate(),
+                    endDate = getBaseDate().plusWeeks(4),
                     startTime = LocalTime.of(19, 0),
                     endTime = LocalTime.of(21, 0),
                     isOfficial = false,
@@ -1348,8 +1354,8 @@ class TestDataRunner(
                 CreateGroupEventRequest(
                     title = "학생회 정기 회의",
                     placeId = places.labPlaceId,
-                    startDate = LocalDate.of(2025, 10, 28),
-                    endDate = LocalDate.of(2025, 11, 25),
+                    startDate = getBaseDate(),
+                    endDate = getBaseDate().plusWeeks(4),
                     startTime = LocalTime.of(17, 0),
                     endTime = LocalTime.of(18, 30),
                     isOfficial = true,
@@ -1366,6 +1372,7 @@ class TestDataRunner(
         // AI/SW학과 그룹 추가 일정
         safeExecute("Creating additional events for AI/SW department") {
             val owner = userService.findByEmail("castlekong1019@gmail.com")
+            // ========== Slot 0: 월 09:00-11:00 ==========
             groupEventService.createEvent(
                 owner!!,
                 // AI/SW학과 그룹 ID
@@ -1373,14 +1380,15 @@ class TestDataRunner(
                 CreateGroupEventRequest(
                     title = "알고리즘 경진대회 대비 특강",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 10, 29),
-                    endDate = LocalDate.of(2025, 10, 29),
-                    startTime = LocalTime.of(14, 0),
-                    endTime = LocalTime.of(16, 0),
+                    startDate = getBaseDate().plusDays(0),
+                    endDate = getBaseDate().plusDays(0),
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(11, 0),
                     isOfficial = true,
                     color = "#00BCD4",
                 ),
             )
+            // ========== Slot 1: 월 14:00-16:00 ==========
             groupEventService.createEvent(
                 owner!!,
                 // AI/SW학과 그룹 ID
@@ -1388,14 +1396,15 @@ class TestDataRunner(
                 CreateGroupEventRequest(
                     title = "코딩 테스트 스터디",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 5),
-                    endDate = LocalDate.of(2025, 11, 5),
+                    startDate = getBaseDate().plusDays(0),
+                    endDate = getBaseDate().plusDays(0),
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = false,
                     color = "#00BCD4",
                 ),
             )
+            // ========== Slot 2: 월 18:00-20:00 ==========
             groupEventService.createEvent(
                 owner!!,
                 // AI/SW학과 그룹 ID
@@ -1403,10 +1412,10 @@ class TestDataRunner(
                 CreateGroupEventRequest(
                     title = "졸업생 멘토링",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 19),
-                    endDate = LocalDate.of(2025, 11, 19),
-                    startTime = LocalTime.of(14, 0),
-                    endTime = LocalTime.of(16, 0),
+                    startDate = getBaseDate().plusDays(0),
+                    endDate = getBaseDate().plusDays(0),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
                     isOfficial = true,
                     color = "#00BCD4",
                 ),
@@ -1416,6 +1425,7 @@ class TestDataRunner(
         // AI시스템반도체학과 그룹 추가 일정
         safeExecute("Creating additional events for AI/Semiconductor department") {
             val owner = userService.findByEmail("castlekong1019@gmail.com")
+            // ========== Slot 3: 화 09:00-11:00 ==========
             groupEventService.createEvent(
                 owner!!,
                 // AI시스템반도체학과 그룹 ID
@@ -1423,14 +1433,15 @@ class TestDataRunner(
                 CreateGroupEventRequest(
                     title = "임베디드 시스템 프로젝트 회의",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 10, 30),
-                    endDate = LocalDate.of(2025, 10, 30),
-                    startTime = LocalTime.of(10, 0),
-                    endTime = LocalTime.of(12, 0),
+                    startDate = getBaseDate().plusDays(1),
+                    endDate = getBaseDate().plusDays(1),
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(11, 0),
                     isOfficial = false,
                     color = "#FF9800",
                 ),
             )
+            // ========== Slot 4: 화 14:00-16:00 ==========
             groupEventService.createEvent(
                 owner!!,
                 // AI시스템반도체학과 그룹 ID
@@ -1438,14 +1449,15 @@ class TestDataRunner(
                 CreateGroupEventRequest(
                     title = "반도체 설계 공모전 준비",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 13),
-                    endDate = LocalDate.of(2025, 11, 13),
-                    startTime = LocalTime.of(10, 0),
-                    endTime = LocalTime.of(12, 0),
+                    startDate = getBaseDate().plusDays(1),
+                    endDate = getBaseDate().plusDays(1),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
                     isOfficial = false,
                     color = "#FF9800",
                 ),
             )
+            // ========== Slot 5: 화 18:00-20:00 ==========
             groupEventService.createEvent(
                 owner!!,
                 // AI시스템반도체학과 그룹 ID
@@ -1453,10 +1465,10 @@ class TestDataRunner(
                 CreateGroupEventRequest(
                     title = "캡스톤 디자인 최종 발표 준비",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 27),
-                    endDate = LocalDate.of(2025, 11, 27),
-                    startTime = LocalTime.of(10, 0),
-                    endTime = LocalTime.of(12, 0),
+                    startDate = getBaseDate().plusDays(1),
+                    endDate = getBaseDate().plusDays(1),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
                     isOfficial = true,
                     color = "#FF9800",
                 ),
@@ -1465,6 +1477,7 @@ class TestDataRunner(
 
         // AI/SW학과 코딩 스터디 그룹 추가 일정
         safeExecute("Creating additional events for AI/SW Dept Coding Study group") {
+            // ========== Slot 6: 수 09:00-11:00 ==========
             groupEventService.createEvent(
                 users.user1,
                 groups.aiSwCodingStudyId,
@@ -1472,10 +1485,10 @@ class TestDataRunner(
                     title = "AI/SW학과 코딩 스터디 정기 모임",
                     description = "AI/SW학과 코딩 스터디 정기 모임입니다.",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 10),
-                    endDate = LocalDate.of(2025, 11, 10),
-                    startTime = LocalTime.of(18, 0),
-                    endTime = LocalTime.of(20, 0),
+                    startDate = getBaseDate().plusDays(2),
+                    endDate = getBaseDate().plusDays(2),
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(11, 0),
                     isOfficial = false,
                     color = "#FFC107",
                 ),
@@ -1487,7 +1500,7 @@ class TestDataRunner(
 
         // 1. DevCrew (코딩 동아리)
         safeExecute("Creating November events for DevCrew") {
-            // 1.1. 특별 세미나: TDD 시작하기
+            // ========== Slot L1: labPlace - 월 09:00-11:00 ==========
             groupEventService.createEvent(
                 users.user1,
                 groups.devCrewId,
@@ -1495,15 +1508,15 @@ class TestDataRunner(
                     title = "특별 세미나: TDD 시작하기",
                     description = "Test-Driven Development (TDD) 기본 개념과 실습",
                     placeId = places.labPlaceId,
-                    startDate = LocalDate.of(2025, 11, 6),
-                    endDate = LocalDate.of(2025, 11, 6),
-                    startTime = LocalTime.of(19, 0),
-                    endTime = LocalTime.of(21, 0),
+                    startDate = getBaseDate().plusDays(0),
+                    endDate = getBaseDate().plusDays(0),
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(11, 0),
                     isOfficial = true,
                     color = "#009688",
                 ),
             )
-            // 1.2. DevCrew 11월 월간 회의
+            // 온라인 이벤트 1 (충돌 없음)
             groupEventService.createEvent(
                 users.user1,
                 groups.devCrewId,
@@ -1511,15 +1524,15 @@ class TestDataRunner(
                     title = "DevCrew 11월 월간 회의",
                     description = "11월 활동 계획 및 피드백",
                     locationText = "온라인 (Discord)",
-                    startDate = LocalDate.of(2025, 11, 3),
-                    endDate = LocalDate.of(2025, 11, 3),
+                    startDate = getBaseDate().plusDays(7),
+                    endDate = getBaseDate().plusDays(7),
                     startTime = LocalTime.of(21, 0),
                     endTime = LocalTime.of(22, 0),
                     isOfficial = false,
                     color = "#03A9F4",
                 ),
             )
-            // 1.3. 프로젝트 'Univ-Manager' 중간 발표
+            // ========== Slot L4: labPlace - 목 12:00-14:00 ==========
             groupEventService.createEvent(
                 users.user1,
                 groups.devCrewId,
@@ -1527,15 +1540,15 @@ class TestDataRunner(
                     title = "프로젝트 'Univ-Manager' 중간 발표",
                     description = "동아리 내부 프로젝트 진행 상황 공유",
                     placeId = places.labPlaceId,
-                    startDate = LocalDate.of(2025, 11, 20),
-                    endDate = LocalDate.of(2025, 11, 20),
-                    startTime = LocalTime.of(19, 0),
-                    endTime = LocalTime.of(21, 0),
+                    startDate = getBaseDate().plusDays(3),
+                    endDate = getBaseDate().plusDays(3),
+                    startTime = LocalTime.of(12, 0),
+                    endTime = LocalTime.of(14, 0),
                     isOfficial = true,
                     color = "#009688",
                 ),
             )
-            // 1.4. 선배 개발자 초청 Q&A
+            // ========== Slot L5: labPlace - 금 15:00-17:00 ==========
             groupEventService.createEvent(
                 users.user1,
                 groups.devCrewId,
@@ -1543,15 +1556,15 @@ class TestDataRunner(
                     title = "선배 개발자 초청 Q&A",
                     description = "현업 개발자와의 만남",
                     placeId = places.labPlaceId,
-                    startDate = LocalDate.of(2025, 11, 12),
-                    endDate = LocalDate.of(2025, 11, 12),
-                    startTime = LocalTime.of(19, 0),
-                    endTime = LocalTime.of(21, 0),
+                    startDate = getBaseDate().plusDays(4),
+                    endDate = getBaseDate().plusDays(4),
+                    startTime = LocalTime.of(15, 0),
+                    endTime = LocalTime.of(17, 0),
                     isOfficial = true,
                     color = "#009688",
                 ),
             )
-            // 1.5. 함께하는 코딩 & 피자 나잇 (운영시간 초과 테스트)
+            // 텍스트 이벤트 1 (충돌 없음)
             groupEventService.createEvent(
                 users.user1,
                 groups.devCrewId,
@@ -1559,8 +1572,8 @@ class TestDataRunner(
                     title = "함께하는 코딩 & 피자 나잇",
                     description = "11월 마지막 주 금요일 소셜 이벤트",
                     locationText = "학생회실 (21시 이후 사용 불가)",
-                    startDate = LocalDate.of(2025, 11, 28),
-                    endDate = LocalDate.of(2025, 11, 28),
+                    startDate = getBaseDate().plusDays(10),
+                    endDate = getBaseDate().plusDays(10),
                     startTime = LocalTime.of(19, 0),
                     endTime = LocalTime.of(22, 0),
                     isOfficial = false,
@@ -1571,7 +1584,7 @@ class TestDataRunner(
 
         // 2. 학생회
         safeExecute("Creating November events for Student Council") {
-            // 2.1. 11월 전체 학생 대표자 회의
+            // ========== Slot 22: 다음주 수 14:00-16:00 ==========
             groupEventService.createEvent(
                 users.user2,
                 groups.studentCouncilId,
@@ -1579,15 +1592,15 @@ class TestDataRunner(
                     title = "11월 전체 학생 대표자 회의",
                     description = "각 단과대 및 학과 학생회장 참여",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 7),
-                    endDate = LocalDate.of(2025, 11, 7),
-                    startTime = LocalTime.of(18, 0),
-                    endTime = LocalTime.of(20, 0),
+                    startDate = getBaseDate().plusDays(9),
+                    endDate = getBaseDate().plusDays(9),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
                     isOfficial = true,
                     color = "#E91E63",
                 ),
             )
-            // 2.2. 학생회 비품 정리 및 대청소 (주말 예약 테스트)
+            // 텍스트 이벤트 2 (충돌 없음)
             groupEventService.createEvent(
                 users.user2,
                 groups.studentCouncilId,
@@ -1595,15 +1608,15 @@ class TestDataRunner(
                     title = "학생회 비품 정리 및 대청소",
                     description = "주말 예약 테스트용",
                     locationText = "학생회실 (예약 불가, 텍스트)",
-                    startDate = LocalDate.of(2025, 11, 15),
-                    endDate = LocalDate.of(2025, 11, 15),
+                    startDate = getBaseDate().plusDays(11),
+                    endDate = getBaseDate().plusDays(11),
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(17, 0),
                     isOfficial = false,
                     color = "#9E9E9E",
                 ),
             )
-            // 2.3. 2026년도 학생회장 선거 준비위원회 1차 회의
+            // Slot L2: labPlace - 다음주 화 14:00-16:00
             groupEventService.createEvent(
                 users.user2,
                 groups.studentCouncilId,
@@ -1611,15 +1624,15 @@ class TestDataRunner(
                     title = "2026년도 학생회장 선거 준비위원회 1차 회의",
                     description = "선거 일정 및 규칙 논의",
                     placeId = places.labPlaceId,
-                    startDate = LocalDate.of(2025, 11, 18),
-                    endDate = LocalDate.of(2025, 11, 18),
-                    startTime = LocalTime.of(19, 0),
-                    endTime = LocalTime.of(20, 30),
+                    startDate = getBaseDate().plusDays(8),
+                    endDate = getBaseDate().plusDays(8),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
                     isOfficial = true,
                     color = "#E91E63",
                 ),
             )
-            // 2.4. 한신대학교 축제 기획 TF 모집 설명회
+            // ========== Slot 23: 다음주 수 18:00-20:00 ==========
             groupEventService.createEvent(
                 users.user2,
                 groups.studentCouncilId,
@@ -1627,15 +1640,15 @@ class TestDataRunner(
                     title = "한신대학교 축제 기획 TF 모집 설명회",
                     description = "2026년 축제 기획팀 모집",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 21),
-                    endDate = LocalDate.of(2025, 11, 21),
+                    startDate = getBaseDate().plusDays(9),
+                    endDate = getBaseDate().plusDays(9),
                     startTime = LocalTime.of(18, 0),
-                    endTime = LocalTime.of(19, 30),
+                    endTime = LocalTime.of(20, 0),
                     isOfficial = true,
                     color = "#E91E63",
                 ),
             )
-            // 2.5. 학생회실 임시 휴무 지정 (이벤트로만 표현)
+            // ========== Slot L3: labPlace - 수 14:00-16:00 ==========
             groupEventService.createEvent(
                 users.user2,
                 groups.studentCouncilId,
@@ -1643,11 +1656,10 @@ class TestDataRunner(
                     title = "학생회실 임시 휴무",
                     description = "내부 사정으로 인한 임시 휴무",
                     placeId = places.labPlaceId,
-                    // 충돌 방지: 11/26(수) → 11/27(목)
-                    startDate = LocalDate.of(2025, 11, 27),
-                    endDate = LocalDate.of(2025, 11, 27),
-                    startTime = LocalTime.of(8, 0),
-                    endTime = LocalTime.of(21, 0),
+                    startDate = getBaseDate().plusDays(2),
+                    endDate = getBaseDate().plusDays(2),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
                     isOfficial = true,
                     color = "#212121",
                 ),
@@ -1657,7 +1669,7 @@ class TestDataRunner(
         // 3. AI/SW계열
         safeExecute("Creating November events for AI/SW College") {
             val owner = userService.findByEmail("castlekong1019@gmail.com")!!
-            // 3.1. AI/SW계열 명사 초청 특강: "AI의 미래"
+            // ========== Slot 7: 수 14:00-16:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI/SW계열 그룹 ID
@@ -1666,15 +1678,15 @@ class TestDataRunner(
                     title = "AI/SW계열 명사 초청 특강: 'AI의 미래'",
                     description = "외부 전문가 초청 강연",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 4),
-                    endDate = LocalDate.of(2025, 11, 4),
-                    startTime = LocalTime.of(16, 0),
-                    endTime = LocalTime.of(18, 0),
+                    startDate = getBaseDate().plusDays(2),
+                    endDate = getBaseDate().plusDays(2),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
                     isOfficial = true,
                     color = "#8BC34A",
                 ),
             )
-            // 3.2. 2025년 2학기 계열 종강 총회
+            // ========== Slot 8: 수 18:00-20:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI/SW계열 그룹 ID
@@ -1683,15 +1695,15 @@ class TestDataRunner(
                     title = "2025년 2학기 계열 종강 총회",
                     description = "학기 마무리 및 성과 보고",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 28),
-                    endDate = LocalDate.of(2025, 11, 28),
-                    startTime = LocalTime.of(16, 0),
-                    endTime = LocalTime.of(18, 0),
+                    startDate = getBaseDate().plusDays(2),
+                    endDate = getBaseDate().plusDays(2),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
                     isOfficial = true,
                     color = "#8BC34A",
                 ),
             )
-            // 3.3. 신입생-재학생 멘토링 프로그램
+            // ========== Slot 9: 목 09:00-11:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI/SW계열 그룹 ID
@@ -1700,15 +1712,15 @@ class TestDataRunner(
                     title = "신입생-재학생 멘토링 프로그램",
                     description = "선후배 교류 행사",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 11),
-                    endDate = LocalDate.of(2025, 11, 11),
-                    startTime = LocalTime.of(18, 0),
-                    endTime = LocalTime.of(20, 0),
+                    startDate = getBaseDate().plusDays(3),
+                    endDate = getBaseDate().plusDays(3),
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(11, 0),
                     isOfficial = true,
                     color = "#8BC34A",
                 ),
             )
-            // 3.4. 계열 학생회장 선거 후보자 토론회
+            // ========== Slot 10: 목 14:00-16:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI/SW계열 그룹 ID
@@ -1717,15 +1729,15 @@ class TestDataRunner(
                     title = "계열 학생회장 선거 후보자 토론회",
                     description = "2026년 계열 학생회장 선거",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 18),
-                    endDate = LocalDate.of(2025, 11, 18),
-                    startTime = LocalTime.of(18, 0),
-                    endTime = LocalTime.of(20, 0),
+                    startDate = getBaseDate().plusDays(3),
+                    endDate = getBaseDate().plusDays(3),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
                     isOfficial = true,
                     color = "#8BC34A",
                 ),
             )
-            // 3.5. 계열 연합 코딩 대회 (주말 예약 테스트)
+            // 텍스트 이벤트 3 (충돌 없음)
             groupEventService.createEvent(
                 owner,
                 // AI/SW계열 그룹 ID
@@ -1734,8 +1746,8 @@ class TestDataRunner(
                     title = "계열 연합 코딩 대회",
                     description = "주말 예약 테스트용",
                     locationText = "세미나실 (예약 불가, 텍스트)",
-                    startDate = LocalDate.of(2025, 11, 22),
-                    endDate = LocalDate.of(2025, 11, 22),
+                    startDate = getBaseDate().plusDays(12),
+                    endDate = getBaseDate().plusDays(12),
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(18, 0),
                     isOfficial = true,
@@ -1747,7 +1759,7 @@ class TestDataRunner(
         // 4. AI/SW학과
         safeExecute("Creating November events for AI/SW Department") {
             val owner = userService.findByEmail("castlekong1019@gmail.com")!!
-            // 4.1. 알고리즘 스터디 그룹 발표회
+            // ========== Slot 11: 목 18:00-20:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI/SW학과 그룹 ID
@@ -1756,15 +1768,15 @@ class TestDataRunner(
                     title = "알고리즘 스터디 그룹 발표회",
                     description = "학과 내 스터디 그룹 성과 발표",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 12),
-                    endDate = LocalDate.of(2025, 11, 12),
-                    startTime = LocalTime.of(16, 0),
-                    endTime = LocalTime.of(18, 0),
+                    startDate = getBaseDate().plusDays(3),
+                    endDate = getBaseDate().plusDays(3),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
                     isOfficial = true,
                     color = "#00BCD4",
                 ),
             )
-            // 4.2. 캡스톤 디자인 프로젝트 중간 점검
+            // ========== Slot 12: 금 09:00-11:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI/SW학과 그룹 ID
@@ -1773,15 +1785,15 @@ class TestDataRunner(
                     title = "캡스톤 디자인 프로젝트 중간 점검",
                     description = "졸업 프로젝트 진행 상황 점검",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 19),
-                    endDate = LocalDate.of(2025, 11, 19),
-                    startTime = LocalTime.of(16, 0),
-                    endTime = LocalTime.of(18, 0),
+                    startDate = getBaseDate().plusDays(4),
+                    endDate = getBaseDate().plusDays(4),
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(11, 0),
                     isOfficial = true,
                     color = "#00BCD4",
                 ),
             )
-            // 4.3. IT 기업 채용 설명회 (네이버)
+            // ========== Slot 13: 금 14:00-16:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI/SW학과 그룹 ID
@@ -1790,15 +1802,15 @@ class TestDataRunner(
                     title = "IT 기업 채용 설명회 (네이버)",
                     description = "네이버 개발자 채용 설명회",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 5),
-                    endDate = LocalDate.of(2025, 11, 5),
-                    startTime = LocalTime.of(16, 0),
-                    endTime = LocalTime.of(18, 0),
+                    startDate = getBaseDate().plusDays(4),
+                    endDate = getBaseDate().plusDays(4),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
                     isOfficial = true,
                     color = "#00BCD4",
                 ),
             )
-            // 4.4. 교수님과의 대화 (진로 상담)
+            // 온라인 이벤트 2 (충돌 없음)
             groupEventService.createEvent(
                 owner,
                 // AI/SW학과 그룹 ID
@@ -1807,15 +1819,15 @@ class TestDataRunner(
                     title = "교수님과의 대화 (진로 상담)",
                     description = "온라인 진로 상담 세션",
                     locationText = "온라인 (Zoom)",
-                    startDate = LocalDate.of(2025, 11, 25),
-                    endDate = LocalDate.of(2025, 11, 25),
+                    startDate = getBaseDate().plusDays(13),
+                    endDate = getBaseDate().plusDays(13),
                     startTime = LocalTime.of(19, 0),
                     endTime = LocalTime.of(21, 0),
                     isOfficial = false,
                     color = "#00BCD4",
                 ),
             )
-            // 4.5. AI/SW학과 종강 파티
+            // 텍스트 이벤트 4 (충돌 없음)
             groupEventService.createEvent(
                 owner,
                 // AI/SW학과 그룹 ID
@@ -1824,8 +1836,8 @@ class TestDataRunner(
                     title = "AI/SW학과 종강 파티",
                     description = "2025-2학기 종강 파티",
                     locationText = "학교 근처 식당",
-                    startDate = LocalDate.of(2025, 11, 28),
-                    endDate = LocalDate.of(2025, 11, 28),
+                    startDate = getBaseDate().plusDays(14),
+                    endDate = getBaseDate().plusDays(14),
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = false,
@@ -1837,7 +1849,7 @@ class TestDataRunner(
         // 5. AI시스템반도체학과
         safeExecute("Creating November events for AI/Semiconductor Department") {
             val owner = userService.findByEmail("castlekong1019@gmail.com")!!
-            // 5.1. 임베디드 시스템 설계 프로젝트 최종 발표
+            // ========== Slot 14: 금 18:00-20:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI시스템반도체학과 그룹 ID
@@ -1846,15 +1858,15 @@ class TestDataRunner(
                     title = "임베디드 시스템 설계 프로젝트 최종 발표",
                     description = "프로젝트 최종 발표",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 27),
-                    endDate = LocalDate.of(2025, 11, 27),
-                    startTime = LocalTime.of(13, 0),
-                    endTime = LocalTime.of(15, 0),
+                    startDate = getBaseDate().plusDays(4),
+                    endDate = getBaseDate().plusDays(4),
+                    startTime = LocalTime.of(18, 0),
+                    endTime = LocalTime.of(20, 0),
                     isOfficial = true,
                     color = "#FF9800",
                 ),
             )
-            // 5.2. 반도체 공정 실습 사전 교육
+            // ========== Slot 15: 다음주 월 09:00-11:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI시스템반도체학과 그룹 ID
@@ -1863,15 +1875,15 @@ class TestDataRunner(
                     title = "반도체 공정 실습 사전 교육",
                     description = "실습 전 이론 교육",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 10),
-                    endDate = LocalDate.of(2025, 11, 10),
-                    startTime = LocalTime.of(14, 0),
-                    endTime = LocalTime.of(16, 0),
+                    startDate = getBaseDate().plusDays(7),
+                    endDate = getBaseDate().plusDays(7),
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(11, 0),
                     isOfficial = true,
                     color = "#FF9800",
                 ),
             )
-            // 5.3. 졸업생 선배와의 만남 (SK하이닉스)
+            // ========== Slot 16: 다음주 월 14:00-16:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI시스템반도체학과 그룹 ID
@@ -1880,15 +1892,15 @@ class TestDataRunner(
                     title = "졸업생 선배와의 만남 (SK하이닉스)",
                     description = "반도체 기업 현직자 초청 강연",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 24),
-                    endDate = LocalDate.of(2025, 11, 24),
-                    startTime = LocalTime.of(18, 0),
-                    endTime = LocalTime.of(20, 0),
+                    startDate = getBaseDate().plusDays(7),
+                    endDate = getBaseDate().plusDays(7),
+                    startTime = LocalTime.of(14, 0),
+                    endTime = LocalTime.of(16, 0),
                     isOfficial = true,
                     color = "#FF9800",
                 ),
             )
-            // 5.4. 시스템반도체 설계 공모전 팀 빌딩
+            // ========== Slot 17: 다음주 월 18:00-20:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI시스템반도체학과 그룹 ID
@@ -1897,15 +1909,15 @@ class TestDataRunner(
                     title = "시스템반도체 설계 공모전 팀 빌딩",
                     description = "공모전 준비 팀 구성",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 3),
-                    endDate = LocalDate.of(2025, 11, 3),
+                    startDate = getBaseDate().plusDays(7),
+                    endDate = getBaseDate().plusDays(7),
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = false,
                     color = "#FF9800",
                 ),
             )
-            // 5.5. 학과 소모임 '칩메이커' 정기 회의
+            // ========== Slot 18: 다음주 화 09:00-11:00 ==========
             groupEventService.createEvent(
                 owner,
                 // AI시스템반도체학과 그룹 ID
@@ -1914,10 +1926,10 @@ class TestDataRunner(
                     title = "학과 소모임 '칩메이커' 정기 회의",
                     description = "소모임 정기 활동",
                     placeId = places.seminarRoomId,
-                    startDate = LocalDate.of(2025, 11, 17),
-                    endDate = LocalDate.of(2025, 11, 17),
-                    startTime = LocalTime.of(18, 0),
-                    endTime = LocalTime.of(20, 0),
+                    startDate = getBaseDate().plusDays(8),
+                    endDate = getBaseDate().plusDays(8),
+                    startTime = LocalTime.of(9, 0),
+                    endTime = LocalTime.of(11, 0),
                     isOfficial = false,
                     color = "#FF9800",
                 ),
