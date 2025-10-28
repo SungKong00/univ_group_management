@@ -34,20 +34,11 @@ class SelectionMethodPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('저장 방식 선택'),
         backgroundColor: AppColors.brand,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.onPrimary,
       ),
       body: previewAsync.when(
         data: (preview) => _buildContent(context, ref, preview),
-        loading: () => const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: AppSpacing.md),
-              Text('멤버 정보를 불러오는 중...'),
-            ],
-          ),
-        ),
+        loading: () => _buildSkeletonLoading(),
         error: (error, stackTrace) => Center(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -62,7 +53,7 @@ class SelectionMethodPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  error.toString(),
+                  _getUserFriendlyErrorMessage(error),
                   style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
                   textAlign: TextAlign.center,
                 ),
@@ -80,39 +71,165 @@ class SelectionMethodPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(
-    BuildContext context,
-    WidgetRef ref,
-    MemberPreviewResponse preview,
-  ) {
+  /// 사용자 친화적인 에러 메시지 생성
+  String _getUserFriendlyErrorMessage(Object error) {
+    final errorStr = error.toString().toLowerCase();
+    if (errorStr.contains('network') || errorStr.contains('connection')) {
+      return '네트워크 연결을 확인해주세요';
+    }
+    if (errorStr.contains('timeout')) {
+      return '서버 응답 시간이 초과되었습니다';
+    }
+    return '일시적인 오류가 발생했습니다. 다시 시도해주세요.';
+  }
+
+  /// Skeleton 로딩 UI
+  Widget _buildSkeletonLoading() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 안내 텍스트
-          Text(
-            '참여자를 어떻게 관리할지 선택하세요',
-            style: AppTheme.headlineSmall.copyWith(
-              color: AppColors.neutral900,
+          // 제목 Skeleton
+          Container(
+            height: 24,
+            width: 280,
+            decoration: BoxDecoration(
+              color: AppColors.neutral200,
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text(
-            '총 ${preview.totalCount}명의 멤버가 조건에 해당합니다',
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppColors.neutral600,
+          Container(
+            height: 16,
+            width: 160,
+            decoration: BoxDecoration(
+              color: AppColors.neutral200,
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-
-          // DYNAMIC 카드
-          _buildDynamicCard(context, preview),
-          const SizedBox(height: AppSpacing.md),
-
-          // STATIC 카드
-          _buildStaticCard(context, ref, preview),
+          // 카드 Skeleton (2개)
+          ...List.generate(
+            2,
+            (index) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: Container(
+                height: 280,
+                decoration: BoxDecoration(
+                  color: AppColors.neutral100,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: AppColors.neutral300),
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    MemberPreviewResponse preview,
+  ) {
+    final size = MediaQuery.of(context).size;
+    final isWide = size.width > 900;
+
+    return AnimatedOpacity(
+      opacity: 1.0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+          // 상단 영역: 제목 + 인원수 & 샘플 통합
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '참여자를 어떻게 관리할지 선택하세요',
+                style: AppTheme.headlineSmall.copyWith(
+                  color: AppColors.neutral900,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: [
+                  Icon(
+                    Icons.group_outlined,
+                    size: 20,
+                    color: AppColors.neutral600,
+                  ),
+                  const SizedBox(width: AppSpacing.xxs),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppColors.neutral600,
+                        ),
+                        children: [
+                          const TextSpan(text: '지금 조건에 맞는 멤버: '),
+                          if (preview.samples.length >= 2)
+                            TextSpan(
+                              text: '${preview.samples[0].name}, ${preview.samples[1].name} 외 ${preview.totalCount - 2}명 ',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.action,
+                              ),
+                            ),
+                          if (preview.samples.length < 2)
+                            TextSpan(
+                              text: '총 ',
+                              style: const TextStyle(
+                                color: AppColors.neutral600,
+                              ),
+                            ),
+                          TextSpan(
+                            text: '(총 ${preview.totalCount}명)',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.action,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // 카드 레이아웃 (반응형)
+          if (isWide)
+            // 데스크톱: 좌우 배치
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: _buildDynamicCard(context, preview)),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: _buildStaticCard(context, ref, preview)),
+                ],
+              ),
+            )
+          else
+            // 모바일/태블릿: 상하 배치
+            Column(
+              children: [
+                _buildDynamicCard(context, preview),
+                const SizedBox(height: AppSpacing.md),
+                _buildStaticCard(context, ref, preview),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -121,80 +238,128 @@ class SelectionMethodPage extends ConsumerWidget {
     BuildContext context,
     MemberPreviewResponse preview,
   ) {
-    return Card(
-      elevation: 4,
-      child: InkWell(
-        onTap: () => _selectDynamic(context),
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.action.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.autorenew,
-                      color: AppColors.action,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      '조건으로 저장 (DYNAMIC)',
-                      style: AppTheme.titleLarge.copyWith(
+    return Semantics(
+      label: '자동 업데이트 방식 선택',
+      hint: '조건에 맞는 멤버를 자동으로 관리합니다. 현재 ${preview.totalCount}명이 해당됩니다.',
+      button: true,
+      child: Card(
+        elevation: 4,
+        color: AppColors.actionTonalBg.withValues(alpha: 0.3),
+        child: InkWell(
+          onTap: () => _selectDynamic(context),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 블록 1: 헤더 (아이콘 + 제목 + 설명)
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: AppColors.action.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.autorenew,
                         color: AppColors.action,
+                        size: 24,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                '총 ${preview.totalCount}명',
-                style: AppTheme.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.neutral800,
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '자동 업데이트',
+                            style: AppTheme.titleLarge.copyWith(
+                              color: AppColors.action,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4.0),
+                          Text(
+                            '저장한 필터 조건에 맞는 멤버를 항상 최신 상태로 유지해요.',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppColors.neutral600,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              if (preview.samples.isNotEmpty)
-                Text(
-                  '${preview.samples.map((s) => s.name).join(", ")}${preview.totalCount > preview.samples.length ? " ..." : ""}',
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppColors.neutral600,
+
+                const SizedBox(height: AppSpacing.md),
+
+                // 하이라이트 영역 (체크리스트)
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildBenefitRow(
+                        Icons.check_circle_outline,
+                        '새로 합류한 멤버도 자동으로 포함돼요.',
+                        AppColors.success,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      _buildBenefitRow(
+                        Icons.check_circle_outline,
+                        '멤버 정보가 바뀌면 바로 반영돼요.',
+                        AppColors.success,
+                      ),
+                    ],
+                  ),
                 ),
-              const SizedBox(height: AppSpacing.sm),
-              const Divider(),
-              const SizedBox(height: AppSpacing.sm),
-              _buildBenefitRow(
-                Icons.check_circle,
-                '신규 멤버 자동 포함',
-                AppColors.success,
-              ),
-              const SizedBox(height: 4),
-              _buildBenefitRow(
-                Icons.check_circle,
-                '조건 변경 시 자동 업데이트',
-                AppColors.success,
-              ),
-              const SizedBox(height: 4),
-              _buildBenefitRow(
-                Icons.check_circle,
-                '실시간 동기화',
-                AppColors.success,
-              ),
-            ],
+
+                const SizedBox(height: AppSpacing.sm),
+
+                // 추천 문장
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: AppColors.actionTonalBg.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 16, color: AppColors.action),
+                      const SizedBox(width: AppSpacing.xxs),
+                      Expanded(
+                        child: Text(
+                          '멤버 변동이 잦은 팀에 추천해요.',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppColors.action,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                // 선택 버튼
+                ElevatedButton(
+                  onPressed: () => _selectDynamic(context),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    backgroundColor: AppColors.action,
+                  ),
+                  child: const Text('이 방식으로 선택'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -206,80 +371,128 @@ class SelectionMethodPage extends ConsumerWidget {
     WidgetRef ref,
     MemberPreviewResponse preview,
   ) {
-    return Card(
-      elevation: 4,
-      child: InkWell(
-        onTap: () => _selectStatic(context, ref, preview),
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.brand.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.list_alt,
-                      color: AppColors.brand,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      '명단으로 저장 (STATIC)',
-                      style: AppTheme.titleLarge.copyWith(
+    return Semantics(
+      label: '직접 선택 방식',
+      hint: '현재 인원 목록을 직접 편집합니다. 다음 단계에서 ${preview.totalCount}명의 멤버를 확인할 수 있습니다.',
+      button: true,
+      child: Card(
+        elevation: 4,
+        color: AppColors.brandLight.withValues(alpha: 0.2),
+        child: InkWell(
+          onTap: () => _selectStatic(context, ref, preview),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 블록 1: 헤더 (아이콘 + 제목 + 설명)
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: AppColors.brand.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.edit_note,
                         color: AppColors.brand,
+                        size: 24,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                '총 ${preview.totalCount}명',
-                style: AppTheme.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.neutral800,
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '직접 선택',
+                            style: AppTheme.titleLarge.copyWith(
+                              color: AppColors.brand,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4.0),
+                          Text(
+                            '현재 인원 목록을 직접 편집해서 고정할 수 있어요.',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppColors.neutral600,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              if (preview.samples.isNotEmpty)
-                Text(
-                  '${preview.samples.map((s) => s.name).join(", ")}${preview.totalCount > preview.samples.length ? " ..." : ""}',
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppColors.neutral600,
+
+                const SizedBox(height: AppSpacing.md),
+
+                // 하이라이트 영역 (체크리스트)
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.brand.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildBenefitRow(
+                        Icons.edit_outlined,
+                        '다음 단계에서 목록을 보고 수정할 수 있어요.',
+                        AppColors.brand,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      _buildBenefitRow(
+                        Icons.lock_outline,
+                        '확정 후에는 인원이 바뀌어도 명단이 그대로 유지돼요.',
+                        AppColors.brand,
+                      ),
+                    ],
+                  ),
                 ),
-              const SizedBox(height: AppSpacing.sm),
-              const Divider(),
-              const SizedBox(height: AppSpacing.sm),
-              _buildBenefitRow(
-                Icons.warning_amber,
-                '고정 명단 (수동 관리)',
-                AppColors.warning,
-              ),
-              const SizedBox(height: 4),
-              _buildBenefitRow(
-                Icons.arrow_forward,
-                '다음 단계에서 편집 가능',
-                AppColors.neutral600,
-              ),
-              const SizedBox(height: 4),
-              _buildBenefitRow(
-                Icons.info_outline,
-                '특정 인원만 선택 시 유용',
-                AppColors.neutral600,
-              ),
-            ],
+
+                const SizedBox(height: AppSpacing.sm),
+
+                // 추천 문장
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandLight.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 16, color: AppColors.brand),
+                      const SizedBox(width: AppSpacing.xxs),
+                      Expanded(
+                        child: Text(
+                          '구성이 거의 바뀌지 않는 팀에 잘 맞아요.',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppColors.brand,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                // 선택 버튼
+                ElevatedButton(
+                  onPressed: () => _selectStatic(context, ref, preview),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    backgroundColor: AppColors.brand,
+                  ),
+                  child: const Text('이 방식으로 선택'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -288,13 +501,17 @@ class SelectionMethodPage extends ConsumerWidget {
 
   Widget _buildBenefitRow(IconData icon, String text, Color color) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 8),
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: AppSpacing.xxs),
         Expanded(
           child: Text(
             text,
-            style: AppTheme.bodySmall.copyWith(color: color),
+            style: AppTheme.bodySmall.copyWith(
+              color: color,
+              height: 1.5,
+            ),
           ),
         ),
       ],

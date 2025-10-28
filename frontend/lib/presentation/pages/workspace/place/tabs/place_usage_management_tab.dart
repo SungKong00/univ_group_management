@@ -7,6 +7,8 @@ import '../../../../../core/models/place/place_usage_group.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../providers/place_provider.dart';
+import '../../../../widgets/buttons/neutral_outlined_button.dart';
+import '../../../../widgets/buttons/primary_button.dart';
 
 /// Tab for managing place usage permissions
 ///
@@ -301,30 +303,14 @@ class _RequestCard extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              '취소',
-              style: AppTheme.titleLarge.copyWith(
-                color: AppColors.neutral600,
-              ),
-            ),
           ),
-          ElevatedButton(
+          PrimaryButton(
+            text: '승인',
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.success,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.button),
-              ),
-            ),
-            child: Text(
-              '승인',
-              style: AppTheme.titleLarge.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            variant: PrimaryButtonVariant.success,
           ),
         ],
       ),
@@ -417,30 +403,14 @@ class _RequestCard extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              '취소',
-              style: AppTheme.titleLarge.copyWith(
-                color: AppColors.neutral600,
-              ),
-            ),
           ),
-          ElevatedButton(
+          PrimaryButton(
+            text: '거절',
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.button),
-              ),
-            ),
-            child: Text(
-              '거절',
-              style: AppTheme.titleLarge.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            variant: PrimaryButtonVariant.error,
           ),
         ],
       ),
@@ -621,30 +591,14 @@ class _ApprovedGroupsList extends ConsumerWidget {
           ],
         ),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              '취소',
-              style: AppTheme.titleLarge.copyWith(
-                color: AppColors.neutral600,
-              ),
-            ),
           ),
-          ElevatedButton(
+          PrimaryButton(
+            text: '권한 취소',
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.button),
-              ),
-            ),
-            child: Text(
-              '권한 취소',
-              style: AppTheme.titleLarge.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            variant: PrimaryButtonVariant.error,
           ),
         ],
       ),

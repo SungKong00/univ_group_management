@@ -32,25 +32,30 @@ class NeutralOutlinedButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isEnabled = onPressed != null && !isLoading;
 
-    return Semantics(
+    final button = Semantics(
       button: true,
       enabled: isEnabled,
       label: semanticsLabel ?? text,
-      child: SizedBox(
-        width: width,
-        child: OutlinedButton(
-          style: AppButtonStyles.neutralOutlined(colorScheme),
-          onPressed: isEnabled ? onPressed : null,
-          child: ButtonLoadingChild(
-            text: text,
-            isLoading: isLoading,
-            textStyle: AppTheme.bodyLargeTheme(context).copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-            indicatorColor: AppColors.neutral600,
+      child: OutlinedButton(
+        style: AppButtonStyles.neutralOutlined(colorScheme),
+        onPressed: isEnabled ? onPressed : null,
+        child: ButtonLoadingChild(
+          text: text,
+          isLoading: isLoading,
+          textStyle: AppTheme.bodyLargeTheme(context).copyWith(
+            fontWeight: FontWeight.w600,
           ),
+          indicatorColor: AppColors.neutral600,
         ),
       ),
     );
+
+    // width가 지정된 경우만 SizedBox로 감싸기
+    // Row 내에서 너비 제약 없이 사용 가능하도록 조건부 처리
+    if (width != null) {
+      return SizedBox(width: width, child: button);
+    }
+
+    return button;
   }
 }

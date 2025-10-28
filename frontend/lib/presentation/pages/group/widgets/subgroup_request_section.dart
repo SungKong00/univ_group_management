@@ -5,6 +5,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/models/group_models.dart';
 import '../../../../core/utils/snack_bar_helper.dart';
+import '../../../widgets/buttons/error_button.dart';
+import '../../../widgets/buttons/neutral_outlined_button.dart';
+import '../../../widgets/buttons/primary_button.dart';
 import '../../../widgets/member/member_avatar.dart';
 import '../../../widgets/common/section_card.dart';
 import '../providers/subgroup_request_provider.dart';
@@ -253,28 +256,18 @@ class _SubGroupRequestCard extends ConsumerWidget {
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton.icon(
+          child: ErrorButton(
+            text: '거절',
             onPressed: () => _handleReject(context, ref),
-            icon: const Icon(Icons.close, size: 18),
-            label: const Text('거절'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.error,
-              side: BorderSide(color: AppColors.error),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: ElevatedButton.icon(
+          child: PrimaryButton(
+            text: '승인',
             onPressed: () => _handleApprove(context, ref),
-            icon: const Icon(Icons.check, size: 18),
-            label: const Text('승인'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brand,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
+            icon: Icon(Icons.check),
+            variant: PrimaryButtonVariant.brand,
           ),
         ),
       ],
@@ -317,17 +310,14 @@ class _SubGroupRequestCard extends ConsumerWidget {
           ],
         ),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
           ),
-          ElevatedButton(
+          PrimaryButton(
+            text: '승인',
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brand,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('승인'),
+            variant: PrimaryButtonVariant.brand,
           ),
         ],
       ),
@@ -383,14 +373,13 @@ class _SubGroupRequestCard extends ConsumerWidget {
             ],
           ),
           actions: [
-            TextButton(
+            NeutralOutlinedButton(
+              text: '취소',
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('취소'),
             ),
-            TextButton(
+            ErrorButton(
+              text: '거절',
               onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(foregroundColor: AppColors.error),
-              child: const Text('거절'),
             ),
           ],
         );

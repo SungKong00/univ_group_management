@@ -18,6 +18,9 @@ import '../../../core/models/member_models.dart';
 import '../../../core/models/group_models.dart';
 import 'providers/role_management_provider.dart';
 import '../../components/popovers/multi_select_popover.dart';
+import '../../widgets/buttons/neutral_outlined_button.dart';
+import '../../widgets/buttons/outlined_link_button.dart';
+import '../../widgets/buttons/primary_button.dart';
 
 /// Step 3: 멤버 명단 편집 페이지
 class MemberEditPage extends ConsumerStatefulWidget {
@@ -70,12 +73,12 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
         backgroundColor: AppColors.brand,
         foregroundColor: Colors.white,
         actions: [
-          TextButton(
-            onPressed: () => _confirmSelection(context),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.white,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: NeutralOutlinedButton(
+              text: '확정',
+              onPressed: () => _confirmSelection(context),
             ),
-            child: const Text('확정'),
           ),
         ],
       ),
@@ -162,11 +165,12 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      ElevatedButton.icon(
+                      PrimaryButton(
+                        text: '다시 시도',
                         onPressed: () =>
                             ref.invalidate(filteredGroupMembersProvider(widget.groupId)),
                         icon: const Icon(Icons.refresh),
-                        label: const Text('다시 시도'),
+                        variant: PrimaryButtonVariant.action,
                       ),
                     ],
                   ),
@@ -333,7 +337,8 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
             ),
           ),
           const Spacer(),
-          TextButton.icon(
+          OutlinedLinkButton(
+            text: '전체 선택',
             onPressed: displayedMembers.isEmpty
                 ? null
                 : () {
@@ -342,14 +347,11 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
                         .selectAll(displayedMembers.map((m) => m.id).toList());
                   },
             icon: const Icon(Icons.select_all, size: 16),
-            label: const Text('전체 선택'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.action,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-            ),
+            variant: ButtonVariant.outlined,
           ),
           const SizedBox(width: 4),
-          TextButton.icon(
+          OutlinedLinkButton(
+            text: '표시 해제',
             onPressed: displayedMembers.isEmpty
                 ? null
                 : () {
@@ -359,11 +361,7 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
                             displayedMembers.map((m) => m.id).toList());
                   },
             icon: const Icon(Icons.deselect, size: 16),
-            label: const Text('표시 해제'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.neutral600,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-            ),
+            variant: ButtonVariant.outlined,
           ),
         ],
       ),

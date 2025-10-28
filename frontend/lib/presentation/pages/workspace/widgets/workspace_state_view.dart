@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../widgets/buttons/primary_button.dart';
+import '../../../widgets/buttons/outlined_link_button.dart';
 
 /// 워크스페이스 상태 유형
 enum WorkspaceStateType {
@@ -70,20 +72,11 @@ class WorkspaceStateView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            ElevatedButton(
+            PrimaryButton(
+              text: '그룹 탐색하기',
               onPressed: () => context.go(AppConstants.homeRoute),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.action,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(160, 48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                '그룹 탐색하기',
-                style: AppTheme.titleMedium.copyWith(color: Colors.white),
-              ),
+              variant: PrimaryButtonVariant.action,
+              width: 160,
             ),
           ],
         ),
@@ -140,38 +133,18 @@ class WorkspaceStateView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (onRetry != null)
-                  ElevatedButton(
+                  PrimaryButton(
+                    text: '다시 시도',
                     onPressed: onRetry,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.action,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(120, 48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      '다시 시도',
-                      style: AppTheme.titleMedium.copyWith(color: Colors.white),
-                    ),
+                    variant: PrimaryButtonVariant.action,
+                    width: 120,
                   ),
                 if (onRetry != null) const SizedBox(width: 16),
-                OutlinedButton(
+                OutlinedLinkButton(
+                  text: '홈으로',
                   onPressed: () => context.go(AppConstants.homeRoute),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.action,
-                    side: const BorderSide(color: AppColors.action),
-                    minimumSize: const Size(120, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    '홈으로',
-                    style: AppTheme.titleMedium.copyWith(
-                      color: AppColors.action,
-                    ),
-                  ),
+                  variant: ButtonVariant.outlined,
+                  width: 120,
                 ),
               ],
             ),

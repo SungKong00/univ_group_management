@@ -9,6 +9,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../providers/calendar_events_provider.dart';
 import '../../providers/timetable_provider.dart';
+import '../../widgets/buttons/error_button.dart';
+import '../../widgets/buttons/neutral_outlined_button.dart';
+import '../../widgets/buttons/outlined_link_button.dart';
 import '../../widgets/buttons/primary_button.dart';
 import '../../widgets/common/compact_tab_bar.dart';
 import 'calendar_week_grid_view.dart';
@@ -291,13 +294,14 @@ class TimetableTab extends ConsumerWidget {
         title: const Text('시간 겹침 확인'),
         content: const Text('⚠️ 해당 시간대에 다른 일정이 있습니다. 계속 진행하시겠습니까?'),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '아니요',
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('아니요'),
           ),
-          FilledButton(
+          PrimaryButton(
+            text: '계속 진행',
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('계속 진행'),
+            variant: PrimaryButtonVariant.action,
           ),
         ],
       ),
@@ -315,14 +319,13 @@ class TimetableTab extends ConsumerWidget {
         title: const Text('일정 삭제'),
         content: Text('정말 "${schedule.title}" 일정을 삭제하시겠습니까?'),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+          ErrorButton(
+            text: '삭제',
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('삭제'),
           ),
         ],
       ),
@@ -363,14 +366,13 @@ class _TimetableToolbar extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Row(
           children: [
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(0, AppComponents.buttonHeight),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            Flexible(
+              child: OutlinedLinkButton(
+                text: '수업 추가',
+                onPressed: isBusy ? null : onShowCourseComingSoon,
+                icon: Icon(Icons.school_outlined),
+                variant: ButtonVariant.outlined,
               ),
-              onPressed: isBusy ? null : onShowCourseComingSoon,
-              icon: const Icon(Icons.school_outlined),
-              label: const Text('수업 추가'),
             ),
             Expanded(
               child: Center(
@@ -383,22 +385,31 @@ class _TimetableToolbar extends StatelessWidget {
                       icon: const Icon(Icons.chevron_left),
                     ),
                     const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(weekLabel, style: textTheme.titleLarge),
-                        Text(
-                          weekRange,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: AppColors.neutral500,
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            weekLabel,
+                            style: textTheme.titleLarge,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                          Text(
+                            weekRange,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: AppColors.neutral500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: isBusy ? null : onToday,
-                      child: const Text('오늘'),
+                    Flexible(
+                      child: NeutralOutlinedButton(
+                        text: '오늘',
+                        onPressed: isBusy ? null : onToday,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
@@ -410,18 +421,17 @@ class _TimetableToolbar extends StatelessWidget {
                 ),
               ),
             ),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, AppComponents.buttonHeight),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            Flexible(
+              child: PrimaryButton(
+                text: '개인 일정 추가',
+                onPressed: isBusy
+                    ? null
+                    : () async {
+                        await onCreate();
+                      },
+                icon: Icon(Icons.add_circle_outline),
+                variant: PrimaryButtonVariant.action,
               ),
-              onPressed: isBusy
-                  ? null
-                  : () async {
-                      await onCreate();
-                    },
-              icon: const Icon(Icons.add_circle_outline),
-              label: const Text('개인 일정 추가'),
             ),
           ],
         ),
@@ -470,7 +480,10 @@ class _ErrorBanner extends StatelessWidget {
               style: textTheme.bodyMedium?.copyWith(color: AppColors.error),
             ),
           ),
-          TextButton(onPressed: onRetry, child: const Text('다시 시도')),
+          const SizedBox(width: AppSpacing.xs),
+          Flexible(
+            child: NeutralOutlinedButton(text: '다시 시도', onPressed: onRetry),
+          ),
         ],
       ),
     );
@@ -507,12 +520,13 @@ class _EmptyTimetable extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            FilledButton.icon(
+            PrimaryButton(
+              text: '개인 일정 추가',
               onPressed: () async {
                 await onCreatePressed();
               },
-              icon: const Icon(Icons.add_circle_outline),
-              label: const Text('개인 일정 추가'),
+              icon: Icon(Icons.add_circle_outline),
+              variant: PrimaryButtonVariant.action,
             ),
           ],
         ),
@@ -825,7 +839,9 @@ class _CalendarNavigator extends StatelessWidget {
           onPressed: onNext,
           icon: const Icon(Icons.chevron_right),
         ),
-        TextButton(onPressed: onToday, child: const Text('오늘')),
+        Flexible(
+          child: NeutralOutlinedButton(text: '오늘', onPressed: onToday),
+        ),
       ],
     );
   }
@@ -1032,14 +1048,13 @@ void _handleEventTap(
           title: const Text('이벤트 삭제'),
           content: Text('정말 "${event.title}" 이벤트를 삭제하시겠습니까?'),
           actions: [
-            TextButton(
+            NeutralOutlinedButton(
+              text: '취소',
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('취소'),
             ),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            ErrorButton(
+              text: '삭제',
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('삭제'),
             ),
           ],
         ),

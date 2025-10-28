@@ -21,6 +21,8 @@ import '../../calendar/widgets/calendar_month_with_sidebar.dart';
 import '../../calendar/widgets/month_event_chip.dart';
 import 'widgets/group_event_form_dialog.dart';
 import 'widgets/place_calendar_tab.dart';
+import '../../../widgets/buttons/neutral_outlined_button.dart';
+import '../../../widgets/buttons/primary_button.dart';
 
 /// Event formality categories for single-step selector
 /// Matches Phase 6 UI design: Step 1 - Official/Unofficial selection
@@ -195,27 +197,15 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
     // Fallback (should not reach here)
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.calendar_today,
-            size: 64,
-            color: AppColors.neutral400,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            '${_getViewName(view)} 뷰',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            '준비 중입니다',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.neutral600,
-                ),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Text(
+          '지원하지 않는 뷰: ${_getViewName(view)}',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppColors.error,
+              ),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -409,7 +399,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     if (result != null && mounted) {
       try {
         // Determine location parameters for API
-        final locationText = result.locationText;
+        final locationText = result.locationText ?? '';
         final placeId = result.place?.id;
 
         await ref
@@ -686,7 +676,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     if (result != null && mounted) {
       try {
         // Determine location parameters for API
-        final locationText = result.locationText;
+        final locationText = result.locationText ?? '';
         final placeId = result.place?.id;
 
         await ref
@@ -736,16 +726,14 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
               : '이 일정을 삭제하시겠습니까?',
         ),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
           ),
-          TextButton(
+          PrimaryButton(
+            text: '삭제',
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
-            child: const Text('삭제'),
+            variant: PrimaryButtonVariant.error,
           ),
         ],
       ),
@@ -787,23 +775,25 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
                   : '어떤 일정을 수정하시겠습니까?',
             ),
             const SizedBox(height: AppSpacing.md),
-            ElevatedButton(
+            PrimaryButton(
+              text: '이 일정만',
               onPressed: () =>
                   Navigator.of(context).pop(UpdateScope.thisEvent),
-              child: const Text('이 일정만'),
+              variant: PrimaryButtonVariant.brand,
             ),
             const SizedBox(height: AppSpacing.xs),
-            ElevatedButton(
+            PrimaryButton(
+              text: '이후 모든 반복 일정',
               onPressed: () =>
                   Navigator.of(context).pop(UpdateScope.allEvents),
-              child: const Text('이후 모든 반복 일정'),
+              variant: PrimaryButtonVariant.brand,
             ),
           ],
         ),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.of(context).pop(null),
-            child: const Text('취소'),
           ),
         ],
       ),
@@ -856,13 +846,12 @@ class _GroupCalendarHeader extends StatelessWidget {
       ],
     );
 
-    final addButton = FilledButton.icon(
-      style: FilledButton.styleFrom(
-        minimumSize: const Size(0, AppComponents.buttonHeight),
-      ),
+    final addButton = PrimaryButton(
+      text: '일정 추가',
       onPressed: onCreateEvent,
       icon: const Icon(Icons.add),
-      label: const Text('일정 추가'),
+      variant: PrimaryButtonVariant.brand,
+      width: 160,
     );
 
     final navigator = _GroupCalendarNavigator(
@@ -954,12 +943,16 @@ class _GroupCalendarNavigator extends StatelessWidget {
           onPressed: enabled ? onPrevious : null,
           icon: const Icon(Icons.chevron_left),
         ),
-        ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 160),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: textTheme.titleLarge,
+        Flexible(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 160, maxWidth: 280),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: textTheme.titleLarge,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         ),
         IconButton(
@@ -967,9 +960,12 @@ class _GroupCalendarNavigator extends StatelessWidget {
           onPressed: enabled ? onNext : null,
           icon: const Icon(Icons.chevron_right),
         ),
-        TextButton(
-          onPressed: enabled ? onToday : null,
-          child: const Text('오늘'),
+        // Flexible로 감싸서 Row 내에서 유연한 크기 조정 가능
+        Flexible(
+          child: NeutralOutlinedButton(
+            text: '오늘',
+            onPressed: enabled ? onToday : null,
+          ),
         ),
       ],
     );

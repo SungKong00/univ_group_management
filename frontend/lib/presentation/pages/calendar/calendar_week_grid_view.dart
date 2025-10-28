@@ -93,7 +93,10 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
     // LayoutBuilder를 수평 스크롤 바깥으로 옮겨 뷰포트의 유한한 maxWidth를 확보
     return LayoutBuilder(
       builder: (context, constraints) {
-        final viewportWidth = constraints.maxWidth;
+        // constraints.maxWidth가 무한인지 검증
+        final viewportWidth = constraints.hasInfiniteWidth
+            ? gridWidth
+            : constraints.maxWidth;
 
         return Scrollbar(
           controller: verticalController,
@@ -110,6 +113,7 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
                 scrollDirection: Axis.horizontal,
                 child: SizedBox(
                   // 뷰포트가 더 넓을 경우, 컨테이너 폭을 뷰포트 이상으로 만들어 중앙 정렬이 보이도록 함
+                  // viewportWidth가 infinite가 아님을 보장
                   width: math.max(viewportWidth, gridWidth),
                   child: Align(
                     alignment: Alignment.topCenter,

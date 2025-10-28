@@ -4,6 +4,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/models/member_models.dart';
 import '../../../../core/utils/snack_bar_helper.dart';
+import '../../../widgets/buttons/error_button.dart';
+import '../../../widgets/buttons/neutral_outlined_button.dart';
+import '../../../widgets/buttons/primary_button.dart';
 import '../../../widgets/member/member_avatar.dart';
 import '../../../widgets/common/section_card.dart';
 import '../providers/join_request_provider.dart';
@@ -137,26 +140,18 @@ class _JoinRequestCard extends ConsumerWidget {
             data: (roles) => Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: ErrorButton(
+                    text: '거절',
                     onPressed: () => _handleReject(context, ref),
-                    icon: const Icon(Icons.close, size: 18),
-                    label: const Text('거절'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.error,
-                      side: BorderSide(color: AppColors.error),
-                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: PrimaryButton(
+                    text: '승인',
                     onPressed: () => _showApprovalDialog(context, ref, roles),
-                    icon: const Icon(Icons.check, size: 18),
-                    label: const Text('승인'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.brand,
-                      foregroundColor: Colors.white,
-                    ),
+                    icon: Icon(Icons.check),
+                    variant: PrimaryButtonVariant.brand,
                   ),
                 ),
               ],
@@ -196,20 +191,17 @@ class _JoinRequestCard extends ConsumerWidget {
           ],
         ),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
           ),
-          ElevatedButton(
+          PrimaryButton(
+            text: '승인',
             onPressed: () async {
               Navigator.pop(dialogContext);
               await _handleApprove(context, ref);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brand,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('승인'),
+            variant: PrimaryButtonVariant.brand,
           ),
         ],
       ),
@@ -247,14 +239,13 @@ class _JoinRequestCard extends ConsumerWidget {
         title: const Text('가입 거절'),
         content: Text('${request.userName}님의 가입 신청을 거절하시겠습니까?'),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
           ),
-          TextButton(
+          ErrorButton(
+            text: '거절',
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('거절'),
           ),
         ],
       ),

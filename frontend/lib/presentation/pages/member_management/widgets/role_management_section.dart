@@ -9,6 +9,9 @@ import '../../../widgets/dialogs/create_role_dialog.dart';
 import '../../../widgets/dialogs/edit_role_dialog.dart';
 import '../../../widgets/common/state_view.dart';
 import '../../../widgets/common/section_card.dart';
+import '../../../widgets/buttons/outlined_link_button.dart';
+import '../../../widgets/buttons/neutral_outlined_button.dart';
+import '../../../widgets/buttons/error_button.dart';
 
 /// 역할 관리 섹션
 ///
@@ -37,15 +40,11 @@ class RoleManagementSection extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         // 커스텀 역할 추가 버튼
-        OutlinedButton.icon(
+        OutlinedLinkButton(
+          text: '커스텀 역할 추가',
           onPressed: () => _showCreateRoleDialog(context, ref),
           icon: const Icon(Icons.add, size: 20),
-          label: const Text('커스텀 역할 추가'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            side: BorderSide(color: AppColors.brand),
-            foregroundColor: AppColors.brand,
-          ),
+          variant: ButtonVariant.outlined,
         ),
       ],
     );
@@ -110,11 +109,12 @@ class RoleManagementSection extends ConsumerWidget {
         title: const Text('역할 삭제'),
         content: Text('${role.name} 역할을 삭제하시겠습니까?'),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
           ),
-          TextButton(
+          ErrorButton(
+            text: '삭제',
             onPressed: () async {
               Navigator.pop(context);
               try {
@@ -136,8 +136,6 @@ class RoleManagementSection extends ConsumerWidget {
                 }
               }
             },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('삭제'),
           ),
         ],
       ),

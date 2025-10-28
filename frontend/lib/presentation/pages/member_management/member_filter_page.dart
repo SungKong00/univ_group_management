@@ -13,7 +13,7 @@ import '../../../core/models/member_filter.dart';
 import '../../../core/models/member_models.dart';
 import '../../../core/models/group_models.dart';
 import 'providers/role_management_provider.dart';
-import '../../components/popovers/multi_select_popover.dart';
+import '../../components/chips/expandable_chip_section.dart';
 import 'selection_method_page.dart';
 
 /// Step 1: 멤버 필터 선택 페이지
@@ -84,25 +84,23 @@ class MemberFilterPage extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            // 선택된 필터 요약
-            if (currentFilter.isActive) ...[
-              const Divider(),
-              const SizedBox(height: AppSpacing.md),
-              _buildFilterSummary(
-                context,
-                currentFilter,
-                rolesAsync,
-                subGroupsAsync,
-                availableYears,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
+            // 선택된 필터 요약 또는 전체 선택 안내
+            const Divider(),
+            const SizedBox(height: AppSpacing.md),
+            currentFilter.isActive
+                ? _buildFilterSummary(
+                    context,
+                    currentFilter,
+                    rolesAsync,
+                    subGroupsAsync,
+                    availableYears,
+                  )
+                : _buildEmptyFilterNotice(context),
+            const SizedBox(height: AppSpacing.lg),
 
-            // 다음 버튼
+            // 다음 버튼 (항상 활성화)
             ElevatedButton(
-              onPressed: currentFilter.isActive
-                  ? () => _navigateToStep2(context, ref, currentFilter)
-                  : null,
+              onPressed: () => _navigateToStep2(context, ref, currentFilter),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.action,
                 minimumSize: const Size.fromHeight(AppComponents.buttonHeight),
@@ -150,17 +148,16 @@ class MemberFilterPage extends ConsumerWidget {
             ],
           ],
         ),
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.sm),
         rolesAsync.when(
           data: (roles) => isEnabled
-              ? MultiSelectPopover<GroupRole>(
-                  label: '역할',
+              ? ExpandableChipSection<GroupRole>(
                   items: roles,
                   selectedItems: roles
                       .where((r) => currentFilter.roleIds?.contains(r.id) ?? false)
                       .toList(),
                   itemLabel: (role) => role.name,
-                  onChanged: (selectedRoles) {
+                  onSelectionChanged: (selectedRoles) {
                     final selectedIds = selectedRoles.map((r) => r.id).toList();
                     // setFilter로 즉시 적용
                     ref.read(memberFilterStateProvider(groupId).notifier).setFilter(
@@ -172,7 +169,8 @@ class MemberFilterPage extends ConsumerWidget {
                       ),
                     );
                   },
-                  emptyLabel: '전체',
+                  enabled: true,
+                  initialDisplayCount: 6,
                 )
               : Text(
                   '다른 필터를 해제하면 역할 필터를 사용할 수 있습니다',
@@ -228,16 +226,15 @@ class MemberFilterPage extends ConsumerWidget {
                 ],
               ],
             ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.sm),
             isEnabled
-                ? MultiSelectPopover<GroupSummaryResponse>(
-                    label: '그룹',
+                ? ExpandableChipSection<GroupSummaryResponse>(
                     items: subGroups,
                     selectedItems: subGroups
                         .where((g) => currentFilter.groupIds?.contains(g.id) ?? false)
                         .toList(),
                     itemLabel: (group) => group.name,
-                    onChanged: (selectedGroups) {
+                    onSelectionChanged: (selectedGroups) {
                       final selectedIds = selectedGroups.map((g) => g.id).toList();
                       // setFilter로 즉시 적용
                       ref.read(memberFilterStateProvider(groupId).notifier).setFilter(
@@ -247,7 +244,8 @@ class MemberFilterPage extends ConsumerWidget {
                         ),
                       );
                     },
-                    emptyLabel: '전체',
+                    enabled: true,
+                    initialDisplayCount: 6,
                   )
                 : Text(
                     '역할 필터를 해제하면 그룹 필터를 사용할 수 있습니다',
@@ -315,12 +313,11 @@ class MemberFilterPage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-          MultiSelectPopover<int>(
-            label: '학년',
+          ExpandableChipSection<int>(
             items: availableGrades,
             selectedItems: currentFilter.grades ?? [],
             itemLabel: (grade) => gradeLabels[grade] ?? '$grade학년',
-            onChanged: (selectedGrades) {
+            onSelectionChanged: (selectedGrades) {
               // setFilter로 즉시 적용
               ref.read(memberFilterStateProvider(groupId).notifier).setFilter(
                 currentFilter.copyWith(
@@ -329,7 +326,8 @@ class MemberFilterPage extends ConsumerWidget {
                 ),
               );
             },
-            emptyLabel: '전체',
+            enabled: true,
+            initialDisplayCount: 5,
           ),
           const SizedBox(height: AppSpacing.md),
           // 학번
@@ -341,12 +339,11 @@ class MemberFilterPage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-          MultiSelectPopover<int>(
-            label: '학번',
+          ExpandableChipSection<int>(
             items: availableYears,
             selectedItems: currentFilter.years ?? [],
             itemLabel: (year) => '$year년',
-            onChanged: (selectedYears) {
+            onSelectionChanged: (selectedYears) {
               // setFilter로 즉시 적용
               ref.read(memberFilterStateProvider(groupId).notifier).setFilter(
                 currentFilter.copyWith(
@@ -355,7 +352,8 @@ class MemberFilterPage extends ConsumerWidget {
                 ),
               );
             },
-            emptyLabel: '전체',
+            enabled: true,
+            initialDisplayCount: 5,
           ),
         ] else
           Text(
@@ -366,6 +364,48 @@ class MemberFilterPage extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildEmptyFilterNotice(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.neutral100,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.neutral300, width: 1),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.people,
+            size: 20,
+            color: AppColors.neutral700,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '전체 멤버 선택',
+                  style: AppTheme.bodyLarge.copyWith(
+                    color: AppColors.neutral800,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '필터를 선택하지 않으면 모든 멤버가 대상에 포함됩니다',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppColors.neutral600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

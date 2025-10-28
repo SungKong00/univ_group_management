@@ -182,7 +182,10 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
     // Responsive layout
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWideScreen = constraints.maxWidth >= 1024;
+        // constraints가 무한인지 검증
+        final hasFiniteWidth = !constraints.hasInfiniteWidth;
+        final hasFiniteHeight = !constraints.hasInfiniteHeight;
+        final isWideScreen = hasFiniteWidth && constraints.maxWidth >= 1024;
 
         if (isWideScreen) {
           // Wide screen: Row layout (calendar 70% + event list 30%)
@@ -197,7 +200,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
               Expanded(
                 flex: 3,
                 child: SizedBox(
-                  height: constraints.maxHeight,
+                  height: hasFiniteHeight ? constraints.maxHeight : double.infinity,
                   child: eventListWidget,
                 ),
               ),
@@ -318,11 +321,14 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
       padding: EdgeInsets.zero,
       itemBuilder: (context, index) {
         final event = selectedEvents[index];
-        return InkWell(
-          onTap: () => widget.onEventTap(event),
-          child: widget.eventCardBuilder != null
-              ? widget.eventCardBuilder!(event)
-              : _buildDefaultEventCard(event),
+        return SizedBox(
+          height: 80, // 고정 높이 지정 (Sliver 에러 방지)
+          child: InkWell(
+            onTap: () => widget.onEventTap(event),
+            child: widget.eventCardBuilder != null
+                ? widget.eventCardBuilder!(event)
+                : _buildDefaultEventCard(event),
+          ),
         );
       },
       separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),

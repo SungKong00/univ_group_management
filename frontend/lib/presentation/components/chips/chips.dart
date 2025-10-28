@@ -4,3 +4,4 @@
 export 'app_chip.dart';
 export 'compact_chip.dart';
 export 'input_chip.dart';
+export 'expandable_chip_section.dart';

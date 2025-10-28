@@ -18,6 +18,9 @@ import 'highlight_painter.dart';
 import 'selection_painter.dart';
 import 'time_grid_painter.dart';
 import 'weekly_schedule_editor_painter.dart';
+import '../buttons/neutral_outlined_button.dart';
+import '../buttons/error_button.dart';
+import '../buttons/primary_button.dart';
 
 typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end, DateTime? startTime, DateTime? endTime});
 
@@ -890,16 +893,17 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         ),
         actions: [
           if (!isExternal && _mode == CalendarMode.edit)
-            TextButton(
+            PrimaryButton(
+              text: '수정',
               onPressed: () {
                 Navigator.of(context).pop();
                 _showEditDialog(event);
               },
-              child: const Text('수정'),
+              variant: PrimaryButtonVariant.action,
             ),
-          TextButton(
+          NeutralOutlinedButton(
+            text: '닫기',
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
           ),
         ],
       ),
@@ -973,9 +977,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           ),
         ),
         actions: [
-          TextButton(
+          NeutralOutlinedButton(
+            text: '닫기',
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
           ),
         ],
       ),
@@ -999,7 +1003,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           decoration: const InputDecoration(labelText: '제목'),
         ),
         actions: [
-          TextButton(
+          ErrorButton(
+            text: '삭제',
             onPressed: () {
               setState(() {
                 _events.removeWhere((e) => e.id == event.id);
@@ -1007,13 +1012,13 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               });
               Navigator.of(context).pop();
             },
-            child: const Text('삭제', style: TextStyle(color: Colors.red)),
           ),
-          TextButton(
+          NeutralOutlinedButton(
+            text: '취소',
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('취소'),
           ),
-          TextButton(
+          PrimaryButton(
+            text: '저장',
             onPressed: () {
               setState(() {
                 final index = _events.indexWhere((e) => e.id == event.id);
@@ -1031,7 +1036,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               });
               Navigator.of(context).pop();
             },
-            child: const Text('저장'),
+            variant: PrimaryButtonVariant.brand,
           ),
         ],
       ),
@@ -1086,9 +1091,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           title: const Text('생성 불가'),
           content: const Text('겹치는 시��에는 일정을 생성할 수 없습니다.'),
           actions: [
-            TextButton(
+            PrimaryButton(
+              text: '확인',
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('확인'),
+              variant: PrimaryButtonVariant.brand,
             ),
           ],
         ),

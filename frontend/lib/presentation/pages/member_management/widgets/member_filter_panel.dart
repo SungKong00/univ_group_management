@@ -11,6 +11,9 @@ import '../../../components/chips/input_chip.dart';
 import '../../../components/chips/app_chip.dart';
 import '../../../components/popovers/multi_select_popover.dart';
 import '../../../widgets/common/section_card.dart';
+import '../../../widgets/buttons/primary_button.dart';
+import '../../../widgets/buttons/neutral_outlined_button.dart';
+import '../../../widgets/buttons/outlined_link_button.dart';
 
 /// 멤버 필터 패널
 ///
@@ -545,41 +548,30 @@ class _ActionSection extends ConsumerWidget {
             children: [
               // 초기화 버튼 (드래프트 필터 있을 때만)
               if (draftFilter.isActive)
-                TextButton.icon(
+                OutlinedLinkButton(
+                  text: '초기화',
                   onPressed: () => filterNotifier.reset(MemberFilter()),
                   icon: const Icon(Icons.refresh, size: 16),
-                  label: const Text('초기화'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.neutral600,
-                  ),
+                  variant: ButtonVariant.outlined,
                 ),
 
               const Spacer(),
 
               // 취소 버튼 (변경 있을 때만)
               if (isDraftDirty)
-                TextButton(
+                NeutralOutlinedButton(
+                  text: '취소',
                   onPressed: () => filterNotifier.cancel(),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.neutral600,
-                  ),
-                  child: const Text('취소'),
                 ),
 
               if (isDraftDirty) const SizedBox(width: AppSpacing.sm),
 
               // 적용 버튼
-              ElevatedButton(
+              PrimaryButton(
+                text: '필터 적용',
                 onPressed: isDraftDirty ? () => filterNotifier.apply() : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.brand,
-                  disabledBackgroundColor: AppColors.neutral200,
-                  minimumSize: const Size(120, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.button),
-                  ),
-                ),
-                child: const Text('필터 적용'),
+                variant: PrimaryButtonVariant.brand,
+                width: 120,
               ),
             ],
           ),
