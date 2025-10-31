@@ -58,6 +58,8 @@ Flutter에서 Row와 Column 위젯 내부에 자식 위젯을 배치할 때 가�
 
 ### 패턴 1: Row 내부의 버튼 (가장 흔함)
 
+> **실제 해결 사례**: _TimetableToolbar, _DateNavigator, _CallengerNavigator에서 OutlinedLinkButton, NeutralOutlinedButton이 Row 내부에 배치되어 "BoxConstraints forces an infinite width" 에러 발생. 각 버튼에 명시적 width 속성 추가(120, 60, 60)로 해결.
+
 #### ❌ 잘못된 코드
 ```dart
 Row(
@@ -112,6 +114,27 @@ Row(
       width: 120,
       height: 44,
       child: ElevatedButton(...),
+    ),
+  ],
+)
+```
+
+#### ✅ 실제 적용 사례 (커스텀 버튼 위젯)
+```dart
+// OutlinedLinkButton, NeutralOutlinedButton 등 커스텀 버튼 위젯의 경우
+Row(
+  children: [
+    OutlinedLinkButton(
+      label: '시간표',
+      icon: Icons.calendar_view_week,
+      onPressed: onTimetablePressed,
+      width: 120,  // 명시적 너비 지정 필수
+    ),
+    const SizedBox(width: 8),
+    NeutralOutlinedButton(
+      icon: Icons.chevron_left,
+      onPressed: onPrevious,
+      width: 60,  // 명시적 너비 지정 필수
     ),
   ],
 )
@@ -276,12 +299,55 @@ Row(
   - 예: 정확한 너비/높이가 지정된 이미지
   - 예: 디자인 시스템에서 정의된 고정 크기 요소
 
+## 버튼 위젯 특별 규칙
+
+### 커스텀 버튼 위젯 작성 시
+```markdown
+□ width 매개변수를 필수로 추가
+□ Row 내부에서 사용될 가능성을 항상 고려
+□ 기본값을 제공하거나 required로 명시
+□ 버튼 생성자에서 SizedBox로 감싸기
+
+예시 패턴:
+class CustomButton extends StatelessWidget {
+  final double? width;  // nullable로 선언
+  final VoidCallback? onPressed;
+
+  const CustomButton({
+    super.key,
+    this.width,  // 선택적 매개변수
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = OutlinedButton(...);
+
+    // width가 지정된 경우 SizedBox로 감싸기
+    if (width != null) {
+      return SizedBox(width: width, child: button);
+    }
+    return button;
+  }
+}
+```
+
+### Row 내부 버튼 사용 시
+```markdown
+□ 항상 width 속성 명시 (예: width: 120, width: 60)
+□ 버튼이 여러 개인 경우 일관된 너비 사용
+□ 아이콘 전용 버튼: 60px
+□ 텍스트 포함 버튼: 120px 이상
+□ 전체 너비 버튼: Expanded로 감싸기
+```
+
 ## 개발 워크플로우 통합
 
 ### 코드 작성 전
 1. Row나 Column을 사용하기 전에 이 체크리스트를 확인
 2. 각 자식 위젯의 제약 전략을 미리 계획
 3. DropdownMenuItem 같은 특수 케이스인지 확인
+4. 커스텀 버튼 위젯은 width 매개변수 제공 여부 확인
 
 ### 코드 작성 중
 1. Row/Column 추가 시 즉시 자식 위젯에 제약 추가

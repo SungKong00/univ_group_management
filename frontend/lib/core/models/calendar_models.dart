@@ -150,12 +150,13 @@ class PersonalScheduleRequest {
 }
 
 /// Default color palette (5 options) defined in the MVP spec.
+/// 개인 일정용 색상 팔레트 (흰색 텍스트와 충분한 대비 확보)
 const List<Color> kPersonalScheduleColors = [
-  Color(0xFF3B82F6),
-  Color(0xFFEF4444),
-  Color(0xFF10B981),
-  Color(0xFFF59E0B),
-  Color(0xFF8B5CF6),
+  Color(0xFF1D4ED8), // Blue 700 (UI/UX actionPrimary)
+  Color(0xFFDC2626), // Red 600
+  Color(0xFF059669), // Green 600
+  Color(0xFFD97706), // Orange 600
+  Color(0xFF5C068C), // Brand Purple
 ];
 
 final DateFormat _timeFormat = DateFormat('HH:mm');

@@ -22,7 +22,7 @@ import '../buttons/neutral_outlined_button.dart';
 import '../buttons/error_button.dart';
 import '../buttons/primary_button.dart';
 
-typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end, DateTime? startTime, DateTime? endTime});
+typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end, DateTime? startTime, DateTime? endTime, Color? color});
 
 /// Calculate event position (top, height) based on DateTime or slot
 ///
@@ -136,6 +136,25 @@ class WeeklyScheduleEditor extends StatefulWidget {
   /// When set, enables single-click reservation with fixed time blocks
   final Duration? requiredDuration;
 
+  /// Initial events (for server-backed calendars)
+  /// Events loaded from API (e.g., PersonalSchedule converted to Event)
+  final List<Event>? initialEvents;
+
+  /// Callback for event creation (returns success)
+  /// Called after user confirms event creation in dialog
+  /// Return true if successfully saved to server, false otherwise
+  final Future<bool> Function(Event event)? onEventCreate;
+
+  /// Callback for event update
+  /// Called after user confirms event modification in dialog
+  /// Return true if successfully updated on server, false otherwise
+  final Future<bool> Function(Event event)? onEventUpdate;
+
+  /// Callback for event delete
+  /// Called after user confirms event deletion
+  /// Return true if successfully deleted from server, false otherwise
+  final Future<bool> Function(Event event)? onEventDelete;
+
   const WeeklyScheduleEditor({
     super.key,
     this.allowMultiDaySelection = false,
@@ -149,6 +168,10 @@ class WeeklyScheduleEditor extends StatefulWidget {
     this.disabledSlotsByPlace,
     this.preSelectedPlaceId,
     this.requiredDuration,
+    this.initialEvents,
+    this.onEventCreate,
+    this.onEventUpdate,
+    this.onEventDelete,
   });
 
   @override
@@ -167,7 +190,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   // State
   final List<Event> _events = [];
-  CalendarMode _mode = CalendarMode.add; // Default to add mode
+  CalendarMode _mode = CalendarMode.edit; // Default to edit mode for viewing/editing
   bool _isOverlapView = true; // Default to overlap view (side-by-side)
   bool _isSelecting = false;
   ({int day, int slot})? _startCell;
@@ -199,6 +222,12 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+
+    // Initialize with server data (for server-backed calendars)
+    if (widget.initialEvents != null) {
+      _events.addAll(widget.initialEvents!);
+    }
+
     final initialRange = _calculateVisibleHourRange();
     _visibleStartHour = initialRange.startHour;
     _visibleEndHour = initialRange.endHour;
@@ -339,6 +368,17 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void didUpdateWidget(covariant WeeklyScheduleEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    // Sync external data when initialEvents change (server-backed calendars)
+    if (widget.initialEvents != oldWidget.initialEvents) {
+      setState(() {
+        // Clear existing events and reload from server
+        _events.clear();
+        if (widget.initialEvents != null) {
+          _events.addAll(widget.initialEvents!);
+        }
+      });
+    }
+
     final newRange = _calculateVisibleHourRange();
     if (newRange.startHour != _visibleStartHour || newRange.endHour != _visibleEndHour) {
       setState(() {
@@ -397,6 +437,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             end: (day: eventDay, slot: endSlot),
             startTime: groupEvent.startDateTime,  // Add DateTime for precise rendering
             endTime: groupEvent.endDateTime,      // Add DateTime for precise rendering
+            color: null,                          // External events use default color
           ));
           debugPrint('  ✓ Added: ${groupEvent.title} (Day: $eventDay, ${startSlot}-${endSlot})');
         }
@@ -1005,11 +1046,23 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         actions: [
           ErrorButton(
             text: '삭제',
-            onPressed: () {
+            onPressed: () async {
+              // If callback provided, call it (for server-backed calendars)
+              if (widget.onEventDelete != null) {
+                final success = await widget.onEventDelete!(event);
+                if (!success) {
+                  if (!mounted) return;
+                  AppSnackBar.error(context, '일정 삭제 실패');
+                  return;
+                }
+              }
+
+              // Update local state (for demo calendars or after successful server delete)
               setState(() {
                 _events.removeWhere((e) => e.id == event.id);
                 _updateVisibleRangeForCurrentState();
               });
+              if (!mounted) return;
               Navigator.of(context).pop();
             },
           ),
@@ -1019,21 +1072,36 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           ),
           PrimaryButton(
             text: '저장',
-            onPressed: () {
+            onPressed: () async {
+              final updatedEvent = (
+                id: event.id,
+                title: titleController.text,
+                start: event.start,
+                end: event.end,
+                startTime: event.startTime,  // Preserve DateTime
+                endTime: event.endTime,      // Preserve DateTime
+                color: event.color,          // Preserve color
+              );
+
+              // If callback provided, call it (for server-backed calendars)
+              if (widget.onEventUpdate != null) {
+                final success = await widget.onEventUpdate!(updatedEvent);
+                if (!success) {
+                  if (!mounted) return;
+                  AppSnackBar.error(context, '일정 수정 실패');
+                  return;
+                }
+              }
+
+              // Update local state (for demo calendars or after successful server update)
               setState(() {
                 final index = _events.indexWhere((e) => e.id == event.id);
                 if (index != -1) {
-                  _events[index] = (
-                    id: event.id,
-                    title: titleController.text,
-                    start: event.start,
-                    end: event.end,
-                    startTime: event.startTime,  // Preserve DateTime
-                    endTime: event.endTime,      // Preserve DateTime
-                  );
+                  _events[index] = updatedEvent;
                   _updateVisibleRangeForCurrentState();
                 }
               });
+              if (!mounted) return;
               Navigator.of(context).pop();
             },
             variant: PrimaryButtonVariant.brand,
@@ -1107,16 +1175,39 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     }
 
     // Create event with DateTime info for precise rendering
+    final newEvent = (
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: result.title,
+      start: startCell,
+      end: endCell,
+      startTime: finalStartTime,  // Store precise time
+      endTime: finalEndTime,      // Store precise time
+      color: result.color,        // Store selected color
+    );
+
+    // If callback provided, call it (for server-backed calendars)
+    if (widget.onEventCreate != null) {
+      final success = await widget.onEventCreate!(newEvent);
+      if (!success) {
+        if (!mounted) return;
+        AppSnackBar.error(context, '일정 생성 실패');
+        return;
+      }
+    }
+
+    // Update local state (for demo calendars or after successful server save)
     setState(() {
-      _events.add((
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: result.title,
-        start: startCell,
-        end: endCell,
-        startTime: finalStartTime,  // Store precise time
-        endTime: finalEndTime,      // Store precise time
-      ));
+      _events.add(newEvent);
       _updateVisibleRangeForCurrentState();
+
+      // Return to edit mode after successful creation
+      if (_mode == CalendarMode.add) {
+        final range = _calculateVisibleHourRange(modeOverride: CalendarMode.edit);
+        _mode = CalendarMode.edit;
+        _visibleStartHour = range.startHour;
+        _visibleEndHour = range.endHour;
+        _hasAppliedInitialScroll = false;
+      }
     });
 
     // TODO: Handle location data (result.locationSelection)
@@ -1205,13 +1296,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       final overlappingEvents = _findEventsAtCell(cell);
 
       if (overlappingEvents.isNotEmpty) {
-        // 1 event: show edit dialog directly (existing behavior)
+        // 1 event: show detail dialog (for viewing, with edit button)
         if (overlappingEvents.length == 1) {
-          if (_mode == CalendarMode.edit) {
-            _showEditDialog(overlappingEvents.first);
-          } else {
-            _showEventDetailDialog(overlappingEvents.first);
-          }
+          // Always show detail dialog first (read-focused)
+          _showEventDetailDialog(overlappingEvents.first);
           return;
         }
         // 2+ events: show overlapping events modal
@@ -1306,13 +1394,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       final overlappingEvents = _findEventsAtCell(cell);
 
       if (overlappingEvents.isNotEmpty) {
-        // 1 event: show edit dialog directly (existing behavior)
+        // 1 event: show detail dialog (for viewing, with edit button)
         if (overlappingEvents.length == 1) {
-          if (_mode == CalendarMode.edit) {
-            _showEditDialog(overlappingEvents.first);
-          } else {
-            _showEventDetailDialog(overlappingEvents.first);
-          }
+          // Always show detail dialog first (read-focused)
+          _showEventDetailDialog(overlappingEvents.first);
         }
         // 2+ events: show overlapping events modal
         else {
@@ -1332,44 +1417,65 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
-              Expanded(
-                child: SegmentedButton<CalendarMode>(
-                  segments: const [
-                    ButtonSegment(
-                      value: CalendarMode.add,
-                      label: Text('추가 모드'),
-                      icon: Icon(Icons.add_circle_outline),
+              // Add event button (switches to add mode temporarily)
+              if (_mode != CalendarMode.add)
+                Flexible(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      final range = _calculateVisibleHourRange(modeOverride: CalendarMode.add);
+                      setState(() {
+                        _mode = CalendarMode.add;
+                        _visibleStartHour = range.startHour;
+                        _visibleEndHour = range.endHour;
+                        _hasAppliedInitialScroll = false;
+                      });
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('일정 추가'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
-                    ButtonSegment(
-                      value: CalendarMode.edit,
-                      label: Text('수정 모드'),
-                      icon: Icon(Icons.edit_outlined),
-                    ),
-                    ButtonSegment(
-                      value: CalendarMode.view,
-                      label: Text('고정 모드'),
-                      icon: Icon(Icons.visibility_outlined),
-                    ),
-                  ],
-                  selected: {_mode},
-                  onSelectionChanged: (Set<CalendarMode> newSelection) {
-                    final nextMode = newSelection.first;
-                    final range = _calculateVisibleHourRange(modeOverride: nextMode);
-                    setState(() {
-                      _mode = nextMode;
-                      _isSelecting = false;
-                      _startCell = null;
-                      _endCell = null;
-                      _selectionRect = null;
-                      _highlightRect = null;
-                      _visibleStartHour = range.startHour;
-                      _visibleEndHour = range.endHour;
-                      _hasAppliedInitialScroll = false;
-                    });
-                  },
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
+              if (_mode == CalendarMode.add)
+                Flexible(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.info_outline, size: 20),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          '캘린더를 드래그하여 시간을 선택하세요',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      TextButton(
+                        onPressed: () {
+                          // Return to edit mode
+                          final range = _calculateVisibleHourRange(modeOverride: CalendarMode.edit);
+                          setState(() {
+                            _mode = CalendarMode.edit;
+                            _isSelecting = false;
+                            _startCell = null;
+                            _endCell = null;
+                            _selectionRect = null;
+                            _highlightRect = null;
+                            _visibleStartHour = range.startHour;
+                            _visibleEndHour = range.endHour;
+                            _hasAppliedInitialScroll = false;
+                          });
+                        },
+                        child: const Text('취소'),
+                      ),
+                    ],
+                  ),
+                ),
+              const Spacer(),
               // Overlap view toggle
               Tooltip(
                 message: _isOverlapView ? '겹친 일정 펼치기' : '겹친 일정 접기',
@@ -1615,14 +1721,14 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     double contentHeight,
   ) {
     // Prepare event data for EventPainter
-    List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span})> eventData;
+    List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span, DateTime? startTime, String? location, Color? color})> eventData;
 
     if (_isOverlapView) {
       // Overlap view: analyze and assign columns
       final allEvents = _getAllEvents();
       final layoutInfo = _calculateEventLayout(allEvents);
 
-      eventData = eventRects.map<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span})>((e) {
+      eventData = eventRects.map<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span, DateTime? startTime, String? location, Color? color})>((e) {
         final info = layoutInfo[e.event.id];
         return (
           rect: e.rect,
@@ -1631,17 +1737,23 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           columnIndex: info?.columnIndex,
           totalColumns: info?.totalColumns,
           span: info?.span,
+          startTime: e.event.startTime,
+          location: null, // Location not available in current Event typedef
+          color: e.event.color, // Pass event color
         );
       }).toList();
     } else {
       // Compact view: no column layout
-      eventData = eventRects.map<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span})>((e) => (
+      eventData = eventRects.map<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span, DateTime? startTime, String? location, Color? color})>((e) => (
         rect: e.rect,
         title: e.event.title,
         id: e.event.id,
         columnIndex: null,
         totalColumns: null,
         span: null,
+        startTime: e.event.startTime,
+        location: null, // Location not available in current Event typedef
+        color: e.event.color, // Pass event color
       )).toList();
     }
 

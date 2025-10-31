@@ -306,14 +306,26 @@ WCAG 2.1 AA 기준:
 □ 포커스 표시 명확함
 ```
 
-#### 4.3 반응형 디자인 확인
+#### 4.3 BoxConstraints 에러 방지 (필수)
 ```markdown
-반응형 체크:
-□ 모바일 우선 설계 (320px~)
-□ 태블릿 대응 (768px~)
-□ 데스크톱 대응 (1024px~)
-□ 터치 친화적 인터페이스
-□ 적절한 터치 타겟 크기 (44px 이상)
+⚠️ Flutter Row/Column 레이아웃 에러 방지 필수 체크
+
+자주 발생하는 에러:
+□ "BoxConstraints forces an infinite width" (Row 내부)
+□ "BoxConstraints forces an infinite height" (Column 내부)
+
+필수 체크리스트:
+□ Row 내부의 모든 자식 위젯에 너비 제약 설정
+  - Expanded/Flexible/SizedBox(width: ...) 중 하나 필수
+□ Column 내부의 모든 자식 위젯에 높이 제약 설정
+  - Expanded/Flexible/SizedBox(height: ...) 중 하나 필수
+□ 버튼 위젯의 명시적 너비/높이 지정 (특히 Row 내부)
+□ DropdownMenuItem 내부 Row는 mainAxisSize: MainAxisSize.min 설정
+
+상세 가이드:
+□ [Row/Column 레이아웃 체크리스트](../implementation/row-column-layout-checklist.md) 숙지
+□ 코드 작성 전 패턴별 해결책 참고
+□ 에러 발생 시 진단 프로세스 따라 해결
 ```
 
 #### 4.4 반응형 디자인 확인
@@ -393,6 +405,7 @@ WCAG 2.1 AA 기준:
 
 ### 개발 시 반드시 확인
 ```markdown
+□ BoxConstraints 에러 방지 (Row/Column 내부 위젯 제약 확인)
 □ 권한 체크 로직 누락 없는지 확인
 □ 에러 처리 및 로딩 상태 관리
 □ API 응답 형식 일관성
@@ -406,6 +419,7 @@ WCAG 2.1 AA 기준:
 ❌ 문서 검토 없이 개발 시작
 ❌ 불명확한 상황에서 임의로 결정하고 진행
 ❌ 한 번에 너무 많은 기능 구현
+❌ Row/Column 내부 위젯에 너비/높이 제약 누락
 ❌ 디자인 시스템 무시
 ❌ 접근성 고려하지 않음
 ❌ 권한 체크 누락

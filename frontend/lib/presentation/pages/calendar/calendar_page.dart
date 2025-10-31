@@ -21,7 +21,8 @@ import 'widgets/event_form_dialog.dart';
 import 'widgets/month_event_chip.dart';
 import 'widgets/schedule_detail_sheet.dart';
 import 'widgets/schedule_form_dialog.dart';
-import 'widgets/timetable_weekly_view.dart';
+import '../../adapters/personal_schedule_adapter.dart';
+import '../../widgets/weekly_calendar/weekly_schedule_editor.dart';
 
 /// LocalStorage Provider
 final localStorageProvider = Provider<LocalStorage>((ref) {
@@ -154,20 +155,34 @@ class TimetableTab extends ConsumerWidget {
 
     Widget content;
     if (isInitialLoading) {
-      content = const Center(child: CircularProgressIndicator());
+      content = const Center(
+        key: ValueKey('timetable-loading'),
+        child: CircularProgressIndicator(),
+      );
     } else if (state.schedules.isEmpty) {
       content = _EmptyTimetable(
+        key: const ValueKey('timetable-empty'),
         onCreatePressed: () async {
           await _handleCreate(context, notifier, isBusy);
         },
       );
     } else {
-      content = TimetableWeeklyView(
-        schedules: state.schedules,
+      // Convert PersonalSchedule to Event for WeeklyScheduleEditor
+      final events = state.schedules
+          .map((schedule) => PersonalScheduleAdapter.toEvent(schedule, state.weekStart))
+          .toList();
+
+      content = WeeklyScheduleEditor(
+        key: ValueKey('timetable-${state.weekStart.millisecondsSinceEpoch}'),
+        allowMultiDaySelection: false, // Timetable: single day only
+        isEditable: true,
+        allowEventOverlap: true, // Show warning but allow overlap
         weekStart: state.weekStart,
-        onScheduleTap: (schedule) async {
-          await _handleScheduleTap(context, notifier, schedule);
-        },
+        initialEvents: events,
+        // Callbacks for CRUD operations
+        onEventCreate: (event) => _handleEventCreate(context, notifier, event, state.weekStart),
+        onEventUpdate: (event) => _handleEventUpdate(context, notifier, event, state.weekStart),
+        onEventDelete: (event) => _handleEventDelete(context, notifier, event),
       );
     }
 
@@ -287,6 +302,79 @@ class TimetableTab extends ConsumerWidget {
     }
   }
 
+  /// Handle event creation from WeeklyScheduleEditor
+  static Future<bool> _handleEventCreate(
+    BuildContext context,
+    TimetableStateNotifier notifier,
+    Event event,
+    DateTime weekStart,
+  ) async {
+    // Convert Event to PersonalScheduleRequest
+    final request = PersonalScheduleAdapter.fromEvent(event, weekStart);
+
+    // Check for overlap
+    final hasOverlap = notifier.hasOverlap(request);
+    if (hasOverlap) {
+      final confirmed = await _showOverlapDialog(context);
+      if (!context.mounted) return false;
+      if (!confirmed) return false;
+    }
+
+    // Call provider to create schedule
+    return await notifier.createSchedule(request);
+  }
+
+  /// Handle event update from WeeklyScheduleEditor
+  static Future<bool> _handleEventUpdate(
+    BuildContext context,
+    TimetableStateNotifier notifier,
+    Event event,
+    DateTime weekStart,
+  ) async {
+    // Extract schedule ID from event ID
+    final scheduleId = PersonalScheduleAdapter.extractScheduleId(event.id);
+    if (scheduleId == null) {
+      AppSnackBar.error(context, '잘못된 일정 ID');
+      return false;
+    }
+
+    // Convert Event to PersonalScheduleRequest
+    final request = PersonalScheduleAdapter.fromEvent(event, weekStart);
+
+    // Check for overlap (excluding current schedule)
+    final hasOverlap = notifier.hasOverlap(request, excludeId: scheduleId);
+    if (hasOverlap) {
+      final confirmed = await _showOverlapDialog(context);
+      if (!context.mounted) return false;
+      if (!confirmed) return false;
+    }
+
+    // Call provider to update schedule
+    return await notifier.updateSchedule(scheduleId, request);
+  }
+
+  /// Handle event deletion from WeeklyScheduleEditor
+  static Future<bool> _handleEventDelete(
+    BuildContext context,
+    TimetableStateNotifier notifier,
+    Event event,
+  ) async {
+    // Extract schedule ID from event ID
+    final scheduleId = PersonalScheduleAdapter.extractScheduleId(event.id);
+    if (scheduleId == null) {
+      AppSnackBar.error(context, '잘못된 일정 ID');
+      return false;
+    }
+
+    // Confirm deletion (using event title since we don't have full schedule)
+    final confirmed = await _showDeleteConfirmDialogSimple(context, event.title);
+    if (!context.mounted) return false;
+    if (!confirmed) return false;
+
+    // Call provider to delete schedule
+    return await notifier.deleteSchedule(scheduleId);
+  }
+
   static Future<bool> _showOverlapDialog(BuildContext context) async {
     final result = await showDialog<bool>(
       context: context,
@@ -318,6 +406,30 @@ class TimetableTab extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('일정 삭제'),
         content: Text('정말 "${schedule.title}" 일정을 삭제하시겠습니까?'),
+        actions: [
+          NeutralOutlinedButton(
+            text: '취소',
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          ErrorButton(
+            text: '삭제',
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  static Future<bool> _showDeleteConfirmDialogSimple(
+    BuildContext context,
+    String title,
+  ) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('일정 삭제'),
+        content: Text('정말 "$title" 일정을 삭제하시겠습니까?'),
         actions: [
           NeutralOutlinedButton(
             text: '취소',
@@ -364,76 +476,91 @@ class _TimetableToolbar extends StatelessWidget {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
-        child: Row(
-          children: [
-            Flexible(
-              child: OutlinedLinkButton(
-                text: '수업 추가',
-                onPressed: isBusy ? null : onShowCourseComingSoon,
-                icon: Icon(Icons.school_outlined),
-                variant: ButtonVariant.outlined,
-              ),
-            ),
-            Expanded(
-              child: Center(
-                child: Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 750;
+
+            if (isCompact) {
+              // 좁은 화면: 세로 배치
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 날짜 네비게이션 (상단 중앙)
+                  _DateNavigator(
+                    weekLabel: weekLabel,
+                    weekRange: weekRange,
+                    textTheme: textTheme,
+                    onPrevious: isBusy ? null : onPreviousWeek,
+                    onNext: isBusy ? null : onNextWeek,
+                    onToday: isBusy ? null : onToday,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  // 액션 버튼들 (하단)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedLinkButton(
+                          text: '수업 추가',
+                          onPressed: isBusy ? null : onShowCourseComingSoon,
+                          icon: const Icon(Icons.school_outlined, size: 18),
+                          variant: ButtonVariant.outlined,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: PrimaryButton(
+                          text: '일정 추가',
+                          onPressed: isBusy ? null : onCreate,
+                          icon: const Icon(Icons.add_circle_outline, size: 18),
+                          variant: PrimaryButtonVariant.action,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }
+
+            // 넓은 화면: 가로 배치 (좌: 액션, 중앙: 네비게이션)
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 좌측: 액션 버튼 그룹
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      tooltip: '이전 주',
-                      onPressed: isBusy ? null : onPreviousWeek,
-                      icon: const Icon(Icons.chevron_left),
+                    OutlinedLinkButton(
+                      text: '수업 추가',
+                      onPressed: isBusy ? null : onShowCourseComingSoon,
+                      icon: const Icon(Icons.school_outlined, size: 18),
+                      variant: ButtonVariant.outlined,
+                      width: 120,
                     ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            weekLabel,
-                            style: textTheme.titleLarge,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            weekRange,
-                            style: textTheme.bodySmall?.copyWith(
-                              color: AppColors.neutral500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: NeutralOutlinedButton(
-                        text: '오늘',
-                        onPressed: isBusy ? null : onToday,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      tooltip: '다음 주',
-                      onPressed: isBusy ? null : onNextWeek,
-                      icon: const Icon(Icons.chevron_right),
+                    const SizedBox(width: AppSpacing.xs),
+                    PrimaryButton(
+                      text: '일정 추가',
+                      onPressed: isBusy ? null : onCreate,
+                      icon: const Icon(Icons.add_circle_outline, size: 18),
+                      variant: PrimaryButtonVariant.action,
+                      width: 120,
                     ),
                   ],
                 ),
-              ),
-            ),
-            Flexible(
-              child: PrimaryButton(
-                text: '개인 일정 추가',
-                onPressed: isBusy
-                    ? null
-                    : () async {
-                        await onCreate();
-                      },
-                icon: Icon(Icons.add_circle_outline),
-                variant: PrimaryButtonVariant.action,
-              ),
-            ),
-          ],
+                const SizedBox(width: AppSpacing.md),
+                // 중앙: 날짜 네비게이션
+                Expanded(
+                  child: _DateNavigator(
+                    weekLabel: weekLabel,
+                    weekRange: weekRange,
+                    textTheme: textTheme,
+                    onPrevious: isBusy ? null : onPreviousWeek,
+                    onNext: isBusy ? null : onNextWeek,
+                    onToday: isBusy ? null : onToday,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -448,6 +575,75 @@ class _TimetableToolbar extends StatelessWidget {
   String _buildWeekRange(DateTime weekStart) {
     final weekEnd = DateUtils.addDaysToDate(weekStart, 6);
     return '${DateFormat('yyyy.MM.dd').format(weekStart)} ~ ${DateFormat('MM.dd').format(weekEnd)}';
+  }
+}
+
+/// 날짜 네비게이션 컴포넌트 (주차 표시 + 이전/다음/오늘)
+class _DateNavigator extends StatelessWidget {
+  const _DateNavigator({
+    required this.weekLabel,
+    required this.weekRange,
+    required this.textTheme,
+    required this.onPrevious,
+    required this.onNext,
+    required this.onToday,
+  });
+
+  final String weekLabel;
+  final String weekRange;
+  final TextTheme textTheme;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+  final VoidCallback? onToday;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: '이전 주',
+          onPressed: onPrevious,
+          icon: const Icon(Icons.chevron_left),
+          visualDensity: VisualDensity.compact,
+        ),
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                weekLabel,
+                style: textTheme.titleLarge,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                weekRange,
+                style: textTheme.bodySmall?.copyWith(
+                  color: AppColors.neutral500,
+                ),
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          tooltip: '다음 주',
+          onPressed: onNext,
+          icon: const Icon(Icons.chevron_right),
+          visualDensity: VisualDensity.compact,
+        ),
+        const SizedBox(width: AppSpacing.xxs),
+        NeutralOutlinedButton(
+          text: '오늘',
+          onPressed: onToday,
+          width: 60,
+        ),
+      ],
+    );
   }
 }
 
@@ -491,7 +687,7 @@ class _ErrorBanner extends StatelessWidget {
 }
 
 class _EmptyTimetable extends StatelessWidget {
-  const _EmptyTimetable({required this.onCreatePressed});
+  const _EmptyTimetable({super.key, required this.onCreatePressed});
 
   final Future<void> Function() onCreatePressed;
 
@@ -521,7 +717,7 @@ class _EmptyTimetable extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             PrimaryButton(
-              text: '개인 일정 추가',
+              text: '일정 추가',
               onPressed: () async {
                 await onCreatePressed();
               },
@@ -698,22 +894,22 @@ class _CalendarHeader extends StatelessWidget {
           CalendarViewType.values.map((view) => view == state.view).toList(),
       onPressed: (index) =>
           onChangeView(CalendarViewType.values.elementAt(index)),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.button),
       fillColor: AppColors.brand.withValues(alpha: 0.08),
       selectedColor: AppColors.brand,
-      constraints: const BoxConstraints(minHeight: 40),
+      constraints: const BoxConstraints(minHeight: 36, minWidth: 56),
       children: const [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text('월간'),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Text('월간', style: TextStyle(fontSize: 13)),
         ),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text('주간'),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Text('주간', style: TextStyle(fontSize: 13)),
         ),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text('일간'),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Text('일간', style: TextStyle(fontSize: 13)),
         ),
       ],
     );
@@ -721,67 +917,75 @@ class _CalendarHeader extends StatelessWidget {
     final addButton = PrimaryButton(
       text: '일정 추가',
       onPressed: onCreateEvent,
+      icon: const Icon(Icons.add_circle_outline, size: 18),
       isLoading: state.isMutating,
-      semanticsLabel: '새 개인 일정 추가',
+      semanticsLabel: '새 일정 추가',
       variant: PrimaryButtonVariant.brand,
-      width: 160,
+      width: 120,
     );
 
-    final navigator = _CalendarNavigator(
-      label: label,
-      onPrevious: onPrevious,
-      onNext: onNext,
-      onToday: onToday,
-    );
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 750;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 850;
-
-        if (isCompact) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(child: navigator),
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+            if (isCompact) {
+              // 좁은 화면: 세로 배치
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: viewToggle,
-                      ),
-                    ),
+                  // 날짜 네비게이션 (상단 중앙)
+                  _CalendarNavigator(
+                    label: label,
+                    onPrevious: onPrevious,
+                    onNext: onNext,
+                    onToday: onToday,
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  addButton,
+                  const SizedBox(height: AppSpacing.xs),
+                  // 하단: 뷰 토글 + 일정 추가
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: viewToggle,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      addButton,
+                    ],
+                  ),
                 ],
-              ),
-            ],
-          );
-        }
+              );
+            }
 
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Row(
+            // 넓은 화면: 가로 배치 (좌: 뷰 토글, 중앙: 네비게이션, 우: 일정 추가)
+            return Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // 좌측: 뷰 전환 토글
                 viewToggle,
-                const SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.md),
+                // 중앙: 날짜 네비게이션
                 Expanded(
-                  child: navigator,
+                  child: _CalendarNavigator(
+                    label: label,
+                    onPrevious: onPrevious,
+                    onNext: onNext,
+                    onToday: onToday,
+                  ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.md),
+                // 우측: 일정 추가 버튼
                 addButton,
               ],
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -820,28 +1024,33 @@ class _CalendarNavigator extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
           tooltip: '이전',
           onPressed: onPrevious,
           icon: const Icon(Icons.chevron_left),
+          visualDensity: VisualDensity.compact,
         ),
-        ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 160),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: textTheme.titleLarge,
+        Flexible(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 140),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: textTheme.titleLarge,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ),
         IconButton(
           tooltip: '다음',
           onPressed: onNext,
           icon: const Icon(Icons.chevron_right),
+          visualDensity: VisualDensity.compact,
         ),
-        Flexible(
-          child: NeutralOutlinedButton(text: '오늘', onPressed: onToday),
-        ),
+        const SizedBox(width: AppSpacing.xxs),
+        NeutralOutlinedButton(text: '오늘', onPressed: onToday, width: 60),
       ],
     );
   }

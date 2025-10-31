@@ -1,3 +1,54 @@
+### 2025-11-01 - BoxConstraints 에러 방지 가이드 강화
+
+**유형**: 문서 업데이트 (에이전트 가이드, 체크리스트)
+**우선순위**: High
+**영향 범위**: 에이전트 문서 (1개), 구현 가이드 (1개)
+
+**작업 개요**:
+Flutter Row/Column 레이아웃에서 반복적으로 발생하는 BoxConstraints 무한 너비 에러를 사전에 방지하기 위해 에이전트 가이드와 체크리스트를 대폭 강화했습니다.
+
+**발생한 문제**:
+- _TimetableToolbar, _DateNavigator, _CalendarNavigator에서 OutlinedLinkButton, NeutralOutlinedButton이 Row 내부에 배치될 때 "BoxConstraints forces an infinite width" 에러 반복 발생
+- 각 버튼에 명시적 width 속성 추가(120, 60, 60)로 해결
+
+**문서 업데이트 내용**:
+1. **frontend-development-agent.md** (514줄 → 528줄)
+   - Phase 4.3: BoxConstraints 에러 방지 섹션 추가 (필수 체크리스트)
+   - 자주 발생하는 에러 유형 명시
+   - Row/Column 내부 위젯 제약 체크리스트
+   - row-column-layout-checklist.md 링크 추가
+   - "개발 시 반드시 확인" 섹션에 BoxConstraints 체크 추가
+   - "절대 금지사항"에 Row/Column 제약 누락 금지 추가
+
+2. **row-column-layout-checklist.md** (301줄 → 366줄)
+   - "패턴 1: Row 내부의 버튼" 섹션에 실제 해결 사례 추가
+   - 실제 적용 사례 코드 예시 추가 (OutlinedLinkButton, NeutralOutlinedButton)
+   - "버튼 위젯 특별 규칙" 섹션 신규 추가 (65줄)
+     - 커스텀 버튼 위젯 작성 시 width 매개변수 필수
+     - Row 내부 버튼 사용 시 가이드라인
+     - 버튼 크기별 권장 값 (아이콘: 60px, 텍스트: 120px)
+   - 개발 워크플로우에 커스텀 버튼 width 확인 추가
+
+**동기화 완료 문서**:
+- ✅ docs/agents/frontend-development-agent.md: 최신 (528줄, 예외)
+- ✅ docs/implementation/row-column-layout-checklist.md: 최신 (366줄, 예외)
+- ✅ docs/context-tracking/context-update-log.md: 현재 로그 추가
+- ✅ docs/context-tracking/sync-status.md: 문서 상태 업데이트
+
+**기대 효과**:
+- BoxConstraints 에러 재발 방지
+- 커스텀 버튼 위젯 설계 시 width 매개변수 누락 방지
+- Row/Column 레이아웃 작성 시 사전 체크 강화
+- 개발 워크플로우에 레이아웃 검증 단계 통합
+
+**다음 단계**:
+- 기존 커스텀 버튼 위젯들에 width 매개변수 추가 검토
+- 다른 커스텀 위젯들도 동일 패턴 적용 검토
+
+**메모**: 반복되는 레이아웃 에러를 문서화하고 예방 가이드를 강화하여 개발 효율성 향상. 실제 해결 사례를 포함하여 구체성 확보.
+
+---
+
 ### 2025-10-27 - TestDataRunner 슬롯 기반 설계 구현
 
 **유형**: 리팩토링 + 최적화 (테스트 데이터)

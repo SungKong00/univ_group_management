@@ -3,6 +3,7 @@ import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/place/place.dart';
+import '../../../core/models/calendar_models.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../common/cupertino_time_picker.dart';
@@ -14,12 +15,14 @@ class EventCreateResult {
   final LocationSelection locationSelection;
   final DateTime? startTime;  // Updated time from dialog
   final DateTime? endTime;    // Updated time from dialog
+  final Color color;          // Selected color
 
   const EventCreateResult({
     required this.title,
     required this.locationSelection,
     this.startTime,
     this.endTime,
+    required this.color,
   });
 }
 
@@ -101,6 +104,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
 
   late LocationType _selectedLocationType;
   int? _selectedPlaceId;
+  late Color _selectedColor;
 
   // Time editing state
   late DateTime _startTime;
@@ -113,6 +117,9 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
     // Initialize time values
     _startTime = widget.startTime;
     _endTime = widget.endTime;
+
+    // Initialize color (default to first color in palette)
+    _selectedColor = kPersonalScheduleColors.first;
 
     // Auto-fill location type based on filter selection
     if (widget.availablePlaces.isNotEmpty) {
@@ -328,6 +335,55 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
     );
   }
 
+  /// Build color selection section
+  Widget _buildColorSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '색상',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.lightOnSurface,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          children: kPersonalScheduleColors.map((color) {
+            final isSelected = color.value == _selectedColor.value;
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedColor = color;
+                });
+              },
+              child: AnimatedContainer(
+                duration: AppMotion.quick,
+                curve: AppMotion.easing,
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isSelected ? AppColors.brand : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check, color: Colors.white)
+                    : null,
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
   void _handleSave() {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
@@ -363,6 +419,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
       locationSelection: locationSelection,
       startTime: _startTime, // Pass updated start time
       endTime: _endTime,     // Pass updated end time
+      color: _selectedColor, // Pass selected color
     );
 
     Navigator.of(context).pop(result);
@@ -466,6 +523,10 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
 
             // Location selection section
             _buildLocationSection(),
+            const SizedBox(height: AppSpacing.md),
+
+            // Color selection section
+            _buildColorSection(),
           ],
         ),
       ),
