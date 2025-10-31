@@ -4,6 +4,7 @@ import '../../../core/models/post_models.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../common/collapsible_content.dart';
+import '../common/option_menu.dart';
 
 /// 개별 게시글 아이템 위젯 (Slack 스타일)
 ///
@@ -102,22 +103,54 @@ class _PostItemState extends State<PostItem> {
 
     return Row(
       children: [
-        Text(
-          widget.post.authorName,
-          style: AppTheme.titleMedium.copyWith(
-            color: AppColors.neutral900,
-            fontWeight: FontWeight.w600,
+        Expanded(
+          child: Row(
+            children: [
+              Text(
+                widget.post.authorName,
+                style: AppTheme.titleMedium.copyWith(
+                  color: AppColors.neutral900,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '•',
+                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                timeText,
+                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 8),
-        Text(
-          '•',
-          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          timeText,
-          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
+        OptionMenu(
+          items: [
+            OptionMenuItem(
+              label: '수정',
+              icon: Icons.edit_outlined,
+              onTap: () {
+                // TODO: 수정 기능 구현
+              },
+            ),
+            OptionMenuItem(
+              label: '신고하기',
+              icon: Icons.flag_outlined,
+              onTap: () {
+                // TODO: 신고 기능 구현
+              },
+            ),
+            OptionMenuItem(
+              label: '삭제',
+              icon: Icons.delete_outline,
+              onTap: () {
+                // TODO: 삭제 기능 구현
+              },
+              isDestructive: true,
+            ),
+          ],
         ),
       ],
     );
