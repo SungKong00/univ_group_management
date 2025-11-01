@@ -236,6 +236,7 @@ class _PlaceOperatingHoursDialogState
           SizedBox(
             width: 80,
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Checkbox(
                   value: hours.isClosed,
@@ -251,22 +252,33 @@ class _PlaceOperatingHoursDialogState
           ),
           const SizedBox(width: 12),
 
-          // 시작 시간
+          // 시간 선택 영역을 Expanded로 감싸고 LayoutBuilder로 너비 계산
           Expanded(
-            child: OutlinedLinkButton(
-              text: hours.startTime ?? '09:00',
-              onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, true) : null,
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text('-'),
-          const SizedBox(width: 8),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // 사용 가능한 너비를 2로 나누고 구분자/여백 제외
+                final buttonWidth = (constraints.maxWidth - 8 - 8) / 2; // '-' 텍스트와 여백 8px씩
 
-          // 종료 시간
-          Expanded(
-            child: OutlinedLinkButton(
-              text: hours.endTime ?? '18:00',
-              onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, false) : null,
+                return Row(
+                  children: [
+                    // 시작 시간
+                    OutlinedLinkButton(
+                      width: buttonWidth,
+                      text: hours.startTime ?? '09:00',
+                      onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, true) : null,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('-'),
+                    const SizedBox(width: 8),
+                    // 종료 시간
+                    OutlinedLinkButton(
+                      width: buttonWidth,
+                      text: hours.endTime ?? '18:00',
+                      onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, false) : null,
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ],
