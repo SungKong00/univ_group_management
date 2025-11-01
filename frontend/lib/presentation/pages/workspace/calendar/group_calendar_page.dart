@@ -39,10 +39,12 @@ enum EventFormalityCategory {
 /// Main page for group calendar.
 class GroupCalendarPage extends ConsumerStatefulWidget {
   final int groupId;
+  final DateTime? initialSelectedDate;
 
   const GroupCalendarPage({
     super.key,
     required this.groupId,
+    this.initialSelectedDate,
   });
 
   @override
@@ -58,6 +60,10 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Set initial selected date if provided
+      if (widget.initialSelectedDate != null) {
+        ref.read(focusedDateProvider.notifier).state = widget.initialSelectedDate!;
+      }
       _loadEvents();
     });
   }

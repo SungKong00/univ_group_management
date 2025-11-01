@@ -6,8 +6,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../providers/my_groups_provider.dart';
 import '../../../providers/workspace_state_provider.dart';
+import '../../../providers/group_calendar_provider.dart';
 import '../../../widgets/dialogs/create_subgroup_dialog.dart';
 import '../../../widgets/common/section_card.dart';
+import '../../../widgets/calendar/compact_month_calendar.dart';
 
 /// 그룹 홈 페이지
 ///
@@ -67,7 +69,7 @@ class GroupHomeView extends ConsumerWidget {
               flex: 1,
               child: Column(
                 children: [
-                  _buildCalendarWidget(context),
+                  _buildCalendarWidget(context, ref),
                   SizedBox(height: AppSpacing.md),
                   _buildScheduleWidget(context),
                 ],
@@ -93,7 +95,7 @@ class GroupHomeView extends ConsumerWidget {
         SizedBox(height: AppSpacing.md),
 
         // Calendar
-        _buildCalendarWidget(context),
+        _buildCalendarWidget(context, ref),
         SizedBox(height: AppSpacing.md),
 
         // Schedule
@@ -378,7 +380,13 @@ class GroupHomeView extends ConsumerWidget {
     );
   }
 
-  Widget _buildCalendarWidget(BuildContext context) {
+  Widget _buildCalendarWidget(BuildContext context, WidgetRef ref) {
+    final workspaceState = ref.watch(workspaceStateProvider);
+    final selectedGroupId = workspaceState.selectedGroupId;
+
+    // Parse groupId
+    final groupId = selectedGroupId != null ? int.tryParse(selectedGroupId) : null;
+
     return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,7 +411,7 @@ class GroupHomeView extends ConsumerWidget {
           SizedBox(height: AppSpacing.md),
           // Calendar content
           Container(
-            height: 280,
+            height: 300, // Increased from 280px to accommodate compact calendar
             decoration: BoxDecoration(
               color: AppColors.lightBackground,
               borderRadius: BorderRadius.circular(AppRadius.input),
@@ -411,25 +419,27 @@ class GroupHomeView extends ConsumerWidget {
                 color: AppColors.lightOutline,
               ),
             ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 48,
-                    color: AppColors.neutral400,
-                  ),
-                  SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    '달력 위젯 (구현 예정)',
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppColors.neutral600,
+            child: groupId != null
+                ? _GroupCalendarWidget(groupId: groupId)
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 48,
+                          color: AppColors.neutral400,
+                        ),
+                        SizedBox(height: AppSpacing.xxs),
+                        Text(
+                          '그룹을 선택해주세요',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: AppColors.neutral600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
@@ -553,5 +563,143 @@ class GroupHomeView extends ConsumerWidget {
       ),
     );
   }
+}
 
+/// Internal widget for displaying group calendar in compact view
+class _GroupCalendarWidget extends ConsumerStatefulWidget {
+  final int groupId;
+
+  const _GroupCalendarWidget({required this.groupId});
+
+  @override
+  ConsumerState<_GroupCalendarWidget> createState() =>
+      _GroupCalendarWidgetState();
+}
+
+class _GroupCalendarWidgetState extends ConsumerState<_GroupCalendarWidget> {
+  DateTime _focusedDate = DateTime.now();
+  DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadEvents();
+    });
+  }
+
+  @override
+  void didUpdateWidget(_GroupCalendarWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.groupId != widget.groupId) {
+      // Group changed, reload events
+      _loadEvents();
+    }
+  }
+
+  Future<void> _loadEvents() async {
+    final startOfMonth = DateTime(_focusedDate.year, _focusedDate.month, 1);
+    final endOfMonth = DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
+
+    await ref.read(groupCalendarProvider(widget.groupId).notifier).loadEvents(
+          groupId: widget.groupId,
+          startDate: startOfMonth,
+          endDate: endOfMonth,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final calendarState = ref.watch(groupCalendarProvider(widget.groupId));
+
+    // 🔍 DEBUG: Print event data pipeline
+    print('🔍 [GroupCalendar Debug] GroupId: ${widget.groupId}');
+    print('🔍 [GroupCalendar Debug] Total events count: ${calendarState.events.length}');
+    print('🔍 [GroupCalendar Debug] Focused month: ${_focusedDate.year}-${_focusedDate.month}');
+
+    // Build event colors map from events
+    final eventColorsByDate = <DateTime, List<Color>>{};
+    for (final event in calendarState.events) {
+      final normalizedStart = _normalizeDate(event.startDate);
+      final normalizedEnd = _normalizeDate(event.endDate);
+
+      // 🔍 DEBUG: Print each event details
+      print('🔍 [Event] "${event.title}" | Start: $normalizedStart | End: $normalizedEnd | Color: ${event.color}');
+
+      // Add event color to all dates it spans
+      var currentDate = normalizedStart;
+      while (currentDate.isBefore(normalizedEnd) ||
+          currentDate.isAtSameMomentAs(normalizedEnd)) {
+        eventColorsByDate.putIfAbsent(currentDate, () => []).add(event.color);
+        currentDate = currentDate.add(const Duration(days: 1));
+      }
+    }
+
+    // 🔍 DEBUG: Print final eventColorsByDate map
+    print('🔍 [GroupCalendar Debug] Event colors by date count: ${eventColorsByDate.length}');
+    eventColorsByDate.forEach((date, colors) {
+      print('🔍 [Date] $date has ${colors.length} event(s) with colors: $colors');
+    });
+
+    if (calendarState.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (calendarState.errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: AppColors.error,
+            ),
+            SizedBox(height: AppSpacing.xs),
+            Text(
+              '일정을 불러오지 못했습니다',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppColors.neutral600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Use CompactMonthCalendar widget
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: CompactMonthCalendar(
+        focusedDate: _focusedDate,
+        selectedDate: _selectedDate,
+        eventColorsByDate: eventColorsByDate,
+        onPageChanged: (newFocusedDate) {
+          setState(() {
+            _focusedDate = newFocusedDate;
+          });
+          _loadEvents();
+        },
+        onEventDateTap: (date) {
+          // Navigate to group calendar page with the selected date
+          _navigateToGroupCalendar(date);
+        },
+        onCalendarTap: () {
+          // Navigate to group calendar page (full view)
+          _navigateToGroupCalendar(null);
+        },
+      ),
+    );
+  }
+
+  void _navigateToGroupCalendar(DateTime? date) {
+    // Navigate to workspace calendar view using WorkspaceStateNotifier
+    // Pass the selected date to focus on that specific date in the calendar
+    ref.read(workspaceStateProvider.notifier).showCalendar(selectedDate: date);
+  }
+
+  DateTime _normalizeDate(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 }

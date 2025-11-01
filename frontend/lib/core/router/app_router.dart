@@ -14,6 +14,7 @@ import '../../presentation/pages/recruitment/recruitment_detail_page.dart';
 import '../../presentation/pages/demo_calendar/demo_calendar_page.dart';
 import '../../presentation/pages/demo/multi_select_popover_demo_page.dart';
 import '../../presentation/pages/main/main_layout.dart';
+import '../../presentation/pages/workspace/calendar/group_calendar_page.dart';
 import '../constants/app_constants.dart';
 import '../services/auth_service.dart';
 
@@ -81,7 +82,17 @@ final GoRouter appRouter = GoRouter(
               },
               routes: [
                 GoRoute(
-                  path: '/channel/:channelId',
+                  path: 'calendar',
+                  name: 'group-calendar',
+                  pageBuilder: (context, state) {
+                    final groupId = int.parse(state.pathParameters['groupId']!);
+                    return NoTransitionPage(
+                      child: GroupCalendarPage(groupId: groupId),
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: 'channel/:channelId',
                   name: 'channel',
                   pageBuilder: (context, state) {
                     final groupId = state.pathParameters['groupId']!;

@@ -63,7 +63,7 @@ class WorkspaceState extends Equatable {
     this.workspaceContext = const {},
     this.channels = const [],
     this.unreadCounts = const {},
-    this.currentView = WorkspaceView.channel,
+    this.currentView = WorkspaceView.groupHome,
     this.mobileView = MobileWorkspaceView.channelList,
     this.hasAnyGroupPermission = false,
     this.currentGroupRole,
@@ -79,6 +79,7 @@ class WorkspaceState extends Equatable {
     this.selectedPlaceId, // Selected place ID for place time management
     this.selectedPlaceName, // Selected place name for place time management
     this.navigationHistory = const [], // Unified navigation history
+    this.selectedCalendarDate, // Selected date for calendar view
   });
 
   final String? selectedGroupId;
@@ -108,6 +109,7 @@ class WorkspaceState extends Equatable {
   final String? selectedPlaceName; // Selected place name for place time management
   final List<NavigationHistoryEntry>
   navigationHistory; // Unified navigation history (channels, views, groups)
+  final DateTime? selectedCalendarDate; // Selected date for calendar view
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -132,6 +134,7 @@ class WorkspaceState extends Equatable {
     int? selectedPlaceId,
     String? selectedPlaceName,
     List<NavigationHistoryEntry>? navigationHistory,
+    DateTime? selectedCalendarDate,
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
@@ -160,6 +163,7 @@ class WorkspaceState extends Equatable {
       selectedPlaceId: selectedPlaceId ?? this.selectedPlaceId,
       selectedPlaceName: selectedPlaceName ?? this.selectedPlaceName,
       navigationHistory: navigationHistory ?? this.navigationHistory,
+      selectedCalendarDate: selectedCalendarDate ?? this.selectedCalendarDate,
     );
   }
 
@@ -191,6 +195,7 @@ class WorkspaceState extends Equatable {
     selectedPlaceId,
     selectedPlaceName,
     navigationHistory,
+    selectedCalendarDate,
   ];
 }
 
@@ -881,11 +886,12 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       isCommentsVisible: false,
       selectedPostId: null,
       isNarrowDesktopCommentsFullscreen: false,
+      selectedCalendarDate: null,
     );
   }
 
   /// Show calendar view
-  void showCalendar() {
+  void showCalendar({DateTime? selectedDate}) {
     // Add current state to navigation history
     if (state.selectedGroupId != null) {
       _addToNavigationHistory(
@@ -905,6 +911,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       isCommentsVisible: false,
       selectedPostId: null,
       isNarrowDesktopCommentsFullscreen: false,
+      selectedCalendarDate: selectedDate,
     );
   }
 

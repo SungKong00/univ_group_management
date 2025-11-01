@@ -424,7 +424,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           if (selectedGroupId == null) {
             return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
           }
-          return GroupCalendarPage(groupId: int.parse(selectedGroupId));
+          final selectedCalendarDate = ref.watch(
+            workspaceStateProvider.select((state) => state.selectedCalendarDate),
+          );
+          return GroupCalendarPage(
+            groupId: int.parse(selectedGroupId),
+            initialSelectedDate: selectedCalendarDate,
+          );
         case WorkspaceView.groupAdmin:
           return const GroupAdminPage();
         case WorkspaceView.memberManagement:
@@ -560,7 +566,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
         if (currentGroupId == null) {
           return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
         }
-        return GroupCalendarPage(groupId: int.parse(currentGroupId));
+        final selectedCalendarDate = ref.watch(
+          workspaceStateProvider.select((state) => state.selectedCalendarDate),
+        );
+        return GroupCalendarPage(
+          groupId: int.parse(currentGroupId),
+          initialSelectedDate: selectedCalendarDate,
+        );
       case WorkspaceView.groupAdmin:
         return const GroupAdminPage();
       case WorkspaceView.memberManagement:
@@ -643,7 +655,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
     // 댓글 작성 성공 후 목록 새로고침
     setState(() {
-      _commentListKey++;
+      _commentListKey++; // 댓글 목록 새로고침
+      _postListKey++; // 게시글 목록도 새로고침하여 댓글 개수/시간 업데이트
     });
 
     if (context.mounted) {
