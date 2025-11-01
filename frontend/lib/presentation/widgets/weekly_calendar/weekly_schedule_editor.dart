@@ -155,6 +155,17 @@ class WeeklyScheduleEditor extends StatefulWidget {
   /// Return true if successfully deleted from server, false otherwise
   final Future<bool> Function(Event event)? onEventDelete;
 
+  /// Callback for toggling show all events (overlap view)
+  /// When true: show overlapping events side-by-side
+  /// When false: show overlapping events stacked
+  final Function(bool showAll)? onToggleShowAllEvents;
+
+  /// Initial calendar mode (add/edit/view)
+  final CalendarMode? initialMode;
+
+  /// Initial overlap view state
+  final bool? initialOverlapView;
+
   const WeeklyScheduleEditor({
     super.key,
     this.allowMultiDaySelection = false,
@@ -172,6 +183,9 @@ class WeeklyScheduleEditor extends StatefulWidget {
     this.onEventCreate,
     this.onEventUpdate,
     this.onEventDelete,
+    this.onToggleShowAllEvents,
+    this.initialMode,
+    this.initialOverlapView,
   });
 
   @override
@@ -223,6 +237,14 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     super.initState();
     _scrollController = ScrollController();
 
+    // Initialize mode and overlap view from widget parameters
+    if (widget.initialMode != null) {
+      _mode = widget.initialMode!;
+    }
+    if (widget.initialOverlapView != null) {
+      _isOverlapView = widget.initialOverlapView!;
+    }
+
     // Initialize with server data (for server-backed calendars)
     if (widget.initialEvents != null) {
       _events.addAll(widget.initialEvents!);
@@ -257,6 +279,18 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   // Get current mode for external state tracking
   CalendarMode get currentMode => _mode;
+
+  // Public method to toggle overlap view
+  void toggleOverlapView() {
+    setState(() {
+      _isOverlapView = !_isOverlapView;
+    });
+    // Notify parent widget if callback is provided
+    widget.onToggleShowAllEvents?.call(_isOverlapView);
+  }
+
+  // Get current overlap view state
+  bool get isOverlapView => _isOverlapView;
 
   @override
   void dispose() {
@@ -1456,11 +1490,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => toggleMode(),
-                  child: const Text('취소'),
-                ),
               ],
             ),
           ),
@@ -1489,29 +1518,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                             ),
                           );
                         },
-                      ),
-                    ),
-                    // Overlap toggle button (positioned at top-right)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Tooltip(
-                        message: _isOverlapView ? '겹친 일정 펼치기' : '겹친 일정 접기',
-                        child: SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: IconButton(
-                            icon: Icon(_isOverlapView ? Icons.view_week : Icons.layers, size: 20),
-                            onPressed: () {
-                              setState(() {
-                                _isOverlapView = !_isOverlapView;
-                              });
-                            },
-                            color: Theme.of(context).colorScheme.primary,
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                          ),
-                        ),
                       ),
                     ),
                   ],
