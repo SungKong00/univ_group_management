@@ -4,6 +4,7 @@ import '../../../core/models/comment_models.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme.dart';
+import '../common/option_menu.dart';
 
 /// 개별 댓글 아이템 위젯
 class CommentItem extends StatelessWidget {
@@ -80,17 +81,44 @@ class CommentItem extends StatelessWidget {
 
     return Row(
       children: [
-        Text(
-          comment.authorName,
-          style: AppTheme.bodyMedium.copyWith(
-            color: AppColors.neutral900,
-            fontWeight: FontWeight.w600,
+        Expanded(
+          child: Row(
+            children: [
+              Text(
+                comment.authorName,
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppColors.neutral900,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                timeText,
+                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 8),
-        Text(
-          timeText,
-          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
+        // TODO: 기능 연결 필요
+        OptionMenu(
+          items: [
+            OptionMenuItem(
+              label: '수정',
+              icon: Icons.edit_outlined,
+              onTap: () {},
+            ),
+            OptionMenuItem(
+              label: '신고하기',
+              icon: Icons.flag_outlined,
+              onTap: () {},
+            ),
+            OptionMenuItem(
+              label: '삭제',
+              icon: Icons.delete_outline,
+              onTap: () {},
+              isDestructive: true,
+            ),
+          ],
         ),
       ],
     );
