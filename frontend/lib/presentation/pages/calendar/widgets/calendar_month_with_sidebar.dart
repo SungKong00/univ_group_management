@@ -112,8 +112,8 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
         focusedDay: widget.focusedDate,
         availableGestures: AvailableGestures.horizontalSwipe,
         headerVisible: false,
-        rowHeight: 96,
-        daysOfWeekHeight: 32,
+        rowHeight: 114,
+        daysOfWeekHeight: 28,
         daysOfWeekStyle: DaysOfWeekStyle(
           weekdayStyle: dowTextStyle,
           weekendStyle: dowTextStyle.copyWith(color: AppColors.neutral600),
@@ -128,7 +128,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
         calendarStyle: const CalendarStyle(
           isTodayHighlighted: false,
           cellMargin: EdgeInsets.all(4),
-          cellPadding: EdgeInsets.all(6),
+          cellPadding: EdgeInsets.all(5),
           outsideDaysVisible: true,
           canMarkersOverflow: true,
         ),
@@ -246,7 +246,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
 
     if (isToday) {
       dayLabel = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
         decoration: BoxDecoration(
           color: AppColors.actionTonalBg,
           borderRadius: BorderRadius.circular(8),
@@ -268,7 +268,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(11),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(5),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,7 +322,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
       itemBuilder: (context, index) {
         final event = selectedEvents[index];
         return SizedBox(
-          height: 80, // 고정 높이 지정 (Sliver 에러 방지)
+          height: 100, // 고정 높이 지정 (픽셀 오버플로우 방지)
           child: InkWell(
             onTap: () => widget.onEventTap(event),
             child: widget.eventCardBuilder != null
@@ -390,9 +390,15 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(event.title, style: textTheme.titleMedium),
+                Text(
+                  event.title,
+                  style: textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   timeLabel,
@@ -406,6 +412,8 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
                     style: textTheme.bodySmall?.copyWith(
                       color: AppColors.neutral600,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
               ],
             ),
