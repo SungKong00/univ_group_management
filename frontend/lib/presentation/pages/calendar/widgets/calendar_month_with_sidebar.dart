@@ -5,6 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../../../domain/models/calendar_event_base.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../widgets/calendar/calendar_event_card.dart';
 
 /// Generic month calendar component with sidebar event list.
 ///
@@ -362,64 +363,20 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
   }
 
   /// Default event card builder (used in sidebar list)
+  /// Uses CalendarEventCard component (Personal/Group Calendar mode)
   Widget _buildDefaultEventCard(T event) {
-    final textTheme = Theme.of(context).textTheme;
     final timeFormatter = DateFormat('HH:mm');
     final timeLabel = event.isAllDay
         ? '종일'
         : '${timeFormatter.format(event.startDateTime)} ~ ${timeFormatter.format(event.endDateTime)}';
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lightOutline),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 6,
-            height: 48,
-            decoration: BoxDecoration(
-              color: event.color,
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.title,
-                  style: textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  timeLabel,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.neutral600,
-                  ),
-                ),
-                if (event.location != null && event.location!.isNotEmpty)
-                  Text(
-                    event.location!,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: AppColors.neutral600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return CalendarEventCard(
+      title: event.title,
+      color: event.color,
+      timeLabel: timeLabel,
+      location: event.location,
+      showIcons: false,
+      onTap: null, // onTap is handled by parent InkWell
     );
   }
 
