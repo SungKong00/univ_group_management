@@ -104,11 +104,17 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   }
 
   void _initializeWorkspace() {
-    // 워크스페이스 상태 설정
-    _workspaceNotifier.enterWorkspace(
-      widget.groupId!,
-      channelId: widget.channelId,
-    );
+    // GroupDropdown이나 다른 곳에서 이미 enterWorkspace()를 호출했는지 확인
+    final currentGroupId = ref.read(currentGroupIdProvider);
+    final isAlreadyInitialized = currentGroupId == widget.groupId;
+
+    if (!isAlreadyInitialized) {
+      // 워크스페이스 상태 설정 (URL 직접 접근 시에만)
+      _workspaceNotifier.enterWorkspace(
+        widget.groupId!,
+        channelId: widget.channelId,
+      );
+    }
 
     // 워크스페이스 진입 시 사이드바를 즉시 축소
     _navigationController.enterWorkspace();
@@ -301,27 +307,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   /// Wide Desktop 뒤로가기 가능 여부 확인
   bool _canHandleWideDesktopBack() {
-    final currentView = ref.read(workspaceCurrentViewProvider);
-    final previousView = ref.read(workspacePreviousViewProvider);
-    final isCommentsVisible = ref.read(isCommentsVisibleProvider);
-    final channelHistory = ref.read(workspaceChannelHistoryProvider);
-
-    // 1. 특수 뷰(groupAdmin, memberManagement 등)일 때
-    if (currentView != WorkspaceView.channel && previousView != null) {
-      return true;
-    }
-
-    // 2. 댓글이 열려있을 때
-    if (isCommentsVisible) {
-      return true;
-    }
-
-    // 3. 채널 히스토리가 있을 때
-    if (channelHistory.isNotEmpty) {
-      return true;
-    }
-
-    return false;
+    final navigationHistory = ref.read(workspaceNavigationHistoryProvider);
+    return navigationHistory.isNotEmpty;
   }
 
   /// Wide Desktop 뒤로가기 처리
@@ -333,27 +320,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   /// Tablet (MEDIUM) 뒤로가기 가능 여부 확인
   bool _canHandleTabletBack() {
-    final currentView = ref.read(workspaceCurrentViewProvider);
-    final previousView = ref.read(workspacePreviousViewProvider);
-    final isCommentsVisible = ref.read(isCommentsVisibleProvider);
-    final channelHistory = ref.read(workspaceChannelHistoryProvider);
-
-    // 1. 특수 뷰(groupAdmin, memberManagement 등)일 때
-    if (currentView != WorkspaceView.channel && previousView != null) {
-      return true;
-    }
-
-    // 2. 댓글이 열려있을 때
-    if (isCommentsVisible) {
-      return true;
-    }
-
-    // 3. 채널 히스토리가 있을 때
-    if (channelHistory.isNotEmpty) {
-      return true;
-    }
-
-    return false;
+    final navigationHistory = ref.read(workspaceNavigationHistoryProvider);
+    return navigationHistory.isNotEmpty;
   }
 
   /// Tablet (MEDIUM) 뒤로가기 처리

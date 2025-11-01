@@ -13,7 +13,21 @@ class WorkspaceState {
   final String? selectedPostId;         // 선택된 게시글
   final WorkspaceView currentView;      // 현재 뷰
   final WorkspaceView? previousView;    // 이전 뷰 (뒤로가기)
-  final List<String> channelHistory;    // 채널 히스토리
+  final List<NavigationHistoryEntry> navigationHistory;  // 통합 네비게이션 히스토리
+}
+```
+
+### NavigationHistoryEntry
+모든 네비게이션 이동(채널, 뷰, 그룹 전환)을 기록하는 통합 히스토리:
+```dart
+class NavigationHistoryEntry {
+  final String groupId;              // 그룹 ID
+  final WorkspaceView view;          // 뷰 타입
+  final MobileWorkspaceView mobileView;  // 모바일 뷰
+  final String? channelId;           // 채널 ID (옵션)
+  final String? postId;              // 게시글 ID (옵션)
+  final bool isCommentsVisible;      // 댓글 표시 여부
+  final DateTime timestamp;          // 기록 시간
 }
 ```
 
@@ -71,37 +85,101 @@ void showChannel(String channelId) {
 }
 ```
 
-## previousView 활용 (뒤로가기)
+## 통합 네비게이션 히스토리 (뒤로가기)
 
-### 단일 히스토리
+### 히스토리 추가
+모든 네비게이션 이동 시 자동 기록:
 ```dart
-// 페이지 이동 시
-showYourNewPage() {
-  previousView: state.currentView,  // 현재 → 이전
-  currentView: WorkspaceView.yourNewPage,
-}
-
-// 뒤로가기 처리
-handleWebBack() {
-  if (state.previousView != null) {
-    final prev = state.previousView!;
-    state = state.copyWith(
-      currentView: prev,
-      previousView: null,  // 히스토리 초기화
-    );
+void _addToNavigationHistory({
+  required String groupId,
+  required WorkspaceView view,
+  required MobileWorkspaceView mobileView,
+  String? channelId,
+  String? postId,
+  bool isCommentsVisible = false,
+}) {
+  // 중복 방지: 마지막 히스토리와 동일하면 스킵
+  if (state.navigationHistory.isNotEmpty) {
+    final last = state.navigationHistory.last;
+    if (last.groupId == groupId &&
+        last.view == view &&
+        last.mobileView == mobileView &&
+        last.channelId == channelId &&
+        last.postId == postId &&
+        last.isCommentsVisible == isCommentsVisible) {
+      return;
+    }
   }
+
+  final newHistory = List<NavigationHistoryEntry>.from(state.navigationHistory);
+  newHistory.add(NavigationHistoryEntry(
+    groupId: groupId,
+    view: view,
+    mobileView: mobileView,
+    channelId: channelId,
+    postId: postId,
+    isCommentsVisible: isCommentsVisible,
+    timestamp: DateTime.now(),
+  ));
+  state = state.copyWith(navigationHistory: newHistory);
 }
 ```
 
-### 다단계 히스토리
+### 뒤로가기 처리
+히스토리 스택에서 이전 상태로 완전 복원:
 ```dart
-// memberManagement → groupAdmin → channel 순서
-handleMobileBack() {
-  final prev = state.previousView!;
-  final nextPrev = prev == WorkspaceView.groupAdmin
-      ? WorkspaceView.channel  // 2단계 뒤로가기
-      : null;
-  state = state.copyWith(currentView: prev, previousView: nextPrev);
+Future<bool> navigateBackInHistory() async {
+  if (state.navigationHistory.isEmpty) {
+    return false;  // 히스토리 없음
+  }
+
+  final newHistory = List<NavigationHistoryEntry>.from(state.navigationHistory);
+  final previousEntry = newHistory.removeLast();
+
+  // 히스토리 업데이트 (재추가 방지)
+  state = state.copyWith(navigationHistory: newHistory);
+
+  // 이전 상태로 완전 복원 (그룹 ID, 뷰, 채널, 게시글, 댓글)
+  final isSameGroup = state.selectedGroupId == previousEntry.groupId;
+
+  if (!isSameGroup) {
+    // 다른 그룹: enterWorkspace 호출
+    await enterWorkspace(
+      previousEntry.groupId,
+      channelId: previousEntry.channelId,
+      targetView: previousEntry.view,
+    );
+  }
+
+  state = state.copyWith(
+    selectedGroupId: previousEntry.groupId,
+    selectedChannelId: previousEntry.channelId,
+    currentView: previousEntry.view,
+    mobileView: previousEntry.mobileView,
+    selectedPostId: previousEntry.postId,
+    isCommentsVisible: previousEntry.isCommentsVisible,
+  );
+
+  // 채널 권한 로드
+  if (previousEntry.channelId != null) {
+    await loadChannelPermissions(previousEntry.channelId!);
+  }
+
+  return true;
+}
+```
+
+### workspace_page.dart에서 사용
+```dart
+/// 뒤로가기 가능 여부 확인 (Web/Tablet 공통)
+bool _canHandleBack() {
+  final navigationHistory = ref.read(workspaceNavigationHistoryProvider);
+  return navigationHistory.isNotEmpty;
+}
+
+/// 뒤로가기 처리 (Web/Tablet 공통)
+Future<void> _handleBack() async {
+  await ref.read(workspaceStateProvider.notifier).navigateBackInHistory();
 }
 ```
 

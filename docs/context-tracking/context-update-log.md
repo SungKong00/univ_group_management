@@ -1,4 +1,63 @@
-### 2025-11-01 - BoxConstraints 에러 방지 가이드 강화
+### 2025-11-01 (B) - 워크스페이스 그룹 전환 네비게이션 시스템 구현
+
+**유형**: 기능 구현 + 문서 업데이트
+**우선순위**: High
+**영향 범위**: 프론트엔드 (4개 파일), 구현 가이드 (2개 문서)
+
+**작업 개요**:
+워크스페이스에서 그룹 전환 시 사용자가 보던 뷰 타입을 유지하고, 모든 네비게이션 이동을 통합 히스토리로 관리하는 시스템 구축.
+
+**구현한 기능**:
+1. **그룹 전환 시 뷰 타입 유지**
+   - 그룹홈 → 그룹홈 유지
+   - 캘린더 → 캘린더 유지
+   - 채널 → 첫 번째 채널로 전환
+2. **최초 접속 시 그룹홈 자동 표시**
+   - LocalStorage에 저장된 뷰가 없으면 groupHome 기본값
+   - 권한 검증 후 관리자 페이지 또는 그룹홈 폴백
+3. **통합 네비게이션 히스토리 시스템**
+   - NavigationHistoryEntry 클래스 신규 추가
+   - 채널, 뷰, 그룹 전환을 하나의 스택으로 관리
+   - 뒤로가기 시 전체 경로 순차 복원 (그룹 간 이동 지원)
+   - 중복 히스토리 자동 제거
+4. **뒤로가기 로직 단순화**
+   - Web/Tablet 공통 로직으로 통합
+   - navigationHistory.isNotEmpty 단일 체크
+
+**변경된 파일**:
+- ✅ frontend/lib/presentation/providers/workspace_navigation_helper.dart (신규)
+- ✅ frontend/lib/presentation/providers/workspace_state_provider.dart
+- ✅ frontend/lib/presentation/widgets/workspace/group_dropdown.dart
+- ✅ frontend/lib/presentation/pages/workspace/workspace_page.dart
+
+**문서 업데이트**:
+- ✅ docs/implementation/workspace-state-management.md
+  - NavigationHistoryEntry 구조 추가
+  - 통합 네비게이션 히스토리 섹션 추가
+  - 뒤로가기 로직 업데이트
+- ✅ docs/ui-ux/pages/workspace-navigation-flow.md
+  - "6. 그룹 전환 시 네비게이션" 섹션 추가
+  - 뷰 타입 유지 전략 설명
+  - 통합 네비게이션 히스토리 설명
+  - 최초 접속 시 동작 설명
+- ✅ docs/context-tracking/context-update-log.md: 현재 로그 추가
+- ✅ docs/context-tracking/sync-status.md: 업데이트 예정
+
+**기대 효과**:
+- 그룹 전환 시 일관된 사용자 경험 제공
+- 뒤로가기로 그룹 간 이동 가능 (사용성 향상)
+- 네비게이션 로직 단순화 및 유지보수성 향상
+- 히스토리 중복 제거로 메모리 효율성 확보
+
+**다음 단계**:
+- 실제 사용자 테스트를 통한 UX 검증
+- 히스토리 스택 크기 제한 검토 (메모리 관리)
+
+**메모**: 워크스페이스 네비게이션의 핵심 기능 완성. 그룹 간 이동과 뒤로가기 지원으로 사용자 경험 크게 개선.
+
+---
+
+### 2025-11-01 (A) - BoxConstraints 에러 방지 가이드 강화
 
 **유형**: 문서 업데이트 (에이전트 가이드, 체크리스트)
 **우선순위**: High

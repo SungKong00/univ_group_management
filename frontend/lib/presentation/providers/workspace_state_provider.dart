@@ -10,6 +10,7 @@ import '../../core/utils/permission_utils.dart';
 import 'my_groups_provider.dart';
 import 'place_calendar_provider.dart';
 import 'auth_provider.dart';
+import 'workspace_navigation_helper.dart';
 
 /// Workspace View Type
 enum WorkspaceView {
@@ -22,6 +23,28 @@ enum WorkspaceView {
   recruitmentManagement, // Recruitment management page view
   applicationManagement, // Application management page view (모집 지원자 관리)
   placeTimeManagement, // Place time management page view (장소 시간 관리)
+}
+
+/// Navigation History Entry
+/// 모든 네비게이션 이동(채널, 뷰, 그룹 전환)을 기록하기 위한 히스토리 엔트리
+class NavigationHistoryEntry {
+  const NavigationHistoryEntry({
+    required this.groupId,
+    required this.view,
+    required this.mobileView,
+    this.channelId,
+    this.postId,
+    this.isCommentsVisible = false,
+    required this.timestamp,
+  });
+
+  final String groupId;
+  final WorkspaceView view;
+  final MobileWorkspaceView mobileView;
+  final String? channelId;
+  final String? postId;
+  final bool isCommentsVisible;
+  final DateTime timestamp;
 }
 
 /// Mobile Workspace View Type (3-step navigation flow)
@@ -50,12 +73,12 @@ class WorkspaceState extends Equatable {
     this.errorMessage,
     this.channelPermissions,
     this.isLoadingPermissions = false,
-    this.channelHistory = const [],
     this.isNarrowDesktopCommentsFullscreen =
         false, // Narrow desktop: comments fullscreen mode
     this.previousView, // Track previous view for back navigation
     this.selectedPlaceId, // Selected place ID for place time management
     this.selectedPlaceName, // Selected place name for place time management
+    this.navigationHistory = const [], // Unified navigation history
   });
 
   final String? selectedGroupId;
@@ -77,13 +100,14 @@ class WorkspaceState extends Equatable {
   final String? errorMessage;
   final ChannelPermissions? channelPermissions;
   final bool isLoadingPermissions;
-  final List<String> channelHistory; // Web-only: channel navigation history
   final bool
   isNarrowDesktopCommentsFullscreen; // Narrow desktop: when true, hide posts and show only comments
   final WorkspaceView?
   previousView; // Previous view for back navigation from special views (groupAdmin, memberManagement, etc.)
   final int? selectedPlaceId; // Selected place ID for place time management
   final String? selectedPlaceName; // Selected place name for place time management
+  final List<NavigationHistoryEntry>
+  navigationHistory; // Unified navigation history (channels, views, groups)
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -103,11 +127,11 @@ class WorkspaceState extends Equatable {
     String? errorMessage,
     ChannelPermissions? channelPermissions,
     bool? isLoadingPermissions,
-    List<String>? channelHistory,
     bool? isNarrowDesktopCommentsFullscreen,
     WorkspaceView? previousView,
     int? selectedPlaceId,
     String? selectedPlaceName,
+    List<NavigationHistoryEntry>? navigationHistory,
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
@@ -129,13 +153,13 @@ class WorkspaceState extends Equatable {
       errorMessage: errorMessage,
       channelPermissions: channelPermissions ?? this.channelPermissions,
       isLoadingPermissions: isLoadingPermissions ?? this.isLoadingPermissions,
-      channelHistory: channelHistory ?? this.channelHistory,
       isNarrowDesktopCommentsFullscreen:
           isNarrowDesktopCommentsFullscreen ??
           this.isNarrowDesktopCommentsFullscreen,
       previousView: previousView ?? this.previousView,
       selectedPlaceId: selectedPlaceId ?? this.selectedPlaceId,
       selectedPlaceName: selectedPlaceName ?? this.selectedPlaceName,
+      navigationHistory: navigationHistory ?? this.navigationHistory,
     );
   }
 
@@ -162,11 +186,11 @@ class WorkspaceState extends Equatable {
     errorMessage,
     channelPermissions,
     isLoadingPermissions,
-    channelHistory,
     isNarrowDesktopCommentsFullscreen,
     previousView,
     selectedPlaceId,
     selectedPlaceName,
+    navigationHistory,
   ];
 }
 
@@ -179,7 +203,6 @@ class WorkspaceSnapshot {
     this.isCommentsVisible = false,
     this.isNarrowDesktopCommentsFullscreen = false,
     this.previousView,
-    this.channelHistory = const [],
   });
 
   final WorkspaceView view;
@@ -189,7 +212,32 @@ class WorkspaceSnapshot {
   final bool isCommentsVisible;
   final bool isNarrowDesktopCommentsFullscreen;
   final WorkspaceView? previousView;
-  final List<String> channelHistory;
+}
+
+/// Internal class to hold navigation target information
+class _NavigationTarget {
+  const _NavigationTarget({
+    required this.finalView,
+    required this.finalMobileView,
+    this.autoSelectChannelId,
+  });
+
+  final WorkspaceView finalView;
+  final MobileWorkspaceView finalMobileView;
+  final String? autoSelectChannelId;
+}
+
+/// Internal class to hold permission information
+class _PermissionInfo {
+  const _PermissionInfo({
+    required this.hasAnyPermission,
+    required this.role,
+    required this.permissions,
+  });
+
+  final bool hasAnyPermission;
+  final String role;
+  final List<String> permissions;
 }
 
 class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
@@ -223,7 +271,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       isNarrowDesktopCommentsFullscreen:
           state.isNarrowDesktopCommentsFullscreen,
       previousView: state.previousView,
-      channelHistory: List<String>.from(state.channelHistory),
     );
 
     _lastGroupId = groupId;
@@ -247,7 +294,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       final lastViewType = await LocalStorage.instance.getLastViewType();
 
       if (lastGroupId != null) {
-        // 복원할 뷰 타입 결정 (기본값: groupHome)
+        // 복원할 뷰 타입 결정
+        // 기본값: groupHome (snapshot이 없을 때 그룹홈 보장)
         WorkspaceView? restoredView;
         if (lastViewType != null) {
           try {
@@ -255,21 +303,24 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
               (v) => v.name == lastViewType,
             );
           } catch (_) {
+            // Invalid view type: default to groupHome
             restoredView = WorkspaceView.groupHome;
           }
         } else {
           // No saved view type: default to groupHome
+          // This ensures first-time access shows groupHome
           restoredView = WorkspaceView.groupHome;
         }
 
         if (kDebugMode) {
           developer.log(
-            'Restoring workspace state: group=$lastGroupId, channel=$lastChannelId, view=$lastViewType',
+            'Restoring workspace state: group=$lastGroupId, channel=$lastChannelId, view=$lastViewType (resolved: ${restoredView.name})',
             name: 'WorkspaceStateNotifier',
           );
         }
 
         // 뷰 타입에 따라 적절한 방식으로 워크스페이스 진입
+        // Note: 채널 뷰가 아니면 채널을 자동 선택하지 않음
         if (restoredView == WorkspaceView.channel && lastChannelId != null) {
           // 채널 뷰인 경우에만 channelId 전달
           await enterWorkspace(
@@ -278,6 +329,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
           );
         } else {
           // 다른 뷰인 경우 targetView로 뷰 타입 명시
+          // 채널 자동 선택 없이 뷰만 전환
           await enterWorkspace(
             lastGroupId,
             targetView: restoredView,
@@ -335,7 +387,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       errorMessage: state.errorMessage,
       channelPermissions: state.channelPermissions,
       isLoadingPermissions: state.isLoadingPermissions,
-      channelHistory: snapshot.channelHistory,
       isNarrowDesktopCommentsFullscreen:
           snapshot.isNarrowDesktopCommentsFullscreen,
       previousView: snapshot.previousView,
@@ -355,6 +406,89 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = const WorkspaceState();
   }
 
+  /// Add current state to navigation history
+  void _addToNavigationHistory({
+    required String groupId,
+    required WorkspaceView view,
+    required MobileWorkspaceView mobileView,
+    String? channelId,
+    String? postId,
+    bool isCommentsVisible = false,
+  }) {
+    // Skip if the current state is identical to the last history entry
+    if (state.navigationHistory.isNotEmpty) {
+      final last = state.navigationHistory.last;
+      if (last.groupId == groupId &&
+          last.view == view &&
+          last.mobileView == mobileView &&
+          last.channelId == channelId &&
+          last.postId == postId &&
+          last.isCommentsVisible == isCommentsVisible) {
+        return; // Don't add duplicate entries
+      }
+    }
+
+    final newHistory = List<NavigationHistoryEntry>.from(state.navigationHistory);
+    newHistory.add(NavigationHistoryEntry(
+      groupId: groupId,
+      view: view,
+      mobileView: mobileView,
+      channelId: channelId,
+      postId: postId,
+      isCommentsVisible: isCommentsVisible,
+      timestamp: DateTime.now(),
+    ));
+    state = state.copyWith(navigationHistory: newHistory);
+  }
+
+  /// Pop navigation history and return to previous location
+  /// Returns true if successfully navigated back, false if history is empty
+  Future<bool> navigateBackInHistory() async {
+    if (state.navigationHistory.isEmpty) {
+      return false;
+    }
+
+    final newHistory = List<NavigationHistoryEntry>.from(state.navigationHistory);
+    final previousEntry = newHistory.removeLast();
+
+    // Update history first (prevent re-adding when navigating)
+    state = state.copyWith(navigationHistory: newHistory);
+
+    // Restore full state from history entry
+    final isSameGroup = state.selectedGroupId == previousEntry.groupId;
+
+    if (!isSameGroup) {
+      // Different group: use enterWorkspace
+      await enterWorkspace(
+        previousEntry.groupId,
+        channelId: previousEntry.channelId,
+        targetView: previousEntry.view,
+      );
+    }
+
+    // Restore exact state from history
+    state = state.copyWith(
+      selectedGroupId: previousEntry.groupId,
+      selectedChannelId: previousEntry.channelId,
+      currentView: previousEntry.view,
+      mobileView: previousEntry.mobileView,
+      selectedPostId: previousEntry.postId,
+      isCommentsVisible: previousEntry.isCommentsVisible,
+    );
+
+    // Load channel permissions if needed
+    if (previousEntry.channelId != null) {
+      await loadChannelPermissions(previousEntry.channelId!);
+    }
+
+    return true;
+  }
+
+  /// Clear all navigation history
+  void clearNavigationHistory() {
+    state = state.copyWith(navigationHistory: []);
+  }
+
   Future<void> enterWorkspace(
     String groupId, {
     String? channelId,
@@ -364,53 +498,167 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     final isSameGroup = state.selectedGroupId == groupId;
     _lastGroupId = groupId;
 
-    // Save current view type before switching groups
-    final previousView = state.currentView;
+    // Step 1: Resolve membership (needed for permission check)
+    final resolvedMembership =
+        membership ?? await _resolveGroupMembership(groupId);
 
+    if (resolvedMembership == null) {
+      _handleMembershipResolutionFailure();
+      return;
+    }
+
+    // Step 2: Save current workspace state if switching groups
     if (!isSameGroup && state.selectedGroupId != null) {
       _saveCurrentWorkspaceSnapshot();
       _ref.invalidate(placeCalendarProvider);
+
+      // Add current state to navigation history (group switching)
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
     }
 
+    // Step 3: Determine navigation target
     final snapshot = channelId != null ? null : _getSnapshot(groupId);
-    final shouldRestoreExistingState =
-        isSameGroup && channelId == null && state.channels.isNotEmpty;
+    final navigationTarget = _determineNavigationTarget(
+      isSameGroup: isSameGroup,
+      targetView: targetView,
+      channelId: channelId,
+      snapshot: snapshot,
+      membership: resolvedMembership,
+    );
 
-    if (shouldRestoreExistingState) {
+    // Step 4: Check for quick restore scenario (same group, no explicit navigation)
+    if (_shouldQuickRestore(
+      isSameGroup: isSameGroup,
+      channelId: channelId,
+      snapshot: snapshot,
+    )) {
       if (snapshot != null) {
         _applySnapshot(snapshot);
       }
       return;
     }
 
-    final hasMobileState = state.mobileView != MobileWorkspaceView.channelList;
+    // Step 5: Update state with navigation target
+    _updateStateForNavigation(
+      groupId: groupId,
+      navigationTarget: navigationTarget,
+      snapshot: snapshot,
+      isSameGroup: isSameGroup,
+    );
 
-    // Determine final target view
-    WorkspaceView finalTargetView;
+    // Step 6: Load channels and finalize state
+    try {
+      await loadChannels(
+        groupId,
+        autoSelectChannelId:
+            channelId ?? navigationTarget.autoSelectChannelId,
+        membership: resolvedMembership,
+        targetView: navigationTarget.finalView,
+      );
 
-    // Priority 1: Explicitly passed targetView parameter (from restoreFromLocalStorage)
-    if (targetView != null) {
-      finalTargetView = targetView;
-    }
-    // Priority 2: When switching groups, maintain current view type
-    else if (!isSameGroup) {
-      // When switching groups, maintain non-channel views (groupHome, calendar, groupAdmin)
-      // For channel view, switch to first channel if channelId not specified
-      if (previousView == WorkspaceView.channel && channelId == null) {
-        // Channel view without explicit channelId: go to first channel
-        finalTargetView = WorkspaceView.channel;
-      } else if (previousView != WorkspaceView.channel) {
-        // Non-channel views: maintain the view type
-        finalTargetView = previousView;
-      } else {
-        // Channel view with explicit channelId
-        finalTargetView = WorkspaceView.channel;
+      // Step 7: Apply snapshot for same group navigation (if applicable)
+      if (isSameGroup && targetView == null && snapshot != null) {
+        _applySnapshot(snapshot);
       }
+
+      state = state.copyWith(isLoadingWorkspace: false);
+    } catch (e) {
+      _handleWorkspaceLoadFailure();
     }
-    // Priority 3: Same group - use snapshot or default to groupHome
-    else {
-      finalTargetView = snapshot?.view ?? WorkspaceView.groupHome;
-    }
+  }
+
+  /// Handle membership resolution failure
+  void _handleMembershipResolutionFailure() {
+    state = state.copyWith(
+      isLoadingWorkspace: false,
+      isLoadingChannels: false,
+      channels: [],
+      hasAnyGroupPermission: false,
+      currentGroupPermissions: null,
+      currentGroupRole: null,
+      errorMessage: '그룹 정보를 불러올 수 없습니다.',
+    );
+  }
+
+  /// Handle workspace load failure
+  void _handleWorkspaceLoadFailure() {
+    state = state.copyWith(
+      isLoadingWorkspace: false,
+      isLoadingChannels: false,
+      channels: [],
+      hasAnyGroupPermission: false,
+      currentGroupPermissions: null,
+      currentGroupRole: null,
+      errorMessage: '워크스페이스를 불러오는 중 문제가 발생했습니다.',
+    );
+  }
+
+  /// Check if we should quickly restore existing state without reloading
+  bool _shouldQuickRestore({
+    required bool isSameGroup,
+    required String? channelId,
+    required WorkspaceSnapshot? snapshot,
+  }) {
+    return isSameGroup &&
+        channelId == null &&
+        snapshot != null &&
+        state.channels.isNotEmpty;
+  }
+
+  /// Determine navigation target (view, mobile view, channel selection)
+  _NavigationTarget _determineNavigationTarget({
+    required bool isSameGroup,
+    required WorkspaceView? targetView,
+    required String? channelId,
+    required WorkspaceSnapshot? snapshot,
+    required GroupMembership membership,
+  }) {
+    // Check permission for admin views
+    final hasGroupAdminPermission =
+        WorkspaceNavigationHelper.hasGroupAdminPermission(membership);
+
+    // Determine final view
+    final finalView = WorkspaceNavigationHelper.determineTargetView(
+      isSameGroup: isSameGroup,
+      currentView: state.currentView,
+      targetView: targetView,
+      snapshot: snapshot,
+      hasChannelId: channelId != null,
+      hasGroupAdminPermission: hasGroupAdminPermission,
+    );
+
+    // Determine mobile view
+    final finalMobileView = WorkspaceNavigationHelper.determineMobileView(
+      isSameGroup: isSameGroup,
+      currentMobileView: state.mobileView,
+      snapshot: snapshot,
+    );
+
+    // Determine if channel should be auto-selected
+    final String? autoSelectChannelId = channelId ?? snapshot?.selectedChannelId;
+
+    return _NavigationTarget(
+      finalView: finalView,
+      finalMobileView: finalMobileView,
+      autoSelectChannelId: autoSelectChannelId,
+    );
+  }
+
+  /// Update state with determined navigation target
+  void _updateStateForNavigation({
+    required String groupId,
+    required _NavigationTarget navigationTarget,
+    required WorkspaceSnapshot? snapshot,
+    required bool isSameGroup,
+  }) {
+    final hasMobileState = state.mobileView != MobileWorkspaceView.channelList;
 
     state = state.copyWith(
       selectedGroupId: groupId,
@@ -420,19 +668,13 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       isCommentsVisible: hasMobileState
           ? state.isCommentsVisible
           : (snapshot?.isCommentsVisible ?? false),
-      selectedPostId: hasMobileState
-          ? state.selectedPostId
-          : snapshot?.selectedPostId,
-      currentView: finalTargetView,
-      mobileView: hasMobileState
-          ? state.mobileView
-          : snapshot?.mobileView ?? MobileWorkspaceView.channelList,
-      channelHistory: hasMobileState ? state.channelHistory : [],
+      selectedPostId:
+          hasMobileState ? state.selectedPostId : snapshot?.selectedPostId,
+      currentView: navigationTarget.finalView,
+      mobileView: navigationTarget.finalMobileView,
       isNarrowDesktopCommentsFullscreen: hasMobileState
           ? state.isNarrowDesktopCommentsFullscreen
           : (snapshot?.isNarrowDesktopCommentsFullscreen ?? false),
-      // When switching groups, reset previousView to null
-      // Only restore previousView from snapshot when staying in the same group
       previousView: isSameGroup ? snapshot?.previousView : null,
       workspaceContext: {
         'groupId': groupId,
@@ -444,50 +686,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       },
       isLoadingWorkspace: true,
     );
-
-    try {
-      final resolvedMembership =
-          membership ?? await _resolveGroupMembership(groupId);
-
-      if (resolvedMembership == null) {
-        state = state.copyWith(
-          isLoadingWorkspace: false,
-          isLoadingChannels: false,
-          channels: [],
-          hasAnyGroupPermission: false,
-          currentGroupPermissions: null,
-          currentGroupRole: null,
-          errorMessage: '그룹 정보를 불러올 수 없습니다.',
-        );
-        return;
-      }
-
-      await loadChannels(
-        groupId,
-        autoSelectChannelId: channelId ?? snapshot?.selectedChannelId,
-        membership: resolvedMembership,
-        targetView: finalTargetView,
-      );
-
-      // Only apply snapshot for same group navigation (not when switching groups with explicit view)
-      // This prevents flickering when switching groups with maintained views
-      final restoredSnapshot = _getSnapshot(groupId);
-      if (restoredSnapshot != null && isSameGroup && targetView == null) {
-        _applySnapshot(restoredSnapshot);
-      }
-
-      state = state.copyWith(isLoadingWorkspace: false);
-    } catch (e) {
-      state = state.copyWith(
-        isLoadingWorkspace: false,
-        isLoadingChannels: false,
-        channels: [],
-        hasAnyGroupPermission: false,
-        currentGroupPermissions: null,
-        currentGroupRole: null,
-        errorMessage: '워크스페이스를 불러오는 중 문제가 발생했습니다.',
-      );
-    }
   }
 
   /// Load channels and membership information for a group
@@ -499,52 +697,44 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }) async {
     try {
       final groupIdInt = int.parse(groupId);
-
       state = state.copyWith(isLoadingChannels: true);
 
-      // Fetch channels
+      // Step 1: Fetch channels
       final channels = await _channelService.getChannels(groupIdInt);
 
-      // Extract permissions from resolved membership
-      final permissions = membership.permissions;
-      final hasAnyPermission =
-          PermissionUtils.hasAnyGroupManagementPermission(permissions);
-      final currentRole = membership.role;
-      final currentPermissions = permissions.toList();
+      // Step 2: Extract permissions
+      final permissionInfo = _extractPermissionInfo(membership);
 
-      // Generate dummy unread counts (for demonstration)
-      final unreadCounts = <String, int>{};
-      for (var channel in channels) {
-        // Randomly assign 0-5 unread messages to some channels
-        if (channel.id % 3 == 0) {
-          unreadCounts[channel.id.toString()] = (channel.id % 5) + 1;
-        }
-      }
+      // Step 3: Generate unread counts (dummy data)
+      final unreadCounts = _generateUnreadCounts(channels);
 
-      // Determine if channel should be selected based on target view
-      final shouldSelectChannel = targetView == null ||
-          targetView == WorkspaceView.channel;
+      // Step 4: Validate final view with permission check
+      // NOTE: Use currentView (already determined in _determineNavigationTarget)
+      // instead of targetView to avoid overriding the navigation decision
+      final finalView = WorkspaceNavigationHelper.validateAndFallbackView(
+        targetView: state.currentView,
+        hasGroupAdminPermission: permissionInfo.hasAnyPermission,
+      );
 
-      // Auto-select channel: only if viewing channel or explicit channelId provided
-      String? selectedChannelId;
-      if (autoSelectChannelId != null) {
-        selectedChannelId = autoSelectChannelId;
-      } else if (shouldSelectChannel && channels.isNotEmpty) {
-        selectedChannelId = channels.first.id.toString();
-      }
+      // Step 5: Determine channel selection based on finalView
+      final shouldSelectChannel = WorkspaceNavigationHelper.shouldSelectChannel(
+        finalView,
+      );
+      final selectedChannelId = shouldSelectChannel
+          ? (WorkspaceNavigationHelper.selectFirstChannel(
+                channels: channels,
+                shouldSelectChannel: true,
+              ) ??
+              autoSelectChannelId)
+          : autoSelectChannelId;
 
-      // For groupAdmin view, verify permission and fallback to groupHome if not authorized
-      WorkspaceView finalView = targetView ?? WorkspaceView.groupHome;
-      if (targetView == WorkspaceView.groupAdmin && !hasAnyPermission) {
-        finalView = WorkspaceView.groupHome;
-      }
-
+      // Step 6: Update state
       state = state.copyWith(
         channels: channels,
         unreadCounts: unreadCounts,
-        hasAnyGroupPermission: hasAnyPermission,
-        currentGroupRole: currentRole,
-        currentGroupPermissions: currentPermissions,
+        hasAnyGroupPermission: permissionInfo.hasAnyPermission,
+        currentGroupRole: permissionInfo.role,
+        currentGroupPermissions: permissionInfo.permissions,
         isLoadingChannels: false,
         selectedChannelId: selectedChannelId,
         currentView: finalView,
@@ -554,7 +744,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
             : state.workspaceContext,
       );
 
-      // Auto-load permissions for the selected channel
+      // Step 7: Auto-load channel permissions
       if (selectedChannelId != null) {
         await loadChannelPermissions(selectedChannelId);
       }
@@ -566,6 +756,33 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       );
       rethrow;
     }
+  }
+
+  /// Extract permission information from membership
+  _PermissionInfo _extractPermissionInfo(GroupMembership membership) {
+    final permissions = membership.permissions;
+    final hasAnyPermission =
+        PermissionUtils.hasAnyGroupManagementPermission(permissions);
+    final currentRole = membership.role;
+    final currentPermissions = permissions.toList();
+
+    return _PermissionInfo(
+      hasAnyPermission: hasAnyPermission,
+      role: currentRole,
+      permissions: currentPermissions,
+    );
+  }
+
+  /// Generate dummy unread counts for channels (for demonstration)
+  Map<String, int> _generateUnreadCounts(List<Channel> channels) {
+    final unreadCounts = <String, int>{};
+    for (var channel in channels) {
+      // Randomly assign 0-5 unread messages to some channels
+      if (channel.id % 3 == 0) {
+        unreadCounts[channel.id.toString()] = (channel.id % 5) + 1;
+      }
+    }
+    return unreadCounts;
   }
 
   Future<GroupMembership?> _resolveGroupMembership(String groupId) async {
@@ -584,16 +801,16 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   void selectChannel(String channelId) {
-    // Record current channel in history (web-only)
-    final newHistory = List<String>.from(state.channelHistory);
-
-    // Add current channel to history if it exists and is different from new channel
-    if (state.selectedChannelId != null &&
-        state.selectedChannelId != channelId) {
-      // Remove if already exists (prevent duplicates)
-      newHistory.remove(state.selectedChannelId);
-      // Add to end of history
-      newHistory.add(state.selectedChannelId!);
+    // Add current state to navigation history before changing channel
+    if (state.selectedGroupId != null && state.selectedChannelId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
     }
 
     // Find channel name from channels list
@@ -607,9 +824,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       isCommentsVisible: false,
       selectedPostId: null,
       currentView: WorkspaceView.channel,
-      channelHistory: newHistory,
       // Reset previousView when entering channel view
-      // Channel navigation uses channelHistory instead of previousView
       previousView: null,
       workspaceContext: Map.from(state.workspaceContext)
         ..['channelId'] = channelId
@@ -647,6 +862,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   /// Show group home view
   void showGroupHome() {
+    // Add current state to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.groupHome,
@@ -659,6 +886,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   /// Show calendar view
   void showCalendar() {
+    // Add current state to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.calendar,
@@ -671,6 +910,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   /// Show group admin/management page view
   void showGroupAdminPage() {
+    // Add current state to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.groupAdmin,
@@ -683,6 +934,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   /// Show member management page view
   void showMemberManagementPage() {
+    // Add current state to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.memberManagement,
@@ -695,6 +958,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   /// Show recruitment management page view
   void showRecruitmentManagementPage() {
+    // Add current state to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.recruitmentManagement,
@@ -707,6 +982,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   /// Show application management page view (모집 지원자 관리)
   void showApplicationManagementPage() {
+    // Add current state to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.applicationManagement,
@@ -719,6 +1006,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   /// Show place time management page view (장소 시간 관리)
   void showPlaceTimeManagementPage(int placeId, String placeName) {
+    // Add current state to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.placeTimeManagement,
@@ -733,6 +1032,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   /// Show channel management page view
   void showChannelManagementPage() {
+    // Add current state to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.channelManagement,
@@ -749,6 +1060,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   void showComments(String postId, {bool isNarrowDesktop = false}) {
+    // Add current state to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     state = state.copyWith(
       isCommentsVisible: true,
       selectedPostId: postId,
@@ -861,6 +1184,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   // 모바일에서 댓글 보기 시 (Step 2 → Step 3)
   void showCommentsForMobile(String postId) {
+    // Add current state to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     state = state.copyWith(
       isCommentsVisible: true,
       selectedPostId: postId,
@@ -872,81 +1207,22 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   // 모바일 뒤로가기 핸들링
-  bool handleMobileBack() {
-    // 1) 특수 뷰(그룹 관리자/멤버관리/그룹 홈/캘린더 등)에서 이전 뷰가 기록되어 있으면 우선 복원
-    if (state.currentView != WorkspaceView.channel &&
-        state.previousView != null) {
-      final prev = state.previousView!;
-      // memberManagement → groupAdmin → channel 순으로 복원되도록 previousView를 보정
-      final nextPrev = prev == WorkspaceView.groupAdmin
-          ? WorkspaceView.channel
-          : null;
-      state = state.copyWith(currentView: prev, previousView: nextPrev);
-      return true;
+  Future<bool> handleMobileBack() async {
+    // Use unified navigation history
+    if (state.navigationHistory.isNotEmpty) {
+      return await navigateBackInHistory();
     }
 
-    // 2) 모바일 3단계 플로우 처리
-    switch (state.mobileView) {
-      case MobileWorkspaceView.postComments:
-        // Step 3 → Step 2: 댓글에서 게시글 목록으로
-        state = state.copyWith(
-          mobileView: MobileWorkspaceView.channelPosts,
-          isCommentsVisible: false,
-          selectedPostId: null,
-          workspaceContext: Map.from(state.workspaceContext)
-            ..remove('postId')
-            ..remove('commentsVisible'),
-        );
-        return true;
-      case MobileWorkspaceView.channelPosts:
-        // Step 2 → Step 1: 게시글 목록에서 채널 목록으로
-        state = state.copyWith(
-          mobileView: MobileWorkspaceView.channelList,
-          selectedChannelId: null,
-          workspaceContext: Map.from(state.workspaceContext)
-            ..remove('channelId'),
-        );
-        return true;
-      case MobileWorkspaceView.channelList:
-        // Step 1: 채널 목록에서는 뒤로가기 허용 (홈으로 이동)
-        return false;
-    }
+    // No history - navigate to home
+    return false;
   }
 
   /// Web back navigation handling
   /// Returns: true if handled internally, false if should navigate to home
-  bool handleWebBack() {
-    // If in a special view (groupAdmin, memberManagement, etc.), return to previous view
-    if (state.currentView != WorkspaceView.channel &&
-        state.previousView != null) {
-      final prev = state.previousView!;
-      final nextPrev = prev == WorkspaceView.groupAdmin
-          ? WorkspaceView.channel
-          : null;
-      state = state.copyWith(currentView: prev, previousView: nextPrev);
-      return true;
-    }
-
-    // If comments are visible, close them first
-    if (state.isCommentsVisible) {
-      hideComments();
-      return true;
-    }
-
-    // If channel history exists, go to previous channel
-    if (state.channelHistory.isNotEmpty) {
-      final newHistory = List<String>.from(state.channelHistory);
-      final previousChannelId = newHistory.removeLast();
-
-      state = state.copyWith(
-        selectedChannelId: previousChannelId,
-        channelHistory: newHistory,
-        workspaceContext: Map.from(state.workspaceContext)
-          ..['channelId'] = previousChannelId,
-      );
-
-      loadChannelPermissions(previousChannelId);
-      return true;
+  Future<bool> handleWebBack() async {
+    // Use unified navigation history
+    if (state.navigationHistory.isNotEmpty) {
+      return await navigateBackInHistory();
     }
 
     // No history - navigate to home
@@ -1085,12 +1361,6 @@ final workspacePreviousViewProvider = Provider<WorkspaceView?>((ref) {
   );
 });
 
-final workspaceChannelHistoryProvider = Provider<List<String>>((ref) {
-  return ref.watch(
-    workspaceStateProvider.select((state) => state.channelHistory),
-  );
-});
-
 final workspaceCurrentGroupRoleProvider = Provider<String?>((ref) {
   return ref.watch(
     workspaceStateProvider.select((state) => state.currentGroupRole),
@@ -1100,5 +1370,11 @@ final workspaceCurrentGroupRoleProvider = Provider<String?>((ref) {
 final workspaceCurrentGroupPermissionsProvider = Provider<List<String>?>((ref) {
   return ref.watch(
     workspaceStateProvider.select((state) => state.currentGroupPermissions),
+  );
+});
+
+final workspaceNavigationHistoryProvider = Provider<List<NavigationHistoryEntry>>((ref) {
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.navigationHistory),
   );
 });

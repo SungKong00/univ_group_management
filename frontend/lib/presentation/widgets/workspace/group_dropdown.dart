@@ -220,9 +220,15 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
     return InkWell(
       onTap: () {
         if (!isSelected) {
+          // Get current view to maintain view type when switching groups
+          final currentView = ref.read(workspaceCurrentViewProvider);
           ref
               .read(workspaceStateProvider.notifier)
-              .enterWorkspace(group.id.toString(), membership: group);
+              .enterWorkspace(
+                group.id.toString(),
+                membership: group,
+                targetView: currentView, // Pass current view to maintain type
+              );
           NavigationHelper.navigateWithSync(
             context,
             ref,
