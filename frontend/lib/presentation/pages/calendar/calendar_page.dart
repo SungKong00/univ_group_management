@@ -324,7 +324,11 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
     DateTime weekStart,
   ) async {
     // Convert Event to PersonalScheduleRequest
-    final request = PersonalScheduleAdapter.fromEvent(event, weekStart);
+    final request = PersonalScheduleAdapter.fromEvent(
+      event,
+      weekStart,
+      color: event.color,
+    );
 
     // Check for overlap
     final hasOverlap = notifier.hasOverlap(request);
@@ -353,7 +357,11 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
     }
 
     // Convert Event to PersonalScheduleRequest
-    final request = PersonalScheduleAdapter.fromEvent(event, weekStart);
+    final request = PersonalScheduleAdapter.fromEvent(
+      event,
+      weekStart,
+      color: event.color,
+    );
 
     // Check for overlap (excluding current schedule)
     final hasOverlap = notifier.hasOverlap(request, excludeId: scheduleId);

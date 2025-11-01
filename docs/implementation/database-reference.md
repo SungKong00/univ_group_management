@@ -359,7 +359,7 @@ CREATE TABLE posts (
     is_pinned BOOLEAN DEFAULT false,
     view_count BIGINT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL,  -- 수정 시에만 값 설정, 처음 생성 시 NULL
 
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE,
     FOREIGN KEY (author_id) REFERENCES users(id)
@@ -371,6 +371,12 @@ CREATE INDEX idx_post_author ON posts(author_id);
 CREATE INDEX idx_post_created ON posts(created_at DESC);
 CREATE INDEX idx_post_pinned ON posts(channel_id, is_pinned, created_at DESC);
 ```
+
+**주요 필드**:
+- `created_at`: 게시글 생성 시간 (변경 불가)
+- `updated_at`: 게시글 수정 시간 (선택적 - null일 수 있음)
+  - `null`: 게시글이 아직 수정되지 않음
+  - `not null`: 게시글이 수정됨
 
 ### Comment 테이블
 ```sql

@@ -1,37 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/post_models.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../providers/auth_provider.dart';
 import '../common/collapsible_content.dart';
 import '../common/option_menu.dart';
+import 'edit_post_dialog.dart';
+import 'delete_post_dialog.dart';
 
 /// 개별 게시글 아이템 위젯 (Slack 스타일)
 ///
 /// 프로필 이미지 + 작성자 + 시간 + 본문 + 댓글 버튼
-class PostItem extends StatefulWidget {
+class PostItem extends ConsumerStatefulWidget {
   final Post post;
   final VoidCallback? onTapComment;
   final VoidCallback? onTapPost;
+  final VoidCallback? onPostUpdated;
+  final VoidCallback? onPostDeleted;
 
   const PostItem({
     super.key,
     required this.post,
     this.onTapComment,
     this.onTapPost,
+    this.onPostUpdated,
+    this.onPostDeleted,
   });
 
   @override
-  State<PostItem> createState() => _PostItemState();
+  ConsumerState<PostItem> createState() => _PostItemState();
 }
 
-class _PostItemState extends State<PostItem> {
+class _PostItemState extends ConsumerState<PostItem> {
   bool _isCommentHovered = false;
+
+  void _showEditDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => EditPostDialog(
+        postId: widget.post.id,
+        initialContent: widget.post.content,
+        onSuccess: widget.onPostUpdated,
+      ),
+    );
+  }
+
+  void _showDeleteDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => DeletePostDialog(
+        postId: widget.post.id,
+        onSuccess: widget.onPostDeleted,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth <= 600;
+    final currentUser = ref.watch(currentUserProvider);
+    final isAuthor = currentUser?.id == widget.post.authorId;
 
     return InkWell(
       onTap: widget.onTapPost,
@@ -50,7 +81,7 @@ class _PostItemState extends State<PostItem> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 작성자 + 시간
-                  _buildHeader(),
+                  _buildHeader(isAuthor),
                   const SizedBox(height: 6),
                   // 본문
                   _buildContent(),
@@ -97,61 +128,89 @@ class _PostItemState extends State<PostItem> {
     );
   }
 
-  Widget _buildHeader() {
-    final timeFormatter = DateFormat('a h:mm', 'ko_KR');
-    final timeText = timeFormatter.format(widget.post.createdAt);
+  Widget _buildHeader(bool isAuthor) {
+    // 수정 여부 판단: updatedAt이 null이 아니고, createdAt과 다른 경우
+    final isEdited = widget.post.updatedAt != null &&
+        widget.post.updatedAt != widget.post.createdAt;
+
+    // 작성 시간 (항상 표시)
+    final timeFormatter = DateFormat('HH:mm', 'ko_KR');
+    final createdTimeText = timeFormatter.format(widget.post.createdAt);
 
     return Row(
       children: [
-        Expanded(
-          child: Row(
-            children: [
-              Text(
-                widget.post.authorName,
-                style: AppTheme.titleMedium.copyWith(
-                  color: AppColors.neutral900,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '•',
-                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                timeText,
-                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
-              ),
-            ],
+        Text(
+          widget.post.authorName,
+          style: AppTheme.titleMedium.copyWith(
+            color: AppColors.neutral900,
+            fontWeight: FontWeight.w600,
           ),
         ),
+        const SizedBox(width: 8),
+        Text(
+          '•',
+          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
+        ),
+        const SizedBox(width: 8),
+        // 작성 시간 (항상 표시)
+        Text(
+          createdTimeText,
+          style: AppTheme.bodySmall.copyWith(
+            color: AppColors.neutral600,
+          ),
+        ),
+        // 수정된 경우 추가 표시
+        if (isEdited) ...[
+          const SizedBox(width: 8),
+          Text(
+            '•',
+            style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${DateFormat('MM/dd HH:mm', 'ko_KR').format(widget.post.updatedAt!)} 수정됨',
+            style: AppTheme.bodySmall.copyWith(
+              color: AppColors.neutral500,
+              fontSize: 12,
+            ),
+          ),
+        ],
+        const SizedBox(width: 8),
         OptionMenu(
           items: [
-            OptionMenuItem(
-              label: '수정',
-              icon: Icons.edit_outlined,
-              onTap: () {
-                // TODO: 수정 기능 구현
-              },
-            ),
+            // 작성자 본인만 수정/삭제 가능
+            if (isAuthor) ...[
+              OptionMenuItem(
+                label: '수정',
+                icon: Icons.edit_outlined,
+                onTap: _showEditDialog,
+              ),
+            ],
+            // 모든 사용자가 신고 가능
             OptionMenuItem(
               label: '신고하기',
               icon: Icons.flag_outlined,
               onTap: () {
                 // TODO: 신고 기능 구현
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('신고 기능은 추후 구현 예정입니다.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
               },
             ),
-            OptionMenuItem(
-              label: '삭제',
-              icon: Icons.delete_outline,
-              onTap: () {
-                // TODO: 삭제 기능 구현
-              },
-              isDestructive: true,
-            ),
+            // 삭제는 가장 위험한 액션이므로 맨 아래 배치
+            if (isAuthor)
+              OptionMenuItem(
+                label: '삭제',
+                icon: Icons.delete_outline,
+                onTap: _showDeleteDialog,
+                isDestructive: true,
+              ),
           ],
         ),
+        const Spacer(),
       ],
     );
   }

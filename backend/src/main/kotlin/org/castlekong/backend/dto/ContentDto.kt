@@ -80,7 +80,7 @@ data class PostResponse(
     val lastCommentedAt: LocalDateTime?,
     val attachments: Set<String>,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
+    val updatedAt: LocalDateTime?,
 )
 
 // Comment DTOs

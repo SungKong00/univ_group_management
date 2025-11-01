@@ -19,6 +19,11 @@ Repository Layer (데이터 접근)
 **패턴**: `@RestController`, `@PreAuthorize`, `@Valid`, `Authentication`
 **예시**: `GroupController.createGroup()` - 그룹 생성 API
 
+**DTO-Entity 동기화 규칙**:
+- 엔티티 필드 타입 변경 시 (특히 nullable 변경) 반드시 대응하는 Response DTO도 함께 업데이트
+- 예: `Post.updatedAt: LocalDateTime?` 변경 → `PostResponse.updatedAt: LocalDateTime?` 동기화
+- 컴파일 에러 발생 시 DTO 필드 타입 확인 필수
+
 ### Service Layer
 **역할**: 비즈니스 로직 실행, 트랜잭션 관리
 **위치**: `backend/src/main/kotlin/.../service/`

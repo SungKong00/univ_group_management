@@ -87,6 +87,16 @@ class _PostListState extends ConsumerState<PostList> {
     _loadPosts();
   }
 
+  /// 게시글이 수정되었을 때 호출 - 전체 목록 새로고침
+  void _handlePostUpdated() {
+    _resetAndLoad();
+  }
+
+  /// 게시글이 삭제되었을 때 호출 - 전체 목록 새로고침
+  void _handlePostDeleted() {
+    _resetAndLoad();
+  }
+
   Future<void> _loadPosts() async {
     if (_isLoading || !_hasMore) return;
 
@@ -297,6 +307,8 @@ class _PostListState extends ConsumerState<PostList> {
                           onTapPost: () {
                             // TODO: 게시글 상세 보기 (나중에 구현)
                           },
+                          onPostUpdated: _handlePostUpdated,
+                          onPostDeleted: _handlePostDeleted,
                         ),
                         const Divider(height: 1, color: AppColors.neutral200),
                       ],

@@ -720,7 +720,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(10, 30),
                     location = "학습관 201호",
-                    color = "#2196F3",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
 
@@ -733,7 +733,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(10, 30),
                     endTime = LocalTime.of(12, 0),
                     location = "학습관 301호",
-                    color = "#4CAF50",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
 
@@ -746,7 +746,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(15, 30),
                     location = "학습관 201호",
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
 
@@ -759,7 +759,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     location = "학생회실",
-                    color = "#9C27B0",
+                    color = "#5C068C", // 프로덕션 색상 (kPersonalScheduleColors - Brand Purple)
                 ),
             )
         }
@@ -775,7 +775,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(10, 30),
                     location = "강의동 101호",
-                    color = "#2196F3",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
 
@@ -788,7 +788,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(10, 30),
                     endTime = LocalTime.of(12, 0),
                     location = "강의동 205호",
-                    color = "#4CAF50",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
 
@@ -801,7 +801,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(17, 0),
                     location = "학생회실",
-                    color = "#F44336",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
 
@@ -814,7 +814,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(13, 0),
                     endTime = LocalTime.of(14, 0),
                     location = "학생회실",
-                    color = "#FF5722",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
         }
@@ -830,7 +830,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(11, 0),
                     endTime = LocalTime.of(12, 30),
                     location = "공과관 501호",
-                    color = "#2196F3",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
 
@@ -843,7 +843,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(10, 30),
                     location = "공과관 502호",
-                    color = "#4CAF50",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
 
@@ -856,7 +856,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(15, 30),
                     location = "공과관 Lab",
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
 
@@ -869,7 +869,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(16, 0),
                     endTime = LocalTime.of(18, 0),
                     location = "학생회실",
-                    color = "#F44336",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
 
@@ -882,7 +882,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(12, 0),
                     endTime = LocalTime.of(13, 0),
                     location = "학생회실",
-                    color = "#FF5722",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
         }
@@ -905,7 +905,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 3, 21, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 3, 23, 0),
                     location = "기숙사",
-                    color = "#536DFE",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             personalEventService.createEvent(
@@ -915,7 +915,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 4, 7, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 4, 8, 30),
                     location = "학교 헬스장",
-                    color = "#009688",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             personalEventService.createEvent(
@@ -925,7 +925,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 4, 19, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 4, 21, 0),
                     location = "중앙도서관 스터디룸",
-                    color = "#7C4DFF",
+                    color = "#5C068C", // 프로덕션 색상 (kPersonalScheduleColors - Brand Purple)
                 ),
             )
             personalEventService.createEvent(
@@ -935,7 +935,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 5, 19, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 5, 21, 0),
                     location = "중앙도서관",
-                    color = "#4CAF50",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             personalEventService.createEvent(
@@ -945,7 +945,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 6, 7, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 6, 8, 30),
                     location = "학교 헬스장",
-                    color = "#009688",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             personalEventService.createEvent(
@@ -955,7 +955,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 6, 20, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 6, 22, 0),
                     location = "학교 앞 식당",
-                    color = "#FFC107",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             personalEventService.createEvent(
@@ -965,7 +965,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 7, 18, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 7, 23, 0),
                     location = "(이동)",
-                    color = "#795548",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
             personalEventService.createEvent(
@@ -975,7 +975,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 8, 20, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 8, 22, 0),
                     location = "기숙사",
-                    color = "#607D8B",
+                    color = "#5C068C", // 프로덕션 색상 (kPersonalScheduleColors - Brand Purple)
                 ),
             )
         }
@@ -989,7 +989,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 3, 18, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 3, 22, 0),
                     location = "학교 앞 스타벅스",
-                    color = "#8D6E63",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             personalEventService.createEvent(
@@ -999,7 +999,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 4, 19, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 4, 21, 0),
                     location = "학생회관 연습실",
-                    color = "#E91E63",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
             personalEventService.createEvent(
@@ -1009,7 +1009,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 5, 18, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 5, 22, 0),
                     location = "학교 앞 스타벅스",
-                    color = "#8D6E63",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             personalEventService.createEvent(
@@ -1019,7 +1019,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 6, 19, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 6, 21, 0),
                     location = "학생회관 연습실",
-                    color = "#E91E63",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
             personalEventService.createEvent(
@@ -1029,7 +1029,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 7, 18, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 7, 20, 0),
                     location = "시내",
-                    color = "#FFEB3B",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             personalEventService.createEvent(
@@ -1039,7 +1039,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 8, 19, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 8, 23, 0),
                     location = "친구 집",
-                    color = "#FFC107",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             personalEventService.createEvent(
@@ -1049,7 +1049,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 9, 14, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 9, 17, 0),
                     location = "중앙도서관",
-                    color = "#4CAF50",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             personalEventService.createEvent(
@@ -1059,7 +1059,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 9, 19, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 9, 22, 0),
                     location = "자취방",
-                    color = "#607D8B",
+                    color = "#5C068C", // 프로덕션 색상 (kPersonalScheduleColors - Brand Purple)
                 ),
             )
         }
@@ -1073,7 +1073,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 3, 19, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 3, 22, 0),
                     location = "공과관 Lab",
-                    color = "#3F51B5",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             personalEventService.createEvent(
@@ -1083,7 +1083,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 4, 19, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 4, 21, 0),
                     location = "중앙도서관 스터디룸",
-                    color = "#00BCD4",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             personalEventService.createEvent(
@@ -1093,7 +1093,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 5, 19, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 5, 22, 0),
                     location = "공과관 Lab",
-                    color = "#3F51B5",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             personalEventService.createEvent(
@@ -1103,7 +1103,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 6, 16, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 6, 17, 0),
                     location = "교수 연구실",
-                    color = "#9C27B0",
+                    color = "#5C068C", // 프로덕션 색상 (kPersonalScheduleColors - Brand Purple)
                 ),
             )
             personalEventService.createEvent(
@@ -1113,7 +1113,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 7, 19, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 7, 21, 0),
                     location = "중앙도서관 스터디룸",
-                    color = "#00BCD4",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             personalEventService.createEvent(
@@ -1123,7 +1123,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 8, 14, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 8, 20, 0),
                     location = "시내",
-                    color = "#E91E63",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
             personalEventService.createEvent(
@@ -1133,7 +1133,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 9, 10, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 9, 18, 0),
                     location = "공과관 Lab",
-                    color = "#3F51B5",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             personalEventService.createEvent(
@@ -1143,7 +1143,7 @@ class TestDataRunner(
                     startDateTime = LocalDateTime.of(2025, 11, 9, 18, 0),
                     endDateTime = LocalDateTime.of(2025, 11, 9, 23, 0),
                     location = "자취방",
-                    color = "#607D8B",
+                    color = "#5C068C", // 프로덕션 색상 (kPersonalScheduleColors - Brand Purple)
                 ),
             )
         }
@@ -1190,7 +1190,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(19, 0),
                     endTime = LocalTime.of(21, 0),
                     isOfficial = false,
-                    color = "#03A9F4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                     recurrence =
                         RecurrencePattern(
                             type = RecurrenceType.WEEKLY,
@@ -1214,7 +1214,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(17, 0),
                     endTime = LocalTime.of(18, 30),
                     isOfficial = true,
-                    color = "#E91E63",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                     recurrence =
                         RecurrencePattern(
                             type = RecurrenceType.WEEKLY,
@@ -1239,7 +1239,7 @@ class TestDataRunner(
                         startTime = LocalTime.of(9, 0),
                         endTime = LocalTime.of(11, 0),
                         isOfficial = false,
-                        color = "#FFC107",
+                        color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                     ),
                 )
         }
@@ -1258,7 +1258,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(15, 0),
                     endTime = LocalTime.of(17, 0),
                     isOfficial = false,
-                    color = "#795548",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
         }
@@ -1278,7 +1278,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = true,
-                    color = "#8BC34A",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
         }
@@ -1298,7 +1298,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = true,
-                    color = "#00BCD4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
         }
@@ -1318,7 +1318,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(11, 0),
                     isOfficial = false,
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
         }
@@ -1336,7 +1336,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(19, 0),
                     endTime = LocalTime.of(21, 0),
                     isOfficial = false,
-                    color = "#03A9F4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                     recurrence =
                         RecurrencePattern(
                             type = RecurrenceType.WEEKLY,
@@ -1359,7 +1359,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(17, 0),
                     endTime = LocalTime.of(18, 30),
                     isOfficial = true,
-                    color = "#E91E63",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                     recurrence =
                         RecurrencePattern(
                             type = RecurrenceType.WEEKLY,
@@ -1385,7 +1385,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(11, 0),
                     isOfficial = true,
-                    color = "#00BCD4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             // ========== Slot 1: 월 14:00-16:00 ==========
@@ -1401,7 +1401,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = false,
-                    color = "#00BCD4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             // ========== Slot 2: 월 18:00-20:00 ==========
@@ -1417,7 +1417,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = true,
-                    color = "#00BCD4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
         }
@@ -1438,7 +1438,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(11, 0),
                     isOfficial = false,
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             // ========== Slot 4: 화 14:00-16:00 ==========
@@ -1454,7 +1454,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = false,
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             // ========== Slot 5: 화 18:00-20:00 ==========
@@ -1470,7 +1470,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = true,
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
         }
@@ -1490,7 +1490,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(11, 0),
                     isOfficial = false,
-                    color = "#FFC107",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
         }
@@ -1513,7 +1513,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(11, 0),
                     isOfficial = true,
-                    color = "#009688",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             // 온라인 이벤트 1 (충돌 없음)
@@ -1529,7 +1529,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(21, 0),
                     endTime = LocalTime.of(22, 0),
                     isOfficial = false,
-                    color = "#03A9F4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             // ========== Slot L4: labPlace - 목 12:00-14:00 ==========
@@ -1545,7 +1545,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(12, 0),
                     endTime = LocalTime.of(14, 0),
                     isOfficial = true,
-                    color = "#009688",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             // ========== Slot L5: labPlace - 금 15:00-17:00 ==========
@@ -1561,7 +1561,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(15, 0),
                     endTime = LocalTime.of(17, 0),
                     isOfficial = true,
-                    color = "#009688",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             // 텍스트 이벤트 1 (충돌 없음)
@@ -1577,7 +1577,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(19, 0),
                     endTime = LocalTime.of(22, 0),
                     isOfficial = false,
-                    color = "#FF5722",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
         }
@@ -1597,7 +1597,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = true,
-                    color = "#E91E63",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
             // 텍스트 이벤트 2 (충돌 없음)
@@ -1613,7 +1613,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(17, 0),
                     isOfficial = false,
-                    color = "#9E9E9E",
+                    color = "#5C068C", // 프로덕션 색상 (kPersonalScheduleColors - Brand Purple)
                 ),
             )
             // Slot L2: labPlace - 다음주 화 14:00-16:00
@@ -1629,7 +1629,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = true,
-                    color = "#E91E63",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
             // ========== Slot 23: 다음주 수 18:00-20:00 ==========
@@ -1645,7 +1645,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = true,
-                    color = "#E91E63",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
             // ========== Slot L3: labPlace - 수 14:00-16:00 ==========
@@ -1661,7 +1661,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = true,
-                    color = "#212121",
+                    color = "#5C068C", // 프로덕션 색상 (kPersonalScheduleColors - Brand Purple)
                 ),
             )
         }
@@ -1683,7 +1683,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = true,
-                    color = "#8BC34A",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             // ========== Slot 8: 수 18:00-20:00 ==========
@@ -1700,7 +1700,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = true,
-                    color = "#8BC34A",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             // ========== Slot 9: 목 09:00-11:00 ==========
@@ -1717,7 +1717,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(11, 0),
                     isOfficial = true,
-                    color = "#8BC34A",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             // ========== Slot 10: 목 14:00-16:00 ==========
@@ -1734,7 +1734,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = true,
-                    color = "#8BC34A",
+                    color = "#059669", // 프로덕션 색상 (kPersonalScheduleColors - Green 600)
                 ),
             )
             // 텍스트 이벤트 3 (충돌 없음)
@@ -1751,7 +1751,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(18, 0),
                     isOfficial = true,
-                    color = "#9E9E9E",
+                    color = "#5C068C", // 프로덕션 색상 (kPersonalScheduleColors - Brand Purple)
                 ),
             )
         }
@@ -1773,7 +1773,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = true,
-                    color = "#00BCD4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             // ========== Slot 12: 금 09:00-11:00 ==========
@@ -1790,7 +1790,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(11, 0),
                     isOfficial = true,
-                    color = "#00BCD4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             // ========== Slot 13: 금 14:00-16:00 ==========
@@ -1807,7 +1807,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = true,
-                    color = "#00BCD4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             // 온라인 이벤트 2 (충돌 없음)
@@ -1824,7 +1824,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(19, 0),
                     endTime = LocalTime.of(21, 0),
                     isOfficial = false,
-                    color = "#00BCD4",
+                    color = "#1D4ED8", // 프로덕션 색상 (kPersonalScheduleColors - Blue 700)
                 ),
             )
             // 텍스트 이벤트 4 (충돌 없음)
@@ -1841,7 +1841,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = false,
-                    color = "#795548",
+                    color = "#DC2626", // 프로덕션 색상 (kPersonalScheduleColors - Red 600)
                 ),
             )
         }
@@ -1863,7 +1863,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = true,
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             // ========== Slot 15: 다음주 월 09:00-11:00 ==========
@@ -1880,7 +1880,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(11, 0),
                     isOfficial = true,
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             // ========== Slot 16: 다음주 월 14:00-16:00 ==========
@@ -1897,7 +1897,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(14, 0),
                     endTime = LocalTime.of(16, 0),
                     isOfficial = true,
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             // ========== Slot 17: 다음주 월 18:00-20:00 ==========
@@ -1914,7 +1914,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(18, 0),
                     endTime = LocalTime.of(20, 0),
                     isOfficial = false,
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
             // ========== Slot 18: 다음주 화 09:00-11:00 ==========
@@ -1931,7 +1931,7 @@ class TestDataRunner(
                     startTime = LocalTime.of(9, 0),
                     endTime = LocalTime.of(11, 0),
                     isOfficial = false,
-                    color = "#FF9800",
+                    color = "#D97706", // 프로덕션 색상 (kPersonalScheduleColors - Orange 600)
                 ),
             )
         }
