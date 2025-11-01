@@ -64,12 +64,20 @@ class OutlinedLinkButton extends StatelessWidget {
       },
     );
 
-    // width가 지정된 경우만 SizedBox로 감싸기
+    // width가 지정된 경우 SizedBox로 감싸기
     if (width != null) {
       return SizedBox(width: width, child: button);
     }
 
-    return button;
+    // width가 지정되지 않았을 때는 ConstrainedBox로 감싸서
+    // 부모의 제약을 존중하되 최소/최대 크기를 설정
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        minWidth: 0,
+        maxWidth: double.infinity,
+      ),
+      child: button,
+    );
   }
 }
 class AdminLoginButton extends StatelessWidget {

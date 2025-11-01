@@ -252,33 +252,28 @@ class _PlaceOperatingHoursDialogState
           ),
           const SizedBox(width: 12),
 
-          // 시간 선택 영역을 Expanded로 감싸고 LayoutBuilder로 너비 계산
+          // 시간 선택 영역
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // 사용 가능한 너비를 2로 나누고 구분자/여백 제외
-                final buttonWidth = (constraints.maxWidth - 8 - 8) / 2; // '-' 텍스트와 여백 8px씩
-
-                return Row(
-                  children: [
-                    // 시작 시간
-                    OutlinedLinkButton(
-                      width: buttonWidth,
-                      text: hours.startTime ?? '09:00',
-                      onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, true) : null,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('-'),
-                    const SizedBox(width: 8),
-                    // 종료 시간
-                    OutlinedLinkButton(
-                      width: buttonWidth,
-                      text: hours.endTime ?? '18:00',
-                      onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, false) : null,
-                    ),
-                  ],
-                );
-              },
+            child: Row(
+              children: [
+                // 시작 시간
+                Expanded(
+                  child: OutlinedLinkButton(
+                    text: hours.startTime ?? '09:00',
+                    onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, true) : null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text('-'),
+                const SizedBox(width: 8),
+                // 종료 시간
+                Expanded(
+                  child: OutlinedLinkButton(
+                    text: hours.endTime ?? '18:00',
+                    onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, false) : null,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -321,13 +316,17 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '운영시간',
-                  style: AppTheme.titleLarge,
+                Expanded(
+                  child: Text(
+                    '운영시간',
+                    style: AppTheme.titleLarge,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 OutlinedLinkButton(
                   text: '설정 수정',
                   icon: const Icon(Icons.edit, size: 18),
+                  width: 120,
                   onPressed: () async {
                     final result = await showDialog<bool>(
                       context: context,

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// 날짜/시간 포맷팅 유틸리티 클래스
@@ -75,5 +76,34 @@ class DateFormatter {
   /// 날짜를 자정 기준으로 정규화 (시간 제거)
   static DateTime normalizeToMidnight(DateTime dateTime) {
     return DateTime(dateTime.year, dateTime.month, dateTime.day);
+  }
+
+  /// 주의 시작/끝 날짜 범위 계산
+  ///
+  /// 주어진 날짜가 속한 주의 월요일부터 일요일까지의 범위를 반환
+  /// 모든 날짜는 자정(00:00:00)으로 정규화됨
+  ///
+  /// Example:
+  /// - Input: 2025-10-16 (수요일)
+  /// - Output: DateTimeRange(2025-10-14 00:00, 2025-10-20 00:00)
+  static DateTimeRange weekRange(DateTime date) {
+    final start = date.subtract(Duration(days: date.weekday - 1));
+    final end = start.add(const Duration(days: 6));
+    return DateTimeRange(
+      start: normalizeToMidnight(start),
+      end: normalizeToMidnight(end),
+    );
+  }
+
+  /// 주 라벨 포맷 ("M/d ~ M/d")
+  ///
+  /// 주의 시작일(월요일)을 기준으로 해당 주의 범위를 문자열로 반환
+  ///
+  /// Example:
+  /// - Input: 2025-10-14 (월요일)
+  /// - Output: "10/14 ~ 10/20"
+  static String formatWeekLabel(DateTime weekStart) {
+    final end = weekStart.add(const Duration(days: 6));
+    return '${weekStart.month}/${weekStart.day} ~ ${end.month}/${end.day}';
   }
 }

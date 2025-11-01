@@ -1,4 +1,69 @@
-### 2025-11-02 - 캘린더 통합 구현 (그룹 홈 월간 뷰 + 개인 캘린더 주간 뷰)
+### 2025-11-02 (B) - 캘린더 리팩토링 (공통 컴포넌트 분리) + 그룹 홈 실제 데이터 연동
+
+**유형**: 리팩토링 + 기능 개선 + 문서 업데이트
+**우선순위**: Medium
+**영향 범위**: 프론트엔드 (9개 파일), 구현 가이드 (1개 문서)
+
+**작업 개요**:
+CalendarPage (1,427줄) 리팩토링을 위한 공통 컴포넌트 3개 분리, 그룹 홈 일정 목록에 실제 데이터 연동, 장소 운영시간 다이얼로그 레이아웃 개선.
+
+**구현한 기능**:
+1. **캘린더 공통 컴포넌트 분리** (3개 신규)
+   - CalendarNavigator (149줄): 날짜 네비게이션 바 (주간/월간 뷰 지원)
+   - CalendarErrorBanner (57줄): 에러 배너 (재시도 기능)
+   - ConfirmDialog (117줄): 확인 다이얼로그 (일반/삭제 확인)
+
+2. **시간표 탭 분리**
+   - TimetableTab (신규 파일, 600줄): 개인 시간표 주간 뷰 탭
+   - calendar/tabs/ 디렉토리 생성
+   - CalendarPage 리팩토링 준비 완료
+
+3. **그룹 홈 실제 데이터 연동**
+   - _UpcomingEventsWidget 추가: 오늘 이후 가까운 3개 일정 표시
+   - 기존 skeleton 데이터 제거
+   - GroupEvent 실제 데이터 표시 (제목, 날짜, 시간, 색상)
+
+4. **DateFormatter 유틸리티 확장**
+   - weekRange(): 주의 시작/끝 계산
+   - formatWeekLabel(): 주 라벨 포맷 ("M/d ~ M/d")
+
+5. **장소 운영시간 다이얼로그 개선**
+   - OutlinedLinkButton: Expanded로 동적 너비 계산
+   - 버튼 width 파라미터 기본값 null로 변경
+
+**변경된 파일** (9개):
+- ✅ frontend/lib/presentation/widgets/calendar/calendar_navigator.dart (신규, 149줄)
+- ✅ frontend/lib/presentation/widgets/calendar/calendar_error_banner.dart (신규, 57줄)
+- ✅ frontend/lib/presentation/widgets/dialogs/confirm_dialog.dart (신규, 117줄)
+- ✅ frontend/lib/presentation/pages/calendar/tabs/timetable_tab.dart (신규, 600줄)
+- ✅ frontend/lib/presentation/pages/workspace/widgets/group_home_view.dart (+172줄)
+- ✅ frontend/lib/core/utils/date_formatter.dart (+30줄)
+- ✅ frontend/lib/features/place_admin/presentation/widgets/place_operating_hours_dialog.dart
+- ✅ frontend/lib/presentation/widgets/buttons/outlined_link_button.dart
+- ❌ MEMO_calendar_refactoring_component_analysis.md (커밋 제외)
+- ❌ MEMO_place_operating_hours_editor.md (커밋 제외)
+
+**문서 업데이트** (1개):
+- ✅ docs/implementation/frontend/components.md
+  - CalendarNavigator 섹션 추가
+  - CalendarErrorBanner 섹션 추가
+  - ConfirmDialog 섹션 추가
+
+**기대 효과**:
+- CalendarPage 리팩토링 준비 완료 (공통 컴포넌트 재사용)
+- 그룹 홈 일정 목록 실제 데이터로 UX 향상
+- 코드 재사용성 향상 (calendar_navigator, confirm_dialog)
+- 장소 운영시간 UI 개선
+
+**다음 단계**:
+- CalendarPage 전체 리팩토링 (tabs 기반)
+- MonthView, WeekView, DayView 탭 분리
+
+**메모**: 리팩토링 전 공통 컴포넌트 분석 및 분리 완료. MEMO 파일은 참고용으로 보관하되 커밋에서 제외.
+
+---
+
+### 2025-11-02 (A) - 캘린더 통합 구현 (그룹 홈 월간 뷰 + 개인 캘린더 주간 뷰)
 
 **유형**: 기능 구현 + 문서 업데이트
 **우선순위**: High
