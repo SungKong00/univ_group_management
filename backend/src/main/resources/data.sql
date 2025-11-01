@@ -47,19 +47,19 @@ VALUES (13, 'AI/SW학과', 1, 2, '한신대학교', 'AI/SW계열', 'AI/SW학과'
 -- 5) Personal Schedules (주간 반복 시간표)
 -- =====================================================================
 
--- User 1: 성실한 모범생
+-- User 1: 성실한 모범생 (프로덕션 색상 팔레트 사용)
 INSERT INTO personal_schedules (id, user_id, title, location, day_of_week, start_time, end_time, color, created_at, updated_at)
-VALUES (1, 1, '자료구조', '공학관 501호', 'MONDAY', '10:00:00', '11:50:00', '#4A90E2', NOW(), NOW());
+VALUES (1, 1, '자료구조', '공학관 501호', 'MONDAY', '10:00:00', '11:50:00', '#1D4ED8', NOW(), NOW());  -- Blue 700 (전공과목)
 INSERT INTO personal_schedules (id, user_id, title, location, day_of_week, start_time, end_time, color, created_at, updated_at)
-VALUES (2, 1, '알고리즘', '공학관 502호', 'TUESDAY', '13:00:00', '14:50:00', '#4A90E2', NOW(), NOW());
+VALUES (2, 1, '알고리즘', '공학관 502호', 'TUESDAY', '13:00:00', '14:50:00', '#1D4ED8', NOW(), NOW());  -- Blue 700 (전공과목)
 INSERT INTO personal_schedules (id, user_id, title, location, day_of_week, start_time, end_time, color, created_at, updated_at)
-VALUES (3, 1, '자료구조', '공학관 501호', 'WEDNESDAY', '10:00:00', '11:50:00', '#4A90E2', NOW(), NOW());
+VALUES (3, 1, '자료구조', '공학관 501호', 'WEDNESDAY', '10:00:00', '11:50:00', '#1D4ED8', NOW(), NOW());  -- Blue 700 (전공과목)
 INSERT INTO personal_schedules (id, user_id, title, location, day_of_week, start_time, end_time, color, created_at, updated_at)
-VALUES (4, 1, '알고리즘', '공학관 502호', 'THURSDAY', '13:00:00', '14:50:00', '#4A90E2', NOW(), NOW());
+VALUES (4, 1, '알고리즘', '공학관 502호', 'THURSDAY', '13:00:00', '14:50:00', '#1D4ED8', NOW(), NOW());  -- Blue 700 (전공과목)
 INSERT INTO personal_schedules (id, user_id, title, location, day_of_week, start_time, end_time, color, created_at, updated_at)
-VALUES (5, 1, '코딩 테스트 스터디', '중앙도서관 스터디룸', 'FRIDAY', '14:00:00', '17:00:00', '#50E3C2', NOW(), NOW());
+VALUES (5, 1, '코딩 테스트 스터디', '중앙도서관 스터디룸', 'FRIDAY', '14:00:00', '17:00:00', '#059669', NOW(), NOW());  -- Green 600 (스터디)
 INSERT INTO personal_schedules (id, user_id, title, location, day_of_week, start_time, end_time, color, created_at, updated_at)
-VALUES (6, 1, '중앙도서관에서 공부', '중앙도서관 2열람실', 'SATURDAY', '10:00:00', '18:00:00', '#B8E986', NOW(), NOW());
+VALUES (6, 1, '중앙도서관에서 공부', '중앙도서관 2열람실', 'SATURDAY', '10:00:00', '18:00:00', '#D97706', NOW(), NOW());  -- Orange 600 (개인 공부)
 
 ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
 ALTER TABLE groups ALTER COLUMN id RESTART WITH 14;

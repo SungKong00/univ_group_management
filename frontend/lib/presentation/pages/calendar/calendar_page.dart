@@ -10,7 +10,6 @@ import '../../../core/theme/theme.dart';
 import '../../providers/calendar_events_provider.dart';
 import '../../providers/timetable_provider.dart';
 import '../../widgets/buttons/error_button.dart';
-import '../../widgets/buttons/neutral_outlined_button.dart';
 import '../../widgets/buttons/outlined_link_button.dart';
 import '../../widgets/buttons/primary_button.dart';
 import '../../widgets/common/compact_tab_bar.dart';
@@ -763,13 +762,24 @@ class _DateNavigator extends StatelessWidget {
           icon: const Icon(Icons.chevron_right),
           visualDensity: VisualDensity.compact,
         ),
-        const SizedBox(width: AppSpacing.xxs),
-        SizedBox(
-          width: 64,
-          height: 36,
-          child: NeutralOutlinedButton(
-            text: '오늘',
-            onPressed: onToday,
+        const SizedBox(width: AppSpacing.xs),
+        TextButton(
+          onPressed: onToday,
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.lightSecondary,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            minimumSize: const Size(64, 44),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: const Text(
+            '오늘',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
@@ -1180,13 +1190,24 @@ class _CalendarNavigator extends StatelessWidget {
           icon: const Icon(Icons.chevron_right),
           visualDensity: VisualDensity.compact,
         ),
-        const SizedBox(width: AppSpacing.xxs),
-        SizedBox(
-          width: 64,
-          height: 36,
-          child: NeutralOutlinedButton(
-            text: '오늘',
-            onPressed: onToday,
+        const SizedBox(width: AppSpacing.xs),
+        TextButton(
+          onPressed: onToday,
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.lightSecondary,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            minimumSize: const Size(64, 44),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: const Text(
+            '오늘',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
