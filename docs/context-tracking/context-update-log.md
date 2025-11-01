@@ -1,3 +1,90 @@
+### 2025-11-02 - 캘린더 통합 구현 (그룹 홈 월간 뷰 + 개인 캘린더 주간 뷰)
+
+**유형**: 기능 구현 + 문서 업데이트
+**우선순위**: High
+**영향 범위**: 프론트엔드 (13개 파일), 구현 가이드 (2개 문서)
+
+**작업 개요**:
+그룹 홈 대시보드에 월간 캘린더 위젯 추가, 개인 캘린더에 WeeklyScheduleEditor 통합, UI/UX 개선 및 어댑터 패턴 도입으로 캘린더 시스템 완성도 향상.
+
+**구현한 기능**:
+1. **CompactMonthCalendar 위젯** (302줄 신규)
+   - 그룹 홈 대시보드용 소형 월간 뷰 (300px 높이)
+   - 일별 이벤트 색상 점 표시 (최대 3개)
+   - 월 네비게이션 + 날짜 클릭 시 그룹 캘린더로 이동
+   - TableCalendar 기반 일관된 UX
+
+2. **PersonalEventAdapter 어댑터** (79줄 신규)
+   - PersonalEvent (도메인) → Event (UI) 변환
+   - 슬롯 기반 시간 변환 (15분 단위)
+   - ID prefix 'pe-'로 유형 구분
+   - 어댑터 패턴으로 레이어 분리
+
+3. **개인 캘린더 주간 뷰 개선**
+   - WeeklyScheduleEditor 통합 (읽기 전용)
+   - PersonalEvent 표시 (시간표 + 개인 일정 통합)
+   - 이벤트 탭 시 상세 시트 표시
+
+4. **UI/UX 개선**
+   - 시간표 탭 툴바 반응형 레이아웃 (750px → 600px)
+   - 모바일: 아이콘 버튼으로 축약
+   - 캘린더 탭 헤더: 뷰 토글 순서 변경 (일간 → 주간 → 월간)
+   - 상태 관리 Provider 통합 (isAddMode, isOverlapView)
+
+5. **장소 운영시간 다이얼로그 수정**
+   - OutlinedLinkButton 동적 너비 계산 (LayoutBuilder)
+   - BoxConstraints 에러 방지
+
+6. **WeeklyScheduleEditor API 확장**
+   - initialMode, initialOverlapView 파라미터 추가
+   - toggleOverlapView() 공개 메서드
+   - 내부 UI 제거 (부모 제어로 위임)
+
+**변경된 파일** (13개):
+- ✅ frontend/lib/presentation/widgets/calendar/compact_month_calendar.dart (신규)
+- ✅ frontend/lib/presentation/adapters/personal_event_adapter.dart (신규)
+- ✅ frontend/lib/presentation/pages/workspace/widgets/group_home_view.dart (+143줄)
+- ✅ frontend/lib/presentation/pages/workspace/calendar/group_calendar_page.dart
+- ✅ frontend/lib/presentation/pages/workspace/workspace_page.dart
+- ✅ frontend/lib/presentation/providers/workspace_state_provider.dart (+selectedCalendarDate)
+- ✅ frontend/lib/core/router/app_router.dart (+group-calendar 라우트)
+- ✅ frontend/lib/presentation/pages/calendar/calendar_page.dart (주간 뷰 통합)
+- ✅ frontend/lib/presentation/providers/timetable_provider.dart (+isAddMode, isOverlapView)
+- ✅ frontend/lib/features/place_admin/presentation/widgets/place_operating_hours_dialog.dart
+- ✅ frontend/lib/presentation/widgets/buttons/outlined_link_button.dart
+- ✅ frontend/lib/presentation/widgets/weekly_calendar/weekly_schedule_editor.dart (API 확장)
+- ✅ frontend/lib/presentation/widgets/buttons/neutral_outlined_button.dart
+
+**문서 업데이트** (2개):
+- ✅ docs/implementation/frontend/components.md
+  - CompactMonthCalendar 섹션 추가
+  - 사용 예시 및 구현 특징 문서화
+- ✅ docs/implementation/frontend/architecture.md
+  - 어댑터 패턴 섹션 추가
+  - presentation/adapters/ 디렉토리 설명
+  - PersonalScheduleAdapter, PersonalEventAdapter 소개
+
+**커밋 내역** (5개):
+1. feat(calendar): 그룹 홈에 소형 월간 캘린더 위젯 추가 (930066b)
+2. feat(calendar): 개인 캘린더 주간 뷰에 WeeklyScheduleEditor 통합 (e19759d)
+3. refactor(calendar): 개인 캘린더 UI/UX 개선 및 반응형 레이아웃 최적화 (63f10d3)
+4. fix(place): 장소 운영시간 다이얼로그 레이아웃 수정 및 버튼 너비 동적 계산 (d468ef2)
+5. refactor(calendar): WeeklyScheduleEditor 외부 제어 API 확장 및 내부 UI 제거 (dbf1ba3)
+
+**기대 효과**:
+- 그룹 홈에서 일정 미리보기로 UX 향상
+- 개인 캘린더 주간 뷰에서 시간표 + 일정 통합 표시
+- 어댑터 패턴으로 도메인-UI 레이어 명확히 분리
+- WeeklyScheduleEditor 재사용성 향상
+
+**다음 단계**:
+- 장소 캘린더 프론트엔드 Phase 2 구현
+- 그룹 캘린더 Phase 8 (권한 시스템 통합)
+
+**메모**: 캘린더 시스템 핵심 기능 완성. 어댑터 패턴과 반응형 레이아웃으로 확장성과 사용성 모두 확보.
+
+---
+
 ### 2025-11-01 (B) - 워크스페이스 그룹 전환 네비게이션 시스템 구현
 
 **유형**: 기능 구현 + 문서 업데이트
