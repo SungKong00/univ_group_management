@@ -36,7 +36,8 @@ lib/
 ├── presentation/           # UI 레이어
 │   ├── pages/              # 페이지 컴포넌트
 │   ├── widgets/            # 재사용 위젯
-│   └── providers/          # 상태 관리 (페이지별)
+│   ├── providers/          # 상태 관리 (페이지별)
+│   └── adapters/           # 어댑터 (도메인 ↔ UI 변환)
 └── main.dart              # 앱 진입점
 ```
 
@@ -49,6 +50,30 @@ lib/
 - **Core/Models**: 데이터 구조 정의
 
 각 레이어는 명확한 책임을 가지며, 하위 레이어에만 의존합니다.
+
+## 어댑터 패턴 (Adapter Pattern)
+
+**목적**: 도메인 모델과 UI 컴포넌트 간 데이터 구조 변환
+
+**구현 위치**: `presentation/adapters/`
+
+**주요 어댑터**:
+- **PersonalScheduleAdapter**: PersonalSchedule ↔ WeeklyScheduleEditor Event
+- **PersonalEventAdapter**: PersonalEvent ↔ WeeklyScheduleEditor Event
+
+**사용 예시**:
+```dart
+// PersonalEvent (도메인 모델) → Event (UI 모델)
+final event = PersonalEventAdapter.toEvent(personalEvent, weekStart);
+
+// Event ID에서 PersonalEvent ID 추출
+final eventId = PersonalEventAdapter.extractEventId(event.id);
+```
+
+**특징**:
+- 단방향 변환 (도메인 → UI)
+- ID prefix로 유형 구분 ('ps-', 'pe-')
+- 슬롯 기반 시간 변환 (15분 단위)
 
 ## API 연동 패턴
 
