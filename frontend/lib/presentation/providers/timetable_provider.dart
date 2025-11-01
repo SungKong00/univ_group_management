@@ -13,6 +13,8 @@ class TimetableState {
     required this.isSubmitting,
     required this.weekStart,
     required this.hasLoaded,
+    required this.isOverlapView,
+    required this.isAddMode,
     this.loadErrorMessage,
     this.snackbarMessage,
     this.snackbarIsError = false,
@@ -26,6 +28,8 @@ class TimetableState {
       isSubmitting: false,
       weekStart: _startOfWeek(now),
       hasLoaded: false,
+      isOverlapView: true,
+      isAddMode: false,
       loadErrorMessage: null,
       snackbarMessage: null,
       snackbarIsError: false,
@@ -37,6 +41,8 @@ class TimetableState {
   final bool isSubmitting;
   final DateTime weekStart;
   final bool hasLoaded;
+  final bool isOverlapView; // 겹친 일정 펼치기 상태
+  final bool isAddMode; // 일정 추가 모드 상태
   final String? loadErrorMessage;
   final String? snackbarMessage;
   final bool snackbarIsError;
@@ -47,6 +53,8 @@ class TimetableState {
     bool? isSubmitting,
     DateTime? weekStart,
     bool? hasLoaded,
+    bool? isOverlapView,
+    bool? isAddMode,
     String? loadErrorMessage,
     String? snackbarMessage,
     bool? snackbarIsError,
@@ -59,6 +67,8 @@ class TimetableState {
       isSubmitting: isSubmitting ?? this.isSubmitting,
       weekStart: weekStart ?? this.weekStart,
       hasLoaded: hasLoaded ?? this.hasLoaded,
+      isOverlapView: isOverlapView ?? this.isOverlapView,
+      isAddMode: isAddMode ?? this.isAddMode,
       loadErrorMessage:
           clearLoadError ? null : loadErrorMessage ?? this.loadErrorMessage,
       snackbarMessage:
@@ -233,6 +243,14 @@ class TimetableStateNotifier extends StateNotifier<TimetableState> {
 
   void clearSnackbar() {
     state = state.copyWith(clearSnackbar: true);
+  }
+
+  void toggleOverlapView() {
+    state = state.copyWith(isOverlapView: !state.isOverlapView);
+  }
+
+  void toggleAddMode() {
+    state = state.copyWith(isAddMode: !state.isAddMode);
   }
 
   static List<PersonalSchedule> _sortedSchedules(
