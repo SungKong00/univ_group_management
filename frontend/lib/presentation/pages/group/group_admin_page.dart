@@ -350,15 +350,7 @@ class _AdminContentView extends ConsumerWidget {
 
   void _navigateToMemberManagement(WidgetRef ref) {
     // 멤버 관리 페이지로 전환
-    final currentState = ref.read(workspaceStateProvider);
-    ref
-        .read(workspaceStateProvider.notifier)
-        .updateState(
-          currentState.copyWith(
-            previousView: currentState.currentView,
-            currentView: WorkspaceView.memberManagement,
-          ),
-        );
+    ref.read(workspaceStateProvider.notifier).showMemberManagementPage();
   }
 
 

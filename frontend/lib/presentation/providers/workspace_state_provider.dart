@@ -247,7 +247,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       final lastViewType = await LocalStorage.instance.getLastViewType();
 
       if (lastGroupId != null) {
-        // 복원할 뷰 타입 결정
+        // 복원할 뷰 타입 결정 (기본값: groupHome)
         WorkspaceView? restoredView;
         if (lastViewType != null) {
           try {
@@ -255,8 +255,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
               (v) => v.name == lastViewType,
             );
           } catch (_) {
-            restoredView = WorkspaceView.channel;
+            restoredView = WorkspaceView.groupHome;
           }
+        } else {
+          // No saved view type: default to groupHome
+          restoredView = WorkspaceView.groupHome;
         }
 
         if (kDebugMode) {
@@ -266,15 +269,19 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
           );
         }
 
-        // 워크스페이스 진입 시 저장된 채널 및 뷰 복원
-        await enterWorkspace(
-          lastGroupId,
-          channelId: lastChannelId,
-        );
-
-        // 뷰 타입 복원
-        if (restoredView != null && restoredView != WorkspaceView.channel) {
-          state = state.copyWith(currentView: restoredView);
+        // 뷰 타입에 따라 적절한 방식으로 워크스페이스 진입
+        if (restoredView == WorkspaceView.channel && lastChannelId != null) {
+          // 채널 뷰인 경우에만 channelId 전달
+          await enterWorkspace(
+            lastGroupId,
+            channelId: lastChannelId,
+          );
+        } else {
+          // 다른 뷰인 경우 targetView로 뷰 타입 명시
+          await enterWorkspace(
+            lastGroupId,
+            targetView: restoredView,
+          );
         }
       }
     } catch (e) {
@@ -352,9 +359,13 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     String groupId, {
     String? channelId,
     GroupMembership? membership,
+    WorkspaceView? targetView,
   }) async {
     final isSameGroup = state.selectedGroupId == groupId;
     _lastGroupId = groupId;
+
+    // Save current view type before switching groups
+    final previousView = state.currentView;
 
     if (!isSameGroup && state.selectedGroupId != null) {
       _saveCurrentWorkspaceSnapshot();
@@ -374,6 +385,33 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
     final hasMobileState = state.mobileView != MobileWorkspaceView.channelList;
 
+    // Determine final target view
+    WorkspaceView finalTargetView;
+
+    // Priority 1: Explicitly passed targetView parameter (from restoreFromLocalStorage)
+    if (targetView != null) {
+      finalTargetView = targetView;
+    }
+    // Priority 2: When switching groups, maintain current view type
+    else if (!isSameGroup) {
+      // When switching groups, maintain non-channel views (groupHome, calendar, groupAdmin)
+      // For channel view, switch to first channel if channelId not specified
+      if (previousView == WorkspaceView.channel && channelId == null) {
+        // Channel view without explicit channelId: go to first channel
+        finalTargetView = WorkspaceView.channel;
+      } else if (previousView != WorkspaceView.channel) {
+        // Non-channel views: maintain the view type
+        finalTargetView = previousView;
+      } else {
+        // Channel view with explicit channelId
+        finalTargetView = WorkspaceView.channel;
+      }
+    }
+    // Priority 3: Same group - use snapshot or default to groupHome
+    else {
+      finalTargetView = snapshot?.view ?? WorkspaceView.groupHome;
+    }
+
     state = state.copyWith(
       selectedGroupId: groupId,
       selectedChannelId: hasMobileState
@@ -385,7 +423,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       selectedPostId: hasMobileState
           ? state.selectedPostId
           : snapshot?.selectedPostId,
-      currentView: snapshot?.view ?? WorkspaceView.channel,
+      currentView: finalTargetView,
       mobileView: hasMobileState
           ? state.mobileView
           : snapshot?.mobileView ?? MobileWorkspaceView.channelList,
@@ -393,6 +431,9 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       isNarrowDesktopCommentsFullscreen: hasMobileState
           ? state.isNarrowDesktopCommentsFullscreen
           : (snapshot?.isNarrowDesktopCommentsFullscreen ?? false),
+      // When switching groups, reset previousView to null
+      // Only restore previousView from snapshot when staying in the same group
+      previousView: isSameGroup ? snapshot?.previousView : null,
       workspaceContext: {
         'groupId': groupId,
         if ((hasMobileState && state.selectedChannelId != null) ||
@@ -425,10 +466,13 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         groupId,
         autoSelectChannelId: channelId ?? snapshot?.selectedChannelId,
         membership: resolvedMembership,
+        targetView: finalTargetView,
       );
 
+      // Only apply snapshot for same group navigation (not when switching groups with explicit view)
+      // This prevents flickering when switching groups with maintained views
       final restoredSnapshot = _getSnapshot(groupId);
-      if (restoredSnapshot != null) {
+      if (restoredSnapshot != null && isSameGroup && targetView == null) {
         _applySnapshot(restoredSnapshot);
       }
 
@@ -451,6 +495,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     String groupId, {
     String? autoSelectChannelId,
     required GroupMembership membership,
+    WorkspaceView? targetView,
   }) async {
     try {
       final groupIdInt = int.parse(groupId);
@@ -476,12 +521,22 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         }
       }
 
-      // Auto-select channel: prioritize passed channelId, then first channel
+      // Determine if channel should be selected based on target view
+      final shouldSelectChannel = targetView == null ||
+          targetView == WorkspaceView.channel;
+
+      // Auto-select channel: only if viewing channel or explicit channelId provided
       String? selectedChannelId;
       if (autoSelectChannelId != null) {
         selectedChannelId = autoSelectChannelId;
-      } else if (channels.isNotEmpty) {
+      } else if (shouldSelectChannel && channels.isNotEmpty) {
         selectedChannelId = channels.first.id.toString();
+      }
+
+      // For groupAdmin view, verify permission and fallback to groupHome if not authorized
+      WorkspaceView finalView = targetView ?? WorkspaceView.groupHome;
+      if (targetView == WorkspaceView.groupAdmin && !hasAnyPermission) {
+        finalView = WorkspaceView.groupHome;
       }
 
       state = state.copyWith(
@@ -492,8 +547,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         currentGroupPermissions: currentPermissions,
         isLoadingChannels: false,
         selectedChannelId: selectedChannelId,
-        workspaceContext: Map.from(state.workspaceContext)
-          ..['channelId'] = selectedChannelId,
+        currentView: finalView,
+        workspaceContext: selectedChannelId != null
+            ? (Map.from(state.workspaceContext)
+              ..['channelId'] = selectedChannelId)
+            : state.workspaceContext,
       );
 
       // Auto-load permissions for the selected channel
@@ -550,6 +608,9 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       selectedPostId: null,
       currentView: WorkspaceView.channel,
       channelHistory: newHistory,
+      // Reset previousView when entering channel view
+      // Channel navigation uses channelHistory instead of previousView
+      previousView: null,
       workspaceContext: Map.from(state.workspaceContext)
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
@@ -613,6 +674,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = state.copyWith(
       previousView: state.currentView,
       currentView: WorkspaceView.groupAdmin,
+      selectedChannelId: null,
+      isCommentsVisible: false,
+      selectedPostId: null,
+      isNarrowDesktopCommentsFullscreen: false,
+    );
+  }
+
+  /// Show member management page view
+  void showMemberManagementPage() {
+    state = state.copyWith(
+      previousView: state.currentView,
+      currentView: WorkspaceView.memberManagement,
       selectedChannelId: null,
       isCommentsVisible: false,
       selectedPostId: null,
