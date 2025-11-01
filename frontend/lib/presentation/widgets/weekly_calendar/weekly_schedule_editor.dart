@@ -234,6 +234,30 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
   }
 
+  // Public method to toggle between edit and add modes
+  void toggleMode() {
+    final newMode = _mode == CalendarMode.edit ? CalendarMode.add : CalendarMode.edit;
+    final range = _calculateVisibleHourRange(modeOverride: newMode);
+
+    setState(() {
+      _mode = newMode;
+      _isSelecting = false;
+      _startCell = null;
+      _endCell = null;
+      _selectionRect = null;
+      _highlightRect = null;
+      _visibleStartHour = range.startHour;
+      _visibleEndHour = range.endHour;
+      _hasAppliedInitialScroll = false;
+    });
+
+    // Reapply scroll to match new hour range
+    WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
+  }
+
+  // Get current mode for external state tracking
+  CalendarMode get currentMode => _mode;
+
   @override
   void dispose() {
     _stopAutoScroll();
@@ -1412,108 +1436,85 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Mode selector and overlap view toggle
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              // Add event button (switches to add mode temporarily)
-              if (_mode != CalendarMode.add)
-                Flexible(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      final range = _calculateVisibleHourRange(modeOverride: CalendarMode.add);
-                      setState(() {
-                        _mode = CalendarMode.add;
-                        _visibleStartHour = range.startHour;
-                        _visibleEndHour = range.endHour;
-                        _hasAppliedInitialScroll = false;
-                      });
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('일정 추가'),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                    ),
+        // Mode indicator message
+        if (_mode == CalendarMode.add)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline,
+                  size: 18,
+                  color: Theme.of(context).primaryColor,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '시간표를 드래그하여 일정을 추가하세요',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              if (_mode == CalendarMode.add)
-                Flexible(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.info_outline, size: 20),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          '캘린더를 드래그하여 시간을 선택하세요',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      TextButton(
-                        onPressed: () {
-                          // Return to edit mode
-                          final range = _calculateVisibleHourRange(modeOverride: CalendarMode.edit);
-                          setState(() {
-                            _mode = CalendarMode.edit;
-                            _isSelecting = false;
-                            _startCell = null;
-                            _endCell = null;
-                            _selectionRect = null;
-                            _highlightRect = null;
-                            _visibleStartHour = range.startHour;
-                            _visibleEndHour = range.endHour;
-                            _hasAppliedInitialScroll = false;
-                          });
-                        },
-                        child: const Text('취소'),
-                      ),
-                    ],
-                  ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => toggleMode(),
+                  child: const Text('취소'),
                 ),
-              const Spacer(),
-              // Overlap view toggle
-              Tooltip(
-                message: _isOverlapView ? '겹친 일정 펼치기' : '겹친 일정 접기',
-                child: IconButton(
-                  icon: Icon(_isOverlapView ? Icons.view_week : Icons.layers),
-                  onPressed: () {
-                    setState(() {
-                      _isOverlapView = !_isOverlapView;
-                    });
-                  },
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
         // Calendar content
         Expanded(
           child: Column(
             children: [
+              // Header row with day names and overlap toggle
               SizedBox(
                 height: _dayRowHeight,
-                child: IgnorePointer(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return CustomPaint(
-                        size: Size(constraints.maxWidth, _dayRowHeight),
-                        painter: TimeGridPainter(
-                          startHour: _visibleStartHour,
-                          endHour: _visibleEndHour,
-                          timeColumnWidth: _timeColumnWidth,
-                          weekStart: _effectiveWeekStart,
-                          paintHeader: true,
-                          paintGrid: false,
+                child: Stack(
+                  children: [
+                    // Day names header
+                    IgnorePointer(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return CustomPaint(
+                            size: Size(constraints.maxWidth, _dayRowHeight),
+                            painter: TimeGridPainter(
+                              startHour: _visibleStartHour,
+                              endHour: _visibleEndHour,
+                              timeColumnWidth: _timeColumnWidth,
+                              weekStart: _effectiveWeekStart,
+                              paintHeader: true,
+                              paintGrid: false,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    // Overlap toggle button (positioned at top-right)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Tooltip(
+                        message: _isOverlapView ? '겹친 일정 펼치기' : '겹친 일정 접기',
+                        child: SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: IconButton(
+                            icon: Icon(_isOverlapView ? Icons.view_week : Icons.layers, size: 20),
+                            onPressed: () {
+                              setState(() {
+                                _isOverlapView = !_isOverlapView;
+                              });
+                            },
+                            color: Theme.of(context).colorScheme.primary,
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                          ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Expanded(

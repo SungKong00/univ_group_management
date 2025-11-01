@@ -42,9 +42,9 @@ class OutlinedLinkButton extends StatelessWidget {
             text: text,
             icon: icon,
             isLoading: isLoading,
-            textStyle: AppTheme.bodyMediumTheme(
+            textStyle: AppTheme.bodyLargeTheme(
               context,
-            ).copyWith(color: AppColors.brand, fontWeight: FontWeight.w500),
+            ).copyWith(color: AppColors.brand, fontWeight: FontWeight.w600),
             indicatorColor: AppColors.brand,
           ),
         ),

@@ -140,11 +140,18 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
   }
 }
 
-class TimetableTab extends ConsumerWidget {
+class TimetableTab extends ConsumerStatefulWidget {
   const TimetableTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TimetableTab> createState() => _TimetableTabState();
+}
+
+class _TimetableTabState extends ConsumerState<TimetableTab> {
+  final GlobalKey<State<WeeklyScheduleEditor>> _scheduleEditorKey = GlobalKey<State<WeeklyScheduleEditor>>();
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(timetableStateProvider);
     final notifier = ref.read(timetableStateProvider.notifier);
 
@@ -173,7 +180,7 @@ class TimetableTab extends ConsumerWidget {
           .toList();
 
       content = WeeklyScheduleEditor(
-        key: ValueKey('timetable-${state.weekStart.millisecondsSinceEpoch}'),
+        key: _scheduleEditorKey,
         allowMultiDaySelection: false, // Timetable: single day only
         isEditable: true,
         allowEventOverlap: true, // Show warning but allow overlap
@@ -193,7 +200,12 @@ class TimetableTab extends ConsumerWidget {
           child: _TimetableToolbar(
             state: state,
             isBusy: isBusy,
-            onCreate: () => _handleCreate(context, notifier, isBusy),
+            onCreate: () {
+              // Toggle WeeklyScheduleEditor mode instead of opening dialog
+              if (state.schedules.isNotEmpty) {
+                (_scheduleEditorKey.currentState as dynamic)?.toggleMode();
+              }
+            },
             onShowCourseComingSoon: () {
               AppSnackBar.info(context, '🚧 추후 구현 예정입니다');
             },
@@ -203,6 +215,8 @@ class TimetableTab extends ConsumerWidget {
             onPreviousWeek: notifier.goToPreviousWeek,
             onNextWeek: notifier.goToNextWeek,
             onToday: notifier.goToCurrentWeek,
+            isAddMode: state.schedules.isNotEmpty &&
+                ((_scheduleEditorKey.currentState as dynamic)?.currentMode == CalendarMode.add),
           ),
         ),
         if (state.loadErrorMessage != null)
@@ -456,22 +470,90 @@ class _TimetableToolbar extends StatelessWidget {
     required this.onPreviousWeek,
     required this.onNextWeek,
     required this.onToday,
+    this.isAddMode = false,
   });
 
   final TimetableState state;
   final bool isBusy;
-  final Future<void> Function() onCreate;
+  final VoidCallback onCreate;
   final VoidCallback onShowCourseComingSoon;
   final VoidCallback onRefresh;
   final VoidCallback onPreviousWeek;
   final VoidCallback onNextWeek;
   final VoidCallback onToday;
+  final bool isAddMode;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final weekLabel = _buildWeekLabel(state.weekStart);
     final weekRange = _buildWeekRange(state.weekStart);
+
+    // 액션 버튼들 - 모드에 따라 동적으로 변경
+    final actionButtons = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Primary: 일정 추가 모드 토글
+        SizedBox(
+          width: isAddMode ? 90 : 110,
+          height: 40,
+          child: FilledButton.icon(
+            onPressed: isBusy || state.schedules.isEmpty ? null : onCreate,
+            icon: Icon(
+              isAddMode ? Icons.check : Icons.add_circle_outline,
+              size: 16,
+            ),
+            label: Text(
+              isAddMode ? '완료' : '일정 추가',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              backgroundColor: isAddMode
+                ? Theme.of(context).colorScheme.secondary
+                : Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        // Secondary: 수업 추가 (보조 액션)
+        SizedBox(
+          width: 110,
+          height: 40,
+          child: OutlinedButton.icon(
+            onPressed: isBusy ? null : onShowCourseComingSoon,
+            icon: const Icon(Icons.school_outlined, size: 16),
+            label: Text('수업 추가',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        // Tertiary: 새로고침 (아이콘만)
+        IconButton(
+          onPressed: isBusy ? null : onRefresh,
+          icon: const Icon(Icons.refresh),
+          tooltip: '새로고침',
+          iconSize: 18,
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(
+            minWidth: 40,
+            minHeight: 40,
+          ),
+        ),
+      ],
+    );
 
     return Center(
       child: ConstrainedBox(
@@ -481,82 +563,119 @@ class _TimetableToolbar extends StatelessWidget {
             final isCompact = constraints.maxWidth < 750;
 
             if (isCompact) {
-              // 좁은 화면: 세로 배치
+              // 모바일(<750px): Column으로 날짜 네비게이션과 버튼들 세로 배치
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // 날짜 네비게이션 (상단 중앙)
-                  _DateNavigator(
-                    weekLabel: weekLabel,
-                    weekRange: weekRange,
-                    textTheme: textTheme,
-                    onPrevious: isBusy ? null : onPreviousWeek,
-                    onNext: isBusy ? null : onNextWeek,
-                    onToday: isBusy ? null : onToday,
+                  Center(
+                    child: _DateNavigator(
+                      weekLabel: weekLabel,
+                      weekRange: weekRange,
+                      textTheme: textTheme,
+                      onPrevious: isBusy ? null : onPreviousWeek,
+                      onNext: isBusy ? null : onNextWeek,
+                      onToday: isBusy ? null : onToday,
+                    ),
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  // 액션 버튼들 (하단)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedLinkButton(
-                          text: '수업 추가',
-                          onPressed: isBusy ? null : onShowCourseComingSoon,
-                          icon: const Icon(Icons.school_outlined, size: 18),
-                          variant: ButtonVariant.outlined,
-                        ),
+                  const SizedBox(height: AppSpacing.sm),
+                  // 하단: 액션 버튼들 (중앙 정렬, 스크롤 가능)
+                  Center(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: actionButtons,
                       ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: PrimaryButton(
-                          text: '일정 추가',
-                          onPressed: isBusy ? null : onCreate,
-                          icon: const Icon(Icons.add_circle_outline, size: 18),
-                          variant: PrimaryButtonVariant.action,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               );
             }
 
-            // 넓은 화면: 가로 배치 (좌: 액션, 중앙: 네비게이션)
+            // 데스크톱(≥750px): Row로 깔끔한 배치
             return Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // 좌측: 액션 버튼 그룹
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    OutlinedLinkButton(
-                      text: '수업 추가',
-                      onPressed: isBusy ? null : onShowCourseComingSoon,
-                      icon: const Icon(Icons.school_outlined, size: 18),
-                      variant: ButtonVariant.outlined,
-                      width: 120,
+                // 좌측: 수업 추가 버튼 (Secondary)
+                SizedBox(
+                  width: 120,
+                  height: 44,
+                  child: OutlinedButton.icon(
+                    onPressed: isBusy ? null : onShowCourseComingSoon,
+                    icon: const Icon(Icons.school_outlined, size: 16),
+                    label: Text('수업 추가',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    const SizedBox(width: AppSpacing.xs),
-                    PrimaryButton(
-                      text: '일정 추가',
-                      onPressed: isBusy ? null : onCreate,
-                      icon: const Icon(Icons.add_circle_outline, size: 18),
-                      variant: PrimaryButtonVariant.action,
-                      width: 120,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
-                  ],
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                // 중앙: 날짜 네비게이션
+
+                // 중앙: 날짜 네비게이션 (확장)
                 Expanded(
-                  child: _DateNavigator(
-                    weekLabel: weekLabel,
-                    weekRange: weekRange,
-                    textTheme: textTheme,
-                    onPrevious: isBusy ? null : onPreviousWeek,
-                    onNext: isBusy ? null : onNextWeek,
-                    onToday: isBusy ? null : onToday,
+                  child: Center(
+                    child: _DateNavigator(
+                      weekLabel: weekLabel,
+                      weekRange: weekRange,
+                      textTheme: textTheme,
+                      onPrevious: isBusy ? null : onPreviousWeek,
+                      onNext: isBusy ? null : onNextWeek,
+                      onToday: isBusy ? null : onToday,
+                    ),
                   ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+
+                // 우측: 새로고침 + 일정 추가 버튼
+                Row(
+                  children: [
+                    // Tertiary: 새로고침
+                    IconButton(
+                      onPressed: isBusy ? null : onRefresh,
+                      icon: const Icon(Icons.refresh),
+                      tooltip: '새로고침',
+                      iconSize: 18,
+                      padding: const EdgeInsets.all(10),
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    // Primary: 일정 추가 모드 토글
+                    SizedBox(
+                      width: isAddMode ? 90 : 110,
+                      height: 44,
+                      child: FilledButton.icon(
+                        onPressed: isBusy || state.schedules.isEmpty ? null : onCreate,
+                        icon: Icon(
+                          isAddMode ? Icons.check : Icons.add_circle_outline,
+                          size: 16,
+                        ),
+                        label: Text(
+                          isAddMode ? '완료' : '일정 추가',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          backgroundColor: isAddMode
+                            ? Theme.of(context).colorScheme.secondary
+                            : Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             );
@@ -637,10 +756,13 @@ class _DateNavigator extends StatelessWidget {
           visualDensity: VisualDensity.compact,
         ),
         const SizedBox(width: AppSpacing.xxs),
-        NeutralOutlinedButton(
-          text: '오늘',
-          onPressed: onToday,
-          width: 60,
+        SizedBox(
+          width: 64,
+          height: 36,
+          child: NeutralOutlinedButton(
+            text: '오늘',
+            onPressed: onToday,
+          ),
         ),
       ],
     );
@@ -721,8 +843,9 @@ class _EmptyTimetable extends StatelessWidget {
               onPressed: () async {
                 await onCreatePressed();
               },
-              icon: Icon(Icons.add_circle_outline),
+              icon: const Icon(Icons.add_circle_outline, size: 18),
               variant: PrimaryButtonVariant.action,
+              width: 140,
             ),
           ],
         ),
@@ -921,7 +1044,7 @@ class _CalendarHeader extends StatelessWidget {
       isLoading: state.isMutating,
       semanticsLabel: '새 일정 추가',
       variant: PrimaryButtonVariant.brand,
-      width: 120,
+      width: 140,
     );
 
     return Center(
@@ -1050,7 +1173,14 @@ class _CalendarNavigator extends StatelessWidget {
           visualDensity: VisualDensity.compact,
         ),
         const SizedBox(width: AppSpacing.xxs),
-        NeutralOutlinedButton(text: '오늘', onPressed: onToday, width: 60),
+        SizedBox(
+          width: 64,
+          height: 36,
+          child: NeutralOutlinedButton(
+            text: '오늘',
+            onPressed: onToday,
+          ),
+        ),
       ],
     );
   }

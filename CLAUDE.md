@@ -90,6 +90,8 @@
 - **디자인 시스템**: [docs/ui-ux/concepts/design-system.md](docs/ui-ux/concepts/design-system.md) - 전체 디자인 시스템 개요
   - [디자인 원칙](docs/ui-ux/concepts/design-principles.md) - 디자인 철학 및 패턴
   - [디자인 토큰](docs/ui-ux/concepts/design-tokens.md) - 구체적인 디자인 값
+  - [버튼 디자인 가이드](docs/ui-ux/concepts/button-design-guide.md) - 버튼 원칙, 유형, 상태
+  - [버튼 디자인 토큰](docs/ui-ux/concepts/button-design-tokens.md) - 버튼 규격, API, CSS
   - [컬러 가이드](docs/ui-ux/concepts/color-guide.md) - 컬러 팔레트 및 사용 지침
   - [반응형 가이드](docs/ui-ux/concepts/responsive-design-guide.md) - 반응형 레이아웃 상세
 - **컴포넌트 명세**:
