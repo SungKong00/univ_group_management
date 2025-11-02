@@ -129,27 +129,28 @@ class UserServiceTest {
                     password = "",
                     globalRole = GlobalRole.STUDENT,
                 )
-            val savedUser = User(
-                id = 1L,
-                name = newUser.name,
-                email = newUser.email,
-                password = newUser.password,
-                globalRole = newUser.globalRole,
-                isActive = newUser.isActive,
-                nickname = newUser.nickname,
-                profileImageUrl = newUser.profileImageUrl,
-                bio = newUser.bio,
-                profileCompleted = newUser.profileCompleted,
-                emailVerified = newUser.emailVerified,
-                college = newUser.college,
-                department = newUser.department,
-                studentNo = newUser.studentNo,
-                schoolEmail = newUser.schoolEmail,
-                professorStatus = newUser.professorStatus,
-                academicYear = newUser.academicYear,
-                createdAt = newUser.createdAt,
-                updatedAt = newUser.updatedAt,
-            )
+            val savedUser =
+                User(
+                    id = 1L,
+                    name = newUser.name,
+                    email = newUser.email,
+                    password = newUser.password,
+                    globalRole = newUser.globalRole,
+                    isActive = newUser.isActive,
+                    nickname = newUser.nickname,
+                    profileImageUrl = newUser.profileImageUrl,
+                    bio = newUser.bio,
+                    profileCompleted = newUser.profileCompleted,
+                    emailVerified = newUser.emailVerified,
+                    college = newUser.college,
+                    department = newUser.department,
+                    studentNo = newUser.studentNo,
+                    schoolEmail = newUser.schoolEmail,
+                    professorStatus = newUser.professorStatus,
+                    academicYear = newUser.academicYear,
+                    createdAt = newUser.createdAt,
+                    updatedAt = newUser.updatedAt,
+                )
 
             every { userRepository.findByEmail(googleUserInfo.email) } returns Optional.empty()
             every { userRepository.saveAndFlush(any<User>()) } returns savedUser
@@ -184,27 +185,28 @@ class UserServiceTest {
                     bio = "테스트 자기소개",
                 )
             val existingUser = TestDataFactory.createTestUser(id = userId)
-            val updatedUser = User(
-                id = existingUser.id,
-                name = existingUser.name,
-                email = existingUser.email,
-                password = existingUser.password,
-                globalRole = GlobalRole.PROFESSOR,
-                isActive = existingUser.isActive,
-                nickname = request.nickname,
-                profileImageUrl = request.profileImageUrl,
-                bio = request.bio,
-                profileCompleted = true,
-                emailVerified = existingUser.emailVerified,
-                college = existingUser.college,
-                department = existingUser.department,
-                studentNo = existingUser.studentNo,
-                schoolEmail = existingUser.schoolEmail,
-                professorStatus = existingUser.professorStatus,
-                academicYear = existingUser.academicYear,
-                createdAt = existingUser.createdAt,
-                updatedAt = existingUser.updatedAt,
-            )
+            val updatedUser =
+                User(
+                    id = existingUser.id,
+                    name = existingUser.name,
+                    email = existingUser.email,
+                    password = existingUser.password,
+                    globalRole = GlobalRole.PROFESSOR,
+                    isActive = existingUser.isActive,
+                    nickname = request.nickname,
+                    profileImageUrl = request.profileImageUrl,
+                    bio = request.bio,
+                    profileCompleted = true,
+                    emailVerified = existingUser.emailVerified,
+                    college = existingUser.college,
+                    department = existingUser.department,
+                    studentNo = existingUser.studentNo,
+                    schoolEmail = existingUser.schoolEmail,
+                    professorStatus = existingUser.professorStatus,
+                    academicYear = existingUser.academicYear,
+                    createdAt = existingUser.createdAt,
+                    updatedAt = existingUser.updatedAt,
+                )
 
             every { userRepository.findById(userId) } returns Optional.of(existingUser)
             every { userRepository.save(any<User>()) } returns updatedUser
@@ -469,33 +471,35 @@ class UserServiceTest {
         @Test
         fun `should convert user to user response correctly`() {
             // Given
-            val userBase = TestDataFactory.createTestUser(
-                id = 1L,
-                email = "test@example.com",
-                name = "테스트 사용자",
-                globalRole = GlobalRole.PROFESSOR,
-            )
-            val user = User(
-                id = userBase.id,
-                name = userBase.name,
-                email = userBase.email,
-                password = userBase.password,
-                globalRole = userBase.globalRole,
-                isActive = userBase.isActive,
-                nickname = "테스트닉네임",
-                profileImageUrl = "https://example.com/profile.jpg",
-                bio = "테스트 자기소개",
-                profileCompleted = true,
-                emailVerified = true,
-                college = userBase.college,
-                department = userBase.department,
-                studentNo = userBase.studentNo,
-                schoolEmail = userBase.schoolEmail,
-                professorStatus = userBase.professorStatus,
-                academicYear = userBase.academicYear,
-                createdAt = userBase.createdAt,
-                updatedAt = userBase.updatedAt,
-            )
+            val userBase =
+                TestDataFactory.createTestUser(
+                    id = 1L,
+                    email = "test@example.com",
+                    name = "테스트 사용자",
+                    globalRole = GlobalRole.PROFESSOR,
+                )
+            val user =
+                User(
+                    id = userBase.id,
+                    name = userBase.name,
+                    email = userBase.email,
+                    password = userBase.password,
+                    globalRole = userBase.globalRole,
+                    isActive = userBase.isActive,
+                    nickname = "테스트닉네임",
+                    profileImageUrl = "https://example.com/profile.jpg",
+                    bio = "테스트 자기소개",
+                    profileCompleted = true,
+                    emailVerified = true,
+                    college = userBase.college,
+                    department = userBase.department,
+                    studentNo = userBase.studentNo,
+                    schoolEmail = userBase.schoolEmail,
+                    professorStatus = userBase.professorStatus,
+                    academicYear = userBase.academicYear,
+                    createdAt = userBase.createdAt,
+                    updatedAt = userBase.updatedAt,
+                )
 
             // When
             val result = userService.convertToUserResponse(user)

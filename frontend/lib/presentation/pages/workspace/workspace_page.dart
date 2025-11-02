@@ -47,7 +47,7 @@ class WorkspacePage extends ConsumerStatefulWidget {
   ConsumerState<WorkspacePage> createState() => _WorkspacePageState();
 }
 
-class _WorkspacePageState extends ConsumerState<WorkspacePage> {
+class _WorkspacePageState extends ConsumerState<WorkspacePage> with WidgetsBindingObserver {
   int _postListKey = 0;
   int _commentListKey = 0;
   bool _previousIsMobile = false;
@@ -70,6 +70,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     _navigationController = ref.read(
       navigationControllerProvider.notifier,
     );
+
+    // Add lifecycle observer for app state changes
+    WidgetsBinding.instance.addObserver(this);
 
     // 워크스페이스 진입 시 상태 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -122,10 +125,40 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   @override
   void dispose() {
+    // Remove lifecycle observer
+    WidgetsBinding.instance.removeObserver(this);
+
     _workspaceNotifier.cacheCurrentWorkspaceState();
     _postScrollController.dispose();
     _commentScrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Save read position when app goes to background or terminates
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _saveCurrentReadPosition();
+    }
+  }
+
+  Future<void> _saveCurrentReadPosition() async {
+    final workspaceState = ref.read(workspaceStateProvider);
+    final channelId = workspaceState.selectedChannelId;
+    final postId = workspaceState.currentVisiblePostId;
+
+    if (channelId != null && postId != null) {
+      final channelIdInt = int.tryParse(channelId);
+      if (channelIdInt != null) {
+        try {
+          await ref.read(workspaceStateProvider.notifier)
+            .saveReadPosition(channelIdInt, postId);
+        } catch (e) {
+          // Silently ignore errors (Best-Effort)
+        }
+      }
+    }
   }
 
   @override

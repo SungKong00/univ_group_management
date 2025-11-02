@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 import '../models/channel_models.dart';
 import '../models/auth_models.dart';
 import '../network/dio_client.dart';
+import '../../data/models/channel/channel_read_position.dart';
 
 /// Channel Service
 ///
@@ -527,6 +528,201 @@ class ChannelService {
         level: 900,
       );
       rethrow;
+    }
+  }
+
+  // ============================================================
+  // Read Position Management
+  // ============================================================
+
+  /// Get read position for a channel
+  ///
+  /// GET /channels/{channelId}/read-position
+  /// Returns null if the user has never visited this channel
+  Future<ChannelReadPosition?> getReadPosition(int channelId) async {
+    try {
+      developer.log(
+        'Fetching read position for channel: $channelId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/channels/$channelId/read-position',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) {
+            if (json == null) return null;
+            return ChannelReadPosition.fromJson(json as Map<String, dynamic>);
+          },
+        );
+
+        if (apiResponse.success) {
+          developer.log(
+            'Successfully fetched read position',
+            name: 'ChannelService',
+          );
+          return apiResponse.data;
+        } else {
+          developer.log(
+            'Failed to fetch read position: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return null;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      developer.log(
+        'Error fetching read position: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      return null;
+    }
+  }
+
+  /// Update read position for a channel
+  ///
+  /// PUT /channels/{channelId}/read-position
+  /// Best-effort operation - errors are logged but not thrown
+  Future<void> updateReadPosition(int channelId, int lastReadPostId) async {
+    try {
+      developer.log(
+        'Updating read position for channel $channelId: lastReadPostId=$lastReadPostId',
+        name: 'ChannelService',
+      );
+
+      await _dioClient.put<Map<String, dynamic>>(
+        '/channels/$channelId/read-position',
+        data: {'lastReadPostId': lastReadPostId},
+      );
+
+      developer.log(
+        'Successfully updated read position',
+        name: 'ChannelService',
+      );
+    } catch (e) {
+      developer.log(
+        'Error updating read position (best-effort, ignored): $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      // Best-effort: do not rethrow
+    }
+  }
+
+  /// Get unread count for a single channel
+  ///
+  /// GET /channels/{channelId}/unread-count
+  Future<int> getUnreadCount(int channelId) async {
+    try {
+      developer.log(
+        'Fetching unread count for channel: $channelId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/channels/$channelId/unread-count',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => json as int,
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched unread count: ${apiResponse.data}',
+            name: 'ChannelService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch unread count: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return 0;
+        }
+      }
+
+      return 0;
+    } catch (e) {
+      developer.log(
+        'Error fetching unread count: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      return 0;
+    }
+  }
+
+  /// Get unread counts for multiple channels (batch query)
+  ///
+  /// GET /channels/unread-counts?channelIds=1,2,3
+  Future<Map<int, int>> getUnreadCounts(List<int> channelIds) async {
+    if (channelIds.isEmpty) return {};
+
+    try {
+      developer.log(
+        'Fetching batch unread counts for ${channelIds.length} channels',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/channels/unread-counts',
+        queryParameters: {'channelIds': channelIds.join(',')},
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) {
+            if (json is List) {
+              return json
+                  .map((item) =>
+                      UnreadCountResponse.fromJson(item as Map<String, dynamic>))
+                  .toList();
+            }
+            return <UnreadCountResponse>[];
+          },
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          final unreadMap = Map.fromEntries(
+            apiResponse.data!.map((unread) =>
+                MapEntry(unread.channelId, unread.unreadCount)),
+          );
+
+          developer.log(
+            'Successfully fetched ${unreadMap.length} unread counts',
+            name: 'ChannelService',
+          );
+          return unreadMap;
+        } else {
+          developer.log(
+            'Failed to fetch batch unread counts: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return {};
+        }
+      }
+
+      return {};
+    } catch (e) {
+      developer.log(
+        'Error fetching batch unread counts: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      return {};
     }
   }
 }

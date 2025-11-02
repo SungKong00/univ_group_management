@@ -276,6 +276,10 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
       builder: (context, ref, child) {
         final currentView = ref.watch(workspaceCurrentViewProvider);
         final selectedChannelId = ref.watch(currentChannelIdProvider);
+        // Read unread count map from workspace state (real API data, Phase 5)
+        final unreadCountMap = ref.watch(
+          workspaceStateProvider.select((state) => state.unreadCountMap),
+        );
 
         return Expanded(
           child: Column(
@@ -314,7 +318,8 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
                     final isChannelView = currentView == WorkspaceView.channel;
                     final isSelected =
                         isChannelView && selectedChannelId == channelId;
-                    final unreadCount = widget.unreadCounts[channelId] ?? 0;
+                    // Use real unread count from API (Phase 5)
+                    final unreadCount = unreadCountMap[channel.id] ?? 0;
 
                     return ChannelItem(
                       channel: channel,

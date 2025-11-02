@@ -80,6 +80,9 @@ class WorkspaceState extends Equatable {
     this.selectedPlaceName, // Selected place name for place time management
     this.navigationHistory = const [], // Unified navigation history
     this.selectedCalendarDate, // Selected date for calendar view
+    this.lastReadPostIdMap = const {}, // Read position management
+    this.unreadCountMap = const {}, // Unread count management
+    this.currentVisiblePostId, // Currently visible post ID
   });
 
   final String? selectedGroupId;
@@ -110,6 +113,9 @@ class WorkspaceState extends Equatable {
   final List<NavigationHistoryEntry>
   navigationHistory; // Unified navigation history (channels, views, groups)
   final DateTime? selectedCalendarDate; // Selected date for calendar view
+  final Map<int, int> lastReadPostIdMap; // {channelId: lastReadPostId}
+  final Map<int, int> unreadCountMap; // {channelId: unreadCount}
+  final int? currentVisiblePostId; // Currently visible post ID for tracking read position
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -135,6 +141,10 @@ class WorkspaceState extends Equatable {
     String? selectedPlaceName,
     List<NavigationHistoryEntry>? navigationHistory,
     DateTime? selectedCalendarDate,
+    Map<int, int>? lastReadPostIdMap,
+    Map<int, int>? unreadCountMap,
+    int? currentVisiblePostId,
+    bool clearCurrentVisiblePostId = false,
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
@@ -164,6 +174,11 @@ class WorkspaceState extends Equatable {
       selectedPlaceName: selectedPlaceName ?? this.selectedPlaceName,
       navigationHistory: navigationHistory ?? this.navigationHistory,
       selectedCalendarDate: selectedCalendarDate ?? this.selectedCalendarDate,
+      lastReadPostIdMap: lastReadPostIdMap ?? this.lastReadPostIdMap,
+      unreadCountMap: unreadCountMap ?? this.unreadCountMap,
+      currentVisiblePostId: clearCurrentVisiblePostId
+          ? null
+          : (currentVisiblePostId ?? this.currentVisiblePostId),
     );
   }
 
@@ -196,6 +211,9 @@ class WorkspaceState extends Equatable {
     selectedPlaceName,
     navigationHistory,
     selectedCalendarDate,
+    lastReadPostIdMap,
+    unreadCountMap,
+    currentVisiblePostId,
   ];
 }
 
@@ -574,6 +592,12 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       }
 
       state = state.copyWith(isLoadingWorkspace: false);
+
+      // Step 8: Load unread counts for all channels (background, no await)
+      final channelIds = state.channels.map((c) => c.id).toList();
+      if (channelIds.isNotEmpty) {
+        loadUnreadCounts(channelIds); // Fire and forget
+      }
     } catch (e) {
       _handleWorkspaceLoadFailure();
     }
@@ -805,19 +829,44 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     }
   }
 
-  void selectChannel(String channelId) {
+  void selectChannel(String channelId) async {
+    // 1. Save read position for previous channel if we have a visible post
+    final prevChannelId = state.selectedChannelId;
+    if (prevChannelId != null && state.currentVisiblePostId != null) {
+      final prevChannelIdInt = int.tryParse(prevChannelId);
+      if (prevChannelIdInt != null) {
+        // Best-Effort: ignore errors
+        try {
+          await saveReadPosition(prevChannelIdInt, state.currentVisiblePostId!);
+
+          // ✅ 이탈 시 뱃지 업데이트 (읽지 않은 글 개수 재계산)
+          await loadUnreadCount(prevChannelIdInt);
+        } catch (e) {
+          // Silently ignore read position save errors
+          if (kDebugMode) {
+            developer.log(
+              'Failed to save read position for channel $prevChannelIdInt: $e',
+              name: 'WorkspaceStateNotifier',
+              level: 300,
+            );
+          }
+        }
+      }
+    }
+
     // Add current state to navigation history before changing channel
-    if (state.selectedGroupId != null && state.selectedChannelId != null) {
+    if (state.selectedGroupId != null && prevChannelId != null) {
       _addToNavigationHistory(
         groupId: state.selectedGroupId!,
         view: state.currentView,
         mobileView: state.mobileView,
-        channelId: state.selectedChannelId,
+        channelId: prevChannelId,
         postId: state.selectedPostId,
         isCommentsVisible: state.isCommentsVisible,
       );
     }
 
+    // 2. Switch to new channel
     // Find channel name from channels list
     final selectedChannel = state.channels.firstWhere(
       (channel) => channel.id.toString() == channelId,
@@ -831,6 +880,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       currentView: WorkspaceView.channel,
       // Reset previousView when entering channel view
       previousView: null,
+      clearCurrentVisiblePostId: true, // Clear visible post when switching channels
       workspaceContext: Map.from(state.workspaceContext)
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
@@ -839,8 +889,16 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     // LocalStorage에 저장
     _saveToLocalStorage();
 
-    // Load permissions for the selected channel
-    loadChannelPermissions(channelId);
+    // 3. Load permissions and read position for the selected channel
+    final channelIdInt = int.tryParse(channelId);
+    if (channelIdInt != null) {
+      await Future.wait([
+        loadChannelPermissions(channelId),
+        loadReadPosition(channelIdInt),
+      ]);
+    } else {
+      await loadChannelPermissions(channelId);
+    }
   }
 
   /// Load channel permissions for the currently selected channel
@@ -862,6 +920,106 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         channelPermissions: null,
         isLoadingPermissions: false,
       );
+    }
+  }
+
+  // ============================================================
+  // Read Position Management
+  // ============================================================
+
+  /// Load read position for a channel (called when entering channel)
+  Future<void> loadReadPosition(int channelId) async {
+    final position = await _channelService.getReadPosition(channelId);
+
+    if (position != null) {
+      state = state.copyWith(
+        lastReadPostIdMap: {
+          ...state.lastReadPostIdMap,
+          channelId: position.lastReadPostId,
+        },
+      );
+    }
+  }
+
+  /// Save read position for a channel (called when leaving channel)
+  /// Best-effort operation - errors are ignored
+  Future<void> saveReadPosition(int channelId, int postId) async {
+    // API call (Best-Effort, error ignored)
+    await _channelService.updateReadPosition(channelId, postId);
+
+    // Update local state
+    state = state.copyWith(
+      lastReadPostIdMap: {
+        ...state.lastReadPostIdMap,
+        channelId: postId,
+      },
+    );
+
+    // Reload unread count for this channel (Best-Effort, Phase 5)
+    try {
+      await loadUnreadCount(channelId);
+    } catch (e) {
+      // Silently ignore unread count reload errors
+      if (kDebugMode) {
+        developer.log(
+          'Failed to reload unread count for channel $channelId: $e',
+          name: 'WorkspaceStateNotifier',
+          level: 300,
+        );
+      }
+    }
+  }
+
+  /// Update currently visible post ID (called during scrolling)
+  void updateCurrentVisiblePost(int postId) {
+    state = state.copyWith(currentVisiblePostId: postId);
+  }
+
+  /// Load unread count for a single channel
+  Future<void> loadUnreadCount(int channelId) async {
+    final count = await _channelService.getUnreadCount(channelId);
+
+    state = state.copyWith(
+      unreadCountMap: {
+        ...state.unreadCountMap,
+        channelId: count,
+      },
+    );
+  }
+
+  /// Load unread counts for multiple channels (batch query)
+  Future<void> loadUnreadCounts(List<int> channelIds) async {
+    final counts = await _channelService.getUnreadCounts(channelIds);
+
+    state = state.copyWith(
+      unreadCountMap: {
+        ...state.unreadCountMap,
+        ...counts,
+      },
+    );
+  }
+
+  /// Load workspace with unread counts (called when entering workspace)
+  Future<void> loadWorkspaceWithUnreadCounts(
+    String groupId, {
+    String? channelId,
+    GroupMembership? membership,
+    WorkspaceView? targetView,
+  }) async {
+    // Load workspace first
+    await enterWorkspace(
+      groupId,
+      channelId: channelId,
+      membership: membership,
+      targetView: targetView,
+    );
+
+    // Collect all channel IDs
+    final channelIds = state.channels.map((c) => c.id).toList();
+
+    // Batch load unread counts
+    if (channelIds.isNotEmpty) {
+      await loadUnreadCounts(channelIds);
     }
   }
 
@@ -1100,7 +1258,32 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     );
   }
 
-  void exitWorkspace() {
+  void exitWorkspace() async {
+    // 1. Save read position for current channel if we have a visible post
+    final currentChannelId = state.selectedChannelId;
+    if (currentChannelId != null && state.currentVisiblePostId != null) {
+      final channelIdInt = int.tryParse(currentChannelId);
+      if (channelIdInt != null) {
+        // Best-Effort: ignore errors
+        try {
+          await saveReadPosition(channelIdInt, state.currentVisiblePostId!);
+
+          // ✅ 이탈 시 뱃지 업데이트 (읽지 않은 글 개수 재계산)
+          await loadUnreadCount(channelIdInt);
+        } catch (e) {
+          // Silently ignore read position save errors
+          if (kDebugMode) {
+            developer.log(
+              'Failed to save read position when exiting workspace: $e',
+              name: 'WorkspaceStateNotifier',
+              level: 300,
+            );
+          }
+        }
+      }
+    }
+
+    // 2. Save workspace snapshot and reset state
     _saveCurrentWorkspaceSnapshot();
     state = const WorkspaceState();
   }
@@ -1168,7 +1351,32 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   // 모바일에서 채널 선택 시 (Step 1 → Step 2)
-  void selectChannelForMobile(String channelId) {
+  void selectChannelForMobile(String channelId) async {
+    // 1. Save read position for previous channel if we have a visible post
+    final prevChannelId = state.selectedChannelId;
+    if (prevChannelId != null && state.currentVisiblePostId != null) {
+      final prevChannelIdInt = int.tryParse(prevChannelId);
+      if (prevChannelIdInt != null) {
+        // Best-Effort: ignore errors
+        try {
+          await saveReadPosition(prevChannelIdInt, state.currentVisiblePostId!);
+
+          // ✅ 이탈 시 뱃지 업데이트 (읽지 않은 글 개수 재계산)
+          await loadUnreadCount(prevChannelIdInt);
+        } catch (e) {
+          // Silently ignore read position save errors
+          if (kDebugMode) {
+            developer.log(
+              'Failed to save read position for channel $prevChannelIdInt: $e',
+              name: 'WorkspaceStateNotifier',
+              level: 300,
+            );
+          }
+        }
+      }
+    }
+
+    // 2. Switch to new channel
     // Find channel name from channels list
     final selectedChannel = state.channels.firstWhere(
       (channel) => channel.id.toString() == channelId,
@@ -1180,13 +1388,22 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       mobileView: MobileWorkspaceView.channelPosts,
       isCommentsVisible: false,
       selectedPostId: null,
+      clearCurrentVisiblePostId: true, // Clear visible post when switching channels
       workspaceContext: Map.from(state.workspaceContext)
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
     );
 
-    // Load permissions for the selected channel
-    loadChannelPermissions(channelId);
+    // 3. Load permissions and read position for the selected channel
+    final channelIdInt = int.tryParse(channelId);
+    if (channelIdInt != null) {
+      await Future.wait([
+        loadChannelPermissions(channelId),
+        loadReadPosition(channelIdInt),
+      ]);
+    } else {
+      await loadChannelPermissions(channelId);
+    }
   }
 
   // 모바일에서 댓글 보기 시 (Step 2 → Step 3)
