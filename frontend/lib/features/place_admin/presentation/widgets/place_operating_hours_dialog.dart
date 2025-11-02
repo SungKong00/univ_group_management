@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../presentation/widgets/buttons/primary_button.dart';
 import '../../../../presentation/widgets/buttons/neutral_outlined_button.dart';
 import '../../../../presentation/widgets/buttons/outlined_link_button.dart';
+import 'place_operating_hours_editor.dart';
 
 /// 운영시간 설정 다이얼로그
 ///
@@ -201,15 +202,20 @@ class _PlaceOperatingHoursDialogState
               ),
             ),
       actions: [
-        NeutralOutlinedButton(
-          text: '취소',
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+        Flexible(
+          child: NeutralOutlinedButton(
+            text: '취소',
+            onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          ),
         ),
-        PrimaryButton(
-          text: '저장',
-          variant: PrimaryButtonVariant.brand,
-          isLoading: _isLoading,
-          onPressed: _isLoading ? null : _handleSave,
+        const SizedBox(width: 8),
+        Flexible(
+          child: PrimaryButton(
+            text: '저장',
+            variant: PrimaryButtonVariant.brand,
+            isLoading: _isLoading,
+            onPressed: _isLoading ? null : _handleSave,
+          ),
         ),
       ],
     );
@@ -328,18 +334,69 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
                   icon: const Icon(Icons.edit, size: 18),
                   width: 120,
                   onPressed: () async {
+                    // 운영시간과 제한시간 데이터 가져오기
+                    final operatingHours = hoursAsync.valueOrNull ?? [];
+                    final restrictedTimesAsync = ref.read(restrictedTimesProvider(placeId));
+                    final restrictedTimes = restrictedTimesAsync.valueOrNull ?? [];
+
                     final result = await showDialog<bool>(
                       context: context,
-                      builder: (context) => PlaceOperatingHoursDialog(
-                        placeId: placeId,
-                        initialHours:
-                            hoursAsync.valueOrNull, // 기존 데이터 전달
+                      builder: (dialogContext) => Dialog.fullscreen(
+                        child: PlaceOperatingHoursEditor(
+                          placeId: placeId,
+                          initialOperatingHours: operatingHours,
+                          initialRestrictedTimes: restrictedTimes,
+                          onSaveOperatingHours: (hours) async {
+                            try {
+                              final request = SetOperatingHoursRequest(operatingHours: hours);
+                              final params = SetOperatingHoursParams(placeId: placeId, request: request);
+                              await ref.read(setOperatingHoursProvider(params).future);
+                              return true;
+                            } catch (e) {
+                              return false;
+                            }
+                          },
+                          onAddRestrictedTime: (dayOfWeek, startTime, endTime, reason) async {
+                            try {
+                              final request = AddRestrictedTimeRequest(
+                                dayOfWeek: dayOfWeek,
+                                startTime: startTime,
+                                endTime: endTime,
+                                reason: reason,
+                              );
+                              final params = AddRestrictedTimeParams(placeId: placeId, request: request);
+                              await ref.read(addRestrictedTimeProvider(params).future);
+                              return true;
+                            } catch (e) {
+                              return false;
+                            }
+                          },
+                          onDeleteRestrictedTime: (restrictedTimeId) async {
+                            try {
+                              final params = DeleteRestrictedTimeParams(
+                                placeId: placeId,
+                                restrictedTimeId: restrictedTimeId,
+                              );
+                              await ref.read(deleteRestrictedTimeProvider(params).future);
+                              return true;
+                            } catch (e) {
+                              return false;
+                            }
+                          },
+                          onSaveCompleted: () {
+                            Navigator.of(dialogContext).pop(true);
+                          },
+                          onCancel: () {
+                            Navigator.of(dialogContext).pop(false);
+                          },
+                        ),
                       ),
                     );
 
                     if (result == true) {
                       // 성공 시 목록 새로고침
                       ref.invalidate(operatingHoursProvider(placeId));
+                      ref.invalidate(restrictedTimesProvider(placeId));
                     }
                   },
                 ),
