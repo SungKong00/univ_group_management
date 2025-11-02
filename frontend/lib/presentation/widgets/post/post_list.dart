@@ -4,15 +4,12 @@ import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 
 import '../../../core/models/post_models.dart';
 import '../../../core/services/post_service.dart';
-import '../../../core/services/channel_read_status_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../common/app_empty_state.dart';
 import 'post_item.dart';
 import 'date_divider.dart';
 import 'post_skeleton.dart';
-import 'unread_message_divider.dart';
-import '../../providers/workspace_state_provider.dart';
 
 /// 게시글 목록 위젯
 ///
@@ -35,7 +32,6 @@ class PostList extends ConsumerStatefulWidget {
 
 class _PostListState extends ConsumerState<PostList> {
   final PostService _postService = PostService();
-  final ChannelReadStatusService _readStatusService = ChannelReadStatusService();
   final ScrollController _scrollController = ScrollController();
 
   // 마지막(최신) 게시물을 상단 정렬하기 위한 키
@@ -55,17 +51,13 @@ class _PostListState extends ConsumerState<PostList> {
   // 최초 로드 직후 스크롤 정렬 과정에서 화면 점프가 보이지 않도록 잠시 숨김 처리
   bool _isInitialAnchoring = false;
 
-  // 읽음 위치 관련 필드
-  int? _lastReadPostId; // 마지막으로 읽은 게시물 ID
-  int _unreadStartIndex = -1; // 구분선을 표시할 인덱스 (-1이면 구분선 없음)
-
   @override
   void initState() {
     super.initState();
     // channelId 기반으로 unique한 GlobalKey 생성
     _lastPostKey = GlobalKey(debugLabel: 'lastPost_${widget.channelId}');
     _lastDateHeaderKey = GlobalKey(debugLabel: 'lastDateHeader_${widget.channelId}');
-    _loadReadStatusAndPosts();
+    _loadPosts();
     _scrollController.addListener(_onScroll);
   }
 
@@ -74,20 +66,12 @@ class _PostListState extends ConsumerState<PostList> {
     super.didUpdateWidget(oldWidget);
     // 채널이 변경되면 목록 재로드
     if (oldWidget.channelId != widget.channelId) {
-      // 이전 채널의 읽음 위치 업데이트
-      if (oldWidget.channelId.isNotEmpty) {
-        _updateReadPositionOnExit(int.parse(oldWidget.channelId));
-      }
       _resetAndLoad();
     }
   }
 
   @override
   void dispose() {
-    // 채널을 나갈 때 읽음 위치 업데이트
-    if (widget.channelId.isNotEmpty && _posts.isNotEmpty) {
-      _updateReadPositionOnExit(int.parse(widget.channelId));
-    }
     _scrollController.dispose();
     super.dispose();
   }
@@ -100,61 +84,8 @@ class _PostListState extends ConsumerState<PostList> {
       _hasMore = true;
       _errorMessage = null;
       _isInitialAnchoring = false;
-      _lastReadPostId = null;
-      _unreadStartIndex = -1;
     });
-    _loadReadStatusAndPosts();
-  }
-
-  /// 채널 읽음 상태 조회 후 게시글 로드
-  Future<void> _loadReadStatusAndPosts() async {
-    // 1. 읽음 위치 조회
-    try {
-      final channelIdInt = int.parse(widget.channelId);
-      final readStatus = await _readStatusService.getReadStatus(channelIdInt);
-
-      if (mounted) {
-        setState(() {
-          _lastReadPostId = readStatus?.lastReadPostId;
-        });
-      }
-    } catch (e) {
-      // 에러 시 무시하고 계속 진행
-    }
-
-    // 2. 게시글 로드
-    await _loadPosts();
-  }
-
-  /// 채널을 나갈 때 읽음 위치 업데이트
-  void _updateReadPositionOnExit(int channelId) {
-    if (_posts.isEmpty) return;
-
-    // 보이는 마지막 게시물 ID 추출 (간단하게 리스트의 마지막 게시물 사용)
-    final lastVisiblePostId = _posts.last.id;
-
-    // Provider를 통해 읽음 위치 업데이트 (await 없이)
-    ref.read(workspaceStateProvider.notifier).updateReadPosition(
-      channelId,
-      lastVisiblePostId,
-    );
-  }
-
-  /// 구분선을 표시할 위치 계산
-  void _calculateUnreadDividerPosition() {
-    if (_lastReadPostId == null || _posts.isEmpty) {
-      setState(() {
-        _unreadStartIndex = -1;
-      });
-      return;
-    }
-
-    // lastReadPostId보다 큰 첫 번째 게시물의 인덱스 찾기
-    final index = _posts.indexWhere((post) => post.id > _lastReadPostId!);
-
-    setState(() {
-      _unreadStartIndex = index;
-    });
+    _loadPosts();
   }
 
   /// 게시글이 수정되었을 때 호출 - 전체 목록 새로고침
@@ -211,9 +142,6 @@ class _PostListState extends ConsumerState<PostList> {
           _isInitialAnchoring = true;
         }
       });
-
-      // 구분선 위치 계산
-      _calculateUnreadDividerPosition();
 
       // 첫 로드 시: 최신(마지막) 게시물을 화면 상단에 정확히 정렬
       if (isFirstPageLoad) {
@@ -371,21 +299,8 @@ class _PostListState extends ConsumerState<PostList> {
                     final bool isLastItem =
                         isLastDate && index == postsInDate.length - 1;
 
-                    // 전체 리스트에서 이 게시물의 인덱스 찾기
-                    final globalIndex = _posts.indexOf(post);
-
-                    // 구분선 표시 여부 확인
-                    final bool shouldShowDivider =
-                        _unreadStartIndex != -1 &&
-                        globalIndex == _unreadStartIndex;
-
                     final child = Column(
                       children: [
-                        // 읽지 않은 메시지 구분선
-                        if (shouldShowDivider)
-                          UnreadMessageDivider(
-                            unreadCount: _posts.length - _unreadStartIndex,
-                          ),
                         PostItem(
                           post: post,
                           onTapComment: () =>
