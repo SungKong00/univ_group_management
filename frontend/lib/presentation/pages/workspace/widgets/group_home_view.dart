@@ -10,6 +10,7 @@ import '../../../providers/workspace_state_provider.dart';
 import '../../../providers/group_calendar_provider.dart';
 import '../../../widgets/dialogs/create_subgroup_dialog.dart';
 import '../../../widgets/common/section_card.dart';
+import '../../../widgets/common/app_empty_state.dart';
 import '../../../widgets/calendar/compact_month_calendar.dart';
 
 /// 그룹 홈 페이지
@@ -708,26 +709,10 @@ class _UpcomingEventsWidget extends ConsumerWidget {
     final limitedEvents = upcomingEvents.take(3).toList();
 
     if (limitedEvents.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.event_available_outlined,
-                size: 48,
-                color: AppColors.neutral400,
-              ),
-              SizedBox(height: AppSpacing.xxs),
-              Text(
-                '예정된 일정이 없습니다',
-                style: AppTheme.bodyMedium.copyWith(
-                  color: AppColors.neutral600,
-                ),
-              ),
-            ],
-          ),
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: AppEmptyState.noData(
+          message: '예정된 일정이 없습니다',
         ),
       );
     }

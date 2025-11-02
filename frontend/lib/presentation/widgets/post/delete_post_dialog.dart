@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import '../dialogs/confirm_cancel_actions.dart';
 import '../../pages/workspace/providers/post_actions_provider.dart';
 
@@ -38,12 +39,7 @@ class _DeletePostDialogState extends ConsumerState<DeletePostDialog> {
       if (mounted) {
         Navigator.of(context).pop();
         widget.onSuccess?.call();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('게시글이 삭제되었습니다.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AppSnackBar.success(context, '게시글이 삭제되었습니다.');
       }
     } catch (e) {
       setState(() {

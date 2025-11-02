@@ -16,6 +16,7 @@ import '../../../../providers/place_provider.dart';
 import '../../../../providers/workspace_state_provider.dart';
 import '../../../../utils/responsive_layout_helper.dart';
 import '../../../../widgets/place/place_card.dart';
+import '../../../../widgets/common/app_empty_state.dart';
 import 'multi_place_calendar_view.dart';
 import 'place_reservation_dialog.dart';
 import 'place_selector_button.dart';
@@ -206,9 +207,8 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
 
     // Empty state: No places available
     if (state.places.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.location_off,
-        title: '등록된 장소가 없습니다',
+      return AppEmptyState.noPlaces(
+        message: '등록된 장소가 없습니다',
         subtitle: '관리자에게 문의하여 장소를 등록해주세요',
       );
     }
@@ -227,44 +227,6 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         ref.read(focusedDateProvider.notifier).setDate(focused);
       },
       onReservationTap: _showReservationDetail,
-    );
-  }
-
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 80,
-              color: AppColors.neutral400,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.neutral700,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.neutral600,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -889,34 +851,9 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
   /// Build place list for modal (reusing PlaceListPage structure)
   Widget _buildModalPlaceList(List<Place> places) {
     if (places.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.location_off,
-                size: 64,
-                color: AppColors.neutral400,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                '등록된 장소가 없습니다',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.neutral600,
-                    ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                '장소를 추가해주세요',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.neutral500,
-                    ),
-              ),
-            ],
-          ),
-        ),
+      return AppEmptyState.noPlaces(
+        message: '등록된 장소가 없습니다',
+        subtitle: '장소를 추가해주세요',
       );
     }
 

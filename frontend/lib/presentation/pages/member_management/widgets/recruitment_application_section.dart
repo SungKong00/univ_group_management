@@ -10,6 +10,7 @@ import '../../../widgets/buttons/neutral_outlined_button.dart';
 import '../../../widgets/buttons/primary_button.dart';
 import '../../../widgets/member/member_avatar.dart';
 import '../../../widgets/common/section_card.dart';
+import '../../../widgets/common/app_empty_state.dart';
 import '../providers/recruitment_application_provider.dart';
 import '../providers/role_management_provider.dart';
 
@@ -91,41 +92,12 @@ class RecruitmentApplicationSection extends ConsumerWidget {
   }
 
   Widget _buildNoRecruitmentState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(48),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.campaign_outlined,
-                size: 64, color: AppColors.neutral400),
-            const SizedBox(height: 16),
-            Text(
-              '활성 모집 공고가 없습니다',
-              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-            ),
-          ],
-        ),
-      ),
-    );
+    return AppEmptyState.noRecruitments();
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(48),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox_outlined, size: 64, color: AppColors.neutral400),
-            const SizedBox(height: 16),
-            Text(
-              '대기 중인 지원자가 없습니다',
-              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState.noData(
+      message: '대기 중인 지원자가 없습니다',
     );
   }
 }

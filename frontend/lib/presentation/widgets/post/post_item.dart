@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/post_models.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../common/collapsible_content.dart';
 import '../common/option_menu.dart';
@@ -192,12 +193,7 @@ class _PostItemState extends ConsumerState<PostItem> {
               icon: Icons.flag_outlined,
               onTap: () {
                 // TODO: 신고 기능 구현
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('신고 기능은 추후 구현 예정입니다.'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+                AppSnackBar.info(context, '신고 기능은 추후 구현 예정입니다.');
               },
             ),
             // 삭제는 가장 위험한 액션이므로 맨 아래 배치

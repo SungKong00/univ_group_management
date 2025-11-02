@@ -10,6 +10,7 @@ import '../../../widgets/buttons/neutral_outlined_button.dart';
 import '../../../widgets/buttons/primary_button.dart';
 import '../../../widgets/member/member_avatar.dart';
 import '../../../widgets/common/section_card.dart';
+import '../../../widgets/common/app_empty_state.dart';
 import '../providers/subgroup_request_provider.dart';
 
 /// 하위 그룹 생성 신청 섹션
@@ -61,21 +62,8 @@ class SubGroupRequestSection extends ConsumerWidget {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(48),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox_outlined, size: 64, color: AppColors.neutral400),
-            const SizedBox(height: 16),
-            Text(
-              '대기 중인 하위 그룹 생성 신청이 없습니다',
-              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState.noData(
+      message: '대기 중인 하위 그룹 생성 신청이 없습니다',
     );
   }
 }

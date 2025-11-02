@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import '../common/app_empty_state.dart';
 
 /// Bottom sheet for selecting groups to display in calendar
 ///
@@ -151,27 +152,7 @@ class _GroupPickerBottomSheetState extends State<GroupPickerBottomSheet> {
               )
             // Empty state
             else if (widget.availableGroups.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.group_off,
-                      size: 48,
-                      color: Theme.of(context).disabledColor,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      '가입한 그룹이 없습니다',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: Theme.of(context).disabledColor,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              )
+              AppEmptyState.noGroups()
             // Group list
             else
               ...widget.availableGroups.map((group) {

@@ -9,6 +9,7 @@ import '../../../widgets/buttons/neutral_outlined_button.dart';
 import '../../../widgets/buttons/primary_button.dart';
 import '../../../widgets/member/member_avatar.dart';
 import '../../../widgets/common/section_card.dart';
+import '../../../widgets/common/app_empty_state.dart';
 import '../providers/join_request_provider.dart';
 import '../providers/role_management_provider.dart';
 
@@ -61,21 +62,8 @@ class JoinRequestSection extends ConsumerWidget {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(48),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox_outlined, size: 64, color: AppColors.neutral400),
-            const SizedBox(height: 16),
-            Text(
-              '대기 중인 가입 신청이 없습니다',
-              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral600),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState.noData(
+      message: '대기 중인 가입 신청이 없습니다',
     );
   }
 }

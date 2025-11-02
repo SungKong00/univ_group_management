@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../widgets/common/app_empty_state.dart';
 import '../providers/recruitment_explore_state_provider.dart';
 import 'recruitment_card.dart';
 
@@ -67,35 +68,7 @@ class _RecruitmentListViewState extends ConsumerState<RecruitmentListView> {
   ) {
     // Empty state
     if (recruitments.isEmpty && !isLoading) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.campaign_outlined,
-                size: 64,
-                color: AppColors.neutral400,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                '모집 공고가 없습니다',
-                style: AppTheme.titleMediumTheme(context).copyWith(
-                  color: AppColors.neutral600,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                '다른 검색어를 시도해보세요',
-                style: AppTheme.bodyMediumTheme(context).copyWith(
-                  color: AppColors.neutral500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return AppEmptyState.noRecruitments();
     }
 
     // Initial loading state
