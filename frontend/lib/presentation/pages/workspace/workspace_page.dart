@@ -659,7 +659,17 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> with WidgetsBindi
     }
 
     final params = CreatePostParams(channelId: channelId, content: content);
-    await ref.read(createPostProvider(params).future);
+    final newPost = await ref.read(createPostProvider(params).future);
+
+    // ✅ 새 글 작성 후 읽음 위치 자동 업데이트 (자신의 글은 읽지 않은 글 표시 안 함)
+    final channelIdInt = int.tryParse(channelId);
+    if (channelIdInt != null) {
+      await ref.read(workspaceStateProvider.notifier)
+          .saveReadPosition(channelIdInt, newPost.id);
+      // 뱃지 업데이트 (읽지 않은 글 개수 재계산)
+      await ref.read(workspaceStateProvider.notifier)
+          .loadUnreadCount(channelIdInt);
+    }
 
     // 게시글 작성 성공 후 목록 새로고침
     setState(() {

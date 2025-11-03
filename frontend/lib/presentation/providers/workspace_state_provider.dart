@@ -941,8 +941,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     }
   }
 
-  /// Save read position for a channel (called when leaving channel)
+  /// Save read position for a channel
   /// Best-effort operation - errors are ignored
+  ///
+  /// Note: Badge update (unread count) is NOT performed here.
+  /// It should be manually called when leaving the channel (selectChannel, exitWorkspace)
   Future<void> saveReadPosition(int channelId, int postId) async {
     // API call (Best-Effort, error ignored)
     await _channelService.updateReadPosition(channelId, postId);
@@ -955,19 +958,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       },
     );
 
-    // Reload unread count for this channel (Best-Effort, Phase 5)
-    try {
-      await loadUnreadCount(channelId);
-    } catch (e) {
-      // Silently ignore unread count reload errors
-      if (kDebugMode) {
-        developer.log(
-          'Failed to reload unread count for channel $channelId: $e',
-          name: 'WorkspaceStateNotifier',
-          level: 300,
-        );
-      }
-    }
+    // Badge update is NOT performed here - it should be done when leaving channel
   }
 
   /// Update currently visible post ID (called during scrolling)
