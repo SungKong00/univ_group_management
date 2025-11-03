@@ -4,9 +4,9 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-11-02 (B) (캘린더 리팩토링 - 공통 컴포넌트 분리 + 그룹 홈 데이터 연동)
-**총 문서 수**: 98개
-**동기화 완료**: 98개 (100%)
+**마지막 업데이트**: 2025-11-03 (D) (완료된 추적 문서 4개 삭제)
+**총 문서 수**: 103개
+**동기화 완료**: 103개 (100%)
 **업데이트 필요**: 0개 (0%)
 
 ---
@@ -76,7 +76,7 @@
 ### `/docs/concepts/` - 도메인 개념 문서 (14개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
-| `domain-overview.md` | ✅ 최신 | 2025-10-24 | 전체 시스템 개요 |
+| `domain-overview.md` | ✅ 최신 | 2025-11-03 | GroupType 6가지, 캘린더 상태 개발진행중, 100줄 축소 (98줄) |
 | `group-hierarchy.md` | ✅ 최신 | 2024-09-25 | 그룹 계층 구조 |
 | `permission-system.md` | ✅ 최신 | 2025-10-13 | 권한 시스템 |
 | `workspace-channel.md` | ✅ 최신 | 2024-09-28 | 워크스페이스와 채널 |
@@ -159,16 +159,12 @@
 | `permission-errors.md` | ✅ 최신 | 2024-09-25 | 권한 에러 해결 |
 | `common-errors.md` | ✅ 최신 | 2025-10-09 | 일반 에러 해결 |
 
-### `/docs/context-tracking/` - 컨텍스트 추적 (7개)
+### `/docs/context-tracking/` - 컨텍스트 추적 (3개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
-| `context-update-log.md` | ✅ 최신 | 2025-10-25 | 2025-10-25 (B) 백엔드 문서화 로그 추가 |
+| `context-update-log.md` | ✅ 최신 | 2025-11-03 | 2025-11-03 (D) 완료된 추적 문서 삭제 로그 추가 |
 | `pending-updates.md` | ✅ 최신 | 2025-10-06 | 대기 중인 업데이트 목록 |
-| `sync-status.md` | ✅ 최신 | 2025-10-25 | 백엔드 문서 상태 업데이트 |
-| `broken-links-report.md` | ✅ 최신 | 2025-10-24 | 깨진 링크 리포트 (0개 달성) |
-| `link-mapping-table.md` | ✅ 최신 | 2025-10-24 | 링크 매핑 테이블 |
-| `documentation-improvement-action-plan.md` | ✅ 최신 | 2025-10-24 | 문서 개선 액션 플랜 |
-| `documentation-improvement-summary.md` | ✅ 최신 | 2025-10-24 | 문서 개선 요약 |
+| `sync-status.md` | ✅ 최신 | 2025-11-03 | 문서 수 통계 업데이트 (107→103개) |
 
 ---
 
@@ -176,6 +172,15 @@
 
 ### ✅ 최신 상태 (98개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
+
+**주요 업데이트 (2025-11-03)**:
+- **임시 파일 정리 및 컨텍스트 검증 완료**
+  - .DS_Store 파일 7개 삭제 (macOS 시스템 파일)
+  - .bak 백업 파일 6개 삭제 (calendar, workspace, navigation 관련)
+  - MEMO_calendar-scroll-fix.md 삭제 (구현 완료, 2025-11-02)
+  - MEMO_place_operating_hours_editor.md → docs/features/place-operating-hours-editor.md 이동 (명세서 문서화)
+  - 컨텍스트 추적 시스템 검증 및 문서 수 통계 교정 (93개→107개)
+  - sync-status.md: 총 문서 수 일관성 확보 및 마지막 업데이트 날짜 반영
 
 **주요 업데이트 (2025-11-02)**:
 - **캘린더 리팩토링 (B)** (공통 컴포넌트 분리 + 그룹 홈 데이터 연동)
@@ -308,7 +313,7 @@
 
 ## 📈 문서 추적 통계
 
-- **전체 문서 수**: 93개
+- **전체 문서 수**: 103개
 - **백엔드 관련**: 15개 (백엔드 설계 6개 + 구현 가이드 9개)
 - **프론트엔드 관련**: 15개 (구현 가이드 8개 + 워크스페이스 7개)
 - **개념 문서**: 14개 (캘린더 4개 포함)
@@ -316,7 +321,7 @@
 - **기능 계획**: 4개 (캘린더 관련)
 - **프로세스/컨벤션**: 7개 (워크플로우 2개 + 컨벤션 4개 + 유지보수 1개)
 - **참조 문서**: 2개 (API + 데이터베이스, 100줄 예외)
-- **추적 시스템**: 7개 (context-tracking)
+- **추적 시스템**: 3개 (context-tracking - 4개 문서 삭제)
 - **서브 에이전트**: 5개 (agents - pre-task-protocol.md, test-patterns.md 포함)
 - **기타**: 1개 (테스트 데이터)
 - **.claude/agents 폴더**: 6개 (에이전트 설정 파일)
@@ -327,5 +332,3 @@
 
 - [Context Update Log](context-update-log.md) - 업데이트 이력
 - [Pending Updates](pending-updates.md) - 대기 중인 업데이트
-- [Broken Links Report](broken-links-report.md) - 깨진 링크 리포트
-- [Link Mapping Table](link-mapping-table.md) - 링크 매핑 테이블

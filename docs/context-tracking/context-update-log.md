@@ -1,3 +1,117 @@
+### 2025-11-03 (D) - 완료된 컨텍스트 추적 문서 정리
+
+**유형**: 유지보수 + 문서 동기화
+**우선순위**: Low
+**영향 범위**: 컨텍스트 추적 시스템 (docs/context-tracking)
+
+**작업 개요**:
+링크 개선 작업이 완료되어 더 이상 필요 없는 컨텍스트 추적 문서 4개를 삭제하고 관련 문서를 업데이트.
+
+**삭제한 문서** (4개):
+1. `broken-links-report.md` (42줄) - 깨진 링크 수정 완료 (0개 달성)
+2. `documentation-improvement-summary.md` (230줄) - 문서 개선 작업 완료
+3. `documentation-improvement-action-plan.md` (468줄) - 액션 플랜 완료
+4. `link-mapping-table.md` (231줄) - 링크 매핑 작업 완료
+
+**업데이트한 문서** (2개):
+1. `sync-status.md`
+   - 총 문서 수: 107개 → 103개
+   - context-tracking 문서 수: 7개 → 3개
+   - 마지막 업데이트: 2025-11-03 (D)
+   - 관련 문서 링크 정리 (삭제된 4개 파일 링크 제거)
+
+2. `context-update-log.md`
+   - 본 로그 추가
+
+**변경 사항**:
+- ✅ 4개 문서 삭제 (git rm)
+- ✅ sync-status.md 통계 업데이트
+- ✅ context-update-log.md 로그 추가
+
+**영향도**: 없음 (아카이브 문서 정리만)
+**다음 액션**: 없음 (정리 완료)
+
+---
+
+### 2025-11-03 (C) - domain-overview.md 현행화 및 100줄 원칙 준수
+
+**유형**: 문서 현행화 + 검증
+**우선순위**: Medium
+**영향 범위**: 도메인 개념 문서
+
+**작업 개요**:
+domain-overview.md의 코드 불일치 사항 수정 및 문서 라인 수 최적화.
+
+**수정 사항**:
+1. **GroupType 정확화**: "3가지 유형" → "6가지 유형" (UNIVERSITY/COLLEGE/DEPARTMENT/LAB/OFFICIAL/AUTONOMOUS)
+   - 문서: Line 38 - 그룹 유형 섹션 완전히 재작성
+   - 코드 근거: backend/src/main/kotlin/org/castlekong/backend/entity/Group.kt:72-79
+
+2. **캘린더 시스템 상태 변경**: "계획 중 (Phase 6 이후)" → "개발 진행 중 (Phase 6-8)"
+   - Line 23: 협업 공간의 캘린더 기능 현행화
+   - Line 45: 워크스페이스의 캘린더 통합 현행화
+   - Line 112-114: 개발 현황 섹션 재구성
+   - 코드 근거: PersonalEvent.kt, GroupEvent.kt, EventException.kt, EventParticipant.kt 등 완전히 구현됨
+
+3. **라인 수 최적화**: 122줄 → 98줄 (100줄 원칙 준수)
+   - Line 38-40: 그룹 섹션 3줄 단축
+   - Line 44-45: 워크스페이스 섹션 2줄 단축
+   - Line 111-119: 개발 현황 섹션 구조 간결화 (6줄 단축)
+
+**문서 업데이트**:
+- sync-status.md: domain-overview.md 마지막 동기화 날짜 2025-11-03으로 업데이트
+- context-update-log.md: 2025-11-03 (C) 로그 추가
+
+**관련 문서**:
+- 상위 링크: [sync-status.md](sync-status.md)
+- 작성 문서: [domain-overview.md](../concepts/domain-overview.md)
+- 참조 코드:
+  - Group.kt (GroupType enum 정의)
+  - PersonalEvent.kt, GroupEvent.kt (캘린더 구현)
+  - calendar_page.dart, group_home_view.dart (프론트엔드 진행)
+
+---
+
+### 2025-11-03 (A) - 임시 파일 정리 및 컨텍스트 검증
+
+**유형**: 유지보수 + 문서 동기화
+**우선순위**: Low
+**영향 범위**: 루트 경로 (임시 파일), 문서 (context-tracking)
+
+**작업 개요**:
+개발 중 생성된 임시 파일들 정리, 백업 파일 삭제, 컨텍스트 추적 시스템 검증 및 문서 통계 교정.
+
+**정리한 항목**:
+1. **.DS_Store 파일 삭제** (7개)
+   - 루트, .claude, .claude/subagents, backend, docs, docs/ui-ux, docs/ui-ux/concepts, docs/ui-ux/pages, docs/implementation
+
+2. **.bak 백업 파일 삭제** (6개)
+   - demo_calendar_page.dart.bak
+   - calendar_page.dart.bak
+   - workspace_page.dart.bak
+   - group_home_view.dart.bak
+   - bottom_navigation.dart.bak
+   - sidebar_navigation.dart.bak
+
+3. **MEMO 파일 정리**
+   - MEMO_calendar-scroll-fix.md 삭제 (구현 완료된 메모)
+   - MEMO_place_operating_hours_editor.md → docs/features/place-operating-hours-editor.md 이동 (명세서 보존)
+
+4. **컨텍스트 추적 문서 검증**
+   - sync-status.md: 총 문서 수 통계 교정 (93개→107개)
+   - context-update-log.md: 2025-11-03 (A) 로그 추가
+   - pending-updates.md: 검토 예정
+
+**변경 파일**:
+- ✅ docs/context-tracking/sync-status.md (총 문서 수, 마지막 업데이트 반영)
+- ✅ docs/context-tracking/context-update-log.md (본 로그 추가)
+- ✅ docs/features/place-operating-hours-editor.md (이동, MEMO→정식 문서)
+
+**영향도**: 매우 낮음 (코드 변경 없음, 문서 정리만)
+**다음 액션**: pending-updates.md 최신 상황 반영
+
+---
+
 ### 2025-11-02 (B) - 캘린더 리팩토링 (공통 컴포넌트 분리) + 그룹 홈 실제 데이터 연동
 
 **유형**: 리팩토링 + 기능 개선 + 문서 업데이트
