@@ -4,7 +4,7 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-11-03 (F) (그룹 캘린더 WeeklyScheduleEditor 통합 구현)
+**마지막 업데이트**: 2025-11-03 (G) (읽지 않은 글 스크롤 버그 수정)
 **총 문서 수**: 103개
 **동기화 완료**: 103개 (100%)
 **업데이트 필요**: 0개 (0%)
@@ -71,7 +71,7 @@
 | `workspace-page-implementation-guide.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 페이지 구현 가이드 |
 | `workspace-page-checklist.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 체크리스트 |
 | `workspace-state-management.md` | ✅ 최신 | 2025-11-01 | 통합 네비게이션 히스토리 시스템 추가 |
-| `workspace-troubleshooting.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 트러블슈팅 |
+| `workspace-troubleshooting.md` | ✅ 최신 | 2025-11-03 | 읽지 않은 글 스크롤 버그 추가 |
 
 ### `/docs/concepts/` - 도메인 개념 문서 (14개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
@@ -174,6 +174,11 @@
 모든 코드 변경사항이 반영되어 동기화된 문서들
 
 **주요 업데이트 (2025-11-03)**:
+- **(G) 읽지 않은 글 스크롤 버그 수정**
+  - read_position_helper.dart: `lastReadPostId == null` 해석 수정 (null → 0 반환)
+  - post_list.dart: Race Condition 방지 메서드 추가, 대기 시간 증가
+  - workspace-troubleshooting.md: 버그 해결 사례 추가
+  - context-update-log.md: 2025-11-03 (G) 로그 추가
 - **(F) 그룹 캘린더 WeeklyScheduleEditor 통합 구현**
   - GroupEventAdapter 신규 생성 (183줄): GroupEvent ↔ Event 양방향 변환
   - group_calendar_page.dart: WeeklyScheduleEditor 통합 (+252줄)

@@ -1,3 +1,48 @@
+### 2025-11-03 (G) - 읽지 않은 글 스크롤 버그 수정
+
+**유형**: 버그 수정
+**우선순위**: High
+**영향 범위**: 프론트엔드 (2개 파일), 문서 (2개)
+
+**작업 개요**:
+워크스페이스 채널에서 읽지 않은 글 경계선 표시 및 자동 스크롤이 작동하지 않는 버그를 수정했습니다.
+
+**문제 상황**:
+- 읽지 않은 글 뱃지 카운트는 정상 작동
+- 경계선 표시 안 됨
+- 자동 스크롤 안 됨
+
+**근본 원인**:
+`read_position_helper.dart`의 `findFirstUnreadGlobalIndex()` 메서드가 `lastReadPostId == null`을 잘못 해석
+- 기존 로직: null → "읽지 않은 글 없음" (return null)
+- 올바른 해석: null → "모든 글이 읽지 않음" (return 0)
+
+**수정 내용**:
+1. **read_position_helper.dart** (line 51-60)
+   - `lastReadPostId == null`일 때 0 반환 (첫 번째 글부터 읽지 않음)
+   - `lastReadPostId`를 찾지 못한 경우 null 반환 (모든 글이 읽음)
+
+2. **post_list.dart** (line 127-160, 264-268)
+   - `_waitForReadPositionData()` 메서드 추가 (Race Condition 방지)
+   - AutoScrollController 대기 시간 100ms → 300ms 증가
+
+**변경된 파일** (2개):
+- ✅ frontend/lib/core/utils/read_position_helper.dart (11줄 수정)
+- ✅ frontend/lib/presentation/widgets/post/post_list.dart (39줄 추가)
+
+**문서 업데이트** (2개):
+- ✅ docs/implementation/workspace-troubleshooting.md: 버그 해결 사례 추가
+- ✅ docs/context-tracking/context-update-log.md: 현재 로그 추가
+
+**기대 효과**:
+- 읽지 않은 글 경계선 정상 표시
+- 자동 스크롤 정상 작동
+- Race Condition 방지로 안정성 향상
+
+**메모**: `lastReadPostId == null`의 의미를 "모든 글이 읽지 않음"으로 정확히 해석하여 수정. 향후 유사한 null 해석 오류 방지를 위해 트러블슈팅 문서에 기록.
+
+---
+
 ### 2025-11-03 (F) - 그룹 캘린더 WeeklyScheduleEditor 통합 구현
 
 **유형**: 기능 구현 + 리팩토링

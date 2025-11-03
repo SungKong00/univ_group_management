@@ -124,6 +124,42 @@ class _PostListState extends ConsumerState<PostList> {
     _resetAndLoad();
   }
 
+  /// 읽음 위치 데이터가 준비될 때까지 대기 (Race Condition 방지)
+  ///
+  /// selectChannel()에서 loadReadPosition()을 await하지만,
+  /// 상태 업데이트 타이밍에 따라 PostList가 초기화될 때
+  /// lastReadPostIdMap이 아직 업데이트되지 않았을 수 있음.
+  ///
+  /// 이 메서드는 최대 500ms 동안 100ms 간격으로 재시도하여
+  /// 읽음 위치 데이터가 준비될 때까지 대기함.
+  Future<void> _waitForReadPositionData(int channelId) async {
+    const maxAttempts = 3; // 최대 3번 시도 (300ms)
+    const retryDelay = Duration(milliseconds: 100);
+
+    // 첫 시도 전에도 대기하여 selectChannel()의 await가 완료될 시간을 줌
+    await Future.delayed(retryDelay);
+
+    for (int attempt = 0; attempt < maxAttempts; attempt++) {
+      final workspaceState = ref.read(workspaceStateProvider);
+
+      // 읽음 위치 데이터가 로드되었는지 확인
+      if (workspaceState.lastReadPostIdMap.containsKey(channelId)) {
+        print('[DEBUG] ✅ Read position data ready on attempt ${attempt + 1}');
+        return;
+      }
+
+      // 마지막 시도가 아니면 계속 대기
+      if (attempt < maxAttempts - 1) {
+        print('[DEBUG] ⏳ Waiting for read position data... (attempt ${attempt + 1}/$maxAttempts)');
+        await Future.delayed(retryDelay);
+      }
+    }
+
+    // 타임아웃: 데이터가 준비되지 않았지만 계속 진행
+    // (새 채널이거나 API가 null을 반환한 경우)
+    print('[DEBUG] ⚠️ Read position data not loaded, proceeding without it (new channel or API returned null)');
+  }
+
   /// 게시글 로드 및 읽지 않은 게시글로 스크롤
   Future<void> _loadPostsAndScrollToUnread() async {
     // 1. 게시글 로드
@@ -132,6 +168,9 @@ class _PostListState extends ConsumerState<PostList> {
     // 2. 읽지 않은 게시글 위치 계산
     final channelIdInt = int.tryParse(widget.channelId);
     if (channelIdInt != null) {
+      // ✅ 읽음 위치 데이터가 준비될 때까지 대기 (최대 500ms)
+      await _waitForReadPositionData(channelIdInt);
+
       final workspaceState = ref.read(workspaceStateProvider);
       final lastReadPostId = ReadPositionHelper.getLastReadPostId(
         workspaceState.lastReadPostIdMap,
@@ -222,15 +261,15 @@ class _PostListState extends ConsumerState<PostList> {
     print('[DEBUG] ScrollController.hasClients: ${_scrollController.hasClients}');
 
     try {
-      // ✅ 추가: ScrollController가 준비될 때까지 대기
+      // ✅ ScrollController가 준비될 때까지 대기 (최대 300ms)
       if (!_scrollController.hasClients) {
-        print('[DEBUG] ⏳ Waiting for ScrollController (100ms)...');
-        await Future.delayed(const Duration(milliseconds: 100));
+        print('[DEBUG] ⏳ Waiting for ScrollController (300ms)...');
+        await Future.delayed(const Duration(milliseconds: 300));
       }
 
       // 스크롤 가능 여부 재확인
       if (!_scrollController.hasClients) {
-        print('[DEBUG] ❌ ScrollController still not ready, falling back to _anchorLastPostAtTop()');
+        print('[DEBUG] ❌ ScrollController still not ready after 300ms, falling back to _anchorLastPostAtTop()');
         _anchorLastPostAtTop();
         return;
       }
