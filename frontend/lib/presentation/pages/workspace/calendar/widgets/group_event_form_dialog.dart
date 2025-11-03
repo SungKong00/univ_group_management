@@ -48,6 +48,8 @@ Future<GroupEventFormResult?> showGroupEventFormDialog(
   required bool canCreateOfficial,
   bool? initialIsOfficial,
   EventType? eventType,
+  DateTime? initialStartTime,
+  DateTime? initialEndTime,
 }) {
   return showDialog<GroupEventFormResult>(
     context: context,
@@ -59,6 +61,8 @@ Future<GroupEventFormResult?> showGroupEventFormDialog(
       canCreateOfficial: canCreateOfficial,
       initialIsOfficial: initialIsOfficial,
       eventType: eventType,
+      initialStartTime: initialStartTime,
+      initialEndTime: initialEndTime,
     ),
   );
 }
@@ -71,6 +75,8 @@ class _GroupEventFormDialog extends StatefulWidget {
     required this.canCreateOfficial,
     this.initialIsOfficial,
     this.eventType,
+    this.initialStartTime,
+    this.initialEndTime,
   });
 
   final int groupId;
@@ -79,6 +85,8 @@ class _GroupEventFormDialog extends StatefulWidget {
   final bool canCreateOfficial;
   final bool? initialIsOfficial;
   final EventType? eventType;
+  final DateTime? initialStartTime;
+  final DateTime? initialEndTime;
 
   @override
   State<_GroupEventFormDialog> createState() => _GroupEventFormDialogState();
@@ -135,17 +143,26 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
     _eventType = initial?.eventType ?? widget.eventType ?? EventType.general;
 
     if (initial != null) {
-      _startDateTime = initial.startDate;
-      _endDateTime = initial.endDate;
+      // For editing: prioritize initialStartTime/initialEndTime (from drag),
+      // fallback to original event times
+      _startDateTime = widget.initialStartTime ?? initial.startDate;
+      _endDateTime = widget.initialEndTime ?? initial.endDate;
     } else {
-      final normalizedAnchor = DateTime(
-        anchor.year,
-        anchor.month,
-        anchor.day,
-        9,
-      );
-      _startDateTime = normalizedAnchor;
-      _endDateTime = normalizedAnchor.add(const Duration(hours: 1));
+      // For creation: prioritize initialStartTime/initialEndTime (from drag),
+      // fallback to default times
+      if (widget.initialStartTime != null && widget.initialEndTime != null) {
+        _startDateTime = widget.initialStartTime!;
+        _endDateTime = widget.initialEndTime!;
+      } else {
+        final normalizedAnchor = DateTime(
+          anchor.year,
+          anchor.month,
+          anchor.day,
+          9,
+        );
+        _startDateTime = normalizedAnchor;
+        _endDateTime = normalizedAnchor.add(const Duration(hours: 1));
+      }
     }
 
     if (_isAllDay) {
