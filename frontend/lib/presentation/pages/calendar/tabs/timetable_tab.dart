@@ -66,7 +66,7 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
         allowEventOverlap: true, // Show warning but allow overlap
         weekStart: state.weekStart,
         initialEvents: events,
-        initialMode: state.isAddMode ? CalendarMode.add : CalendarMode.view,
+        initialMode: state.isAddMode ? CalendarMode.add : CalendarMode.edit,
         initialOverlapView: state.isOverlapView,
         // Callbacks for CRUD operations
         onEventCreate: (event) =>
