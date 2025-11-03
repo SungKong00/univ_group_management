@@ -111,7 +111,7 @@ class _PostListState extends ConsumerState<PostList> {
       _errorMessage = null;
       _isInitialAnchoring = false;
     });
-    _loadPosts();
+    _loadPostsAndScrollToUnread();
   }
 
   /// 게시글이 수정되었을 때 호출 - 전체 목록 새로고침
@@ -335,9 +335,6 @@ class _PostListState extends ConsumerState<PostList> {
 
   // 최신(마지막) 게시물을 화면 상단에 정확히 오도록 스크롤하는 보조 함수
   void _anchorLastPostAtTop() {
-    print('[DEBUG] 🔴 _anchorLastPostAtTop() called');
-    print('[DEBUG] Stack trace:\n${StackTrace.current}');
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 

@@ -866,7 +866,19 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       );
     }
 
-    // 2. Switch to new channel
+    // 2. Load permissions and read position BEFORE updating state
+    // This ensures PostList has read position data when it initializes
+    final channelIdInt = int.tryParse(channelId);
+    if (channelIdInt != null) {
+      await Future.wait([
+        loadChannelPermissions(channelId),
+        loadReadPosition(channelIdInt),
+      ]);
+    } else {
+      await loadChannelPermissions(channelId);
+    }
+
+    // 3. NOW update state (after data is loaded)
     // Find channel name from channels list
     final selectedChannel = state.channels.firstWhere(
       (channel) => channel.id.toString() == channelId,
@@ -888,17 +900,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
     // LocalStorage에 저장
     _saveToLocalStorage();
-
-    // 3. Load permissions and read position for the selected channel
-    final channelIdInt = int.tryParse(channelId);
-    if (channelIdInt != null) {
-      await Future.wait([
-        loadChannelPermissions(channelId),
-        loadReadPosition(channelIdInt),
-      ]);
-    } else {
-      await loadChannelPermissions(channelId);
-    }
   }
 
   /// Load channel permissions for the currently selected channel
@@ -1367,7 +1368,19 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       }
     }
 
-    // 2. Switch to new channel
+    // 2. Load permissions and read position BEFORE updating state
+    // This ensures PostList has read position data when it initializes
+    final channelIdInt = int.tryParse(channelId);
+    if (channelIdInt != null) {
+      await Future.wait([
+        loadChannelPermissions(channelId),
+        loadReadPosition(channelIdInt),
+      ]);
+    } else {
+      await loadChannelPermissions(channelId);
+    }
+
+    // 3. NOW update state (after data is loaded)
     // Find channel name from channels list
     final selectedChannel = state.channels.firstWhere(
       (channel) => channel.id.toString() == channelId,
@@ -1384,17 +1397,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
     );
-
-    // 3. Load permissions and read position for the selected channel
-    final channelIdInt = int.tryParse(channelId);
-    if (channelIdInt != null) {
-      await Future.wait([
-        loadChannelPermissions(channelId),
-        loadReadPosition(channelIdInt),
-      ]);
-    } else {
-      await loadChannelPermissions(channelId);
-    }
   }
 
   // 모바일에서 댓글 보기 시 (Step 2 → Step 3)
