@@ -4,7 +4,7 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-11-03 (D) (완료된 추적 문서 4개 삭제)
+**마지막 업데이트**: 2025-11-03 (E) (캘린더 개념 문서 MVP 범위 명확화)
 **총 문서 수**: 103개
 **동기화 완료**: 103개 (100%)
 **업데이트 필요**: 0개 (0%)
@@ -84,9 +84,9 @@
 | `recruitment-system.md` | ✅ 최신 | 2025-10-06 | 모집 시스템 |
 | `channel-permissions.md` | ✅ 최신 | 2024-09-25 | 채널 권한 |
 | `personal-calendar-system.md` | ✅ 최신 | 2025-10-24 | 개인 캘린더 (시간표 + 일정) |
-| `group-calendar-system.md` | ✅ 최신 | 2025-10-24 | 그룹 캘린더 (공유 일정) |
+| `group-calendar-system.md` | ✅ 최신 | 2025-11-03 | MVP 범위 명확화 (공식 일정/비공식 일정) |
 | `place-calendar-system.md` | ✅ 최신 | 2025-10-24 | 장소 캘린더 (예약 관리) |
-| `calendar-integration.md` | ✅ 최신 | 2025-10-24 | 캘린더 통합 (세 시스템 연동) |
+| `calendar-integration.md` | ✅ 최신 | 2025-11-03 | MVP 범위 명확화 (예약 가능 시간 표시 중심) |
 
 ### `/docs/ui-ux/concepts/` - UI/UX 개념 (5개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
@@ -174,7 +174,13 @@
 모든 코드 변경사항이 반영되어 동기화된 문서들
 
 **주요 업데이트 (2025-11-03)**:
-- **임시 파일 정리 및 컨텍스트 검증 완료**
+- **(E) 캘린더 개념 문서 MVP 범위 명확화**
+  - calendar-integration.md: "최적 시간 추천" → "예약 가능 시간 표시"로 변경 (141줄)
+  - group-calendar-system.md: MVP 기능 vs Phase 2+ 기능 명확히 표기 (113줄)
+  - Phase 1: 그룹 캘린더, 장소 예약, 예약 가능 시간 표시 (명확)
+  - Phase 2 이후: 자동 동기화, 최적 시간 추천, TARGETED/RSVP, 채널 연동 ("구현 예정" 표기)
+  - context-update-log.md 신규 항목 추가
+- **(D) 임시 파일 정리 및 컨텍스트 검증 완료**
   - .DS_Store 파일 7개 삭제 (macOS 시스템 파일)
   - .bak 백업 파일 6개 삭제 (calendar, workspace, navigation 관련)
   - MEMO_calendar-scroll-fix.md 삭제 (구현 완료, 2025-11-02)
