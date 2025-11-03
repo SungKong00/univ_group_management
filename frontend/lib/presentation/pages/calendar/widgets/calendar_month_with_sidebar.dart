@@ -208,13 +208,18 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
             ],
           );
         } else {
-          // Narrow screen: Column layout
-          return Column(
-            children: [
-              calendarWidget,
-              const SizedBox(height: AppSpacing.sm),
-              Expanded(child: eventListWidget),
-            ],
+          // Narrow screen: Column layout with full scroll
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                calendarWidget,
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  height: 400, // Fixed height for event list in column layout
+                  child: eventListWidget,
+                ),
+              ],
+            ),
           );
         }
       },
