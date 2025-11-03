@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../../core/models/post_models.dart';
 import '../../../core/services/post_service.dart';
@@ -57,6 +60,11 @@ class _PostListState extends ConsumerState<PostList> {
 
   // 읽지 않은 게시글 관리
   int? _firstUnreadPostIndex; // 첫 번째 읽지 않은 게시글의 전역 인덱스
+
+  // 가시성 추적 (Visibility Detector)
+  final Set<int> _visiblePostIds = {}; // 현재 화면에 보이는 게시글 ID 집합
+  int? _currentMaxVisibleId; // 현재 보이는 게시글 중 최댓값
+  Timer? _debounceTimer; // debounce 타이머
   bool _hasScrolledToUnread = false; // 스크롤 완료 플래그
 
   @override
@@ -89,6 +97,7 @@ class _PostListState extends ConsumerState<PostList> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
@@ -159,14 +168,14 @@ class _PostListState extends ConsumerState<PostList> {
           print('[DEBUG] _scrollToUnreadPost() completed');
 
           // ✅ 수정: 최신 게시글을 읽음 위치로 저장 (모든 읽지 않은 글 해제)
+          // 뱃지 업데이트는 채널 이탈 시에만 수행 (workspace_state_provider에서 처리)
           if (_posts.isNotEmpty) {
             final latestPostId = _posts.last.id;
             print('[DEBUG] Updating read position to latest post: $latestPostId');
 
-            await ref.read(workspaceStateProvider.notifier)
-              .saveReadPosition(channelIdInt, latestPostId);
-
-            // ✅ 뱃지 업데이트 제거 (채널 이탈 시에만 업데이트)
+            // ✅ 읽음 위치만 저장, 뱃지 업데이트는 하지 않음
+            final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+            await workspaceNotifier.saveReadPosition(channelIdInt, latestPostId);
           }
         });
       } else {
@@ -176,14 +185,13 @@ class _PostListState extends ConsumerState<PostList> {
         _anchorLastPostAtTop();
 
         // ✅ 읽지 않은 글 없으면 최신 게시글을 읽음 위치로 설정
+        // 뱃지 업데이트는 채널 이탈 시에만 수행 (workspace_state_provider에서 처리)
         if (_posts.isNotEmpty) {
           final latestPostId = _posts.last.id;
           print('[DEBUG] Updating read position to latest post (no unread): $latestPostId');
 
           await ref.read(workspaceStateProvider.notifier)
             .saveReadPosition(channelIdInt, latestPostId);
-
-          // ✅ 뱃지 업데이트 제거 (채널 이탈 시에만 업데이트)
         }
       }
 
@@ -404,34 +412,42 @@ class _PostListState extends ConsumerState<PostList> {
       _loadPosts();
     }
 
-    // 현재 화면에 보이는 게시글 ID 업데이트 (읽음 위치 저장용)
-    _updateVisiblePostId();
+    // VisibilityDetector가 실시간으로 읽음 위치를 업데이트하므로
+    // 기존 _updateVisiblePostId() 호출 제거됨
   }
 
-  /// 현재 화면에 보이는 게시글 ID 업데이트
-  void _updateVisiblePostId() {
-    // 화면 중앙에 보이는 게시글 ID를 WorkspaceState에 저장
-    final visibleIndex = _calculateVisibleIndex();
-    if (visibleIndex != null) {
-      final postId = _getPostIdByGlobalIndex(visibleIndex);
-      if (postId != null) {
-        ref.read(workspaceStateProvider.notifier).updateCurrentVisiblePost(postId);
-      }
+  /// 게시글이 화면에 나타났을 때 호출
+  void _onPostVisible(int postId) {
+    _visiblePostIds.add(postId);
+    _scheduleUpdateMaxVisibleId();
+  }
+
+  /// 게시글이 화면에서 사라졌을 때 호출
+  void _onPostInvisible(int postId) {
+    _visiblePostIds.remove(postId);
+    _scheduleUpdateMaxVisibleId();
+  }
+
+  /// debounce를 적용하여 최대 보이는 게시글 ID 업데이트
+  void _scheduleUpdateMaxVisibleId() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 200), () {
+      _updateMaxVisibleId();
+    });
+  }
+
+  /// 현재 보이는 게시글 중 가장 최신(ID가 큰) 게시글로 읽음 위치 업데이트
+  void _updateMaxVisibleId() {
+    if (_visiblePostIds.isEmpty) return;
+
+    final maxId = _visiblePostIds.reduce((a, b) => a > b ? a : b);
+    if (maxId != _currentMaxVisibleId) {
+      _currentMaxVisibleId = maxId;
+      ref.read(workspaceStateProvider.notifier).updateCurrentVisiblePost(maxId);
     }
   }
 
-  /// 스크롤 위치 기반으로 현재 보이는 인덱스 계산
-  int? _calculateVisibleIndex() {
-    if (!_scrollController.hasClients) return null;
-
-    // 화면 중앙 기준으로 계산
-    final viewportHeight = _scrollController.position.viewportDimension;
-    final scrollOffset = _scrollController.position.pixels;
-
-    // 대략적인 추정: 평균 아이템 높이를 100px로 가정
-    // TODO: 실제 아이템 높이를 고려한 정확한 계산 필요
-    return (scrollOffset / 100).floor();
-  }
+  // 기존 추정 로직 제거됨 - VisibilityDetector로 대체
 
   /// 전역 인덱스로 게시글 ID 조회
   int? _getPostIdByGlobalIndex(int globalIndex) {
@@ -527,22 +543,33 @@ class _PostListState extends ConsumerState<PostList> {
                     final bool shouldShowDivider =
                         _firstUnreadPostIndex == currentGlobalIndex;
 
-                    final child = Column(
-                      children: [
-                        // 읽지 않은 게시글 구분선
-                        if (shouldShowDivider) const UnreadMessageDivider(),
-                        PostItem(
-                          post: post,
-                          onTapComment: () =>
-                              widget.onTapComment?.call(post.id),
-                          onTapPost: () {
-                            // TODO: 게시글 상세 보기 (나중에 구현)
-                          },
-                          onPostUpdated: _handlePostUpdated,
-                          onPostDeleted: _handlePostDeleted,
-                        ),
-                        const Divider(height: 1, color: AppColors.neutral200),
-                      ],
+                    final child = VisibilityDetector(
+                      key: Key('post_visibility_${post.id}'),
+                      onVisibilityChanged: (info) {
+                        // 30% 이상 보이면 읽음 처리
+                        if (info.visibleFraction > 0.3) {
+                          _onPostVisible(post.id);
+                        } else {
+                          _onPostInvisible(post.id);
+                        }
+                      },
+                      child: Column(
+                        children: [
+                          // 읽지 않은 게시글 구분선
+                          if (shouldShowDivider) const UnreadMessageDivider(),
+                          PostItem(
+                            post: post,
+                            onTapComment: () =>
+                                widget.onTapComment?.call(post.id),
+                            onTapPost: () {
+                              // TODO: 게시글 상세 보기 (나중에 구현)
+                            },
+                            onPostUpdated: _handlePostUpdated,
+                            onPostDeleted: _handlePostDeleted,
+                          ),
+                          const Divider(height: 1, color: AppColors.neutral200),
+                        ],
+                      ),
                     );
 
                     // AutoScrollTag로 래핑

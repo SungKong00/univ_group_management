@@ -53,6 +53,9 @@ dependencies:
   # Scroll To Index
   scroll_to_index: ^3.0.1
 
+  # Visibility Detection
+  visibility_detector: ^0.4.0+2
+
   # Haptic Feedback
   vibration: ^2.0.0
 
