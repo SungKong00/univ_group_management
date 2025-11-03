@@ -1371,7 +1371,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     // View mode: no further interaction if no events
     if (_mode == CalendarMode.view) return;
 
-    // Add mode or Edit mode (when not tapping an event): create new event
+    // Add mode: create new event
+    // Edit mode: no drag-to-create (only edit existing events)
+    if (_mode != CalendarMode.add) return;
+
     if (!_isSelecting) {
       setState(() {
         _isSelecting = true;
@@ -1390,6 +1393,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
     // View mode: no interaction
     if (_mode == CalendarMode.view) return;
+
+    // Edit mode: no drag-to-create (only edit existing events)
+    if (_mode != CalendarMode.add) return;
 
     final localPosition =
         _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
