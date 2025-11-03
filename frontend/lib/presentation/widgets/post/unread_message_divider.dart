@@ -3,14 +3,14 @@ import '../../../core/theme/app_colors.dart';
 
 /// Unread Message Divider Widget
 ///
-/// Displays "여기부터 읽지 않은 글" with left/right divider lines
+/// Displays "읽지 않은 글" with left/right divider lines
 class UnreadMessageDivider extends StatelessWidget {
   const UnreadMessageDivider({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: '여기부터 읽지 않은 게시글입니다',
+      label: '읽지 않은 게시글입니다',
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
         child: Row(
@@ -24,7 +24,7 @@ class UnreadMessageDivider extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Text(
-                '여기부터 읽지 않은 글',
+                '읽지 않은 글',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,

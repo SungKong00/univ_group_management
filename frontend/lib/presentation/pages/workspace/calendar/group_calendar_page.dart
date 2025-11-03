@@ -16,6 +16,7 @@ import '../../../providers/group_permission_provider.dart';
 import '../../../utils/responsive_layout_helper.dart';
 import '../../../widgets/common/compact_tab_bar.dart';
 import '../../../widgets/organisms/organisms.dart';
+import '../../../widgets/calendar/calendar_navigator.dart';
 import '../../calendar/calendar_week_grid_view.dart';
 import '../../calendar/widgets/calendar_month_with_sidebar.dart';
 import '../../calendar/widgets/month_event_chip.dart';
@@ -88,6 +89,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
   @override
   Widget build(BuildContext context) {
+    print('🔍 [GROUP_CALENDAR] Building GroupCalendarPage - NEW VERSION');
     return Column(
       children: [
         _buildTabBar(),
@@ -133,22 +135,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
             AppSpacing.sm,
             AppSpacing.xs,
           ),
-          child: _GroupCalendarHeader(
-            view: currentView,
-            label: _formatFocusedLabel(focusedDate, currentView),
-            isBusy: state.isLoading,
-            onChangeView: (view) {
-              if (view != currentView) {
-                ref.read(calendarViewProvider.notifier).setView(view);
-              }
-            },
-            onPrevious: () => _handlePrevious(currentView),
-            onNext: () => _handleNext(currentView),
-            onToday: () =>
-                ref.read(focusedDateProvider.notifier).resetToToday(),
-            onCreateEvent:
-                state.isLoading ? null : () => _showCreateDialog(),
-          ),
+          child: _buildCalendarHeader(currentView, focusedDate, state.isLoading),
         ),
         Expanded(
           child: _buildCalendarContent(state, currentView),
@@ -272,6 +259,102 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
   Widget _buildPlaceCalendarTab() {
     return PlaceCalendarTab(groupId: widget.groupId);
+  }
+
+  Widget _buildCalendarHeader(CalendarView currentView, DateTime focusedDate, bool isBusy) {
+    print('🔍 [GROUP_CALENDAR] Building header with CalendarNavigator (NEW)');
+    final viewToggle = ToggleButtons(
+      isSelected: CalendarView.values
+          .map((option) => option == currentView)
+          .toList(growable: false),
+      onPressed: (index) {
+        final newView = CalendarView.values.elementAt(index);
+        if (newView != currentView) {
+          ref.read(calendarViewProvider.notifier).setView(newView);
+        }
+      },
+      borderRadius: BorderRadius.circular(AppRadius.button),
+      fillColor: AppColors.brand.withValues(alpha: 0.08),
+      selectedColor: AppColors.brand,
+      constraints: const BoxConstraints(minHeight: 36, minWidth: 56),
+      children: const [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Text('주간', style: TextStyle(fontSize: 13)),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Text('월간', style: TextStyle(fontSize: 13)),
+        ),
+      ],
+    );
+
+    final addButton = PrimaryButton(
+      text: '일정 추가',
+      onPressed: isBusy ? null : () => _showCreateDialog(),
+      icon: const Icon(Icons.add),
+      variant: PrimaryButtonVariant.brand,
+      width: 160,
+    );
+
+    final navigator = CalendarNavigator(
+      currentDate: focusedDate,
+      label: _formatFocusedLabel(focusedDate, currentView),
+      onPrevious: isBusy ? () {} : () => _handlePrevious(currentView),
+      onNext: isBusy ? () {} : () => _handleNext(currentView),
+      onToday: isBusy ? () {} : () => ref.read(focusedDateProvider.notifier).resetToToday(),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final helper = ResponsiveLayoutHelper(context: context, constraints: constraints);
+        final isCompact = !helper.isWideDesktop;
+
+        if (isCompact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(child: navigator),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: viewToggle,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  addButton,
+                ],
+              ),
+            ],
+          );
+        }
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                viewToggle,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Center(child: navigator),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                addButton,
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   String _formatDateRange(DateTime start, DateTime end, bool isAllDay) {
@@ -807,176 +890,6 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   }
 }
 
-class _GroupCalendarHeader extends StatelessWidget {
-  const _GroupCalendarHeader({
-    required this.view,
-    required this.label,
-    required this.isBusy,
-    required this.onChangeView,
-    required this.onPrevious,
-    required this.onNext,
-    required this.onToday,
-    required this.onCreateEvent,
-  });
-
-  final CalendarView view;
-  final String label;
-  final bool isBusy;
-  final ValueChanged<CalendarView> onChangeView;
-  final VoidCallback onPrevious;
-  final VoidCallback onNext;
-  final VoidCallback onToday;
-  final VoidCallback? onCreateEvent;
-
-  @override
-  Widget build(BuildContext context) {
-    final viewToggle = ToggleButtons(
-      isSelected: CalendarView.values
-          .map((option) => option == view)
-          .toList(growable: false),
-      onPressed: (index) =>
-          onChangeView(CalendarView.values.elementAt(index)),
-      borderRadius: BorderRadius.circular(12),
-      fillColor: AppColors.brand.withValues(alpha: 0.08),
-      selectedColor: AppColors.brand,
-      constraints: const BoxConstraints(minHeight: 40),
-      children: const [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text('주간'),
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text('월간'),
-        ),
-      ],
-    );
-
-    final addButton = PrimaryButton(
-      text: '일정 추가',
-      onPressed: onCreateEvent,
-      icon: const Icon(Icons.add),
-      variant: PrimaryButtonVariant.brand,
-      width: 160,
-    );
-
-    final navigator = _GroupCalendarNavigator(
-      label: label,
-      onPrevious: onPrevious,
-      onNext: onNext,
-      onToday: onToday,
-      enabled: !isBusy,
-    );
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Use project standard: 850px breakpoint for wide desktop
-        final helper = ResponsiveLayoutHelper(context: context, constraints: constraints);
-        final isCompact = !helper.isWideDesktop;
-
-        if (isCompact) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(child: navigator),
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: viewToggle,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  addButton,
-                ],
-              ),
-            ],
-          );
-        }
-
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                viewToggle,
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Center(child: navigator),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                addButton,
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _GroupCalendarNavigator extends StatelessWidget {
-  const _GroupCalendarNavigator({
-    required this.label,
-    required this.onPrevious,
-    required this.onNext,
-    required this.onToday,
-    required this.enabled,
-  });
-
-  final String label;
-  final VoidCallback onPrevious;
-  final VoidCallback onNext;
-  final VoidCallback onToday;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          tooltip: '이전',
-          onPressed: enabled ? onPrevious : null,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Flexible(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 160, maxWidth: 280),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: textTheme.titleLarge,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-        ),
-        IconButton(
-          tooltip: '다음',
-          onPressed: enabled ? onNext : null,
-          icon: const Icon(Icons.chevron_right),
-        ),
-        // Flexible로 감싸서 Row 내에서 유연한 크기 조정 가능
-        Flexible(
-          child: NeutralOutlinedButton(
-            text: '오늘',
-            onPressed: enabled ? onToday : null,
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 extension on Color {
   String toHex() {
