@@ -1,3 +1,79 @@
+### 2025-11-03 (F) - 그룹 캘린더 WeeklyScheduleEditor 통합 구현
+
+**유형**: 기능 구현 + 리팩토링
+**우선순위**: High
+**영향 범위**: 프론트엔드 (4개 파일)
+
+**작업 개요**:
+워크스페이스 그룹 캘린더 주간 뷰를 CalendarWeekGridView에서 WeeklyScheduleEditor로 전환하여 개인 캘린더와 동일한 UX를 제공하고, 드래그 생성 로직을 개선했습니다.
+
+**구현한 기능**:
+
+1. **GroupEventAdapter 어댑터 신규 생성** (183줄)
+   - GroupEvent ↔ Event 양방향 변환
+   - 슬롯 기반 시간 변환 (15분 단위)
+   - ID prefix 'ge-'로 유형 구분
+   - allDay 이벤트는 주간 뷰에서 제외 (null 반환)
+
+2. **WeeklyScheduleEditor 통합** (group_calendar_page.dart)
+   - CalendarWeekGridView 제거
+   - WeeklyScheduleEditor 적용 (드래그 생성/수정 지원)
+   - CALENDAR_MANAGE 권한 기반 isEditable 설정
+   - allowMultiDaySelection: false (그룹 일정은 단일 날짜만)
+   - allowEventOverlap: true (일정 겹침 허용)
+
+3. **CRUD 핸들러 구현** (group_calendar_page.dart)
+   - _handleEventCreate(): 공식/비공식 선택 → 폼 다이얼로그 → API 생성
+   - _handleEventUpdate(): 반복 일정 UpdateScope 지원 → API 업데이트
+   - _handleEventDelete(): 반복 일정 UpdateScope 지원 → API 삭제
+   - Event → GroupEvent 역변환 로직 (GroupEventAdapter.toGroupEvent)
+
+4. **GroupEventFormDialog 확장** (group_event_form_dialog.dart)
+   - existingEvent 파라미터 추가 (수정 모드)
+   - 수정 모드 시 폼 필드 초기값 설정
+   - 반복 일정 표시 개선
+
+5. **WeeklyScheduleEditor edit 모드 드래그 생성 비활성화** (weekly_schedule_editor.dart)
+   - edit 모드: 기존 일정 수정만 가능 (드래그 생성 비활성화)
+   - add 모드: 드래그로 새 일정 생성 가능 (유지)
+   - _handleTap() 메서드: mode != add 체크 추가 (line 1374-1376)
+   - _handleLongPressStart() 메서드: mode != add 체크 추가 (line 1397-1398)
+   - 적용 범위: 개인 시간표, 개인 캘린더, 워크스페이스 그룹 캘린더
+
+**커밋 내역** (2개):
+1. feat(calendar): 그룹 캘린더 WeeklyScheduleEditor 통합 (f51106e)
+   - GroupEventAdapter 신규 생성 (183줄)
+   - group_calendar_page.dart: WeeklyScheduleEditor 통합 및 CRUD 핸들러 구현 (+252줄)
+   - group_event_form_dialog.dart: 수정 모드 지원 (+20줄)
+2. refactor(calendar): edit 모드에서 드래그 일정 생성 비활성화 (44f800c)
+   - weekly_schedule_editor.dart: edit 모드 드래그 생성 로직 비활성화 (+7줄)
+
+**변경된 파일** (4개):
+- ✅ frontend/lib/presentation/adapters/group_event_adapter.dart (신규, 183줄)
+- ✅ frontend/lib/presentation/pages/workspace/calendar/group_calendar_page.dart (+252줄)
+- ✅ frontend/lib/presentation/pages/workspace/calendar/widgets/group_event_form_dialog.dart (+20줄)
+- ✅ frontend/lib/presentation/widgets/weekly_calendar/weekly_schedule_editor.dart (+7줄)
+
+**기대 효과**:
+- 그룹 캘린더와 개인 캘린더의 일관된 UX 제공
+- 드래그로 일정 생성/수정 가능 (직관적)
+- 권한 기반 편집 제어 (CALENDAR_MANAGE)
+- 반복 일정 UpdateScope 지원 (THIS/ALL/FUTURE)
+- edit 모드 UX 혼란 방지 ("일정 추가" 버튼으로만 생성)
+
+**문서 동기화 상태**:
+- ⏳ context-update-log.md: 현재 로그 추가 (본 항목)
+- ⏳ pending-updates.md: 그룹 캘린더 Phase 8 (권한 통합) 확인 필요
+- ⏳ sync-status.md: 마지막 업데이트 반영 예정
+
+**다음 단계**:
+- 그룹 캘린더 Phase 8: 권한 시스템 통합 (2-3시간)
+- 장소 캘린더 Phase 2: 프론트엔드 기본 구현 (6-8시간)
+
+**메모**: WeeklyScheduleEditor 통합으로 그룹 캘린더의 핵심 기능 완성. 어댑터 패턴으로 도메인-UI 레이어 명확히 분리. edit 모드 드래그 생성 비활성화로 UX 개선.
+
+---
+
 ### 2025-11-03 (E) - 캘린더 개념 문서 MVP 범위 명확화
 
 **유형**: 문서 현행화

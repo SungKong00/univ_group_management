@@ -4,7 +4,7 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-11-03 (E) (캘린더 개념 문서 MVP 범위 명확화)
+**마지막 업데이트**: 2025-11-03 (F) (그룹 캘린더 WeeklyScheduleEditor 통합 구현)
 **총 문서 수**: 103개
 **동기화 완료**: 103개 (100%)
 **업데이트 필요**: 0개 (0%)
@@ -174,6 +174,14 @@
 모든 코드 변경사항이 반영되어 동기화된 문서들
 
 **주요 업데이트 (2025-11-03)**:
+- **(F) 그룹 캘린더 WeeklyScheduleEditor 통합 구현**
+  - GroupEventAdapter 신규 생성 (183줄): GroupEvent ↔ Event 양방향 변환
+  - group_calendar_page.dart: WeeklyScheduleEditor 통합 (+252줄)
+  - CRUD 핸들러 구현 (create/update/delete)
+  - 권한 기반 편집 제어 (CALENDAR_MANAGE)
+  - WeeklyScheduleEditor edit 모드 드래그 생성 비활성화 (+7줄)
+  - 적용 범위: 개인 시간표, 개인 캘린더, 워크스페이스 그룹 캘린더
+  - 커밋 2개: f51106e (통합), 44f800c (edit 모드)
 - **(E) 캘린더 개념 문서 MVP 범위 명확화**
   - calendar-integration.md: "최적 시간 추천" → "예약 가능 시간 표시"로 변경 (141줄)
   - group-calendar-system.md: MVP 기능 vs Phase 2+ 기능 명확히 표기 (113줄)
