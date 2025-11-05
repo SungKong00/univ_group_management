@@ -5,6 +5,7 @@ import org.castlekong.backend.dto.ApiResponse
 import org.castlekong.backend.dto.ChannelResponse
 import org.castlekong.backend.dto.CommentResponse
 import org.castlekong.backend.dto.CreateChannelRequest
+import org.castlekong.backend.dto.CreateChannelWithPermissionsRequest
 import org.castlekong.backend.dto.CreateCommentRequest
 import org.castlekong.backend.dto.CreatePostRequest
 import org.castlekong.backend.dto.CreateWorkspaceRequest
@@ -118,6 +119,25 @@ class ContentController(
     ): ApiResponse<ChannelResponse> {
         val user = getUserByEmail(authentication.name)
         val response = contentService.createChannel(workspaceId, request, user.id)
+        return ApiResponse.success(response)
+    }
+
+    /**
+     * 채널 생성 + 권한 설정 통합 API
+     *
+     * 채널 기본 정보와 역할별 권한을 한 번에 받아
+     * 트랜잭션으로 원자적으로 처리합니다.
+     */
+    @PostMapping("/workspaces/{workspaceId}/channels/with-permissions")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun createChannelWithPermissions(
+        @PathVariable workspaceId: Long,
+        @Valid @RequestBody request: CreateChannelWithPermissionsRequest,
+        authentication: Authentication,
+    ): ApiResponse<ChannelResponse> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.createChannelWithPermissions(workspaceId, request, user.id)
         return ApiResponse.success(response)
     }
 

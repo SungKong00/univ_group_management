@@ -216,6 +216,70 @@ class ChannelService {
     }
   }
 
+  /// Create a new channel with permissions in a single API call
+  ///
+  /// POST /workspaces/{workspaceId}/channels/with-permissions
+  Future<Channel?> createChannelWithPermissions({
+    required int workspaceId,
+    required String name,
+    String? description,
+    String type = 'TEXT',
+    required Map<int, List<String>> rolePermissions,
+  }) async {
+    try {
+      developer.log(
+        'Creating channel with permissions in workspace: $workspaceId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.post<Map<String, dynamic>>(
+        '/workspaces/$workspaceId/channels/with-permissions',
+        data: {
+          'name': name,
+          'description': description,
+          'type': type,
+          'rolePermissions': rolePermissions.map(
+            (roleId, permissions) => MapEntry(
+              roleId.toString(),
+              permissions,
+            ),
+          ),
+        },
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) => Channel.fromJson(json as Map<String, dynamic>),
+        );
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully created channel with permissions: ${apiResponse.data!.name}',
+            name: 'ChannelService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to create channel with permissions: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return null;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      developer.log(
+        'Error creating channel with permissions: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      rethrow;
+    }
+  }
+
   /// Create channel role binding
   ///
   /// POST /channels/{channelId}/role-bindings

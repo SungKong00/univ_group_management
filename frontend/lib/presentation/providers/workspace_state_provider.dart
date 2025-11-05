@@ -318,45 +318,61 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
       if (lastGroupId != null) {
         // 복원할 뷰 타입 결정
-        // 기본값: groupHome (snapshot이 없을 때 그룹홈 보장)
+        // ✅ Priority 1: 채널 ID가 있으면 채널 뷰 (모바일 UX: 채널 리스트가 홈)
+        // ✅ Priority 2: 저장된 뷰 타입이 채널이 아닌 경우만 복원
+        // ✅ Priority 3: 없으면 기본값 (groupHome)
+
         WorkspaceView? restoredView;
-        if (lastViewType != null) {
+        bool shouldUseChannelView = false;
+
+        // 채널 ID가 있으면 무조건 채널 뷰로 진입 (모바일 UX 우선)
+        if (lastChannelId != null) {
+          shouldUseChannelView = true;
+        } else if (lastViewType != null) {
+          // 채널 ID가 없을 때만 저장된 뷰 타입 복원
           try {
             restoredView = WorkspaceView.values.firstWhere(
               (v) => v.name == lastViewType,
             );
+            // 저장된 뷰가 groupHome/calendar 등 특수 뷰인 경우만 복원
+            if (restoredView != WorkspaceView.channel) {
+              shouldUseChannelView = false;
+            } else {
+              // 저장된 뷰가 channel인데 channelId가 없으면 첫 채널로
+              shouldUseChannelView = true;
+            }
           } catch (_) {
-            // Invalid view type: default to groupHome
-            restoredView = WorkspaceView.groupHome;
+            // Invalid view type: 채널 뷰로 진입
+            shouldUseChannelView = true;
           }
         } else {
-          // No saved view type: default to groupHome
-          // This ensures first-time access shows groupHome
-          restoredView = WorkspaceView.groupHome;
+          // No saved view type: 모바일 UX를 위해 채널 뷰로 진입
+          shouldUseChannelView = true;
         }
 
         if (kDebugMode) {
           developer.log(
-            'Restoring workspace state: group=$lastGroupId, channel=$lastChannelId, view=$lastViewType (resolved: ${restoredView.name})',
+            'Restoring workspace state: group=$lastGroupId, channel=$lastChannelId, view=$lastViewType, shouldUseChannelView=$shouldUseChannelView',
             name: 'WorkspaceStateNotifier',
           );
         }
 
         // 뷰 타입에 따라 적절한 방식으로 워크스페이스 진입
-        // Note: 채널 뷰가 아니면 채널을 자동 선택하지 않음
-        if (restoredView == WorkspaceView.channel && lastChannelId != null) {
-          // 채널 뷰인 경우에만 channelId 전달
+        if (shouldUseChannelView) {
+          // 채널 뷰: channelId 전달 (있으면) 또는 첫 번째 채널 자동 선택
           await enterWorkspace(
             lastGroupId,
             channelId: lastChannelId,
           );
-        } else {
-          // 다른 뷰인 경우 targetView로 뷰 타입 명시
-          // 채널 자동 선택 없이 뷰만 전환
+        } else if (restoredView != null) {
+          // 특수 뷰 (groupHome, calendar 등): targetView로 뷰 타입 명시
           await enterWorkspace(
             lastGroupId,
             targetView: restoredView,
           );
+        } else {
+          // Fallback: 채널 뷰로 진입
+          await enterWorkspace(lastGroupId);
         }
       }
     } catch (e) {

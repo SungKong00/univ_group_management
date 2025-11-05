@@ -204,12 +204,15 @@ class ChannelListSection extends ConsumerWidget {
   }
 
   Future<void> _handleCreateChannel(BuildContext context, WidgetRef ref) async {
+    print('[DEBUG] _handleCreateChannel called for groupId: $groupId');
     try {
       // 워크스페이스 ID 조회
+      print('[DEBUG] Fetching workspace for group $groupId');
       final dioClient = DioClient();
       final response = await dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/workspaces',
       );
+      print('[DEBUG] Workspace response: ${response.data}');
 
       if (response.data == null || !context.mounted) return;
 
@@ -225,6 +228,7 @@ class ChannelListSection extends ConsumerWidget {
       );
 
       if (!apiResponse.success || apiResponse.data == null) {
+        print('[DEBUG] Failed to get workspace: ${apiResponse.message}');
         if (context.mounted) {
           AppSnackBar.error(context, '워크스페이스를 찾을 수 없습니다');
         }
@@ -232,59 +236,41 @@ class ChannelListSection extends ConsumerWidget {
       }
 
       final workspaceId = apiResponse.data!;
+      print('[DEBUG] Got workspaceId: $workspaceId');
 
-      // 채널 생성 다이얼로그
+      // 채널 생성 다이얼로그 (권한 설정 통합)
       if (!context.mounted) return;
+      print('[DEBUG] Showing CreateChannelDialog...');
       final channel = await showCreateChannelDialog(
         context,
         workspaceId: workspaceId,
         groupId: groupId,
       );
+      print('[DEBUG] Dialog returned: ${channel?.name ?? 'null'}');
 
       if (channel != null) {
-        // 권한 설정 다이얼로그
-        if (!context.mounted) return;
-        final permissionsSet = await showChannelPermissionsDialog(
-          context,
-          channelId: channel.id,
-          channelName: channel.name,
-          groupId: groupId,
-          isRequired: true,
+        // 채널 목록 새로고침
+        ref.invalidate(channelListProvider(groupId));
+
+        // workspace state도 새로고침
+        ref.read(workspaceStateProvider.notifier).loadChannels(
+          groupId.toString(),
+          membership: (await ref.read(myGroupsProvider.future))
+              .firstWhere((g) => g.id == groupId),
         );
 
-        if (permissionsSet) {
-          // 채널 목록 새로고침
-          ref.invalidate(channelListProvider(groupId));
-
-          // workspace state도 새로고침
-          ref.read(workspaceStateProvider.notifier).loadChannels(
-            groupId.toString(),
-            membership: (await ref.read(myGroupsProvider.future))
-                .firstWhere((g) => g.id == groupId),
+        // 성공 메시지
+        if (context.mounted) {
+          AppSnackBar.success(
+            context,
+            '채널 "${channel.name}"이(가) 생성되고 권한이 설정되었습니다',
+            duration: const Duration(seconds: 3),
           );
-
-          // 성공 메시지
-          if (context.mounted) {
-            AppSnackBar.success(
-              context,
-              '채널 "${channel.name}"이(가) 생성되고 권한이 설정되었습니다',
-              duration: const Duration(seconds: 3),
-            );
-          }
-        } else {
-          // 권한 설정 취소
-          if (context.mounted) {
-            AppSnackBar.warning(
-              context,
-              '채널 "${channel.name}"이(가) 생성되었으나 권한 설정이 필요합니다',
-              duration: const Duration(seconds: 3),
-            );
-          }
-          // 목록 새로고침
-          ref.invalidate(channelListProvider(groupId));
         }
       }
     } catch (e) {
+      print('[DEBUG] Exception in _handleCreateChannel: $e');
+      print('[DEBUG] Stack trace: ${StackTrace.current}');
       if (context.mounted) {
         AppSnackBar.error(context, '오류가 발생했습니다: $e');
       }
