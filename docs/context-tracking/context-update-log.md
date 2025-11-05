@@ -1,3 +1,55 @@
+### 2025-11-05 - 모바일 워크스페이스 네비게이션 UX 개선
+
+**유형**: 기능 개선 + 버그 수정
+**우선순위**: High
+**영향 범위**: 프론트엔드 (2개 파일)
+
+**작업 개요**:
+모바일 워크스페이스의 네비게이션 시스템을 개선하여 채널 리스트를 먼저 표시하고, 백버튼 시 단계적으로 되돌아갈 수 있도록 수정했습니다.
+
+**구현한 기능**:
+
+1. **워크스페이스 진입 시 채널 리스트 우선 표시**
+   - LocalStorage 복원 로직 개선: 저장된 뷰 타입 대신 채널 ID 우선 확인
+   - 채널 ID가 있으면 → 채널 뷰로 진입
+   - 없으면 → 저장된 뷰 타입 복원
+   - 모바일 UX 원칙: 채널 리스트가 홈
+
+2. **그룹 전환 시 모바일 채널 리스트 표시**
+   - `_determineNavigationTarget()` 메서드 수정
+   - 그룹 전환 시 mobileView = channelList면 currentView를 channel로 강제 설정
+   - 특수 뷰(calendar, admin 등)는 예외 처리
+
+3. **백버튼 시 채널 네비게이션 단계 추가**
+   - `selectChannelForMobile()` 메서드: 채널 선택 전에 현재 상태 히스토리 저장
+   - 백버튼 시 3단계 뒤로가기: 댓글 → 게시글 → 채널 리스트 → 글로벌 홈
+
+4. **그룹 홈 버튼 클릭 반응 복구**
+   - mobile_workspace_view.dart에서 groupHome 제외 조건 제거
+   - buildSpecialView()가 GroupHomeView를 정상 반환
+
+**커밋 내역** (6개):
+1. `1247d96`: fix(mobile) - 모바일 워크스페이스 진입 시 채널 리스트 먼저 표시
+2. `edf73e8`: fix - mobile_workspace_view에서 WorkspaceView 네임스페이스 수정
+3. `f6f5bbb`: fix(mobile) - LocalStorage 복원 로직 + 렌더링 우선순위 변경
+4. `8ff73f2`: fix(mobile) - 그룹 홈 버튼 클릭 반응 복구
+5. `827d6b2`: fix(mobile) - 그룹 전환 시 모바일 채널 리스트 우선 표시
+6. `bcd8502`: feat(mobile) - 백버튼 시 채널 네비게이션 단계 추가
+
+**변경된 파일** (2개):
+- ✅ frontend/lib/presentation/pages/workspace/widgets/mobile_workspace_view.dart (렌더링 로직)
+- ✅ frontend/lib/presentation/providers/workspace_state_provider.dart (네비게이션 로직)
+
+**기대 효과**:
+- 모바일 워크스페이스 진입 시 채널 리스트가 먼저 표시됨
+- 백버튼 시 채널 네비게이션을 거쳐 단계적으로 되돌아감
+- 그룹 홈, 캘린더, 관리 페이지 등 특수 뷰는 정상 작동
+- 데스크톱 동작은 영향 없음
+
+**메모**: 모바일 워크스페이스 네비게이션의 완전한 개선. 백버튼 히스토리 시스템으로 사용자 경험을 크게 향상.
+
+---
+
 ### 2025-11-03 (G) - 읽지 않은 글 스크롤 버그 수정
 
 **유형**: 버그 수정
