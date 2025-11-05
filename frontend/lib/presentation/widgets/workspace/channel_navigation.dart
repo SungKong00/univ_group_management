@@ -11,7 +11,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../dialogs/create_channel_dialog.dart';
-import '../dialogs/channel_permissions_dialog.dart';
 import 'channel_item.dart';
 import 'workspace_header.dart';
 
@@ -409,7 +408,7 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
 
               final workspaceId = apiResponse.data!;
 
-              // 채널 생성 다이얼로그 표시
+              // 채널 생성 다이얼로그 표시 (권한 설정 통합)
               if (!context.mounted) return;
               final channel = await showCreateChannelDialog(
                 context,
@@ -418,35 +417,23 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
               );
 
               if (channel != null) {
-                // 권한 설정 다이얼로그 표시 (필수)
+                // 채널 + 권한이 이미 생성됨 (CreateChannelDialog에서 처리)
+                // 채널 목록 새로고침 (Provider 무효화)
                 if (!context.mounted) return;
-                final permissionsSet = await showChannelPermissionsDialog(
-                  context,
-                  channelId: channel.id,
-                  channelName: channel.name,
-                  groupId: groupId,
-                  isRequired: true,
-                );
+                ref.invalidate(workspaceChannelsProvider);
 
-                if (permissionsSet) {
-                  // 채널 목록 새로고침 (Provider 무효화)
-                  if (!context.mounted) return;
-                  ref.invalidate(workspaceChannelsProvider);
+                // 새로 생성된 채널로 네비게이션
+                ref
+                    .read(workspaceStateProvider.notifier)
+                    .showChannel(channel.id.toString());
 
-                  // 새로 생성된 채널로 네비게이션
-                  ref
-                      .read(workspaceStateProvider.notifier)
-                      .showChannel(channel.id.toString());
-
-                  // 성공 메시지 표시
-                  if (context.mounted) {
-                    AppSnackBar.info(context, '채널 "${channel.name}"이(가) 생성되었습니다');
-                  }
-                } else {
-                  // 권한 설정이 취소되거나 실패한 경우
-                  if (context.mounted) {
-                    AppSnackBar.info(context, '채널 "${channel.name}"이(가) 생성되었지만 권한 설정은 나중에 해주세요');
-                  }
+                // 성공 메시지 표시
+                if (context.mounted) {
+                  AppSnackBar.success(
+                    context,
+                    '채널 "${channel.name}"이(가) 생성되고 권한이 설정되었습니다',
+                    duration: const Duration(seconds: 3),
+                  );
                 }
               }
             } catch (e) {

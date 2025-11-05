@@ -90,102 +90,92 @@ class ChannelListSection extends ConsumerWidget {
   Widget _buildChannelCard(BuildContext context, Channel channel) {
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: InkWell(
-        onTap: () => _handleChannelTap(context, channel),
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            children: [
-              // 채널 아이콘
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.brand.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                ),
-                child: const Icon(
-                  Icons.tag,
-                  color: AppColors.brand,
-                  size: 20,
-                ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            // 채널 아이콘
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.brand.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              const SizedBox(width: AppSpacing.md),
-              // 채널 정보
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            channel.name,
-                            style: AppTheme.bodyLarge.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+              child: const Icon(
+                Icons.tag,
+                color: AppColors.brand,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            // 채널 정보
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          channel.name,
+                          style: AppTheme.bodyLarge.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: channel.type == 'ANNOUNCEMENT'
+                              ? AppColors.warning.withValues(alpha: 0.1)
+                              : AppColors.neutral200,
+                          borderRadius: BorderRadius.circular(AppRadius.xs),
+                        ),
+                        child: Text(
+                          channel.type == 'ANNOUNCEMENT' ? '공지' : '일반',
+                          style: AppTheme.bodySmall.copyWith(
                             color: channel.type == 'ANNOUNCEMENT'
-                                ? AppColors.warning.withValues(alpha: 0.1)
-                                : AppColors.neutral200,
-                            borderRadius: BorderRadius.circular(AppRadius.xs),
-                          ),
-                          child: Text(
-                            channel.type == 'ANNOUNCEMENT' ? '공지' : '일반',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: channel.type == 'ANNOUNCEMENT'
-                                  ? AppColors.warning
-                                  : AppColors.neutral700,
-                              fontSize: 11,
-                            ),
+                                ? AppColors.warning
+                                : AppColors.neutral700,
+                            fontSize: 11,
                           ),
                         ),
-                      ],
-                    ),
-                    if (channel.description != null &&
-                        channel.description!.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        channel.description!,
-                        style: AppTheme.bodySmall.copyWith(
-                          color: AppColors.neutral600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
+                  ),
+                  if (channel.description != null &&
+                      channel.description!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      channel.description!,
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppColors.neutral600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
-                ),
+                ],
               ),
-              const SizedBox(width: AppSpacing.sm),
-              // 권한 설정 버튼
-              IconButton(
-                icon: const Icon(Icons.settings, size: 20),
-                onPressed: () => _handleChannelSettings(context, channel),
-                tooltip: '채널 권한 설정',
-                color: AppColors.neutral600,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            // 권한 설정 버튼 (나중에 수정할 때 사용)
+            IconButton(
+              icon: const Icon(Icons.settings, size: 20),
+              onPressed: () => _handleChannelSettings(context, channel),
+              tooltip: '채널 권한 설정',
+              color: AppColors.neutral600,
+            ),
+          ],
         ),
       ),
     );
-  }
-
-  void _handleChannelTap(BuildContext context, Channel channel) {
-    // 채널 상세 보기 또는 다른 동작
-    // 현재는 권한 설정으로 이동
-    _handleChannelSettings(context, channel);
   }
 
   Future<void> _handleChannelSettings(BuildContext context, Channel channel) async {

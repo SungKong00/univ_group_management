@@ -373,10 +373,7 @@ class ContentService(
         // 3. 모든 역할이 해당 그룹 소속인지 확인
         val invalidRoles = existingRoles.filter { it.group.id != groupId }
         if (invalidRoles.isNotEmpty()) {
-            throw BusinessException(
-                ErrorCode.FORBIDDEN,
-                "역할이 해당 그룹에 속하지 않습니다",
-            )
+            throw BusinessException(ErrorCode.FORBIDDEN)
         }
 
         // 4. POST_READ 권한 필수 체크
@@ -391,10 +388,7 @@ class ContentService(
         // 5. 각 역할의 권한이 비어있지 않은지 확인
         rolePermissions.forEach { (roleId, permissions) ->
             if (permissions.isEmpty()) {
-                throw BusinessException(
-                    ErrorCode.EMPTY_ROLE_PERMISSIONS,
-                    "역할 ID $roleId 의 권한이 비어있습니다",
-                )
+                throw BusinessException(ErrorCode.EMPTY_ROLE_PERMISSIONS)
             }
         }
     }
@@ -409,32 +403,33 @@ class ContentService(
         channel: Channel,
         rolePermissions: Map<Long, Set<String>>,
     ) {
-        val bindings = rolePermissions.map { (roleId, permissionStrings) ->
-            // 역할 조회
-            val role =
-                groupRoleRepository.findById(roleId)
-                    .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+        val bindings =
+            rolePermissions.map { (roleId, permissionStrings) ->
+                // 역할 조회
+                val role =
+                    groupRoleRepository.findById(roleId)
+                        .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
-            // String -> ChannelPermission 변환
-            val permissions =
-                permissionStrings
-                    .mapNotNull { permStr ->
-                        try {
-                            ChannelPermission.valueOf(permStr)
-                        } catch (e: IllegalArgumentException) {
-                            logger.warn("Invalid permission string: $permStr")
-                            null
+                // String -> ChannelPermission 변환
+                val permissions =
+                    permissionStrings
+                        .mapNotNull { permStr ->
+                            try {
+                                ChannelPermission.valueOf(permStr)
+                            } catch (e: IllegalArgumentException) {
+                                logger.warn("Invalid permission string: $permStr")
+                                null
+                            }
                         }
-                    }
-                    .toMutableSet()
+                        .toMutableSet()
 
-            // ChannelRoleBinding 생성
-            ChannelRoleBinding(
-                channel = channel,
-                groupRole = role,
-                permissions = permissions,
-            )
-        }
+                // ChannelRoleBinding 생성
+                ChannelRoleBinding(
+                    channel = channel,
+                    groupRole = role,
+                    permissions = permissions,
+                )
+            }
 
         // 일괄 저장
         channelRoleBindingRepository.saveAll(bindings)
