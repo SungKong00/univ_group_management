@@ -52,7 +52,7 @@ class MobileWorkspaceView extends ConsumerWidget {
 
     // 4. 모바일 3단계 플로우에 따른 뷰 전환 (채널 관련) - 우선 처리
     // 모바일에서는 mobileView가 주 네비게이션을 제어합니다
-    if (currentView == WorkspaceView.channel) {
+    if (currentView == provider.WorkspaceView.channel) {
       switch (mobileView) {
         case provider.MobileWorkspaceView.channelList:
           // Step 1: 채널 목록
