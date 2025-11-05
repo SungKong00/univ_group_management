@@ -558,19 +558,11 @@ class _GroupCalendarWidgetState extends ConsumerState<_GroupCalendarWidget> {
   Widget build(BuildContext context) {
     final calendarState = ref.watch(groupCalendarProvider(widget.groupId));
 
-    // 🔍 DEBUG: Print event data pipeline
-    print('🔍 [GroupCalendar Debug] GroupId: ${widget.groupId}');
-    print('🔍 [GroupCalendar Debug] Total events count: ${calendarState.events.length}');
-    print('🔍 [GroupCalendar Debug] Focused month: ${_focusedDate.year}-${_focusedDate.month}');
-
     // Build event colors map from events
     final eventColorsByDate = <DateTime, List<Color>>{};
     for (final event in calendarState.events) {
       final normalizedStart = _normalizeDate(event.startDate);
       final normalizedEnd = _normalizeDate(event.endDate);
-
-      // 🔍 DEBUG: Print each event details
-      print('🔍 [Event] "${event.title}" | Start: $normalizedStart | End: $normalizedEnd | Color: ${event.color}');
 
       // Add event color to all dates it spans
       var currentDate = normalizedStart;
@@ -580,12 +572,6 @@ class _GroupCalendarWidgetState extends ConsumerState<_GroupCalendarWidget> {
         currentDate = currentDate.add(const Duration(days: 1));
       }
     }
-
-    // 🔍 DEBUG: Print final eventColorsByDate map
-    print('🔍 [GroupCalendar Debug] Event colors by date count: ${eventColorsByDate.length}');
-    eventColorsByDate.forEach((date, colors) {
-      print('🔍 [Date] $date has ${colors.length} event(s) with colors: $colors');
-    });
 
     if (calendarState.isLoading) {
       return const Center(
