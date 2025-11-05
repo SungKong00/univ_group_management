@@ -52,10 +52,11 @@ class ReadPositionHelper {
     Map<DateTime, List<Post>> groupedPosts,
     int? lastReadPostId,
   ) {
-    // ✅ 수정: lastReadPostId가 null이면 "읽음 이력 없음" = "모든 글이 읽지 않음"
+    // ✅ 수정: lastReadPostId가 null 또는 -1이면 "읽음 이력 없음" = "모든 글이 읽지 않음"
     // 따라서 첫 번째 게시글(index 0)부터 읽지 않은 글로 간주
-    if (lastReadPostId == null) {
-      print('[DEBUG] ReadPositionHelper: lastReadPostId is null, all posts are unread (return index 0)');
+    // -1: 신규 채널 또는 API가 null을 반환한 경우 (workspace_state_provider에서 설정)
+    if (lastReadPostId == null || lastReadPostId == -1) {
+      print('[DEBUG] ReadPositionHelper: lastReadPostId is $lastReadPostId (new channel), all posts are unread (return index 0)');
       return groupedPosts.isEmpty ? null : 0;
     }
 

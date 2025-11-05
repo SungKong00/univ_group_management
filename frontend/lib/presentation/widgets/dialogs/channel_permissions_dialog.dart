@@ -74,8 +74,25 @@ class _ChannelPermissionsDialogState
     });
 
     try {
+      // 1. 역할 목록 로드
       final roleRepository = ApiRoleRepository();
       final roles = await roleRepository.getGroupRoles(widget.groupId);
+
+      // 2. 기존 권한 바인딩 로드
+      final channelService = ChannelService();
+      final bindings =
+          await channelService.getChannelRoleBindings(widget.channelId);
+
+      // 3. 바인딩을 _permissionMatrix로 변환 (기존 권한을 체크박스에 표시)
+      for (final binding in bindings) {
+        final roleId = binding['groupRoleId'] as int;
+        final permissions = (binding['permissions'] as List).cast<String>();
+
+        for (final permission in permissions) {
+          // POST_READ, POST_WRITE 등 권한을 해당 역할의 Set에 추가
+          _permissionMatrix[permission]?.add(roleId);
+        }
+      }
 
       setState(() {
         _roles = roles;
@@ -83,7 +100,7 @@ class _ChannelPermissionsDialogState
       });
     } catch (e) {
       setState(() {
-        _errorMessage = '역할 목록을 불러올 수 없습니다: $e';
+        _errorMessage = '역할 및 권한 정보를 불러올 수 없습니다: $e';
         _isLoadingRoles = false;
       });
     }
