@@ -72,7 +72,6 @@ class PlaceTimeManagementPage extends ConsumerWidget {
           PlaceOperatingHoursEditor(
             placeId: placeId,
             initialOperatingHours: operatingHours,
-            initialRestrictedTimes: restrictedTimes,
             onSaveOperatingHours: (hours) async {
               try {
                 final request = SetOperatingHoursRequest(operatingHours: hours);
@@ -81,36 +80,6 @@ class PlaceTimeManagementPage extends ConsumerWidget {
                   request: request,
                 );
                 await ref.read(setOperatingHoursProvider(params).future);
-                return true;
-              } catch (e) {
-                return false;
-              }
-            },
-            onAddRestrictedTime: (dayOfWeek, startTime, endTime, reason) async {
-              try {
-                final request = AddRestrictedTimeRequest(
-                  dayOfWeek: dayOfWeek,
-                  startTime: startTime,
-                  endTime: endTime,
-                  reason: reason,
-                );
-                final params = AddRestrictedTimeParams(
-                  placeId: placeId,
-                  request: request,
-                );
-                await ref.read(addRestrictedTimeProvider(params).future);
-                return true;
-              } catch (e) {
-                return false;
-              }
-            },
-            onDeleteRestrictedTime: (restrictedTimeId) async {
-              try {
-                final params = DeleteRestrictedTimeParams(
-                  placeId: placeId,
-                  restrictedTimeId: restrictedTimeId,
-                );
-                await ref.read(deleteRestrictedTimeProvider(params).future);
                 return true;
               } catch (e) {
                 return false;

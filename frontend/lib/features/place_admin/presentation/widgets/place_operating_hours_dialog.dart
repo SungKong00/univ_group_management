@@ -334,10 +334,8 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
                   icon: const Icon(Icons.edit, size: 18),
                   width: 120,
                   onPressed: () async {
-                    // 운영시간과 제한시간 데이터 가져오기
+                    // 운영시간 데이터 가져오기
                     final operatingHours = hoursAsync.valueOrNull ?? [];
-                    final restrictedTimesAsync = ref.read(restrictedTimesProvider(placeId));
-                    final restrictedTimes = restrictedTimesAsync.valueOrNull ?? [];
 
                     final result = await showDialog<bool>(
                       context: context,
@@ -345,39 +343,11 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
                         child: PlaceOperatingHoursEditor(
                           placeId: placeId,
                           initialOperatingHours: operatingHours,
-                          initialRestrictedTimes: restrictedTimes,
                           onSaveOperatingHours: (hours) async {
                             try {
                               final request = SetOperatingHoursRequest(operatingHours: hours);
                               final params = SetOperatingHoursParams(placeId: placeId, request: request);
                               await ref.read(setOperatingHoursProvider(params).future);
-                              return true;
-                            } catch (e) {
-                              return false;
-                            }
-                          },
-                          onAddRestrictedTime: (dayOfWeek, startTime, endTime, reason) async {
-                            try {
-                              final request = AddRestrictedTimeRequest(
-                                dayOfWeek: dayOfWeek,
-                                startTime: startTime,
-                                endTime: endTime,
-                                reason: reason,
-                              );
-                              final params = AddRestrictedTimeParams(placeId: placeId, request: request);
-                              await ref.read(addRestrictedTimeProvider(params).future);
-                              return true;
-                            } catch (e) {
-                              return false;
-                            }
-                          },
-                          onDeleteRestrictedTime: (restrictedTimeId) async {
-                            try {
-                              final params = DeleteRestrictedTimeParams(
-                                placeId: placeId,
-                                restrictedTimeId: restrictedTimeId,
-                              );
-                              await ref.read(deleteRestrictedTimeProvider(params).future);
                               return true;
                             } catch (e) {
                               return false;
@@ -396,7 +366,6 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
                     if (result == true) {
                       // 성공 시 목록 새로고침
                       ref.invalidate(operatingHoursProvider(placeId));
-                      ref.invalidate(restrictedTimesProvider(placeId));
                     }
                   },
                 ),

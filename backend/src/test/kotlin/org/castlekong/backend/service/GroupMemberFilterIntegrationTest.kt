@@ -762,12 +762,13 @@ class GroupMemberFilterIntegrationTest {
     @DisplayName("Preview API: 결과 없음")
     fun testPreviewWithNoResults() {
         // when
+        // AI 학회에는 3학년이 없음
         val preview =
             groupMemberService.previewMembers(
                 groupId = parentGroup.id,
                 roleIds = null,
                 groupIds = subGroup1.id.toString(),
-                grades = "3", // AI 학회에는 3학년이 없음
+                grades = "3",
                 years = null,
             )
 

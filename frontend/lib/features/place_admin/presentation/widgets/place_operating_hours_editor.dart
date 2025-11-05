@@ -1,73 +1,24 @@
-import 'dart:async';
-import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:vibration/vibration.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/place_time_models.dart';
+import '../../../../core/providers/place_time_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../core/utils/snack_bar_helper.dart';
 import '../../../../presentation/widgets/buttons/primary_button.dart';
 import '../../../../presentation/widgets/buttons/neutral_outlined_button.dart';
-import '../../../../presentation/widgets/weekly_calendar/time_grid_painter.dart';
-import '../../../../presentation/widgets/weekly_calendar/highlight_painter.dart';
-import '../../../../presentation/widgets/weekly_calendar/selection_painter.dart';
 
-/// 에디터 모드 (운영시간 또는 브레이크 타임)
-enum EditorMode {
-  operatingHours,  // 운영시간 설정 (보라색)
-  breakTime,       // 브레이크 타임 설정 (노란색)
-}
-
-/// 시간 블록 모델 (운영시간 또는 브레이크 타임)
-class TimeBlock {
-  final int day;       // 0 (월) ~ 6 (일)
-  final int startSlot; // 15분 단위 (0 = 00:00, 96 = 24:00)
-  final int endSlot;
-  final Color color;
-  final int? id;       // 서버 ID (브레이크 타임용, null이면 신규)
-
-  TimeBlock({
-    required this.day,
-    required this.startSlot,
-    required this.endSlot,
-    required this.color,
-    this.id,
-  });
-
-  /// 슬롯을 "HH:mm" 형식으로 변환
-  static String slotToTimeString(int slot) {
-    final hour = slot ~/ 4;
-    final minute = (slot % 4) * 15;
-    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-  }
-
-  /// "HH:mm" 형식을 슬롯으로 변환
-  static int timeStringToSlot(String time) {
-    final parts = time.split(':');
-    if (parts.length != 2) return 0;
-    final hour = int.tryParse(parts[0]) ?? 0;
-    final minute = int.tryParse(parts[1]) ?? 0;
-    return hour * 4 + (minute ~/ 15);
-  }
-
-  String get startTime => slotToTimeString(startSlot);
-  String get endTime => slotToTimeString(endSlot);
-}
-
-/// 장소 운영시간 에디터
+/// 장소 운영시간 에디터 (카드 + Range Slider 방식)
 ///
-/// WeeklyScheduleEditor 기반으로 장소의 운영시간과 브레이크 타임을 설정합니다.
-/// - 운영시간 모드: 요일별 1개 블록 (보라색)
-/// - 브레이크 타임 모드: 요일별 N개 블록 (노란색)
-class PlaceOperatingHoursEditor extends StatefulWidget {
+/// 7개의 요일별 카드로 구성되며, 각 카드는:
+/// - 토글 스위치 (on/off로 휴무 설정)
+/// - Range Slider (시작/종료 시간 드래그 조정)
+/// - 브레이크 타임 섹션 (접기/펼치기 가능)
+class PlaceOperatingHoursEditor extends ConsumerStatefulWidget {
   final int placeId;
   final List<OperatingHoursResponse> initialOperatingHours;
-  final List<RestrictedTimeResponse> initialRestrictedTimes;
   final Future<bool> Function(List<OperatingHoursItem> operatingHours) onSaveOperatingHours;
-  final Future<bool> Function(String dayOfWeek, String startTime, String endTime, String? reason) onAddRestrictedTime;
-  final Future<bool> Function(int restrictedTimeId) onDeleteRestrictedTime;
   final VoidCallback? onSaveCompleted;
   final VoidCallback? onCancel;
 
@@ -75,110 +26,76 @@ class PlaceOperatingHoursEditor extends StatefulWidget {
     super.key,
     required this.placeId,
     required this.initialOperatingHours,
-    required this.initialRestrictedTimes,
     required this.onSaveOperatingHours,
-    required this.onAddRestrictedTime,
-    required this.onDeleteRestrictedTime,
     this.onSaveCompleted,
     this.onCancel,
   });
 
   @override
-  State<PlaceOperatingHoursEditor> createState() => _PlaceOperatingHoursEditorState();
+  ConsumerState<PlaceOperatingHoursEditor> createState() => _PlaceOperatingHoursEditorState();
 }
 
-class _PlaceOperatingHoursEditorState extends State<PlaceOperatingHoursEditor> {
-  // Grid Geometry
-  final double _timeColumnWidth = 50.0;
-  final double _dayRowHeight = 50.0;
-  final int _startHour = 0;
-  final int _endHour = 24;
-  final int _daysInWeek = 7;
-  final double _minSlotHeight = 20.0;
+class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursEditor> {
+  // 요일별 운영 상태 (true = 운영, false = 휴무)
+  final Map<int, bool> _isOperating = {};
 
-  // State
-  EditorMode _mode = EditorMode.operatingHours;
-  Map<int, TimeBlock> _operatingHours = {};      // 요일별 1개
-  Map<int, List<TimeBlock>> _breakTimes = {};    // 요일별 N개
+  // 요일별 시간 범위 (슬롯 단위: 0-96, 15분 단위)
+  final Map<int, RangeValues> _timeRanges = {};
+
+  // 요일별 수정 상태 추적 (보라색 강조 표시용)
+  final Map<int, bool> _modifiedDays = {};
+
+  // 요일별 브레이크 타임 접기/펼치기 상태 (삭제됨 - 항상 표시)
+  // final Map<int, bool> _breakTimeExpanded = {};
+
+  // 브레이크 타임별 Range 값 (id → RangeValues)
+  final Map<int, RangeValues> _breakTimeRanges = {};
+
+  // 브레이크 타임 변경사항 추적
+  final Map<int, List<RestrictedTimeChange>> _pendingBreakTimeChanges = {};
 
   bool _isDirty = false;
   bool _isSaving = false;
 
-  // Initial data (for rollback)
-  late Map<int, TimeBlock> _initialOperatingHours;
-  late Map<int, List<TimeBlock>> _initialBreakTimes;
+  // 초기 데이터 (롤백용)
+  late Map<int, bool> _initialIsOperating;
+  late Map<int, RangeValues> _initialTimeRanges;
 
-  // Selection state
-  bool _isSelecting = false;
-  ({int day, int slot})? _startCell;
-  ({int day, int slot})? _endCell;
-  Rect? _selectionRect;
-  Rect? _highlightRect;
-  Offset? _activePointerGlobalPosition;
-
-  // Scroll
-  late ScrollController _scrollController;
-  Timer? _autoScrollTimer;
-  static const double _edgeScrollThreshold = 50.0;
-  static const double _scrollSpeed = 5.0;
-  int _autoScrollDirection = 0;
-  double _autoScrollDayColumnWidth = 0;
-
-  double _currentDayColumnWidth = 0;
-  double _currentContentHeight = 0;
-  double _currentViewportHeight = 0;
-
-  final GlobalKey _gestureContentKey = GlobalKey();
+  // 슬롯 단위 (15분 = 1슬롯, 96슬롯 = 24시간)
+  static const int _slotsPerHour = 4; // 15분 단위
+  static const int _totalSlots = 96; // 24시간 * 4
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
     _parseInitialData();
-  }
-
-  @override
-  void dispose() {
-    _stopAutoScroll();
-    _scrollController.dispose();
-    super.dispose();
   }
 
   /// 서버 데이터 파싱
   void _parseInitialData() {
+    // 7일 초기화 (기본값: 휴무)
+    for (int day = 0; day < 7; day++) {
+      _isOperating[day] = false;
+      _timeRanges[day] = const RangeValues(36, 72); // 기본 09:00-18:00
+      _modifiedDays[day] = false; // 초기 상태는 수정되지 않음
+    }
+
     // 운영시간 파싱
     for (final oh in widget.initialOperatingHours) {
-      if (oh.isClosed || oh.startTime == null || oh.endTime == null) continue;
-
       final day = _dayOfWeekToIndex(oh.dayOfWeek);
       if (day == -1) continue;
 
-      _operatingHours[day] = TimeBlock(
-        day: day,
-        startSlot: TimeBlock.timeStringToSlot(oh.startTime!),
-        endSlot: TimeBlock.timeStringToSlot(oh.endTime!),
-        color: AppColors.brand.withOpacity(0.8),
-      );
+      if (!oh.isClosed && oh.startTime != null && oh.endTime != null) {
+        _isOperating[day] = true;
+        final startSlot = _timeStringToSlot(oh.startTime!);
+        final endSlot = _timeStringToSlot(oh.endTime!);
+        _timeRanges[day] = RangeValues(startSlot.toDouble(), endSlot.toDouble());
+      }
     }
 
-    // 브레이크 타임 파싱
-    for (final rt in widget.initialRestrictedTimes) {
-      final day = _dayOfWeekToIndex(rt.dayOfWeek);
-      if (day == -1) continue;
-
-      _breakTimes.putIfAbsent(day, () => []);
-      _breakTimes[day]!.add(TimeBlock(
-        day: day,
-        startSlot: TimeBlock.timeStringToSlot(rt.startTime),
-        endSlot: TimeBlock.timeStringToSlot(rt.endTime),
-        color: Colors.amber.withOpacity(0.8),
-        id: rt.id,
-      ));
-    }
-
-    // 초기 데이터 백업 (롤백용)
-    _initialOperatingHours = Map.from(_operatingHours);
-    _initialBreakTimes = Map.from(_breakTimes.map((k, v) => MapEntry(k, List.from(v))));
+    // 초기 데이터 백업
+    _initialIsOperating = Map.from(_isOperating);
+    _initialTimeRanges = Map.from(_timeRanges);
   }
 
   /// 요일 문자열을 인덱스로 변환
@@ -201,483 +118,179 @@ class _PlaceOperatingHoursEditorState extends State<PlaceOperatingHoursEditor> {
     return days[index];
   }
 
-  // --- Auto-scroll ---
-
-  void _stopAutoScroll() {
-    _autoScrollTimer?.cancel();
-    _autoScrollTimer = null;
-    _autoScrollDirection = 0;
+  /// 인덱스를 한글 요일로 변환
+  String _indexToDayOfWeekKorean(int index) {
+    const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+    return days[index];
   }
 
-  void _performAutoScrollTick() {
-    if (!_scrollController.hasClients || _autoScrollDirection == 0) {
-      _stopAutoScroll();
-      return;
-    }
-
-    final double maxExtent = _scrollController.position.maxScrollExtent;
-    final double targetOffset = (_scrollController.offset + _autoScrollDirection * _scrollSpeed)
-        .clamp(0.0, maxExtent);
-
-    if (targetOffset == _scrollController.offset) {
-      _stopAutoScroll();
-      return;
-    }
-
-    _scrollController.jumpTo(targetOffset);
-
-    if (_activePointerGlobalPosition != null) {
-      _updateSelectionFromPointer(
-        _activePointerGlobalPosition!,
-        _autoScrollDayColumnWidth,
-        checkAutoScroll: false,
-      );
-    }
+  /// "HH:mm" 형식을 슬롯으로 변환
+  int _timeStringToSlot(String time) {
+    final parts = time.split(':');
+    if (parts.length != 2) return 0;
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1]) ?? 0;
+    final slot = hour * _slotsPerHour + (minute ~/ 15);
+    return slot.clamp(0, 95); // 슬롯 범위 제한 (0-95)
   }
 
-  void _handleEdgeScrolling(Offset globalPosition, double dayColumnWidth) {
-    if (!_scrollController.hasClients) return;
-    if (_currentViewportHeight <= 0) return;
-
-    final localPosition = _globalToGestureLocal(globalPosition);
-    final scrollOffset = _scrollController.offset;
-    final viewportY = localPosition.dy - scrollOffset;
-
-    const double topThreshold = _edgeScrollThreshold;
-    final double bottomThreshold = _currentViewportHeight - _edgeScrollThreshold;
-
-    int direction = 0;
-
-    if (viewportY <= topThreshold) {
-      direction = -1;
-    } else if (viewportY >= bottomThreshold) {
-      direction = 1;
-    }
-
-    if (direction == 0) {
-      _stopAutoScroll();
-    } else {
-      _autoScrollDirection = direction;
-      _autoScrollDayColumnWidth = dayColumnWidth;
-      _autoScrollTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
-        _performAutoScrollTick();
-      });
-    }
+  /// 슬롯을 "HH:mm" 형식으로 변환
+  String _slotToTimeString(int slot) {
+    final hour = slot ~/ _slotsPerHour;
+    final minute = (slot % _slotsPerHour) * 15;
+    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
   }
 
-  // --- Haptic ---
-
-  Future<void> _triggerHaptic() async {
-    if (kIsWeb) return;
-
-    try {
-      HapticFeedback.mediumImpact();
-      final hasVibrator = await Vibration.hasVibrator();
-      if (hasVibrator == true) {
-        final hasAmplitudeControl = await Vibration.hasAmplitudeControl();
-        if (hasAmplitudeControl == false) {
-          Vibration.vibrate(duration: 100);
-        }
-      }
-    } catch (e) {
-      debugPrint('Haptic error: $e');
-    }
-  }
-
-  // --- Coordinate Conversion ---
-
-  RenderBox? get _gestureRenderBox =>
-      _gestureContentKey.currentContext?.findRenderObject() as RenderBox?;
-
-  Offset _globalToGestureLocal(Offset globalPosition) {
-    final renderBox = _gestureRenderBox;
-    if (renderBox == null) return Offset.zero;
-    return renderBox.globalToLocal(globalPosition);
-  }
-
-  Offset _clampLocalToContent(Offset position, double dayColumnWidth) {
-    final double maxWidth = math.max(
-      _timeColumnWidth + dayColumnWidth * _daysInWeek,
-      _timeColumnWidth + 1,
-    );
-    final double maxHeight = math.max(_currentContentHeight, 1.0);
-
-    final double clampedX = position.dx.clamp(0.0, maxWidth);
-    final double clampedY = position.dy.clamp(0.0, maxHeight - 1);
-    return Offset(clampedX, clampedY);
-  }
-
-  ({int day, int slot}) _pixelToCell(Offset position, double dayColumnWidth) {
-    final double slotHeight = _minSlotHeight;
-    final int visibleSlots = (_endHour - _startHour) * 4;
-
-    int day = ((position.dx - _timeColumnWidth) / dayColumnWidth).floor();
-    day = day.clamp(0, _daysInWeek - 1);
-
-    int slotOffset = (position.dy / slotHeight).floor();
-    slotOffset = slotOffset.clamp(0, visibleSlots - 1);
-
-    return (day: day, slot: slotOffset);
-  }
-
-  Rect _cellToRect(({int day, int slot}) start, ({int day, int slot}) end, double dayColumnWidth) {
-    final double slotHeight = _minSlotHeight;
-
-    final startDay = start.day < end.day ? start.day : end.day;
-    final endDay = start.day > end.day ? start.day : end.day;
-    final startSlot = start.slot < end.slot ? start.slot : end.slot;
-    final endSlot = start.slot > end.slot ? start.slot : end.slot;
-
-    return Rect.fromLTRB(
-      _timeColumnWidth + startDay * dayColumnWidth,
-      startSlot * slotHeight,
-      _timeColumnWidth + (endDay + 1) * dayColumnWidth,
-      (endSlot + 1) * slotHeight,
-    );
-  }
-
-  // --- Selection Handlers ---
-
-  void _updateSelectionCell(
-    Offset position,
-    double dayColumnWidth, {
-    bool enableHaptics = false,
-  }) {
-    if (_startCell == null) return;
-
-    final clampedPosition = _clampLocalToContent(position, dayColumnWidth);
-    var currentCell = _pixelToCell(clampedPosition, dayColumnWidth);
-
-    // 같은 요일 내에서만 선택
-    currentCell = (day: _startCell!.day, slot: currentCell.slot);
-
-    // 하프틱 피드백
-    if (enableHaptics && _endCell != null && currentCell != _endCell) {
-      _triggerHaptic();
-    }
-
-    // 역방향 선택 방지
-    if (currentCell.slot < _startCell!.slot) {
-      setState(() {
-        _endCell = currentCell;
-        _selectionRect = null;
-        _highlightRect = _cellToRect(currentCell, currentCell, dayColumnWidth);
-      });
-    } else if (currentCell != _endCell) {
-      setState(() {
-        _endCell = currentCell;
-        _selectionRect = _cellToRect(_startCell!, currentCell, dayColumnWidth);
-        _highlightRect = _cellToRect(currentCell, currentCell, dayColumnWidth);
-      });
-    }
-  }
-
-  void _completeSelection() {
-    final finalStartCell = _startCell;
-    final finalEndCell = _endCell;
-
-    _activePointerGlobalPosition = null;
-    _stopAutoScroll();
-
-    setState(() {
-      _isSelecting = false;
-      _startCell = null;
-      _endCell = null;
-      _selectionRect = null;
-      _highlightRect = null;
-    });
-
-    if (finalStartCell != null && finalEndCell != null && finalEndCell.slot >= finalStartCell.slot) {
-      _handleBlockCreation(finalStartCell, finalEndCell);
-    }
-  }
-
-  /// 블록 생성 처리 (모드별로 분기)
-  void _handleBlockCreation(({int day, int slot}) startCell, ({int day, int slot}) endCell) {
-    if (_mode == EditorMode.operatingHours) {
-      _handleOperatingHoursCreation(startCell, endCell);
-    } else {
-      _handleBreakTimeCreation(startCell, endCell);
-    }
-  }
-
-  /// 운영시간 블록 생성 (요일별 1개 제약)
-  void _handleOperatingHoursCreation(({int day, int slot}) startCell, ({int day, int slot}) endCell) {
-    final day = startCell.day;
-
-    // 기존 블록이 있으면 교체 확인 다이얼로그
-    if (_operatingHours.containsKey(day)) {
-      _showReplaceConfirmDialog(day, startCell, endCell);
-    } else {
-      _createOperatingHoursBlock(day, startCell, endCell);
-    }
-  }
-
-  /// 운영시간 블록 생성
-  void _createOperatingHoursBlock(int day, ({int day, int slot}) startCell, ({int day, int slot}) endCell) {
-    setState(() {
-      _operatingHours[day] = TimeBlock(
-        day: day,
-        startSlot: startCell.slot,
-        endSlot: endCell.slot,
-        color: AppColors.brand.withOpacity(0.8),
-      );
-      _isDirty = true;
-    });
-  }
-
-  /// 브레이크 타임 블록 생성 (운영시간 내부만 허용, 겹침 방지)
-  void _handleBreakTimeCreation(({int day, int slot}) startCell, ({int day, int slot}) endCell) {
-    final day = startCell.day;
-
-    // 1. 운영시간 블록이 있는지 확인
-    if (!_operatingHours.containsKey(day)) {
-      AppSnackBar.info(context, '운영시간이 설정되지 않은 요일입니다');
-      return;
-    }
-
-    final operatingBlock = _operatingHours[day]!;
-
-    // 2. 브레이크 타임이 운영시간 내부에 있는지 확인
-    if (startCell.slot < operatingBlock.startSlot || endCell.slot > operatingBlock.endSlot) {
-      AppSnackBar.info(context, '브레이크 타임은 운영시간 내에만 설정할 수 있습니다');
-      return;
-    }
-
-    // 3. 기존 브레이크 타임과 겹침 확인
-    if (_breakTimes.containsKey(day)) {
-      for (final block in _breakTimes[day]!) {
-        if (_isOverlapping(startCell.slot, endCell.slot, block.startSlot, block.endSlot)) {
-          AppSnackBar.info(context, '이미 설정된 시간대입니다');
-          return;
-        }
-      }
-    }
-
-    // 4. 브레이크 타임 생성
-    setState(() {
-      _breakTimes.putIfAbsent(day, () => []);
-      _breakTimes[day]!.add(TimeBlock(
-        day: day,
-        startSlot: startCell.slot,
-        endSlot: endCell.slot,
-        color: Colors.amber.withOpacity(0.8),
-      ));
-      _isDirty = true;
-    });
-  }
-
-  /// 시간 겹침 확인
-  bool _isOverlapping(int start1, int end1, int start2, int end2) {
-    return start1 <= end2 && end1 >= start2;
-  }
-
-  /// 교체 확인 다이얼로그
-  void _showReplaceConfirmDialog(int day, ({int day, int slot}) startCell, ({int day, int slot}) endCell) {
-    showDialog(
+  /// 충돌 경고 다이얼로그 표시
+  Future<bool> _showConflictWarningDialog(
+    String dayLabel,
+    List<RestrictedTimeResponse> conflicts,
+  ) async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.dialog),
+          borderRadius: BorderRadius.circular(16),
         ),
-        title: Text('기존 운영시간 변경', style: AppTheme.headlineSmall),
-        content: Text(
-          '이 요일에 이미 운영시간이 설정되어 있습니다.\n기존 운영시간을 변경하시겠습니까?',
-          style: AppTheme.bodyMedium,
+        title: Row(
+          children: [
+            Icon(Icons.warning, color: AppColors.warning, size: 24),
+            const SizedBox(width: 8),
+            Text('운영시간 변경 확인', style: AppTheme.headlineSmall),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$dayLabel의 운영시간 변경으로 다음 브레이크 타임이 삭제됩니다:',
+              style: AppTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            ...conflicts.map((c) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Icon(Icons.access_time, color: AppColors.neutral600, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${c.reason ?? '브레이크 타임'}: ${c.startTime} - ${c.endTime}',
+                      style: AppTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            )),
+          ],
         ),
         actions: [
-          Flexible(
-            child: NeutralOutlinedButton(
-              text: '취소',
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: PrimaryButton(
-              text: '변경',
-              onPressed: () {
-                Navigator.of(context).pop();
-                _createOperatingHoursBlock(day, startCell, endCell);
-              },
-              variant: PrimaryButtonVariant.brand,
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: NeutralOutlinedButton(
+                  text: '취소',
+                  onPressed: () => Navigator.pop(context, false),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: PrimaryButton(
+                  text: '삭제하고 저장',
+                  variant: PrimaryButtonVariant.error,
+                  onPressed: () => Navigator.pop(context, true),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
+
+    return result ?? false;
   }
 
-  /// 블록 삭제 다이얼로그
-  void _showDeleteConfirmDialog(TimeBlock block, bool isOperatingHours) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.dialog),
-        ),
-        title: Text('삭제 확인', style: AppTheme.headlineSmall),
-        content: Text(
-          '${isOperatingHours ? "운영시간" : "브레이크 타임"}을 삭제하시겠습니까?',
-          style: AppTheme.bodyMedium,
-        ),
-        actions: [
-          Flexible(
-            child: NeutralOutlinedButton(
-              text: '취소',
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: PrimaryButton(
-              text: '삭제',
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteBlock(block, isOperatingHours);
-              },
-              variant: PrimaryButtonVariant.error,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 블록 삭제
-  void _deleteBlock(TimeBlock block, bool isOperatingHours) {
-    setState(() {
-      if (isOperatingHours) {
-        _operatingHours.remove(block.day);
-      } else {
-        _breakTimes[block.day]?.removeWhere((b) => b.startSlot == block.startSlot && b.endSlot == block.endSlot);
-      }
-      _isDirty = true;
-    });
-  }
-
-  // --- Tap Handlers ---
-
-  void _handleTap(Offset position, double dayColumnWidth) {
-    final clampedPosition = _clampLocalToContent(position, dayColumnWidth);
-    final cell = _pixelToCell(clampedPosition, dayColumnWidth);
-
-    // 블록 클릭 확인
-    final tappedBlock = _findBlockAtCell(cell);
-    if (tappedBlock != null) {
-      final isOperatingHours = tappedBlock.$2;
-      _showDeleteConfirmDialog(tappedBlock.$1, isOperatingHours);
-      return;
-    }
-
-    // 새 블록 생성 시작
-    if (!_isSelecting) {
-      setState(() {
-        _isSelecting = true;
-        _startCell = _pixelToCell(clampedPosition, dayColumnWidth);
-        _endCell = _startCell;
-        _selectionRect = _cellToRect(_startCell!, _endCell!, dayColumnWidth);
-      });
-    } else {
-      _completeSelection();
-    }
-  }
-
-  void _handleLongPressStart(LongPressStartDetails details, double dayColumnWidth) {
-    final localPosition =
-        _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
-    final cell = _pixelToCell(localPosition, dayColumnWidth);
-
-    _triggerHaptic();
-    _activePointerGlobalPosition = details.globalPosition;
-    setState(() {
-      _isSelecting = true;
-      _startCell = cell;
-      _endCell = _startCell;
-      _selectionRect = _cellToRect(_startCell!, _endCell!, dayColumnWidth);
-      _highlightRect = _cellToRect(cell, cell, dayColumnWidth);
-    });
-  }
-
-  void _handleLongPressEnd(LongPressEndDetails details) {
-    _activePointerGlobalPosition = null;
-    _stopAutoScroll();
-  }
-
-  void _updateSelectionFromPointer(
-    Offset globalPosition,
-    double dayColumnWidth, {
-    bool checkAutoScroll = true,
-  }) {
-    if (_startCell == null) return;
-
-    _activePointerGlobalPosition = globalPosition;
-    final localPosition =
-        _clampLocalToContent(_globalToGestureLocal(globalPosition), dayColumnWidth);
-
-    _updateSelectionCell(
-      localPosition,
-      dayColumnWidth,
-      enableHaptics: true,
-    );
-
-    if (checkAutoScroll) {
-      _handleEdgeScrolling(globalPosition, dayColumnWidth);
-    }
-  }
-
-  void _handleMobileTap(Offset globalPosition, double dayColumnWidth) {
-    final localPosition =
-        _clampLocalToContent(_globalToGestureLocal(globalPosition), dayColumnWidth);
-    final cell = _pixelToCell(localPosition, dayColumnWidth);
-
-    // 블록 클릭 확인
-    final tappedBlock = _findBlockAtCell(cell);
-    if (tappedBlock != null) {
-      final isOperatingHours = tappedBlock.$2;
-      _showDeleteConfirmDialog(tappedBlock.$1, isOperatingHours);
-    }
-  }
-
-  /// 셀에 있는 블록 찾기 (운영시간 또는 브레이크 타임)
-  /// Returns (TimeBlock, isOperatingHours)
-  (TimeBlock, bool)? _findBlockAtCell(({int day, int slot}) cell) {
-    final day = cell.day;
-
-    // 운영시간 확인
-    if (_operatingHours.containsKey(day)) {
-      final block = _operatingHours[day]!;
-      if (cell.slot >= block.startSlot && cell.slot <= block.endSlot) {
-        return (block, true);
-      }
-    }
-
-    // 브레이크 타임 확인
-    if (_breakTimes.containsKey(day)) {
-      for (final block in _breakTimes[day]!) {
-        if (cell.slot >= block.startSlot && cell.slot <= block.endSlot) {
-          return (block, false);
-        }
-      }
-    }
-
-    return null;
-  }
-
-  // --- Save/Cancel ---
-
+  /// 저장 처리
   Future<void> _handleSave() async {
     if (!_isDirty) {
       AppSnackBar.info(context, '변경사항이 없습니다');
       return;
     }
 
+    if (_isSaving) return;
+
     setState(() {
       _isSaving = true;
     });
 
     try {
-      // 1. 운영시간 저장 (전체 교체)
+      // 1. 모든 브레이크 타임 가져오기 (동기 접근)
+      final restrictedTimesAsync = ref.read(restrictedTimesProvider(widget.placeId));
+      final allRestrictedTimes = restrictedTimesAsync.asData?.value ?? [];
+
+      // 2. 각 요일별로 충돌 검증
+      final allConflicts = <int, List<RestrictedTimeResponse>>{};
+
+      for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
+        final dayOfWeek = _indexToDayOfWeek(dayIndex);
+        final conflicts = _findConflictingBreakTimes(
+          dayIndex,
+          dayOfWeek,
+          allRestrictedTimes,
+        );
+
+        if (conflicts.isNotEmpty) {
+          allConflicts[dayIndex] = conflicts;
+        }
+      }
+
+      // 3. 충돌이 있으면 경고 다이얼로그 표시
+      if (allConflicts.isNotEmpty) {
+        // 충돌이 있는 요일별로 다이얼로그 표시
+        for (final entry in allConflicts.entries) {
+          final dayIndex = entry.key;
+          final conflicts = entry.value;
+          final dayLabel = _indexToDayOfWeekKorean(dayIndex);
+
+          final confirmed = await _showConflictWarningDialog(dayLabel, conflicts);
+
+          if (!confirmed) {
+            // 취소 선택 시 저장 중단
+            setState(() {
+              _isSaving = false;
+            });
+            return;
+          }
+        }
+
+        // 4. 충돌하는 브레이크 타임 삭제
+        int deletedCount = 0;
+        for (final conflicts in allConflicts.values) {
+          for (final conflict in conflicts) {
+            try {
+              final params = DeleteRestrictedTimeParams(
+                placeId: widget.placeId,
+                restrictedTimeId: conflict.id,
+              );
+              await ref.read(deleteRestrictedTimeProvider(params).future);
+              deletedCount++;
+            } catch (e) {
+              debugPrint('브레이크 타임 삭제 실패: $e');
+            }
+          }
+        }
+
+        if (mounted && deletedCount > 0) {
+          AppSnackBar.info(
+            context,
+            '운영시간 변경으로 브레이크 타임 ${deletedCount}개가 삭제되었습니다',
+          );
+        }
+      }
+
+      // 5. 운영시간 저장 (기존 로직)
       final operatingHoursItems = _buildOperatingHoursItems();
       final saveSuccess = await widget.onSaveOperatingHours(operatingHoursItems);
 
@@ -688,23 +301,82 @@ class _PlaceOperatingHoursEditorState extends State<PlaceOperatingHoursEditor> {
         return;
       }
 
-      // 2. 브레이크 타임 저장 (추가/삭제)
-      final breakTimeSuccess = await _saveBreakTimes();
+      // 6. 브레이크 타임 변경사항 저장 (신규)
+      int breakTimeChangeCount = 0;
 
-      if (!breakTimeSuccess) {
-        if (!mounted) return;
-        AppSnackBar.error(context, '브레이크 타임 저장 실패');
-        // 운영시간은 이미 저장됨, 롤백하지 않음
-        return;
+      for (final entry in _pendingBreakTimeChanges.entries) {
+        for (final change in entry.value) {
+          try {
+            switch (change.type) {
+              case BreakTimeChangeType.add:
+                final params = AddRestrictedTimeParams(
+                  placeId: widget.placeId,
+                  request: AddRestrictedTimeRequest(
+                    dayOfWeek: change.dayOfWeek,
+                    startTime: change.startTime,
+                    endTime: change.endTime,
+                    reason: change.reason,
+                  ),
+                );
+                await ref.read(addRestrictedTimeProvider(params).future);
+                breakTimeChangeCount++;
+                break;
+
+              case BreakTimeChangeType.update:
+                if (change.id != null) {
+                  final params = UpdateRestrictedTimeParams(
+                    placeId: widget.placeId,
+                    restrictedTimeId: change.id!,
+                    request: AddRestrictedTimeRequest(
+                      dayOfWeek: change.dayOfWeek,
+                      startTime: change.startTime,
+                      endTime: change.endTime,
+                      reason: change.reason,
+                    ),
+                  );
+                  await ref.read(updateRestrictedTimeProvider(params).future);
+                  breakTimeChangeCount++;
+                }
+                break;
+
+              case BreakTimeChangeType.delete:
+                if (change.id != null) {
+                  final params = DeleteRestrictedTimeParams(
+                    placeId: widget.placeId,
+                    restrictedTimeId: change.id!,
+                  );
+                  await ref.read(deleteRestrictedTimeProvider(params).future);
+                  breakTimeChangeCount++;
+                }
+                break;
+            }
+          } catch (e) {
+            debugPrint('브레이크 타임 저장 실패: $e');
+            // 부분 저장 허용 - 에러 로그만 출력하고 계속 진행
+          }
+        }
       }
 
+      // 7. 상태 초기화
       if (!mounted) return;
-      AppSnackBar.success(context, '저장되었습니다');
       setState(() {
         _isDirty = false;
-        _initialOperatingHours = Map.from(_operatingHours);
-        _initialBreakTimes = Map.from(_breakTimes.map((k, v) => MapEntry(k, List.from(v))));
+        _modifiedDays.clear();
+        _pendingBreakTimeChanges.clear();
+        _breakTimeRanges.clear();
+        _initialIsOperating = Map.from(_isOperating);
+        _initialTimeRanges = Map.from(_timeRanges);
       });
+
+      // 8. 성공 피드백
+      if (breakTimeChangeCount > 0) {
+        AppSnackBar.success(
+          context,
+          '운영시간 및 브레이크 타임 ${breakTimeChangeCount}개가 저장되었습니다',
+        );
+      } else {
+        AppSnackBar.success(context, '운영시간이 저장되었습니다');
+      }
       widget.onSaveCompleted?.call();
     } catch (e) {
       if (!mounted) return;
@@ -719,73 +391,19 @@ class _PlaceOperatingHoursEditorState extends State<PlaceOperatingHoursEditor> {
     }
   }
 
-  /// 브레이크 타임 저장 (추가/삭제)
-  Future<bool> _saveBreakTimes() async {
-    try {
-      // 1. 삭제할 브레이크 타임 찾기 (초기에 있었지만 현재 없는 것들)
-      for (final entry in _initialBreakTimes.entries) {
-        final day = entry.key;
-        final initialBlocks = entry.value;
-
-        for (final initialBlock in initialBlocks) {
-          // ID가 있고 (서버에 저장된 것) + 현재 상태에 없으면 삭제
-          if (initialBlock.id != null) {
-            final stillExists = _breakTimes[day]?.any((b) =>
-                b.startSlot == initialBlock.startSlot && b.endSlot == initialBlock.endSlot) ?? false;
-
-            if (!stillExists) {
-              final deleteSuccess = await widget.onDeleteRestrictedTime(initialBlock.id!);
-              if (!deleteSuccess) {
-                return false;
-              }
-            }
-          }
-        }
-      }
-
-      // 2. 추가할 브레이크 타임 찾기 (현재 있지만 초기에 없었던 것들)
-      for (final entry in _breakTimes.entries) {
-        final day = entry.key;
-        final currentBlocks = entry.value;
-
-        for (final currentBlock in currentBlocks) {
-          // ID가 없으면 (신규) 추가
-          if (currentBlock.id == null) {
-            final dayOfWeek = _indexToDayOfWeek(day);
-            final addSuccess = await widget.onAddRestrictedTime(
-              dayOfWeek,
-              currentBlock.startTime,
-              currentBlock.endTime,
-              null, // reason은 선택사항
-            );
-
-            if (!addSuccess) {
-              return false;
-            }
-          }
-        }
-      }
-
-      return true;
-    } catch (e) {
-      debugPrint('Error saving break times: $e');
-      return false;
-    }
-  }
-
-  /// 운영시간 아이템 빌드 (7일 전부)
+  /// 운영시간 아이템 빌드
   List<OperatingHoursItem> _buildOperatingHoursItems() {
     final items = <OperatingHoursItem>[];
 
     for (int day = 0; day < 7; day++) {
       final dayOfWeek = _indexToDayOfWeek(day);
 
-      if (_operatingHours.containsKey(day)) {
-        final block = _operatingHours[day]!;
+      if (_isOperating[day] == true) {
+        final range = _timeRanges[day]!;
         items.add(OperatingHoursItem(
           dayOfWeek: dayOfWeek,
-          startTime: block.startTime,
-          endTime: block.endTime,
+          startTime: _slotToTimeString(range.start.toInt()),
+          endTime: _slotToTimeString(range.end.toInt()),
           isClosed: false,
         ));
       } else {
@@ -801,14 +419,18 @@ class _PlaceOperatingHoursEditorState extends State<PlaceOperatingHoursEditor> {
     return items;
   }
 
+  /// 롤백
   void _rollback() {
     setState(() {
-      _operatingHours = Map.from(_initialOperatingHours);
-      _breakTimes = Map.from(_initialBreakTimes.map((k, v) => MapEntry(k, List.from(v))));
+      _isOperating.clear();
+      _isOperating.addAll(_initialIsOperating);
+      _timeRanges.clear();
+      _timeRanges.addAll(_initialTimeRanges);
       _isDirty = false;
     });
   }
 
+  /// 취소 처리
   void _handleCancel() {
     if (_isDirty) {
       showDialog(
@@ -823,23 +445,28 @@ class _PlaceOperatingHoursEditorState extends State<PlaceOperatingHoursEditor> {
             style: AppTheme.bodyMedium,
           ),
           actions: [
-            Flexible(
-              child: NeutralOutlinedButton(
-                text: '돌아가기',
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: PrimaryButton(
-                text: '취소',
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _rollback();
-                  widget.onCancel?.call();
-                },
-                variant: PrimaryButtonVariant.error,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: NeutralOutlinedButton(
+                    text: '돌아가기',
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: PrimaryButton(
+                    text: '취소',
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _rollback();
+                      widget.onCancel?.call();
+                    },
+                    variant: PrimaryButtonVariant.error,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -851,363 +478,1014 @@ class _PlaceOperatingHoursEditorState extends State<PlaceOperatingHoursEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Header: 모드 토글 버튼
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.lightBackground,
-            border: Border(bottom: BorderSide(color: AppColors.lightOutline)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '장소 운영시간 설정',
-                  style: AppTheme.headlineSmall,
-                ),
-              ),
-              SegmentedButton<EditorMode>(
-                segments: const [
-                  ButtonSegment(
-                    value: EditorMode.operatingHours,
-                    label: Text('운영시간'),
-                    icon: Icon(Icons.schedule, size: 18),
+    return SingleChildScrollView(
+      child: Container(
+        color: Colors.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 페이지 헤더
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              color: Colors.white,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '시설 운영시간 관리',
+                    style: AppTheme.displayMedium,
                   ),
-                  ButtonSegment(
-                    value: EditorMode.breakTime,
-                    label: Text('브레이크 타임'),
-                    icon: Icon(Icons.free_breakfast, size: 18),
+                  const SizedBox(height: 8),
+                  Text(
+                    '주간 운영시간과 임시 휴무를 관리합니다',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppColors.neutral600,
+                    ),
                   ),
                 ],
-                selected: {_mode},
-                onSelectionChanged: (Set<EditorMode> newSelection) {
-                  setState(() {
-                    _mode = newSelection.first;
-                    _isSelecting = false;
-                    _startCell = null;
-                    _endCell = null;
-                    _selectionRect = null;
-                    _highlightRect = null;
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-
-        // Mode indicator banner
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: _mode == EditorMode.operatingHours
-              ? AppColors.brand.withOpacity(0.1)
-              : Colors.amber.withOpacity(0.1),
-          child: Row(
-            children: [
-              Icon(
-                _mode == EditorMode.operatingHours ? Icons.schedule : Icons.free_breakfast,
-                size: 18,
-                color: _mode == EditorMode.operatingHours ? AppColors.brand : Colors.amber.shade700,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                _mode == EditorMode.operatingHours
-                    ? '운영시간을 드래그하여 설정하세요 (요일별 1개)'
-                    : '브레이크 타임을 드래그하여 설정하세요 (운영시간 내부만 가능)',
-                style: AppTheme.bodySmall.copyWith(
-                  color: _mode == EditorMode.operatingHours ? AppColors.brand : Colors.amber.shade700,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Calendar Grid
-        Column(
-          children: [
-            // Day names header
-            SizedBox(
-              height: _dayRowHeight,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return CustomPaint(
-                    size: Size(constraints.maxWidth, _dayRowHeight),
-                    painter: TimeGridPainter(
-                      startHour: _startHour,
-                      endHour: _endHour,
-                      timeColumnWidth: _timeColumnWidth,
-                      weekStart: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
-                      paintHeader: true,
-                      paintGrid: false,
-                    ),
-                  );
-                },
               ),
             ),
 
-            // Full-size grid (no scroll)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
-                final double contentHeight = (_endHour - _startHour) * 4 * _minSlotHeight;
+            // 주간 운영시간 섹션
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 섹션 헤더 (타이틀 + 버튼)
+                  Row(
+                    children: [
+                      // 아이콘 + 텍스트 (고정 크기)
+                      Icon(
+                        Icons.schedule,
+                        size: 20,
+                        color: AppColors.neutral900,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '주간 운영시간',
+                        style: AppTheme.headlineMedium,
+                      ),
+                      // 여백 (유연)
+                      const Spacer(),
+                      // 버튼 영역 (조건부 표시)
+                      if (_isDirty) ...[
+                        SizedBox(
+                          width: 80,
+                          child: NeutralOutlinedButton(
+                            text: '취소',
+                            onPressed: _isSaving ? null : _handleCancel,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 100,
+                          child: PrimaryButton(
+                            text: _isSaving ? '저장 중...' : '저장',
+                            onPressed: _isSaving ? null : _handleSave,
+                            variant: PrimaryButtonVariant.brand,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
 
-                _currentDayColumnWidth = dayColumnWidth;
-                _currentContentHeight = contentHeight;
-                _currentViewportHeight = contentHeight; // 전체 크기 표시
-
-                return SizedBox(
-                  height: contentHeight,
-                  child: kIsWeb
-                      ? _buildWebGestureHandler(dayColumnWidth, contentHeight)
-                      : _buildMobileGestureHandler(dayColumnWidth, contentHeight),
-                );
-              },
+                  // 7개의 요일 카드
+                  ...List.generate(7, (day) => _buildDayCard(day)),
+                ],
+              ),
             ),
           ],
         ),
-
-        // Footer: Save/Cancel buttons
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.lightBackground,
-            border: Border(top: BorderSide(color: AppColors.lightOutline)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Flexible(
-                child: NeutralOutlinedButton(
-                  text: '취소',
-                  onPressed: _isSaving ? null : _handleCancel,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Flexible(
-                child: PrimaryButton(
-                  text: _isSaving ? '저장 중...' : '저장',
-                  onPressed: (_isSaving || !_isDirty) ? null : _handleSave,
-                  variant: PrimaryButtonVariant.brand,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // --- Gesture Handlers ---
-
-  Widget _buildWebGestureHandler(double dayColumnWidth, double contentHeight) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onHover: (event) {
-        if (_isSelecting) {
-          _updateSelectionCell(event.localPosition, dayColumnWidth);
-        } else {
-          final currentCell = _pixelToCell(event.localPosition, dayColumnWidth);
-          setState(() {
-            _highlightRect = _cellToRect(currentCell, currentCell, dayColumnWidth);
-          });
-        }
-      },
-      onExit: (event) {
-        setState(() {
-          _highlightRect = null;
-        });
-      },
-      child: GestureDetector(
-        onTapDown: (details) {
-          _handleTap(details.localPosition, dayColumnWidth);
-        },
-        behavior: HitTestBehavior.opaque,
-        child: _buildCalendarStack(dayColumnWidth, contentHeight),
       ),
     );
   }
 
-  Widget _buildMobileGestureHandler(double dayColumnWidth, double contentHeight) {
-    return GestureDetector(
-      key: _gestureContentKey,
-      onTapDown: (details) {
-        final localPosition =
-            _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
-        final touchedCell = _pixelToCell(localPosition, dayColumnWidth);
+  /// 요일별 카드 빌드 (좌우 분할 레이아웃)
+  Widget _buildDayCard(int day) {
+    final dayOfWeek = _indexToDayOfWeek(day);
 
-        setState(() {
-          _highlightRect = _cellToRect(touchedCell, touchedCell, dayColumnWidth);
-        });
+    // 브레이크 타임 데이터 가져오기
+    final restrictedTimesAsync = ref.watch(restrictedTimesProvider(widget.placeId));
 
-        _handleMobileTap(details.globalPosition, dayColumnWidth);
+    return restrictedTimesAsync.when(
+      data: (allRestrictedTimes) {
+        // 해당 요일의 브레이크 타임만 필터링
+        final dayRestrictedTimes = allRestrictedTimes
+            .where((rt) => rt.dayOfWeek == dayOfWeek)
+            .toList()
+          ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+
+        return _buildDayCardContent(day, dayOfWeek, dayRestrictedTimes);
       },
-      onTapUp: (details) {
-        if (!_isSelecting) {
-          setState(() {
-            _highlightRect = null;
-          });
-        }
-      },
-      onTapCancel: () {
-        if (!_isSelecting) {
-          setState(() {
-            _highlightRect = null;
-          });
-        }
-      },
-      onLongPressStart: (details) {
-        _handleLongPressStart(details, dayColumnWidth);
-      },
-      onLongPressMoveUpdate: (details) {
-        if (_isSelecting) {
-          _updateSelectionFromPointer(details.globalPosition, dayColumnWidth);
-        }
-      },
-      onLongPressEnd: (details) {
-        if (_isSelecting) {
-          _triggerHaptic();
-          _updateSelectionFromPointer(details.globalPosition, dayColumnWidth, checkAutoScroll: false);
-          _completeSelection();
-          _handleLongPressEnd(details);
-        }
-      },
-      behavior: HitTestBehavior.opaque,
-      child: _buildCalendarStack(dayColumnWidth, contentHeight),
+      loading: () => _buildDayCardContent(day, dayOfWeek, []),  // 로딩 중에는 빈 리스트
+      error: (err, stack) => _buildDayCardContent(day, dayOfWeek, []),  // 에러 시 빈 리스트
     );
   }
 
-  Widget _buildCalendarStack(double dayColumnWidth, double contentHeight) {
-    return SizedBox(
-      height: contentHeight,
-      child: Stack(
+  /// 요일별 카드 컨텐츠 빌드
+  Widget _buildDayCardContent(int day, String dayOfWeek, List<RestrictedTimeResponse> restrictedTimes) {
+    final isOperating = _isOperating[day] ?? false;
+    final timeRange = _timeRanges[day] ?? const RangeValues(36, 72);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.lightOutline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Grid lines
-          Positioned.fill(
-            child: CustomPaint(
-              painter: TimeGridPainter(
-                startHour: _startHour,
-                endHour: _endHour,
-                timeColumnWidth: _timeColumnWidth,
-                weekStart: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
-                paintHeader: false,
-                paintGrid: true,
-              ),
+          // === 왼쪽: 토글 스위치 + 요일 (가로 배치, 고정 너비 140px) ===
+          SizedBox(
+            width: 140,
+            child: Row(
+              children: [
+                // 토글 스위치
+                Transform.scale(
+                  scale: 0.85,
+                  child: Switch(
+                    value: isOperating,
+                    onChanged: (value) {
+                      setState(() {
+                        _isOperating[day] = value;
+                        _isDirty = true;
+                      });
+                    },
+                    activeTrackColor: AppColors.brand,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // 요일 텍스트
+                Text(
+                  _indexToDayOfWeekKorean(day),
+                  style: AppTheme.titleLarge,
+                ),
+              ],
             ),
           ),
 
-          // 2. Operating hours blocks
-          ..._buildOperatingHoursBlocks(dayColumnWidth),
+          const SizedBox(width: AppSpacing.md),
 
-          // 3. Break time blocks
-          ..._buildBreakTimeBlocks(dayColumnWidth),
+          // === 오른쪽: 운영시간 정보 + 드래그 바 (Expanded) ===
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isOperating) ...[
+                  // "운영시간" 레이블 (회색)
+                  Text(
+                    '운영시간',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppColors.neutral600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
 
-          // 4. Highlight
-          if (_highlightRect != null)
-            Positioned.fill(
-              child: CustomPaint(
-                painter: HighlightPainter(highlightRect: _highlightRect),
-              ),
+                  // 운영시간 정보 (시작: 왼쪽 끝, 종료: 오른쪽 끝)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // 시작 시간 (왼쪽 끝)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '시작: ',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppColors.neutral700,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          Text(
+                            _slotToTimeString(timeRange.start.toInt()),
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: AppColors.neutral900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // 종료 시간 (오른쪽 끝)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '종료: ',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppColors.neutral700,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          Text(
+                            _slotToTimeString(timeRange.end.toInt()),
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: AppColors.neutral900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Range Slider (드래그 바)
+                  RangeSlider(
+                    values: timeRange,
+                    min: 0,
+                    max: _totalSlots.toDouble(),
+                    divisions: _totalSlots,
+                    activeColor: (_modifiedDays[day] ?? false)
+                        ? Colors.purple.shade700
+                        : AppColors.brand,
+                    inactiveColor: AppColors.brandLight,
+                    onChanged: (RangeValues values) {
+                      setState(() {
+                        _timeRanges[day] = values;
+                        _modifiedDays[day] = true;
+                        _isDirty = true;
+                      });
+                    },
+                  ),
+
+                  // 브레이크 타임 섹션 추가
+                  const SizedBox(height: 16),
+                  _buildBreakTimeSection(day, dayOfWeek, restrictedTimes),
+                ] else ...[
+                  // 휴무 상태
+                  Text(
+                    '전체 휴무',
+                    style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
+                  ),
+                ],
+              ],
             ),
-
-          // 5. Selection
-          if (_selectionRect != null)
-            Positioned.fill(
-              child: CustomPaint(
-                painter: SelectionPainter(selection: _selectionRect),
-              ),
-            ),
+          ),
         ],
       ),
     );
   }
 
-  List<Widget> _buildOperatingHoursBlocks(double dayColumnWidth) {
-    final blocks = <Widget>[];
+  /// 브레이크 타임 섹션 빌드 (좌측 정렬 제목 + 우측 "+" 버튼)
+  Widget _buildBreakTimeSection(int dayIndex, String dayOfWeek, List<RestrictedTimeResponse> restrictedTimes) {
+    // 로컬에서 추가된 브레이크 타임 (아직 서버에 저장되지 않음)
+    final pendingAdds = (_pendingBreakTimeChanges[dayIndex] ?? [])
+        .where((change) => change.type == BreakTimeChangeType.add)
+        .toList();
 
-    for (final entry in _operatingHours.entries) {
-      final block = entry.value;
-      final rect = _cellToRect(
-        (day: block.day, slot: block.startSlot),
-        (day: block.day, slot: block.endSlot),
-        dayColumnWidth,
-      );
+    // 서버 데이터 + 로컬 추가 항목 합치기
+    final totalCount = restrictedTimes.length + pendingAdds.length;
+    final hasAnyBreakTime = totalCount > 0;
 
-      blocks.add(
-        Positioned(
-          left: rect.left,
-          top: rect.top,
-          width: rect.width,
-          height: rect.height,
-          child: Container(
-            decoration: BoxDecoration(
-              color: block.color,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: AppColors.brand, width: 1.5),
-            ),
-            padding: const EdgeInsets.all(4),
-            child: Center(
-              child: Text(
-                '${block.startTime}\n-\n${block.endTime}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 헤더: 제목 + "+" 버튼
+        Row(
+          children: [
+            Text(
+              '브레이크 타임 ($totalCount개)',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppColors.neutral700,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.add, size: 20, color: AppColors.brand),
+              onPressed: () => _addNewBreakTimeLocal(dayIndex, dayOfWeek),
+              tooltip: '브레이크 타임 추가',
+              padding: const EdgeInsets.all(4),
+              constraints: const BoxConstraints(),
+            ),
+          ],
         ),
-      );
-    }
 
-    return blocks;
+        const SizedBox(height: 8),
+
+        // 브레이크 타임 리스트 (항상 표시)
+        if (!hasAnyBreakTime)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              '브레이크 타임을 추가하려면 "+" 버튼을 클릭하세요',
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
+            ),
+          )
+        else ...[
+          // 서버 데이터 (기존 브레이크 타임)
+          ...restrictedTimes.asMap().entries.map(
+            (entry) => _buildBreakTimeItem(dayIndex, dayOfWeek, entry.value, entry.key),
+          ),
+          // 로컬 추가 항목 (아직 저장 안 됨)
+          ...pendingAdds.map(
+            (change) => _buildPendingBreakTimeItem(dayIndex, dayOfWeek, change),
+          ),
+        ],
+      ],
+    );
   }
 
-  List<Widget> _buildBreakTimeBlocks(double dayColumnWidth) {
-    final blocks = <Widget>[];
+  /// 로컬 추가 브레이크 타임 아이템 빌드 (아직 저장 안 됨)
+  Widget _buildPendingBreakTimeItem(int dayIndex, String dayOfWeek, RestrictedTimeChange change) {
+    // 임시 고유 키 생성 (저장 전이므로 ID가 없음)
+    final tempKey = '${dayOfWeek}_${change.startTime}_${change.endTime}';
 
-    for (final entry in _breakTimes.entries) {
-      for (final block in entry.value) {
-        final rect = _cellToRect(
-          (day: block.day, slot: block.startSlot),
-          (day: block.day, slot: block.endSlot),
-          dayColumnWidth,
+    // 현재 Range 값 (로컬 상태 또는 기본값)
+    final currentRange = _breakTimeRanges[tempKey.hashCode] ??
+        RangeValues(
+          _timeStringToSlot(change.startTime).toDouble(),
+          _timeStringToSlot(change.endTime).toDouble(),
         );
 
-        blocks.add(
-          Positioned(
-            left: rect.left,
-            top: rect.top,
-            width: rect.width,
-            height: rect.height,
-            child: Container(
-              decoration: BoxDecoration(
-                color: block.color,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.amber, width: 1.5),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 상단: 이유 Chip + 삭제 버튼 + "미저장" 라벨
+          Row(
+            children: [
+              // 이유 Chip (클릭하여 수정 가능)
+              InkWell(
+                onTap: () => _editPendingReasonLocal(dayIndex, change),
+                borderRadius: BorderRadius.circular(16),
+                child: Chip(
+                  label: Text(
+                    change.reason ?? '브레이크 타임',
+                    style: AppTheme.bodySmall,
+                  ),
+                  backgroundColor: Colors.transparent,
+                  side: const BorderSide(color: AppColors.neutral400, width: 1),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
-              padding: const EdgeInsets.all(4),
-              child: Center(
+              const SizedBox(width: 8),
+              // "미저장" 라벨
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: AppColors.warning, width: 1),
+                ),
                 child: Text(
-                  '${block.startTime}\n-\n${block.endTime}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  '미저장',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppColors.warning,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-            ),
+              const Spacer(),
+              // 삭제 버튼
+              IconButton(
+                icon: const Icon(Icons.close, size: 16, color: AppColors.neutral600),
+                onPressed: () => _deletePendingBreakTimeLocal(dayIndex, change),
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(),
+                tooltip: '삭제',
+              ),
+            ],
           ),
-        );
+          const SizedBox(height: 8),
+          // 시간 표시 Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // 시작 시간 (왼쪽 끝)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '시작',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppColors.neutral700,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatSlotTime(currentRange.start),
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              // 종료 시간 (오른쪽 끝)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '종료',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppColors.neutral700,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatSlotTime(currentRange.end),
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Range Slider
+          RangeSlider(
+            values: currentRange,
+            min: 0,
+            max: 96,
+            divisions: 96,
+            activeColor: AppColors.brand,
+            inactiveColor: AppColors.brandLight,
+            onChanged: (values) {
+              setState(() {
+                _breakTimeRanges[tempKey.hashCode] = values;
+              });
+            },
+            onChangeEnd: (values) => _savePendingBreakTimeRangeLocal(dayIndex, change, values),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 개별 브레이크 타임 아이템 빌드 (Range Slider 방식)
+  Widget _buildBreakTimeItem(int dayIndex, String dayOfWeek, RestrictedTimeResponse rt, int index) {
+    // 현재 브레이크 타임의 Range 값 (로컬 상태 또는 서버 데이터)
+    final currentRange = _breakTimeRanges[rt.id] ?? _parseRestrictedTimeToRange(rt);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 상단: 이유 Chip + 삭제 버튼
+          Row(
+            children: [
+              // 이유 Chip (클릭하여 수정 가능)
+              InkWell(
+                onTap: () => _editReasonLocal(rt),
+                borderRadius: BorderRadius.circular(16),
+                child: Chip(
+                  label: Text(
+                    rt.reason ?? '브레이크 타임',
+                    style: AppTheme.bodySmall,
+                  ),
+                  backgroundColor: Colors.transparent,
+                  side: const BorderSide(color: AppColors.neutral400, width: 1),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              const Spacer(),
+              // 삭제 버튼
+              IconButton(
+                icon: const Icon(Icons.close, size: 16, color: AppColors.neutral600),
+                onPressed: () => _deleteBreakTimeLocal(rt),
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(),
+                tooltip: '삭제',
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 시간 표시 Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // 시작 시간 (왼쪽 끝)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '시작',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppColors.neutral700,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatSlotTime(currentRange.start),
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              // 종료 시간 (오른쪽 끝)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '종료',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppColors.neutral700,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatSlotTime(currentRange.end),
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Range Slider
+          RangeSlider(
+            values: currentRange,
+            min: 0,
+            max: 96,
+            divisions: 96,
+            activeColor: AppColors.brand,
+            inactiveColor: AppColors.brandLight,
+            onChanged: (values) {
+              setState(() {
+                _breakTimeRanges[rt.id] = values;
+              });
+            },
+            onChangeEnd: (values) => _saveBreakTimeRangeLocal(rt, values),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 브레이크 타임 삭제 (로컬 상태)
+  Future<void> _deleteBreakTimeLocal(RestrictedTimeResponse rt) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('브레이크 타임 삭제', style: AppTheme.headlineSmall),
+        content: Text(
+          '이 브레이크 타임을 삭제하시겠습니까?',
+          style: AppTheme.bodyMedium,
+        ),
+        actions: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: NeutralOutlinedButton(
+                  text: '취소',
+                  onPressed: () => Navigator.pop(context, false),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: PrimaryButton(
+                  text: '삭제',
+                  variant: PrimaryButtonVariant.error,
+                  onPressed: () => Navigator.pop(context, true),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final dayIndex = _dayOfWeekToIndex(rt.dayOfWeek);
+
+      // 변경사항 기록
+      _recordBreakTimeChange(
+        dayIndex,
+        RestrictedTimeChange(
+          type: BreakTimeChangeType.delete,
+          id: rt.id,
+          dayOfWeek: rt.dayOfWeek,
+          startTime: rt.startTime,
+          endTime: rt.endTime,
+          reason: rt.reason,
+        ),
+      );
+
+      // 해당 요일을 수정됨으로 표시
+      setState(() {
+        _modifiedDays[dayIndex] = true;
+        _isDirty = true;
+      });
+    }
+  }
+
+  /// 슬롯을 TimeOfDay로 변환
+  TimeOfDay _slotToTimeOfDay(int slot) {
+    final hour = slot ~/ _slotsPerHour;
+    final minute = (slot % _slotsPerHour) * 15;
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  /// 시간이 범위 내에 있는지 확인
+  bool _isTimeInRange(TimeOfDay time, TimeOfDay start, TimeOfDay end) {
+    final timeMinutes = time.hour * 60 + time.minute;
+    final startMinutes = start.hour * 60 + start.minute;
+    final endMinutes = end.hour * 60 + end.minute;
+
+    return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
+  }
+
+  /// 운영시간 변경으로 충돌하는 브레이크 타임 찾기
+  List<RestrictedTimeResponse> _findConflictingBreakTimes(
+    int dayIndex,
+    String dayOfWeek,
+    List<RestrictedTimeResponse> allRestrictedTimes,
+  ) {
+    final conflicts = <RestrictedTimeResponse>[];
+
+    // 해당 요일의 운영 상태 확인
+    final isOperating = _isOperating[dayIndex] ?? false;
+
+    // 휴무로 변경한 경우 → 모든 브레이크 타임 삭제
+    if (!isOperating) {
+      conflicts.addAll(
+        allRestrictedTimes.where((rt) => rt.dayOfWeek == dayOfWeek),
+      );
+      return conflicts;
+    }
+
+    // 운영시간 범위 가져오기
+    final operatingRange = _timeRanges[dayIndex];
+    if (operatingRange == null) return conflicts;
+
+    final operatingStart = _slotToTimeOfDay(operatingRange.start.toInt());
+    final operatingEnd = _slotToTimeOfDay(operatingRange.end.toInt());
+
+    // 해당 요일의 브레이크 타임 필터링
+    final dayRestrictedTimes = allRestrictedTimes
+        .where((rt) => rt.dayOfWeek == dayOfWeek)
+        .toList();
+
+    // 각 브레이크 타임이 운영시간 범위를 벗어나는지 체크
+    for (final rt in dayRestrictedTimes) {
+      final breakStartParts = rt.startTime.split(':');
+      final breakEndParts = rt.endTime.split(':');
+
+      final breakStart = TimeOfDay(
+        hour: int.parse(breakStartParts[0]),
+        minute: int.parse(breakStartParts[1]),
+      );
+      final breakEnd = TimeOfDay(
+        hour: int.parse(breakEndParts[0]),
+        minute: int.parse(breakEndParts[1]),
+      );
+
+      // 브레이크 타임이 운영시간 범위 밖인 경우
+      if (!_isTimeInRange(breakStart, operatingStart, operatingEnd) ||
+          !_isTimeInRange(breakEnd, operatingStart, operatingEnd)) {
+        conflicts.add(rt);
       }
     }
 
-    return blocks;
+    return conflicts;
   }
+
+  /// RestrictedTimeResponse → RangeValues 변환
+  RangeValues _parseRestrictedTimeToRange(RestrictedTimeResponse rt) {
+    final start = _timeStringToSlot(rt.startTime);
+    final end = _timeStringToSlot(rt.endTime);
+    return RangeValues(start.toDouble(), end.toDouble());
+  }
+
+  /// 슬롯 → "HH:mm" (브레이크 타임용)
+  String _formatSlotTime(double slot) {
+    final totalMinutes = (slot * 15).toInt();
+    final hour = totalMinutes ~/ 60;
+    final minute = totalMinutes % 60;
+    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+  }
+
+  /// 브레이크 타임 Range 변경 (로컬 상태만 업데이트)
+  void _saveBreakTimeRangeLocal(RestrictedTimeResponse rt, RangeValues values) {
+    final startTime = _formatSlotTime(values.start);
+    final endTime = _formatSlotTime(values.end);
+
+    // 어느 요일의 브레이크 타임인지 찾기
+    final dayIndex = _dayOfWeekToIndex(rt.dayOfWeek);
+    if (dayIndex != -1) {
+      final operatingRange = _timeRanges[dayIndex];
+
+      // 운영시간 범위 체크
+      if (operatingRange != null) {
+        final operatingStart = _slotToTimeOfDay(operatingRange.start.toInt());
+        final operatingEnd = _slotToTimeOfDay(operatingRange.end.toInt());
+        final breakStart = _slotToTimeOfDay(values.start.toInt());
+        final breakEnd = _slotToTimeOfDay(values.end.toInt());
+
+        // 범위 체크
+        if (!_isTimeInRange(breakStart, operatingStart, operatingEnd) ||
+            !_isTimeInRange(breakEnd, operatingStart, operatingEnd)) {
+          if (mounted) {
+            AppSnackBar.error(
+              context,
+              '브레이크 타임은 운영시간 범위 내에 있어야 합니다',
+            );
+          }
+          // 원래 값으로 복원
+          setState(() {
+            _breakTimeRanges.remove(rt.id);
+          });
+          return;
+        }
+      }
+
+      // 변경사항 기록
+      _recordBreakTimeChange(
+        dayIndex,
+        RestrictedTimeChange(
+          type: BreakTimeChangeType.update,
+          id: rt.id,
+          dayOfWeek: rt.dayOfWeek,
+          startTime: startTime,
+          endTime: endTime,
+          reason: rt.reason,
+        ),
+      );
+
+      // 해당 요일을 수정됨으로 표시
+      setState(() {
+        _modifiedDays[dayIndex] = true;
+        _isDirty = true;
+      });
+    }
+  }
+
+  /// "+" 버튼 클릭 시 새 브레이크 타임 추가 (로컬 상태)
+  void _addNewBreakTimeLocal(int dayIndex, String dayOfWeek) {
+    // 운영시간 범위 가져오기
+    final operatingRange = _timeRanges[dayIndex];
+    String startTime = '12:00';
+    String endTime = '13:00';
+
+    // 운영시간이 설정된 경우 범위 내에서 기본값 설정
+    if (operatingRange != null) {
+      final operatingStart = _slotToTimeOfDay(operatingRange.start.toInt());
+      final operatingEnd = _slotToTimeOfDay(operatingRange.end.toInt());
+
+      // 기본 브레이크 타임(12:00-13:00)이 운영시간 범위 밖이면 운영시간 범위 내로 조정
+      final defaultBreakStart = const TimeOfDay(hour: 12, minute: 0);
+      final defaultBreakEnd = const TimeOfDay(hour: 13, minute: 0);
+
+      if (!_isTimeInRange(defaultBreakStart, operatingStart, operatingEnd) ||
+          !_isTimeInRange(defaultBreakEnd, operatingStart, operatingEnd)) {
+        // 운영 시작 시간 + 1시간을 기본값으로 설정
+        startTime = _slotToTimeString(operatingRange.start.toInt());
+        final endSlot = (operatingRange.start.toInt() + 4).clamp(0, operatingRange.end.toInt());
+        endTime = _slotToTimeString(endSlot);
+      }
+    }
+
+    // 변경사항 기록
+    _recordBreakTimeChange(
+      dayIndex,
+      RestrictedTimeChange(
+        type: BreakTimeChangeType.add,
+        dayOfWeek: dayOfWeek,
+        startTime: startTime,
+        endTime: endTime,
+        reason: '브레이크 타임',
+      ),
+    );
+
+    // 해당 요일을 수정됨으로 표시
+    setState(() {
+      _modifiedDays[dayIndex] = true;
+      _isDirty = true;
+    });
+  }
+
+  /// 이유(reason) 수정 (로컬 상태)
+  Future<void> _editReasonLocal(RestrictedTimeResponse rt) async {
+    final controller = TextEditingController(text: rt.reason ?? '');
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.dialog),
+        ),
+        title: Text('브레이크 타임 이름', style: AppTheme.headlineSmall),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: '이름 (예: 점심시간)'),
+          autofocus: true,
+        ),
+        actions: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: NeutralOutlinedButton(
+                  text: '취소',
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: PrimaryButton(
+                  text: '저장',
+                  variant: PrimaryButtonVariant.brand,
+                  onPressed: () => Navigator.pop(context, controller.text),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result != rt.reason && mounted) {
+      final dayIndex = _dayOfWeekToIndex(rt.dayOfWeek);
+
+      // 변경사항 기록
+      _recordBreakTimeChange(
+        dayIndex,
+        RestrictedTimeChange(
+          type: BreakTimeChangeType.update,
+          id: rt.id,
+          dayOfWeek: rt.dayOfWeek,
+          startTime: rt.startTime,
+          endTime: rt.endTime,
+          reason: result,
+        ),
+      );
+
+      // 해당 요일을 수정됨으로 표시
+      setState(() {
+        _modifiedDays[dayIndex] = true;
+        _isDirty = true;
+      });
+    }
+  }
+
+  /// 브레이크 타임 변경사항 기록
+  void _recordBreakTimeChange(int dayIndex, RestrictedTimeChange change) {
+    if (!_pendingBreakTimeChanges.containsKey(dayIndex)) {
+      _pendingBreakTimeChanges[dayIndex] = [];
+    }
+
+    // 같은 ID의 기존 변경사항이 있으면 대체
+    if (change.id != null) {
+      _pendingBreakTimeChanges[dayIndex]!.removeWhere((c) => c.id == change.id);
+    }
+
+    _pendingBreakTimeChanges[dayIndex]!.add(change);
+  }
+
+  /// 미저장 브레이크 타임 삭제 (로컬 상태)
+  void _deletePendingBreakTimeLocal(int dayIndex, RestrictedTimeChange change) {
+    setState(() {
+      _pendingBreakTimeChanges[dayIndex]?.remove(change);
+      _isDirty = _pendingBreakTimeChanges.values.any((list) => list.isNotEmpty);
+    });
+  }
+
+  /// 미저장 브레이크 타임 이름 수정 (로컬 상태)
+  Future<void> _editPendingReasonLocal(int dayIndex, RestrictedTimeChange change) async {
+    final controller = TextEditingController(text: change.reason ?? '');
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.dialog),
+        ),
+        title: Text('브레이크 타임 이름', style: AppTheme.headlineSmall),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: '이름 (예: 점심시간)'),
+          autofocus: true,
+        ),
+        actions: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: NeutralOutlinedButton(
+                  text: '취소',
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: PrimaryButton(
+                  text: '저장',
+                  variant: PrimaryButtonVariant.brand,
+                  onPressed: () => Navigator.pop(context, controller.text),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result != change.reason && mounted) {
+      setState(() {
+        // 리스트에서 기존 항목 찾아서 reason 업데이트
+        final index = _pendingBreakTimeChanges[dayIndex]?.indexOf(change) ?? -1;
+        if (index != -1) {
+          _pendingBreakTimeChanges[dayIndex]![index] = RestrictedTimeChange(
+            type: change.type,
+            id: change.id,
+            dayOfWeek: change.dayOfWeek,
+            startTime: change.startTime,
+            endTime: change.endTime,
+            reason: result,
+          );
+        }
+      });
+    }
+  }
+
+  /// 미저장 브레이크 타임 시간 변경 (로컬 상태)
+  void _savePendingBreakTimeRangeLocal(int dayIndex, RestrictedTimeChange change, RangeValues values) {
+    final startTime = _formatSlotTime(values.start);
+    final endTime = _formatSlotTime(values.end);
+
+    final operatingRange = _timeRanges[dayIndex];
+
+    // 운영시간 범위 체크
+    if (operatingRange != null) {
+      final operatingStart = _slotToTimeOfDay(operatingRange.start.toInt());
+      final operatingEnd = _slotToTimeOfDay(operatingRange.end.toInt());
+      final breakStart = _slotToTimeOfDay(values.start.toInt());
+      final breakEnd = _slotToTimeOfDay(values.end.toInt());
+
+      // 범위 체크
+      if (!_isTimeInRange(breakStart, operatingStart, operatingEnd) ||
+          !_isTimeInRange(breakEnd, operatingStart, operatingEnd)) {
+        if (mounted) {
+          AppSnackBar.error(
+            context,
+            '브레이크 타임은 운영시간 범위 내에 있어야 합니다',
+          );
+        }
+        // 원래 값으로 복원
+        final tempKey = '${change.dayOfWeek}_${change.startTime}_${change.endTime}';
+        setState(() {
+          _breakTimeRanges.remove(tempKey.hashCode);
+        });
+        return;
+      }
+    }
+
+    setState(() {
+      // 리스트에서 기존 항목 찾아서 시간 업데이트
+      final index = _pendingBreakTimeChanges[dayIndex]?.indexOf(change) ?? -1;
+      if (index != -1) {
+        _pendingBreakTimeChanges[dayIndex]![index] = RestrictedTimeChange(
+          type: change.type,
+          id: change.id,
+          dayOfWeek: change.dayOfWeek,
+          startTime: startTime,
+          endTime: endTime,
+          reason: change.reason,
+        );
+      }
+    });
+  }
+}
+
+/// 브레이크 타임 변경 타입
+enum BreakTimeChangeType {
+  add,    // 새로 추가
+  update, // 수정
+  delete, // 삭제
+}
+
+/// 브레이크 타임 변경사항
+class RestrictedTimeChange {
+  final BreakTimeChangeType type;
+  final int? id;  // update/delete 시 사용
+  final String dayOfWeek;
+  final String startTime;
+  final String endTime;
+  final String? reason;
+
+  RestrictedTimeChange({
+    required this.type,
+    this.id,
+    required this.dayOfWeek,
+    required this.startTime,
+    required this.endTime,
+    this.reason,
+  });
 }

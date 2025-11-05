@@ -50,12 +50,12 @@ class NeutralOutlinedButton extends StatelessWidget {
       ),
     );
 
-    // width가 지정된 경우만 SizedBox로 감싸기
-    // Row 내에서 너비 제약 없이 사용 가능하도록 조건부 처리
+    // width가 지정된 경우 SizedBox로 감싸기
     if (width != null) {
       return SizedBox(width: width, child: button);
     }
 
-    return button;
+    // width 미지정 시 IntrinsicWidth로 감싸서 Row 내에서 안전하게 사용
+    return IntrinsicWidth(child: button);
   }
 }
