@@ -686,11 +686,21 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       snapshot: snapshot,
     );
 
+    // ✅ 모바일 UX 조정: 그룹 전환 시 mobileView가 channelList이면 currentView를 channel로 설정
+    WorkspaceView adjustedView = finalView;
+    if (!isSameGroup && finalMobileView == MobileWorkspaceView.channelList) {
+      // 그룹 전환 시 모바일의 기본 뷰는 채널 리스트
+      // 특수 뷰(calendar, admin 등)가 아니면 channel 뷰로 강제
+      if (targetView == null || targetView == WorkspaceView.groupHome) {
+        adjustedView = WorkspaceView.channel;
+      }
+    }
+
     // Determine if channel should be auto-selected
     final String? autoSelectChannelId = channelId ?? snapshot?.selectedChannelId;
 
     return _NavigationTarget(
-      finalView: finalView,
+      finalView: adjustedView,
       finalMobileView: finalMobileView,
       autoSelectChannelId: autoSelectChannelId,
     );
