@@ -239,8 +239,9 @@ class ChannelListSection extends ConsumerWidget {
       print('[DEBUG] Dialog returned: ${channel?.name ?? 'null'}');
 
       if (channel != null) {
-        // 채널 목록 새로고침
-        ref.invalidate(channelListProvider(groupId));
+        // 채널 목록 새로고침 (여러 Provider 무효화)
+        ref.invalidate(channelListProvider(groupId)); // 관리자 페이지 채널 목록
+        ref.invalidate(workspaceChannelsProvider); // 워크스페이스 채널 네비게이션 바
 
         // workspace state도 새로고침
         ref.read(workspaceStateProvider.notifier).loadChannels(

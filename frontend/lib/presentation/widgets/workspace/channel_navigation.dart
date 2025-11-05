@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../providers/workspace_state_provider.dart';
+import '../../providers/my_groups_provider.dart';
 import '../dialogs/create_channel_dialog.dart';
 import 'channel_item.dart';
 import 'workspace_header.dart';
@@ -418,9 +419,16 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
 
               if (channel != null) {
                 // 채널 + 권한이 이미 생성됨 (CreateChannelDialog에서 처리)
-                // 채널 목록 새로고침 (Provider 무효화)
+                // 채널 목록 새로고침 (여러 Provider 무효화)
                 if (!context.mounted) return;
-                ref.invalidate(workspaceChannelsProvider);
+                ref.invalidate(workspaceChannelsProvider); // 워크스페이스 채널 네비게이션 바
+
+                // workspace state도 새로고침
+                ref.read(workspaceStateProvider.notifier).loadChannels(
+                  groupIdStr,
+                  membership: (await ref.read(myGroupsProvider.future))
+                      .firstWhere((g) => g.id.toString() == groupIdStr),
+                );
 
                 // 새로 생성된 채널로 네비게이션
                 ref
