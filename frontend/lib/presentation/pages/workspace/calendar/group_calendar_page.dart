@@ -8,6 +8,7 @@ import '../../../../core/models/calendar/group_event.dart';
 import '../../../../core/models/calendar/update_scope.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../adapters/group_event_adapter.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/calendar_view_provider.dart';
@@ -242,12 +243,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     switch (view) {
       case CalendarView.week:
         final weekStart = _getWeekStart(date);
-        final weekEnd = weekStart.add(const Duration(days: 6));
-        if (weekStart.month == weekEnd.month) {
-          return '${weekStart.year}년 ${weekStart.month}월 ${weekStart.day}일 ~ ${weekEnd.day}일';
-        }
-        return '${DateFormat('M월 d일', 'ko_KR').format(weekStart)} ~ '
-            '${DateFormat('M월 d일', 'ko_KR').format(weekEnd)}';
+        return DateFormatter.formatWeekHeader(weekStart);
       case CalendarView.month:
         return DateFormat('yyyy년 M월', 'ko_KR').format(date);
     }
@@ -317,9 +313,13 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       width: 160,
     );
 
+    final weekStart = currentView == CalendarView.week ? _getWeekStart(focusedDate) : null;
+
     final navigator = CalendarNavigator(
       currentDate: focusedDate,
       label: _formatFocusedLabel(focusedDate, currentView),
+      subtitle: weekStart != null ? DateFormatter.formatWeekRangeDetailed(weekStart) : null,
+      isWeekView: currentView == CalendarView.week,
       onPrevious: isBusy ? () {} : () => _handlePrevious(currentView),
       onNext: isBusy ? () {} : () => _handleNext(currentView),
       onToday: isBusy ? () {} : () => ref.read(focusedDateProvider.notifier).resetToToday(),

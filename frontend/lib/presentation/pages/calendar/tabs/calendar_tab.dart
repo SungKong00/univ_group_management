@@ -180,6 +180,10 @@ class _CalendarHeader extends StatelessWidget {
       state.focusedDate,
       state.selectedDate,
     );
+    final subtitle = _buildSubtitle(
+      state.view,
+      state.focusedDate,
+    );
 
     final viewTypes = [
       CalendarViewType.day,
@@ -245,6 +249,8 @@ class _CalendarHeader extends StatelessWidget {
                   CalendarNavigator(
                     currentDate: state.focusedDate,
                     label: label,
+                    subtitle: subtitle,
+                    isWeekView: state.view == CalendarViewType.week,
                     onPrevious: onPrevious,
                     onNext: onNext,
                     onToday: onToday,
@@ -281,6 +287,8 @@ class _CalendarHeader extends StatelessWidget {
                     child: CalendarNavigator(
                       currentDate: state.focusedDate,
                       label: label,
+                      subtitle: subtitle,
+                      isWeekView: state.view == CalendarViewType.week,
                       onPrevious: onPrevious,
                       onNext: onNext,
                       onToday: onToday,
@@ -308,9 +316,22 @@ class _CalendarHeader extends StatelessWidget {
         return '${focused.year}년 ${focused.month}월';
       case CalendarViewType.week:
         final range = DateFormatter.weekRange(focused);
-        return DateFormatter.formatWeekLabel(range.start);
+        return DateFormatter.formatWeekHeader(range.start);
       case CalendarViewType.day:
         return DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(selected);
+    }
+  }
+
+  String? _buildSubtitle(
+    CalendarViewType view,
+    DateTime focused,
+  ) {
+    switch (view) {
+      case CalendarViewType.week:
+        final range = DateFormatter.weekRange(focused);
+        return DateFormatter.formatWeekRangeDetailed(range.start);
+      default:
+        return null;
     }
   }
 }

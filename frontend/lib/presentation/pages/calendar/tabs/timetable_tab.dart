@@ -351,8 +351,8 @@ class _TimetableToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final weekRange = DateFormatter.weekRange(state.weekStart);
-    final weekLabel = _buildWeekLabel(state.weekStart);
-    final weekRangeLabel = DateFormatter.formatWeekLabel(weekRange.start);
+    final weekLabel = DateFormatter.formatWeekHeader(state.weekStart);
+    final weekRangeLabel = DateFormatter.formatWeekRangeDetailed(weekRange.start);
 
     return Center(
       child: ConstrainedBox(
@@ -494,12 +494,6 @@ class _TimetableToolbar extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _buildWeekLabel(DateTime weekStart) {
-    final anchor = weekStart.add(const Duration(days: 3));
-    final weekNumber = ((anchor.day - 1) ~/ 7) + 1;
-    return '${anchor.year}년 ${anchor.month}월 $weekNumber주차';
   }
 }
 

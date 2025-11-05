@@ -106,4 +106,32 @@ class DateFormatter {
     final end = weekStart.add(const Duration(days: 6));
     return '${weekStart.month}/${weekStart.day} ~ ${end.month}/${end.day}';
   }
+
+  /// 주차 헤더 포맷 ("yyyy년 mm월 ww주차")
+  ///
+  /// 주의 시작일(월요일)을 기준으로 해당 주의 주차를 계산하여 반환
+  /// 주 중간(수요일)을 기준으로 해당 월의 주차를 계산
+  ///
+  /// Example:
+  /// - Input: 2025-10-14 (월요일)
+  /// - Output: "2025년 10월 3주차"
+  static String formatWeekHeader(DateTime weekStart) {
+    final anchor = weekStart.add(const Duration(days: 3));
+    final weekNumber = ((anchor.day - 1) ~/ 7) + 1;
+    return '${anchor.year}년 ${anchor.month}월 $weekNumber주차';
+  }
+
+  /// 주차 날짜 범위 포맷 ("yyyy.mm.dd (요일) ~ yyyy.mm.dd (요일)")
+  ///
+  /// 주의 시작일(월요일)부터 종료일(일요일)까지의 범위를 상세 형식으로 반환
+  ///
+  /// Example:
+  /// - Input: 2025-10-14 (월요일)
+  /// - Output: "2025.10.14 (월) ~ 2025.10.20 (일)"
+  static String formatWeekRangeDetailed(DateTime weekStart) {
+    final end = weekStart.add(const Duration(days: 6));
+    final startFormatted = DateFormat('yyyy.MM.dd (E)', 'ko_KR').format(weekStart);
+    final endFormatted = DateFormat('yyyy.MM.dd (E)', 'ko_KR').format(end);
+    return '$startFormatted ~ $endFormatted';
+  }
 }

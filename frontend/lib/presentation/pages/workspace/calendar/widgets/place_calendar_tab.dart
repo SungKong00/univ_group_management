@@ -8,6 +8,7 @@ import '../../../../../core/models/place/place.dart';
 import '../../../../../core/models/place/place_reservation.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
+import '../../../../../core/utils/date_formatter.dart';
 import '../../../../providers/calendar_view_provider.dart';
 import '../../../../providers/focused_date_provider.dart';
 import '../../../../providers/group_permission_provider.dart';
@@ -17,6 +18,7 @@ import '../../../../providers/workspace_state_provider.dart';
 import '../../../../utils/responsive_layout_helper.dart';
 import '../../../../widgets/place/place_card.dart';
 import '../../../../widgets/common/app_empty_state.dart';
+import '../../../../widgets/calendar/calendar_navigator.dart';
 import 'multi_place_calendar_view.dart';
 import 'place_reservation_dialog.dart';
 import 'place_selector_button.dart';
@@ -664,36 +666,16 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     CalendarView view,
     DateTime focusedDate,
   ) {
-    final label = _formatFocusedLabel(focusedDate, view);
+    final weekStart = view == CalendarView.week ? _getWeekStart(focusedDate) : null;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          tooltip: '이전',
-          onPressed: () => _handlePrevious(view),
-          icon: const Icon(Icons.chevron_left),
-        ),
-        ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 120),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-        ),
-        IconButton(
-          tooltip: '다음',
-          onPressed: () => _handleNext(view),
-          icon: const Icon(Icons.chevron_right),
-        ),
-        TextButton(
-          onPressed: () => ref.read(focusedDateProvider.notifier).resetToToday(),
-          child: const Text('오늘'),
-        ),
-      ],
+    return CalendarNavigator(
+      currentDate: focusedDate,
+      label: _formatFocusedLabel(focusedDate, view),
+      subtitle: weekStart != null ? DateFormatter.formatWeekRangeDetailed(weekStart) : null,
+      isWeekView: view == CalendarView.week,
+      onPrevious: () => _handlePrevious(view),
+      onNext: () => _handleNext(view),
+      onToday: () => ref.read(focusedDateProvider.notifier).resetToToday(),
     );
   }
 
@@ -701,12 +683,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     switch (view) {
       case CalendarView.week:
         final weekStart = _getWeekStart(date);
-        final weekEnd = weekStart.add(const Duration(days: 6));
-        if (weekStart.month == weekEnd.month) {
-          return '${weekStart.year}년 ${weekStart.month}월 ${weekStart.day}일 ~ ${weekEnd.day}일';
-        }
-        return '${DateFormat('M월 d일', 'ko_KR').format(weekStart)} ~ '
-            '${DateFormat('M월 d일', 'ko_KR').format(weekEnd)}';
+        return DateFormatter.formatWeekHeader(weekStart);
       case CalendarView.month:
         return DateFormat('yyyy년 M월', 'ko_KR').format(date);
     }
