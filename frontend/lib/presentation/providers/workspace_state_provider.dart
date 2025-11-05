@@ -1406,6 +1406,19 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       await loadChannelPermissions(channelId);
     }
 
+    // ✅ 2.5. Save current state (channelList) to navigation history BEFORE changing mobileView
+    // This ensures back button will restore channelList step
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView, // ✅ 현재 mobileView = channelList 저장
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
     // 3. NOW update state (after data is loaded)
     // Find channel name from channels list
     final selectedChannel = state.channels.firstWhere(
