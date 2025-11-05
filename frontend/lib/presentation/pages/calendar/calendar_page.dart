@@ -84,24 +84,24 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('캘린더'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(40),
-          child: CompactTabBar(
+      body: Column(
+        children: [
+          CompactTabBar(
             controller: _tabController,
             tabs: const [
               CompactTab(label: '시간표'),
               CompactTab(label: '캘린더'),
             ],
           ),
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          TimetableTab(),
-          CalendarTab(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: const [
+                TimetableTab(),
+                CalendarTab(),
+              ],
+            ),
+          ),
         ],
       ),
     );

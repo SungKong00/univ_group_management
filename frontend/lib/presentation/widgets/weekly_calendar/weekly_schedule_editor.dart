@@ -1474,95 +1474,101 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Mode indicator message
-        if (_mode == CalendarMode.add)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline,
-                  size: 18,
-                  color: Theme.of(context).primaryColor,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '시간표를 드래그하여 일정을 추가하세요',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white, // 배경색 설정 (그룹 캘린더 주간 뷰 문제 해결)
+        borderRadius: BorderRadius.circular(12), // 둥근 테두리
+      ),
+      child: Column(
+        children: [
+          // Mode indicator message
+          if (_mode == CalendarMode.add)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline,
+                    size: 18,
                     color: Theme.of(context).primaryColor,
-                    fontWeight: FontWeight.w500,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '시간표를 드래그하여 일정을 추가하세요',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          // Calendar content
+          Expanded(
+            child: Column(
+              children: [
+                // Header row with day names and overlap toggle
+                SizedBox(
+                  height: _dayRowHeight,
+                  child: Stack(
+                    children: [
+                      // Day names header
+                      IgnorePointer(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return CustomPaint(
+                              size: Size(constraints.maxWidth, _dayRowHeight),
+                              painter: TimeGridPainter(
+                                startHour: _visibleStartHour,
+                                endHour: _visibleEndHour,
+                                timeColumnWidth: _timeColumnWidth,
+                                weekStart: _effectiveWeekStart,
+                                paintHeader: true,
+                                paintGrid: false,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
+                      final double contentHeight = (_visibleEndHour - _visibleStartHour) * 4 * _minSlotHeight;
+
+                      _currentDayColumnWidth = dayColumnWidth;
+                      _currentContentHeight = contentHeight;
+                      _currentViewportHeight = constraints.maxHeight; // 실제 뷰포트 높이 저장
+
+                      final allEvents = _getAllEvents();
+                      final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {
+                        return (rect: _eventToRect(event, dayColumnWidth), event: event);
+                      }).toList();
+
+                      WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
+
+                      return SingleChildScrollView(
+                        controller: _scrollController,
+                        physics: _isSelecting ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
+                        child: SizedBox(
+                          height: contentHeight,
+                          child: kIsWeb
+                              ? _buildWebGestureHandler(dayColumnWidth, eventRects, contentHeight)
+                              : _buildMobileGestureHandler(dayColumnWidth, eventRects, contentHeight),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
             ),
           ),
-        // Calendar content
-        Expanded(
-          child: Column(
-            children: [
-              // Header row with day names and overlap toggle
-              SizedBox(
-                height: _dayRowHeight,
-                child: Stack(
-                  children: [
-                    // Day names header
-                    IgnorePointer(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          return CustomPaint(
-                            size: Size(constraints.maxWidth, _dayRowHeight),
-                            painter: TimeGridPainter(
-                              startHour: _visibleStartHour,
-                              endHour: _visibleEndHour,
-                              timeColumnWidth: _timeColumnWidth,
-                              weekStart: _effectiveWeekStart,
-                              paintHeader: true,
-                              paintGrid: false,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
-                    final double contentHeight = (_visibleEndHour - _visibleStartHour) * 4 * _minSlotHeight;
-
-                    _currentDayColumnWidth = dayColumnWidth;
-                    _currentContentHeight = contentHeight;
-                    _currentViewportHeight = constraints.maxHeight; // 실제 뷰포트 높이 저장
-
-                    final allEvents = _getAllEvents();
-                    final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {
-                      return (rect: _eventToRect(event, dayColumnWidth), event: event);
-                    }).toList();
-
-                    WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
-
-                    return SingleChildScrollView(
-                      controller: _scrollController,
-                      physics: _isSelecting ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
-                      child: SizedBox(
-                        height: contentHeight,
-                        child: kIsWeb
-                            ? _buildWebGestureHandler(dayColumnWidth, eventRects, contentHeight)
-                            : _buildMobileGestureHandler(dayColumnWidth, eventRects, contentHeight),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
