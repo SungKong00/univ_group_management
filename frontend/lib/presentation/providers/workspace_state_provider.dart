@@ -958,14 +958,14 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   Future<void> loadReadPosition(int channelId) async {
     final position = await _channelService.getReadPosition(channelId);
 
-    if (position != null) {
-      state = state.copyWith(
-        lastReadPostIdMap: {
-          ...state.lastReadPostIdMap,
-          channelId: position.lastReadPostId,
-        },
-      );
-    }
+    // ✅ Always update state, even if position is null (marks channel as "loaded")
+    // This prevents PostList from waiting with timeout when entering a new channel
+    state = state.copyWith(
+      lastReadPostIdMap: {
+        ...state.lastReadPostIdMap,
+        channelId: position?.lastReadPostId ?? -1, // -1 = new channel or no read history
+      },
+    );
   }
 
   /// Save read position for a channel

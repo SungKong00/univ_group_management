@@ -2,11 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/channel_models.dart';
 import '../../../../core/services/channel_service.dart';
 
-/// 그룹의 채널 목록 조회 Provider
+/// 그룹의 채널 목록 조회 Provider (관리자용 - 권한 필터 없음)
+///
+/// 채널 관리 페이지에서 CHANNEL_MANAGE 권한이 있는 사용자가
+/// POST_READ 권한이 없는 채널도 조회하고 관리할 수 있도록 함
 final channelListProvider =
     FutureProvider.family<List<Channel>, int>((ref, groupId) async {
   final service = ChannelService();
-  return await service.getChannels(groupId);
+  return await service.getChannelsForAdmin(groupId);
 });
 
 /// 채널 생성 요청

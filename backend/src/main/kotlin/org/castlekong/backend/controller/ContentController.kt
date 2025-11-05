@@ -109,6 +109,17 @@ class ContentController(
         return ApiResponse.success(response)
     }
 
+    @GetMapping("/groups/{groupId}/channels/admin")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'CHANNEL_MANAGE')")
+    fun getChannelsByGroupForAdmin(
+        @PathVariable groupId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<ChannelResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getChannelsByGroupForAdmin(groupId, user.id)
+        return ApiResponse.success(response)
+    }
+
     @PostMapping("/workspaces/{workspaceId}/channels")
     @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)

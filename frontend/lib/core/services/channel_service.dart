@@ -65,6 +65,60 @@ class ChannelService {
     }
   }
 
+  /// Get all channels for admin (no POST_READ filter)
+  ///
+  /// GET /groups/{groupId}/channels/admin
+  ///
+  /// 채널 관리 페이지에서 CHANNEL_MANAGE 권한이 있는 사용자가
+  /// POST_READ 권한이 없는 채널도 조회하고 관리할 수 있도록 함
+  Future<List<Channel>> getChannelsForAdmin(int groupId) async {
+    try {
+      developer.log(
+        'Fetching all channels for admin: $groupId',
+        name: 'ChannelService',
+      );
+
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/groups/$groupId/channels/admin',
+      );
+
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map((item) => Channel.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+          return <Channel>[];
+        });
+
+        if (apiResponse.success && apiResponse.data != null) {
+          developer.log(
+            'Successfully fetched ${apiResponse.data!.length} channels (admin)',
+            name: 'ChannelService',
+          );
+          return apiResponse.data!;
+        } else {
+          developer.log(
+            'Failed to fetch admin channels: ${apiResponse.message}',
+            name: 'ChannelService',
+            level: 900,
+          );
+          return [];
+        }
+      }
+
+      return [];
+    } catch (e) {
+      developer.log(
+        'Error fetching admin channels: $e',
+        name: 'ChannelService',
+        level: 900,
+      );
+      return [];
+    }
+  }
+
   /// Get current user's membership information in a group
   ///
   /// GET /groups/{groupId}/members/me

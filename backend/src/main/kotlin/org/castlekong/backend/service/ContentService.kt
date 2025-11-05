@@ -249,6 +249,34 @@ class ContentService(
             .map { toChannelResponse(it) }
     }
 
+    /**
+     * 관리자용 채널 조회 (권한 필터링 없음)
+     *
+     * CHANNEL_MANAGE 권한이 있는 사용자가 채널 관리 페이지에서
+     * POST_READ 권한이 없는 채널도 조회하고 관리할 수 있도록 함
+     */
+    fun getChannelsByGroupForAdmin(
+        groupId: Long,
+        requesterId: Long,
+    ): List<ChannelResponse> {
+        // 1. 그룹 존재 확인
+        val group =
+            groupRepository.findById(groupId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+
+        // 2. 사용자 멤버십 확인
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+
+        // 3. CHANNEL_MANAGE 권한 확인
+        ensurePermission(groupId, requesterId, GroupPermission.CHANNEL_MANAGE)
+
+        // 4. 권한 필터링 없이 모든 채널 반환
+        return channelRepository.findByGroup_Id(groupId)
+            .map { toChannelResponse(it) }
+    }
+
     @Transactional
     fun createChannel(
         workspaceId: Long,
