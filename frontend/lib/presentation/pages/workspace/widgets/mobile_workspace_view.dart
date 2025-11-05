@@ -50,49 +50,55 @@ class MobileWorkspaceView extends ConsumerWidget {
       return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
     }
 
-    // 4. 특수 뷰 우선 처리 (groupAdmin, memberManagement 등)
+    // 4. 모바일 3단계 플로우에 따른 뷰 전환 (채널 관련) - 우선 처리
+    // 모바일에서는 mobileView가 주 네비게이션을 제어합니다
+    if (currentView == WorkspaceView.channel) {
+      switch (mobileView) {
+        case provider.MobileWorkspaceView.channelList:
+          // Step 1: 채널 목록
+          return const MobileChannelListView();
+
+        case provider.MobileWorkspaceView.channelPosts:
+          // Step 2: 선택된 채널의 게시글 목록
+          if (selectedChannelId == null) {
+            // 채널이 선택되지 않았다면 채널 목록으로 폴백
+            return const MobileChannelListView();
+          }
+          return MobileChannelPostsView(
+            channelId: selectedChannelId,
+            groupId: selectedGroupId!,
+            permissions: channelPermissions,
+          );
+
+        case provider.MobileWorkspaceView.postComments:
+          // Step 3: 선택된 게시글의 댓글
+          if (selectedPostId == null || selectedChannelId == null) {
+            // 게시글이나 채널이 선택되지 않았다면 게시글 목록으로 폴백
+            if (selectedChannelId != null) {
+              return MobileChannelPostsView(
+                channelId: selectedChannelId,
+                groupId: selectedGroupId!,
+                permissions: channelPermissions,
+              );
+            }
+            return const MobileChannelListView();
+          }
+          return MobilePostCommentsView(
+            postId: selectedPostId,
+            channelId: selectedChannelId,
+            groupId: selectedGroupId!,
+            permissions: channelPermissions,
+          );
+      }
+    }
+
+    // 5. 특수 뷰 처리 (groupAdmin, memberManagement, calendar, groupHome 등)
     final specialView = WorkspaceViewBuilder.buildSpecialView(ref, currentView);
     if (specialView != null) {
       return specialView;
     }
 
-    // 5. 모바일 3단계 플로우에 따른 뷰 전환 (채널 관련)
-    switch (mobileView) {
-      case provider.MobileWorkspaceView.channelList:
-        // Step 1: 채널 목록
-        return const MobileChannelListView();
-
-      case provider.MobileWorkspaceView.channelPosts:
-        // Step 2: 선택된 채널의 게시글 목록
-        if (selectedChannelId == null) {
-          // 채널이 선택되지 않았다면 채널 목록으로 폴백
-          return const MobileChannelListView();
-        }
-        return MobileChannelPostsView(
-          channelId: selectedChannelId,
-          groupId: selectedGroupId!,
-          permissions: channelPermissions,
-        );
-
-      case provider.MobileWorkspaceView.postComments:
-        // Step 3: 선택된 게시글의 댓글
-        if (selectedPostId == null || selectedChannelId == null) {
-          // 게시글이나 채널이 선택되지 않았다면 게시글 목록으로 폴백
-          if (selectedChannelId != null) {
-            return MobileChannelPostsView(
-              channelId: selectedChannelId,
-              groupId: selectedGroupId!,
-              permissions: channelPermissions,
-            );
-          }
-          return const MobileChannelListView();
-        }
-        return MobilePostCommentsView(
-          postId: selectedPostId,
-          channelId: selectedChannelId,
-          groupId: selectedGroupId!,
-          permissions: channelPermissions,
-        );
-    }
+    // 6. 기본값: 채널 리스트 (모바일에서는 항상 리턴되어야 함)
+    return const MobileChannelListView();
   }
 }
