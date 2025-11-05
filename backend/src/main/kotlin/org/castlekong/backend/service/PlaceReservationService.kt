@@ -465,7 +465,8 @@ class PlaceReservationService(
                 place.id,
                 startDateTime,
                 endDateTime,
-                null, // excludeReservationId는 null (eventId 기반 필터링은 아래에서 처리)
+                // excludeReservationId는 null (eventId 기반 필터링은 아래에서 처리)
+                null,
             )
 
         val conflictingReservations =
@@ -696,8 +697,12 @@ class PlaceReservationService(
 
         // 3. 기본 가용 시간: 운영시간
         val availableSlots = mutableListOf<TimeSlot>()
-        var currentStart = operatingHours.startTime
-        val operatingEnd = operatingHours.endTime
+
+        // startTime/endTime이 null이면 빈 목록 반환
+        val operatingStart = operatingHours.startTime ?: return emptyList()
+        val operatingEnd = operatingHours.endTime ?: return emptyList()
+
+        var currentStart = operatingStart
 
         // 4. 금지시간 제외
         val restrictedTimes =

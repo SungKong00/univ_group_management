@@ -212,9 +212,9 @@ data class PlaceAvailabilityDto(
 data class OperatingHourDto(
     val dayOfWeek: DayOfWeek,
     @field:JsonFormat(pattern = "HH:mm:ss")
-    val startTime: LocalTime,
+    val startTime: LocalTime?,
     @field:JsonFormat(pattern = "HH:mm:ss")
-    val endTime: LocalTime,
+    val endTime: LocalTime?,
 )
 
 /**

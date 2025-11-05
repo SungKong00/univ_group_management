@@ -109,6 +109,11 @@ class PlaceOperatingHoursService(
     private fun validateOperatingHours(data: OperatingHoursData) {
         // isClosed = false인 경우에만 시간 검증
         if (!data.isClosed) {
+            // 시작/종료 시간이 null이면 오류
+            if (data.startTime == null || data.endTime == null) {
+                throw BusinessException(ErrorCode.INVALID_TIME_RANGE)
+            }
+            // 시작 시간이 종료 시간보다 늦거나 같으면 오류
             if (data.startTime.isAfter(data.endTime) || data.startTime == data.endTime) {
                 throw BusinessException(ErrorCode.INVALID_TIME_RANGE)
             }
@@ -119,8 +124,8 @@ class PlaceOperatingHoursService(
      * 운영시간 데이터 클래스
      */
     data class OperatingHoursData(
-        val startTime: LocalTime,
-        val endTime: LocalTime,
+        val startTime: LocalTime?,
+        val endTime: LocalTime?,
         val isClosed: Boolean = false,
     )
 }

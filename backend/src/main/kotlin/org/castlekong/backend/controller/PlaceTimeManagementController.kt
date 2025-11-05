@@ -401,8 +401,14 @@ class PlaceTimeManagementController(
                 dayOfWeek = date.dayOfWeek,
                 isClosed = isClosed,
                 operatingHours =
-                    operatingHours?.let {
-                        OperatingHoursInfo(it.startTime, it.endTime)
+                    operatingHours?.let { oh ->
+                        val start = oh.startTime
+                        val end = oh.endTime
+                        if (start != null && end != null) {
+                            OperatingHoursInfo(start, end)
+                        } else {
+                            null
+                        }
                     },
                 restrictedTimes =
                     restrictedTimes.map {
