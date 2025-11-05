@@ -50,11 +50,9 @@ class MobileWorkspaceView extends ConsumerWidget {
       return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
     }
 
-    // 4. 특수 뷰 처리 (groupAdmin, memberManagement, calendar 등)
+    // 4. 특수 뷰 처리 (groupHome, groupAdmin, memberManagement, calendar 등)
     // 모바일에서는 명시적으로 요청된 특수 뷰만 표시
-    // (groupHome은 모바일에서 채널 리스트로 대체)
-    if (currentView != provider.WorkspaceView.channel &&
-        currentView != provider.WorkspaceView.groupHome) {
+    if (currentView != provider.WorkspaceView.channel) {
       final specialView = WorkspaceViewBuilder.buildSpecialView(ref, currentView);
       if (specialView != null) {
         return specialView;
