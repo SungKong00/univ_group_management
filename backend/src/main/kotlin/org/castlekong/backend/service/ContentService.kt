@@ -215,7 +215,12 @@ class ContentService(
         val member =
             groupMemberRepository.findByGroupIdAndUserId(workspace.group.id, requesterId)
                 .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
-        return channelRepository.findByWorkspace_Id(workspaceId).map { toChannelResponse(it) }
+        // POST_READ 권한이 있는 채널만 필터링 (CHANNEL_VIEW 역할 흡수)
+        return channelRepository.findByWorkspace_Id(workspaceId)
+            .filter { channel ->
+                hasChannelPermission(channel.id, requesterId, ChannelPermission.POST_READ)
+            }
+            .map { toChannelResponse(it) }
     }
 
     fun getChannelsByGroup(
@@ -234,7 +239,12 @@ class ContentService(
 
         // 3. 채널 목록 직접 조회 (workspace 테이블 우회)
         // Note: 현재 구조에서는 채널이 group에 직접 연결되어 있음
-        return channelRepository.findByGroup_Id(groupId).map { toChannelResponse(it) }
+        // POST_READ 권한이 있는 채널만 필터링 (CHANNEL_VIEW 역할 흡수)
+        return channelRepository.findByGroup_Id(groupId)
+            .filter { channel ->
+                hasChannelPermission(channel.id, requesterId, ChannelPermission.POST_READ)
+            }
+            .map { toChannelResponse(it) }
     }
 
     @Transactional

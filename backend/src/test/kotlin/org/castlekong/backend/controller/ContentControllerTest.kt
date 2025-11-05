@@ -239,7 +239,6 @@ class ContentControllerTest {
     ) {
         val ownerPermissions =
             setOf(
-                org.castlekong.backend.entity.ChannelPermission.CHANNEL_VIEW,
                 org.castlekong.backend.entity.ChannelPermission.POST_READ,
                 org.castlekong.backend.entity.ChannelPermission.POST_WRITE,
                 org.castlekong.backend.entity.ChannelPermission.COMMENT_WRITE,
@@ -248,7 +247,6 @@ class ContentControllerTest {
 
         val memberPermissions =
             setOf(
-                org.castlekong.backend.entity.ChannelPermission.CHANNEL_VIEW,
                 org.castlekong.backend.entity.ChannelPermission.POST_READ,
                 org.castlekong.backend.entity.ChannelPermission.POST_WRITE,
                 org.castlekong.backend.entity.ChannelPermission.COMMENT_WRITE,

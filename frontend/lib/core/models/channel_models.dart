@@ -142,12 +142,8 @@ class ChannelPermissions {
   bool get canUploadFile => permissions.contains('FILE_UPLOAD');
 
   /// Check if user has POST_READ permission
-  /// Required to view posts in the channel
+  /// Required to view posts in the channel (also serves as channel access permission)
   bool get canReadPost => permissions.contains('POST_READ');
-
-  /// Check if user has CHANNEL_VIEW permission
-  /// Required to view the channel itself
-  bool get canViewChannel => permissions.contains('CHANNEL_VIEW');
 
   @override
   bool operator ==(Object other) {

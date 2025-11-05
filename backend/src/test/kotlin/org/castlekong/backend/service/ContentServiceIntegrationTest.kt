@@ -408,14 +408,12 @@ class ContentServiceIntegrationTest {
         grantBindings(
             channelId,
             setOf(
-                ChannelPermission.CHANNEL_VIEW,
                 ChannelPermission.POST_READ,
                 ChannelPermission.POST_WRITE,
                 ChannelPermission.COMMENT_WRITE,
                 ChannelPermission.FILE_UPLOAD,
             ),
             setOf(
-                ChannelPermission.CHANNEL_VIEW,
                 ChannelPermission.POST_READ,
                 ChannelPermission.POST_WRITE,
                 ChannelPermission.COMMENT_WRITE,

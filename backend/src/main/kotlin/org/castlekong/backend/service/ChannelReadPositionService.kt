@@ -35,7 +35,7 @@ class ChannelReadPositionService(
         userId: Long,
         channelId: Long,
     ): ChannelReadPositionResponse? {
-        // 1. 채널 접근 권한 확인 (CHANNEL_VIEW 권한)
+        // 1. 채널 접근 권한 확인 (POST_READ 권한)
         checkChannelAccess(userId, channelId)
 
         // 2. 읽음 위치 조회
@@ -132,7 +132,7 @@ class ChannelReadPositionService(
 
     /**
      * 채널 접근 권한 확인
-     * CHANNEL_VIEW 권한이 있는지 확인
+     * POST_READ 권한이 있는지 확인
      */
     private fun checkChannelAccess(
         userId: Long,
@@ -146,8 +146,8 @@ class ChannelReadPositionService(
         groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
             .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
 
-        // 채널 VIEW 권한 확인
-        if (!channelPermissionService.hasChannelPermission(channelId, userId, ChannelPermission.CHANNEL_VIEW)) {
+        // 채널 POST_READ 권한 확인
+        if (!channelPermissionService.hasChannelPermission(channelId, userId, ChannelPermission.POST_READ)) {
             throw BusinessException(ErrorCode.FORBIDDEN)
         }
     }
