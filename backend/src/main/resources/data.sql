@@ -64,3 +64,14 @@ VALUES (6, 1, '중앙도서관에서 공부', '중앙도서관 2열람실', 'SAT
 ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
 ALTER TABLE groups ALTER COLUMN id RESTART WITH 14;
 ALTER TABLE personal_schedules ALTER COLUMN id RESTART WITH 7;
+
+-- =====================================================================
+-- 6) Sequence initialization for other tables
+-- =====================================================================
+-- These tables are populated by ApplicationRunners, but we need to ensure
+-- their ID sequences start from 1 for predictable data generation
+ALTER TABLE channels ALTER COLUMN id RESTART WITH 1;
+ALTER TABLE posts ALTER COLUMN id RESTART WITH 1;
+ALTER TABLE channel_read_positions ALTER COLUMN id RESTART WITH 1;
+ALTER TABLE workspaces ALTER COLUMN id RESTART WITH 1;
+ALTER TABLE comments ALTER COLUMN id RESTART WITH 1;

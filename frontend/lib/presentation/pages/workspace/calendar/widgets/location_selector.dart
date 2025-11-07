@@ -259,8 +259,10 @@ class _LocationSelectorState extends State<LocationSelector> {
 
   Future<void> _showPlacePicker() async {
     final selectedPlace = await showPlacePickerDialog(
-      context,
+      context: context,
       groupId: widget.groupId,
+      startTime: widget.startDateTime,
+      endTime: widget.endDateTime,
     );
 
     if (selectedPlace != null) {

@@ -50,7 +50,6 @@ data class CreateChannelWithPermissionsRequest(
     @field:Size(max = 500, message = "설명은 500자를 초과할 수 없습니다")
     val description: String? = null,
     val type: String? = null,
-
     /**
      * 역할별 권한 설정
      * Key: groupRoleId

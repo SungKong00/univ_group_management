@@ -56,7 +56,33 @@ class ChannelReadPositionService(
         // 1. 채널 접근 권한 확인
         checkChannelAccess(userId, channelId)
 
-        // 2. 기존 레코드 조회 또는 새로 생성
+        // 2. lastReadPostId 검증: 게시글이 해당 채널에 속하는지 확인
+        if (request.lastReadPostId > 0) {
+            val post =
+                postRepository.findById(request.lastReadPostId)
+                    .orElseThrow {
+                        logger.warn(
+                            "Post not found: userId={}, channelId={}, lastReadPostId={}",
+                            userId,
+                            channelId,
+                            request.lastReadPostId,
+                        )
+                        BusinessException(ErrorCode.POST_NOT_FOUND)
+                    }
+
+            if (post.channel.id != channelId) {
+                logger.warn(
+                    "ReadPosition mismatch detected: userId={}, channelId={}, lastReadPostId={} belongs to channelId={}",
+                    userId,
+                    channelId,
+                    request.lastReadPostId,
+                    post.channel.id,
+                )
+                throw BusinessException(ErrorCode.INVALID_REQUEST)
+            }
+        }
+
+        // 3. 기존 레코드 조회 또는 새로 생성
         val position =
             readPositionRepository.findByUserIdAndChannelId(userId, channelId)
                 ?.also {

@@ -27,6 +27,7 @@ import 'widgets/group_event_form_dialog.dart';
 import 'widgets/place_calendar_tab.dart';
 import '../../../widgets/buttons/neutral_outlined_button.dart';
 import '../../../widgets/buttons/primary_button.dart';
+import '../../../widgets/buttons/calendar_add_button.dart';
 
 /// Event formality categories for single-step selector
 /// Matches Phase 6 UI design: Step 1 - Official/Unofficial selection
@@ -305,12 +306,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       ],
     );
 
-    final addButton = PrimaryButton(
-      text: '일정 추가',
-      onPressed: isBusy ? null : () => _showCreateDialog(),
-      icon: const Icon(Icons.add),
-      variant: PrimaryButtonVariant.brand,
-      width: 160,
+    final addButton = CalendarAddButton(
+      onPressed: () => _showCreateDialog(),
+      isLoading: isBusy,
     );
 
     final weekStart = currentView == CalendarView.week ? _getWeekStart(focusedDate) : null;

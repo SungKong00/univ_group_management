@@ -17,8 +17,11 @@ import org.castlekong.backend.entity.GroupPermission
 import org.castlekong.backend.entity.GroupType
 import org.castlekong.backend.entity.UsageStatus
 import org.castlekong.backend.entity.User
+import org.castlekong.backend.repository.ChannelReadPositionRepository
+import org.castlekong.backend.repository.ChannelRepository
 import org.castlekong.backend.repository.PlaceOperatingHoursRepository
 import org.castlekong.backend.repository.PlaceRepository
+import org.castlekong.backend.repository.PostRepository
 import org.castlekong.backend.security.PermissionService
 import org.castlekong.backend.service.GoogleUserInfo
 import org.castlekong.backend.service.GroupEventService
@@ -87,6 +90,9 @@ class TestDataRunner(
     private val placeOperatingHoursRepository: PlaceOperatingHoursRepository,
     private val placeRepository: PlaceRepository,
     private val permissionService: PermissionService,
+    private val channelRepository: ChannelRepository,
+    private val postRepository: PostRepository,
+    private val readPositionRepository: ChannelReadPositionRepository,
 ) : ApplicationRunner {
     private val logger = LoggerFactory.getLogger(TestDataRunner::class.java)
 
@@ -115,6 +121,9 @@ class TestDataRunner(
             // Phase 2: 커스텀 그룹 생성
             val customGroups = createCustomGroups(users)
 
+            // Phase 2.5: 한신대학교 그룹 멤버십 추가 (Critical 문제 해결)
+            addUsersToHanshinGroup(users)
+
             // Phase 3: 그룹 멤버십 및 역할 관리
             setupGroupMemberships(users, customGroups)
 
@@ -135,6 +144,9 @@ class TestDataRunner(
 
             // Phase 9: 그룹 캘린더 일정 및 장소 예약 생성
             createCalendarEventsAndReservations(users, customGroups, customPlaces)
+
+            // Note: ReadPosition 생성은 DummyPostInitializer에 통합됨
+            // (게시글 생성 직후 읽음 위치를 설정하여 데이터 일관성 보장)
 
             logger.info("=== Test Data Creation Completed Successfully ===")
         } catch (e: Exception) {
@@ -335,6 +347,37 @@ class TestDataRunner(
         logger.info("   - ${aiSwCodingStudyGroup.name} (owner: ${users.user1.email}, parent: AI/SW학과)")
 
         return CustomGroups(devCrewGroup.id, studentCouncilGroup.id, aiSwCodingStudyGroup.id)
+    }
+
+    /**
+     * Phase 2.5: 한신대학교 그룹 멤버십 추가
+     *
+     * DummyPostInitializer가 생성하는 게시글이 있는 채널(한신대학교 공지사항)에
+     * 테스트 사용자들이 접근할 수 있도록 명시적으로 멤버십을 추가합니다.
+     *
+     * @param users 테스트 사용자들
+     */
+    private fun addUsersToHanshinGroup(users: TestUsers) {
+        logger.info("[2.5/9] Adding test users to 한신대학교 group for channel access...")
+
+        val hanshinGroupId = 1L // 한신대학교 그룹 ID (data.sql에서 생성)
+
+        // 각 사용자를 한신대학교 그룹에 멤버로 추가
+        listOf(users.user1, users.user2, users.user3).forEach { user ->
+            safeExecute("Adding ${user.email} to 한신대학교 group") {
+                // 이미 멤버인지 확인 (중복 방지)
+                val existingMember = groupMemberService.isMember(hanshinGroupId, user.id!!)
+
+                if (!existingMember) {
+                    groupMemberService.joinGroup(hanshinGroupId, user.id!!)
+                    logger.debug("   -> Added ${user.email} to 한신대학교 group")
+                } else {
+                    logger.debug("   -> ${user.email} already member of 한신대학교 group")
+                }
+            }
+        }
+
+        logger.info("-> SUCCESS: Added test users to 한신대학교 group for DummyPost channel access")
     }
 
     /**

@@ -318,18 +318,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
       if (lastGroupId != null) {
         // 복원할 뷰 타입 결정
-        // ✅ Priority 1: 채널 ID가 있으면 채널 뷰 (모바일 UX: 채널 리스트가 홈)
-        // ✅ Priority 2: 저장된 뷰 타입이 채널이 아닌 경우만 복원
-        // ✅ Priority 3: 없으면 기본값 (groupHome)
+        // ✅ Priority 1: 채널 ID가 있으면 채널 뷰
+        // ✅ Priority 2: 저장된 뷰 타입이 있으면 복원
+        // ✅ Priority 3: 없으면 기본값 (웹: groupHome, 모바일: channel)
 
         WorkspaceView? restoredView;
         bool shouldUseChannelView = false;
 
-        // 채널 ID가 있으면 무조건 채널 뷰로 진입 (모바일 UX 우선)
+        // 채널 ID가 있으면 무조건 채널 뷰로 진입
         if (lastChannelId != null) {
           shouldUseChannelView = true;
         } else if (lastViewType != null) {
-          // 채널 ID가 없을 때만 저장된 뷰 타입 복원
+          // 채널 ID가 없을 때 저장된 뷰 타입 복원
           try {
             restoredView = WorkspaceView.values.firstWhere(
               (v) => v.name == lastViewType,
@@ -342,17 +342,19 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
               shouldUseChannelView = true;
             }
           } catch (_) {
-            // Invalid view type: 채널 뷰로 진입
-            shouldUseChannelView = true;
+            // Invalid view type: 플랫폼별 기본 동작
+            shouldUseChannelView = !kIsWeb; // 웹: false (groupHome), 모바일: true (channel)
           }
         } else {
-          // No saved view type: 모바일 UX를 위해 채널 뷰로 진입
-          shouldUseChannelView = true;
+          // No saved view type: 플랫폼별 기본 동작
+          // 웹: groupHome으로 진입 (UX 명세 준수)
+          // 모바일: 채널 뷰로 진입 (모바일 UX: 채널 리스트가 홈)
+          shouldUseChannelView = !kIsWeb;
         }
 
         if (kDebugMode) {
           developer.log(
-            'Restoring workspace state: group=$lastGroupId, channel=$lastChannelId, view=$lastViewType, shouldUseChannelView=$shouldUseChannelView',
+            'Restoring workspace state: group=$lastGroupId, channel=$lastChannelId, view=$lastViewType, shouldUseChannelView=$shouldUseChannelView, kIsWeb=$kIsWeb',
             name: 'WorkspaceStateNotifier',
           );
         }
@@ -371,8 +373,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
             targetView: restoredView,
           );
         } else {
-          // Fallback: 채널 뷰로 진입
-          await enterWorkspace(lastGroupId);
+          // Fallback: groupHome으로 진입 (웹 기본값)
+          await enterWorkspace(
+            lastGroupId,
+            targetView: WorkspaceView.groupHome,
+          );
         }
       }
     } catch (e) {

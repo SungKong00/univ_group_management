@@ -15,11 +15,15 @@ class PlaceReservationDialog extends ConsumerStatefulWidget {
     required this.groupId,
     this.initialDate,
     this.initialStartTime,
+    this.initialEndTime,
+    this.initialPlaceId,
   });
 
   final int groupId;
   final DateTime? initialDate;
   final TimeOfDay? initialStartTime;
+  final TimeOfDay? initialEndTime;
+  final int? initialPlaceId;
 
   @override
   ConsumerState<PlaceReservationDialog> createState() =>
@@ -42,10 +46,12 @@ class _PlaceReservationDialogState
     super.initState();
     _selectedDate = widget.initialDate ?? DateTime.now();
     _startTime = widget.initialStartTime ?? const TimeOfDay(hour: 9, minute: 0);
-    _endTime = TimeOfDay(
-      hour: (_startTime!.hour + 2) % 24,
-      minute: _startTime!.minute,
-    );
+    _endTime = widget.initialEndTime ??
+        TimeOfDay(
+          hour: (_startTime!.hour + 2) % 24,
+          minute: _startTime!.minute,
+        );
+    _selectedPlaceId = widget.initialPlaceId;
   }
 
   @override
@@ -370,6 +376,8 @@ Future<bool?> showPlaceReservationDialog(
   required int groupId,
   DateTime? initialDate,
   TimeOfDay? initialStartTime,
+  TimeOfDay? initialEndTime,
+  int? initialPlaceId,
 }) {
   return showDialog<bool>(
     context: context,
@@ -377,6 +385,8 @@ Future<bool?> showPlaceReservationDialog(
       groupId: groupId,
       initialDate: initialDate,
       initialStartTime: initialStartTime,
+      initialEndTime: initialEndTime,
+      initialPlaceId: initialPlaceId,
     ),
   );
 }

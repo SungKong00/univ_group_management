@@ -11,6 +11,7 @@ import '../../../adapters/personal_event_adapter.dart';
 import '../../../providers/calendar_events_provider.dart';
 import '../../../widgets/buttons/error_button.dart';
 import '../../../widgets/buttons/neutral_outlined_button.dart';
+import '../../../widgets/buttons/calendar_add_button.dart';
 import '../../../widgets/calendar/calendar_error_banner.dart';
 import '../../../widgets/calendar/calendar_event_card.dart';
 import '../../../widgets/calendar/calendar_navigator.dart';
@@ -213,24 +214,9 @@ class _CalendarHeader extends StatelessWidget {
       ],
     );
 
-    final addButton = SizedBox(
-      width: 110,
-      height: 44,
-      child: FilledButton.icon(
-        onPressed: state.isMutating ? null : onCreateEvent,
-        icon: const Icon(Icons.add_circle_outline, size: 16),
-        label: Text(
-          '일정 추가',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-              ),
-        ),
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-        ),
-      ),
+    final addButton = CalendarAddButton(
+      onPressed: onCreateEvent,
+      isLoading: state.isMutating,
     );
 
     return Center(

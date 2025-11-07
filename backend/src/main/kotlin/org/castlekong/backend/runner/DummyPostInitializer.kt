@@ -1,15 +1,18 @@
 package org.castlekong.backend.runner
 
+import org.castlekong.backend.entity.ChannelReadPosition
 import org.castlekong.backend.entity.ChannelType
 import org.castlekong.backend.entity.Post
 import org.castlekong.backend.entity.PostType
+import org.castlekong.backend.repository.ChannelReadPositionRepository
 import org.castlekong.backend.repository.ChannelRepository
 import org.castlekong.backend.repository.PostRepository
 import org.castlekong.backend.repository.UserRepository
 import org.slf4j.LoggerFactory
-import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.boot.ApplicationArguments
+import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Profile
-import org.springframework.context.event.EventListener
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -17,9 +20,9 @@ import java.time.LocalDateTime
 /**
  * TODO: 배포 시 이 파일 삭제 필요
  *
- * Event listener that creates dummy posts for development purposes.
+ * ApplicationRunner that creates dummy posts for development purposes.
  *
- * This listener executes after all ApplicationRunners complete and creates 9 dummy posts
+ * This runner executes after TestDataRunner (@Order(2)) with @Order(3) and creates 9 dummy posts
  * in the Hansin University announcement channel:
  * - 10/4: 3 posts (5 lines, 15 lines, 30 lines)
  * - 10/5: 3 posts (5 lines, 15 lines, 30 lines)
@@ -30,22 +33,22 @@ import java.time.LocalDateTime
  */
 @Component
 @Profile("!prod")
+@Order(3)
 class DummyPostInitializer(
     private val userRepository: UserRepository,
     private val channelRepository: ChannelRepository,
     private val postRepository: PostRepository,
-) {
+    private val readPositionRepository: ChannelReadPositionRepository,
+) : ApplicationRunner {
     private val logger = LoggerFactory.getLogger(DummyPostInitializer::class.java)
 
-    @EventListener(ApplicationReadyEvent::class)
     @Transactional
-    fun initializeDummyPosts() {
+    override fun run(args: ApplicationArguments?) {
         logger.info("=== Starting Dummy Post Initialization Runner ===")
 
-        // Check if dummy posts already exist
-        val existingDummyPosts = postRepository.findAll().filter { it.content.contains("[DUMMY_POST]") }
-        if (existingDummyPosts.isNotEmpty()) {
-            logger.info("Dummy posts already exist (${existingDummyPosts.size} found). Skipping initialization.")
+        // Check if dummy posts already exist (using efficient DB query)
+        if (postRepository.existsByContentContaining("[DUMMY_POST]")) {
+            logger.info("Dummy posts already exist. Skipping initialization.")
             return
         }
 
@@ -92,6 +95,7 @@ class DummyPostInitializer(
                 Triple(LocalDateTime.of(2025, 10, 6, 19, 0), 30, "2025학년도 하계 해외 교환학생 프로그램 모집 안내"),
             )
 
+        val createdPostIds = mutableListOf<Long>()
         postsToCreate.forEachIndexed { index, (date, lines, title) ->
             val content = generateDummyContent(title, lines)
             val post =
@@ -104,11 +108,16 @@ class DummyPostInitializer(
                     createdAt = date,
                     updatedAt = date,
                 )
-            postRepository.save(post)
-            logger.info("Created dummy post ${index + 1}/9: $title ($lines lines, date=${date.toLocalDate()})")
+            val savedPost = postRepository.save(post)
+            createdPostIds.add(savedPost.id)
+            logger.info("Created dummy post ${index + 1}/9: $title ($lines lines, date=${date.toLocalDate()}, id=${savedPost.id})")
         }
 
+        // Step 4: Create read positions after posts are created
+        createReadPositionsForDummyPosts(announcementChannel.id, createdPostIds)
+
         logger.info("=== Dummy Post Initialization Completed Successfully ===")
+        logger.info("Created ${createdPostIds.size} posts with IDs: ${createdPostIds.min()}-${createdPostIds.max()}")
     }
 
     /**
@@ -192,5 +201,55 @@ class DummyPostInitializer(
         }
 
         return lines.joinToString("\n")
+    }
+
+    /**
+     * Creates read positions for test users after dummy posts are created.
+     * Ensures data consistency between posts and read positions.
+     *
+     * @param channelId The announcement channel ID
+     * @param createdPostIds List of created post IDs in ascending order
+     */
+    private fun createReadPositionsForDummyPosts(
+        channelId: Long,
+        createdPostIds: List<Long>,
+    ) {
+        if (createdPostIds.size < 5) {
+            logger.warn("Not enough posts created to set read positions (need >= 5, got ${createdPostIds.size})")
+            return
+        }
+
+        try {
+            // testuser1: Read all posts (lastReadPostId = last post ID, unread count = 0)
+            val user1 = userRepository.findByEmail("testuser1@hs.ac.kr")
+            if (user1.isPresent) {
+                readPositionRepository.save(
+                    ChannelReadPosition(
+                        userId = user1.get().id!!,
+                        channelId = channelId,
+                        lastReadPostId = createdPostIds.last(),
+                    ),
+                )
+                logger.info("Created read position for testuser1: lastReadPostId=${createdPostIds.last()}, unread=0")
+            }
+
+            // testuser2: Read only first 5 posts (unread count = 4)
+            val user2 = userRepository.findByEmail("testuser2@hs.ac.kr")
+            if (user2.isPresent) {
+                readPositionRepository.save(
+                    ChannelReadPosition(
+                        userId = user2.get().id!!,
+                        channelId = channelId,
+                        lastReadPostId = createdPostIds[4],
+                    ),
+                )
+                logger.info("Created read position for testuser2: lastReadPostId=${createdPostIds[4]}, unread=${createdPostIds.size - 5}")
+            }
+
+            // testuser3: No read position (all posts unread, unread count = 9)
+            logger.info("testuser3 has no read position: unread=${createdPostIds.size}")
+        } catch (e: Exception) {
+            logger.warn("Failed to create read positions: ${e.message}")
+        }
     }
 }

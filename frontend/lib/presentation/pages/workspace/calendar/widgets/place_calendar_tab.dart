@@ -19,6 +19,7 @@ import '../../../../utils/responsive_layout_helper.dart';
 import '../../../../widgets/place/place_card.dart';
 import '../../../../widgets/common/app_empty_state.dart';
 import '../../../../widgets/calendar/calendar_navigator.dart';
+import '../../../../widgets/buttons/calendar_add_button.dart';
 import 'multi_place_calendar_view.dart';
 import 'place_reservation_dialog.dart';
 import 'place_selector_button.dart';
@@ -109,6 +110,12 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
       _previousSelectedPlaceIds = state.selectedPlaceIds;
       if (state.selectedPlaceIds.isNotEmpty) {
         shouldLoadReservations = true;
+        // Also load availabilities when places are selected
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref.read(placeCalendarProvider.notifier).loadAvailabilities();
+          }
+        });
       }
     }
 
@@ -161,36 +168,18 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     CalendarView currentView,
     bool isWideMode,
   ) {
-    return Stack(
+    return Column(
       children: [
-        Column(
-          children: [
-            // Responsive header: 1 row in wide mode, 2 rows in compact mode
-            _buildResponsiveHeader(context, currentView, focusedDate, isWideMode),
+        // Responsive header: 1 row in wide mode, 2 rows in compact mode
+        _buildResponsiveHeader(context, currentView, focusedDate, isWideMode, state),
 
-            // Selected places chips (from BuildingPlaceSelector)
-            _buildSelectedPlacesChips(state),
+        // Selected places chips (from BuildingPlaceSelector)
+        _buildSelectedPlacesChips(state),
 
-            // Calendar view or empty state
-            Expanded(
-              child: _buildCalendarView(state, focusedDate, currentView),
-            ),
-          ],
+        // Calendar view or empty state
+        Expanded(
+          child: _buildCalendarView(state, focusedDate, currentView),
         ),
-
-        // Floating action button for adding reservations
-        // Show button when places are available, regardless of selection
-        if (state.places.isNotEmpty)
-          Positioned(
-            right: AppSpacing.md,
-            bottom: AppSpacing.md,
-            child: FloatingActionButton.extended(
-              onPressed: () => _showReservationDialog(context),
-              icon: const Icon(Icons.add),
-              label: const Text('예약 추가'),
-              backgroundColor: AppColors.brand,
-            ),
-          ),
       ],
     );
   }
@@ -219,6 +208,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     // When no places are selected, calendar will be empty
     // When places are selected, their reservations will be displayed
     return MultiPlaceCalendarView(
+      groupId: widget.groupId,
       view: view,
       focusedDate: focusedDate,
       selectedDate: focusedDate,
@@ -471,6 +461,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     CalendarView currentView,
     DateTime focusedDate,
     bool isWideMode,
+    PlaceCalendarState state,
   ) {
     final permissions = ref.watch(groupPermissionsProvider(widget.groupId));
     final hasCalendarManage = permissions.when(
@@ -497,19 +488,20 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
           ? Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1200),
-                child: _buildWideHeader(context, currentView, focusedDate, hasCalendarManage),
+                child: _buildWideHeader(context, currentView, focusedDate, hasCalendarManage, state),
               ),
             )
-          : _buildCompactHeader(context, currentView, focusedDate, hasCalendarManage),
+          : _buildCompactHeader(context, currentView, focusedDate, hasCalendarManage, state),
     );
   }
 
-  /// Wide mode layout: [주간/월간] | [◀ 2025년 11월 ▶ 오늘] | [건물▼ 장소▼ ⚙️]
+  /// Wide mode layout: [주간/월간] | [◀ 2025년 11월 ▶ 오늘] | [예약 추가] | [건물▼ 장소▼ ⚙️]
   Widget _buildWideHeader(
     BuildContext context,
     CalendarView currentView,
     DateTime focusedDate,
     bool hasCalendarManage,
+    PlaceCalendarState state,
   ) {
     return Row(
       children: [
@@ -522,6 +514,16 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
           child: _buildDateNavigator(context, currentView, focusedDate),
         ),
         const SizedBox(width: AppSpacing.md),
+
+        // Add reservation button
+        if (state.places.isNotEmpty) ...[
+          CalendarAddButton(
+            onPressed: () => _showReservationDialog(context),
+            isLoading: state.isLoading,
+            label: '예약 추가',
+          ),
+          const SizedBox(width: AppSpacing.xs),
+        ],
 
         // Place selector + Settings button
         Row(
@@ -538,12 +540,13 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
 
   /// Compact mode layout (2 rows):
   /// Row 1: [주간/월간] | [◀ 2025년 11월 ▶ 오늘]
-  /// Row 2: [건물▼ 장소▼] | [⚙️]
+  /// Row 2: [예약 추가] | [건물▼ 장소▼] | [⚙️]
   Widget _buildCompactHeader(
     BuildContext context,
     CalendarView currentView,
     DateTime focusedDate,
     bool hasCalendarManage,
+    PlaceCalendarState state,
   ) {
     return Column(
       children: [
@@ -559,9 +562,19 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Row 2: Place selector + Settings
+        // Row 2: Add button + Place selector + Settings
         Row(
           children: [
+            // Add reservation button
+            if (state.places.isNotEmpty) ...[
+              CalendarAddButton(
+                onPressed: () => _showReservationDialog(context),
+                isLoading: state.isLoading,
+                label: '예약 추가',
+              ),
+              const SizedBox(width: AppSpacing.xs),
+            ],
+
             // Place selector
             const PlaceSelectorButton(),
             const Spacer(),

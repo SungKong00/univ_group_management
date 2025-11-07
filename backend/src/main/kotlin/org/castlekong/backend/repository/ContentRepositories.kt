@@ -54,6 +54,15 @@ interface PostRepository : JpaRepository<Post, Long> {
         @Param("channelIds") channelIds: List<Long>,
     ): List<Post>
 
+    /**
+     * Checks if any post exists with the given marker in its content.
+     * Used by DummyPostInitializer for idempotency check.
+     */
+    @Query("SELECT COUNT(p) > 0 FROM Post p WHERE p.content LIKE CONCAT('%', :marker, '%')")
+    fun existsByContentContaining(
+        @Param("marker") marker: String,
+    ): Boolean
+
     @Modifying
     @Query(
         """

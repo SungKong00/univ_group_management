@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
 import '../../../../providers/place_calendar_provider.dart';
+import '../../../../widgets/weekly_calendar/duration_input_dialog.dart';
 
 /// Popover content for place selection
 /// Displays building categories with room chips for quick multi-selection
@@ -157,10 +158,46 @@ class PlaceSelectorPopover extends ConsumerWidget {
             return FilterChip(
               label: Text(place.displayName),
               selected: isSelected,
-              onSelected: (_) {
-                ref.read(placeCalendarProvider.notifier).togglePlaceSelection(
-                      place.id,
-                    );
+              onSelected: (_) async {
+                final notifier = ref.read(placeCalendarProvider.notifier);
+                final currentState = ref.read(placeCalendarProvider);
+                final wasSelected = currentState.selectedPlaceIds.contains(place.id);
+
+                if (wasSelected) {
+                  notifier.deselectPlace(place.id);
+                  // When returning to single-place mode, clear required duration
+                  final remaining = currentState.selectedPlaceIds.length - 1;
+                  if (remaining <= 1) {
+                    notifier.clearRequiredDuration();
+                  }
+                  return;
+                }
+
+                final previousCount = currentState.selectedPlaceIds.length;
+                notifier.selectPlace(place.id);
+
+                // Ensure duration prompt only when moving into multi-place mode
+                final updatedState = ref.read(placeCalendarProvider);
+                final selectionCount = updatedState.selectedPlaceIds.length;
+                final needsDuration =
+                    selectionCount >= 2 && updatedState.requiredDuration == null;
+
+                if (needsDuration) {
+                  final duration = await showDialog<Duration>(
+                    context: context,
+                    builder: (ctx) => const DurationInputDialog(),
+                  );
+
+                  if (duration != null) {
+                    notifier.setRequiredDuration(duration);
+                  } else {
+                    // Revert selection if user cancelled duration selection
+                    notifier.deselectPlace(place.id);
+                    if (previousCount <= 1) {
+                      notifier.clearRequiredDuration();
+                    }
+                  }
+                }
               },
               backgroundColor: AppColors.neutral100,
               selectedColor: AppColors.brandLight,
