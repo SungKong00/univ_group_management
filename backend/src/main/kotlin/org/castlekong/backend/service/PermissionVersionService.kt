@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicLong
 @Service
 @Transactional
 class PermissionVersionService {
-
     /**
      * 채널별 권한 버전을 메모리에서 관리
      * 운영환경에서는 Redis 등 분산 캐시 고려

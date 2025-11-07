@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import '../../../core/utils/snack_bar_helper.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -70,27 +71,41 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
 
       if (kDebugMode) {
-        developer.log('✅ Google 계정 로그인 성공: ${account.email}', name: 'GoogleSignIn');
+        developer.log(
+          '✅ Google 계정 로그인 성공: ${account.email}',
+          name: 'GoogleSignIn',
+        );
       }
       final auth = await account.authentication;
       final idToken = auth.idToken;
       final accessToken = auth.accessToken;
 
       if (kDebugMode) {
-        developer.log('🔑 ID Token 길이: ${idToken?.length ?? 0}', name: 'GoogleSignIn');
-        developer.log('🔑 Access Token 길이: ${accessToken?.length ?? 0}', name: 'GoogleSignIn');
+        developer.log(
+          '🔑 ID Token 길이: ${idToken?.length ?? 0}',
+          name: 'GoogleSignIn',
+        );
+        developer.log(
+          '🔑 Access Token 길이: ${accessToken?.length ?? 0}',
+          name: 'GoogleSignIn',
+        );
       }
 
-      if ((idToken == null || idToken.isEmpty) && (accessToken == null || accessToken.isEmpty)) {
+      if ((idToken == null || idToken.isEmpty) &&
+          (accessToken == null || accessToken.isEmpty)) {
         throw Exception(
           'Google에서 인증 토큰을 반환하지 않았습니다. OAuth 클라이언트 설정을 다시 확인해주세요.',
         );
       }
 
-      final loginResponse = await ref.read(authProvider.notifier).loginWithGoogle(
-        idToken: (idToken != null && idToken.isNotEmpty) ? idToken : null,
-        accessToken: (accessToken != null && accessToken.isNotEmpty) ? accessToken : null,
-      );
+      final loginResponse = await ref
+          .read(authProvider.notifier)
+          .loginWithGoogle(
+            idToken: (idToken != null && idToken.isNotEmpty) ? idToken : null,
+            accessToken: (accessToken != null && accessToken.isNotEmpty)
+                ? accessToken
+                : null,
+          );
 
       if (!mounted) {
         return;
@@ -100,22 +115,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     } on PlatformException catch (error) {
       if (mounted) {
         final message = error.message ?? 'Google 로그인 초기화 중 오류가 발생했습니다.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('로그인 실패: $message'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '로그인 실패: $message');
       }
     } catch (e) {
       if (mounted) {
         final message = e.toString().replaceFirst('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('로그인 실패: $message'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '로그인 실패: $message');
       }
     } finally {
       if (mounted) {
@@ -128,7 +133,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final loginResponse = await ref.read(authProvider.notifier).loginWithTestAccount();
+      final loginResponse = await ref
+          .read(authProvider.notifier)
+          .loginWithTestAccount();
 
       if (!mounted) {
         return;
@@ -137,12 +144,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       await _handlePostLogin(loginResponse);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('테스트 로그인 실패: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, '테스트 로그인 실패: $e');
       }
     } finally {
       if (mounted) {
@@ -156,8 +158,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     // 디버깅을 위한 로그
     if (kDebugMode) {
-      developer.log('🔧 Platform Client ID: $platformClientId', name: 'GoogleSignIn');
-      developer.log('🔧 Google Web Client ID from env: ${AppConstants.googleWebClientId}', name: 'GoogleSignIn');
+      developer.log(
+        '🔧 Platform Client ID: $platformClientId',
+        name: 'GoogleSignIn',
+      );
+      developer.log(
+        '🔧 Google Web Client ID from env: ${AppConstants.googleWebClientId}',
+        name: 'GoogleSignIn',
+      );
       developer.log('🔧 Is Web Platform: $kIsWeb', name: 'GoogleSignIn');
     }
 
@@ -273,12 +281,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                             const SizedBox(height: AppTheme.spacing12),
                             AdminLoginButton(
-                              onPressed: _isLoading ? null : _handleTestAccountLogin,
+                              onPressed: _isLoading
+                                  ? null
+                                  : _handleTestAccountLogin,
                               isLoading: _isLoading,
                               width: double.infinity,
                               variant: ButtonVariant.tonal,
                               semanticsLabel: '관리자 계정으로 로그인하기',
                             ),
+                            if (kDebugMode) ...[
+                              const SizedBox(height: AppTheme.spacing8),
+                              _buildTestLoginButtons(),
+                            ],
                             const SizedBox(height: AppTheme.spacing16),
                             _buildInfoCallout(context),
                           ],
@@ -293,6 +307,51 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildTestLoginButtons() {
+    return Wrap(
+      spacing: AppTheme.spacing8,
+      runSpacing: AppTheme.spacing8,
+      alignment: WrapAlignment.center,
+      children: [
+        _buildTestLoginButton('TestUser1', 'mock_google_token_for_testuser1'),
+        _buildTestLoginButton('TestUser2', 'mock_google_token_for_testuser2'),
+        _buildTestLoginButton('TestUser3', 'mock_google_token_for_testuser3'),
+      ],
+    );
+  }
+
+  Widget _buildTestLoginButton(String label, String mockToken) {
+    return OutlinedButton(
+      onPressed: _isLoading ? null : () => _handleMockLogin(mockToken),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.neutral700,
+        side: const BorderSide(color: AppColors.neutral300),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing12,
+          vertical: AppTheme.spacing8,
+        ),
+      ),
+      child: Text(label, style: AppTheme.bodySmall),
+    );
+  }
+
+  Future<void> _handleMockLogin(String mockToken) async {
+    setState(() => _isLoading = true);
+    try {
+      final loginResponse = await ref.read(authProvider.notifier).loginWithMockToken(mockToken);
+      if (!mounted) return;
+      await _handlePostLogin(loginResponse);
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.error(context, '테스트 로그인 실패: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Widget _buildLogo() {
@@ -314,10 +373,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildHeadline(BuildContext context) {
     return Text(
       '대학 그룹 관리',
-      style: AppTheme.displaySmallTheme(context).copyWith(
-        fontWeight: FontWeight.w700,
-        color: AppColors.neutral900,
-      ),
+      style: AppTheme.displaySmallTheme(
+        context,
+      ).copyWith(fontWeight: FontWeight.w700, color: AppColors.neutral900),
       textAlign: TextAlign.center,
     );
   }
@@ -357,10 +415,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             Expanded(
               child: Text(
                 '개발 단계에서는 관리자 계정으로 테스트해보세요.',
-                style: AppTheme.bodySmallTheme(context).copyWith(
-                  color: AppColors.neutral600,
-                  height: 1.5,
-                ),
+                style: AppTheme.bodySmallTheme(
+                  context,
+                ).copyWith(color: AppColors.neutral600, height: 1.5),
               ),
             ),
           ],

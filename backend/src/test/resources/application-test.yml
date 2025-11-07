@@ -7,7 +7,7 @@ spring:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
-    password: 
+    password:
 
   # H2 Console 설정 (테스트용)
   h2:
@@ -23,7 +23,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        use_sql_comments: true
         dialect: org.hibernate.dialect.H2Dialect
+
+  # 테스트 환경에서도 data.sql 실행 (E2E 테스트와 동일)
+  sql:
+    init:
+      mode: always
 
 # JWT 테스트 설정
 jwt:

@@ -1,17 +1,25 @@
 package org.castlekong.backend.service
 
 import org.castlekong.backend.dto.GroupJoinRequestResponse
-import org.castlekong.backend.dto.GroupSummaryResponse
 import org.castlekong.backend.dto.ProfileUpdateRequest
 import org.castlekong.backend.dto.SignupProfileRequest
 import org.castlekong.backend.dto.SubGroupRequestResponse
 import org.castlekong.backend.dto.UserResponse
 import org.castlekong.backend.dto.UserSummaryResponse
 import org.castlekong.backend.entity.GlobalRole
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupJoinRequestStatus
+import org.castlekong.backend.entity.GroupType
 import org.castlekong.backend.entity.ProfessorStatus
+import org.castlekong.backend.entity.SubGroupRequestStatus
 import org.castlekong.backend.entity.User
+import org.castlekong.backend.repository.GroupJoinRequestRepository
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.SubGroupRequestRepository
 import org.castlekong.backend.repository.UserRepository
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -19,13 +27,16 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class UserService(
     private val userRepository: UserRepository,
-    private val groupRepository: org.castlekong.backend.repository.GroupRepository,
+    private val groupRepository: GroupRepository,
     private val groupMemberService: GroupMemberService,
-    private val groupJoinRequestRepository: org.castlekong.backend.repository.GroupJoinRequestRepository,
-    private val subGroupRequestRepository: org.castlekong.backend.repository.SubGroupRequestRepository,
-    private val groupMemberRepository: org.castlekong.backend.repository.GroupMemberRepository,
+    private val groupJoinRequestRepository: GroupJoinRequestRepository,
+    private val subGroupRequestRepository: SubGroupRequestRepository,
+    private val groupMemberRepository: GroupMemberRepository,
+    // GroupMapper 추가
+    private val groupMapper: GroupMapper,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
+
     fun findByEmail(email: String): User? {
         return userRepository.findByEmail(email).orElse(null)
     }
@@ -51,17 +62,22 @@ class UserService(
                 globalRole = GlobalRole.STUDENT,
                 profileCompleted = false,
             )
-        return userRepository.save(user)
+        return try {
+            userRepository.saveAndFlush(user)
+        } catch (e: DataIntegrityViolationException) {
+            // 동시 생성으로 인한 제약 위반이면 기존 사용자 재조회 후 반환
+            findByEmail(email)
+                ?: throw e
+        }
     }
 
     @Transactional
-    fun findOrCreateUser(googleUserInfo: org.castlekong.backend.service.GoogleUserInfo): User {
+    fun findOrCreateUser(googleUserInfo: GoogleUserInfo): User {
         // 기존 사용자 조회
         val existingUser = findByEmail(googleUserInfo.email)
 
         return if (existingUser != null) {
             // 기존 사용자 반환
-            logger.debug("Found existing user - email: {}, profileCompleted: {}", existingUser.email, existingUser.profileCompleted)
             existingUser
         } else {
             // 새 사용자 생성
@@ -69,13 +85,20 @@ class UserService(
                 User(
                     name = googleUserInfo.name,
                     email = googleUserInfo.email,
-                    password = "", // Google OAuth2 사용자는 비밀번호 불필요
+                    // Google OAuth2 사용자는 비밀번호 불필요
+                    password = "",
                     globalRole = GlobalRole.STUDENT,
-                    profileCompleted = false, // 명시적으로 false 설정
+                    // 명시적으로 false 설정
+                    profileCompleted = false,
                 )
-            val savedUser = userRepository.save(user)
-            logger.debug("Created new user - email: {}, profileCompleted: {}", savedUser.email, savedUser.profileCompleted)
-            savedUser
+            try {
+                val savedUser = userRepository.saveAndFlush(user)
+                savedUser
+            } catch (e: DataIntegrityViolationException) {
+                // 제약 위반 발생 시 기존 사용자 재조회하여 반환 (로그인 성공으로 처리)
+                findByEmail(googleUserInfo.email)
+                    ?: throw e
+            }
         }
     }
 
@@ -89,12 +112,26 @@ class UserService(
                 .orElseThrow { IllegalArgumentException("사용자를 찾을 수 없습니다: $userId") }
 
         val updatedUser =
-            user.copy(
+            User(
+                id = user.id,
+                name = user.name,
+                email = user.email,
+                password = user.password,
                 globalRole = GlobalRole.valueOf(request.globalRole),
+                isActive = user.isActive,
                 nickname = request.nickname,
                 profileImageUrl = request.profileImageUrl,
                 bio = request.bio,
                 profileCompleted = true,
+                emailVerified = user.emailVerified,
+                college = user.college,
+                department = user.department,
+                studentNo = user.studentNo,
+                schoolEmail = user.schoolEmail,
+                professorStatus = user.professorStatus,
+                academicYear = user.academicYear,
+                createdAt = user.createdAt,
+                updatedAt = user.updatedAt,
             )
 
         return userRepository.save(updatedUser)
@@ -137,24 +174,34 @@ class UserService(
 
         // 계열 또는 학과 정보 업데이트
         val updated =
-            user.copy(
+            User(
+                id = user.id,
                 name = req.name,
+                email = user.email,
+                password = user.password,
+                globalRole = finalRole,
+                isActive = user.isActive,
                 nickname = req.nickname,
+                profileImageUrl = user.profileImageUrl,
+                bio = user.bio,
+                profileCompleted = true,
+                emailVerified = user.emailVerified,
                 college = req.college,
                 department = req.dept,
                 studentNo = req.studentNo,
                 schoolEmail = req.schoolEmail,
-                globalRole = finalRole,
                 professorStatus = professorStatus,
-                profileCompleted = true,
+                academicYear = req.academicYear,
+                createdAt = user.createdAt,
+                updatedAt = user.updatedAt,
             )
 
         val saved = userRepository.save(updated)
 
-        // [수정] 사용자가 선택한 학과 또는 계열에 자동 가입
+        // [수정] 사용자가 선택한 학과 또는 계열에 자동 가입 (상위 그룹 포함)
         try {
             val university = "한신대학교" // 이 부분은 향후 확장 가능
-            var targetGroup: org.castlekong.backend.entity.Group? = null
+            var targetGroup: Group? = null
 
             // 1. 학과를 선택했다면 학과 그룹을 우선으로 찾음
             if (!req.college.isNullOrBlank() && !req.dept.isNullOrBlank()) {
@@ -169,12 +216,27 @@ class UserService(
                 targetGroup =
                     groupRepository
                         .findByUniversityAndCollegeAndDepartment(university, req.college, null)
-                        .firstOrNull { it.groupType == org.castlekong.backend.entity.GroupType.COLLEGE }
+                        .firstOrNull { it.groupType == GroupType.COLLEGE }
             }
 
             if (targetGroup != null) {
-                runCatching { groupMemberService.joinGroup(targetGroup.id, saved.id) }
-                    .onFailure { e -> logger.warn("Auto-join failed for user {} to group {}: {}", saved.id, targetGroup.id, e.message) }
+                // 선택한 그룹과 모든 상위 그룹에 자동 가입
+                val groupsToJoin = collectAncestorGroups(targetGroup)
+                groupsToJoin.forEach { group ->
+                    // 이미 멤버인지 사전 체크하여 불필요한 예외 발생 방지
+                    val alreadyMember = groupMemberRepository.findByGroupIdAndUserId(group.id, saved.id).isPresent
+                    if (!alreadyMember) {
+                        runCatching { groupMemberService.joinGroup(group.id, saved.id) }
+                            .onFailure { e ->
+                                logger.warn(
+                                    "Auto-join failed for user {} to group {}: {}",
+                                    saved.id,
+                                    group.id,
+                                    e.message,
+                                )
+                            }
+                    }
+                }
             }
         } catch (e: Exception) {
             // 개발 중 자동 가입 실패는 에러를 발생시키지 않음
@@ -182,6 +244,20 @@ class UserService(
         }
 
         return saved
+    }
+
+    /**
+     * 주어진 그룹부터 최상위 그룹까지 모든 상위 그룹을 수집합니다.
+     * 예: AI/SW학과 → [AI/SW학과, AI/SW계열, 한신대학교]
+     */
+    private fun collectAncestorGroups(group: Group): List<Group> {
+        val groups = mutableListOf(group)
+        var current = group.parent
+        while (current != null) {
+            groups.add(current)
+            current = current.parent
+        }
+        return groups
     }
 
     fun convertToUserResponse(user: User): UserResponse {
@@ -199,6 +275,7 @@ class UserService(
             professorStatus = user.professorStatus?.name,
             department = user.department,
             studentNo = user.studentNo,
+            academicYear = user.academicYear,
             schoolEmail = user.schoolEmail,
             createdAt = user.createdAt,
             updatedAt = user.updatedAt,
@@ -237,7 +314,7 @@ class UserService(
     ): List<GroupJoinRequestResponse> {
         val st =
             try {
-                org.castlekong.backend.entity.GroupJoinRequestStatus.valueOf(status)
+                GroupJoinRequestStatus.valueOf(status)
             } catch (e: Exception) {
                 null
             }
@@ -245,46 +322,14 @@ class UserService(
             if (st != null) {
                 groupJoinRequestRepository.findByUserIdAndStatus(userId, st)
             } else {
-                groupJoinRequestRepository.findByUserIdAndStatus(userId, org.castlekong.backend.entity.GroupJoinRequestStatus.PENDING)
+                groupJoinRequestRepository.findByUserIdAndStatus(
+                    userId,
+                    GroupJoinRequestStatus.PENDING,
+                )
             }
         return requests.map { r ->
             val memberCount = groupMemberRepository.countByGroupId(r.group.id).toInt()
-            val grp = r.group
-            GroupJoinRequestResponse(
-                id = r.id,
-                group =
-                    GroupSummaryResponse(
-                        id = grp.id,
-                        name = grp.name,
-                        description = grp.description,
-                        profileImageUrl = grp.profileImageUrl,
-                        university = grp.university,
-                        college = grp.college,
-                        department = grp.department,
-                        visibility = grp.visibility,
-                        groupType = grp.groupType,
-                        isRecruiting = grp.isRecruiting,
-                        memberCount = memberCount,
-                        tags = grp.tags,
-                    ),
-                user =
-                    UserSummaryResponse(
-                        id = r.user.id,
-                        name = r.user.name,
-                        email = r.user.email,
-                        profileImageUrl = r.user.profileImageUrl,
-                    ),
-                requestMessage = r.requestMessage,
-                status = r.status.name,
-                responseMessage = r.responseMessage,
-                reviewedBy =
-                    r.reviewedBy?.let { rb ->
-                        UserSummaryResponse(id = rb.id, name = rb.name, email = rb.email, profileImageUrl = rb.profileImageUrl)
-                    },
-                reviewedAt = r.reviewedAt,
-                createdAt = r.createdAt,
-                updatedAt = r.updatedAt,
-            )
+            groupMapper.toGroupJoinRequestResponse(r, memberCount)
         }
     }
 
@@ -294,7 +339,7 @@ class UserService(
     ): List<SubGroupRequestResponse> {
         val st =
             try {
-                org.castlekong.backend.entity.SubGroupRequestStatus.valueOf(status)
+                SubGroupRequestStatus.valueOf(status)
             } catch (e: Exception) {
                 null
             }
@@ -302,52 +347,14 @@ class UserService(
             if (st != null) {
                 subGroupRequestRepository.findByRequesterIdAndStatus(userId, st)
             } else {
-                subGroupRequestRepository.findByRequesterIdAndStatus(userId, org.castlekong.backend.entity.SubGroupRequestStatus.PENDING)
+                subGroupRequestRepository.findByRequesterIdAndStatus(
+                    userId,
+                    SubGroupRequestStatus.PENDING,
+                )
             }
         return requests.map { r ->
             val memberCount = groupMemberRepository.countByGroupId(r.parentGroup.id).toInt()
-            val pg = r.parentGroup
-            SubGroupRequestResponse(
-                id = r.id,
-                requester =
-                    UserSummaryResponse(
-                        id = r.requester.id,
-                        name = r.requester.name,
-                        email = r.requester.email,
-                        profileImageUrl = r.requester.profileImageUrl,
-                    ),
-                parentGroup =
-                    GroupSummaryResponse(
-                        id = pg.id,
-                        name = pg.name,
-                        description = pg.description,
-                        profileImageUrl = pg.profileImageUrl,
-                        university = pg.university,
-                        college = pg.college,
-                        department = pg.department,
-                        visibility = pg.visibility,
-                        groupType = pg.groupType,
-                        isRecruiting = pg.isRecruiting,
-                        memberCount = memberCount,
-                        tags = pg.tags,
-                    ),
-                requestedGroupName = r.requestedGroupName,
-                requestedGroupDescription = r.requestedGroupDescription,
-                requestedUniversity = r.requestedUniversity,
-                requestedCollege = r.requestedCollege,
-                requestedDepartment = r.requestedDepartment,
-                requestedGroupType = r.requestedGroupType,
-                requestedMaxMembers = r.requestedMaxMembers,
-                status = r.status.name,
-                responseMessage = r.responseMessage,
-                reviewedBy =
-                    r.reviewedBy?.let { rb ->
-                        UserSummaryResponse(id = rb.id, name = rb.name, email = rb.email, profileImageUrl = rb.profileImageUrl)
-                    },
-                reviewedAt = r.reviewedAt,
-                createdAt = r.createdAt,
-                updatedAt = r.updatedAt,
-            )
+            groupMapper.toSubGroupRequestResponse(r, memberCount)
         }
     }
 
@@ -367,9 +374,49 @@ class UserService(
             }
         val updated =
             if (desiredRole == GlobalRole.PROFESSOR) {
-                user.copy(professorStatus = ProfessorStatus.PENDING)
+                User(
+                    id = user.id,
+                    name = user.name,
+                    email = user.email,
+                    password = user.password,
+                    globalRole = user.globalRole,
+                    isActive = user.isActive,
+                    nickname = user.nickname,
+                    profileImageUrl = user.profileImageUrl,
+                    bio = user.bio,
+                    profileCompleted = user.profileCompleted,
+                    emailVerified = user.emailVerified,
+                    college = user.college,
+                    department = user.department,
+                    studentNo = user.studentNo,
+                    schoolEmail = user.schoolEmail,
+                    professorStatus = ProfessorStatus.PENDING,
+                    academicYear = user.academicYear,
+                    createdAt = user.createdAt,
+                    updatedAt = user.updatedAt,
+                )
             } else {
-                user.copy(globalRole = desiredRole, professorStatus = null)
+                User(
+                    id = user.id,
+                    name = user.name,
+                    email = user.email,
+                    password = user.password,
+                    globalRole = desiredRole,
+                    isActive = user.isActive,
+                    nickname = user.nickname,
+                    profileImageUrl = user.profileImageUrl,
+                    bio = user.bio,
+                    profileCompleted = user.profileCompleted,
+                    emailVerified = user.emailVerified,
+                    college = user.college,
+                    department = user.department,
+                    studentNo = user.studentNo,
+                    schoolEmail = user.schoolEmail,
+                    professorStatus = null,
+                    academicYear = user.academicYear,
+                    createdAt = user.createdAt,
+                    updatedAt = user.updatedAt,
+                )
             }
         userRepository.save(updated)
     }

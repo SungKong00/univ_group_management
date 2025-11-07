@@ -6,7 +6,7 @@ data class ApiResponse<T>(
     val success: Boolean,
     val data: T? = null,
     val error: ErrorResponse? = null,
-    val timestamp: LocalDateTime = LocalDateTime.now()
+    val timestamp: LocalDateTime = LocalDateTime.now(),
 ) {
     companion object {
         fun <T> success(data: T): ApiResponse<T> = ApiResponse(success = true, data = data)

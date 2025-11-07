@@ -1,8 +1,14 @@
 package org.castlekong.backend.security
 
-import io.mockk.*
-import org.assertj.core.api.Assertions.*
-import org.castlekong.backend.entity.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupPermission
+import org.castlekong.backend.entity.GroupRole
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.fixture.TestDataFactory
@@ -11,7 +17,7 @@ import org.castlekong.backend.repository.GroupRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import java.util.*
+import java.util.Optional
 
 @DisplayName("PermissionService 단위 테스트")
 class PermissionServiceTest {
@@ -44,22 +50,26 @@ class PermissionServiceTest {
     // === 권한 계산 테스트 ===
 
     @Test
-    @DisplayName("OWNER 역할은 모든 권한을 가진다")
+    @DisplayName("그룹장 역할은 모든 권한을 가진다")
     fun getEffective_OwnerRole_HasAllPermissions() {
         // Given
-        val groupMember = TestDataFactory.createTestGroupMember(
-            group = testGroup,
-            user = testUser,
-            role = ownerRole,
-        )
+        val groupMember =
+            TestDataFactory.createTestGroupMember(
+                group = testGroup,
+                user = testUser,
+                role = ownerRole,
+            )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
-                "OWNER" -> GroupPermission.entries.toSet()
-                "ADVISOR" -> GroupPermission.entries.toSet()
+                "그룹장" -> GroupPermission.entries.toSet()
+                "교수" -> GroupPermission.entries.toSet()
                 else -> emptySet()
             }
         }
@@ -72,22 +82,26 @@ class PermissionServiceTest {
     }
 
     @Test
-    @DisplayName("ADVISOR 역할은 모든 권한을 가진다")
+    @DisplayName("교수 역할은 모든 권한을 가진다")
     fun getEffective_AdvisorRole_HasAllPermissions() {
         // Given
-        val groupMember = TestDataFactory.createTestGroupMember(
-            group = testGroup,
-            user = testUser,
-            role = advisorRole,
-        )
+        val groupMember =
+            TestDataFactory.createTestGroupMember(
+                group = testGroup,
+                user = testUser,
+                role = advisorRole,
+            )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
-                "OWNER" -> GroupPermission.entries.toSet()
-                "ADVISOR" -> GroupPermission.entries.toSet()
+                "그룹장" -> GroupPermission.entries.toSet()
+                "교수" -> GroupPermission.entries.toSet()
                 else -> emptySet()
             }
         }
@@ -100,23 +114,27 @@ class PermissionServiceTest {
     }
 
     @Test
-    @DisplayName("MEMBER 역할은 기본 권한이 없다")
+    @DisplayName("멤버 역할은 기본 권한이 없다")
     fun getEffective_MemberRole_HasNoPermissions() {
         // Given
-        val groupMember = TestDataFactory.createTestGroupMember(
-            group = testGroup,
-            user = testUser,
-            role = memberRole,
-        )
+        val groupMember =
+            TestDataFactory.createTestGroupMember(
+                group = testGroup,
+                user = testUser,
+                role = memberRole,
+            )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
-                "OWNER" -> GroupPermission.entries.toSet()
-                "ADVISOR" -> GroupPermission.entries.toSet()
-                "MEMBER" -> emptySet()
+                "그룹장" -> GroupPermission.entries.toSet()
+                "교수" -> GroupPermission.entries.toSet()
+                "멤버" -> emptySet()
                 else -> emptySet()
             }
         }
@@ -132,25 +150,30 @@ class PermissionServiceTest {
     @DisplayName("커스텀 역할은 정의된 권한만 가진다")
     fun getEffective_CustomRole_HasDefinedPermissions() {
         // Given
-        val customPermissions = setOf(GroupPermission.CHANNEL_MANAGE, GroupPermission.ADMIN_MANAGE)
+        val customPermissions = setOf(GroupPermission.CHANNEL_MANAGE, GroupPermission.MEMBER_MANAGE)
         // copy 제거 → 팩토리 직접 사용하여 id 설정
-        val customRole = TestDataFactory.createTestGroupRole(
-            id = 4L,
-            group = testGroup,
-            name = "MODERATOR",
-            isSystemRole = false,
-            permissions = customPermissions,
-            priority = 50,
-        )
+        val customRole =
+            TestDataFactory.createTestGroupRole(
+                id = 4L,
+                group = testGroup,
+                name = "MODERATOR",
+                isSystemRole = false,
+                permissions = customPermissions,
+                priority = 50,
+            )
 
-        val groupMember = TestDataFactory.createTestGroupMember(
-            group = testGroup,
-            user = testUser,
-            role = customRole,
-        )
+        val groupMember =
+            TestDataFactory.createTestGroupMember(
+                group = testGroup,
+                user = testUser,
+                role = customRole,
+            )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { emptySet() }
 
@@ -200,14 +223,18 @@ class PermissionServiceTest {
     @DisplayName("권한은 캐시에 저장된다")
     fun getEffective_UsesCaching() {
         // Given
-        val groupMember = TestDataFactory.createTestGroupMember(
-            group = testGroup,
-            user = testUser,
-            role = ownerRole,
-        )
+        val groupMember =
+            TestDataFactory.createTestGroupMember(
+                group = testGroup,
+                user = testUser,
+                role = ownerRole,
+            )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = {
             GroupPermission.entries.toSet()
@@ -228,14 +255,18 @@ class PermissionServiceTest {
     @DisplayName("개별 사용자 권한 무효화가 동작한다")
     fun invalidate_Individual_WorksCorrectly() {
         // Given
-        val groupMember = TestDataFactory.createTestGroupMember(
-            group = testGroup,
-            user = testUser,
-            role = ownerRole,
-        )
+        val groupMember =
+            TestDataFactory.createTestGroupMember(
+                group = testGroup,
+                user = testUser,
+                role = ownerRole,
+            )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
-        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns Optional.of(groupMember)
+        every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, testUser.id) } returns
+            Optional.of(
+                groupMember,
+            )
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = {
             GroupPermission.entries.toSet()
@@ -243,7 +274,7 @@ class PermissionServiceTest {
 
         // When
         permissionService.getEffective(testGroup.id, testUser.id, systemRolePermissions)
-        permissionService.invalidate(testGroup.id, testUser.id)  // 캐시 무효화
+        permissionService.invalidate(testGroup.id, testUser.id) // 캐시 무효화
         permissionService.getEffective(testGroup.id, testUser.id, systemRolePermissions)
 
         // Then - Repository가 두 번 호출되어야 함 (캐시 무효화 후 재조회)
@@ -258,17 +289,19 @@ class PermissionServiceTest {
         val user1 = testUser
         val user2 = TestDataFactory.createTestUser(id = 2L, email = "user2@example.com")
 
-        val groupMember1 = TestDataFactory.createTestGroupMember(
-            group = testGroup,
-            user = user1,
-            role = ownerRole,
-        )
+        val groupMember1 =
+            TestDataFactory.createTestGroupMember(
+                group = testGroup,
+                user = user1,
+                role = ownerRole,
+            )
 
-        val groupMember2 = TestDataFactory.createTestGroupMember(
-            group = testGroup,
-            user = user2,
-            role = memberRole,
-        )
+        val groupMember2 =
+            TestDataFactory.createTestGroupMember(
+                group = testGroup,
+                user = user2,
+                role = memberRole,
+            )
 
         every { groupRepository.findById(testGroup.id) } returns Optional.of(testGroup)
         every { groupMemberRepository.findByGroupIdAndUserId(testGroup.id, user1.id) } returns Optional.of(groupMember1)
@@ -276,7 +309,7 @@ class PermissionServiceTest {
 
         val systemRolePermissions: (String) -> Set<GroupPermission> = { roleName ->
             when (roleName.uppercase()) {
-                "OWNER" -> GroupPermission.entries.toSet()
+                "그룹장" -> GroupPermission.entries.toSet()
                 else -> emptySet()
             }
         }
@@ -285,7 +318,7 @@ class PermissionServiceTest {
         permissionService.getEffective(testGroup.id, user1.id, systemRolePermissions)
         permissionService.getEffective(testGroup.id, user2.id, systemRolePermissions)
 
-        permissionService.invalidateGroup(testGroup.id)  // 그룹 전체 캐시 무효화
+        permissionService.invalidateGroup(testGroup.id) // 그룹 전체 캐시 무효화
 
         permissionService.getEffective(testGroup.id, user1.id, systemRolePermissions)
         permissionService.getEffective(testGroup.id, user2.id, systemRolePermissions)

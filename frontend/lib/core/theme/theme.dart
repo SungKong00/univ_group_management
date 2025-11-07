@@ -20,6 +20,8 @@ class AppSpacing {
 class AppRadius {
   AppRadius._();
 
+  static const double xs = 4.0;
+  static const double sm = 8.0;
   static const double card = 20.0;
   static const double button = 12.0;
   static const double input = 12.0;
@@ -310,10 +312,7 @@ class AppTheme {
       ),
 
       // ========== Divider Theme ==========
-      dividerTheme: DividerThemeData(
-        color: colorScheme.outline,
-        thickness: 1,
-      ),
+      dividerTheme: DividerThemeData(color: colorScheme.outline, thickness: 1),
 
       // ========== Progress Indicator Theme ==========
       progressIndicatorTheme: ProgressIndicatorThemeData(
@@ -352,9 +351,7 @@ class AppTheme {
       ),
       backgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.disabled)) {
-          return isDark
-              ? AppColors.disabledBgDark
-              : AppColors.disabledBgLight;
+          return isDark ? AppColors.disabledBgDark : AppColors.disabledBgLight;
         }
         if (states.contains(WidgetState.hovered)) {
           return AppColors.actionHover;
@@ -411,9 +408,7 @@ class AppTheme {
     ).copyWith(
       backgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.disabled)) {
-          return isDark
-              ? AppColors.disabledBgDark
-              : AppColors.disabledBgLight;
+          return isDark ? AppColors.disabledBgDark : AppColors.disabledBgLight;
         }
         return AppColors.brand;
       }),

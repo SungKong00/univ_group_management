@@ -1,11 +1,19 @@
 package org.castlekong.backend.service
 
-import org.assertj.core.api.Assertions.*
-import org.castlekong.backend.entity.*
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.castlekong.backend.entity.GlobalRole
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupPermission
+import org.castlekong.backend.entity.GroupType
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.fixture.TestDataFactory
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.GroupRoleRepository
+import org.castlekong.backend.repository.UserRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -33,27 +41,49 @@ class GroupMemberServiceIntegrationTest {
     @Autowired
     private lateinit var groupMemberRepository: GroupMemberRepository
 
+    @Autowired
+    private lateinit var groupInitializationRunner: org.castlekong.backend.runner.GroupInitializationRunner
+
     private lateinit var owner: User
     private lateinit var student: User
     private lateinit var professor: User
 
     @BeforeEach
     fun setUp() {
-        val suffix = System.nanoTime().toString()
-        owner =
-            userRepository.save(
-                TestDataFactory.createTestUser(
-                    name = "그룹장",
-                    email = "owner+$suffix@example.com",
-                    globalRole = GlobalRole.STUDENT,
-                ).copy(profileCompleted = true),
+        val ownerBase = TestDataFactory.createTestUser(
+            name = "그룹장",
+            email = TestDataFactory.uniqueEmail("owner"),
+            globalRole = GlobalRole.STUDENT,
+        )
+        owner = userRepository.save(
+            User(
+                id = ownerBase.id,
+                name = ownerBase.name,
+                email = ownerBase.email,
+                password = ownerBase.password,
+                globalRole = ownerBase.globalRole,
+                isActive = ownerBase.isActive,
+                nickname = ownerBase.nickname,
+                profileImageUrl = ownerBase.profileImageUrl,
+                bio = ownerBase.bio,
+                profileCompleted = true,
+                emailVerified = ownerBase.emailVerified,
+                college = ownerBase.college,
+                department = ownerBase.department,
+                studentNo = ownerBase.studentNo,
+                schoolEmail = ownerBase.schoolEmail,
+                professorStatus = ownerBase.professorStatus,
+                academicYear = ownerBase.academicYear,
+                createdAt = ownerBase.createdAt,
+                updatedAt = ownerBase.updatedAt,
             )
+        )
 
         student =
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "학생",
-                    email = "student+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("student"),
                 ),
             )
 
@@ -61,7 +91,7 @@ class GroupMemberServiceIntegrationTest {
             userRepository.save(
                 TestDataFactory.createProfessorUser(
                     name = "교수",
-                    email = "professor+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("professor"),
                 ),
             )
     }
@@ -79,7 +109,7 @@ class GroupMemberServiceIntegrationTest {
 
         // Then
         assertThat(response.user.id).isEqualTo(student.id)
-        assertThat(response.role.name).isEqualTo("MEMBER")
+        assertThat(response.role.name).isEqualTo("멤버")
 
         val member = groupMemberRepository.findByGroupIdAndUserId(group.id, student.id)
         assertThat(member).isPresent
@@ -236,7 +266,8 @@ class GroupMemberServiceIntegrationTest {
         // Given
         val group = createGroupWithRoles("테스트 그룹", owner)
         groupMemberService.joinGroup(group.id, student.id)
-        val anotherUser = userRepository.save(TestDataFactory.createStudentUser(name = "다른학생", email = "another@example.com"))
+        val anotherUser =
+            userRepository.save(TestDataFactory.createStudentUser(name = "다른학생", email = TestDataFactory.uniqueEmail("another")))
         groupMemberService.joinGroup(group.id, anotherUser.id)
 
         // When & Then
@@ -283,12 +314,12 @@ class GroupMemberServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("OWNER 역할로 변경은 불가능하다")
+    @DisplayName("그룹장 역할로 변경은 불가능하다")
     fun updateMemberRole_ToOwner_ThrowsException() {
         // Given
         val group = createGroupWithRoles("테스트 그룹", owner)
         groupMemberService.joinGroup(group.id, student.id)
-        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").get()
+        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "그룹장").get()
 
         // When & Then
         assertThatThrownBy { groupMemberService.updateMemberRole(group.id, student.id, ownerRole.id, owner.id) }
@@ -308,7 +339,7 @@ class GroupMemberServiceIntegrationTest {
         val response = groupMemberService.assignProfessor(group.id, professor.id, owner.id)
 
         // Then
-        assertThat(response.role.name).isEqualTo("ADVISOR")
+        assertThat(response.role.name).isEqualTo("교수")
         assertThat(response.user.id).isEqualTo(professor.id)
     }
 
@@ -336,7 +367,7 @@ class GroupMemberServiceIntegrationTest {
 
         // Then
         val member = groupMemberRepository.findByGroupIdAndUserId(group.id, professor.id).get()
-        assertThat(member.role.name).isEqualTo("MEMBER")
+        assertThat(member.role.name).isEqualTo("멤버")
     }
 
     // === 그룹장 권한 위임 테스트 ===
@@ -352,12 +383,12 @@ class GroupMemberServiceIntegrationTest {
         val response = groupMemberService.transferOwnership(group.id, student.id, owner.id)
 
         // Then
-        assertThat(response.role.name).isEqualTo("OWNER")
+        assertThat(response.role.name).isEqualTo("그룹장")
         assertThat(response.user.id).isEqualTo(student.id)
 
         // 이전 그룹장은 일반 멤버로 강등
         val formerOwner = groupMemberRepository.findByGroupIdAndUserId(group.id, owner.id).get()
-        assertThat(formerOwner.role.name).isEqualTo("MEMBER")
+        assertThat(formerOwner.role.name).isEqualTo("멤버")
 
         // 그룹 엔티티의 owner도 변경되었는지 확인
         val updatedGroup = groupRepository.findById(group.id).get()
@@ -394,7 +425,7 @@ class GroupMemberServiceIntegrationTest {
     fun handleOwnerAbsence_Success() {
         // Given
         val group = createGroupWithRoles("테스트 그룹", owner)
-        val oldMember = userRepository.save(TestDataFactory.createStudentUser(name = "옛날멤버", email = "old@example.com"))
+        val oldMember = userRepository.save(TestDataFactory.createStudentUser(name = "옛날멤버", email = TestDataFactory.uniqueEmail("old")))
         groupMemberService.joinGroup(group.id, oldMember.id)
         Thread.sleep(10) // 가입 시간 차이 보장
         groupMemberService.joinGroup(group.id, student.id)
@@ -406,7 +437,7 @@ class GroupMemberServiceIntegrationTest {
         assertThat(response).isNotNull
         // 가장 먼저 가입한 멤버가 승계
         assertThat(response!!.user.id).isEqualTo(oldMember.id)
-        assertThat(response.role.name).isEqualTo("OWNER")
+        assertThat(response.role.name).isEqualTo("그룹장")
 
         // 그룹 엔티티의 owner도 변경되었는지 확인
         val updatedGroup = groupRepository.findById(group.id).get()
@@ -435,6 +466,7 @@ class GroupMemberServiceIntegrationTest {
         parent: Group? = null,
         maxMembers: Int? = null,
     ): Group {
+        // 그룹 생성
         val group =
             groupRepository.save(
                 TestDataFactory.createTestGroup(
@@ -446,19 +478,9 @@ class GroupMemberServiceIntegrationTest {
                 ),
             )
 
-        // 기본 역할 생성
-        val ownerRole = groupRoleRepository.save(TestDataFactory.createOwnerRole(group))
-        groupRoleRepository.save(TestDataFactory.createAdvisorRole(group))
-        groupRoleRepository.save(TestDataFactory.createMemberRole(group))
-
-        // 그룹장을 멤버로 추가
-        groupMemberRepository.save(
-            TestDataFactory.createTestGroupMember(
-                group = group,
-                user = owner,
-                role = ownerRole,
-            ),
-        )
+        // GroupInitializationRunner를 직접 호출하여 역할, 채널, 멤버십 초기화
+        // 테스트 환경에서는 ApplicationRunner가 각 테스트마다 실행되지 않으므로 수동 호출 필요
+        groupInitializationRunner.initializeGroup(group)
 
         return group
     }

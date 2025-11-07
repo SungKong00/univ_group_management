@@ -44,9 +44,7 @@ class AppButtonStyles {
       ),
       backgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.disabled)) {
-          return isDark
-              ? AppColors.disabledBgDark
-              : AppColors.disabledBgLight;
+          return isDark ? AppColors.disabledBgDark : AppColors.disabledBgLight;
         }
         if (states.contains(WidgetState.hovered)) {
           return AppColors.actionHover;
@@ -60,6 +58,70 @@ class AppButtonStyles {
               : AppColors.disabledTextLight;
         }
         return Colors.white;
+      }),
+      overlayColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return Colors.white.withValues(alpha: 0.12);
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return Colors.white.withValues(alpha: 0.08);
+        }
+        return null;
+      }),
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.focused)) {
+          return const BorderSide(color: AppColors.focusRing, width: 2);
+        }
+        return null;
+      }),
+    );
+  }
+
+  /// Brand Primary 버튼 스타일
+  /// 브랜드 퍼플 계열 CTA에 사용 (예: 캘린더 추가, 브랜드 강조 액션)
+  static ButtonStyle brandPrimary(ColorScheme colorScheme) {
+    final isDark = colorScheme.brightness == Brightness.dark;
+
+    return FilledButton.styleFrom(
+      backgroundColor: AppColors.brand,
+      foregroundColor: AppColors.onPrimary,
+      minimumSize: const Size.fromHeight(AppComponents.buttonHeight),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
+      textStyle: GoogleFonts.notoSansKr(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        height: 1.4,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.button),
+      ),
+    ).copyWith(
+      elevation: const WidgetStatePropertyAll<double>(2),
+      shadowColor: WidgetStatePropertyAll<Color>(
+        AppColors.brand.withValues(alpha: 0.3),
+      ),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return isDark ? AppColors.disabledBgDark : AppColors.disabledBgLight;
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return AppColors.brandStrong;
+        }
+        if (states.contains(WidgetState.pressed)) {
+          return AppColors.brandStrong.withValues(alpha: 0.92);
+        }
+        return AppColors.brand;
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return isDark
+              ? AppColors.disabledTextDark
+              : AppColors.disabledTextLight;
+        }
+        return AppColors.onPrimary;
       }),
       overlayColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.pressed)) {
@@ -187,9 +249,7 @@ class AppButtonStyles {
     ).copyWith(
       backgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.disabled)) {
-          return isDark
-              ? AppColors.disabledBgDark
-              : AppColors.disabledBgLight;
+          return isDark ? AppColors.disabledBgDark : AppColors.disabledBgLight;
         }
         return AppColors.error;
       }),
@@ -228,23 +288,27 @@ class AppButtonStyles {
     final isDark = colorScheme.brightness == Brightness.dark;
 
     return OutlinedButton.styleFrom(
-      foregroundColor: isDark ? ColorTokens.googleTextDark : ColorTokens.googleTextLight,
+      foregroundColor: isDark
+          ? ColorTokens.googleTextDark
+          : ColorTokens.googleTextLight,
       backgroundColor: isDark ? ColorTokens.googleBgDark : Colors.white,
       minimumSize: const Size.fromHeight(AppComponents.buttonHeight),
       padding: const EdgeInsets.only(
-        left: AppSpacing.xs,   // 12px (Google 가이드라인)
-        right: AppSpacing.xs,  // 12px
+        left: AppSpacing.xs, // 12px (Google 가이드라인)
+        right: AppSpacing.xs, // 12px
         top: AppSpacing.xs,
         bottom: AppSpacing.xs,
       ),
       textStyle: GoogleFonts.roboto(
         fontSize: 16,
-        fontWeight: FontWeight.w500,  // Medium
+        fontWeight: FontWeight.w500, // Medium
         height: 1.4,
         letterSpacing: 0.25,
       ),
       side: BorderSide(
-        color: isDark ? ColorTokens.googleBorderDark : ColorTokens.googleBorderLight,
+        color: isDark
+            ? ColorTokens.googleBorderDark
+            : ColorTokens.googleBorderLight,
         width: 1,
       ),
       shape: RoundedRectangleBorder(
@@ -269,7 +333,9 @@ class AppButtonStyles {
           return const BorderSide(color: AppColors.focusRing, width: 2);
         }
         return BorderSide(
-          color: isDark ? ColorTokens.googleBorderDark : ColorTokens.googleBorderLight,
+          color: isDark
+              ? ColorTokens.googleBorderDark
+              : ColorTokens.googleBorderLight,
           width: 1,
         );
       }),
@@ -280,7 +346,9 @@ class AppButtonStyles {
   /// 중립적인 보조 액션에 사용
   static ButtonStyle neutralOutlined(ColorScheme colorScheme) {
     final isDark = colorScheme.brightness == Brightness.dark;
-    final neutralColor = isDark ? AppColors.darkSecondary : AppColors.lightSecondary;
+    final neutralColor = isDark
+        ? AppColors.darkSecondary
+        : AppColors.lightSecondary;
 
     return OutlinedButton.styleFrom(
       foregroundColor: neutralColor,

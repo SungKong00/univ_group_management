@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../core/utils/snack_bar_helper.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,7 @@ import '../../../core/services/onboarding_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/buttons/primary_button.dart';
+import '../../widgets/buttons/outlined_link_button.dart';
 
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
@@ -27,7 +29,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _nicknameController = TextEditingController();
-  final TextEditingController _studentNumberController = TextEditingController();
+  final TextEditingController _studentNumberController =
+      TextEditingController();
   final TextEditingController _schoolEmailController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
 
@@ -51,6 +54,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       <int, List<GroupHierarchyNode>>{};
   int? _selectedCollegeId;
   int? _selectedDepartmentId;
+  int? _selectedAcademicYear;
 
   Duration? _otpRemaining;
   Timer? _otpTimer;
@@ -98,7 +102,10 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         _emailVerified = true;
         // 기본 학교 이메일 설정 (사용자 이메일이 없는 경우)
         if (_schoolEmailController.text.isEmpty) {
-          _schoolEmailController.text = user.email.replaceAll('@gmail.com', '@example.ac.kr');
+          _schoolEmailController.text = user.email.replaceAll(
+            '@gmail.com',
+            '@example.ac.kr',
+          );
         }
       } else {
         // 사용자 정보가 없어도 임시로 인증 완료 처리
@@ -153,7 +160,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     if (user.department != null) {
       for (final entry in _nodesById.entries) {
         final node = entry.value;
-        if (node.type == GroupNodeType.department && node.name == user.department) {
+        if (node.type == GroupNodeType.department &&
+            node.name == user.department) {
           _selectedDepartmentId = entry.key;
           _selectedCollegeId = node.parentId;
           break;
@@ -171,9 +179,12 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       _nodesById[node.id] = node;
       if (node.type == GroupNodeType.college) {
         _colleges.add(node);
-      } else if (node.type == GroupNodeType.department && node.parentId != null) {
-        final list =
-            _departmentsByCollege.putIfAbsent(node.parentId!, () => <GroupHierarchyNode>[]);
+      } else if (node.type == GroupNodeType.department &&
+          node.parentId != null) {
+        final list = _departmentsByCollege.putIfAbsent(
+          node.parentId!,
+          () => <GroupHierarchyNode>[],
+        );
         list.add(node);
       }
     }
@@ -183,7 +194,6 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       entry.value.sort((a, b) => a.name.compareTo(b.name));
     }
   }
-
 
   void _onNicknameChanged(String value) {
     _nicknameDebounce?.cancel();
@@ -219,8 +229,9 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
           return;
         }
         setState(() {
-          _nicknameStatus =
-              result.available ? NicknameStatus.available : NicknameStatus.unavailable;
+          _nicknameStatus = result.available
+              ? NicknameStatus.available
+              : NicknameStatus.unavailable;
           _nicknameSuggestions = result.suggestions;
           _nicknameErrorMessage = result.available
               ? null
@@ -258,12 +269,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       setState(() {
         _emailVerified = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(emailError),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, emailError);
       return;
     }
 
@@ -273,25 +279,18 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     });
 
     try {
-      await _onboardingService.sendEmailVerification(EmailSendRequest(email: email));
+      await _onboardingService.sendEmailVerification(
+        EmailSendRequest(email: email),
+      );
       if (!mounted) {
         return;
       }
       _startOtpCountdown();
       _otpController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('인증 코드를 발송했어요. 5분 안에 입력해주세요.'),
-        ),
-      );
+      AppSnackBar.info(context, '인증 코드를 발송했어요. 5분 안에 입력해주세요.');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_cleanMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, _cleanMessage(e));
       }
     } finally {
       if (mounted) {
@@ -307,12 +306,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     final code = _otpController.text.trim();
 
     if (code.length != 6 || int.tryParse(code) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('6자리 인증 코드를 정확히 입력해주세요.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, '6자리 인증 코드를 정확히 입력해주세요.');
       return;
     }
 
@@ -333,18 +327,11 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         _otpRemaining = null;
       });
       _otpController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('인증이 완료되었어요.')),
-      );
+      AppSnackBar.success(context, '인증이 완료되었어요.');
       FocusScope.of(context).unfocus();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_cleanMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, _cleanMessage(e));
       }
     } finally {
       if (mounted) {
@@ -395,31 +382,26 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     }
 
     if (_nicknameStatus != NicknameStatus.available) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('사용 가능한 닉네임을 확인해주세요.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, '사용 가능한 닉네임을 확인해주세요.');
       return;
     }
 
     // 임시로 이메일 인증 조건 비활성화 (개발용)
     // if (!_emailVerified) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('학교 이메일 인증을 완료해주세요.'),
-    //       backgroundColor: AppColors.error,
-    //     ),
-    //   );
+    AppSnackBar.error(context, '학교 이메일 인증을 완료해주세요.');
     //   return;
     // }
 
-    final name = _nameController.text.trim();
-    final nickname = _nicknameController.text.trim();
     final studentNo = _studentNumberController.text.trim();
     final email = _schoolEmailController.text.trim();
 
+    if (_selectedAcademicYear == null) {
+      AppSnackBar.error(context, '학년을 선택해주세요.');
+      return;
+    }
+
+    final name = _nameController.text.trim();
+    final nickname = _nicknameController.text.trim();
     final collegeName = _selectedCollegeId != null
         ? _nodesById[_selectedCollegeId!]?.name
         : null;
@@ -434,7 +416,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       schoolEmail: email,
       college: collegeName,
       department: departmentName,
-      studentNo: studentNo.isEmpty ? null : studentNo,
+      studentNo: studentNo,
+      academicYear: _selectedAcademicYear!,
     );
 
     setState(() {
@@ -448,18 +431,11 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('프로필 설정이 완료되었어요.')),
-      );
+      AppSnackBar.success(context, '프로필 설정이 완료되었어요.');
       context.go(AppConstants.homeRoute);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_cleanMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, _cleanMessage(e));
       }
     } finally {
       if (mounted) {
@@ -480,13 +456,13 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     final horizontalPadding = isWide
         ? AppTheme.spacing32
         : isNarrow
-            ? AppTheme.spacing12
-            : AppTheme.spacing16;
+        ? AppTheme.spacing12
+        : AppTheme.spacing16;
     final verticalPadding = isWide
         ? AppTheme.spacing120
         : isNarrow
-            ? AppTheme.spacing48
-            : AppTheme.spacing96;
+        ? AppTheme.spacing48
+        : AppTheme.spacing96;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -502,8 +478,12 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
               child: Card(
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isNarrow ? AppTheme.spacing16 : AppTheme.spacing32,
-                    vertical: isNarrow ? AppTheme.spacing24 : AppTheme.spacing32,
+                    horizontal: isNarrow
+                        ? AppTheme.spacing16
+                        : AppTheme.spacing32,
+                    vertical: isNarrow
+                        ? AppTheme.spacing24
+                        : AppTheme.spacing32,
                   ),
                   child: _buildContent(),
                 ),
@@ -547,18 +527,19 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
               children: [
                 Text(
                   '계열/학과 정보를 불러오지 못했어요.',
-                  style: AppTheme.headlineSmall.copyWith(color: AppColors.error),
+                  style: AppTheme.headlineSmall.copyWith(
+                    color: AppColors.error,
+                  ),
                 ),
                 const SizedBox(height: AppTheme.spacing12),
                 Text(
                   _initializationError!,
-                  style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral700),
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppColors.neutral700,
+                  ),
                 ),
                 const SizedBox(height: AppTheme.spacing16),
-                PrimaryButton(
-                  text: '다시 시도',
-                  onPressed: _initializePage,
-                ),
+                PrimaryButton(text: '다시 시도', onPressed: _initializePage),
               ],
             ),
           ),
@@ -581,7 +562,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
           const SizedBox(height: AppTheme.spacing24),
           _buildAffiliationSelectors(),
           const SizedBox(height: AppTheme.spacing24),
-          _buildStudentNumberField(),
+          _buildStudentInfoFields(),
           const SizedBox(height: AppTheme.spacing24),
           _buildRoleSelector(),
           const SizedBox(height: AppTheme.spacing24),
@@ -599,10 +580,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   }
 
   Widget _buildHeadline() {
-    return Text(
-      '기본 정보를 입력해주세요',
-      style: AppTheme.displaySmall,
-    );
+    return Text('기본 정보를 입력해주세요', style: AppTheme.displaySmall);
   }
 
   Widget _buildIntroCopy() {
@@ -621,9 +599,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         TextFormField(
           controller: _nameController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            hintText: '실명',
-          ),
+          decoration: const InputDecoration(hintText: '실명'),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return '이름을 입력해주세요.';
@@ -646,8 +622,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
 
     final helperText = switch (_nicknameStatus) {
       NicknameStatus.available => '사용 가능한 닉네임이에요.',
-      NicknameStatus.unavailable =>
-          _nicknameErrorMessage ?? '이미 사용 중인 닉네임입니다.',
+      NicknameStatus.unavailable => _nicknameErrorMessage ?? '이미 사용 중인 닉네임입니다.',
       NicknameStatus.invalid => _nicknameErrorMessage ?? '닉네임을 확인해주세요.',
       NicknameStatus.checking => '닉네임 중복을 확인하는 중...',
       NicknameStatus.initial => '다른 사용자에게 표시될 이름이에요.',
@@ -713,9 +688,10 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                       selected: false,
                       onSelected: (_) {
                         _nicknameController.text = suggestion;
-                        _nicknameController.selection = TextSelection.fromPosition(
-                          TextPosition(offset: suggestion.length),
-                        );
+                        _nicknameController.selection =
+                            TextSelection.fromPosition(
+                              TextPosition(offset: suggestion.length),
+                            );
                       },
                     ),
                   )
@@ -774,7 +750,10 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   const SizedBox(width: AppTheme.spacing16),
                   Expanded(
                     child: DropdownButtonFormField<int?>(
-                      initialValue: departmentOptions.any((node) => node.id == _selectedDepartmentId)
+                      initialValue:
+                          departmentOptions.any(
+                            (node) => node.id == _selectedDepartmentId,
+                          )
                           ? _selectedDepartmentId
                           : null,
                       items: [
@@ -782,13 +761,12 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                           value: null,
                           child: Text('선택 안함'),
                         ),
-                        ...departmentOptions
-                            .map(
-                              (node) => DropdownMenuItem<int?>(
-                                value: node.id,
-                                child: Text(node.name),
-                              ),
-                            ),
+                        ...departmentOptions.map(
+                          (node) => DropdownMenuItem<int?>(
+                            value: node.id,
+                            child: Text(node.name),
+                          ),
+                        ),
                       ],
                       decoration: const InputDecoration(
                         hintText: '학과 선택 (선택사항)',
@@ -832,7 +810,10 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   ),
                   const SizedBox(height: AppTheme.spacing16),
                   DropdownButtonFormField<int?>(
-                    initialValue: departmentOptions.any((node) => node.id == _selectedDepartmentId)
+                    initialValue:
+                        departmentOptions.any(
+                          (node) => node.id == _selectedDepartmentId,
+                        )
                         ? _selectedDepartmentId
                         : null,
                     items: [
@@ -840,17 +821,14 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                         value: null,
                         child: Text('선택 안함'),
                       ),
-                      ...departmentOptions
-                          .map(
-                            (node) => DropdownMenuItem<int?>(
-                              value: node.id,
-                              child: Text(node.name),
-                            ),
-                          ),
+                      ...departmentOptions.map(
+                        (node) => DropdownMenuItem<int?>(
+                          value: node.id,
+                          child: Text(node.name),
+                        ),
+                      ),
                     ],
-                    decoration: const InputDecoration(
-                      hintText: '학과 선택 (선택사항)',
-                    ),
+                    decoration: const InputDecoration(hintText: '학과 선택 (선택사항)'),
                     onChanged: (value) {
                       setState(() {
                         _selectedDepartmentId = value;
@@ -863,37 +841,90 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     );
   }
 
-  Widget _buildStudentNumberField() {
+  Widget _buildStudentInfoFields() {
+    final mediaQuery = MediaQuery.of(context);
+    final isWide = mediaQuery.size.width >= 768;
+
+    final studentNumberField = _buildStudentNumberField();
+    final academicYearField = _buildAcademicYearField();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('학번 (선택)', style: AppTheme.titleLarge),
+        Text('학적 정보', style: AppTheme.titleLarge),
         const SizedBox(height: AppTheme.spacing12),
-        TextFormField(
-          controller: _studentNumberController,
-          decoration: const InputDecoration(
-            hintText: '예: 20251234',
-          ),
-          keyboardType: TextInputType.number,
-          maxLength: 10,
-          buildCounter: (_, {required currentLength, maxLength, required isFocused}) {
+        isWide
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: studentNumberField),
+                  const SizedBox(width: AppTheme.spacing16),
+                  Expanded(child: academicYearField),
+                ],
+              )
+            : Column(
+                children: [
+                  studentNumberField,
+                  const SizedBox(height: AppTheme.spacing24),
+                  academicYearField,
+                ],
+              ),
+      ],
+    );
+  }
+
+  Widget _buildStudentNumberField() {
+    return TextFormField(
+      controller: _studentNumberController,
+      decoration: const InputDecoration(
+        labelText: '학번',
+        hintText: '예: 20251234',
+      ),
+      keyboardType: TextInputType.number,
+      maxLength: 10,
+      buildCounter:
+          (_, {required currentLength, maxLength, required isFocused}) {
             return const SizedBox.shrink();
           },
-          validator: (value) {
-            final trimmed = value?.trim();
-            if (trimmed == null || trimmed.isEmpty) {
-              return null;
-            }
-            if (trimmed.length < 4 || trimmed.length > 10) {
-              return '학번은 4~10자리 숫자로 입력해주세요.';
-            }
-            if (int.tryParse(trimmed) == null) {
-              return '숫자만 입력할 수 있어요.';
-            }
-            return null;
-          },
-        ),
-      ],
+      validator: (value) {
+        final trimmed = value?.trim();
+        if (trimmed == null || trimmed.isEmpty) {
+          return '학번을 입력해주세요.';
+        }
+        if (trimmed.length < 4 || trimmed.length > 10) {
+          return '학번은 4~10자리 숫자로 입력해주세요.';
+        }
+        if (int.tryParse(trimmed) == null) {
+          return '숫자만 입력할 수 있어요.';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildAcademicYearField() {
+    return DropdownButtonFormField<int>(
+      initialValue: _selectedAcademicYear,
+      items: [1, 2, 3, 4, 5]
+          .map(
+            (year) => DropdownMenuItem<int>(
+              value: year,
+              child: Text(year == 5 ? '4학년 이상' : '$year학년'),
+            ),
+          )
+          .toList(),
+      decoration: const InputDecoration(labelText: '학년', hintText: '학년 선택'),
+      validator: (value) {
+        if (value == null) {
+          return '학년을 선택해주세요.';
+        }
+        return null;
+      },
+      onChanged: (value) {
+        setState(() {
+          _selectedAcademicYear = value;
+        });
+      },
     );
   }
 
@@ -943,7 +974,9 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   Expanded(
                     child: Text(
                       '교수 권한은 관리자 승인 후 활성화돼요.',
-                      style: AppTheme.bodySmall.copyWith(color: AppColors.neutral700),
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppColors.neutral700,
+                      ),
                     ),
                   ),
                 ],
@@ -956,7 +989,9 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
 
   Widget _buildEmailVerificationFields() {
     final email = _schoolEmailController.text.trim();
-    final emailHint = email.isEmpty ? '학교 이메일 (예: student@hanshin.ac.kr)' : email;
+    final emailHint = email.isEmpty
+        ? '학교 이메일 (예: student@hanshin.ac.kr)'
+        : email;
     final mediaQuery = MediaQuery.of(context);
     final isNarrow = mediaQuery.size.width < 600;
 
@@ -972,9 +1007,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   TextFormField(
                     controller: _schoolEmailController,
                     enabled: !_emailVerified,
-                    decoration: InputDecoration(
-                      hintText: emailHint,
-                    ),
+                    decoration: InputDecoration(hintText: emailHint),
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     validator: (value) => _validateEmail(value?.trim() ?? ''),
@@ -982,15 +1015,10 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   const SizedBox(height: AppTheme.spacing12),
                   SizedBox(
                     height: 48,
-                    child: OutlinedButton(
+                    child: OutlinedLinkButton(
+                      text: _otpRemaining == null ? '인증 코드 받기' : '재전송',
                       onPressed: _emailVerified || _isSendingOtp ? null : _sendOtp,
-                      child: _isSendingOtp
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(_otpRemaining == null ? '인증 코드 받기' : '재전송'),
+                      isLoading: _isSendingOtp,
                     ),
                   ),
                 ],
@@ -1001,9 +1029,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     child: TextFormField(
                       controller: _schoolEmailController,
                       enabled: !_emailVerified,
-                      decoration: InputDecoration(
-                        hintText: emailHint,
-                      ),
+                      decoration: InputDecoration(hintText: emailHint),
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       validator: (value) => _validateEmail(value?.trim() ?? ''),
@@ -1017,16 +1043,10 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     ),
                     child: SizedBox(
                       height: 48,
-                      child: OutlinedButton(
+                      child: OutlinedLinkButton(
+                        text: _otpRemaining == null ? '인증 코드 받기' : '재전송',
                         onPressed: _emailVerified || _isSendingOtp ? null : _sendOtp,
-                        child: _isSendingOtp
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : Text(_otpRemaining == null ? '인증 코드 받기' : '재전송',
-                                  style: const TextStyle(fontSize: 14)),
+                        isLoading: _isSendingOtp,
                       ),
                     ),
                   ),
@@ -1068,19 +1088,16 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     const SizedBox(height: AppTheme.spacing12),
                     SizedBox(
                       height: 48,
-                      child: FilledButton(
-                        onPressed: !_isVerifyingOtp &&
+                      child: PrimaryButton(
+                        text: '확인',
+                        onPressed:
+                            !_isVerifyingOtp &&
                                 _otpRemaining != null &&
                                 _otpRemaining != Duration.zero
                             ? _verifyOtp
                             : null,
-                        child: _isVerifyingOtp
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Text('확인'),
+                        isLoading: _isVerifyingOtp,
+                        width: double.infinity,
                       ),
                     ),
                   ],
@@ -1106,19 +1123,15 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                       ),
                       child: SizedBox(
                         height: 48,
-                        child: FilledButton(
-                          onPressed: !_isVerifyingOtp &&
+                        child: PrimaryButton(
+                          text: '확인',
+                          onPressed:
+                              !_isVerifyingOtp &&
                                   _otpRemaining != null &&
                                   _otpRemaining != Duration.zero
                               ? _verifyOtp
                               : null,
-                          child: _isVerifyingOtp
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text('확인'),
+                          isLoading: _isVerifyingOtp,
                         ),
                       ),
                     ),

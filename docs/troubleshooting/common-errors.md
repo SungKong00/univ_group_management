@@ -78,6 +78,29 @@ data class CreateGroupRequest(
 
 ### 4. JPA 연관관계 에러
 
+#### DataIntegrityViolationException (ID 중복 또는 제약조건 위반)
+
+**증상:**
+```
+org.springframework.dao.DataIntegrityViolationException: could not execute statement; SQL [n/a]; constraint ["PRIMARY KEY ON ..."];
+... Caused by: org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
+```
+
+**주요 원인 및 해결:**
+
+1.  **H2 DB 시퀀스 불일치 (로컬 개발)**
+    -   **원인**: `data.sql`로 수동 삽입한 ID와 DB의 자동 증가(auto-increment) 카운터가 충돌.
+    -   **해결**: `data.sql` 마지막에 `ALTER TABLE ... RESTART WITH ...` 쿼리를 추가하여 다음 ID를 명시적으로 지정. 자세한 내용은 [백엔드 가이드 - H2 DB ID 충돌 해결](../implementation/backend/development-setup.md) 참조.
+
+2.  **사용자 동시 생성 (Concurrency Issue)**
+    -   **원인**: 여러 요청이 동시에 같은 이메일로 가입을 시도하여 DB의 `UNIQUE` 제약조건 위반.
+    -   **해결**: 사용자 생성 로직(`findOrCreateUser`)에서 `saveAndFlush`를 `try-catch`로 감싸고, `DataIntegrityViolationException` 발생 시 해당 사용자를 다시 조회하여 반환. 자세한 내용은 [백엔드 가이드 - 동시성 처리](../implementation/backend/development-setup.md) 참조.
+
+3.  **잘못된 요청 본문 (Invalid Request Body)**
+    -   **증상**: `HttpMessageNotReadableException`이 발생하며, 서버 로그에 `FAIL_TO_PARSE`와 유사한 메시지 기록.
+    -   **원인**: 클라이언트가 보낸 JSON 요청의 형식이 잘못되었거나, 필수 필드가 누락됨.
+    -   **해결**: `GlobalExceptionHandler`에 `HttpMessageNotReadableException` 핸들러를 추가하여 400 Bad Request로 처리하고, 클라이언트에 명확한 에러 메시지("요청 본문을 읽을 수 없습니다. JSON 형식을 확인하세요.")를 반환하도록 개선.
+
 #### LazyInitializationException
 ```
 org.hibernate.LazyInitializationException: could not initialize proxy - no Session
@@ -104,9 +127,100 @@ data class Group(
 )
 ```
 
+### 5. 트랜잭션 롤백 에러 (2025-10-09 추가) {#트랜잭션롤백}
+
+#### UnexpectedRollbackException
+
+**증상:**
+```
+org.springframework.transaction.UnexpectedRollbackException: Transaction silently rolled back because it has been marked as rollback-only
+```
+
+**원인:**
+- `@Transactional` 메서드 내부에서 **unchecked exception**(RuntimeException)이 발생하면 Spring은 트랜잭션을 rollback-only로 마킹
+- 예외를 `try-catch`로 잡아서 처리해도 트랜잭션은 이미 rollback-only 상태
+- 메서드가 정상 종료되어 커밋을 시도하면 `UnexpectedRollbackException` 발생
+
+**예시 시나리오:**
+```kotlin
+@Transactional
+fun submitSignupProfile(userId: Long, req: SignupProfileRequest): User {
+    val user = userRepository.save(updatedUser)
+
+    // ❌ 문제: joinGroup()에서 BusinessException 발생 시 트랜잭션 롤백
+    try {
+        groupMemberService.joinGroup(groupId, userId)  // @Transactional 메서드
+    } catch (e: Exception) {
+        logger.warn("Failed to join group: ${e.message}")
+        // 예외를 잡아서 로깅만 하지만, 트랜잭션은 이미 rollback-only!
+    }
+
+    return user  // 정상 종료 시도 → UnexpectedRollbackException 발생
+}
+```
+
+**해결 방법:**
+
+**1. 사전 체크로 예외 발생 방지 (권장)**
+```kotlin
+@Transactional
+fun submitSignupProfile(userId: Long, req: SignupProfileRequest): User {
+    val user = userRepository.save(updatedUser)
+
+    // ✅ 해결: 예외가 발생하기 전에 사전 체크
+    val alreadyMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId).isPresent
+    if (!alreadyMember) {
+        try {
+            groupMemberService.joinGroup(groupId, userId)
+        } catch (e: Exception) {
+            logger.warn("Failed to join group: ${e.message}")
+        }
+    }
+
+    return user
+}
+```
+
+**2. 별도 트랜잭션으로 분리**
+```kotlin
+@Transactional
+fun submitSignupProfile(userId: Long, req: SignupProfileRequest): User {
+    val user = userRepository.save(updatedUser)
+
+    // ✅ 해결: 자동 가입을 별도 트랜잭션으로 실행
+    autoJoinGroupInSeparateTransaction(groupId, userId)
+
+    return user
+}
+
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+protected open fun autoJoinGroupInSeparateTransaction(groupId: Long, userId: Long) {
+    try {
+        groupMemberService.joinGroup(groupId, userId)
+    } catch (e: Exception) {
+        logger.warn("Auto-join failed: ${e.message}")
+        // 별도 트랜잭션이므로 외부 트랜잭션에 영향 없음
+    }
+}
+```
+
+**3. noRollbackFor 사용 (비권장)**
+```kotlin
+// ⚠️ 주의: 특정 예외는 롤백하지 않도록 설정 가능하나,
+// 비즈니스 로직에 따라 데이터 정합성 문제 발생 가능
+@Transactional(noRollbackFor = [BusinessException::class])
+fun submitSignupProfile(...): User {
+    // ...
+}
+```
+
+**관련 문서:**
+- [백엔드 가이드 - 트랜잭션 전파 레벨](../implementation/backend/transaction-patterns.md)
+- [백엔드 가이드 - 예외 처리 전략](../implementation/backend/exception-handling.md)
+
 ## 프론트엔드 에러
 
-### 5. Flutter Web 포트 관련 에러
+### 6. Flutter Web 포트 관련 에러
 
 #### 포트 충돌 문제 {#포트충돌}
 ```
@@ -122,7 +236,7 @@ flutter run -d chrome --web-port 3000
 flutter run -d chrome --web-hostname localhost --web-port 5173
 ```
 
-### 6. CORS 에러
+### 7. CORS 에러
 
 #### 증상
 ```
@@ -144,7 +258,7 @@ class WebConfig : WebMvcConfigurer {
 }
 ```
 
-### 7. 상태 관리 에러
+### 8. 상태 관리 에러
 
 #### Provider 에러 (Flutter)
 ```
@@ -187,9 +301,95 @@ Widget build(BuildContext context) {
 }
 ```
 
+#### 로그아웃 후 이전 계정 데이터 표시 문제 (2025-10-05 추가) {#로그아웃데이터}
+
+**증상:**
+```
+로그아웃 후 다른 계정으로 로그인했는데,
+이전 계정의 워크스페이스 목록이나 그룹 정보가 표시됨
+```
+
+**원인:**
+- Riverpod FutureProvider/Provider가 데이터를 캐시함
+- 로그아웃 시 Provider 상태가 초기화되지 않음
+- 계정 전환 시 이전 계정의 캐시된 데이터가 유지됨
+
+**해결: Provider 초기화 시스템 사용**
+
+1. **중앙 Provider 초기화 시스템 설정** (`core/providers/provider_reset.dart`)
+```dart
+typedef LogoutResetCallback = void Function(Ref ref);
+
+final _providersToInvalidateOnLogout = <ProviderOrFamily<dynamic>>[
+  myGroupsProvider,
+  homeStateProvider,
+  groupCalendarProvider,
+  // ... 사용자 데이터 Provider 등록
+];
+
+final _customLogoutCallbacks = <LogoutResetCallback>[
+  (ref) => ref.read(workspaceStateProvider.notifier).forceClearForLogout(),
+  (ref) => ref.read(homeStateProvider.notifier).clearSnapshots(),
+];
+
+void resetAllUserDataProviders(Ref ref) {
+  for (final callback in _customLogoutCallbacks) {
+    callback(ref); // 메모리 스냅샷/로컬 상태 정리
+  }
+
+  for (final provider in _providersToInvalidateOnLogout) {
+    ref.invalidate(provider); // Riverpod 캐시 무효화
+  }
+}
+```
+
+2. **로그아웃 로직에 통합** (`presentation/providers/auth_provider.dart`)
+```dart
+Future<void> logout() async {
+  await _authService.logout();
+
+  // ✅ 모든 사용자 데이터 Provider 초기화
+  resetAllUserDataProviders(_ref);
+
+  // 네비게이션 초기화
+  final navigationController = _ref.read(navigationControllerProvider.notifier);
+  navigationController.resetToHome();
+
+  state = AuthState(user: null, isLoading: false);
+}
+```
+
+3. **autoDispose 패턴 적용** (계정 전환 시 자동 해제)
+```dart
+// ❌ 기존: 메모리에 계속 유지되어 캐시 문제 발생
+final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
+  return await groupService.getMyGroups();
+});
+
+// ✅ 개선: autoDispose로 자동 메모리 관리
+final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref) async {
+  return await groupService.getMyGroups();
+});
+```
+
+**검증 방법:**
+1. 계정 A로 로그인하여 워크스페이스 생성
+2. 로그아웃
+3. 계정 B로 로그인
+4. 계정 A의 워크스페이스가 보이지 않는지 확인
+
+**관련 파일:**
+- `lib/core/providers/provider_reset.dart` - 중앙 Provider 초기화 시스템
+- `lib/presentation/providers/workspace_state_provider.dart` - 스냅샷 강제 초기화
+- `lib/presentation/providers/home_state_provider.dart` - 홈 스냅샷 초기화
+- `lib/presentation/providers/calendar_events_provider.dart` - 캘린더 스냅샷 초기화
+- `lib/presentation/providers/auth_provider.dart` - 로그아웃 로직
+
+**참고:** [프론트엔드 가이드 - Provider 초기화 시스템](../implementation/frontend/README.md#상태-관리-패턴)
+
 ## API 통신 에러
 
-### 8. 네트워크 연결 에러
+### 9. 네트워크 연결 에러
 
 #### 타임아웃 에러
 ```
@@ -215,7 +415,7 @@ SocketException: Connection refused
 - [ ] 포트 번호가 올바른가? (8080)
 - [ ] 방화벽이 차단하고 있는가?
 
-### 9. JSON 파싱 에러
+### 10. JSON 파싱 에러
 
 #### 예상치 못한 응답 형식
 ```
@@ -236,7 +436,7 @@ if (response.statusCode == 200) {
 
 ## 인증 관련 에러
 
-### 10. Google OAuth 설정 에러 {#인증}
+### 11. Google OAuth 설정 에러 {#인증}
 
 #### Invalid client error
 ```
@@ -268,7 +468,7 @@ fun completeProfile(userId: Long, request: ProfileRequest) {
 
 ## 성능 관련 문제
 
-### 11. N+1 쿼리 문제
+### 12. N+1 쿼리 문제
 
 #### 증상
 ```sql
@@ -289,7 +489,7 @@ SELECT COUNT(*) FROM group_members WHERE group_id = 2;
 fun findGroupsWithMemberCount(): List<GroupWithMemberCount>
 ```
 
-### 12. 메모리 누수 (Flutter)
+### 13. 메모리 누수 (Flutter)
 
 #### 증상
 앱 사용 중 메모리 사용량이 계속 증가
@@ -311,7 +511,7 @@ class _MyWidgetState extends State<MyWidget> {
 
 ## 개발 환경 문제
 
-### 13. Gradle 빌드 에러
+### 14. Gradle 빌드 에러
 
 #### Out of memory error
 ```
@@ -333,7 +533,7 @@ Could not resolve dependencies for configuration ':runtimeClasspath'
 
 해결: `./gradlew dependencies` 로 의존성 트리 확인 후 버전 통일
 
-### 14. IDE 관련 문제
+### 15. IDE 관련 문제
 
 #### IntelliJ 인덱싱 문제
 증상: 자동완성이 안 되고 빨간 줄이 표시됨
@@ -353,7 +553,7 @@ Could not resolve dependencies for configuration ':runtimeClasspath'
 
 ## 배포 관련 에러
 
-### 15. 빌드 에러
+### 16. 빌드 에러
 
 #### Flutter Web 빌드 실패
 ```
@@ -436,8 +636,8 @@ flutter pub get
 - **권한 에러**: [permission-errors.md](permission-errors.md)
 
 ### 구현 참조
-- **백엔드 가이드**: [../implementation/backend-guide.md](../implementation/backend-guide.md)
-- **프론트엔드 가이드**: [../implementation/frontend-guide.md](../implementation/frontend-guide.md)
+- **백엔드 구현 가이드**: [../implementation/backend/README.md](../implementation/backend/README.md)
+- **프론트엔드 가이드**: [../implementation/frontend/README.md](../implementation/frontend/README.md)
 - **API 참조**: [../implementation/api-reference.md](../implementation/api-reference.md)
 
 ### 개발 프로세스

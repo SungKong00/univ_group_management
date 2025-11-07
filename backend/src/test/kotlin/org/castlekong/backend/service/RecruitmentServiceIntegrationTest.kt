@@ -60,20 +60,39 @@ class RecruitmentServiceIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        val suffix = System.nanoTime().toString()
-        owner =
-            userRepository.save(
-                TestDataFactory.createTestUser(
-                    name = "그룹장",
-                    email = "owner-recruit+$suffix@example.com",
-                ).copy(profileCompleted = true),
+        val ownerBase = TestDataFactory.createTestUser(
+            name = "그룹장",
+            email = TestDataFactory.uniqueEmail("owner-recruit"),
+        )
+        owner = userRepository.save(
+            User(
+                id = ownerBase.id,
+                name = ownerBase.name,
+                email = ownerBase.email,
+                password = ownerBase.password,
+                globalRole = ownerBase.globalRole,
+                isActive = ownerBase.isActive,
+                nickname = ownerBase.nickname,
+                profileImageUrl = ownerBase.profileImageUrl,
+                bio = ownerBase.bio,
+                profileCompleted = true,
+                emailVerified = ownerBase.emailVerified,
+                college = ownerBase.college,
+                department = ownerBase.department,
+                studentNo = ownerBase.studentNo,
+                schoolEmail = ownerBase.schoolEmail,
+                professorStatus = ownerBase.professorStatus,
+                academicYear = ownerBase.academicYear,
+                createdAt = ownerBase.createdAt,
+                updatedAt = ownerBase.updatedAt,
             )
+        )
 
         applicant =
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "지원자",
-                    email = "applicant-recruit+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("applicant-recruit"),
                 ),
             )
 
@@ -96,11 +115,11 @@ class RecruitmentServiceIntegrationTest {
                 applicationQuestions = listOf("자기소개", "지원동기"),
             )
 
-        val response = recruitmentService.createRecruitment(group.id!!, request, owner.id!!)
+        val response = recruitmentService.createRecruitment(group.id, request, owner.id)
 
         assertThat(response.title).isEqualTo("2025 상반기 신입 모집")
         assertThat(response.status).isEqualTo(RecruitmentStatus.OPEN)
-        assertThat(response.group.id).isEqualTo(group.id!!)
+        assertThat(response.group.id).isEqualTo(group.id)
         assertThat(response.applicationQuestions).containsExactly("자기소개", "지원동기")
 
         val saved = groupRecruitmentRepository.findById(response.id)
@@ -118,9 +137,9 @@ class RecruitmentServiceIntegrationTest {
                 autoApprove = false,
             )
 
-        recruitmentService.createRecruitment(group.id!!, request, owner.id!!)
+        recruitmentService.createRecruitment(group.id, request, owner.id)
 
-        assertThatThrownBy { recruitmentService.createRecruitment(group.id!!, request, owner.id!!) }
+        assertThatThrownBy { recruitmentService.createRecruitment(group.id, request, owner.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.RECRUITMENT_ALREADY_EXISTS)
     }
@@ -138,7 +157,7 @@ class RecruitmentServiceIntegrationTest {
                 showApplicantCount = false,
             )
 
-        val response = recruitmentService.updateRecruitment(recruitmentId, updateRequest, owner.id!!)
+        val response = recruitmentService.updateRecruitment(recruitmentId, updateRequest, owner.id)
 
         assertThat(response.title).isEqualTo("수정된 모집 공고")
         assertThat(response.maxApplicants).isEqualTo(10)
@@ -155,7 +174,7 @@ class RecruitmentServiceIntegrationTest {
     fun closeRecruitment_Success() {
         val recruitmentId = createRecruitment()
 
-        val response = recruitmentService.closeRecruitment(recruitmentId, owner.id!!)
+        val response = recruitmentService.closeRecruitment(recruitmentId, owner.id)
 
         assertThat(response.status).isEqualTo(RecruitmentStatus.CLOSED)
         assertThat(response.closedAt).isNotNull
@@ -168,9 +187,9 @@ class RecruitmentServiceIntegrationTest {
     @DisplayName("지원서가 존재하는 공고는 삭제할 수 없다")
     fun deleteRecruitment_WithApplications_ThrowsException() {
         val recruitmentId = createRecruitment()
-        recruitmentService.submitApplication(recruitmentId, CreateApplicationRequest(motivation = "지원"), applicant.id!!)
+        recruitmentService.submitApplication(recruitmentId, CreateApplicationRequest(motivation = "지원"), applicant.id)
 
-        assertThatThrownBy { recruitmentService.deleteRecruitment(recruitmentId, owner.id!!) }
+        assertThatThrownBy { recruitmentService.deleteRecruitment(recruitmentId, owner.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.RECRUITMENT_HAS_APPLICATIONS)
     }
@@ -180,17 +199,18 @@ class RecruitmentServiceIntegrationTest {
     fun submitApplication_Success() {
         val recruitmentId = createRecruitment()
 
-        val response = recruitmentService.submitApplication(
-            recruitmentId,
-            CreateApplicationRequest(
-                motivation = "열심히 활동하겠습니다",
-                questionAnswers = mapOf(0 to "답변"),
-            ),
-            applicant.id!!,
-        )
+        val response =
+            recruitmentService.submitApplication(
+                recruitmentId,
+                CreateApplicationRequest(
+                    motivation = "열심히 활동하겠습니다",
+                    questionAnswers = mapOf(0 to "답변"),
+                ),
+                applicant.id,
+            )
 
         assertThat(response.status).isEqualTo(ApplicationStatus.PENDING)
-        assertThat(response.applicant.id).isEqualTo(applicant.id!!)
+        assertThat(response.applicant.id).isEqualTo(applicant.id)
 
         val saved = recruitmentApplicationRepository.findById(response.id)
         assertThat(saved).isPresent
@@ -206,19 +226,20 @@ class RecruitmentServiceIntegrationTest {
                 autoApprove = true,
                 recruitmentEndDate = LocalDateTime.now().plusDays(5),
             )
-        val recruitmentId = recruitmentService.createRecruitment(group.id!!, request, owner.id!!).id
+        val recruitmentId = recruitmentService.createRecruitment(group.id, request, owner.id).id
 
-        val response = recruitmentService.submitApplication(
-            recruitmentId,
-            CreateApplicationRequest(motivation = "자동 승인"),
-            applicant.id!!,
-        )
+        val response =
+            recruitmentService.submitApplication(
+                recruitmentId,
+                CreateApplicationRequest(motivation = "자동 승인"),
+                applicant.id,
+            )
 
         assertThat(response.status).isEqualTo(ApplicationStatus.APPROVED)
 
-        val membership = groupMemberRepository.findByGroupIdAndUserId(group.id!!, applicant.id!!)
+        val membership = groupMemberRepository.findByGroupIdAndUserId(group.id, applicant.id)
         assertThat(membership).isPresent
-        assertThat(membership.get().role.name).isEqualTo("MEMBER")
+        assertThat(membership.get().role.name).isEqualTo("멤버")
     }
 
     @Test
@@ -229,16 +250,16 @@ class RecruitmentServiceIntegrationTest {
             recruitmentService.submitApplication(
                 recruitmentId,
                 CreateApplicationRequest(motivation = "승인 요청"),
-                applicant.id!!,
+                applicant.id,
             )
 
         val reviewRequest = ReviewApplicationRequest(action = "APPROVE", reviewComment = "좋은 지원서")
-        val response = recruitmentService.reviewApplication(application.id, reviewRequest, reviewer.id!!)
+        val response = recruitmentService.reviewApplication(application.id, reviewRequest, reviewer.id)
 
         assertThat(response.status).isEqualTo(ApplicationStatus.APPROVED)
-        assertThat(response.reviewedBy?.id).isEqualTo(reviewer.id!!)
+        assertThat(response.reviewedBy?.id).isEqualTo(reviewer.id)
 
-        val membership = groupMemberRepository.findByGroupIdAndUserId(group.id!!, applicant.id!!)
+        val membership = groupMemberRepository.findByGroupIdAndUserId(group.id, applicant.id)
         assertThat(membership).isPresent
     }
 
@@ -250,16 +271,16 @@ class RecruitmentServiceIntegrationTest {
             recruitmentService.submitApplication(
                 recruitmentId,
                 CreateApplicationRequest(motivation = "반려 테스트"),
-                applicant.id!!,
+                applicant.id,
             )
 
         val reviewRequest = ReviewApplicationRequest(action = "REJECT", reviewComment = "요건 미충족")
-        val response = recruitmentService.reviewApplication(application.id, reviewRequest, reviewer.id!!)
+        val response = recruitmentService.reviewApplication(application.id, reviewRequest, reviewer.id)
 
         assertThat(response.status).isEqualTo(ApplicationStatus.REJECTED)
-        assertThat(response.reviewedBy?.id).isEqualTo(reviewer.id!!)
+        assertThat(response.reviewedBy?.id).isEqualTo(reviewer.id)
 
-        val membership = groupMemberRepository.findByGroupIdAndUserId(group.id!!, applicant.id!!)
+        val membership = groupMemberRepository.findByGroupIdAndUserId(group.id, applicant.id)
         assertThat(membership).isNotPresent
     }
 
@@ -271,10 +292,10 @@ class RecruitmentServiceIntegrationTest {
             recruitmentService.submitApplication(
                 recruitmentId,
                 CreateApplicationRequest(motivation = "철회 예정"),
-                applicant.id!!,
+                applicant.id,
             )
 
-        val response = recruitmentService.withdrawApplication(application.id, applicant.id!!)
+        val response = recruitmentService.withdrawApplication(application.id, applicant.id)
 
         assertThat(response.status).isEqualTo(ApplicationStatus.WITHDRAWN)
 
@@ -287,9 +308,15 @@ class RecruitmentServiceIntegrationTest {
     fun submitApplication_Duplicate_ThrowsException() {
         val recruitmentId = createRecruitment()
 
-        recruitmentService.submitApplication(recruitmentId, CreateApplicationRequest(), applicant.id!!)
+        recruitmentService.submitApplication(recruitmentId, CreateApplicationRequest(), applicant.id)
 
-        assertThatThrownBy { recruitmentService.submitApplication(recruitmentId, CreateApplicationRequest(), applicant.id!!) }
+        assertThatThrownBy {
+            recruitmentService.submitApplication(
+                recruitmentId,
+                CreateApplicationRequest(),
+                applicant.id,
+            )
+        }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.APPLICATION_ALREADY_EXISTS)
     }
@@ -302,7 +329,7 @@ class RecruitmentServiceIntegrationTest {
                 autoApprove = false,
                 showApplicantCount = true,
             )
-        val response = recruitmentService.createRecruitment(group.id!!, request, owner.id!!)
+        val response = recruitmentService.createRecruitment(group.id, request, owner.id)
         return response.id
     }
 

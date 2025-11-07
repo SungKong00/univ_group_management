@@ -1,11 +1,23 @@
 package org.castlekong.backend.entity
 
-import jakarta.persistence.*
+import jakarta.persistence.CollectionTable
+import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
 import java.time.LocalDateTime
 
 @Entity
 @Table(name = "groups")
-data class Group(
+class Group(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -30,17 +42,12 @@ data class Group(
     @Column(name = "department", length = 100)
     val department: String? = null,
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    val visibility: GroupVisibility = GroupVisibility.PUBLIC,
-    @Enumerated(EnumType.STRING)
     @Column(name = "group_type", nullable = false, length = 20)
     val groupType: GroupType = GroupType.AUTONOMOUS,
-    @Column(name = "is_recruiting", nullable = false)
-    val isRecruiting: Boolean = false,
     @Column(name = "max_members")
     val maxMembers: Int? = null,
     @Column(name = "default_channels_created", nullable = false)
-    val defaultChannelsCreated: Boolean = false,
+    var defaultChannelsCreated: Boolean = false,
     @ElementCollection(targetClass = String::class, fetch = FetchType.EAGER)
     @CollectionTable(name = "group_tags", joinColumns = [JoinColumn(name = "group_id")])
     @Column(name = "tag", nullable = false, length = 50)
@@ -52,12 +59,14 @@ data class Group(
     // 소프트 삭제(보존 기간) 지원을 위한 필드
     @Column(name = "deleted_at")
     val deletedAt: LocalDateTime? = null,
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Group) return false
+        return id != 0L && id == other.id
+    }
 
-enum class GroupVisibility {
-    PUBLIC,
-    PRIVATE,
-    INVITE_ONLY,
+    override fun hashCode(): Int = id.hashCode()
 }
 
 enum class GroupType {

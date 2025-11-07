@@ -1,15 +1,37 @@
 package org.castlekong.backend.controller
 
 import jakarta.validation.Valid
-import org.castlekong.backend.dto.*
+import org.castlekong.backend.dto.ApiResponse
+import org.castlekong.backend.dto.ApplicationResponse
+import org.castlekong.backend.dto.ApplicationSummaryResponse
+import org.castlekong.backend.dto.ArchivedRecruitmentResponse
+import org.castlekong.backend.dto.CreateApplicationRequest
+import org.castlekong.backend.dto.CreateRecruitmentRequest
+import org.castlekong.backend.dto.PagedApiResponse
+import org.castlekong.backend.dto.PaginationInfo
+import org.castlekong.backend.dto.RecruitmentResponse
+import org.castlekong.backend.dto.RecruitmentSearchRequest
+import org.castlekong.backend.dto.RecruitmentStatsResponse
+import org.castlekong.backend.dto.RecruitmentSummaryResponse
+import org.castlekong.backend.dto.ReviewApplicationRequest
+import org.castlekong.backend.dto.UpdateRecruitmentRequest
 import org.castlekong.backend.service.RecruitmentService
 import org.castlekong.backend.service.UserService
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api")
@@ -17,7 +39,6 @@ class RecruitmentController(
     private val recruitmentService: RecruitmentService,
     userService: UserService,
 ) : BaseController(userService) {
-
     // 모집 게시글 관련 엔드포인트
 
     @PostMapping("/groups/{groupId}/recruitments")
@@ -38,6 +59,14 @@ class RecruitmentController(
         @PathVariable groupId: Long,
     ): ApiResponse<RecruitmentResponse?> {
         val response = recruitmentService.getActiveRecruitment(groupId)
+        return ApiResponse.success(response)
+    }
+
+    @GetMapping("/recruitments/{recruitmentId}")
+    fun getRecruitment(
+        @PathVariable recruitmentId: Long,
+    ): ApiResponse<RecruitmentResponse> {
+        val response = recruitmentService.getRecruitment(recruitmentId)
         return ApiResponse.success(response)
     }
 
@@ -125,7 +154,9 @@ class RecruitmentController(
     }
 
     @GetMapping("/applications/{applicationId}")
-    @PreAuthorize("hasPermission(#applicationId, 'APPLICATION', 'VIEW') or @recruitmentController.isApplicationOwner(#applicationId, authentication)")
+    @PreAuthorize(
+        "hasPermission(#applicationId, 'APPLICATION', 'VIEW') or @recruitmentController.isApplicationOwner(#applicationId, authentication)",
+    )
     fun getApplication(
         @PathVariable applicationId: Long,
         authentication: Authentication,
@@ -168,7 +199,10 @@ class RecruitmentController(
 
     // 헬퍼 메서드 (Security Expression에서 사용)
 
-    fun isApplicationOwner(applicationId: Long, authentication: Authentication): Boolean {
+    fun isApplicationOwner(
+        applicationId: Long,
+        authentication: Authentication,
+    ): Boolean {
         return try {
             val user = getCurrentUser(authentication)
             val application = recruitmentService.getApplication(applicationId)

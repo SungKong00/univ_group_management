@@ -42,7 +42,9 @@ class GroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: semanticsLabel ?? '$groupName. 멤버 $memberCount명. ${isActive ? '활성 상태' : '비활성 상태'}',
+      label:
+          semanticsLabel ??
+          '$groupName. 멤버 $memberCount명. ${isActive ? '활성 상태' : '비활성 상태'}',
       child: Container(
         width: AppComponents.groupCardWidth,
         margin: const EdgeInsets.only(right: AppSpacing.sm),
@@ -82,11 +84,11 @@ class GroupCard extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
                     '멤버 $memberCount명',
-                    style: AppTheme.bodySmallTheme(context).copyWith(
-                      color: AppColors.neutral600,
-                    ),
+                    style: AppTheme.bodySmallTheme(
+                      context,
+                    ).copyWith(color: AppColors.neutral600),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: AppSpacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.xxs,
@@ -96,12 +98,16 @@ class GroupCard extends StatelessWidget {
                       color: isActive
                           ? AppColors.brandLight
                           : AppColors.neutral200,
-                      borderRadius: BorderRadius.circular(AppComponents.badgeRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppComponents.badgeRadius,
+                      ),
                     ),
                     child: Text(
                       isActive ? '활성' : '비활성',
                       style: AppTheme.labelSmallTheme(context).copyWith(
-                        color: isActive ? AppColors.brand : AppColors.neutral600,
+                        color: isActive
+                            ? AppColors.brand
+                            : AppColors.neutral600,
                       ),
                     ),
                   ),

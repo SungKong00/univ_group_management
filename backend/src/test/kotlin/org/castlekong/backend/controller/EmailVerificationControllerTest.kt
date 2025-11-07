@@ -21,13 +21,17 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(controllers = [EmailVerificationController::class])
 class EmailVerificationControllerTest {
-    @Autowired lateinit var mockMvc: MockMvc
+    @Autowired
+    lateinit var mockMvc: MockMvc
 
-    @Autowired lateinit var objectMapper: ObjectMapper
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
 
-    @MockkBean lateinit var emailVerificationService: EmailVerificationService
+    @MockkBean
+    lateinit var emailVerificationService: EmailVerificationService
 
-    @MockkBean lateinit var jwtTokenProvider: JwtTokenProvider
+    @MockkBean
+    lateinit var jwtTokenProvider: JwtTokenProvider
 
     @Test
     @WithMockUser(username = "user@example.com")

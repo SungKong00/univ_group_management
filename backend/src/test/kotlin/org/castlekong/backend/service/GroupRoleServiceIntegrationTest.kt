@@ -48,20 +48,39 @@ class GroupRoleServiceIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        val suffix = System.nanoTime().toString()
-        owner =
-            userRepository.save(
-                TestDataFactory.createTestUser(
-                    name = "그룹장",
-                    email = "owner-role+$suffix@example.com",
-                ).copy(profileCompleted = true),
+        val ownerBase = TestDataFactory.createTestUser(
+            name = "그룹장",
+            email = TestDataFactory.uniqueEmail("owner-role"),
+        )
+        owner = userRepository.save(
+            User(
+                id = ownerBase.id,
+                name = ownerBase.name,
+                email = ownerBase.email,
+                password = ownerBase.password,
+                globalRole = ownerBase.globalRole,
+                isActive = ownerBase.isActive,
+                nickname = ownerBase.nickname,
+                profileImageUrl = ownerBase.profileImageUrl,
+                bio = ownerBase.bio,
+                profileCompleted = true,
+                emailVerified = ownerBase.emailVerified,
+                college = ownerBase.college,
+                department = ownerBase.department,
+                studentNo = ownerBase.studentNo,
+                schoolEmail = ownerBase.schoolEmail,
+                professorStatus = ownerBase.professorStatus,
+                academicYear = ownerBase.academicYear,
+                createdAt = ownerBase.createdAt,
+                updatedAt = ownerBase.updatedAt,
             )
+        )
 
         member =
             userRepository.save(
                 TestDataFactory.createStudentUser(
                     name = "구성원",
-                    email = "member-role+$suffix@example.com",
+                    email = TestDataFactory.uniqueEmail("member-role"),
                 ),
             )
 
@@ -78,15 +97,18 @@ class GroupRoleServiceIntegrationTest {
                 priority = 50,
             )
 
-        val response = groupRoleService.createGroupRole(group.id!!, request, owner.id!!)
+        val response = groupRoleService.createGroupRole(group.id, request, owner.id)
 
         assertThat(response.name).isEqualTo("MODERATOR")
         assertThat(response.permissions).containsExactlyInAnyOrder("GROUP_MANAGE", "CHANNEL_MANAGE")
         assertThat(response.priority).isEqualTo(50)
 
-        val saved = groupRoleRepository.findByGroupIdAndName(group.id!!, "MODERATOR")
+        val saved = groupRoleRepository.findByGroupIdAndName(group.id, "MODERATOR")
         assertThat(saved).isPresent
-        assertThat(saved.get().permissions).containsExactlyInAnyOrder(GroupPermission.GROUP_MANAGE, GroupPermission.CHANNEL_MANAGE)
+        assertThat(saved.get().permissions).containsExactlyInAnyOrder(
+            GroupPermission.GROUP_MANAGE,
+            GroupPermission.CHANNEL_MANAGE,
+        )
     }
 
     @Test
@@ -99,7 +121,7 @@ class GroupRoleServiceIntegrationTest {
                 priority = 10,
             )
 
-        assertThatThrownBy { groupRoleService.createGroupRole(group.id!!, request, member.id!!) }
+        assertThatThrownBy { groupRoleService.createGroupRole(group.id, request, member.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FORBIDDEN)
     }
@@ -114,9 +136,9 @@ class GroupRoleServiceIntegrationTest {
                 priority = 10,
             )
 
-        groupRoleService.createGroupRole(group.id!!, request, owner.id!!)
+        groupRoleService.createGroupRole(group.id, request, owner.id)
 
-        assertThatThrownBy { groupRoleService.createGroupRole(group.id!!, request, owner.id!!) }
+        assertThatThrownBy { groupRoleService.createGroupRole(group.id, request, owner.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GROUP_ROLE_NAME_ALREADY_EXISTS)
     }
@@ -126,7 +148,7 @@ class GroupRoleServiceIntegrationTest {
     fun getGroupRole_Success() {
         val customRole = createCustomRole(group, "EDITOR")
 
-        val response = groupRoleService.getGroupRole(group.id!!, customRole.id!!)
+        val response = groupRoleService.getGroupRole(group.id, customRole.id)
 
         assertThat(response.name).isEqualTo("EDITOR")
         assertThat(response.permissions).containsExactly("CHANNEL_MANAGE")
@@ -135,9 +157,9 @@ class GroupRoleServiceIntegrationTest {
     @Test
     @DisplayName("다른 그룹의 역할을 조회하면 예외가 발생한다")
     fun getGroupRole_MismatchedGroup_ThrowsException() {
-        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id!!, "OWNER").get()
+        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "그룹장").get()
 
-        assertThatThrownBy { groupRoleService.getGroupRole(group.id!! + 999, ownerRole.id!!) }
+        assertThatThrownBy { groupRoleService.getGroupRole(group.id + 999, ownerRole.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GROUP_ROLE_NOT_FOUND)
     }
@@ -147,9 +169,9 @@ class GroupRoleServiceIntegrationTest {
     fun getGroupRoles_Success() {
         createCustomRole(group, "COORDINATOR")
 
-        val roles = groupRoleService.getGroupRoles(group.id!!)
+        val roles = groupRoleService.getGroupRoles(group.id)
 
-        assertThat(roles.map { it.name }).contains("OWNER", "MEMBER", "COORDINATOR")
+        assertThat(roles.map { it.name }).contains("그룹장", "교수", "멤버", "COORDINATOR")
     }
 
     @Test
@@ -163,22 +185,22 @@ class GroupRoleServiceIntegrationTest {
                 priority = 80,
             )
 
-        val response = groupRoleService.updateGroupRole(group.id!!, customRole.id!!, request, owner.id!!)
+        val response = groupRoleService.updateGroupRole(group.id, customRole.id, request, owner.id)
 
         assertThat(response.name).isEqualTo("COORDINATOR")
         assertThat(response.permissions).containsExactly("GROUP_MANAGE")
         assertThat(response.priority).isEqualTo(80)
 
-        val saved = groupRoleRepository.findById(customRole.id!!).get()
+        val saved = groupRoleRepository.findById(customRole.id).get()
         assertThat(saved.name).isEqualTo("COORDINATOR")
         assertThat(saved.permissions).containsExactly(GroupPermission.GROUP_MANAGE)
         assertThat(saved.priority).isEqualTo(80)
     }
 
     @Test
-    @DisplayName("OWNER 또는 MEMBER 역할은 수정할 수 없다")
+    @DisplayName("그룹장 또는 멤버 역할은 수정할 수 없다")
     fun updateGroupRole_SystemRole_ThrowsForbidden() {
-        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id!!, "OWNER").get()
+        val ownerRole = groupRoleRepository.findByGroupIdAndName(group.id, "그룹장").get()
 
         val request =
             UpdateGroupRoleRequest(
@@ -186,7 +208,7 @@ class GroupRoleServiceIntegrationTest {
                 permissions = setOf("GROUP_MANAGE"),
             )
 
-        assertThatThrownBy { groupRoleService.updateGroupRole(group.id!!, ownerRole.id!!, request, owner.id!!) }
+        assertThatThrownBy { groupRoleService.updateGroupRole(group.id, ownerRole.id, request, owner.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.SYSTEM_ROLE_IMMUTABLE)
     }
@@ -198,7 +220,7 @@ class GroupRoleServiceIntegrationTest {
 
         val request = UpdateGroupRoleRequest(name = "STAFF")
 
-        assertThatThrownBy { groupRoleService.updateGroupRole(group.id!!, customRole.id!!, request, member.id!!) }
+        assertThatThrownBy { groupRoleService.updateGroupRole(group.id, customRole.id, request, member.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FORBIDDEN)
     }
@@ -208,9 +230,9 @@ class GroupRoleServiceIntegrationTest {
     fun deleteGroupRole_Success() {
         val customRole = createCustomRole(group, "STAFF")
 
-        groupRoleService.deleteGroupRole(group.id!!, customRole.id!!, owner.id!!)
+        groupRoleService.deleteGroupRole(group.id, customRole.id, owner.id)
 
-        val deleted = groupRoleRepository.findById(customRole.id!!)
+        val deleted = groupRoleRepository.findById(customRole.id)
         assertThat(deleted).isNotPresent
     }
 
@@ -219,7 +241,7 @@ class GroupRoleServiceIntegrationTest {
     fun deleteGroupRole_NotOwner_ThrowsForbidden() {
         val customRole = createCustomRole(group, "REVIEWER")
 
-        assertThatThrownBy { groupRoleService.deleteGroupRole(group.id!!, customRole.id!!, member.id!!) }
+        assertThatThrownBy { groupRoleService.deleteGroupRole(group.id, customRole.id, member.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FORBIDDEN)
     }
@@ -227,9 +249,9 @@ class GroupRoleServiceIntegrationTest {
     @Test
     @DisplayName("시스템 역할은 삭제할 수 없다")
     fun deleteGroupRole_SystemRole_ThrowsForbidden() {
-        val memberRole = groupRoleRepository.findByGroupIdAndName(group.id!!, "MEMBER").get()
+        val memberRole = groupRoleRepository.findByGroupIdAndName(group.id, "멤버").get()
 
-        assertThatThrownBy { groupRoleService.deleteGroupRole(group.id!!, memberRole.id!!, owner.id!!) }
+        assertThatThrownBy { groupRoleService.deleteGroupRole(group.id, memberRole.id, owner.id) }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.SYSTEM_ROLE_IMMUTABLE)
     }

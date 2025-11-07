@@ -1,10 +1,20 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.dto.*
-import org.castlekong.backend.entity.*
+import org.castlekong.backend.dto.GroupMemberResponse
+import org.castlekong.backend.dto.MemberPreviewResponse
+import org.castlekong.backend.dto.MyGroupResponse
+import org.castlekong.backend.entity.GlobalRole
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupMember
+import org.castlekong.backend.entity.GroupPermission
+import org.castlekong.backend.entity.GroupRole
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.GroupRoleRepository
+import org.castlekong.backend.repository.UserRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -20,6 +30,7 @@ class GroupMemberService(
     private val userRepository: UserRepository,
     private val permissionService: org.castlekong.backend.security.PermissionService,
     private val groupMapper: GroupMapper,
+    private val groupRoleInitializationService: GroupRoleInitializationService,
 ) {
     @Transactional
     fun joinGroup(
@@ -60,12 +71,14 @@ class GroupMemberService(
         group: Group,
         user: User,
     ): GroupMember {
-        // 기본 MEMBER 역할 확보 (없으면 생성)
+        // 기본 멤버 역할 확보 (없으면 생성)
         val memberRole =
-            groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").orElseGet {
-                // OWNER / ADVISOR 기본 역할도 보장
+            groupRoleRepository.findByGroupIdAndName(group.id, "멤버").orElseGet {
+                // 그룹장 / 교수 기본 역할도 보장
                 ensureDefaultRoles(group)
-                groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").get()
+                groupRoleRepository.findByGroupIdAndName(group.id, "멤버").orElseThrow {
+                    IllegalStateException("Failed to create 멤버 role for group ${group.id}")
+                }
             }
 
         val groupMember =
@@ -80,39 +93,8 @@ class GroupMemberService(
     }
 
     private fun ensureDefaultRoles(group: Group) {
-        if (!groupRoleRepository.findByGroupIdAndName(group.id, "OWNER").isPresent) {
-            groupRoleRepository.save(
-                GroupRole(
-                    group = group,
-                    name = "OWNER",
-                    isSystemRole = true,
-                    permissions = GroupPermission.values().toMutableSet(),
-                    priority = 100,
-                ),
-            )
-        }
-        if (!groupRoleRepository.findByGroupIdAndName(group.id, "ADVISOR").isPresent) {
-            groupRoleRepository.save(
-                GroupRole(
-                    group = group,
-                    name = "ADVISOR",
-                    isSystemRole = true,
-                    permissions = GroupPermission.values().toMutableSet(),
-                    priority = 99,
-                ),
-            )
-        }
-        if (!groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").isPresent) {
-            groupRoleRepository.save(
-                GroupRole(
-                    group = group,
-                    name = "MEMBER",
-                    isSystemRole = true,
-                    permissions = mutableSetOf(),
-                    priority = 1,
-                ),
-            )
-        }
+        // Delegate to GroupRoleInitializationService for consistent role creation
+        groupRoleInitializationService.ensureDefaultRoles(group)
     }
 
     private fun joinParentGroupsAutomatically(
@@ -166,9 +148,9 @@ class GroupMemberService(
     }
 
     private fun ensureMemberRole(group: Group): GroupRole {
-        return groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").orElseGet {
+        return groupRoleRepository.findByGroupIdAndName(group.id, "멤버").orElseGet {
             ensureDefaultRoles(group)
-            groupRoleRepository.findByGroupIdAndName(group.id, "MEMBER").get()
+            groupRoleRepository.findByGroupIdAndName(group.id, "멤버").get()
         }
     }
 
@@ -282,8 +264,161 @@ class GroupMemberService(
             throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
         }
 
-        return groupMemberRepository.findByGroupId(groupId, pageable)
-            .map { groupMapper.toGroupMemberResponse(it) }
+        // N+1 문제 해결: ID만 페이징 조회 → 상세 정보 JOIN FETCH
+        val idsPage = groupMemberRepository.findIdsByGroupId(groupId, pageable)
+        if (idsPage.content.isEmpty()) {
+            return Page.empty(pageable)
+        }
+
+        val members = groupMemberRepository.findByIdsWithDetails(idsPage.content)
+        val memberResponses = members.map { groupMapper.toGroupMemberResponse(it) }
+
+        return org.springframework.data.domain.PageImpl(
+            memberResponses,
+            pageable,
+            idsPage.totalElements,
+        )
+    }
+
+    /**
+     * 그룹 멤버 목록 조회 (필터링 지원, 권한별 DTO 반환)
+     *
+     * @param groupId 그룹 ID
+     * @param userId 현재 사용자 ID
+     * @param roleIds 역할 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param groupIds 하위 그룹 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param grades 학년 목록 (쉼표 구분 문자열, 선택적)
+     * @param years 학번 목록 (쉼표 구분 문자열, 선택적, 예: "24,25")
+     * @param pageable 페이징 정보
+     * @return 필터링된 멤버 목록 (페이징, 관리자는 GroupMemberResponse, 일반 멤버는 MemberBasicResponse)
+     */
+    fun getGroupMembersWithFilter(
+        groupId: Long,
+        userId: Long,
+        roleIds: String?,
+        groupIds: String?,
+        grades: String?,
+        years: String?,
+        pageable: Pageable,
+    ): Page<Any> {
+        // 그룹 존재 여부 확인
+        if (!groupRepository.existsById(groupId)) {
+            throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
+        }
+
+        // 권한 확인: MEMBER_MANAGE 권한이 있는지 체크
+        val hasMemberManagePermission =
+            try {
+                val permissions = permissionService.getEffective(groupId, userId, ::systemRolePermissions)
+                permissions.contains(GroupPermission.MEMBER_MANAGE)
+            } catch (e: BusinessException) {
+                // 멤버가 아닌 경우 권한 없음
+                false
+            }
+
+        // 파라미터 파싱
+        val roleIdList = parseToLongList(roleIds)
+        val groupIdList = parseToLongList(groupIds)
+        val gradeList = parseToIntList(grades)
+        val yearList = parseToStringList(years)
+
+        // Specification 생성
+        val spec =
+            org.castlekong.backend.repository.GroupMemberSpecification.filterMembers(
+                groupId = groupId,
+                roleIds = roleIdList,
+                groupIds = groupIdList,
+                grades = gradeList,
+                years = yearList,
+            )
+
+        // N+1 문제 해결: Phase 1 - ID만 페이징 조회
+        val idsPage = groupMemberRepository.findAll(spec, pageable).map { it.id }
+        if (idsPage.content.isEmpty()) {
+            return org.springframework.data.domain.Page.empty(pageable)
+        }
+
+        // N+1 문제 해결: Phase 2 - 상세 정보 JOIN FETCH로 한 번에 조회
+        val members = groupMemberRepository.findByIdsWithDetails(idsPage.content)
+
+        // 권한에 따라 다른 DTO로 매핑
+        val memberResponses =
+            if (hasMemberManagePermission) {
+                // 관리자: 전체 정보 (email 포함) 반환
+                members.map { groupMapper.toGroupMemberResponse(it) }
+            } else {
+                // 일반 멤버: 기본 정보만 (email 제외) 반환
+                members.map { groupMapper.toMemberBasicResponse(it) }
+            }
+
+        return org.springframework.data.domain.PageImpl(
+            memberResponses,
+            pageable,
+            idsPage.totalElements,
+        )
+    }
+
+    /**
+     * 그룹 멤버 수 조회 (필터링 지원)
+     *
+     * @param groupId 그룹 ID
+     * @param roleIds 역할 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param groupIds 하위 그룹 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param grades 학년 목록 (쉼표 구분 문자열, 선택적)
+     * @param years 학번 목록 (쉼표 구분 문자열, 선택적, 예: "24,25")
+     * @return 필터링된 멤버 수
+     */
+    fun countFilteredMembers(
+        groupId: Long,
+        roleIds: String?,
+        groupIds: String?,
+        grades: String?,
+        years: String?,
+    ): Long {
+        // 그룹 존재 여부 확인
+        if (!groupRepository.existsById(groupId)) {
+            throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
+        }
+
+        // 파라미터 파싱
+        val roleIdList = parseToLongList(roleIds)
+        val groupIdList = parseToLongList(groupIds)
+        val gradeList = parseToIntList(grades)
+        val yearList = parseToStringList(years)
+
+        // Specification 생성 (getGroupMembersWithFilter와 동일한 로직)
+        val spec =
+            org.castlekong.backend.repository.GroupMemberSpecification.filterMembers(
+                groupId = groupId,
+                roleIds = roleIdList,
+                groupIds = groupIdList,
+                grades = gradeList,
+                years = yearList,
+            )
+
+        return groupMemberRepository.count(spec)
+    }
+
+    private fun parseToLongList(input: String?): List<Long>? {
+        if (input.isNullOrBlank()) return null
+        return input.split(',')
+            .mapNotNull { it.trim().toLongOrNull() }
+            .takeIf { it.isNotEmpty() }
+    }
+
+    private fun parseToIntList(input: String?): List<Int>? {
+        if (input.isNullOrBlank()) return null
+        return input.split(',')
+            .mapNotNull { it.trim().toIntOrNull() }
+            .takeIf { it.isNotEmpty() }
+    }
+
+    private fun parseToStringList(input: String?): List<String>? {
+        if (input.isNullOrBlank()) return null
+        return input.split(',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .takeIf { it.isNotEmpty() }
     }
 
     fun getMyMembership(
@@ -295,6 +430,13 @@ class GroupMemberService(
         val existing = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
         if (existing.isPresent) return groupMapper.toGroupMemberResponse(existing.get())
         throw BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND)
+    }
+
+    fun isMember(
+        groupId: Long,
+        userId: Long,
+    ): Boolean {
+        return groupMemberRepository.findByGroupIdAndUserId(groupId, userId).isPresent
     }
 
     @Transactional
@@ -354,12 +496,19 @@ class GroupMemberService(
             throw BusinessException(ErrorCode.INVALID_REQUEST)
         }
 
-        // OWNER 역할 변경은 위임 API 사용
-        if (newRole.name == "OWNER") {
+        // 그룹장 역할 변경은 위임 API 사용
+        if (newRole.name == "그룹장") {
             throw BusinessException(ErrorCode.INVALID_REQUEST)
         }
 
-        val updated = groupMember.copy(role = newRole)
+        val updated =
+            GroupMember(
+                id = groupMember.id,
+                group = groupMember.group,
+                user = groupMember.user,
+                role = newRole,
+                joinedAt = groupMember.joinedAt,
+            )
         val saved = groupMemberRepository.save(updated)
         permissionService.invalidate(groupId, targetUserId)
         return groupMapper.toGroupMemberResponse(saved)
@@ -392,7 +541,7 @@ class GroupMemberService(
         }
 
         val professorRole =
-            groupRoleRepository.findByGroupIdAndName(groupId, "ADVISOR")
+            groupRoleRepository.findByGroupIdAndName(groupId, "교수")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // 이미 그룹 멤버인지 확인
@@ -400,7 +549,15 @@ class GroupMemberService(
 
         if (existingMember.isPresent) {
             // 이미 멤버라면 역할을 지도교수로 변경
-            val updated = existingMember.get().copy(role = professorRole)
+            val member = existingMember.get()
+            val updated =
+                GroupMember(
+                    id = member.id,
+                    group = member.group,
+                    user = member.user,
+                    role = professorRole,
+                    joinedAt = member.joinedAt,
+                )
             val saved = groupMemberRepository.save(updated)
             permissionService.invalidate(groupId, professorUserId)
             return groupMapper.toGroupMemberResponse(saved)
@@ -439,16 +596,23 @@ class GroupMemberService(
                 .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
 
         // 지도교수 역할인지 확인
-        if (groupMember.role.name != "ADVISOR") {
+        if (groupMember.role.name != "교수") {
             throw BusinessException(ErrorCode.INVALID_REQUEST)
         }
 
         // 일반 멤버로 역할 변경 (완전 제거하지 않음)
         val memberRole =
-            groupRoleRepository.findByGroupIdAndName(groupId, "MEMBER")
+            groupRoleRepository.findByGroupIdAndName(groupId, "멤버")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
-        val updated = groupMember.copy(role = memberRole)
+        val updated =
+            GroupMember(
+                id = groupMember.id,
+                group = groupMember.group,
+                user = groupMember.user,
+                role = memberRole,
+                joinedAt = groupMember.joinedAt,
+            )
         groupMemberRepository.save(updated)
         permissionService.invalidate(groupId, professorUserId)
     }
@@ -488,26 +652,58 @@ class GroupMemberService(
                 .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
 
         val ownerRole =
-            groupRoleRepository.findByGroupIdAndName(groupId, "OWNER")
+            groupRoleRepository.findByGroupIdAndName(groupId, "그룹장")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         val memberRole =
-            groupRoleRepository.findByGroupIdAndName(groupId, "MEMBER")
+            groupRoleRepository.findByGroupIdAndName(groupId, "멤버")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // Group 엔티티의 owner 변경
-        val updatedGroup = group.copy(owner = newOwner, updatedAt = LocalDateTime.now())
+        val updatedGroup =
+            Group(
+                id = group.id,
+                name = group.name,
+                description = group.description,
+                profileImageUrl = group.profileImageUrl,
+                owner = newOwner,
+                parent = group.parent,
+                university = group.university,
+                college = group.college,
+                department = group.department,
+                groupType = group.groupType,
+                maxMembers = group.maxMembers,
+                defaultChannelsCreated = group.defaultChannelsCreated,
+                tags = group.tags,
+                createdAt = group.createdAt,
+                updatedAt = LocalDateTime.now(),
+                deletedAt = group.deletedAt,
+            )
         groupRepository.save(updatedGroup)
 
         // 이전 그룹장을 일반 멤버로 강등
         val currentOwnerMember =
             groupMemberRepository.findByGroupIdAndUserId(groupId, currentOwnerId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
-        val demotedOwner = currentOwnerMember.copy(role = memberRole)
+        val demotedOwner =
+            GroupMember(
+                id = currentOwnerMember.id,
+                group = currentOwnerMember.group,
+                user = currentOwnerMember.user,
+                role = memberRole,
+                joinedAt = currentOwnerMember.joinedAt,
+            )
         groupMemberRepository.save(demotedOwner)
 
         // 새 그룹장을 OWNER 역할로 승급
-        val promotedMember = newOwnerMember.copy(role = ownerRole)
+        val promotedMember =
+            GroupMember(
+                id = newOwnerMember.id,
+                group = newOwnerMember.group,
+                user = newOwnerMember.user,
+                role = ownerRole,
+                joinedAt = newOwnerMember.joinedAt,
+            )
         val savedMember = groupMemberRepository.save(promotedMember)
 
         // 권한 캐시 무효화
@@ -533,15 +729,40 @@ class GroupMemberService(
 
         val successor = candidates.first()
         val ownerRole =
-            groupRoleRepository.findByGroupIdAndName(groupId, "OWNER")
+            groupRoleRepository.findByGroupIdAndName(groupId, "그룹장")
                 .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
 
         // Group 엔티티의 owner 변경
-        val updatedGroup = group.copy(owner = successor.user, updatedAt = LocalDateTime.now())
+        val updatedGroup =
+            Group(
+                id = group.id,
+                name = group.name,
+                description = group.description,
+                profileImageUrl = group.profileImageUrl,
+                owner = successor.user,
+                parent = group.parent,
+                university = group.university,
+                college = group.college,
+                department = group.department,
+                groupType = group.groupType,
+                maxMembers = group.maxMembers,
+                defaultChannelsCreated = group.defaultChannelsCreated,
+                tags = group.tags,
+                createdAt = group.createdAt,
+                updatedAt = LocalDateTime.now(),
+                deletedAt = group.deletedAt,
+            )
         groupRepository.save(updatedGroup)
 
         // 승계자를 OWNER 역할로 변경
-        val updatedMember = successor.copy(role = ownerRole)
+        val updatedMember =
+            GroupMember(
+                id = successor.id,
+                group = successor.group,
+                user = successor.user,
+                role = ownerRole,
+                joinedAt = successor.joinedAt,
+            )
         val savedMember = groupMemberRepository.save(updatedMember)
 
         permissionService.invalidate(groupId, successor.user.id)
@@ -562,9 +783,102 @@ class GroupMemberService(
 
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> =
         when (roleName.uppercase()) {
-            "OWNER" -> GroupPermission.entries.toSet()
-            "ADVISOR" -> GroupPermission.entries.toSet() // MVP에서는 OWNER와 동일
-            "MEMBER" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
+            "그룹장" -> GroupPermission.entries.toSet()
+            "교수" -> GroupPermission.entries.toSet() // MVP에서는 그룹장와 동일
+            "멤버" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
             else -> emptySet()
         }
+
+    // === 내 그룹 목록 조회 (워크스페이스 자동 진입용) ===
+
+    fun getMyGroups(userId: Long): List<MyGroupResponse> {
+        val memberships = groupMemberRepository.findByUserIdWithDetails(userId)
+
+        return memberships.map { membership ->
+            val group = membership.group
+            val level = calculateGroupLevel(group)
+
+            MyGroupResponse(
+                id = group.id,
+                name = group.name,
+                type = group.groupType,
+                level = level,
+                parentId = group.parent?.id,
+                role = membership.role.name,
+                permissions = membership.role.permissions.map { it.name }.toSet(),
+                profileImageUrl = group.profileImageUrl,
+            )
+        }.sortedWith(compareBy({ it.level }, { it.id }))
+    }
+
+    private fun calculateGroupLevel(group: Group): Int {
+        var level = 0
+        var current: Group? = group
+        while (current?.parent != null) {
+            level++
+            current = current.parent
+        }
+        return level
+    }
+
+    /**
+     * 멤버 선택 Preview API
+     * 필터 조건에 맞는 멤버 수와 샘플 3명 조회
+     *
+     * @param groupId 그룹 ID
+     * @param roleIds 역할 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param groupIds 하위 그룹 ID 목록 (쉼표 구분 문자열, 선택적)
+     * @param grades 학년 목록 (쉼표 구분 문자열, 선택적)
+     * @param years 학번 목록 (쉼표 구분 문자열, 선택적, 예: "24,25")
+     * @return 멤버 수와 샘플 목록
+     */
+    fun previewMembers(
+        groupId: Long,
+        roleIds: String?,
+        groupIds: String?,
+        grades: String?,
+        years: String?,
+    ): MemberPreviewResponse {
+        // 그룹 존재 여부 확인
+        if (!groupRepository.existsById(groupId)) {
+            throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
+        }
+
+        // 파라미터 파싱
+        val roleIdList = parseToLongList(roleIds)
+        val groupIdList = parseToLongList(groupIds)
+        val gradeList = parseToIntList(grades)
+        val yearList = parseToStringList(years)
+
+        // Specification 생성
+        val spec =
+            org.castlekong.backend.repository.GroupMemberSpecification.filterMembers(
+                groupId = groupId,
+                roleIds = roleIdList,
+                groupIds = groupIdList,
+                grades = gradeList,
+                years = yearList,
+            )
+
+        // COUNT 쿼리 실행
+        val totalCount = groupMemberRepository.count(spec).toInt()
+
+        // 샘플 3명 조회 (ID만 먼저 조회)
+        val samplePageable = org.springframework.data.domain.PageRequest.of(0, 3)
+        val sampleIds = groupMemberRepository.findAll(spec, samplePageable).map { it.id }.content
+
+        // 샘플 데이터 JOIN FETCH로 조회
+        val samples =
+            if (sampleIds.isNotEmpty()) {
+                groupMemberRepository.findByIdsWithDetailsForPreview(sampleIds)
+                    .map { groupMapper.toMemberPreviewDto(it) }
+            } else {
+                emptyList()
+            }
+
+        return MemberPreviewResponse(
+            totalCount = totalCount,
+            samples = samples,
+        )
+    }
 }

@@ -2,16 +2,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/auth_models.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/navigation/navigation_controller.dart';
+import '../../core/providers/provider_reset.dart';
 
 class AuthState {
   final UserInfo? user;
   final bool isLoading;
   final String? error;
+  final bool isLoggingOut;
 
   const AuthState({
     this.user,
     this.isLoading = false,
     this.error,
+    this.isLoggingOut = false,
   });
 
   bool get isLoggedIn => user != null;
@@ -20,11 +23,13 @@ class AuthState {
     UserInfo? user,
     bool? isLoading,
     String? error,
+    bool? isLoggingOut,
   }) {
     return AuthState(
       user: user,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      isLoggingOut: isLoggingOut ?? this.isLoggingOut,
     );
   }
 
@@ -33,6 +38,7 @@ class AuthState {
       user: user,
       isLoading: isLoading,
       error: null,
+      isLoggingOut: isLoggingOut,
     );
   }
 
@@ -41,6 +47,7 @@ class AuthState {
       user: null,
       isLoading: false,
       error: null,
+      isLoggingOut: false,
     );
   }
 }
@@ -89,17 +96,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         accessToken: accessToken,
       );
 
-      state = state.copyWith(
-        user: response.user,
-        isLoading: false,
-      );
+      state = state.copyWith(user: response.user, isLoading: false);
 
       return response;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -110,29 +111,43 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final response = await _authService.loginWithTestAccount();
 
-      state = state.copyWith(
-        user: response.user,
-        isLoading: false,
-      );
+      state = state.copyWith(user: response.user, isLoading: false);
 
       return response;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
+    }
+  }
+
+  Future<LoginResponse> loginWithMockToken(String mockToken) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final response = await _authService.loginWithMockToken(mockToken);
+
+      state = state.copyWith(user: response.user, isLoading: false);
+
+      return response;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
 
   Future<void> logout() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: null, isLoggingOut: true);
 
     try {
       await _authService.logout();
 
+      // 모든 사용자 데이터 관련 Provider 초기화
+      resetAllUserDataProviders(_ref);
+
       // NavigationController 초기화 (홈으로 리셋)
-      final navigationController = _ref.read(navigationControllerProvider.notifier);
+      final navigationController = _ref.read(
+        navigationControllerProvider.notifier,
+      );
       navigationController.resetToHome();
 
       state = state.clearUser();
@@ -140,6 +155,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(
         isLoading: false,
         error: 'Logout failed: ${e.toString()}',
+        isLoggingOut: false,
       );
       rethrow;
     }
@@ -150,9 +166,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _authService.updateCurrentUser(updatedUser);
       state = state.copyWith(user: updatedUser);
     } catch (e) {
-      state = state.copyWith(
-        error: 'User update failed: ${e.toString()}',
-      );
+      state = state.copyWith(error: 'User update failed: ${e.toString()}');
       rethrow;
     }
   }

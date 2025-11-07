@@ -46,7 +46,10 @@ class SecurityExpressionHelper(
      * 사용자가 특정 채널에서 특정 권한을 가지고 있는지 확인
      * MVP에서는 단순히 그룹 멤버십으로 확인
      */
-    fun hasChannelPermission(channelId: Long, permission: String): Boolean {
+    fun hasChannelPermission(
+        channelId: Long,
+        permission: String,
+    ): Boolean {
         val channel = channelRepository.findById(channelId).orElse(null) ?: return false
         return isGroupMember(channel.group.id)
     }

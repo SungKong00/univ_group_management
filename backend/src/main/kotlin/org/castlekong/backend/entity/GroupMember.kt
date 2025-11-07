@@ -1,6 +1,15 @@
 package org.castlekong.backend.entity
 
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import java.time.LocalDateTime
 
 @Entity
@@ -10,7 +19,7 @@ import java.time.LocalDateTime
         UniqueConstraint(columnNames = ["group_id", "user_id"]),
     ],
 )
-data class GroupMember(
+class GroupMember(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -25,4 +34,8 @@ data class GroupMember(
     val role: GroupRole,
     @Column(name = "joined_at", nullable = false)
     val joinedAt: LocalDateTime = LocalDateTime.now(),
-)
+) {
+    override fun equals(other: Any?) = other is GroupMember && id != 0L && id == other.id
+
+    override fun hashCode(): Int = id.hashCode()
+}

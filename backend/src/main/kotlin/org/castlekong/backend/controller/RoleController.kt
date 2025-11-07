@@ -5,10 +5,13 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.castlekong.backend.dto.ApiResponse
 import org.castlekong.backend.service.UserService
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 
 data class RoleApplyRequest(val role: String)
 
@@ -26,8 +29,9 @@ class RoleController(
         authentication: Authentication,
         @RequestBody req: RoleApplyRequest,
     ): ApiResponse<Unit> {
-        val user = userService.findByEmail(authentication.name)
-            ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
+        val user =
+            userService.findByEmail(authentication.name)
+                ?: throw org.castlekong.backend.exception.BusinessException(org.castlekong.backend.exception.ErrorCode.USER_NOT_FOUND)
         userService.applyRole(user.id, req.role)
         return ApiResponse.success()
     }

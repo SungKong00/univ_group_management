@@ -95,8 +95,8 @@ class NavigationConfig {
   /// 모든 네비게이션 아이템을 순서대로 반환
   static const List<NavigationConfig> items = [
     home,
-    workspace,
     calendar,
+    workspace,
     activity,
     profile,
   ];
@@ -112,6 +112,10 @@ class NavigationConfig {
   /// NavigationConfig.fromRoute('/unknown') // null
   /// ```
   static NavigationConfig? fromRoute(String route) {
+    // 특수 경로 매핑: 그룹 관리자 페이지는 워크스페이스 탭에 속하도록 처리
+    if (route.startsWith(AppConstants.groupAdminRoute)) {
+      return workspace;
+    }
     for (final item in items) {
       if (route.startsWith(item.route)) {
         return item;
@@ -175,6 +179,24 @@ class NavigationConfig {
   /// ```
   bool isRootRoute(String route) {
     return route == this.route;
+  }
+
+  /// 브레드크럼용 경로 리스트 반환
+  ///
+  /// 기본적으로는 제목만 포함하는 단일 항목 리스트를 반환합니다.
+  /// 워크스페이스 등 특수 페이지는 Provider에서 동적으로 경로를 구성합니다.
+  ///
+  /// 예시:
+  /// ```dart
+  /// NavigationConfig.home.getBreadcrumbPath() // ["홈"]
+  /// NavigationConfig.workspace.getBreadcrumbPath() // ["워크스페이스"]
+  /// ```
+  ///
+  /// 향후 확장:
+  /// - 프로필 > 정보수정: ["프로필", "정보수정"]
+  /// - 캘린더 > 일정추가: ["캘린더", "일정추가"]
+  List<String> getBreadcrumbPath() {
+    return [title];
   }
 
   @override

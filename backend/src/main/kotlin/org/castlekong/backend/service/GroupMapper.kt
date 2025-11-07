@@ -1,11 +1,42 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.dto.*
-import org.castlekong.backend.entity.*
+import org.castlekong.backend.dto.GroupJoinRequestResponse
+import org.castlekong.backend.dto.GroupMemberResponse
+import org.castlekong.backend.dto.GroupResponse
+import org.castlekong.backend.dto.GroupRoleResponse
+import org.castlekong.backend.dto.GroupSummaryResponse
+import org.castlekong.backend.dto.MemberPreviewDto
+import org.castlekong.backend.dto.SubGroupRequestResponse
+import org.castlekong.backend.dto.UserSummaryResponse
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupJoinRequest
+import org.castlekong.backend.entity.GroupMember
+import org.castlekong.backend.entity.GroupRole
+import org.castlekong.backend.entity.SubGroupRequest
+import org.castlekong.backend.entity.User
+import org.castlekong.backend.repository.GroupRecruitmentRepository
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 
 @Component
-class GroupMapper {
+class GroupMapper(
+    private val groupRecruitmentRepository: GroupRecruitmentRepository,
+) {
+    /**
+     * 그룹의 실제 모집 중 상태를 확인
+     * - 활성 모집 공고가 존재하는지 확인
+     * - 모집 공고 상태가 OPEN
+     * - 현재 시각이 모집 기간 내
+     */
+    fun isGroupActuallyRecruiting(group: Group): Boolean {
+        val now = LocalDateTime.now()
+        return groupRecruitmentRepository.findByGroupId(group.id).any { recruitment ->
+            recruitment.status == org.castlekong.backend.entity.RecruitmentStatus.OPEN &&
+                recruitment.recruitmentStartDate <= now &&
+                (recruitment.recruitmentEndDate == null || recruitment.recruitmentEndDate!! > now)
+        }
+    }
+
     fun toGroupResponse(group: Group): GroupResponse {
         return GroupResponse(
             id = group.id,
@@ -16,9 +47,9 @@ class GroupMapper {
             university = group.university,
             college = group.college,
             department = group.department,
-            visibility = group.visibility,
             groupType = group.groupType,
-            isRecruiting = group.isRecruiting,
+            // 실제 모집 상태 확인
+            isRecruiting = isGroupActuallyRecruiting(group),
             maxMembers = group.maxMembers,
             tags = group.tags,
             createdAt = group.createdAt,
@@ -38,9 +69,9 @@ class GroupMapper {
             university = group.university,
             college = group.college,
             department = group.department,
-            visibility = group.visibility,
             groupType = group.groupType,
-            isRecruiting = group.isRecruiting,
+            // 실제 모집 상태 확인
+            isRecruiting = isGroupActuallyRecruiting(group),
             memberCount = memberCount,
             tags = group.tags,
         )
@@ -52,6 +83,25 @@ class GroupMapper {
             user = toUserSummaryResponse(groupMember.user),
             role = toGroupRoleResponse(groupMember.role),
             joinedAt = groupMember.joinedAt,
+        )
+    }
+
+    fun toMemberBasicResponse(groupMember: GroupMember): org.castlekong.backend.dto.MemberBasicResponse {
+        return org.castlekong.backend.dto.MemberBasicResponse(
+            id = groupMember.id,
+            user =
+                org.castlekong.backend.dto.UserBasicInfo(
+                    id = groupMember.user.id,
+                    name = groupMember.user.name,
+                    profileImageUrl = groupMember.user.profileImageUrl,
+                    studentNo = groupMember.user.studentNo,
+                    academicYear = groupMember.user.academicYear,
+                ),
+            role =
+                org.castlekong.backend.dto.RoleBasicInfo(
+                    id = groupMember.role.id,
+                    name = groupMember.role.name,
+                ),
         )
     }
 
@@ -70,6 +120,8 @@ class GroupMapper {
             name = user.name,
             email = user.email,
             profileImageUrl = user.profileImageUrl,
+            studentNo = user.studentNo,
+            academicYear = user.academicYear,
         )
     }
 
@@ -112,6 +164,19 @@ class GroupMapper {
             reviewedAt = request.reviewedAt,
             createdAt = request.createdAt,
             updatedAt = request.updatedAt,
+        )
+    }
+
+    fun toMemberPreviewDto(groupMember: GroupMember): MemberPreviewDto {
+        val user = groupMember.user
+        // studentNo에서 year 추출 (예: "2024001" -> 24)
+        val year = user.studentNo?.take(4)?.toIntOrNull()?.let { it % 100 }
+        return MemberPreviewDto(
+            id = groupMember.id,
+            name = user.name,
+            grade = user.academicYear,
+            year = year,
+            roleName = groupMember.role.name,
         )
     }
 }

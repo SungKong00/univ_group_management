@@ -1,6 +1,7 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.event.*
+import org.castlekong.backend.event.RoleBindingChangedEvent
+import org.castlekong.backend.event.UserRoleChangedEvent
 import org.castlekong.backend.repository.ChannelRoleBindingRepository
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component
 class ChannelPermissionCacheManager(
     private val cacheManager: CacheManager,
     private val permissionVersionService: PermissionVersionService,
-    private val channelRoleBindingRepository: ChannelRoleBindingRepository
+    private val channelRoleBindingRepository: ChannelRoleBindingRepository,
 ) {
     private val logger = LoggerFactory.getLogger(ChannelPermissionCacheManager::class.java)
 
@@ -39,7 +40,6 @@ class ChannelPermissionCacheManager(
         logger.info("Invalidated cache for channel ${event.channelId}, new version: $newVersion")
     }
 
-
     /**
      * c) GroupRole membership(user↔role) 변경 이벤트 처리
      */
@@ -59,10 +59,11 @@ class ChannelPermissionCacheManager(
                 evictUserChannelCache(channelId, event.userId)
             }
 
-            logger.info("Invalidated user ${event.userId} cache for ${affectedChannels.size} channels in group ${event.groupId}: $newVersions")
+            logger.info(
+                "Invalidated user ${event.userId} cache for ${affectedChannels.size} channels in group ${event.groupId}: $newVersions",
+            )
         }
     }
-
 
     /**
      * 특정 채널의 모든 사용자 캐시 무효화
@@ -80,7 +81,10 @@ class ChannelPermissionCacheManager(
     /**
      * 특정 사용자의 특정 채널 캐시만 무효화
      */
-    private fun evictUserChannelCache(channelId: Long, userId: Long) {
+    private fun evictUserChannelCache(
+        channelId: Long,
+        userId: Long,
+    ) {
         val cache = cacheManager.getCache(CACHE_NAME)
         cache?.let {
             // 해당 사용자의 해당 채널 관련 캐시 키들을 정확히 삭제

@@ -11,10 +11,7 @@ import 'navigation_controller.dart';
 class BackButtonHandler extends ConsumerWidget {
   final Widget child;
 
-  const BackButtonHandler({
-    super.key,
-    required this.child,
-  });
+  const BackButtonHandler({super.key, required this.child});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,7 +35,9 @@ class BackButtonHandler extends ConsumerWidget {
   /// 뒤로가기 버튼 처리
   /// 성공적으로 뒤로가기를 처리했으면 true, 더 이상 뒤로갈 수 없으면 false 반환
   Future<bool> _handleBackButton(BuildContext context, WidgetRef ref) async {
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
     final navigationState = ref.read(navigationControllerProvider);
 
     if (kDebugMode) {
@@ -136,7 +135,9 @@ class NavigationHelper {
     Object? routerExtra,
   }) {
     // NavigationController 업데이트
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
     navigationController.navigateTo(route);
 
     // Go Router로 실제 네비게이션
@@ -152,14 +153,22 @@ class NavigationHelper {
 
   /// 홈으로 안전하게 이동
   static void goHome(BuildContext context, WidgetRef ref) {
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
     navigationController.navigateToHome();
     safeGo(context, '/home');
   }
 
   /// 특정 탭의 루트로 이동
-  static void goToTabRoot(BuildContext context, WidgetRef ref, NavigationTab tab) {
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+  static void goToTabRoot(
+    BuildContext context,
+    WidgetRef ref,
+    NavigationTab tab,
+  ) {
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
     navigationController.navigateToTabRoot(tab);
     safeGo(context, tab.route);
   }
@@ -175,10 +184,6 @@ class NavigationHelper {
         ? '/workspace/$groupId/channel/$channelId'
         : '/workspace/$groupId';
 
-    navigateWithSync(
-      context,
-      ref,
-      route,
-    );
+    navigateWithSync(context, ref, route);
   }
 }

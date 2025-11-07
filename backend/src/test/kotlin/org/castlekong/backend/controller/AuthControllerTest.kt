@@ -3,6 +3,7 @@ package org.castlekong.backend.controller
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import org.castlekong.backend.dto.GoogleLoginRequest
 import org.castlekong.backend.dto.LoginResponse
 import org.castlekong.backend.dto.RefreshTokenResponse
 import org.castlekong.backend.dto.UserResponse
@@ -18,9 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.LocalDateTime
 
 @WebMvcTest(
@@ -63,6 +67,7 @@ class AuthControllerTest {
                     bio = null,
                     profileCompleted = false,
                     emailVerified = false,
+                    academicYear = 1,
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now(),
                 )
@@ -119,7 +124,7 @@ class AuthControllerTest {
         fun `should return 200 when valid Google access token provided`() {
             // Given
             val googleLoginRequest =
-                org.castlekong.backend.dto.GoogleLoginRequest(
+                GoogleLoginRequest(
                     googleAuthToken = null,
                     googleAccessToken = "valid.google.access.token",
                 )
@@ -135,6 +140,7 @@ class AuthControllerTest {
                     bio = "교수 소개",
                     profileCompleted = true,
                     emailVerified = true,
+                    academicYear = 1,
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now(),
                 )
@@ -172,7 +178,7 @@ class AuthControllerTest {
         fun `should return 401 when invalid Google access token provided`() {
             // Given
             val invalidGoogleLoginRequest =
-                org.castlekong.backend.dto.GoogleLoginRequest(
+                GoogleLoginRequest(
                     googleAuthToken = null,
                     googleAccessToken = "invalid.google.access.token",
                 )
@@ -215,16 +221,17 @@ class AuthControllerTest {
         @Test
         fun `should return new access token when refresh token valid`() {
             val requestBody = mapOf("refreshToken" to "valid.refresh.token")
-            every { authService.refreshAccessToken("valid.refresh.token") } returns RefreshTokenResponse(
-                accessToken = "new.access.token",
-                tokenType = "Bearer",
-                expiresIn = 86400000L,
-            )
+            every { authService.refreshAccessToken("valid.refresh.token") } returns
+                RefreshTokenResponse(
+                    accessToken = "new.access.token",
+                    tokenType = "Bearer",
+                    expiresIn = 86400000L,
+                )
 
             mockMvc.perform(
                 post("/api/auth/refresh")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestBody))
+                    .content(objectMapper.writeValueAsString(requestBody)),
             )
                 .andDo(print())
                 .andExpect(status().isOk)
@@ -238,7 +245,7 @@ class AuthControllerTest {
             mockMvc.perform(
                 post("/api/auth/refresh")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestBody))
+                    .content(objectMapper.writeValueAsString(requestBody)),
             )
                 .andDo(print())
                 .andExpect(status().isBadRequest)
@@ -258,17 +265,19 @@ class AuthControllerTest {
                     bio = null,
                     profileCompleted = true,
                     emailVerified = true,
-                    createdAt = java.time.LocalDateTime.now(),
-                    updatedAt = java.time.LocalDateTime.now(),
+                    academicYear = 1,
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now(),
                 )
             every { authService.verifyToken() } returns userResponse
 
+            // verify는 GET이지만 간혹 클라이언트 실수 방지: POST 호출 시 405 기대 가능
             mockMvc.perform(
-                post("/api/auth/verify") // verify는 GET이지만 간혹 클라이언트 실수 방지: POST 호출 시 405 기대 가능
+                post("/api/auth/verify"),
             ).andExpect(status().isMethodNotAllowed)
 
             mockMvc.perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/auth/verify")
+                get("/api/auth/verify"),
             )
                 .andDo(print())
                 .andExpect(status().isOk)

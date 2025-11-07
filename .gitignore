@@ -43,13 +43,16 @@ $RECYCLE.BIN/
 ####################################
 # IDE / 툴링
 ####################################
-.idea/*
-!.idea/codeStyles
-!.idea/runConfigurations
+# IntelliJ IDEA - 기본 설정
 *.iml
 *.ipr
 *.iws
 .vscode/
+
+# .idea 디렉토리 - 전체 무시 후 필요한 것만 예외
+.idea/
+!.idea/codeStyles/
+!.idea/runConfigurations/
 
 ####################################
 # 공통 빌드/패키징 산출물
@@ -157,6 +160,7 @@ $RECYCLE.BIN/
 /frontend/ios/Flutter/Generated.xcconfig
 /frontend/ios/Flutter/Debug.xcconfig
 /frontend/ios/Flutter/Release.xcconfig
+/frontend/ios/Flutter/Profile.xcconfig
 /frontend/ios/Flutter/app.flx
 /frontend/ios/Flutter/app.zip
 /frontend/ios/Flutter/flutter_assets/
@@ -167,6 +171,7 @@ $RECYCLE.BIN/
 !/frontend/ios/**/default.mode2v3
 !/frontend/ios/**/default.pbxuser
 !/frontend/ios/**/default.perspectivev3
+/frontend/ios/Podfile.lock
 
 # macOS
 /frontend/macos/**/Pods/
@@ -183,6 +188,7 @@ $RECYCLE.BIN/
 /frontend/macos/Flutter/flutter_export_environment.sh
 /frontend/macos/ServiceDefinitions.json
 /frontend/macos/Runner/GeneratedPluginRegistrant.*
+/frontend/macos/Podfile.lock
 
 # Linux
 /frontend/linux/flutter/ephemeral/
@@ -235,16 +241,8 @@ context/_meta/backup_*
 /frontend/**/doc/api/
 # iOS/macOS dgph 심볼 파일
 /frontend/**/dgph
-# Windows 개발 환경 산출물 (Visual Studio 등)
-/frontend/windows/*.suo
-/frontend/windows/*.user
-/frontend/windows/*.userosscache
-/frontend/windows/*.sln.docstates
-/frontend/windows/x64/
-/frontend/windows/x86/
-# Windows 캐시: 파일은 무시, 동일 확장자의 디렉터리는 유지
-/frontend/windows/*.[Cc]ache
-!/frontend/windows/*.[Cc]ache/
+# Windows 개발 환경 산출물 (중복 패턴 제거됨 - 상단 Windows 섹션에 이미 존재)
+# (중복 항목 제거)
 # -------------------------------------------------------------------------------------------------
 # 추가: frontend 기존 .gitignore 잔여 패턴 통합
 /frontend/**/*.pyc

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:developer' as developer;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/navigation/navigation_config.dart';
 import '../../../core/navigation/navigation_utils.dart';
 import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/back_button_handler.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/services/group_service.dart';
+import '../../providers/workspace_state_provider.dart';
+import '../../../core/models/group_models.dart';
+import '../../providers/my_groups_provider.dart';
 
 class BottomNavigation extends ConsumerWidget {
   const BottomNavigation({super.key});
@@ -29,6 +35,8 @@ class BottomNavigation extends ConsumerWidget {
         unselectedItemColor: AppColors.neutral600,
         backgroundColor: Colors.white,
         elevation: 0,
+        selectedFontSize: 10,
+        unselectedFontSize: 10,
         onTap: (index) => _onTap(context, ref, index),
         items: NavigationConfig.items
             .map(
@@ -43,18 +51,112 @@ class BottomNavigation extends ConsumerWidget {
     );
   }
 
-  void _onTap(BuildContext context, WidgetRef ref, int index) {
+  void _onTap(BuildContext context, WidgetRef ref, int index) async {
     final config = NavigationConfig.items[index];
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
+    final navigationState = ref.read(navigationControllerProvider);
 
-    // 워크스페이스 상태 관리
     if (config.route == AppConstants.workspaceRoute) {
       navigationController.enterWorkspace();
+
+      final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+      final targetGroupId = _resolveLastWorkspaceGroupId(
+        navigationState,
+        workspaceNotifier.lastGroupId,
+      );
+
+      if (targetGroupId != null) {
+        workspaceNotifier.clearError();
+        NavigationHelper.navigateWithSync(
+          context,
+          ref,
+          '/workspace/$targetGroupId',
+        );
+        return;
+      }
+
+      try {
+        ref.read(workspaceStateProvider.notifier).setLoadingState(true);
+
+        final groupsAsync = ref.read(myGroupsProvider);
+        final groupService = GroupService();
+        GroupMembership? topGroup;
+
+        groupsAsync.whenOrNull(
+          data: (groups) {
+            topGroup = groupService.getTopLevelGroup(groups);
+          },
+        );
+
+        topGroup ??= groupService.getTopLevelGroup(
+          await groupService.getMyGroups(),
+        );
+
+        if (topGroup != null && context.mounted) {
+          workspaceNotifier.clearError();
+          NavigationHelper.navigateWithSync(
+            context,
+            ref,
+            '/workspace/${topGroup!.id}',
+          );
+        } else if (context.mounted) {
+          workspaceNotifier.setError('소속된 그룹이 없습니다');
+          NavigationHelper.navigateWithSync(context, ref, config.route);
+        }
+      } catch (e, stackTrace) {
+        developer.log(
+          'Error loading workspace: $e',
+          name: 'BottomNav',
+          error: e,
+          stackTrace: stackTrace,
+          level: 900,
+        );
+
+        if (context.mounted) {
+          ref
+              .read(workspaceStateProvider.notifier)
+              .setError('워크스페이스를 불러올 수 없습니다');
+
+          AppSnackBar.error(context, '워크스페이스를 불러오는 중 오류가 발생했습니다');
+        }
+      } finally {
+        ref.read(workspaceStateProvider.notifier).setLoadingState(false);
+      }
     } else {
       navigationController.exitWorkspace();
+      NavigationHelper.navigateWithSync(context, ref, config.route);
+    }
+  }
+
+  String? _resolveLastWorkspaceGroupId(
+    NavigationState navigationState,
+    String? cachedGroupId,
+  ) {
+    final history = navigationState.tabHistories[NavigationTab.workspace] ?? [];
+    if (history.isNotEmpty) {
+      final groupId = _parseGroupId(history.last.route);
+      if (groupId != null) {
+        return groupId;
+      }
     }
 
-    // 네비게이션 동기화
-    NavigationHelper.navigateWithSync(context, ref, config.route);
+    if (navigationState.currentTab == NavigationTab.workspace) {
+      final groupId = _parseGroupId(navigationState.currentRoute);
+      if (groupId != null) {
+        return groupId;
+      }
+    }
+
+    return cachedGroupId;
+  }
+
+  String? _parseGroupId(String route) {
+    final segments = Uri.parse(route).pathSegments;
+    if (segments.length >= 2 && segments.first == 'workspace') {
+      return segments[1];
+    }
+    return null;
   }
 }

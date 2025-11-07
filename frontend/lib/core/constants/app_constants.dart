@@ -2,7 +2,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
   static const String appName = 'University Group Management';
-  static const String baseUrl = 'http://localhost:8080/api';
+  static const String baseUrl = 'http://127.0.0.1:8080/api';
 
   // Storage Keys
   static const String accessTokenKey = 'access_token';
@@ -17,6 +17,7 @@ class AppConstants {
   static const String calendarRoute = '/calendar';
   static const String activityRoute = '/activity';
   static const String profileRoute = '/profile';
+  static const String groupAdminRoute = '/group-admin';
 
   // Google Sign-In configuration (loaded from .env file)
   static String get googleServerClientId =>
@@ -46,7 +47,7 @@ class AppConstants {
   static const double sidebarWidth = 256;
   static const double sidebarCollapsedWidth = 72;
   static const double backButtonWidth = 72;
-  static const double topNavigationHeight = 64;
+  static const double topNavigationHeight = 48;
 
   // Animation Duration
   static const Duration animationDuration = Duration(milliseconds: 200);

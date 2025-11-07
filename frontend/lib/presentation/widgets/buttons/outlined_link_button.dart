@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../../../core/theme/app_colors.dart';
+import 'button_loading_child.dart';
 
 class OutlinedLinkButton extends StatelessWidget {
   final String text;
@@ -29,99 +30,49 @@ class OutlinedLinkButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isEnabled = onPressed != null && !isLoading;
 
-    final button = switch (variant) {
-      ButtonVariant.outlined => OutlinedButton(
-          style: AppButtonStyles.outlined(colorScheme),
-          onPressed: isEnabled ? onPressed : null,
-          child: _OutlinedChild(
-            text: text,
-            icon: icon,
-            isLoading: isLoading,
-            textStyle: AppTheme.bodyMediumTheme(context).copyWith(
-              color: AppColors.brand,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ButtonVariant.tonal => FilledButton(
-          style: AppButtonStyles.tonal(colorScheme),
-          onPressed: isEnabled ? onPressed : null,
-          child: _OutlinedChild(
-            text: text,
-            icon: icon,
-            isLoading: isLoading,
-            textStyle: AppTheme.bodyMediumTheme(context).copyWith(
-              color: AppColors.brand,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-    };
-
-    return Semantics(
+    final button = Semantics(
       button: true,
       enabled: isEnabled,
       label: semanticsLabel ?? text,
-      child: SizedBox(width: width, child: button),
-    );
-  }
-}
-
-class _OutlinedChild extends StatelessWidget {
-  final String text;
-  final Widget? icon;
-  final bool isLoading;
-  final TextStyle textStyle;
-
-  const _OutlinedChild({
-    required this.text,
-    required this.icon,
-    required this.isLoading,
-    required this.textStyle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return SizedBox(
-        width: AppComponents.progressIndicatorSize,
-        height: AppComponents.progressIndicatorSize,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.brand),
-        ),
-      );
-    }
-
-    if (icon == null) {
-      return Text(text, style: textStyle, textAlign: TextAlign.center);
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconTheme(
-          data: IconThemeData(
-            size: AppComponents.googleIconSize,
-            color: textStyle.color,
-          ),
-          child: icon!,
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Flexible(
-          child: Text(
-            text,
-            style: textStyle,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
+      child: switch (variant) {
+        ButtonVariant.outlined => OutlinedButton(
+          style: AppButtonStyles.outlined(colorScheme),
+          onPressed: isEnabled ? onPressed : null,
+          child: ButtonLoadingChild(
+            text: text,
+            icon: icon,
+            isLoading: isLoading,
+            textStyle: AppTheme.bodyMediumTheme(
+              context,
+            ).copyWith(color: AppColors.brand, fontWeight: FontWeight.w500),
+            indicatorColor: AppColors.brand,
           ),
         ),
-      ],
+        ButtonVariant.tonal => FilledButton(
+          style: AppButtonStyles.tonal(colorScheme),
+          onPressed: isEnabled ? onPressed : null,
+          child: ButtonLoadingChild(
+            text: text,
+            icon: icon,
+            isLoading: isLoading,
+            textStyle: AppTheme.bodyMediumTheme(
+              context,
+            ).copyWith(color: AppColors.brand, fontWeight: FontWeight.w500),
+            indicatorColor: AppColors.brand,
+          ),
+        ),
+      },
     );
+
+    // width가 지정된 경우만 SizedBox로 감싸기
+    // Row 내에서 너비 제약 없이 사용 가능하도록 조건부 처리
+    if (width != null) {
+      return SizedBox(width: width, child: button);
+    }
+
+    return button;
   }
 }
-
 class AdminLoginButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;

@@ -1,6 +1,9 @@
 package org.castlekong.backend.service
 
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.castlekong.backend.dto.UserResponse
@@ -59,6 +62,7 @@ class AuthServiceTest {
                     bio = user.bio,
                     profileCompleted = user.profileCompleted,
                     emailVerified = user.emailVerified,
+                    academicYear = 1,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 )
@@ -147,6 +151,7 @@ class AuthServiceTest {
                     bio = user.bio,
                     profileCompleted = user.profileCompleted,
                     emailVerified = user.emailVerified,
+                    academicYear = 1,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 )
@@ -198,6 +203,7 @@ class AuthServiceTest {
                     bio = user.bio,
                     profileCompleted = user.profileCompleted,
                     emailVerified = user.emailVerified,
+                    academicYear = 1,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 )
@@ -286,6 +292,7 @@ class AuthServiceTest {
                     bio = user.bio,
                     profileCompleted = user.profileCompleted,
                     emailVerified = user.emailVerified,
+                    academicYear = 1,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 )
@@ -322,29 +329,32 @@ class AuthServiceTest {
         @Test
         fun `verifyToken - SecurityContext 인증 사용자 정보 반환`() {
             val user = TestDataFactory.createTestUser()
-            val auth: Authentication = mockk {
-                every { name } returns user.email
-            }
+            val auth: Authentication =
+                mockk {
+                    every { name } returns user.email
+                }
             // 실제 SecurityContext 사용 (static mock 제거)
             val context = org.springframework.security.core.context.SecurityContextHolder.createEmptyContext()
             context.authentication = auth
             org.springframework.security.core.context.SecurityContextHolder.setContext(context)
 
             every { userService.findByEmail(user.email) } returns user
-            every { userService.convertToUserResponse(user) } returns UserResponse(
-                id = user.id,
-                name = user.name,
-                email = user.email,
-                globalRole = user.globalRole.name,
-                isActive = user.isActive,
-                nickname = user.nickname,
-                profileImageUrl = user.profileImageUrl,
-                bio = user.bio,
-                profileCompleted = user.profileCompleted,
-                emailVerified = user.emailVerified,
-                createdAt = user.createdAt,
-                updatedAt = user.updatedAt,
-            )
+            every { userService.convertToUserResponse(user) } returns
+                UserResponse(
+                    id = user.id,
+                    name = user.name,
+                    email = user.email,
+                    globalRole = user.globalRole.name,
+                    isActive = user.isActive,
+                    nickname = user.nickname,
+                    profileImageUrl = user.profileImageUrl,
+                    bio = user.bio,
+                    profileCompleted = user.profileCompleted,
+                    emailVerified = user.emailVerified,
+                    academicYear = 1,
+                    createdAt = user.createdAt,
+                    updatedAt = user.updatedAt,
+                )
 
             val result = authService.verifyToken()
             assertThat(result.email).isEqualTo(user.email)
@@ -356,9 +366,10 @@ class AuthServiceTest {
         fun `refreshAccessToken - 유효한 리프레시 토큰으로 새 액세스 토큰 발급`() {
             val refreshToken = "refresh.jwt"
             val user = TestDataFactory.createTestUser()
-            val authentication: Authentication = mockk {
-                every { name } returns user.email
-            }
+            val authentication: Authentication =
+                mockk {
+                    every { name } returns user.email
+                }
             every { jwtTokenProvider.validateToken(refreshToken) } returns true
             every { jwtTokenProvider.getAuthentication(refreshToken) } returns authentication
             every { userService.findByEmail(user.email) } returns user

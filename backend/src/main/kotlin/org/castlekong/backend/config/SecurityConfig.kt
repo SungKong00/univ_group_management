@@ -32,9 +32,26 @@ class SecurityConfig(
                 auth
                     .requestMatchers("/api/auth/google").permitAll()
                     .requestMatchers("/api/auth/google/callback").permitAll()
+                    .requestMatchers("/api/auth/debug/**").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    // 공개 그룹 탐색 엔드포인트
+                    .requestMatchers(HttpMethod.GET, "/api/groups/explore").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/groups/hierarchy").permitAll()
+                    // 공개 모집 조회 엔드포인트
+                    .requestMatchers(HttpMethod.GET, "/api/groups/*/recruitments").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/recruitments/public").permitAll()
+                    // 공개 장소 조회 엔드포인트 (인증 불필요)
+                    .requestMatchers(HttpMethod.GET, "/api/places").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*/operating-hours").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*/restricted-times").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*/closures").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*/available-times").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/calendar").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*/reservations").permitAll()
+                    // 장소 예약 생성/수정/삭제는 인증 필요
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

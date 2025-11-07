@@ -1,10 +1,38 @@
 package org.castlekong.backend.service
 
-import org.castlekong.backend.dto.*
-import org.castlekong.backend.entity.*
+import org.castlekong.backend.dto.ChannelResponse
+import org.castlekong.backend.dto.CommentResponse
+import org.castlekong.backend.dto.CreateChannelRequest
+import org.castlekong.backend.dto.CreateCommentRequest
+import org.castlekong.backend.dto.CreatePostRequest
+import org.castlekong.backend.dto.CreateWorkspaceRequest
+import org.castlekong.backend.dto.PostResponse
+import org.castlekong.backend.dto.UpdateChannelRequest
+import org.castlekong.backend.dto.UpdateCommentRequest
+import org.castlekong.backend.dto.UpdatePostRequest
+import org.castlekong.backend.dto.UpdateWorkspaceRequest
+import org.castlekong.backend.dto.UserSummaryResponse
+import org.castlekong.backend.dto.WorkspaceResponse
+import org.castlekong.backend.entity.Channel
+import org.castlekong.backend.entity.ChannelPermission
+import org.castlekong.backend.entity.ChannelType
+import org.castlekong.backend.entity.Comment
+import org.castlekong.backend.entity.GroupPermission
+import org.castlekong.backend.entity.Post
+import org.castlekong.backend.entity.PostType
+import org.castlekong.backend.entity.User
+import org.castlekong.backend.entity.Workspace
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
-import org.castlekong.backend.repository.*
+import org.castlekong.backend.repository.ChannelRepository
+import org.castlekong.backend.repository.ChannelRoleBindingRepository
+import org.castlekong.backend.repository.CommentRepository
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.GroupRoleRepository
+import org.castlekong.backend.repository.PostRepository
+import org.castlekong.backend.repository.UserRepository
+import org.castlekong.backend.repository.WorkspaceRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -25,11 +53,12 @@ class ContentService(
     private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
+
     private fun systemRolePermissions(roleName: String): Set<GroupPermission> =
         when (roleName.uppercase()) {
-            "OWNER" -> GroupPermission.entries.toSet()
-            "ADVISOR" -> GroupPermission.entries.toSet() // MVP에서는 OWNER와 동일
-            "MEMBER" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
+            "그룹장" -> GroupPermission.entries.toSet()
+            "교수" -> GroupPermission.entries.toSet() // MVP에서는 그룹장와 동일
+            "멤버" -> emptySet() // 멤버는 기본적으로 워크스페이스 접근 가능, 별도 권한 불필요
             else -> emptySet()
         }
 
@@ -52,11 +81,13 @@ class ContentService(
         userId: Long,
         required: ChannelPermission,
     ): Boolean {
-        val channel = channelRepository.findById(channelId)
-            .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
+        val channel =
+            channelRepository.findById(channelId)
+                .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
 
-        val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(channel.group.id, userId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND) }
 
         // 사용자의 역할에 대한 채널 권한 바인딩 조회
         val bindings = channelRoleBindingRepository.findByChannelIdAndGroupRoleId(channelId, member.role.id)
@@ -75,11 +106,19 @@ class ContentService(
     }
 
     // Workspaces
-    fun getWorkspacesByGroup(groupId: Long): List<WorkspaceResponse> {
+    fun getWorkspacesByGroup(
+        groupId: Long,
+        requesterId: Long,
+    ): List<WorkspaceResponse> {
         val group =
             groupRepository.findById(groupId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         if (group.deletedAt != null) throw BusinessException(ErrorCode.GROUP_NOT_FOUND)
+
+        // Check group membership
+        groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
+            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+
         val existing = workspaceRepository.findByGroup_Id(groupId)
         if (existing.isNotEmpty()) return existing.map { toWorkspaceResponse(it) }
         // ensure single default workspace
@@ -156,7 +195,12 @@ class ContentService(
         }
         // 3) 채널 삭제 (개별 select 없이 일괄) - 현재 deleteAll(channels) 사용
         channelRepository.deleteAll(channels)
-        logger.debug("Workspace {} contents deleted: channels={}, posts={}, comments deleted in bulk", workspaceId, channelIds.size, postIds.size)
+        logger.debug(
+            "Workspace {} contents deleted: channels={}, posts={}, comments deleted in bulk",
+            workspaceId,
+            channelIds.size,
+            postIds.size,
+        )
     }
 
     // Channels
@@ -168,9 +212,29 @@ class ContentService(
             workspaceRepository.findById(workspaceId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val member = groupMemberRepository.findByGroupIdAndUserId(workspace.group.id, requesterId)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(workspace.group.id, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return channelRepository.findByWorkspace_Id(workspaceId).map { toChannelResponse(it) }
+    }
+
+    fun getChannelsByGroup(
+        groupId: Long,
+        requesterId: Long,
+    ): List<ChannelResponse> {
+        // 1. 그룹 존재 확인
+        val group =
+            groupRepository.findById(groupId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+
+        // 2. 사용자 멤버십 확인
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+
+        // 3. 채널 목록 직접 조회 (workspace 테이블 우회)
+        // Note: 현재 구조에서는 채널이 group에 직접 연결되어 있음
+        return channelRepository.findByGroup_Id(groupId).map { toChannelResponse(it) }
     }
 
     @Transactional
@@ -188,7 +252,9 @@ class ContentService(
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         // permission: group owner or role has CHANNEL_WRITE
         validateChannelManagePermission(group.id, creator.id)
-        val type = request.type?.let { runCatching { ChannelType.valueOf(it) }.getOrDefault(ChannelType.TEXT) } ?: ChannelType.TEXT
+        val type =
+            request.type?.let { runCatching { ChannelType.valueOf(it) }.getOrDefault(ChannelType.TEXT) }
+                ?: ChannelType.TEXT
         val channel =
             Channel(
                 group = group,
@@ -221,10 +287,16 @@ class ContentService(
         validateChannelManagePermission(channel.group.id, userId)
         val type = request.type?.let { runCatching { ChannelType.valueOf(it) }.getOrNull() } ?: channel.type
         val updated =
-            channel.copy(
+            Channel(
+                id = channel.id,
+                group = channel.group,
+                workspace = channel.workspace,
                 name = request.name ?: channel.name,
                 description = request.description ?: channel.description,
                 type = type,
+                displayOrder = channel.displayOrder,
+                createdBy = channel.createdBy,
+                createdAt = channel.createdAt,
                 updatedAt = LocalDateTime.now(),
             )
         return toChannelResponse(channelRepository.save(updated))
@@ -266,8 +338,9 @@ class ContentService(
             channelRepository.findById(channelId)
                 .orElseThrow { BusinessException(ErrorCode.CHANNEL_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val member = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, requesterId)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(channel.group.id, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return postRepository.findByChannel_Id(channelId).map { toPostResponse(it) }
     }
 
@@ -279,8 +352,9 @@ class ContentService(
             postRepository.findById(postId)
                 .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val member = groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, requesterId)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return toPostResponse(post)
     }
 
@@ -297,10 +371,13 @@ class ContentService(
             userRepository.findById(authorId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val authorMember = groupMemberRepository.findByGroupIdAndUserId(channel.group.id, author.id)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val authorMember =
+            groupMemberRepository.findByGroupIdAndUserId(channel.group.id, author.id)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         ensureChannelPermission(channelId, author.id, ChannelPermission.POST_WRITE)
-        val type = request.type?.let { runCatching { PostType.valueOf(it) }.getOrDefault(PostType.GENERAL) } ?: PostType.GENERAL
+        val type =
+            request.type?.let { runCatching { PostType.valueOf(it) }.getOrDefault(PostType.GENERAL) }
+                ?: PostType.GENERAL
         val post =
             Post(
                 channel = channel,
@@ -345,7 +422,7 @@ class ContentService(
             // allow moderators with POST_DELETE_ANY
             val groupId = post.channel.group.id
             val perms = getEffectivePermissions(groupId, requesterId)
-            if (!perms.contains(GroupPermission.ADMIN_MANAGE)) {
+            if (!perms.contains(GroupPermission.MEMBER_MANAGE)) {
                 throw BusinessException(ErrorCode.FORBIDDEN)
             }
         }
@@ -370,8 +447,9 @@ class ContentService(
             postRepository.findById(postId)
                 .orElseThrow { BusinessException(ErrorCode.POST_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val member = groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, requesterId)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         return commentRepository.findByPost_Id(postId).map { toCommentResponse(it) }
     }
 
@@ -388,8 +466,9 @@ class ContentService(
             userRepository.findById(authorId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         // 워크스페이스 접근은 그룹 멤버십으로 확인
-        val authorMember = groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, author.id)
-            .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val authorMember =
+            groupMemberRepository.findByGroupIdAndUserId(post.channel.group.id, author.id)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
         val parent =
             request.parentCommentId?.let {
                 commentRepository.findById(it).orElseThrow { BusinessException(ErrorCode.COMMENT_NOT_FOUND) }
@@ -451,7 +530,8 @@ class ContentService(
             name = channel.name,
             description = channel.description,
             type = channel.type.name,
-            isPrivate = false, // 권한은 ChannelRoleBinding으로 관리
+            // 권한은 ChannelRoleBinding으로 관리
+            isPrivate = false,
             displayOrder = channel.displayOrder,
             createdAt = channel.createdAt,
             updatedAt = channel.updatedAt,
@@ -504,8 +584,11 @@ class ContentService(
             groupRepository.findById(groupId)
                 .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
         if (group.owner.id == userId) return
-        val member = groupMemberRepository.findByGroupIdAndUserId(groupId, userId).orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
-        val rolePerms = if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+        val rolePerms =
+            if (member.role.isSystemRole) systemRolePermissions(member.role.name) else member.role.permissions
         // MVP 단순화: 오버라이드 제거, 역할 권한만 확인
         if (!rolePerms.contains(GroupPermission.CHANNEL_MANAGE)) throw BusinessException(ErrorCode.FORBIDDEN)
     }
@@ -515,7 +598,7 @@ class ContentService(
 
 // removed compat response; using WorkspaceResponse
 
-private fun toUserSummaryResponse(user: org.castlekong.backend.entity.User): UserSummaryResponse {
+private fun toUserSummaryResponse(user: User): UserSummaryResponse {
     return UserSummaryResponse(
         id = user.id,
         name = user.name,

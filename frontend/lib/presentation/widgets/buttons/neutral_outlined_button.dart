@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_button_styles.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
+import 'button_loading_child.dart';
 
 /// 중립적인 회색 톤의 아웃라인 버튼 (주로 취소 액션에 사용)
 ///
@@ -30,41 +32,30 @@ class NeutralOutlinedButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isEnabled = onPressed != null && !isLoading;
 
-    return Semantics(
+    final button = Semantics(
       button: true,
       enabled: isEnabled,
       label: semanticsLabel ?? text,
-      child: SizedBox(
-        width: width,
-        child: OutlinedButton(
-          style: AppButtonStyles.neutralOutlined(colorScheme),
-          onPressed: isEnabled ? onPressed : null,
-          child: _buildChild(),
+      child: OutlinedButton(
+        style: AppButtonStyles.neutralOutlined(colorScheme),
+        onPressed: isEnabled ? onPressed : null,
+        child: ButtonLoadingChild(
+          text: text,
+          isLoading: isLoading,
+          textStyle: AppTheme.bodyLargeTheme(context).copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          indicatorColor: AppColors.neutral600,
         ),
       ),
     );
-  }
 
-  Widget _buildChild() {
-    if (isLoading) {
-      return const SizedBox(
-        width: 16,
-        height: 16,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.neutral600),
-        ),
-      );
+    // width가 지정된 경우만 SizedBox로 감싸기
+    // Row 내에서 너비 제약 없이 사용 가능하도록 조건부 처리
+    if (width != null) {
+      return SizedBox(width: width, child: button);
     }
 
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        height: 1.4,
-      ),
-      textAlign: TextAlign.center,
-    );
+    return button;
   }
 }

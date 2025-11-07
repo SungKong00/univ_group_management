@@ -1,66 +1,64 @@
 package org.castlekong.backend.entity
 
-import jakarta.persistence.*
+import jakarta.persistence.CollectionTable
+import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
 import java.time.LocalDateTime
 
 @Entity
 @Table(name = "group_recruitments")
-data class GroupRecruitment(
+class GroupRecruitment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     val group: Group,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     val createdBy: User,
-
     @Column(nullable = false, length = 200)
-    val title: String,
-
+    var title: String,
     @Column(columnDefinition = "TEXT")
-    val content: String? = null,
-
+    var content: String? = null,
     @Column(name = "max_applicants")
-    val maxApplicants: Int? = null,
-
+    var maxApplicants: Int? = null,
     @Column(name = "recruitment_start_date", nullable = false)
     val recruitmentStartDate: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "recruitment_end_date")
-    val recruitmentEndDate: LocalDateTime? = null,
-
+    var recruitmentEndDate: LocalDateTime? = null,
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    val status: RecruitmentStatus = RecruitmentStatus.OPEN,
-
+    var status: RecruitmentStatus = RecruitmentStatus.OPEN,
     @Column(name = "auto_approve", nullable = false)
-    val autoApprove: Boolean = false,
-
+    var autoApprove: Boolean = false,
     @Column(name = "show_applicant_count", nullable = false)
-    val showApplicantCount: Boolean = true,
-
+    var showApplicantCount: Boolean = true,
     @ElementCollection(targetClass = String::class, fetch = FetchType.EAGER)
     @CollectionTable(name = "recruitment_questions", joinColumns = [JoinColumn(name = "recruitment_id")])
     @Column(name = "question", nullable = false, length = 500)
-    val applicationQuestions: List<String> = emptyList(),
-
+    var applicationQuestions: List<String> = emptyList(),
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "updated_at", nullable = false)
-    val updatedAt: LocalDateTime = LocalDateTime.now(),
-
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "closed_at")
-    val closedAt: LocalDateTime? = null,
+    var closedAt: LocalDateTime? = null,
 )
 
 enum class RecruitmentStatus {
-    DRAFT,      // 임시저장
-    OPEN,       // 모집 중
-    CLOSED,     // 모집 마감
-    CANCELLED   // 모집 취소
+    DRAFT, // 임시저장
+    OPEN, // 모집 중
+    CLOSED, // 모집 마감
+    CANCELLED, // 모집 취소
 }

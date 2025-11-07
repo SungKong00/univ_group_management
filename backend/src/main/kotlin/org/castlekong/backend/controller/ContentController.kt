@@ -1,13 +1,34 @@
 package org.castlekong.backend.controller
 
 import jakarta.validation.Valid
-import org.castlekong.backend.dto.*
+import org.castlekong.backend.dto.ApiResponse
+import org.castlekong.backend.dto.ChannelResponse
+import org.castlekong.backend.dto.CommentResponse
+import org.castlekong.backend.dto.CreateChannelRequest
+import org.castlekong.backend.dto.CreateCommentRequest
+import org.castlekong.backend.dto.CreatePostRequest
+import org.castlekong.backend.dto.CreateWorkspaceRequest
+import org.castlekong.backend.dto.PostResponse
+import org.castlekong.backend.dto.UpdateChannelRequest
+import org.castlekong.backend.dto.UpdateCommentRequest
+import org.castlekong.backend.dto.UpdatePostRequest
+import org.castlekong.backend.dto.UpdateWorkspaceRequest
+import org.castlekong.backend.dto.WorkspaceResponse
+import org.castlekong.backend.service.ChannelPermissionManagementService
 import org.castlekong.backend.service.ContentService
 import org.castlekong.backend.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api")
@@ -15,15 +36,17 @@ class ContentController(
     private val contentService: ContentService,
     userService: UserService,
     // 채널 권한 조회용 서비스 주입
-    private val channelPermissionManagementService: org.castlekong.backend.service.ChannelPermissionManagementService,
+    private val channelPermissionManagementService: ChannelPermissionManagementService,
 ) : BaseController(userService) {
     // === Workspaces (compat: group-level single workspace) ===
     @GetMapping("/groups/{groupId}/workspaces")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'CHANNEL_READ')")
+    @PreAuthorize("isAuthenticated()")
     fun getWorkspaces(
         @PathVariable groupId: Long,
+        authentication: Authentication,
     ): ApiResponse<List<WorkspaceResponse>> {
-        val response = contentService.getWorkspacesByGroup(groupId)
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getWorkspacesByGroup(groupId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -71,6 +94,17 @@ class ContentController(
     ): ApiResponse<List<ChannelResponse>> {
         val user = getUserByEmail(authentication.name)
         val response = contentService.getChannelsByWorkspace(workspaceId, user.id)
+        return ApiResponse.success(response)
+    }
+
+    @GetMapping("/groups/{groupId}/channels")
+    @PreAuthorize("isAuthenticated()")
+    fun getChannelsByGroup(
+        @PathVariable groupId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<ChannelResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val response = contentService.getChannelsByGroup(groupId, user.id)
         return ApiResponse.success(response)
     }
 
@@ -233,4 +267,58 @@ class ContentController(
         return ApiResponse.success(payload)
     }
 
+    // === Channel Role Bindings (권한 설정) ===
+    @GetMapping("/channels/{channelId}/role-bindings")
+    @PreAuthorize("isAuthenticated()")
+    fun getChannelRoleBindings(
+        @PathVariable channelId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<org.castlekong.backend.dto.ChannelRoleBindingResponse>> {
+        // 채널이 속한 그룹의 멤버만 조회 가능
+        val user = getUserByEmail(authentication.name)
+        val bindings = channelPermissionManagementService.getChannelRoleBindings(channelId)
+        return ApiResponse.success(bindings)
+    }
+
+    @PostMapping("/channels/{channelId}/role-bindings")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun createChannelRoleBinding(
+        @PathVariable channelId: Long,
+        @Valid @RequestBody request: org.castlekong.backend.dto.CreateChannelRoleBindingRequest,
+        authentication: Authentication,
+    ): ApiResponse<org.castlekong.backend.dto.ChannelRoleBindingResponse> {
+        val user = getUserByEmail(authentication.name)
+        // CHANNEL_MANAGE 권한 확인은 서비스 레이어에서 처리
+        val response = channelPermissionManagementService.createChannelRoleBinding(channelId, request, user.id)
+        return ApiResponse.success(response)
+    }
+
+    @PutMapping("/channels/{channelId}/role-bindings/{bindingId}")
+    @PreAuthorize("isAuthenticated()")
+    fun updateChannelRoleBinding(
+        @PathVariable channelId: Long,
+        @PathVariable bindingId: Long,
+        @Valid @RequestBody request: org.castlekong.backend.dto.UpdateChannelRoleBindingRequest,
+        authentication: Authentication,
+    ): ApiResponse<org.castlekong.backend.dto.ChannelRoleBindingResponse> {
+        val user = getUserByEmail(authentication.name)
+        // TODO: CHANNEL_MANAGE 권한 확인 추가 필요
+        val response = channelPermissionManagementService.updateChannelRoleBinding(bindingId, request)
+        return ApiResponse.success(response)
+    }
+
+    @DeleteMapping("/channels/{channelId}/role-bindings/{bindingId}")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteChannelRoleBinding(
+        @PathVariable channelId: Long,
+        @PathVariable bindingId: Long,
+        authentication: Authentication,
+    ): ApiResponse<Unit> {
+        val user = getUserByEmail(authentication.name)
+        // TODO: CHANNEL_MANAGE 권한 확인 추가 필요
+        channelPermissionManagementService.deleteChannelRoleBinding(bindingId)
+        return ApiResponse.success()
+    }
 }

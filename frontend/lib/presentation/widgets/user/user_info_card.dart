@@ -1,19 +1,34 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/auth_models.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../dialogs/logout_dialog.dart';
+import 'avatar_popup_menu.dart';
 
+/// UserInfoCard v2
+/// 목표:
+/// 1) 높이/비율 깨짐 없는 안정적 레이아웃 (heightFactor / SizeTransition 제거)
+/// 2) 단일 AnimationController 로 진입/퇴장(Fade + Slide) 처리
+/// 3) 내부 상태(로그아웃 진행 중)만 관리, 제거 애니메이션은 부모 AnimatedSwitcher/AnimatedSize 활용
+/// 4) 뷰 계층 명확 분리: Avatar / Info / Actions
+/// 5) 재사용성: isCompact / onLogoutRequested 확장 고려
 class UserInfoCard extends ConsumerStatefulWidget {
   final UserInfo user;
   final bool isCompact;
+  final VoidCallback? onLogoutRequested;
+  final bool showLogout;
+  final bool slowReveal; // 하단 전용 느린 리빌
 
   const UserInfoCard({
     super.key,
     required this.user,
     this.isCompact = false,
+    this.onLogoutRequested,
+    this.showLogout = true,
+    this.slowReveal = false,
   });
 
   @override
@@ -21,101 +36,193 @@ class UserInfoCard extends ConsumerStatefulWidget {
 }
 
 class _UserInfoCardState extends ConsumerState<UserInfoCard>
-    with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late AnimationController _logoutAnimationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _slideAnimation;
-  late Animation<double> _scaleAnimation;
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller; // 확장/축소 애니메이션 (0=확장, 1=축소)
   bool _isLoggingOut = false;
+  OverlayEntry? _popupOverlay;
+  final LayerLink _layerLink = LayerLink();
 
   @override
   void initState() {
     super.initState();
-
-    // 메인 애니메이션 컨트롤러 (진입)
-    _animationController = AnimationController(
-      duration: AppMotion.standard,
+    _controller = AnimationController(
       vsync: this,
+      duration: const Duration(milliseconds: 240), // 사이드바와 동일한 타이밍
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: AppMotion.easing,
-    ));
+    // 초기 상태 설정
+    _controller.value = widget.isCompact ? 1.0 : 0.0;
+  }
 
-    // 로그아웃 애니메이션 컨트롤러 (퇴장)
-    _logoutAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    _slideAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _logoutAnimationController,
-      curve: Curves.easeInBack,
-    ));
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.8,
-    ).animate(CurvedAnimation(
-      parent: _logoutAnimationController,
-      curve: Curves.easeInOut,
-    ));
-
-    _animationController.forward();
+  @override
+  void didUpdateWidget(UserInfoCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // isCompact 상태 변경 감지 시 애니메이션 트리거
+    if (widget.isCompact != oldWidget.isCompact) {
+      if (widget.isCompact) {
+        _controller.forward(); // 축소: 0 → 1
+      } else {
+        _controller.reverse(); // 확장: 1 → 0
+      }
+    }
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
-    _logoutAnimationController.dispose();
+    _removePopup();
+    _controller.dispose();
     super.dispose();
+  }
+
+  void _showPopup() {
+    if (_popupOverlay != null) return;
+
+    _popupOverlay = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // 외부 클릭 시 팝업 닫기
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _removePopup,
+              behavior: HitTestBehavior.translucent,
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          // 팝업 메뉴: 아바타 오른쪽에 붙이고, 하단 높이 정렬
+          Positioned(
+            width: 240,
+            child: CompositedTransformFollower(
+              link: _layerLink,
+              targetAnchor: Alignment.bottomRight,
+              followerAnchor: Alignment.bottomLeft,
+              offset: const Offset(
+                AppSpacing.xxs + 30,
+                0,
+              ), // 경계선(1px) 보정하여 오른쪽으로 1px 추가 이동
+              child: AvatarPopupMenu(
+                user: widget.user,
+                onLogout: () {
+                  _removePopup();
+                  _handleLogout();
+                },
+                onClose: _removePopup,
+                animationAlignment: Alignment.bottomLeft, // 왼쪽 하단에서 펼쳐지는 애니메이션
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Overlay.of(context).insert(_popupOverlay!);
+  }
+
+  void _removePopup() {
+    _popupOverlay?.remove();
+    _popupOverlay = null;
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_fadeAnimation, _slideAnimation, _scaleAnimation]),
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, _slideAnimation.value * 100),
-          child: Transform.scale(
-            scale: _scaleAnimation.value,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(widget.isCompact ? AppSpacing.xs : AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  border: const Border(
-                    top: BorderSide(color: AppColors.outline, width: 1),
+      animation: _controller,
+      builder: (context, _) {
+        final t = _controller.value; // 0=확장, 1=축소
+
+        // 콘텐츠 표시 여부 결정 (지연된 조건부 렌더링)
+        // 축소 시: t가 0.2 넘으면 제거 (텍스트 먼저 사라짐, 공간 부족 전에 제거)
+        // 확장 시: t가 0.2 이하일 때 표시 (사이드바 너비 확보 후 추가)
+        final shouldShowContent = t < 0.2;
+
+        // 페이드 진행도 계산
+        // 확장: t 1.0→0.2에서 opacity 0→1
+        // 축소: t 0.0→0.2에서 opacity 1→0
+        final contentOpacity = shouldShowContent
+            ? (1 - (t / 0.2)).clamp(0.0, 1.0)
+            : 0.0;
+
+        // 아바타 중앙 이동 애니메이션
+        // 축소 시: 왼쪽(0) → 중앙(12px)으로 이동
+        // 확장 시: 중앙(12px) → 왼쪽(0)으로 이동
+        final avatarDx = Curves.easeInOutCubic.transform(t) * 12.0;
+
+        return _buildSurface(
+          child: ClipRect(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Avatar: Transform으로 위치 애니메이션
+                CompositedTransformTarget(
+                  link: _layerLink,
+                  child: Transform.translate(
+                    offset: Offset(avatarDx, 0),
+                    child: _AvatarSection(
+                      user: widget.user,
+                      isCompact: widget.isCompact,
+                      onTap: widget.isCompact ? _showPopup : null,
+                    ),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.neutral900.withValues(alpha: 0.04),
-                      offset: const Offset(0, -2),
-                      blurRadius: 8,
-                      spreadRadius: 0,
+                ),
+
+                // 확장 상태 콘텐츠 (지연 렌더링)
+                if (shouldShowContent) ...[
+                  const SizedBox(width: AppSpacing.xs),
+                  // Info Section (닉네임 + 이메일/학과)
+                  Expanded(
+                    child: Opacity(
+                      opacity: contentOpacity,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Primary (닉네임/이름)
+                          Text(
+                            widget.user.nickname ?? widget.user.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.neutral900,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          // Secondary (email)
+                          Text(
+                            widget.user.email,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.neutral600,
+                              height: 1.2,
+                            ),
+                          ),
+                          if (widget.user.department != null) ...[
+                            const SizedBox(height: 2),
+                            _Tag(widget.user.department!),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Actions (로그아웃)
+                  if (widget.showLogout) ...[
+                    const SizedBox(width: AppSpacing.xs),
+                    Opacity(
+                      opacity: contentOpacity,
+                      child: _ActionsSection(
+                        isLoading: _isLoggingOut,
+                        onLogoutTap: _isLoggingOut ? null : _handleLogout,
+                      ),
                     ),
                   ],
-                ),
-                child: Row(
-                  children: [
-                    _buildProfileSection(),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(child: _buildUserInfo()),
-                    if (!widget.isCompact) ...[
-                      const SizedBox(width: AppSpacing.xs),
-                      _buildLogoutButton(),
-                    ],
-                  ],
-                ),
-              ),
+                ],
+              ],
             ),
           ),
         );
@@ -123,206 +230,208 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
     );
   }
 
-  Widget _buildProfileSection() {
-    return Container(
-      width: widget.isCompact ? 32 : 40,
-      height: widget.isCompact ? 32 : 40,
-      decoration: BoxDecoration(
-        color: AppColors.brandContainerLight,
-        borderRadius: BorderRadius.circular(widget.isCompact ? 16 : 20),
-        border: Border.all(
-          color: AppColors.brand.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: widget.user.profileImageUrl != null
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(widget.isCompact ? 15 : 19),
-              child: Image.network(
-                widget.user.profileImageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildFallbackAvatar(),
-              ),
-            )
-          : _buildFallbackAvatar(),
-    );
-  }
-
-  Widget _buildFallbackAvatar() {
-    final initials = _getInitials(widget.user.name);
-    return Center(
-      child: Text(
-        initials,
-        style: TextStyle(
-          fontSize: widget.isCompact ? 12 : 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.brand,
-          height: 1.0,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUserInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          widget.user.nickname ?? widget.user.name,
-          style: TextStyle(
-            fontSize: widget.isCompact ? 12 : 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.neutral900,
-            height: 1.2,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        if (!widget.isCompact) ...[
-          const SizedBox(height: 2),
-          Text(
-            widget.user.email,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w400,
-              color: AppColors.neutral600,
-              height: 1.2,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (widget.user.department != null) ...[
-            const SizedBox(height: 1),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 2,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.neutral100,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                widget.user.department!,
-                style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.neutral700,
-                  height: 1.0,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ],
-    );
-  }
-
-  Widget _buildLogoutButton() {
-    return AnimatedContainer(
-      duration: AppMotion.standard,
-      curve: AppMotion.easing,
+  Widget _buildSurface({required Widget child}) {
+    return RepaintBoundary(
       child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _isLoggingOut ? null : _handleLogout,
-          borderRadius: BorderRadius.circular(6),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xxs,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: _isLoggingOut
-                    ? AppColors.neutral300
-                    : AppColors.neutral400,
-                width: 1,
-              ),
-            ),
-            child: _isLoggingOut
-                ? const SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.5,
-                      color: AppColors.neutral500,
-                    ),
-                  )
-                : const Icon(
-                    Icons.logout,
-                    size: 14,
-                    color: AppColors.neutral600,
-                  ),
+        color: AppColors.surface,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeInOutCubic,
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.isCompact ? AppSpacing.xxs : AppSpacing.sm,
+            vertical: 10,
           ),
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: AppColors.outline, width: 1)),
+          ),
+          child: child,
         ),
       ),
     );
   }
 
   Future<void> _handleLogout() async {
-    if (_isLoggingOut) return;
-
-    // 로그아웃 확인 다이얼로그 표시
-    final confirmed = await _showLogoutConfirmDialog();
+    // 1) 확인 다이얼로그
+    final confirmed = await showLogoutDialog(context);
     if (!confirmed) return;
 
-    setState(() {
-      _isLoggingOut = true;
-    });
+    setState(() => _isLoggingOut = true);
 
     try {
-      // 로그아웃 슬라이드 아웃 애니메이션 시작
-      _logoutAnimationController.forward();
-
       await ref.read(authProvider.notifier).logout();
-
-      if (mounted) {
-        // 추가 페이드 아웃 애니메이션
-        await _animationController.reverse();
-
-        // GoRouter의 refreshListenable이 자동으로 redirect를 트리거하여
-        // 로그인 페이지로 이동합니다 (추가 네비게이션 코드 불필요)
-      }
+      widget.onLogoutRequested?.call();
+      // provider 가 currentUser null 로 만들면 부모 AnimatedSwitcher 가 제거 애니메이션 수행
     } catch (e) {
-      if (mounted) {
-        // 애니메이션 롤백
-        _logoutAnimationController.reverse();
-
-        setState(() {
-          _isLoggingOut = false;
-        });
-
-        // 에러 스낵바 표시 (컬러 가이드의 에너제틱 레드 사용)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('로그아웃 중 오류가 발생했습니다: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
+      if (!mounted) return;
+      setState(() => _isLoggingOut = false);
+      AppSnackBar.error(context, '로그아웃 실패: $e');
     }
   }
+}
 
-  /// 로그아웃 확인 다이얼로그 표시 (리디자인된 토스 스타일 다이얼로그 사용)
-  Future<bool> _showLogoutConfirmDialog() async {
-    return await showLogoutDialog(context);
+// ================= Sub Components =================
+
+class _AvatarSection extends StatelessWidget {
+  final UserInfo user;
+  final bool isCompact;
+  final VoidCallback? onTap;
+  const _AvatarSection({
+    required this.user,
+    required this.isCompact,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = isCompact ? 32.0 : 40.0;
+    final radius = size / 2;
+
+    final avatar = AnimatedContainer(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeInOutCubic,
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: AppColors.brandContainerLight,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(
+          color: AppColors.brand.withValues(alpha: 0.18),
+          width: 1,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: _buildImageOrInitials(size),
+    );
+
+    if (onTap != null) {
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(onTap: onTap, child: avatar),
+      );
+    }
+
+    return avatar;
   }
 
-  String _getInitials(String name) {
+  Widget _buildImageOrInitials(double size) {
+    if (user.profileImageUrl != null) {
+      return Image.network(
+        user.profileImageUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) =>
+            _Initials(user: user, isCompact: isCompact),
+      );
+    }
+    return _Initials(user: user, isCompact: isCompact);
+  }
+}
+
+class _Initials extends StatelessWidget {
+  final UserInfo user;
+  final bool isCompact;
+  const _Initials({required this.user, required this.isCompact});
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = _computeInitials(user.name);
+    return Center(
+      child: AnimatedDefaultTextStyle(
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeInOutCubic,
+        style: TextStyle(
+          fontSize: isCompact ? 12 : 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.brand,
+          height: 1.0,
+        ),
+        child: Text(initials),
+      ),
+    );
+  }
+
+  String _computeInitials(String name) {
     if (name.isEmpty) return '?';
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  }
+}
 
-    final words = name.trim().split(' ');
-    if (words.length == 1) {
-      return words[0].substring(0, 1).toUpperCase();
-    } else {
-      return (words[0].substring(0, 1) + words[1].substring(0, 1))
-          .toUpperCase();
-    }
+class _Tag extends StatelessWidget {
+  final String text;
+  const _Tag(this.text);
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.neutral100,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w500,
+          color: AppColors.neutral700,
+          height: 1.0,
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionsSection extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback? onLogoutTap;
+  const _ActionsSection({required this.isLoading, required this.onLogoutTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: AppMotion.standard,
+      switchInCurve: AppMotion.easing,
+      switchOutCurve: Curves.easeInCubic,
+      child: isLoading
+          ? const SizedBox(
+              key: ValueKey('progress'),
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.neutral500,
+              ),
+            )
+          : _LogoutButton(key: const ValueKey('btn'), onTap: onLogoutTap),
+    );
+  }
+}
+
+class _LogoutButton extends StatelessWidget {
+  final VoidCallback? onTap;
+  const _LogoutButton({super.key, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: AppColors.neutral400, width: 1),
+          ),
+          child: const Icon(
+            Icons.logout,
+            size: 14,
+            color: AppColors.neutral600,
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -12,35 +12,20 @@
 
 ### 2) 팔레트 및 역할
 
+본 문서에서는 색상 시스템의 개념과 역할을 설명합니다. 실제 구현에 사용되는 구체적인 Hex 코드 및 디자인 토큰 값은 **[디자인 시스템 가이드](./design-system.md#91-컬러-시스템-appcolors)** 문서를 단일 소스로 따릅니다.
+
 #### 브랜드 컬러
-primary:     #5C068C   // 메인 브랜드 컬러 (학교 공식: Pantone 2597 CVC)
-brandStrong: #4B0672   // Hover/Active 등 진한 보라(톤 다운)
-brandLight:  #F2E8FA   // 톤 컨테이너/칩/강조 배경(연보라 틴트)
+- **primary**: 메인 브랜드 컬러 (학교 공식 색상)
+- **brandStrong**: Hover/Active 상태를 위한 톤 다운된 보라색
+- **brandLight**: 강조 배경을 위한 연한 보라색 틴트
 
 #### 중성 컬러
-neutral900: #0F172A   // 제목, 가장 중요한 텍스트
-neutral800: #1E293B   // 섹션 타이틀
-neutral700: #334155   // 본문 텍스트
-neutral600: #64748B   // 보조 텍스트/아이콘
-neutral500: #94A3B8   // 서브 아이콘, 비활성 텍스트
-neutral400: #CBD5E1   // 얕은 보더/디바이더
-neutral300: #E2E8F0   // 카드 보더/섹션 분리
-neutral200: #EEF2F6   // 카드/패널 표면 구분
-neutral100: #F8FAFC   // 페이지 베이스 배경
+- **neutral900 ~ neutral100**: 텍스트, 배경, 보더 등 UI의 기본 골격을 구성하는 무채색 계열. 숫자가 높을수록 어둡습니다.
 
 #### 시스템 컬러
-// 액션(행동) — 버튼/링크/선택 상태는 블루로 통일
-actionPrimary:  #1D4ED8   // 주요 CTA/링크
-actionHover:    #0F3CC9   // Hover/포커스 시
-actionTonalBg:  #EAF2FF   // 선택 배경/하이라이트 표면
-
-// 상태(의미 고정)
-success:        #10B981   // 성공/활성
-warning:        #F59E0B   // 경고
-error:          #E63946   // 오류/위험(가독성 좋은 레드)
-
-// 접근성
-focusRing:      rgba(92, 6, 140, 0.45)  // 브랜드 보라 Focus Ring(2px 권장)
+- **actionPrimary, actionHover, actionTonalBg**: 버튼, 링크 등 사용자의 행동을 유도하는 요소에 사용되는 색상 계열입니다.
+- **success, warning, error**: 작업의 성공, 경고, 오류 상태를 나타내는 시맨틱 컬러입니다.
+- **focusRing**: 키보드 포커스 상태를 명확히 보여주는 색상입니다.
 
 ### 3) 인터랙션
 - Hover: 액션 색상은 명도만 소폭 상승. 예) #1E6FFF → #3B87FF  
@@ -60,38 +45,22 @@ focusRing:      rgba(92, 6, 140, 0.45)  // 브랜드 보라 Focus Ring(2px 권�
 
 ### 2) 팔레트 및 역할
 
+본 문서에서는 색상 시스템의 개념과 역할을 설명합니다. 실제 구현에 사용되는 구체적인 Hex 코드 및 디자인 토큰 값은 **[디자인 시스템 가이드](./design-system.md#91-컬러-시스템-appcolors)** 문서를 단일 소스로 따릅니다.
+
 #### 브랜드 컬러
-primary:     #5C068C   // 메인 브랜드 컬러 (Pantone 2597 CVC)
-brandStrong: #D6B8F2   // 다크 배경에서 밝게 띄우는 보라 포인트
-brandLight:  #521A77   // 보라 톤 컨테이너/칩/토글 배경
+- **primary**: 메인 브랜드 컬러 (학교 공식 색상)
+- **brandStrong**: 다크 모드 배경에서 강조되는 밝은 보라색 포인트
+- **brandLight**: 보라색 톤의 컨테이너 배경
 
-#### 중성컬러
-neutralSurface:        #121212   // 기본 배경
-neutralSurfaceElevated:#1A1A1A   // 카드/패널 표면
-neutralBorder:         #2B3440   // 경계선/디바이더
-
-neutral900: #FFFFFF    // 제목/주요 텍스트
-neutral800: #E5E7EB    // 부제목/서브 타이틀
-neutral700: #CBD5E1    // 본문 텍스트
-neutral600: #94A3B8    // 보조 텍스트/아이콘
-neutral500: #64748B    // 비활성 텍스트
-neutral400: #475569    // 진한 보더/구분선
+#### 중성 컬러
+- **neutralSurface, neutralSurfaceElevated**: 다크 모드의 기본 배경 및 카드/패널 표면 색상
+- **neutralBorder**: 경계선 및 구분선 색상
+- **neutral900 ~ neutral400**: 텍스트, 아이콘 등 전경 요소를 위한 무채색 계열. 숫자가 높을수록 밝습니다.
 
 #### 시스템 컬러
-actionPrimary:   #3B82F6              // 주요 CTA/링크
-actionHover:     #60A5FA              // Hover/Focus 시
-actionTonalBg:   rgba(59,130,246,0.16)// 선택 배경/하이라이트
-
-success:         #10B981              // 성공/활성
-successTonalBg:  rgba(16,185,129,0.16)
-
-warning:         #F59E0B              // 경고
-warningTonalBg:  rgba(245,158,11,0.16)
-
-error:           #E63946              // 오류/위험
-errorTonalBg:    rgba(230,57,70,0.16)
-
-focusRing:       rgba(92,6,140,0.55)  // 브랜드 보라 포커스 링
+- **actionPrimary, actionHover, actionTonalBg**: 버튼, 링크 등 사용자의 행동을 유도하는 요소에 사용되는 색상 계열입니다.
+- **success, warning, error**: 작업의 성공, 경고, 오류 상태를 나타내는 시맨틱 컬러와 그 배경 톤입니다.
+- **focusRing**: 키보드 포커스 상태를 명확히 보여주는 색상입니다.
 
 ### 3) 인터랙션
 - Hover: 액션 색상은 명도만 소폭 상승. 예) #1E6FFF → #3B87FF  

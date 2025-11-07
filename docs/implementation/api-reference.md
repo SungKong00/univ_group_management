@@ -22,6 +22,9 @@
 | UNAUTHORIZED | 401 | 인증 정보 없음 |
 | FORBIDDEN | 403 | 권한 부족 |
 | SYSTEM_ROLE_IMMUTABLE | 403 | 시스템 역할 수정/삭제 시도 |
+| INVALID_STATE | 400 | 잘못된 서버 설정 또는 상태 |
+| INVALID_REQUEST_BODY | 400 | 요청 본문 파싱 불가 (JSON 형식 오류) |
+| DATA_INTEGRITY_VIOLATION | 409 | 데이터 무결성 제약 조건 위반 (e.g., ID 중복) |
 | GROUP_ROLE_NAME_ALREADY_EXISTS | 409 | 역할명 중복 |
 | RECRUITMENT_ALREADY_OPEN | 409 | 그룹에 이미 활성 모집 존재 |
 | RECRUITMENT_CLOSED | 400 | 마감/취소된 모집 접근 |
@@ -102,6 +105,7 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
           "college": "AI/SW계열",
           "dept": "AI/SW학과",
           "studentNo": "20250001",
+          "academicYear": 1,
           "schoolEmail": "student@hanshin.ac.kr",
           "role": "STUDENT"
         }
@@ -135,6 +139,19 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
     -   **권한**: `isAuthenticated()`
     -   **파라미터**: `q` (String), `role` (String, Optional)
     -   **응답**: `List<UserSummaryResponse>`
+    -   **응답 구조**:
+        ```json
+        [
+          {
+            "id": 2,
+            "name": "사용자명",
+            "email": "user2@example.com",
+            "profileImageUrl": null,
+            "studentNo": "20250002",
+            "academicYear": 1
+          }
+        ]
+        ```
 
 -   `GET /me/join-requests`
     -   **설명**: 현재 사용자가 신청한 그룹 가입 요청 목록을 조회합니다.
@@ -167,24 +184,102 @@ Google OAuth2 인증 및 로그인/로그아웃을 처리합니다.
 
 -   `POST /{groupId}/join`: 그룹 가입 신청
 -   `DELETE /{groupId}/leave`: 그룹 탈퇴
--   `GET /{groupId}/members`: 그룹 멤버 목록 조회 (`ADMIN_MANAGE` 권한 필요)
+-   `GET /{groupId}/members`: 그룹 멤버 목록 조회 (`MEMBER_MANAGE` 권한 필요)
 -   `GET /{groupId}/members/me`: 나의 그룹 내 멤버십 정보 조회
--   `PUT /{groupId}/members/{userId}/role`: 멤버 역할 변경 (`ADMIN_MANAGE` 권한 필요)
--   `DELETE /{groupId}/members/{userId}`: 멤버 강제 탈퇴 (`ADMIN_MANAGE` 권한 필요)
+    - **설명**: 현재 로그인한 사용자의 특정 그룹 내 역할 및 그룹 수준 권한을 조회합니다.
+    - **권한**: 그룹 멤버
+    - **응답**: `ApiResponse<GroupMemberResponse>`
+    - **응답 구조 (v2, 2025-10-07 이후)**:
+        ```json
+        {
+          "success": true,
+          "data": {
+            "user": {
+              "id": 1,
+              "name": "Castlekong",
+              "nickname": "castlekong",
+              "profileImageUrl": null
+            },
+            "role": {
+              "id": 1,
+              "name": "그룹장",
+              "priority": 100,
+              "permissions": [
+                "GROUP_MANAGE",
+                "RECRUITMENT_MANAGE",
+                "MEMBER_MANAGE"
+                // ... 모든 그룹 권한
+              ]
+            },
+            "joinedAt": "2025-10-07T12:00:00"
+          },
+          "error": null
+        }
+        ```
+    - **참고**: 이전 버전의 평평한 구조(`userId`, `roleName` 등)에서 중첩된 `user`, `role` 객체 구조로 변경되었습니다. 프론트엔드에서는 이 구조에 맞춰 파싱해야 합니다.
+
+-   `PUT /{groupId}/members/{userId}/role`: 멤버 역할 변경 (`MEMBER_MANAGE` 권한 필요)
+-   `DELETE /{groupId}/members/{userId}`: 멤버 강제 탈퇴 (`MEMBER_MANAGE` 권한 필요)
 -   `POST /{groupId}/transfer-ownership/{newOwnerId}`: 그룹 소유권 이전 (`GROUP_MANAGE` 권한 필요)
 
 ### 3.3. 역할(Role) 관리
 
--   `POST /{groupId}/roles`: 그룹 내 역할 생성 (`ADMIN_MANAGE` 권한 필요)
--   `GET /{groupId}/roles`: 그룹 내 역할 목록 조회 (`ADMIN_MANAGE` 권한 필요)
--   `GET /{groupId}/roles/{roleId}`: 특정 역할 상세 조회 (`ADMIN_MANAGE` 권한 필요)
--   `PUT /{groupId}/roles/{roleId}`: 역할 정보 및 권한 수정 (`ADMIN_MANAGE` 권한 필요)
--   `DELETE /{groupId}/roles/{roleId}`: 역할 삭제 (`ADMIN_MANAGE` 권한 필요)
+-   `POST /{groupId}/roles`: 그룹 내 역할 생성 (`MEMBER_MANAGE` 권한 필요)
+    -   **요청**: `CreateGroupRoleRequest`
+        ```json
+        {
+          "name": "역할이름",
+          "permissions": [], // 권한이 없어도 생성 가능
+          "priority": 0
+        }
+        ```
+-   `GET /{groupId}/roles`: 그룹 내 역할 목록 조회 (`MEMBER_MANAGE` 권한 필요)
+    -   **응답**: `List<GroupRoleResponse>`
+        ```json
+        [
+          {
+            "id": 1,
+            "name": "그룹장",
+            "permissions": ["GROUP_MANAGE", "MEMBER_MANAGE", ...],
+            "priority": 100,
+            "memberCount": 1
+          }
+        ]
+        ```
+-   `GET /{groupId}/roles/{roleId}`: 특정 역할 상세 조회 (`MEMBER_MANAGE` 권한 필요)
+-   `PUT /{groupId}/roles/{roleId}`: 역할 정보 및 권한 수정 (`MEMBER_MANAGE` 권한 필요)
+-   `DELETE /{groupId}/roles/{roleId}`: 역할 삭제 (`MEMBER_MANAGE` 권한 필요)
 
 ### 3.4. 가입 및 생성 요청 관리
 
--   `GET /{groupId}/join-requests`: 그룹 가입 신청 목록 조회 (`ADMIN_MANAGE` 권한 필요)
--   `PATCH /{groupId}/join-requests/{requestId}`: 가입 신청 승인/거절 (`ADMIN_MANAGE` 권한 필요)
+-   `GET /{groupId}/join-requests`: 그룹 가입 신청 목록 조회 (`MEMBER_MANAGE` 권한 필요)
+    -   **응답**: `ApiResponse<List<GroupJoinRequestResponse>>`
+    -   **응답 구조 (GroupJoinRequestResponse)**:
+        ```json
+        {
+          "id": 1,
+          "user": {
+            "id": 1,
+            "name": "Kang",
+            "email": "kang@example.com",
+            "profileImageUrl": null
+          },
+          "requestMessage": "지원 동기",
+          "status": "PENDING",
+          "createdAt": "2024-10-01T12:00:00"
+        }
+        ```
+    -   **참고**: `userId`, `userName` 등의 평평한 구조에서 중첩된 `user` 객체로 변경되었습니다. 또한 `message` -> `requestMessage`, `requestedAt` -> `createdAt`으로 필드명이 변경되었습니다.
+
+-   `PATCH /{groupId}/join-requests/{requestId}`: 가입 신청 승인/거절 (`MEMBER_MANAGE` 권한 필요)
+    -   **요청**: `UpdateJoinRequest`
+        ```json
+        {
+          "action": "APPROVE" // or "REJECT"
+        }
+        ```
+    -   **참고**: 기존 `decision` 필드에서 `action` 필드로 변경되었습니다. 승인 시 별도의 역할(role) 지정 없이 그룹의 기본 역할로 자동 할당됩니다.
+
 -   `POST /{groupId}/sub-groups/requests`: 하위 그룹 생성 요청
 -   `GET /{groupId}/sub-groups/requests`: 하위 그룹 생성 요청 목록 조회 (`GROUP_MANAGE` 권한 필요)
 -   `PATCH /{groupId}/sub-groups/requests/{requestId}`: 하위 그룹 생성 요청 승인/거절 (`GROUP_MANAGE` 권한 필요)
@@ -338,7 +433,32 @@ POST /api/recruitments/{id}/applications
 | RECRUITMENT_CLOSED | 모집이 OPEN 아님 |
 
 ### 4.9 지원서 목록 / 상세
-- 목록: `GET /api/recruitments/{id}/applications?page=0&size=20` (RECRUITMENT_MANAGE)
+### 4.9 지원서 목록 / 상세
+- 목록: `GET /api/recruitments/{id}/applications?page=0&size=20` (`RECRUITMENT_MANAGE` 권한 필요)
+  - **응답**: `ApiResponse<PagedApiResponse<ApplicationSummaryResponse>>`
+  - **응답 구조**:
+    ```json
+    {
+      "success": true,
+      "data": {
+        "content": [
+          {
+            "id": 1,
+            "recruitmentId": 12,
+            "userId": 5,
+            "userName": "지원자명",
+            "status": "PENDING",
+            "submittedAt": "2025-10-18T10:00:00"
+          }
+        ],
+        "page": 0,
+        "size": 20,
+        "totalElements": 1,
+        "totalPages": 1
+      },
+      "error": null
+    }
+    ```
 - 상세: `GET /api/applications/{appId}` (권한자 또는 본인)
 
 ### 4.10 지원서 심사
@@ -399,17 +519,150 @@ GET /api/recruitments/{id}/stats
 -   `DELETE /channels/{channelId}`: 채널 삭제 (관련자만 가능)
 -   `GET /channels/{channelId}/permissions/me`: 채널에 대한 나의 권한 목록 조회
 
-### 5.2. 게시글 및 댓글
+### 5.2. 게시글 (Posts)
 
--   `GET /channels/{channelId}/posts`: 채널 내 게시글 목록 조회 (`POST_READ` 권한 필요)
--   `POST /channels/{channelId}/posts`: 게시글 작성 (`POST_WRITE` 권한 필요)
--   `GET /posts/{postId}`: 게시글 상세 조회 (`POST_READ` 권한 필요)
--   `PUT /posts/{postId}`: 게시글 수정 (작성자 또는 관리자)
--   `DELETE /posts/{postId}`: 게시글 삭제 (작성자 또는 관리자)
--   `GET /posts/{postId}/comments`: 게시글의 댓글 목록 조회
--   `POST /posts/{postId}/comments`: 댓글 작성
--   `PUT /comments/{commentId}`: 댓글 수정 (작성자 또는 관리자)
--   `DELETE /comments/{commentId}`: 댓글 삭제 (작성자 또는 관리자)
+**게시글 목록 조회**
+```
+GET /api/channels/{channelId}/posts?page=0&size=20
+```
+- **권한**: `POST_READ` (채널 권한)
+- **응답**: `ApiResponse<PostListResponse>`
+- **PostListResponse**:
+  ```json
+  {
+    "posts": [
+      {
+        "id": 1,
+        "channelId": 10,
+        "content": "게시글 내용",
+        "authorId": 5,
+        "authorName": "작성자명",
+        "createdAt": "2025-10-05T14:30:00",
+        "updatedAt": "2025-10-05T14:30:00"
+      }
+    ],
+    "hasNext": true
+  }
+  ```
+
+**게시글 작성**
+```
+POST /api/channels/{channelId}/posts
+Content-Type: application/json
+```
+- **권한**: `POST_WRITE` (채널 권한)
+- **요청**: `CreatePostRequest`
+  ```json
+  {
+    "content": "게시글 내용"
+  }
+  ```
+- **응답**: `ApiResponse<Post>`
+
+**게시글 수정**
+```
+PUT /api/posts/{postId}
+```
+- **권한**: 작성자 본인 또는 관리자
+- **요청**: `CreatePostRequest`
+- **응답**: `ApiResponse<Post>`
+
+**게시글 삭제**
+```
+DELETE /api/posts/{postId}
+```
+- **권한**: 작성자 본인 또는 관리자
+- **응답**: `ApiResponse<void>`
+
+### 5.3. 댓글 (Comments)
+
+**댓글 목록 조회**
+```
+GET /api/posts/{postId}/comments?page=0&size=50
+```
+- **권한**: `POST_READ` (채널 권한)
+- **응답**: `ApiResponse<CommentListResponse>`
+- **CommentListResponse**:
+  ```json
+  {
+    "comments": [
+      {
+        "id": 1,
+        "postId": 10,
+        "content": "댓글 내용",
+        "author": {
+          "id": 5,
+          "name": "작성자명",
+          "profileImageUrl": "url..."
+        },
+        "createdAt": "2025-10-05T14:35:00",
+        "updatedAt": "2025-10-05T14:35:00",
+        "parentCommentId": null
+      }
+    ],
+    "hasNext": false
+  }
+  ```
+
+**댓글 작성**
+```
+POST /api/posts/{postId}/comments
+Content-Type: application/json
+```
+- **권한**: `COMMENT_WRITE` (채널 권한)
+- **요청**: `CreateCommentRequest`
+  ```json
+  {
+    "content": "댓글 내용"
+  }
+  ```
+- **응답**: `ApiResponse<Comment>`
+
+**댓글 수정**
+```
+PUT /api/comments/{commentId}
+```
+- **권한**: 작성자 본인 또는 관리자
+- **요청**: `CreateCommentRequest`
+- **응답**: `ApiResponse<Comment>`
+
+**댓글 삭제**
+```
+DELETE /api/comments/{commentId}
+```
+- **권한**: 작성자 본인 또는 관리자
+- **응답**: `ApiResponse<void>`
+
+### 5.4. 채널 권한 관리 (Channel Permission Management)
+
+**채널 역할-권한 바인딩 수정**
+```
+PUT /api/channels/{channelId}/role-bindings/{bindingId}
+```
+- **권한**: `CHANNEL_MANAGE` (채널 권한)
+- **요청**: `UpdateChannelRoleBindingRequest`
+  ```json
+  {
+    "permissions": ["POST_READ", "COMMENT_WRITE"]
+  }
+  ```
+- **응답**: `ApiResponse<ChannelRoleBindingResponse>`
+
+**채널 역할-권한 바인딩 삭제**
+```
+DELETE /api/channels/{channelId}/role-bindings/{bindingId}
+```
+- **권한**: `CHANNEL_MANAGE` (채널 권한)
+- **응답**: `ApiResponse<void>` (204 No Content)
+
+**권한 에러 예시**:
+| 상황 | ErrorCode | HTTP |
+|------|-----------|------|
+| 채널 멤버가 아님 | FORBIDDEN | 403 |
+| POST_READ 권한 없음 | FORBIDDEN | 403 |
+| POST_WRITE 권한 없음 | FORBIDDEN | 403 |
+| COMMENT_WRITE 권한 없음 | FORBIDDEN | 403 |
+| 타인 게시글 수정/삭제 | FORBIDDEN | 403 |
 
 ## 6. Admin API (`/api/admin`)
 
@@ -428,6 +681,195 @@ GET /api/recruitments/{id}/stats
 
 -   **Me API (`/api`)**
     -   `GET /me`: 현재 로그인한 사용자 정보 조회
+    -   `GET /me/groups`: 내가 속한 모든 그룹 목록 조회 (계층 레벨순 정렬)
+
+### Me API 상세
+
+#### GET /api/me/groups
+현재 사용자가 속한 모든 그룹을 계층 레벨 순으로 조회합니다.
+
+-   **권한**: `isAuthenticated()`
+-   **사용 사례**: 워크스페이스 자동 진입 시 최상위 그룹 선택
+-   **정렬**: level 오름차순 (0=최상위) → id 오름차순
+-   **응답**: `ApiResponse<List<MyGroupResponse>>`
+
+**응답 구조**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "한신대학교",
+      "type": "UNIVERSITY",
+      "level": 0,
+      "parentId": null,
+      "role": "멤버",
+      "permissions": ["CHANNEL_READ", "POST_READ"],
+      "profileImageUrl": null
+    },
+    {
+      "id": 2,
+      "name": "AI/SW학부",
+      "type": "DEPARTMENT",
+      "level": 2,
+      "parentId": 1,
+      "role": "멤버",
+      "permissions": ["CHANNEL_READ", "POST_READ", "POST_WRITE"],
+      "profileImageUrl": null
+    }
+  ],
+  "error": null
+}
+```
+
+**프론트엔드 최상위 그룹 선택 로직**:
+```dart
+// 1. level이 가장 작은 그룹들 필터링
+final minLevel = groups.map((g) => g.level).reduce((a, b) => a < b ? a : b);
+final topLevelGroups = groups.where((g) => g.level == minLevel).toList();
+
+// 2. id가 가장 작은 그룹 선택 (가장 먼저 가입한 그룹)
+topLevelGroups.sort((a, b) => a.id.compareTo(b.id));
+final topGroup = topLevelGroups.first;
+
+// 3. /workspace/{topGroup.id}로 자동 진입
+context.go('/workspace/${topGroup.id}');
+```
 
 -   **Role API (`/api/roles`)**
     -   `POST /apply`: 역할(교수) 신청
+
+---
+
+## 캘린더 API (v1.4)
+
+> **상태**: 장소 예약 API 구현 완료, 그 외 설계 단계
+> **관련 문서**: [캘린더 통합](../concepts/calendar-integration.md)
+
+### 장소 및 예약 API (`/api`)
+
+장소 조회, 관리 및 예약 관련 기능을 제공합니다.
+
+#### GET /api/groups/{groupId}/available-places
+
+**설명**: 그룹이 예약 가능한 장소 목록을 조회합니다.
+
+**권한**: 그룹 멤버 (`@PreAuthorize("@security.isMember(#groupId)")`)
+
+**응답 (200 OK)**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "managingGroupId": 10,
+      "managingGroupName": "AISC",
+      "building": "60주년 기념관",
+      "roomNumber": "18203",
+      "alias": "AISC랩실",
+      "displayName": "AISC랩실 (60주년 기념관-18203)",
+      "capacity": 30,
+      "createdAt": "2025-10-13T10:00:00",
+      "updatedAt": "2025-10-13T10:00:00"
+    }
+  ],
+  "error": null
+}
+```
+
+**에러 응답**:
+- 403 Forbidden: 그룹 멤버가 아님
+- 404 Not Found: 그룹을 찾을 수 없음
+
+---
+
+#### 기타 장소/예약 API (기존)
+
+-   `GET /places`: 모든 장소 목록 조회 (공개)
+-   `GET /places/{placeId}`: 특정 장소 상세 정보 조회 (공개)
+        - **설명**: 장소의 기본 정보와 함께 운영 시간, 승인된 사용 그룹 수를 반환합니다.
+        - **응답**: `ApiResponse<PlaceDetailResponse>`
+        - **응답 구조**:
+          ```json
+          {
+            "success": true,
+            "data": {
+              "place": {
+                "id": 1,
+                "managingGroupId": 10,
+                "managingGroupName": "AISC",
+                "building": "60주년 기념관",
+                "roomNumber": "18203",
+                "alias": "AISC랩실",
+                "displayName": "AISC랩실 (60주년 기념관-18203)",
+                "capacity": 30
+              },
+              "operatingHours": [
+                {
+                  "id": 1,
+                  "dayOfWeek": "MONDAY",
+                  "startTime": "09:00:00",
+                  "endTime": "21:00:00",
+                  "isClosed": false
+                }
+                // ... (tuesday to sunday)
+              ],
+              "approvedGroupCount": 5
+            },
+            "error": null
+          }
+          ```
+        - **참고**: 기존 `availabilities` 필드가 `operatingHours`로 변경되었습니다. 클라이언트는 이 새로운 구조에 맞춰야 합니다.
+-   `GET /places/calendar`: 다중 장소 캘린더 조회 (공개)
+    -   **쿼리**: `placeIds`, `startDate`, `endDate`
+-   `GET /places/{placeId}/reservations`: 특정 장소의 예약 목록 조회 (공개)
+    -   **쿼리**: `startDate`, `endDate`
+-   `POST /places/{placeId}/reservations`: 새 장소 예약 생성
+    -   **권한**: `isAuthenticated()`
+    -   **요청**: `CreatePlaceReservationRequest` (`placeId`, `groupEventId`)
+-   `PATCH /reservations/{reservationId}`: 예약 수정 (장소 변경 등)
+    -   **권한**: 예약자 본인 또는 `CALENDAR_MANAGE`
+    -   **요청**: `UpdatePlaceReservationRequest` (`placeId`)
+-   `DELETE /reservations/{reservationId}`: 예약 취소
+    -   **권한**: 예약자 본인 또는 `CALENDAR_MANAGE`
+
+---
+> 아래 API들은 현재 설계 단계에 있으며, 구현 시 명세가 변경될 수 있습니다.
+
+### 시간표 API (`/api/timetable`) - 설계 단계
+
+개인의 고정/반복 일정을 관리합니다.
+
+- `GET /me`: 내 **시간표** 조회 (학교 강의 + 개인 반복 일정) (권한: `isAuthenticated()`)
+- `POST /me/courses`: 내 시간표에 강의 추가 (권한: `isAuthenticated()`)
+- `DELETE /me/courses/{userCourseTimetableId}`: 내 시간표에서 강의 삭제 (권한: `isAuthenticated()`)
+- `POST /me/schedules`: 내 시간표에 개인 반복 일정 추가 (권한: `isAuthenticated()`)
+- `PUT /me/schedules/{scheduleId}`: 개인 반복 일정 수정 (권한: `isAuthenticated()`)
+- `DELETE /me/schedules/{scheduleId}`: 개인 반복 일정 삭제 (권한: `isAuthenticated()`)
+
+### 개인 캘린더 API (`/api/calendar`) - 설계 단계
+
+개인의 모든 유동적/확정적 일정을 통합 조회하고 관리합니다.
+
+- `GET /me/events?year=2025&month=11`: 특정 월의 내 **캘린더** 이벤트 조회 (권한: `isAuthenticated()`)
+- `POST /me/events`: 개인 이벤트 생성 (권한: `isAuthenticated()`)
+- `PUT /me/events/{eventId}`: 개인 이벤트 수정 (권한: `isAuthenticated()`)
+- `DELETE /me/events/{eventId}`: 개인 이벤트 삭제 (권한: `isAuthenticated()`)
+
+### 그룹 캘린더 API (`/api/groups/{groupId}/events`) - 설계 단계
+
+그룹의 일정을 관리합니다.
+
+- `GET /`: 그룹 캘린더의 일정 목록 조회 (권한: **그룹 멤버**)
+- `POST /`: 그룹 일정 생성 (공식: **`CALENDAR_MANAGE`** / 비공식: **그룹 멤버**)
+- `GET /{eventId}`: 특정 그룹 일정 상세 조회 (권한: **그룹 멤버**)
+- `PUT /{eventId}`: 그룹 일정 수정 (공식: **`CALENDAR_MANAGE`** / 비공식: **작성자 or `CALENDAR_MANAGE`**)
+- `DELETE /{eventId}`: 그룹 일정 삭제 (공식: **`CALENDAR_MANAGE`** / 비공식: **작성자 or `CALENDAR_MANAGE`**)
+- `POST /{eventId}/participants`: 일정 참여 상태 변경 (권한: **그룹 멤버**)
+- `GET /{eventId}/participants`: 일정 참여자 목록 조회 (권한: **그룹 멤버**)
+
+### 최적 시간 추천 API (`/api/groups/{groupId}/recommend-time`) - 설계 단계
+
+- `POST /`: 그룹 일정 생성을 위한 최적 시간 추천 (권한: **그룹 멤버**)

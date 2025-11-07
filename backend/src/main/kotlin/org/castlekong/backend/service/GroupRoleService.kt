@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional
 class GroupRoleService(
     private val groupRepository: GroupRepository,
     private val groupRoleRepository: GroupRoleRepository,
+    private val groupMemberRepository: org.castlekong.backend.repository.GroupMemberRepository,
     private val permissionService: org.castlekong.backend.security.PermissionService,
 ) {
     @Transactional
@@ -94,7 +95,8 @@ class GroupRoleService(
         request: UpdateGroupRoleRequest,
         userId: Long,
     ): GroupRoleResponse {
-        val role = groupRoleRepository.findById(roleId).orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+        val role =
+            groupRoleRepository.findById(roleId).orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
         if (role.group.id != groupId) throw BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND)
         if (role.group.owner.id != userId) throw BusinessException(ErrorCode.FORBIDDEN)
         if (role.isSystemRole) throw BusinessException(ErrorCode.SYSTEM_ROLE_IMMUTABLE)
@@ -119,7 +121,8 @@ class GroupRoleService(
         roleId: Long,
         userId: Long,
     ) {
-        val role = groupRoleRepository.findById(roleId).orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+        val role =
+            groupRoleRepository.findById(roleId).orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
         if (role.group.id != groupId) throw BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND)
         if (role.group.owner.id != userId) throw BusinessException(ErrorCode.FORBIDDEN)
         if (role.isSystemRole) throw BusinessException(ErrorCode.SYSTEM_ROLE_IMMUTABLE)
@@ -128,11 +131,13 @@ class GroupRoleService(
     }
 
     private fun toGroupRoleResponse(groupRole: GroupRole): GroupRoleResponse {
+        val memberCount = groupMemberRepository.countByRoleId(groupRole.id).toInt()
         return GroupRoleResponse(
             id = groupRole.id,
             name = groupRole.name,
             permissions = groupRole.permissions.map { it.name }.toSet(),
             priority = groupRole.priority,
+            memberCount = memberCount,
         )
     }
 }

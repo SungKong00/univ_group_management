@@ -25,6 +25,22 @@
 
 ### Phase 1: 커밋 전 검증
 
+#### 0. 컨텍스트 동기화 상태 최종 검증 (by context-manager)
+```markdown
+커밋 프로세스를 시작하기 전, **`context-manager` 에이전트를 호출**하여 프로젝트 문서 전체의 동기화 상태를 최종 점검합니다.
+
+1. **`context-manager` 호출**:
+   - **요청**: "현재 프로젝트에 업데이트가 누락된 컨텍스트 문서가 있는지 `sync-status.md`를 기준으로 최종 확인해줘."
+   - `context-manager`는 `sync-status.md`를 파싱하여 `❌ 업데이트 필요` 상태의 문서가 있는지 확인하고 결과를 응답합니다.
+
+2. **결과에 따른 분기 처리**:
+   - **만약 `context-manager`가 "동기화 필요 문서 없음"이라고 응답하면:**
+     - → 정상적으로 다음 커밋 단계를 계속 진행합니다.
+   - **만약 `context-manager`가 "동기화 필요 문서 존재: `[파일명.md]`" 라고 응답하면:**
+     - → **커밋 프로세스를 즉시 중단**합니다.
+     - → 사용자에게 "커밋을 진행하기 전에 다음 문서들의 동기화가 필요합니다: `[파일명.md]`. `context-manager`를 사용하여 먼저 동기화를 진행하시겠습니까?" 라고 안내합니다.
+```
+
 #### 1.1 변경 사항 분석
 ```markdown
 변경 파일 스캔 및 분류:
@@ -63,8 +79,8 @@
 ```markdown
 영향받는 문서 자동 식별:
 1. 변경된 파일 경로 기반 매핑:
-   - backend/src/** → docs/implementation/backend-guide.md, api-reference.md
-   - frontend/lib/** → docs/implementation/frontend-guide.md, ui-ux/**
+   - backend/src/** → do../implementation/backend/README.md, api-reference.md
+   - frontend/lib/** → do../implementation/frontend/README.md, ui-ux/**
    - **/auth/** → docs/concepts/permission-system.md
    - **/group/** → docs/concepts/group-hierarchy.md, workspace-channel.md
 
@@ -90,7 +106,7 @@
 
 2. 간접 영향 문서:
    - 관련 개념이나 워크플로우에 영향을 주는 문서들
-   - 예: 권한 로직 변경 → backend-guide.md, troubleshooting/**
+   - 예: 권한 로직 변경 → backend/README.md, troubleshooting/**
 
 3. 일관성 확인 필요 문서:
    - 변경으로 인해 내용이 모순될 수 있는 문서들

@@ -1,6 +1,5 @@
 package org.castlekong.backend.security
 
-import io.mockk.*
 import org.assertj.core.api.Assertions.assertThat
 import org.castlekong.backend.fixture.TestDataFactory
 import org.junit.jupiter.api.BeforeEach
@@ -19,8 +18,16 @@ class JwtTokenProviderTest {
 
         // ReflectionTestUtils를 사용하여 private 필드 설정
         ReflectionTestUtils.setField(jwtTokenProvider, "secretKey", TestDataFactory.TEST_JWT_SECRET)
-        ReflectionTestUtils.setField(jwtTokenProvider, "accessTokenExpiration", TestDataFactory.TEST_ACCESS_TOKEN_EXPIRATION)
-        ReflectionTestUtils.setField(jwtTokenProvider, "refreshTokenExpiration", TestDataFactory.TEST_REFRESH_TOKEN_EXPIRATION)
+        ReflectionTestUtils.setField(
+            jwtTokenProvider,
+            "accessTokenExpiration",
+            TestDataFactory.TEST_ACCESS_TOKEN_EXPIRATION,
+        )
+        ReflectionTestUtils.setField(
+            jwtTokenProvider,
+            "refreshTokenExpiration",
+            TestDataFactory.TEST_REFRESH_TOKEN_EXPIRATION,
+        )
 
         // @PostConstruct 메서드 수동 호출
         ReflectionTestUtils.invokeMethod<Unit>(jwtTokenProvider, "init")

@@ -7,24 +7,35 @@ import java.time.LocalDateTime
  */
 data class PagedApiResponse<T>(
     val success: Boolean,
-    val data: List<T>,
-    val pagination: PaginationInfo,
+    val data: PagedData<T>,
     val error: ErrorResponse? = null,
-    val timestamp: LocalDateTime = LocalDateTime.now()
+    val timestamp: LocalDateTime = LocalDateTime.now(),
 ) {
     companion object {
-        fun <T> success(data: List<T>, pagination: PaginationInfo): PagedApiResponse<T> =
-            PagedApiResponse(success = true, data = data, pagination = pagination)
+        fun <T> success(
+            data: List<T>,
+            pagination: PaginationInfo,
+        ): PagedApiResponse<T> = PagedApiResponse(success = true, data = PagedData(content = data, pagination = pagination))
 
-        fun <T> error(code: String, message: String): PagedApiResponse<T> =
+        fun <T> error(
+            code: String,
+            message: String,
+        ): PagedApiResponse<T> =
             PagedApiResponse(
                 success = false,
-                data = emptyList(),
-                pagination = PaginationInfo.empty(),
-                error = ErrorResponse(code, message)
+                data = PagedData(content = emptyList(), pagination = PaginationInfo.empty()),
+                error = ErrorResponse(code, message),
             )
     }
 }
+
+/**
+ * 페이징된 데이터와 페이징 정보를 담는 래퍼 클래스
+ */
+data class PagedData<T>(
+    val content: List<T>,
+    val pagination: PaginationInfo,
+)
 
 /**
  * 페이징 정보를 담는 표준화된 클래스
@@ -37,19 +48,20 @@ data class PaginationInfo(
     val first: Boolean,
     val last: Boolean,
     val hasNext: Boolean,
-    val hasPrevious: Boolean
+    val hasPrevious: Boolean,
 ) {
     companion object {
-        fun empty(): PaginationInfo = PaginationInfo(
-            page = 0,
-            size = 0,
-            totalElements = 0,
-            totalPages = 0,
-            first = true,
-            last = true,
-            hasNext = false,
-            hasPrevious = false
-        )
+        fun empty(): PaginationInfo =
+            PaginationInfo(
+                page = 0,
+                size = 0,
+                totalElements = 0,
+                totalPages = 0,
+                first = true,
+                last = true,
+                hasNext = false,
+                hasPrevious = false,
+            )
 
         fun fromSpringPage(page: org.springframework.data.domain.Page<*>): PaginationInfo =
             PaginationInfo(
@@ -60,7 +72,7 @@ data class PaginationInfo(
                 first = page.isFirst,
                 last = page.isLast,
                 hasNext = page.hasNext(),
-                hasPrevious = page.hasPrevious()
+                hasPrevious = page.hasPrevious(),
             )
     }
 }

@@ -1,15 +1,13 @@
 package org.castlekong.backend.service
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.castlekong.backend.dto.LoginResponse
 import org.castlekong.backend.dto.RefreshTokenResponse
 import org.castlekong.backend.dto.UserResponse
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.exception.BusinessException
 import org.castlekong.backend.exception.ErrorCode
 import org.castlekong.backend.security.JwtTokenProvider
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -22,8 +20,10 @@ import org.springframework.transaction.annotation.Transactional
 class AuthService(
     private val userService: UserService,
     private val jwtTokenProvider: JwtTokenProvider,
-    private val googleIdTokenVerifierPort: GoogleIdTokenVerifierPort, // 신규 포트 주입
-    private val googleUserInfoFetcherPort: GoogleUserInfoFetcherPort, // AccessToken 사용자 정보 조회 포트 추가
+    // 신규 포트 주입
+    private val googleIdTokenVerifierPort: GoogleIdTokenVerifierPort,
+    // AccessToken 사용자 정보 조회 포트 추가
+    private val googleUserInfoFetcherPort: GoogleUserInfoFetcherPort,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -64,7 +64,8 @@ class AuthService(
 
         return LoginResponse(
             accessToken = accessJwt,
-            tokenType = "Bearer",  // tokenType은 Bearer 문자열 유지
+            // tokenType은 Bearer 문자열 유지
+            tokenType = "Bearer",
             expiresIn = 86400000L,
             user = userService.convertToUserResponse(user),
             firstLogin = !user.profileCompleted,
@@ -76,14 +77,16 @@ class AuthService(
      * SecurityContext에서 인증된 사용자 정보를 가져옴
      */
     fun verifyToken(): UserResponse {
-        val authentication = SecurityContextHolder.getContext().authentication
-            ?: throw BusinessException(ErrorCode.UNAUTHORIZED)
+        val authentication =
+            SecurityContextHolder.getContext().authentication
+                ?: throw BusinessException(ErrorCode.UNAUTHORIZED)
 
         val email = authentication.name
         logger.debug("Verifying token for user: {}", email)
 
-        val user = userService.findByEmail(email)
-            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+        val user =
+            userService.findByEmail(email)
+                ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
 
         if (!user.isActive) throw BusinessException(ErrorCode.UNAUTHORIZED)
 
@@ -106,8 +109,9 @@ class AuthService(
         logger.debug("Refreshing access token for user: {}", email)
 
         // 사용자 존재 및 활성 상태 확인
-        val user = userService.findByEmail(email)
-            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+        val user =
+            userService.findByEmail(email)
+                ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
 
         if (!user.isActive) throw BusinessException(ErrorCode.UNAUTHORIZED)
 
@@ -117,7 +121,8 @@ class AuthService(
         return RefreshTokenResponse(
             accessToken = newAccessToken,
             tokenType = "Bearer",
-            expiresIn = 86400000L, // 24시간
+            // 24시간
+            expiresIn = 86400000L,
         )
     }
 
@@ -129,7 +134,28 @@ class AuthService(
 
         users.forEach { user ->
             if (user.profileCompleted) {
-                val updatedUser = user.copy(profileCompleted = false)
+                val updatedUser =
+                    User(
+                        id = user.id,
+                        name = user.name,
+                        email = user.email,
+                        password = user.password,
+                        globalRole = user.globalRole,
+                        isActive = user.isActive,
+                        nickname = user.nickname,
+                        profileImageUrl = user.profileImageUrl,
+                        bio = user.bio,
+                        profileCompleted = false,
+                        emailVerified = user.emailVerified,
+                        college = user.college,
+                        department = user.department,
+                        studentNo = user.studentNo,
+                        schoolEmail = user.schoolEmail,
+                        professorStatus = user.professorStatus,
+                        academicYear = user.academicYear,
+                        createdAt = user.createdAt,
+                        updatedAt = user.updatedAt,
+                    )
                 userService.save(updatedUser)
                 updatedCount++
                 logger.debug("Reset profileCompleted for user: {}", user.email)
@@ -137,6 +163,34 @@ class AuthService(
         }
 
         return updatedCount
+    }
+
+    // 임시 디버그용 메서드 - 이메일로 개발 토큰 생성
+    @Transactional
+    fun generateDevToken(email: String): LoginResponse {
+        val user =
+            userService.findByEmail(email)
+                ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+
+        if (!user.isActive) {
+            throw BusinessException(ErrorCode.UNAUTHORIZED)
+        }
+
+        val authorities = listOf(SimpleGrantedAuthority("ROLE_${user.globalRole.name}"))
+        val authentication: Authentication =
+            UsernamePasswordAuthenticationToken(user.email, null, authorities)
+        val accessToken = jwtTokenProvider.generateAccessToken(authentication)
+        val refreshToken = jwtTokenProvider.generateRefreshToken(authentication)
+
+        logger.debug("Generated dev token for user: {}", email)
+
+        return LoginResponse(
+            accessToken = accessToken,
+            tokenType = "Bearer",
+            expiresIn = 86400000L,
+            user = userService.convertToUserResponse(user),
+            firstLogin = !user.profileCompleted,
+        )
     }
 }
 

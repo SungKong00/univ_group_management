@@ -1,28 +1,73 @@
 package org.castlekong.backend.controller
 
 import jakarta.validation.Valid
-import org.castlekong.backend.dto.*
-import org.castlekong.backend.service.*
+import org.castlekong.backend.dto.AdminStatsResponse
+import org.castlekong.backend.dto.ApiResponse
+import org.castlekong.backend.dto.CreateGroupRequest
+import org.castlekong.backend.dto.CreateGroupRoleRequest
+import org.castlekong.backend.dto.CreateSubGroupRequest
+import org.castlekong.backend.dto.GroupHierarchyNodeDto
+import org.castlekong.backend.dto.GroupJoinRequestResponse
+import org.castlekong.backend.dto.GroupMemberResponse
+import org.castlekong.backend.dto.GroupResponse
+import org.castlekong.backend.dto.GroupRoleResponse
+import org.castlekong.backend.dto.GroupSummaryResponse
+import org.castlekong.backend.dto.JoinGroupRequest
+import org.castlekong.backend.dto.MemberCountResponse
+import org.castlekong.backend.dto.MemberPreviewResponse
+import org.castlekong.backend.dto.PagedApiResponse
+import org.castlekong.backend.dto.PaginationInfo
+import org.castlekong.backend.dto.PlaceResponse
+import org.castlekong.backend.dto.ReviewGroupJoinRequestRequest
+import org.castlekong.backend.dto.ReviewSubGroupRequestRequest
+import org.castlekong.backend.dto.SubGroupRequestResponse
+import org.castlekong.backend.dto.UpdateGroupRequest
+import org.castlekong.backend.dto.UpdateGroupRoleRequest
+import org.castlekong.backend.dto.UpdateMemberRoleRequest
+import org.castlekong.backend.dto.WorkspaceDto
 import org.castlekong.backend.security.SecurityExpressionHelper
-import org.springframework.data.domain.Page
+import org.castlekong.backend.service.AdminStatsService
+import org.castlekong.backend.service.GroupDeletionService
+import org.castlekong.backend.service.GroupHierarchyService
+import org.castlekong.backend.service.GroupInitializationService
+import org.castlekong.backend.service.GroupMemberService
+import org.castlekong.backend.service.GroupRequestService
+import org.castlekong.backend.service.GroupRoleService
+import org.castlekong.backend.service.GroupService
+import org.castlekong.backend.service.UserService
+import org.castlekong.backend.service.WorkspaceManagementService
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/groups")
 class GroupController(
-    private val groupManagementService: GroupManagementService,
+    private val groupService: GroupService,
+    private val groupHierarchyService: GroupHierarchyService,
+    private val groupDeletionService: GroupDeletionService,
+    private val groupInitializationService: GroupInitializationService,
     private val groupMemberService: GroupMemberService,
     private val groupRequestService: GroupRequestService,
     private val workspaceManagementService: WorkspaceManagementService,
     private val adminStatsService: AdminStatsService,
     private val groupRoleService: GroupRoleService,
+    private val placeService: org.castlekong.backend.service.PlaceService,
     userService: UserService,
     private val securityExpressionHelper: SecurityExpressionHelper,
+    private val permissionService: org.castlekong.backend.security.PermissionService,
 ) : BaseController(userService) {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
@@ -32,13 +77,13 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<GroupResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupManagementService.createGroup(request, user.id)
+        val response = groupInitializationService.createGroupWithDefaults(request, user.id)
         return ApiResponse.success(response)
     }
 
     @GetMapping
     fun getGroups(pageable: Pageable): PagedApiResponse<GroupSummaryResponse> {
-        val response = groupManagementService.getGroups(pageable)
+        val response = groupService.getGroups(pageable)
         val pagination = PaginationInfo.fromSpringPage(response)
         return PagedApiResponse.success(response.content, pagination)
     }
@@ -46,7 +91,7 @@ class GroupController(
     @GetMapping("/all")
     @io.swagger.v3.oas.annotations.Operation(summary = "모든 그룹 조회", description = "페이징 없이 모든 그룹의 요약 정보를 반환합니다.")
     fun getAllGroups(): ApiResponse<List<GroupSummaryResponse>> {
-        val response = groupManagementService.getAllGroups()
+        val response = groupService.getAllGroups()
         return ApiResponse.success(response)
     }
 
@@ -55,24 +100,50 @@ class GroupController(
     fun exploreGroups(
         pageable: Pageable,
         @RequestParam(required = false) recruiting: Boolean?,
-        @RequestParam(required = false) visibility: org.castlekong.backend.entity.GroupVisibility?,
-        @RequestParam(required = false) groupType: org.castlekong.backend.entity.GroupType?,
+        // 쉼표로 구분된 그룹 타입 목록 (예: "UNIVERSITY,COLLEGE,DEPARTMENT")
+        @RequestParam(required = false) groupTypes: String?,
         @RequestParam(required = false) university: String?,
         @RequestParam(required = false) college: String?,
         @RequestParam(required = false) department: String?,
         @RequestParam(required = false) q: String?,
-        @RequestParam(required = false) tags: String?, // comma-separated
+        // comma-separated
+        @RequestParam(required = false) tags: String?,
     ): PagedApiResponse<GroupSummaryResponse> {
-        val tagSet = tags?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet() ?: emptySet()
-        val response = groupManagementService.searchGroups(pageable, recruiting, visibility, groupType, university, college, department, q, tagSet)
+        // Parse comma-separated groupTypes into List<GroupType>
+        val groupTypeList =
+            groupTypes?.split(',')
+                ?.mapNotNull { typeString ->
+                    try {
+                        org.castlekong.backend.entity.GroupType.valueOf(typeString.trim().uppercase())
+                    } catch (e: IllegalArgumentException) {
+                        null // Ignore invalid group types
+                    }
+                } ?: emptyList()
+
+        val tagSet =
+            tags?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet() ?: emptySet()
+        val response =
+            groupService.searchGroups(
+                pageable,
+                recruiting,
+                groupTypeList,
+                university,
+                college,
+                department,
+                q,
+                tagSet,
+            )
         val pagination = PaginationInfo.fromSpringPage(response)
         return PagedApiResponse.success(response.content, pagination)
     }
 
     @GetMapping("/hierarchy")
-    @io.swagger.v3.oas.annotations.Operation(summary = "전체 계열/학과 계층 구조 조회", description = "온보딩 시 계열/학과 선택 UI를 구성하기 위한 전체 그룹 목록을 반환합니다.")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "전체 계열/학과 계층 구조 조회",
+        description = "온보딩 시 계열/학과 선택 UI를 구성하기 위한 전체 그룹 목록을 반환합니다.",
+    )
     fun getGroupHierarchy(): ApiResponse<List<GroupHierarchyNodeDto>> {
-        val groups = groupManagementService.getAllGroupsForHierarchy()
+        val groups = groupHierarchyService.getAllGroupsForHierarchy()
         return ApiResponse.success(groups)
     }
 
@@ -80,7 +151,7 @@ class GroupController(
     fun getGroup(
         @PathVariable groupId: Long,
     ): ApiResponse<GroupResponse> {
-        val response = groupManagementService.getGroup(groupId)
+        val response = groupService.getGroup(groupId)
         return ApiResponse.success(response)
     }
 
@@ -92,7 +163,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<GroupResponse> {
         val user = getUserByEmail(authentication.name)
-        val response = groupManagementService.updateGroup(groupId, request, user.id)
+        val response = groupService.updateGroup(groupId, request, user.id)
         return ApiResponse.success(response)
     }
 
@@ -104,7 +175,7 @@ class GroupController(
         authentication: Authentication,
     ): ApiResponse<Unit> {
         val user = getUserByEmail(authentication.name)
-        groupManagementService.deleteGroup(groupId, user.id)
+        groupDeletionService.deleteGroup(groupId, user.id)
         return ApiResponse.success()
     }
 
@@ -134,14 +205,69 @@ class GroupController(
     }
 
     @GetMapping("/{groupId}/members")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "그룹 멤버 목록 조회",
+        description = "그룹 멤버 목록을 조회합니다. 관리자(MEMBER_MANAGE 권한)는 전체 정보(email 포함), 일반 멤버는 기본 정보만 반환됩니다.",
+    )
     fun getGroupMembers(
         @PathVariable groupId: Long,
+        @RequestParam(required = false) roleIds: String?,
+        @RequestParam(required = false) groupIds: String?,
+        @RequestParam(required = false) grades: String?,
+        @RequestParam(required = false) years: String?,
         pageable: Pageable,
-    ): PagedApiResponse<GroupMemberResponse> {
-        val response = groupMemberService.getGroupMembers(groupId, pageable)
+        authentication: Authentication,
+    ): PagedApiResponse<Any> {
+        val user = getUserByEmail(authentication.name)
+
+        val response =
+            groupMemberService.getGroupMembersWithFilter(
+                groupId = groupId,
+                userId = user.id,
+                roleIds = roleIds,
+                groupIds = groupIds,
+                grades = grades,
+                years = years,
+                pageable = pageable,
+            )
+
         val pagination = PaginationInfo.fromSpringPage(response)
         return PagedApiResponse.success(response.content, pagination)
+    }
+
+    @GetMapping("/{groupId}/members/count")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "그룹 멤버 수 조회 (필터링 지원)",
+        description = "필터링 조건에 맞는 그룹 멤버 수를 조회합니다. 멤버 필터 UI의 실시간 카운트에 사용됩니다. 권한 요구사항: 그룹 멤버",
+    )
+    fun countGroupMembers(
+        @PathVariable groupId: Long,
+        @RequestParam(required = false) roleIds: String?,
+        @RequestParam(required = false) groupIds: String?,
+        @RequestParam(required = false) grades: String?,
+        @RequestParam(required = false) years: String?,
+    ): ApiResponse<MemberCountResponse> {
+        val count = groupMemberService.countFilteredMembers(groupId, roleIds, groupIds, grades, years)
+        return ApiResponse.success(MemberCountResponse(count))
+    }
+
+    @GetMapping("/{groupId}/members/preview")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "멤버 선택 Preview (필터 미리보기)",
+        description = "필터 조건에 맞는 멤버 수와 샘플 3명을 조회합니다. 멤버 선택 플로우 Step 2에서 DYNAMIC/STATIC 카드 표시에 사용됩니다. 권한 요구사항: 그룹 멤버",
+    )
+    fun previewMembers(
+        @PathVariable groupId: Long,
+        @RequestParam(required = false) roleIds: String?,
+        @RequestParam(required = false) groupIds: String?,
+        @RequestParam(required = false) grades: String?,
+        @RequestParam(required = false) years: String?,
+    ): ApiResponse<MemberPreviewResponse> {
+        val preview = groupMemberService.previewMembers(groupId, roleIds, groupIds, grades, years)
+        return ApiResponse.success(preview)
     }
 
     // 내 멤버십 조회 (멤버 여부 판별용)
@@ -158,7 +284,7 @@ class GroupController(
 
     // 멤버 역할 변경
     @PutMapping("/{groupId}/members/{userId}/role")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun updateMemberRole(
         @PathVariable groupId: Long,
         @PathVariable userId: Long,
@@ -172,7 +298,7 @@ class GroupController(
 
     // 멤버 강제 탈퇴
     @DeleteMapping("/{groupId}/members/{userId}")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun removeMember(
         @PathVariable groupId: Long,
@@ -184,10 +310,9 @@ class GroupController(
         return ApiResponse.success()
     }
 
-
     // Group Role 관련 엔드포인트
     @PostMapping("/{groupId}/roles")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     @ResponseStatus(HttpStatus.CREATED)
     fun createGroupRole(
         @PathVariable groupId: Long,
@@ -200,7 +325,7 @@ class GroupController(
     }
 
     @GetMapping("/{groupId}/roles")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun getGroupRoles(
         @PathVariable groupId: Long,
     ): ApiResponse<List<GroupRoleResponse>> {
@@ -209,7 +334,7 @@ class GroupController(
     }
 
     @GetMapping("/{groupId}/roles/{roleId}")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun getGroupRole(
         @PathVariable groupId: Long,
         @PathVariable roleId: Long,
@@ -219,7 +344,7 @@ class GroupController(
     }
 
     @PutMapping("/{groupId}/roles/{roleId}")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun updateGroupRole(
         @PathVariable groupId: Long,
         @PathVariable roleId: Long,
@@ -232,7 +357,7 @@ class GroupController(
     }
 
     @DeleteMapping("/{groupId}/roles/{roleId}")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteGroupRole(
         @PathVariable groupId: Long,
@@ -247,7 +372,7 @@ class GroupController(
     // === 그룹 가입 신청 관리 ===
 
     @GetMapping("/{groupId}/join-requests")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun getGroupJoinRequests(
         @PathVariable groupId: Long,
     ): ApiResponse<List<GroupJoinRequestResponse>> {
@@ -256,7 +381,7 @@ class GroupController(
     }
 
     @PatchMapping("/{groupId}/join-requests/{requestId}")
-    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'ADMIN_MANAGE')")
+    @PreAuthorize("hasPermission(#groupId, 'GROUP', 'MEMBER_MANAGE')")
     fun reviewGroupJoinRequest(
         @PathVariable groupId: Long,
         @PathVariable requestId: Long,
@@ -311,7 +436,7 @@ class GroupController(
     fun getSubGroups(
         @PathVariable groupId: Long,
     ): ApiResponse<List<GroupSummaryResponse>> {
-        val response = groupManagementService.getSubGroups(groupId)
+        val response = groupHierarchyService.getSubGroups(groupId)
         return ApiResponse.success(response)
     }
 
@@ -365,15 +490,13 @@ class GroupController(
         return ApiResponse.success(response)
     }
 
-
-
     // === 워크스페이스 조회 (명세서 요구사항) ===
     @GetMapping("/{groupId}/workspace")
     @PreAuthorize("@security.isGroupMember(#groupId)")
     fun getWorkspace(
         @PathVariable groupId: Long,
         authentication: Authentication,
-    ): ApiResponse<org.castlekong.backend.dto.WorkspaceDto> {
+    ): ApiResponse<WorkspaceDto> {
         val user = getUserByEmail(authentication.name)
         val response = workspaceManagementService.getWorkspace(groupId, user.id)
         return ApiResponse.success(response)
@@ -406,9 +529,62 @@ class GroupController(
     fun checkBatchGroupMembership(
         @RequestBody groupIds: List<Long>,
     ): ApiResponse<Map<Long, Boolean>> {
-        val membershipMap = groupIds.associateWith { groupId ->
-            securityExpressionHelper.isGroupMember(groupId)
-        }
+        val membershipMap =
+            groupIds.associateWith { groupId ->
+                securityExpressionHelper.isGroupMember(groupId)
+            }
         return ApiResponse.success(membershipMap)
+    }
+
+    // === 권한 조회 ===
+    @GetMapping("/{groupId}/permissions")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "내 그룹 권한 조회",
+        description = "현재 사용자가 특정 그룹에서 가지는 권한 목록을 반환합니다.",
+    )
+    fun getMyPermissions(
+        @PathVariable groupId: Long,
+        authentication: Authentication,
+    ): ApiResponse<Set<String>> {
+        val user = getUserByEmail(authentication.name)
+        val permissions =
+            permissionService.getEffective(groupId, user.id) { roleName ->
+                systemRolePermissions(roleName)
+            }
+        return ApiResponse.success(permissions.map { it.name }.toSet())
+    }
+
+    private fun systemRolePermissions(roleName: String): Set<org.castlekong.backend.entity.GroupPermission> {
+        return when (roleName.uppercase()) {
+            "그룹장" -> org.castlekong.backend.entity.GroupPermission.entries.toSet()
+            "교수" -> org.castlekong.backend.entity.GroupPermission.entries.toSet()
+            "멤버" -> emptySet()
+            else -> emptySet()
+        }
+    }
+
+    // === 그룹 일정-장소 통합 ===
+
+    /**
+     * GET /api/groups/{groupId}/available-places
+     * 현재 그룹이 예약 가능한 장소 목록 조회
+     *
+     * @권한 그룹 멤버
+     * @설명 PlaceUsageGroup APPROVED 상태인 장소만 반환
+     */
+    @GetMapping("/{groupId}/available-places")
+    @PreAuthorize("@security.isGroupMember(#groupId)")
+    @io.swagger.v3.oas.annotations.Operation(
+        summary = "그룹 예약 가능 장소 조회",
+        description = "현재 그룹이 예약 가능한 장소 목록을 조회합니다 (APPROVED 상태만)",
+    )
+    fun getAvailablePlaces(
+        @PathVariable groupId: Long,
+        authentication: Authentication,
+    ): ApiResponse<List<PlaceResponse>> {
+        val user = getUserByEmail(authentication.name)
+        val places = placeService.findReservablePlacesForGroup(user, groupId)
+        return ApiResponse.success(places)
     }
 }

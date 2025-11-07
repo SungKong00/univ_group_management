@@ -3,6 +3,7 @@ package org.castlekong.backend.service
 import org.castlekong.backend.dto.EmailSendRequest
 import org.castlekong.backend.dto.EmailVerifyRequest
 import org.castlekong.backend.entity.EmailVerification
+import org.castlekong.backend.entity.User
 import org.castlekong.backend.repository.EmailVerificationRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -77,9 +78,26 @@ class EmailVerificationService(
                 ?: throw IllegalArgumentException("USER_NOT_FOUND: 사용자 없음")
 
         val updated =
-            user.copy(
-                schoolEmail = req.email,
+            User(
+                id = user.id,
+                name = user.name,
+                email = user.email,
+                password = user.password,
+                globalRole = user.globalRole,
+                isActive = user.isActive,
+                nickname = user.nickname,
+                profileImageUrl = user.profileImageUrl,
+                bio = user.bio,
+                profileCompleted = user.profileCompleted,
                 emailVerified = true,
+                college = user.college,
+                department = user.department,
+                studentNo = user.studentNo,
+                schoolEmail = req.email,
+                professorStatus = user.professorStatus,
+                academicYear = user.academicYear,
+                createdAt = user.createdAt,
+                updatedAt = user.updatedAt,
             )
         userService.save(updated)
     }

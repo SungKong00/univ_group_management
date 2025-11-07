@@ -16,7 +16,7 @@
 | INVALID_TOKEN | 401 | 토큰 위변조/형식 오류 | 잘못된 서명, Bearer 누락 |
 | EXPIRED_TOKEN | 401 | 토큰 만료 | Access Token 만료, 재발급 필요 |
 | FORBIDDEN | 403 | 권한 부족 | 역할에 필요한 권한 미보유 |
-| SYSTEM_ROLE_IMMUTABLE | 403 | 시스템 역할 변경 금지 | OWNER / ADVISOR / MEMBER 수정·삭제 시도 |
+| SYSTEM_ROLE_IMMUTABLE | 403 | 시스템 역할 변경 금지 | 그룹장 / 교수 / 멤버 수정·삭제 시도 |
 | GROUP_ROLE_NAME_ALREADY_EXISTS | 409 | 역할명 중복 | 동일 이름 역할 생성/변경 |
 | GROUP_ROLE_NOT_FOUND | 404 | 역할 없음 | 잘못된 roleId |
 | GROUP_MEMBER_NOT_FOUND | 404 | 멤버 아님 | 그룹 비회원 접근 |
@@ -68,10 +68,15 @@ HTTP/1.1 403 Forbidden
 체크리스트:
 - 사용자가 해당 그룹 멤버인가?
 - 역할에 필요한 GroupPermission 혹은 ChannelPermission 포함?
-- 캐시 무효화 누락? (역할 수정 직후 invalidate 호출 여부)
+- **캐시 문제 확인**:
+    - **캐시 무효화 누락?**: 역할/권한 변경 후 캐시가 제때 무효화되지 않았을 수 있습니다.
+    - **캐시 데이터 불일치?**: 드물지만, 캐시에 오래된 데이터가 남아있을 수 있습니다.
+
+조치:
+- **강제 캐시 비우기**: 문제가 의심될 경우, 임시로 모든 채널 권한 캐시를 비우는 엔드포인트(필요 시 추가)를 호출하거나, 서버를 재시작하여 캐시를 초기화할 수 있습니다. `ChannelPermissionCacheManager`의 `evictAllPermissionCache()` 메서드를 노출하는 디버그용 API를 활용할 수 있습니다.
 
 ### (B) SYSTEM_ROLE_IMMUTABLE
-시스템 역할(OWNER/ADVISOR/MEMBER) 이름/우선순위/권한 변경, 삭제 시도.
+시스템 역할(그룹장/교수/멤버) 이름/우선순위/권한 변경, 삭제 시도.
 ```http
 HTTP/1.1 403 Forbidden
 {
@@ -83,25 +88,26 @@ HTTP/1.1 403 Forbidden
 해결: UI에서 시스템 역할 편집/삭제 버튼 비노출.
 
 ## 3. 역할/권한 디버깅 절차
-1. 그룹 멤버십 재확인
-2. 역할이 시스템 역할인지 구분 (불변 처리)
-3. PermissionService 캐시 무효화 호출 여부(역할/바인딩 갱신 후)
-4. 채널 유형 판별 (rev5): 기본 초기 채널(공지/자유)인가, 사용자 정의 채널인가?
-   - 기본 초기 채널 → 템플릿 바인딩 3개(OWNER/ADVISOR/ MEMBER) 존재 기대
-   - 사용자 정의 채널 → 생성 직후 바인딩 0개 정상 (구성 전 접근 불가)
-5. 접근 불가(403/빈 목록) 시 ChannelRoleBinding 존재/권한 교차점 확인
-   - 사용자 정의 채널: 아직 설정 전이면 CHANNEL_VIEW 미부여 → 정상 → UI 권한 매트릭스 안내
-   - 기본 채널: 예상 바인딩 누락이면 초기화/삭제 이력 확인 필요
-6. 최소 권한 검증: CHANNEL_VIEW → POST_READ → (선택) POST_WRITE / COMMENT_WRITE / FILE_UPLOAD 순 충족 여부
-7. 캐시 재검증: 최근 변경 후 invalidateGroup(groupId) 호출 여부
-8. 여전히 문제면 DB 직접 조회 (SELECT * FROM channel_role_bindings WHERE channel_id=?) 로 실제 저장 상태 확인
+1.  **그룹 멤버십 재확인**: 사용자가 그룹의 정식 멤버인지 확인합니다.
+2.  **역할 확인**: 부여된 역할이 시스템 역할인지, 커스텀 역할인지 확인합니다.
+3.  **DB 직접 조회**: `channel_role_bindings` 테이블을 직접 조회하여, `(channel_id, group_role_id)`에 대한 레코드가 존재하는지, `permissions` 컬럼에 필요한 권한이 있는지 확인합니다.
+4.  **채널 유형 판별 (rev5)**: 문제가 발생한 채널이 기본 채널(공지/자유)인지, 사용자가 직접 생성한 채널인지 확인합니다. 사용자 정의 채널은 생성 직후 권한이 비어있는 것이 정상입니다.
+5.  **캐시 상태 확인**:
+    -   **로그 확인**: `ChannelPermissionCacheManager` 관련 로그를 확인하여 캐시 무효화(`evict`) 또는 버전 업데이트가 정상적으로 이루어졌는지 확인합니다.
+    -   **강제 무효화**: 디버깅용 API나 테스트 코드를 통해 특정 채널(`evictChannelCache(channelId)`) 또는 전체 캐시(`evictAllPermissionCache()`)를 강제로 비운 후 다시 시도하여 캐시 문제인지 확인합니다.
+6.  **최소 권한부터 검증**: `CHANNEL_VIEW` -> `POST_READ` -> `POST_WRITE` 순으로 권한을 하나씩 부여하며 어느 단계에서 문제가 발생하는지 확인합니다.
 
 > rev5 혼합 정책: “기본 2채널 템플릿 + 사용자 정의 채널 0바인딩 시작” 으로 인한 오인(‘권한 누락’ 착시) 방지.
 
 ## 4. 빠른 JPA/캐시 점검 코드 스니펫
 ```kotlin
+// 사용자 역할 및 권한 확인
 val member = groupMemberRepository.findByGroupIdAndUserId(groupId, userId).orElse(null)
 log.debug("memberRole={}, permissions={}", member?.role?.name, member?.role?.permissions)
+
+// 특정 채널의 캐시 강제 무효화 (디버그용)
+channelPermissionCacheManager.evictChannelPermissionCache(channelId)
+log.info("Manually evicted cache for channel: {}", channelId)
 ```
 
 ## 5. 프론트엔드 처리 패턴 (Flutter 예시)
@@ -116,10 +122,10 @@ if (error.code == 'EXPIRED_TOKEN') {
 ```
 
 ## 6. 자주 하는 실수 요약
-| 실수 | 증상 | 해결 |
+| 실수 | 증상 | 해결 | 
 |------|------|------|
 | 시스템 역할 편집 UI 노출 | 403 SYSTEM_ROLE_IMMUTABLE | 시스템 역할 필터링 후 UI 숨김 |
-| 캐시 무효화 누락 | 권한 변경 즉시 반영 안 됨 | 역할/바인딩 변경 후 invalidateGroup 호출 |
+| **캐시 무효화 로직 누락 또는 실패** | 권한을 변경해도 이전 상태가 계속 유지됨. (예: 권한을 줬는데 없다고 나옴) | 역할/바인딩 변경 로직 마지막에 관련 **이벤트가 정상적으로 발행**되는지 확인. `ChannelPermissionCacheManager`가 이벤트를 수신하여 캐시를 무효화하는지 로그로 확인. |
 | ChannelRoleBinding 미설정 (사용자 정의 채널) | 채널 목록/게시글 전부 미노출 | 권한 매트릭스 저장 후 최소 VIEW 권한 부여 |
 | 기본 채널 템플릿 손상 | 기본 공지/자유 접근 불가 | 템플릿 재적용(수동 재설정) 또는 재생성 + 재구성 |
 | Bearer 접두사 누락 | INVALID_TOKEN | 헤더 형식 강제 (`Bearer `) |

@@ -4,12 +4,18 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.castlekong.backend.dto.*
+import org.castlekong.backend.dto.ApiResponse
+import org.castlekong.backend.dto.GoogleLoginRequest
+import org.castlekong.backend.dto.LoginResponse
+import org.castlekong.backend.dto.RefreshTokenResponse
+import org.castlekong.backend.dto.UserResponse
 import org.castlekong.backend.exception.ValidationException
 import org.castlekong.backend.service.AuthService
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 
 @RestController
@@ -34,8 +40,10 @@ class AuthController(
             when {
                 !googleLoginRequest.googleAuthToken.isNullOrBlank() ->
                     authService.authenticateWithGoogle(googleLoginRequest.googleAuthToken)
+
                 !googleLoginRequest.googleAccessToken.isNullOrBlank() ->
                     authService.authenticateWithGoogleAccessToken(googleLoginRequest.googleAccessToken)
+
                 else -> throw ValidationException("Google token is required")
             }
         return ApiResponse.success(loginResponse)
@@ -78,8 +86,9 @@ class AuthController(
     fun refreshToken(
         @RequestBody payload: Map<String, String>,
     ): ApiResponse<RefreshTokenResponse> {
-        val refreshToken = payload["refreshToken"]
-            ?: throw ValidationException("refreshToken is required")
+        val refreshToken =
+            payload["refreshToken"]
+                ?: throw ValidationException("refreshToken is required")
 
         val response = authService.refreshAccessToken(refreshToken)
         return ApiResponse.success(response)
@@ -103,5 +112,19 @@ class AuthController(
     fun resetProfileStatus(): ApiResponse<String> {
         val updatedCount = authService.resetAllUsersProfileStatus()
         return ApiResponse.success("Updated $updatedCount users' profileCompleted status to false")
+    }
+
+    // 임시 디버그용 API - 이메일로 개발 토큰 생성
+    @PostMapping("/debug/generate-token")
+    @Operation(summary = "[DEBUG] 이메일로 개발 토큰 생성", description = "디버그용 API - 개발 환경에서만 사용")
+    fun generateDevToken(
+        @RequestBody payload: Map<String, String>,
+    ): ApiResponse<LoginResponse> {
+        val email =
+            payload["email"]
+                ?: throw ValidationException("email is required")
+
+        val loginResponse = authService.generateDevToken(email)
+        return ApiResponse.success(loginResponse)
     }
 }

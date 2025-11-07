@@ -18,6 +18,14 @@ import '../../../core/theme/app_colors.dart';
 ///   description: '새로운 그룹을 만들어보세요',
 ///   onTap: () => navigateToCreateGroup(),
 /// )
+///
+/// ActionCard(
+///   icon: Icons.delete,
+///   title: '그룹 삭제',
+///   description: '그룹을 영구적으로 삭제합니다',
+///   isDestructive: true,
+///   onTap: () => confirmDelete(),
+/// )
 /// ```
 class ActionCard extends StatelessWidget {
   final IconData icon;
@@ -25,6 +33,8 @@ class ActionCard extends StatelessWidget {
   final String description;
   final VoidCallback? onTap;
   final String? semanticsLabel;
+  final bool isDestructive;
+  final bool showChevron;
 
   const ActionCard({
     super.key,
@@ -33,41 +43,67 @@ class ActionCard extends StatelessWidget {
     required this.description,
     this.onTap,
     this.semanticsLabel,
+    this.isDestructive = false,
+    this.showChevron = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = isDestructive
+        ? AppColors.error.withValues(alpha: 0.05)
+        : AppColors.neutral100;
+    final iconColor = isDestructive ? AppColors.error : AppColors.action;
+    final titleColor = isDestructive ? AppColors.error : AppColors.neutral900;
+
     return Semantics(
       button: true,
       label: semanticsLabel ?? '$title. $description',
-      child: Card(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  icon,
-                  size: AppComponents.actionCardIconSize,
-                  color: AppColors.action, // 하이라이트 블루 #1E6FFF
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  title,
-                  style: AppTheme.titleLargeTheme(context),
-                ),
-                const SizedBox(height: AppSpacing.xxs / 2),
-                Text(
-                  description,
-                  style: AppTheme.bodySmallTheme(context).copyWith(
-                    color: AppColors.neutral600,
-                  ),
-                ),
-              ],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.button),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(AppRadius.button),
+            border: Border.all(
+              color: isDestructive
+                  ? AppColors.error.withValues(alpha: 0.2)
+                  : AppColors.neutral300,
+              width: 1,
             ),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: iconColor, size: 28),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTheme.titleLargeTheme(
+                        context,
+                      ).copyWith(color: titleColor),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: AppTheme.bodySmallTheme(
+                        context,
+                      ).copyWith(color: AppColors.neutral600),
+                    ),
+                  ],
+                ),
+              ),
+              if (showChevron)
+                Icon(
+                  Icons.chevron_right,
+                  color: AppColors.neutral400,
+                  size: 20,
+                ),
+            ],
           ),
         ),
       ),

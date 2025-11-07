@@ -18,7 +18,7 @@ enum class GroupPermission {
      * - 커스텀 역할 생성, 수정, 삭제
      * - 가입 신청 승인/반려
      */
-    ADMIN_MANAGE,
+    MEMBER_MANAGE,
 
     /**
      * 채널 관리 권한
@@ -35,4 +35,10 @@ enum class GroupPermission {
      */
     RECRUITMENT_MANAGE,
 
+    /**
+     * 캘린더 관리 권한
+     * - 공식 일정 생성/수정/삭제
+     * - 일정 설정 관리
+     */
+    CALENDAR_MANAGE,
 }
