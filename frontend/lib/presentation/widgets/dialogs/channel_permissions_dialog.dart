@@ -48,7 +48,6 @@ class _ChannelPermissionsDialogState
 
   // 권한별 선택된 역할 ID Set
   final Map<String, Set<int>> _permissionMatrix = {
-    'CHANNEL_VIEW': {},
     'POST_READ': {},
     'POST_WRITE': {},
     'COMMENT_WRITE': {},
@@ -75,8 +74,25 @@ class _ChannelPermissionsDialogState
     });
 
     try {
+      // 1. 역할 목록 로드
       final roleRepository = ApiRoleRepository();
       final roles = await roleRepository.getGroupRoles(widget.groupId);
+
+      // 2. 기존 권한 바인딩 로드
+      final channelService = ChannelService();
+      final bindings =
+          await channelService.getChannelRoleBindings(widget.channelId);
+
+      // 3. 바인딩을 _permissionMatrix로 변환 (기존 권한을 체크박스에 표시)
+      for (final binding in bindings) {
+        final roleId = binding['groupRoleId'] as int;
+        final permissions = (binding['permissions'] as List).cast<String>();
+
+        for (final permission in permissions) {
+          // POST_READ, POST_WRITE 등 권한을 해당 역할의 Set에 추가
+          _permissionMatrix[permission]?.add(roleId);
+        }
+      }
 
       setState(() {
         _roles = roles;
@@ -84,17 +100,17 @@ class _ChannelPermissionsDialogState
       });
     } catch (e) {
       setState(() {
-        _errorMessage = '역할 목록을 불러올 수 없습니다: $e';
+        _errorMessage = '역할 및 권한 정보를 불러올 수 없습니다: $e';
         _isLoadingRoles = false;
       });
     }
   }
 
   Future<void> _handleSave() async {
-    // 최소 1개 역할에 CHANNEL_VIEW 권한 검증
-    if (_permissionMatrix['CHANNEL_VIEW']!.isEmpty) {
+    // 최소 1개 역할에 POST_READ 권한 검증 (채널 접근의 기본 권한)
+    if (_permissionMatrix['POST_READ']!.isEmpty) {
       setState(() {
-        _errorMessage = '최소 1개 역할에 "채널 보기" 권한을 부여해야 합니다';
+        _errorMessage = '최소 1개 역할에 "게시글 읽기" 권한을 부여해야 합니다';
       });
       return;
     }
@@ -258,7 +274,7 @@ class _ChannelPermissionsDialogState
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
-                  '최소 1개 역할에 "채널 보기" 권한을 부여해야 합니다',
+                  '최소 1개 역할에 "게시글 읽기" 권한을 부여해야 합니다',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.onSurface.withValues(alpha: 0.8),
@@ -272,16 +288,10 @@ class _ChannelPermissionsDialogState
 
         // 권한별 역할 선택
         _buildPermissionSection(
-          'CHANNEL_VIEW',
-          '채널 보기',
-          '채널 목록에 표시',
-          isRequired: true,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _buildPermissionSection(
           'POST_READ',
           '게시글 읽기',
-          '게시글과 댓글 조회',
+          '게시글과 댓글 조회 (채널 접근 필수)',
+          isRequired: true,
         ),
         const SizedBox(height: AppSpacing.sm),
         _buildPermissionSection(

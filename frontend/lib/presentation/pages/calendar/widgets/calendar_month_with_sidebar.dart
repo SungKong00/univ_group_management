@@ -5,6 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../../../domain/models/calendar_event_base.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../widgets/calendar/calendar_event_card.dart';
 
 /// Generic month calendar component with sidebar event list.
 ///
@@ -112,8 +113,8 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
         focusedDay: widget.focusedDate,
         availableGestures: AvailableGestures.horizontalSwipe,
         headerVisible: false,
-        rowHeight: 96,
-        daysOfWeekHeight: 32,
+        rowHeight: 114,
+        daysOfWeekHeight: 28,
         daysOfWeekStyle: DaysOfWeekStyle(
           weekdayStyle: dowTextStyle,
           weekendStyle: dowTextStyle.copyWith(color: AppColors.neutral600),
@@ -128,7 +129,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
         calendarStyle: const CalendarStyle(
           isTodayHighlighted: false,
           cellMargin: EdgeInsets.all(4),
-          cellPadding: EdgeInsets.all(6),
+          cellPadding: EdgeInsets.all(5),
           outsideDaysVisible: true,
           canMarkersOverflow: true,
         ),
@@ -207,13 +208,18 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
             ],
           );
         } else {
-          // Narrow screen: Column layout
-          return Column(
-            children: [
-              calendarWidget,
-              const SizedBox(height: AppSpacing.sm),
-              Expanded(child: eventListWidget),
-            ],
+          // Narrow screen: Column layout with full scroll
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                calendarWidget,
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  height: 400, // Fixed height for event list in column layout
+                  child: eventListWidget,
+                ),
+              ],
+            ),
           );
         }
       },
@@ -246,7 +252,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
 
     if (isToday) {
       dayLabel = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
         decoration: BoxDecoration(
           color: AppColors.actionTonalBg,
           borderRadius: BorderRadius.circular(8),
@@ -268,7 +274,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(11),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(5),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,7 +328,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
       itemBuilder: (context, index) {
         final event = selectedEvents[index];
         return SizedBox(
-          height: 80, // 고정 높이 지정 (Sliver 에러 방지)
+          height: 100, // 고정 높이 지정 (픽셀 오버플로우 방지)
           child: InkWell(
             onTap: () => widget.onEventTap(event),
             child: widget.eventCardBuilder != null
@@ -362,56 +368,20 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
   }
 
   /// Default event card builder (used in sidebar list)
+  /// Uses CalendarEventCard component (Personal/Group Calendar mode)
   Widget _buildDefaultEventCard(T event) {
-    final textTheme = Theme.of(context).textTheme;
     final timeFormatter = DateFormat('HH:mm');
     final timeLabel = event.isAllDay
         ? '종일'
         : '${timeFormatter.format(event.startDateTime)} ~ ${timeFormatter.format(event.endDateTime)}';
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lightOutline),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 6,
-            height: 48,
-            decoration: BoxDecoration(
-              color: event.color,
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(event.title, style: textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(
-                  timeLabel,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.neutral600,
-                  ),
-                ),
-                if (event.location != null && event.location!.isNotEmpty)
-                  Text(
-                    event.location!,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: AppColors.neutral600,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return CalendarEventCard(
+      title: event.title,
+      color: event.color,
+      timeLabel: timeLabel,
+      location: event.location,
+      showIcons: false,
+      onTap: null, // onTap is handled by parent InkWell
     );
   }
 

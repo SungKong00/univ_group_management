@@ -37,6 +37,28 @@ data class CreateChannelRequest(
     val type: String? = null,
 )
 
+/**
+ * 채널 생성 + 권한 설정 통합 요청
+ *
+ * 채널 기본 정보와 역할별 권한을 한 번에 수집하여
+ * 백엔드에서 트랜잭션으로 원자적으로 처리
+ */
+data class CreateChannelWithPermissionsRequest(
+    @field:NotBlank(message = "채널 이름은 필수입니다")
+    @field:Size(min = 1, max = 100, message = "채널 이름은 1자 이상 100자 이하여야 합니다")
+    val name: String,
+    @field:Size(max = 500, message = "설명은 500자를 초과할 수 없습니다")
+    val description: String? = null,
+    val type: String? = null,
+
+    /**
+     * 역할별 권한 설정
+     * Key: groupRoleId
+     * Value: 권한 문자열 집합 (예: ["POST_READ", "POST_WRITE"])
+     */
+    val rolePermissions: Map<Long, Set<String>>,
+)
+
 data class UpdateChannelRequest(
     val name: String? = null,
     val description: String? = null,
@@ -80,7 +102,7 @@ data class PostResponse(
     val lastCommentedAt: LocalDateTime?,
     val attachments: Set<String>,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
+    val updatedAt: LocalDateTime?,
 )
 
 // Comment DTOs

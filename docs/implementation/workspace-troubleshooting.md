@@ -79,6 +79,22 @@ switch (currentView) {
 
 ## 발생한 오류 및 해결
 
+### 읽지 않은 글 경계선 표시 안 됨 (2025-11-03)
+**증상**: 워크스페이스 채널에서 읽지 않은 글 뱃지는 정상이나, 경계선 표시 및 자동 스크롤이 작동하지 않음
+
+**원인**: `read_position_helper.dart`의 `findFirstUnreadGlobalIndex()` 메서드가 `lastReadPostId == null`을 잘못 해석
+- 기존: null → "읽지 않은 글 없음" (return null)
+- 올바른 해석: null → "모든 글이 읽지 않음" (return 0)
+
+**해결**:
+1. **read_position_helper.dart** (line 51-60)
+   - `lastReadPostId == null`일 때 0 반환 (첫 번째 글이 읽지 않음)
+   - `lastReadPostId`를 찾지 못한 경우 null 반환 (모든 글이 읽음)
+
+2. **post_list.dart** (line 127-160, 264-268)
+   - `_waitForReadPositionData()` 메서드 추가 (Race Condition 방지)
+   - AutoScrollController 대기 시간 100ms → 300ms 증가
+
 ### BoxConstraints 무한 너비 에러
 **원인**: Row/Column 내부에서 무제한 크기 위젯 사용
 **해결**: Expanded, Flexible로 명시적 크기 제약

@@ -15,8 +15,8 @@ import java.time.LocalTime
 data class OperatingHoursResponse(
     val id: Long,
     val dayOfWeek: DayOfWeek,
-    val startTime: LocalTime,
-    val endTime: LocalTime,
+    val startTime: LocalTime?,
+    val endTime: LocalTime?,
     val isClosed: Boolean,
 )
 
@@ -34,10 +34,8 @@ data class SetOperatingHoursRequest(
 data class OperatingHoursItem(
     @field:NotNull(message = "요일은 필수입니다")
     val dayOfWeek: DayOfWeek,
-    @field:NotNull(message = "시작 시간은 필수입니다")
-    val startTime: LocalTime,
-    @field:NotNull(message = "종료 시간은 필수입니다")
-    val endTime: LocalTime,
+    val startTime: LocalTime?,
+    val endTime: LocalTime?,
     val isClosed: Boolean = false,
 )
 

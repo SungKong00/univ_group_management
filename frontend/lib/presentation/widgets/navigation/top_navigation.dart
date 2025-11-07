@@ -104,7 +104,7 @@ class TopNavigation extends ConsumerWidget {
     );
   }
 
-  void _handleBackNavigation(BuildContext context, WidgetRef ref) {
+  Future<void> _handleBackNavigation(BuildContext context, WidgetRef ref) async {
     final currentRoute = GoRouterState.of(context).uri.path;
 
     // Home navigation handling (priority)
@@ -122,13 +122,13 @@ class TopNavigation extends ConsumerWidget {
 
       // Web: handle web-specific back navigation
       if (layoutMode.isWide || layoutMode.isMedium) {
-        final handled = workspaceNotifier.handleWebBack();
+        final handled = await workspaceNotifier.handleWebBack();
         if (handled) return; // Internal navigation handled
         // If not handled, continue to normal navigation (go home)
       }
       // Mobile: handle mobile-specific back navigation
       else if (layoutMode.isCompact) {
-        final handled = workspaceNotifier.handleMobileBack();
+        final handled = await workspaceNotifier.handleMobileBack();
         if (handled) return; // Internal navigation handled
         // If not handled (channelList), continue to normal navigation (go home)
       }

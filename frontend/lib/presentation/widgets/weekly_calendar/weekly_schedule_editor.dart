@@ -155,6 +155,17 @@ class WeeklyScheduleEditor extends StatefulWidget {
   /// Return true if successfully deleted from server, false otherwise
   final Future<bool> Function(Event event)? onEventDelete;
 
+  /// Callback for toggling show all events (overlap view)
+  /// When true: show overlapping events side-by-side
+  /// When false: show overlapping events stacked
+  final Function(bool showAll)? onToggleShowAllEvents;
+
+  /// Initial calendar mode (add/edit/view)
+  final CalendarMode? initialMode;
+
+  /// Initial overlap view state
+  final bool? initialOverlapView;
+
   const WeeklyScheduleEditor({
     super.key,
     this.allowMultiDaySelection = false,
@@ -172,6 +183,9 @@ class WeeklyScheduleEditor extends StatefulWidget {
     this.onEventCreate,
     this.onEventUpdate,
     this.onEventDelete,
+    this.onToggleShowAllEvents,
+    this.initialMode,
+    this.initialOverlapView,
   });
 
   @override
@@ -223,6 +237,14 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     super.initState();
     _scrollController = ScrollController();
 
+    // Initialize mode and overlap view from widget parameters
+    if (widget.initialMode != null) {
+      _mode = widget.initialMode!;
+    }
+    if (widget.initialOverlapView != null) {
+      _isOverlapView = widget.initialOverlapView!;
+    }
+
     // Initialize with server data (for server-backed calendars)
     if (widget.initialEvents != null) {
       _events.addAll(widget.initialEvents!);
@@ -233,6 +255,42 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     _visibleEndHour = initialRange.endHour;
     WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
   }
+
+  // Public method to toggle between edit and add modes
+  void toggleMode() {
+    final newMode = _mode == CalendarMode.edit ? CalendarMode.add : CalendarMode.edit;
+    final range = _calculateVisibleHourRange(modeOverride: newMode);
+
+    setState(() {
+      _mode = newMode;
+      _isSelecting = false;
+      _startCell = null;
+      _endCell = null;
+      _selectionRect = null;
+      _highlightRect = null;
+      _visibleStartHour = range.startHour;
+      _visibleEndHour = range.endHour;
+      _hasAppliedInitialScroll = false;
+    });
+
+    // Reapply scroll to match new hour range
+    WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
+  }
+
+  // Get current mode for external state tracking
+  CalendarMode get currentMode => _mode;
+
+  // Public method to toggle overlap view
+  void toggleOverlapView() {
+    setState(() {
+      _isOverlapView = !_isOverlapView;
+    });
+    // Notify parent widget if callback is provided
+    widget.onToggleShowAllEvents?.call(_isOverlapView);
+  }
+
+  // Get current overlap view state
+  bool get isOverlapView => _isOverlapView;
 
   @override
   void dispose() {
@@ -1313,7 +1371,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     // View mode: no further interaction if no events
     if (_mode == CalendarMode.view) return;
 
-    // Add mode or Edit mode (when not tapping an event): create new event
+    // Add mode: create new event
+    // Edit mode: no drag-to-create (only edit existing events)
+    if (_mode != CalendarMode.add) return;
+
     if (!_isSelecting) {
       setState(() {
         _isSelecting = true;
@@ -1332,6 +1393,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
     // View mode: no interaction
     if (_mode == CalendarMode.view) return;
+
+    // Edit mode: no drag-to-create (only edit existing events)
+    if (_mode != CalendarMode.add) return;
 
     final localPosition =
         _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
@@ -1410,146 +1474,101 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Mode selector and overlap view toggle
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              // Add event button (switches to add mode temporarily)
-              if (_mode != CalendarMode.add)
-                Flexible(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      final range = _calculateVisibleHourRange(modeOverride: CalendarMode.add);
-                      setState(() {
-                        _mode = CalendarMode.add;
-                        _visibleStartHour = range.startHour;
-                        _visibleEndHour = range.endHour;
-                        _hasAppliedInitialScroll = false;
-                      });
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('일정 추가'),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Theme.of(context).colorScheme.primary,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white, // 배경색 설정 (그룹 캘린더 주간 뷰 문제 해결)
+        borderRadius: BorderRadius.circular(12), // 둥근 테두리
+      ),
+      child: Column(
+        children: [
+          // Mode indicator message
+          if (_mode == CalendarMode.add)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline,
+                    size: 18,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '시간표를 드래그하여 일정을 추가하세요',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-              if (_mode == CalendarMode.add)
-                Flexible(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                ],
+              ),
+            ),
+          // Calendar content
+          Expanded(
+            child: Column(
+              children: [
+                // Header row with day names and overlap toggle
+                SizedBox(
+                  height: _dayRowHeight,
+                  child: Stack(
                     children: [
-                      const Icon(Icons.info_outline, size: 20),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          '캘린더를 드래그하여 시간을 선택하세요',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                      // Day names header
+                      IgnorePointer(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return CustomPaint(
+                              size: Size(constraints.maxWidth, _dayRowHeight),
+                              painter: TimeGridPainter(
+                                startHour: _visibleStartHour,
+                                endHour: _visibleEndHour,
+                                timeColumnWidth: _timeColumnWidth,
+                                weekStart: _effectiveWeekStart,
+                                paintHeader: true,
+                                paintGrid: false,
+                              ),
+                            );
+                          },
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      TextButton(
-                        onPressed: () {
-                          // Return to edit mode
-                          final range = _calculateVisibleHourRange(modeOverride: CalendarMode.edit);
-                          setState(() {
-                            _mode = CalendarMode.edit;
-                            _isSelecting = false;
-                            _startCell = null;
-                            _endCell = null;
-                            _selectionRect = null;
-                            _highlightRect = null;
-                            _visibleStartHour = range.startHour;
-                            _visibleEndHour = range.endHour;
-                            _hasAppliedInitialScroll = false;
-                          });
-                        },
-                        child: const Text('취소'),
                       ),
                     ],
                   ),
                 ),
-              const Spacer(),
-              // Overlap view toggle
-              Tooltip(
-                message: _isOverlapView ? '겹친 일정 펼치기' : '겹친 일정 접기',
-                child: IconButton(
-                  icon: Icon(_isOverlapView ? Icons.view_week : Icons.layers),
-                  onPressed: () {
-                    setState(() {
-                      _isOverlapView = !_isOverlapView;
-                    });
-                  },
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Calendar content
-        Expanded(
-          child: Column(
-            children: [
-              SizedBox(
-                height: _dayRowHeight,
-                child: IgnorePointer(
+                Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      return CustomPaint(
-                        size: Size(constraints.maxWidth, _dayRowHeight),
-                        painter: TimeGridPainter(
-                          startHour: _visibleStartHour,
-                          endHour: _visibleEndHour,
-                          timeColumnWidth: _timeColumnWidth,
-                          weekStart: _effectiveWeekStart,
-                          paintHeader: true,
-                          paintGrid: false,
+                      final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
+                      final double contentHeight = (_visibleEndHour - _visibleStartHour) * 4 * _minSlotHeight;
+
+                      _currentDayColumnWidth = dayColumnWidth;
+                      _currentContentHeight = contentHeight;
+                      _currentViewportHeight = constraints.maxHeight; // 실제 뷰포트 높이 저장
+
+                      final allEvents = _getAllEvents();
+                      final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {
+                        return (rect: _eventToRect(event, dayColumnWidth), event: event);
+                      }).toList();
+
+                      WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
+
+                      return SingleChildScrollView(
+                        controller: _scrollController,
+                        physics: _isSelecting ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
+                        child: SizedBox(
+                          height: contentHeight,
+                          child: kIsWeb
+                              ? _buildWebGestureHandler(dayColumnWidth, eventRects, contentHeight)
+                              : _buildMobileGestureHandler(dayColumnWidth, eventRects, contentHeight),
                         ),
                       );
                     },
                   ),
                 ),
-              ),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
-                    final double contentHeight = (_visibleEndHour - _visibleStartHour) * 4 * _minSlotHeight;
-
-                    _currentDayColumnWidth = dayColumnWidth;
-                    _currentContentHeight = contentHeight;
-                    _currentViewportHeight = constraints.maxHeight; // 실제 뷰포트 높이 저장
-
-                    final allEvents = _getAllEvents();
-                    final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {
-                      return (rect: _eventToRect(event, dayColumnWidth), event: event);
-                    }).toList();
-
-                    WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
-
-                    return SingleChildScrollView(
-                      controller: _scrollController,
-                      physics: _isSelecting ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
-                      child: SizedBox(
-                        height: contentHeight,
-                        child: kIsWeb
-                            ? _buildWebGestureHandler(dayColumnWidth, eventRects, contentHeight)
-                            : _buildMobileGestureHandler(dayColumnWidth, eventRects, contentHeight),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

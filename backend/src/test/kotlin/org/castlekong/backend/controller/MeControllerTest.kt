@@ -67,34 +67,36 @@ class MeControllerTest {
         val suffix = System.nanoTime().toString()
 
         // Create test user
-        val testUserBase = TestDataFactory.createTestUser(
-            name = "테스트 사용자",
-            email = "me-test-$suffix@example.com",
-            globalRole = GlobalRole.STUDENT,
-        )
-        testUser = userRepository.save(
-            User(
-                id = testUserBase.id,
-                name = testUserBase.name,
-                email = testUserBase.email,
-                password = testUserBase.password,
-                globalRole = testUserBase.globalRole,
-                isActive = testUserBase.isActive,
-                nickname = "테스터",
-                profileImageUrl = testUserBase.profileImageUrl,
-                bio = "테스트 계정입니다",
-                profileCompleted = true,
-                emailVerified = testUserBase.emailVerified,
-                college = testUserBase.college,
-                department = testUserBase.department,
-                studentNo = testUserBase.studentNo,
-                schoolEmail = testUserBase.schoolEmail,
-                professorStatus = testUserBase.professorStatus,
-                academicYear = testUserBase.academicYear,
-                createdAt = testUserBase.createdAt,
-                updatedAt = testUserBase.updatedAt,
+        val testUserBase =
+            TestDataFactory.createTestUser(
+                name = "테스트 사용자",
+                email = "me-test-$suffix@example.com",
+                globalRole = GlobalRole.STUDENT,
             )
-        )
+        testUser =
+            userRepository.save(
+                User(
+                    id = testUserBase.id,
+                    name = testUserBase.name,
+                    email = testUserBase.email,
+                    password = testUserBase.password,
+                    globalRole = testUserBase.globalRole,
+                    isActive = testUserBase.isActive,
+                    nickname = "테스터",
+                    profileImageUrl = testUserBase.profileImageUrl,
+                    bio = "테스트 계정입니다",
+                    profileCompleted = true,
+                    emailVerified = testUserBase.emailVerified,
+                    college = testUserBase.college,
+                    department = testUserBase.department,
+                    studentNo = testUserBase.studentNo,
+                    schoolEmail = testUserBase.schoolEmail,
+                    professorStatus = testUserBase.professorStatus,
+                    academicYear = testUserBase.academicYear,
+                    createdAt = testUserBase.createdAt,
+                    updatedAt = testUserBase.updatedAt,
+                ),
+            )
 
         // Create group and roles
         testGroup = createGroupWithRoles(testUser)

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/models/place/place.dart';
 import '../../../core/services/place_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../common/app_empty_state.dart';
 
 class PlaceSelectorBottomSheet extends StatefulWidget {
   final Function(List<Place>) onPlacesSelected;
@@ -140,12 +141,7 @@ class _PlaceSelectorBottomSheetState extends State<PlaceSelectorBottomSheet> {
           else
             Expanded(
               child: _places.isEmpty
-                  ? Center(
-                      child: Text(
-                        '사용 가능한 장소가 없습니다',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    )
+                  ? AppEmptyState.noPlaces()
                   : ListView.builder(
                       itemCount: _groupPlacesByBuilding().length,
                       itemBuilder: (context, index) {

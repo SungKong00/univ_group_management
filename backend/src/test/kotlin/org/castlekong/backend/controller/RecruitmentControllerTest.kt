@@ -92,90 +92,96 @@ class RecruitmentControllerTest {
         val suffix = System.nanoTime().toString()
 
         // Create users
-        val ownerBase = TestDataFactory.createTestUser(
-            name = "그룹장",
-            email = "owner-recruit-ctrl+$suffix@example.com",
-            globalRole = GlobalRole.STUDENT,
-        )
-        owner = userRepository.save(
-            User(
-                id = ownerBase.id,
-                name = ownerBase.name,
-                email = ownerBase.email,
-                password = ownerBase.password,
-                globalRole = ownerBase.globalRole,
-                isActive = ownerBase.isActive,
-                nickname = ownerBase.nickname,
-                profileImageUrl = ownerBase.profileImageUrl,
-                bio = ownerBase.bio,
-                profileCompleted = true,
-                emailVerified = ownerBase.emailVerified,
-                college = ownerBase.college,
-                department = ownerBase.department,
-                studentNo = ownerBase.studentNo,
-                schoolEmail = ownerBase.schoolEmail,
-                professorStatus = ownerBase.professorStatus,
-                academicYear = ownerBase.academicYear,
-                createdAt = ownerBase.createdAt,
-                updatedAt = ownerBase.updatedAt,
+        val ownerBase =
+            TestDataFactory.createTestUser(
+                name = "그룹장",
+                email = "owner-recruit-ctrl+$suffix@example.com",
+                globalRole = GlobalRole.STUDENT,
             )
-        )
+        owner =
+            userRepository.save(
+                User(
+                    id = ownerBase.id,
+                    name = ownerBase.name,
+                    email = ownerBase.email,
+                    password = ownerBase.password,
+                    globalRole = ownerBase.globalRole,
+                    isActive = ownerBase.isActive,
+                    nickname = ownerBase.nickname,
+                    profileImageUrl = ownerBase.profileImageUrl,
+                    bio = ownerBase.bio,
+                    profileCompleted = true,
+                    emailVerified = ownerBase.emailVerified,
+                    college = ownerBase.college,
+                    department = ownerBase.department,
+                    studentNo = ownerBase.studentNo,
+                    schoolEmail = ownerBase.schoolEmail,
+                    professorStatus = ownerBase.professorStatus,
+                    academicYear = ownerBase.academicYear,
+                    createdAt = ownerBase.createdAt,
+                    updatedAt = ownerBase.updatedAt,
+                ),
+            )
 
-        val memberBase = TestDataFactory.createStudentUser(
-            name = "멤버",
-            email = "member-recruit-ctrl+$suffix@example.com",
-        )
-        member = userRepository.save(
-            User(
-                id = memberBase.id,
-                name = memberBase.name,
-                email = memberBase.email,
-                password = memberBase.password,
-                globalRole = memberBase.globalRole,
-                isActive = memberBase.isActive,
-                nickname = memberBase.nickname,
-                profileImageUrl = memberBase.profileImageUrl,
-                bio = memberBase.bio,
-                profileCompleted = true,
-                emailVerified = memberBase.emailVerified,
-                college = memberBase.college,
-                department = memberBase.department,
-                studentNo = memberBase.studentNo,
-                schoolEmail = memberBase.schoolEmail,
-                professorStatus = memberBase.professorStatus,
-                academicYear = memberBase.academicYear,
-                createdAt = memberBase.createdAt,
-                updatedAt = memberBase.updatedAt,
+        val memberBase =
+            TestDataFactory.createStudentUser(
+                name = "멤버",
+                email = "member-recruit-ctrl+$suffix@example.com",
             )
-        )
+        member =
+            userRepository.save(
+                User(
+                    id = memberBase.id,
+                    name = memberBase.name,
+                    email = memberBase.email,
+                    password = memberBase.password,
+                    globalRole = memberBase.globalRole,
+                    isActive = memberBase.isActive,
+                    nickname = memberBase.nickname,
+                    profileImageUrl = memberBase.profileImageUrl,
+                    bio = memberBase.bio,
+                    profileCompleted = true,
+                    emailVerified = memberBase.emailVerified,
+                    college = memberBase.college,
+                    department = memberBase.department,
+                    studentNo = memberBase.studentNo,
+                    schoolEmail = memberBase.schoolEmail,
+                    professorStatus = memberBase.professorStatus,
+                    academicYear = memberBase.academicYear,
+                    createdAt = memberBase.createdAt,
+                    updatedAt = memberBase.updatedAt,
+                ),
+            )
 
-        val outsiderBase = TestDataFactory.createStudentUser(
-            name = "외부인",
-            email = "outsider-recruit-ctrl+$suffix@example.com",
-        )
-        outsider = userRepository.save(
-            User(
-                id = outsiderBase.id,
-                name = outsiderBase.name,
-                email = outsiderBase.email,
-                password = outsiderBase.password,
-                globalRole = outsiderBase.globalRole,
-                isActive = outsiderBase.isActive,
-                nickname = outsiderBase.nickname,
-                profileImageUrl = outsiderBase.profileImageUrl,
-                bio = outsiderBase.bio,
-                profileCompleted = true,
-                emailVerified = outsiderBase.emailVerified,
-                college = outsiderBase.college,
-                department = outsiderBase.department,
-                studentNo = outsiderBase.studentNo,
-                schoolEmail = outsiderBase.schoolEmail,
-                professorStatus = outsiderBase.professorStatus,
-                academicYear = outsiderBase.academicYear,
-                createdAt = outsiderBase.createdAt,
-                updatedAt = outsiderBase.updatedAt,
+        val outsiderBase =
+            TestDataFactory.createStudentUser(
+                name = "외부인",
+                email = "outsider-recruit-ctrl+$suffix@example.com",
             )
-        )
+        outsider =
+            userRepository.save(
+                User(
+                    id = outsiderBase.id,
+                    name = outsiderBase.name,
+                    email = outsiderBase.email,
+                    password = outsiderBase.password,
+                    globalRole = outsiderBase.globalRole,
+                    isActive = outsiderBase.isActive,
+                    nickname = outsiderBase.nickname,
+                    profileImageUrl = outsiderBase.profileImageUrl,
+                    bio = outsiderBase.bio,
+                    profileCompleted = true,
+                    emailVerified = outsiderBase.emailVerified,
+                    college = outsiderBase.college,
+                    department = outsiderBase.department,
+                    studentNo = outsiderBase.studentNo,
+                    schoolEmail = outsiderBase.schoolEmail,
+                    professorStatus = outsiderBase.professorStatus,
+                    academicYear = outsiderBase.academicYear,
+                    createdAt = outsiderBase.createdAt,
+                    updatedAt = outsiderBase.updatedAt,
+                ),
+            )
 
         // Create group and roles
         group = createGroupWithRoles(owner)

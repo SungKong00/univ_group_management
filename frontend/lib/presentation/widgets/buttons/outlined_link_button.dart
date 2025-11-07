@@ -42,9 +42,9 @@ class OutlinedLinkButton extends StatelessWidget {
             text: text,
             icon: icon,
             isLoading: isLoading,
-            textStyle: AppTheme.bodyMediumTheme(
+            textStyle: AppTheme.bodyLargeTheme(
               context,
-            ).copyWith(color: AppColors.brand, fontWeight: FontWeight.w500),
+            ).copyWith(color: AppColors.brand, fontWeight: FontWeight.w600),
             indicatorColor: AppColors.brand,
           ),
         ),
@@ -64,13 +64,20 @@ class OutlinedLinkButton extends StatelessWidget {
       },
     );
 
-    // width가 지정된 경우만 SizedBox로 감싸기
-    // Row 내에서 너비 제약 없이 사용 가능하도록 조건부 처리
+    // width가 지정된 경우 SizedBox로 감싸기
     if (width != null) {
       return SizedBox(width: width, child: button);
     }
 
-    return button;
+    // width가 지정되지 않았을 때는 ConstrainedBox로 감싸서
+    // 부모의 제약을 존중하되 최소/최대 크기를 설정
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        minWidth: 0,
+        maxWidth: double.infinity,
+      ),
+      child: button,
+    );
   }
 }
 class AdminLoginButton extends StatelessWidget {

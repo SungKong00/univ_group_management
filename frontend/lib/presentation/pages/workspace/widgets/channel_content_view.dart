@@ -56,7 +56,8 @@ class _ChannelContentViewState extends ConsumerState<ChannelContentView> {
     final canWritePost = channelPermissions?.canWritePost ?? false;
 
     // 권한이 없는 경우 권한 에러 표시
-    if (channelPermissions != null && !channelPermissions.canViewChannel) {
+    // POST_READ 권한이 채널 접근의 기본 권한으로 작동
+    if (channelPermissions != null && !channelPermissions.canReadPost) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),

@@ -114,34 +114,36 @@ class ContentControllerTest {
         val suffix = System.nanoTime().toString()
 
         // Create users
-        val ownerBase = TestDataFactory.createTestUser(
-            name = "그룹장",
-            email = "owner-ctrl+$suffix@example.com",
-            globalRole = GlobalRole.STUDENT,
-        )
-        owner = userRepository.save(
-            User(
-                id = ownerBase.id,
-                name = ownerBase.name,
-                email = ownerBase.email,
-                password = ownerBase.password,
-                globalRole = ownerBase.globalRole,
-                isActive = ownerBase.isActive,
-                nickname = ownerBase.nickname,
-                profileImageUrl = ownerBase.profileImageUrl,
-                bio = ownerBase.bio,
-                profileCompleted = true,
-                emailVerified = ownerBase.emailVerified,
-                college = ownerBase.college,
-                department = ownerBase.department,
-                studentNo = ownerBase.studentNo,
-                schoolEmail = ownerBase.schoolEmail,
-                professorStatus = ownerBase.professorStatus,
-                academicYear = ownerBase.academicYear,
-                createdAt = ownerBase.createdAt,
-                updatedAt = ownerBase.updatedAt,
+        val ownerBase =
+            TestDataFactory.createTestUser(
+                name = "그룹장",
+                email = "owner-ctrl+$suffix@example.com",
+                globalRole = GlobalRole.STUDENT,
             )
-        )
+        owner =
+            userRepository.save(
+                User(
+                    id = ownerBase.id,
+                    name = ownerBase.name,
+                    email = ownerBase.email,
+                    password = ownerBase.password,
+                    globalRole = ownerBase.globalRole,
+                    isActive = ownerBase.isActive,
+                    nickname = ownerBase.nickname,
+                    profileImageUrl = ownerBase.profileImageUrl,
+                    bio = ownerBase.bio,
+                    profileCompleted = true,
+                    emailVerified = ownerBase.emailVerified,
+                    college = ownerBase.college,
+                    department = ownerBase.department,
+                    studentNo = ownerBase.studentNo,
+                    schoolEmail = ownerBase.schoolEmail,
+                    professorStatus = ownerBase.professorStatus,
+                    academicYear = ownerBase.academicYear,
+                    createdAt = ownerBase.createdAt,
+                    updatedAt = ownerBase.updatedAt,
+                ),
+            )
 
         member =
             userRepository.save(
@@ -237,7 +239,6 @@ class ContentControllerTest {
     ) {
         val ownerPermissions =
             setOf(
-                org.castlekong.backend.entity.ChannelPermission.CHANNEL_VIEW,
                 org.castlekong.backend.entity.ChannelPermission.POST_READ,
                 org.castlekong.backend.entity.ChannelPermission.POST_WRITE,
                 org.castlekong.backend.entity.ChannelPermission.COMMENT_WRITE,
@@ -246,7 +247,6 @@ class ContentControllerTest {
 
         val memberPermissions =
             setOf(
-                org.castlekong.backend.entity.ChannelPermission.CHANNEL_VIEW,
                 org.castlekong.backend.entity.ChannelPermission.POST_READ,
                 org.castlekong.backend.entity.ChannelPermission.POST_WRITE,
                 org.castlekong.backend.entity.ChannelPermission.COMMENT_WRITE,

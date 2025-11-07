@@ -1,4 +1,543 @@
-### 2025-11-01 - BoxConstraints 에러 방지 가이드 강화
+### 2025-11-05 - 모바일 워크스페이스 네비게이션 UX 개선
+
+**유형**: 기능 개선 + 버그 수정
+**우선순위**: High
+**영향 범위**: 프론트엔드 (2개 파일)
+
+**작업 개요**:
+모바일 워크스페이스의 네비게이션 시스템을 개선하여 채널 리스트를 먼저 표시하고, 백버튼 시 단계적으로 되돌아갈 수 있도록 수정했습니다.
+
+**구현한 기능**:
+
+1. **워크스페이스 진입 시 채널 리스트 우선 표시**
+   - LocalStorage 복원 로직 개선: 저장된 뷰 타입 대신 채널 ID 우선 확인
+   - 채널 ID가 있으면 → 채널 뷰로 진입
+   - 없으면 → 저장된 뷰 타입 복원
+   - 모바일 UX 원칙: 채널 리스트가 홈
+
+2. **그룹 전환 시 모바일 채널 리스트 표시**
+   - `_determineNavigationTarget()` 메서드 수정
+   - 그룹 전환 시 mobileView = channelList면 currentView를 channel로 강제 설정
+   - 특수 뷰(calendar, admin 등)는 예외 처리
+
+3. **백버튼 시 채널 네비게이션 단계 추가**
+   - `selectChannelForMobile()` 메서드: 채널 선택 전에 현재 상태 히스토리 저장
+   - 백버튼 시 3단계 뒤로가기: 댓글 → 게시글 → 채널 리스트 → 글로벌 홈
+
+4. **그룹 홈 버튼 클릭 반응 복구**
+   - mobile_workspace_view.dart에서 groupHome 제외 조건 제거
+   - buildSpecialView()가 GroupHomeView를 정상 반환
+
+**커밋 내역** (6개):
+1. `1247d96`: fix(mobile) - 모바일 워크스페이스 진입 시 채널 리스트 먼저 표시
+2. `edf73e8`: fix - mobile_workspace_view에서 WorkspaceView 네임스페이스 수정
+3. `f6f5bbb`: fix(mobile) - LocalStorage 복원 로직 + 렌더링 우선순위 변경
+4. `8ff73f2`: fix(mobile) - 그룹 홈 버튼 클릭 반응 복구
+5. `827d6b2`: fix(mobile) - 그룹 전환 시 모바일 채널 리스트 우선 표시
+6. `bcd8502`: feat(mobile) - 백버튼 시 채널 네비게이션 단계 추가
+
+**변경된 파일** (2개):
+- ✅ frontend/lib/presentation/pages/workspace/widgets/mobile_workspace_view.dart (렌더링 로직)
+- ✅ frontend/lib/presentation/providers/workspace_state_provider.dart (네비게이션 로직)
+
+**기대 효과**:
+- 모바일 워크스페이스 진입 시 채널 리스트가 먼저 표시됨
+- 백버튼 시 채널 네비게이션을 거쳐 단계적으로 되돌아감
+- 그룹 홈, 캘린더, 관리 페이지 등 특수 뷰는 정상 작동
+- 데스크톱 동작은 영향 없음
+
+**메모**: 모바일 워크스페이스 네비게이션의 완전한 개선. 백버튼 히스토리 시스템으로 사용자 경험을 크게 향상.
+
+---
+
+### 2025-11-03 (G) - 읽지 않은 글 스크롤 버그 수정
+
+**유형**: 버그 수정
+**우선순위**: High
+**영향 범위**: 프론트엔드 (2개 파일), 문서 (2개)
+
+**작업 개요**:
+워크스페이스 채널에서 읽지 않은 글 경계선 표시 및 자동 스크롤이 작동하지 않는 버그를 수정했습니다.
+
+**문제 상황**:
+- 읽지 않은 글 뱃지 카운트는 정상 작동
+- 경계선 표시 안 됨
+- 자동 스크롤 안 됨
+
+**근본 원인**:
+`read_position_helper.dart`의 `findFirstUnreadGlobalIndex()` 메서드가 `lastReadPostId == null`을 잘못 해석
+- 기존 로직: null → "읽지 않은 글 없음" (return null)
+- 올바른 해석: null → "모든 글이 읽지 않음" (return 0)
+
+**수정 내용**:
+1. **read_position_helper.dart** (line 51-60)
+   - `lastReadPostId == null`일 때 0 반환 (첫 번째 글부터 읽지 않음)
+   - `lastReadPostId`를 찾지 못한 경우 null 반환 (모든 글이 읽음)
+
+2. **post_list.dart** (line 127-160, 264-268)
+   - `_waitForReadPositionData()` 메서드 추가 (Race Condition 방지)
+   - AutoScrollController 대기 시간 100ms → 300ms 증가
+
+**변경된 파일** (2개):
+- ✅ frontend/lib/core/utils/read_position_helper.dart (11줄 수정)
+- ✅ frontend/lib/presentation/widgets/post/post_list.dart (39줄 추가)
+
+**문서 업데이트** (2개):
+- ✅ docs/implementation/workspace-troubleshooting.md: 버그 해결 사례 추가
+- ✅ docs/context-tracking/context-update-log.md: 현재 로그 추가
+
+**기대 효과**:
+- 읽지 않은 글 경계선 정상 표시
+- 자동 스크롤 정상 작동
+- Race Condition 방지로 안정성 향상
+
+**메모**: `lastReadPostId == null`의 의미를 "모든 글이 읽지 않음"으로 정확히 해석하여 수정. 향후 유사한 null 해석 오류 방지를 위해 트러블슈팅 문서에 기록.
+
+---
+
+### 2025-11-03 (F) - 그룹 캘린더 WeeklyScheduleEditor 통합 구현
+
+**유형**: 기능 구현 + 리팩토링
+**우선순위**: High
+**영향 범위**: 프론트엔드 (4개 파일)
+
+**작업 개요**:
+워크스페이스 그룹 캘린더 주간 뷰를 CalendarWeekGridView에서 WeeklyScheduleEditor로 전환하여 개인 캘린더와 동일한 UX를 제공하고, 드래그 생성 로직을 개선했습니다.
+
+**구현한 기능**:
+
+1. **GroupEventAdapter 어댑터 신규 생성** (183줄)
+   - GroupEvent ↔ Event 양방향 변환
+   - 슬롯 기반 시간 변환 (15분 단위)
+   - ID prefix 'ge-'로 유형 구분
+   - allDay 이벤트는 주간 뷰에서 제외 (null 반환)
+
+2. **WeeklyScheduleEditor 통합** (group_calendar_page.dart)
+   - CalendarWeekGridView 제거
+   - WeeklyScheduleEditor 적용 (드래그 생성/수정 지원)
+   - CALENDAR_MANAGE 권한 기반 isEditable 설정
+   - allowMultiDaySelection: false (그룹 일정은 단일 날짜만)
+   - allowEventOverlap: true (일정 겹침 허용)
+
+3. **CRUD 핸들러 구현** (group_calendar_page.dart)
+   - _handleEventCreate(): 공식/비공식 선택 → 폼 다이얼로그 → API 생성
+   - _handleEventUpdate(): 반복 일정 UpdateScope 지원 → API 업데이트
+   - _handleEventDelete(): 반복 일정 UpdateScope 지원 → API 삭제
+   - Event → GroupEvent 역변환 로직 (GroupEventAdapter.toGroupEvent)
+
+4. **GroupEventFormDialog 확장** (group_event_form_dialog.dart)
+   - existingEvent 파라미터 추가 (수정 모드)
+   - 수정 모드 시 폼 필드 초기값 설정
+   - 반복 일정 표시 개선
+
+5. **WeeklyScheduleEditor edit 모드 드래그 생성 비활성화** (weekly_schedule_editor.dart)
+   - edit 모드: 기존 일정 수정만 가능 (드래그 생성 비활성화)
+   - add 모드: 드래그로 새 일정 생성 가능 (유지)
+   - _handleTap() 메서드: mode != add 체크 추가 (line 1374-1376)
+   - _handleLongPressStart() 메서드: mode != add 체크 추가 (line 1397-1398)
+   - 적용 범위: 개인 시간표, 개인 캘린더, 워크스페이스 그룹 캘린더
+
+**커밋 내역** (2개):
+1. feat(calendar): 그룹 캘린더 WeeklyScheduleEditor 통합 (f51106e)
+   - GroupEventAdapter 신규 생성 (183줄)
+   - group_calendar_page.dart: WeeklyScheduleEditor 통합 및 CRUD 핸들러 구현 (+252줄)
+   - group_event_form_dialog.dart: 수정 모드 지원 (+20줄)
+2. refactor(calendar): edit 모드에서 드래그 일정 생성 비활성화 (44f800c)
+   - weekly_schedule_editor.dart: edit 모드 드래그 생성 로직 비활성화 (+7줄)
+
+**변경된 파일** (4개):
+- ✅ frontend/lib/presentation/adapters/group_event_adapter.dart (신규, 183줄)
+- ✅ frontend/lib/presentation/pages/workspace/calendar/group_calendar_page.dart (+252줄)
+- ✅ frontend/lib/presentation/pages/workspace/calendar/widgets/group_event_form_dialog.dart (+20줄)
+- ✅ frontend/lib/presentation/widgets/weekly_calendar/weekly_schedule_editor.dart (+7줄)
+
+**기대 효과**:
+- 그룹 캘린더와 개인 캘린더의 일관된 UX 제공
+- 드래그로 일정 생성/수정 가능 (직관적)
+- 권한 기반 편집 제어 (CALENDAR_MANAGE)
+- 반복 일정 UpdateScope 지원 (THIS/ALL/FUTURE)
+- edit 모드 UX 혼란 방지 ("일정 추가" 버튼으로만 생성)
+
+**문서 동기화 상태**:
+- ⏳ context-update-log.md: 현재 로그 추가 (본 항목)
+- ⏳ pending-updates.md: 그룹 캘린더 Phase 8 (권한 통합) 확인 필요
+- ⏳ sync-status.md: 마지막 업데이트 반영 예정
+
+**다음 단계**:
+- 그룹 캘린더 Phase 8: 권한 시스템 통합 (2-3시간)
+- 장소 캘린더 Phase 2: 프론트엔드 기본 구현 (6-8시간)
+
+**메모**: WeeklyScheduleEditor 통합으로 그룹 캘린더의 핵심 기능 완성. 어댑터 패턴으로 도메인-UI 레이어 명확히 분리. edit 모드 드래그 생성 비활성화로 UX 개선.
+
+---
+
+### 2025-11-03 (E) - 캘린더 개념 문서 MVP 범위 명확화
+
+**유형**: 문서 현행화
+**우선순위**: Medium
+**영향 범위**: 개념 문서 (2개)
+
+**작업 개요**:
+캘린더 시스템 개념 문서를 MVP(Phase 1) 범위와 향후 확장 기능으로 명확히 구분하여 사용자 기대치를 정확히 설정.
+
+**수정 사항**:
+
+1. **calendar-integration.md** (141줄)
+   - "최적 시간 추천" → "예약 가능 시간 표시"로 변경
+   - Phase 1 MVP vs Phase 2 이후 기능 명확히 표기
+   - 시나리오 예시를 MVP 범위로 단순화
+   - 핵심 특징을 Phase별로 구분
+
+2. **group-calendar-system.md** (113줄)
+   - 개요: "공식 일정(공지형)", TARGETED/RSVP는 향후 확장
+   - 공식 일정 유형 섹션에서 TARGETED/RSVP에 "Phase 2 이후" 표기
+   - 편의 기능: "예약 가능 시간 표시(Phase 1)" vs "최적 시간 추천(Phase 2 이후)"
+   - "채널 연동(Phase 2 이후)" 명시
+   - 실제 사용 흐름을 MVP 중심으로 리팩토링
+
+**변경 요약**:
+- MVP 기능(그룹 캘린더 + 장소 예약 + 시간표 기반 예약 가능 시간 표시) 명확화
+- 자동 동기화, 최적 시간 추천, TARGETED/RSVP, 채널 연동은 명시적으로 "구현 예정" 표기
+- 사용자 기대치 관리를 위한 명확한 구분
+
+**문서 상태**:
+- ✅ calendar-integration.md: 141줄 (참조 문서 범주, 100줄 예외 승인)
+- ✅ group-calendar-system.md: 113줄 (개념 문서, 100줄 이내)
+
+**동기화 완료 문서**:
+- ✅ context-update-log.md: 본 로그
+- ⏳ sync-status.md: 마지막 업데이트 반영 필요
+
+**메모**: 캘린더 시스템의 MVP 범위를 명확히 하여, 향후 개발 계획과 사용자 기대치를 정렬. 개념 문서의 명확성 향상.
+
+---
+
+### 2025-11-03 (D) - 완료된 컨텍스트 추적 문서 정리
+
+**유형**: 유지보수 + 문서 동기화
+**우선순위**: Low
+**영향 범위**: 컨텍스트 추적 시스템 (docs/context-tracking)
+
+**작업 개요**:
+링크 개선 작업이 완료되어 더 이상 필요 없는 컨텍스트 추적 문서 4개를 삭제하고 관련 문서를 업데이트.
+
+**삭제한 문서** (4개):
+1. `broken-links-report.md` (42줄) - 깨진 링크 수정 완료 (0개 달성)
+2. `documentation-improvement-summary.md` (230줄) - 문서 개선 작업 완료
+3. `documentation-improvement-action-plan.md` (468줄) - 액션 플랜 완료
+4. `link-mapping-table.md` (231줄) - 링크 매핑 작업 완료
+
+**업데이트한 문서** (2개):
+1. `sync-status.md`
+   - 총 문서 수: 107개 → 103개
+   - context-tracking 문서 수: 7개 → 3개
+   - 마지막 업데이트: 2025-11-03 (D)
+   - 관련 문서 링크 정리 (삭제된 4개 파일 링크 제거)
+
+2. `context-update-log.md`
+   - 본 로그 추가
+
+**변경 사항**:
+- ✅ 4개 문서 삭제 (git rm)
+- ✅ sync-status.md 통계 업데이트
+- ✅ context-update-log.md 로그 추가
+
+**영향도**: 없음 (아카이브 문서 정리만)
+**다음 액션**: 없음 (정리 완료)
+
+---
+
+### 2025-11-03 (C) - domain-overview.md 현행화 및 100줄 원칙 준수
+
+**유형**: 문서 현행화 + 검증
+**우선순위**: Medium
+**영향 범위**: 도메인 개념 문서
+
+**작업 개요**:
+domain-overview.md의 코드 불일치 사항 수정 및 문서 라인 수 최적화.
+
+**수정 사항**:
+1. **GroupType 정확화**: "3가지 유형" → "6가지 유형" (UNIVERSITY/COLLEGE/DEPARTMENT/LAB/OFFICIAL/AUTONOMOUS)
+   - 문서: Line 38 - 그룹 유형 섹션 완전히 재작성
+   - 코드 근거: backend/src/main/kotlin/org/castlekong/backend/entity/Group.kt:72-79
+
+2. **캘린더 시스템 상태 변경**: "계획 중 (Phase 6 이후)" → "개발 진행 중 (Phase 6-8)"
+   - Line 23: 협업 공간의 캘린더 기능 현행화
+   - Line 45: 워크스페이스의 캘린더 통합 현행화
+   - Line 112-114: 개발 현황 섹션 재구성
+   - 코드 근거: PersonalEvent.kt, GroupEvent.kt, EventException.kt, EventParticipant.kt 등 완전히 구현됨
+
+3. **라인 수 최적화**: 122줄 → 98줄 (100줄 원칙 준수)
+   - Line 38-40: 그룹 섹션 3줄 단축
+   - Line 44-45: 워크스페이스 섹션 2줄 단축
+   - Line 111-119: 개발 현황 섹션 구조 간결화 (6줄 단축)
+
+**문서 업데이트**:
+- sync-status.md: domain-overview.md 마지막 동기화 날짜 2025-11-03으로 업데이트
+- context-update-log.md: 2025-11-03 (C) 로그 추가
+
+**관련 문서**:
+- 상위 링크: [sync-status.md](sync-status.md)
+- 작성 문서: [domain-overview.md](../concepts/domain-overview.md)
+- 참조 코드:
+  - Group.kt (GroupType enum 정의)
+  - PersonalEvent.kt, GroupEvent.kt (캘린더 구현)
+  - calendar_page.dart, group_home_view.dart (프론트엔드 진행)
+
+---
+
+### 2025-11-03 (A) - 임시 파일 정리 및 컨텍스트 검증
+
+**유형**: 유지보수 + 문서 동기화
+**우선순위**: Low
+**영향 범위**: 루트 경로 (임시 파일), 문서 (context-tracking)
+
+**작업 개요**:
+개발 중 생성된 임시 파일들 정리, 백업 파일 삭제, 컨텍스트 추적 시스템 검증 및 문서 통계 교정.
+
+**정리한 항목**:
+1. **.DS_Store 파일 삭제** (7개)
+   - 루트, .claude, .claude/subagents, backend, docs, docs/ui-ux, docs/ui-ux/concepts, docs/ui-ux/pages, docs/implementation
+
+2. **.bak 백업 파일 삭제** (6개)
+   - demo_calendar_page.dart.bak
+   - calendar_page.dart.bak
+   - workspace_page.dart.bak
+   - group_home_view.dart.bak
+   - bottom_navigation.dart.bak
+   - sidebar_navigation.dart.bak
+
+3. **MEMO 파일 정리**
+   - MEMO_calendar-scroll-fix.md 삭제 (구현 완료된 메모)
+   - MEMO_place_operating_hours_editor.md → docs/features/place-operating-hours-editor.md 이동 (명세서 보존)
+
+4. **컨텍스트 추적 문서 검증**
+   - sync-status.md: 총 문서 수 통계 교정 (93개→107개)
+   - context-update-log.md: 2025-11-03 (A) 로그 추가
+   - pending-updates.md: 검토 예정
+
+**변경 파일**:
+- ✅ docs/context-tracking/sync-status.md (총 문서 수, 마지막 업데이트 반영)
+- ✅ docs/context-tracking/context-update-log.md (본 로그 추가)
+- ✅ docs/features/place-operating-hours-editor.md (이동, MEMO→정식 문서)
+
+**영향도**: 매우 낮음 (코드 변경 없음, 문서 정리만)
+**다음 액션**: pending-updates.md 최신 상황 반영
+
+---
+
+### 2025-11-02 (B) - 캘린더 리팩토링 (공통 컴포넌트 분리) + 그룹 홈 실제 데이터 연동
+
+**유형**: 리팩토링 + 기능 개선 + 문서 업데이트
+**우선순위**: Medium
+**영향 범위**: 프론트엔드 (9개 파일), 구현 가이드 (1개 문서)
+
+**작업 개요**:
+CalendarPage (1,427줄) 리팩토링을 위한 공통 컴포넌트 3개 분리, 그룹 홈 일정 목록에 실제 데이터 연동, 장소 운영시간 다이얼로그 레이아웃 개선.
+
+**구현한 기능**:
+1. **캘린더 공통 컴포넌트 분리** (3개 신규)
+   - CalendarNavigator (149줄): 날짜 네비게이션 바 (주간/월간 뷰 지원)
+   - CalendarErrorBanner (57줄): 에러 배너 (재시도 기능)
+   - ConfirmDialog (117줄): 확인 다이얼로그 (일반/삭제 확인)
+
+2. **시간표 탭 분리**
+   - TimetableTab (신규 파일, 600줄): 개인 시간표 주간 뷰 탭
+   - calendar/tabs/ 디렉토리 생성
+   - CalendarPage 리팩토링 준비 완료
+
+3. **그룹 홈 실제 데이터 연동**
+   - _UpcomingEventsWidget 추가: 오늘 이후 가까운 3개 일정 표시
+   - 기존 skeleton 데이터 제거
+   - GroupEvent 실제 데이터 표시 (제목, 날짜, 시간, 색상)
+
+4. **DateFormatter 유틸리티 확장**
+   - weekRange(): 주의 시작/끝 계산
+   - formatWeekLabel(): 주 라벨 포맷 ("M/d ~ M/d")
+
+5. **장소 운영시간 다이얼로그 개선**
+   - OutlinedLinkButton: Expanded로 동적 너비 계산
+   - 버튼 width 파라미터 기본값 null로 변경
+
+**변경된 파일** (9개):
+- ✅ frontend/lib/presentation/widgets/calendar/calendar_navigator.dart (신규, 149줄)
+- ✅ frontend/lib/presentation/widgets/calendar/calendar_error_banner.dart (신규, 57줄)
+- ✅ frontend/lib/presentation/widgets/dialogs/confirm_dialog.dart (신규, 117줄)
+- ✅ frontend/lib/presentation/pages/calendar/tabs/timetable_tab.dart (신규, 600줄)
+- ✅ frontend/lib/presentation/pages/workspace/widgets/group_home_view.dart (+172줄)
+- ✅ frontend/lib/core/utils/date_formatter.dart (+30줄)
+- ✅ frontend/lib/features/place_admin/presentation/widgets/place_operating_hours_dialog.dart
+- ✅ frontend/lib/presentation/widgets/buttons/outlined_link_button.dart
+- ❌ MEMO_calendar_refactoring_component_analysis.md (커밋 제외)
+- ❌ MEMO_place_operating_hours_editor.md (커밋 제외)
+
+**문서 업데이트** (1개):
+- ✅ docs/implementation/frontend/components.md
+  - CalendarNavigator 섹션 추가
+  - CalendarErrorBanner 섹션 추가
+  - ConfirmDialog 섹션 추가
+
+**기대 효과**:
+- CalendarPage 리팩토링 준비 완료 (공통 컴포넌트 재사용)
+- 그룹 홈 일정 목록 실제 데이터로 UX 향상
+- 코드 재사용성 향상 (calendar_navigator, confirm_dialog)
+- 장소 운영시간 UI 개선
+
+**다음 단계**:
+- CalendarPage 전체 리팩토링 (tabs 기반)
+- MonthView, WeekView, DayView 탭 분리
+
+**메모**: 리팩토링 전 공통 컴포넌트 분석 및 분리 완료. MEMO 파일은 참고용으로 보관하되 커밋에서 제외.
+
+---
+
+### 2025-11-02 (A) - 캘린더 통합 구현 (그룹 홈 월간 뷰 + 개인 캘린더 주간 뷰)
+
+**유형**: 기능 구현 + 문서 업데이트
+**우선순위**: High
+**영향 범위**: 프론트엔드 (13개 파일), 구현 가이드 (2개 문서)
+
+**작업 개요**:
+그룹 홈 대시보드에 월간 캘린더 위젯 추가, 개인 캘린더에 WeeklyScheduleEditor 통합, UI/UX 개선 및 어댑터 패턴 도입으로 캘린더 시스템 완성도 향상.
+
+**구현한 기능**:
+1. **CompactMonthCalendar 위젯** (302줄 신규)
+   - 그룹 홈 대시보드용 소형 월간 뷰 (300px 높이)
+   - 일별 이벤트 색상 점 표시 (최대 3개)
+   - 월 네비게이션 + 날짜 클릭 시 그룹 캘린더로 이동
+   - TableCalendar 기반 일관된 UX
+
+2. **PersonalEventAdapter 어댑터** (79줄 신규)
+   - PersonalEvent (도메인) → Event (UI) 변환
+   - 슬롯 기반 시간 변환 (15분 단위)
+   - ID prefix 'pe-'로 유형 구분
+   - 어댑터 패턴으로 레이어 분리
+
+3. **개인 캘린더 주간 뷰 개선**
+   - WeeklyScheduleEditor 통합 (읽기 전용)
+   - PersonalEvent 표시 (시간표 + 개인 일정 통합)
+   - 이벤트 탭 시 상세 시트 표시
+
+4. **UI/UX 개선**
+   - 시간표 탭 툴바 반응형 레이아웃 (750px → 600px)
+   - 모바일: 아이콘 버튼으로 축약
+   - 캘린더 탭 헤더: 뷰 토글 순서 변경 (일간 → 주간 → 월간)
+   - 상태 관리 Provider 통합 (isAddMode, isOverlapView)
+
+5. **장소 운영시간 다이얼로그 수정**
+   - OutlinedLinkButton 동적 너비 계산 (LayoutBuilder)
+   - BoxConstraints 에러 방지
+
+6. **WeeklyScheduleEditor API 확장**
+   - initialMode, initialOverlapView 파라미터 추가
+   - toggleOverlapView() 공개 메서드
+   - 내부 UI 제거 (부모 제어로 위임)
+
+**변경된 파일** (13개):
+- ✅ frontend/lib/presentation/widgets/calendar/compact_month_calendar.dart (신규)
+- ✅ frontend/lib/presentation/adapters/personal_event_adapter.dart (신규)
+- ✅ frontend/lib/presentation/pages/workspace/widgets/group_home_view.dart (+143줄)
+- ✅ frontend/lib/presentation/pages/workspace/calendar/group_calendar_page.dart
+- ✅ frontend/lib/presentation/pages/workspace/workspace_page.dart
+- ✅ frontend/lib/presentation/providers/workspace_state_provider.dart (+selectedCalendarDate)
+- ✅ frontend/lib/core/router/app_router.dart (+group-calendar 라우트)
+- ✅ frontend/lib/presentation/pages/calendar/calendar_page.dart (주간 뷰 통합)
+- ✅ frontend/lib/presentation/providers/timetable_provider.dart (+isAddMode, isOverlapView)
+- ✅ frontend/lib/features/place_admin/presentation/widgets/place_operating_hours_dialog.dart
+- ✅ frontend/lib/presentation/widgets/buttons/outlined_link_button.dart
+- ✅ frontend/lib/presentation/widgets/weekly_calendar/weekly_schedule_editor.dart (API 확장)
+- ✅ frontend/lib/presentation/widgets/buttons/neutral_outlined_button.dart
+
+**문서 업데이트** (2개):
+- ✅ docs/implementation/frontend/components.md
+  - CompactMonthCalendar 섹션 추가
+  - 사용 예시 및 구현 특징 문서화
+- ✅ docs/implementation/frontend/architecture.md
+  - 어댑터 패턴 섹션 추가
+  - presentation/adapters/ 디렉토리 설명
+  - PersonalScheduleAdapter, PersonalEventAdapter 소개
+
+**커밋 내역** (5개):
+1. feat(calendar): 그룹 홈에 소형 월간 캘린더 위젯 추가 (930066b)
+2. feat(calendar): 개인 캘린더 주간 뷰에 WeeklyScheduleEditor 통합 (e19759d)
+3. refactor(calendar): 개인 캘린더 UI/UX 개선 및 반응형 레이아웃 최적화 (63f10d3)
+4. fix(place): 장소 운영시간 다이얼로그 레이아웃 수정 및 버튼 너비 동적 계산 (d468ef2)
+5. refactor(calendar): WeeklyScheduleEditor 외부 제어 API 확장 및 내부 UI 제거 (dbf1ba3)
+
+**기대 효과**:
+- 그룹 홈에서 일정 미리보기로 UX 향상
+- 개인 캘린더 주간 뷰에서 시간표 + 일정 통합 표시
+- 어댑터 패턴으로 도메인-UI 레이어 명확히 분리
+- WeeklyScheduleEditor 재사용성 향상
+
+**다음 단계**:
+- 장소 캘린더 프론트엔드 Phase 2 구현
+- 그룹 캘린더 Phase 8 (권한 시스템 통합)
+
+**메모**: 캘린더 시스템 핵심 기능 완성. 어댑터 패턴과 반응형 레이아웃으로 확장성과 사용성 모두 확보.
+
+---
+
+### 2025-11-01 (B) - 워크스페이스 그룹 전환 네비게이션 시스템 구현
+
+**유형**: 기능 구현 + 문서 업데이트
+**우선순위**: High
+**영향 범위**: 프론트엔드 (4개 파일), 구현 가이드 (2개 문서)
+
+**작업 개요**:
+워크스페이스에서 그룹 전환 시 사용자가 보던 뷰 타입을 유지하고, 모든 네비게이션 이동을 통합 히스토리로 관리하는 시스템 구축.
+
+**구현한 기능**:
+1. **그룹 전환 시 뷰 타입 유지**
+   - 그룹홈 → 그룹홈 유지
+   - 캘린더 → 캘린더 유지
+   - 채널 → 첫 번째 채널로 전환
+2. **최초 접속 시 그룹홈 자동 표시**
+   - LocalStorage에 저장된 뷰가 없으면 groupHome 기본값
+   - 권한 검증 후 관리자 페이지 또는 그룹홈 폴백
+3. **통합 네비게이션 히스토리 시스템**
+   - NavigationHistoryEntry 클래스 신규 추가
+   - 채널, 뷰, 그룹 전환을 하나의 스택으로 관리
+   - 뒤로가기 시 전체 경로 순차 복원 (그룹 간 이동 지원)
+   - 중복 히스토리 자동 제거
+4. **뒤로가기 로직 단순화**
+   - Web/Tablet 공통 로직으로 통합
+   - navigationHistory.isNotEmpty 단일 체크
+
+**변경된 파일**:
+- ✅ frontend/lib/presentation/providers/workspace_navigation_helper.dart (신규)
+- ✅ frontend/lib/presentation/providers/workspace_state_provider.dart
+- ✅ frontend/lib/presentation/widgets/workspace/group_dropdown.dart
+- ✅ frontend/lib/presentation/pages/workspace/workspace_page.dart
+
+**문서 업데이트**:
+- ✅ docs/implementation/workspace-state-management.md
+  - NavigationHistoryEntry 구조 추가
+  - 통합 네비게이션 히스토리 섹션 추가
+  - 뒤로가기 로직 업데이트
+- ✅ docs/ui-ux/pages/workspace-navigation-flow.md
+  - "6. 그룹 전환 시 네비게이션" 섹션 추가
+  - 뷰 타입 유지 전략 설명
+  - 통합 네비게이션 히스토리 설명
+  - 최초 접속 시 동작 설명
+- ✅ docs/context-tracking/context-update-log.md: 현재 로그 추가
+- ✅ docs/context-tracking/sync-status.md: 업데이트 예정
+
+**기대 효과**:
+- 그룹 전환 시 일관된 사용자 경험 제공
+- 뒤로가기로 그룹 간 이동 가능 (사용성 향상)
+- 네비게이션 로직 단순화 및 유지보수성 향상
+- 히스토리 중복 제거로 메모리 효율성 확보
+
+**다음 단계**:
+- 실제 사용자 테스트를 통한 UX 검증
+- 히스토리 스택 크기 제한 검토 (메모리 관리)
+
+**메모**: 워크스페이스 네비게이션의 핵심 기능 완성. 그룹 간 이동과 뒤로가기 지원으로 사용자 경험 크게 개선.
+
+---
+
+### 2025-11-01 (A) - BoxConstraints 에러 방지 가이드 강화
 
 **유형**: 문서 업데이트 (에이전트 가이드, 체크리스트)
 **우선순위**: High

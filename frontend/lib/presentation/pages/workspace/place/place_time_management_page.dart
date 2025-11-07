@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../features/place_admin/presentation/widgets/place_operating_hours_dialog.dart';
-import '../../../../features/place_admin/presentation/widgets/restricted_time_widgets.dart';
+import '../../../../core/models/place_time_models.dart';
+import '../../../../core/providers/place_time_providers.dart';
+import '../../../../features/place_admin/presentation/widgets/place_operating_hours_editor.dart';
 import '../../../../features/place_admin/presentation/widgets/place_closure_widgets.dart';
-import '../../../../features/place_admin/presentation/widgets/available_times_widget.dart';
 
-/// Place time management page (workspace-level page without Scaffold)
-/// Displays time slot management UI for a specific place
+/// 장소 시간 관리 페이지 (workspace-level page without Scaffold)
+///
+/// 장소 설정 진입 시 바로 보이는 메인 페이지입니다.
+/// - PlaceOperatingHoursEditor (운영시간 + 브레이크 타임 설정) - 전체 크기 표시
+/// - PlaceClosureCalendarWidget (임시 휴무 캘린더) - 전체 크기 표시
+/// - 전체 페이지를 하나의 스크롤로 이동
 class PlaceTimeManagementPage extends ConsumerWidget {
   final int placeId;
   final String placeName;
@@ -21,79 +23,86 @@ class PlaceTimeManagementPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      color: AppColors.lightBackground,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 페이지 타이틀
-            Text(
-              '장소 시간 관리',
-              style: AppTheme.displaySmall,
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              '$placeName의 운영시간, 금지시간, 임시 휴무를 설정하고 예약 가능 시간을 조회할 수 있습니다.',
-              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
-            ),
-            const SizedBox(height: 32.0),
+    final operatingHoursAsync = ref.watch(operatingHoursProvider(placeId));
+    final restrictedTimesAsync = ref.watch(restrictedTimesProvider(placeId));
 
-            // 섹션 1: 운영시간
-            _buildSection(
-              title: '운영시간 설정',
-              description: '요일별 기본 운영시간을 설정합니다',
-              child: PlaceOperatingHoursDisplay(placeId: placeId),
+    return operatingHoursAsync.when(
+      data: (operatingHours) {
+        return restrictedTimesAsync.when(
+          data: (restrictedTimes) {
+            return _buildContent(
+              context,
+              ref,
+              operatingHours,
+              restrictedTimes,
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Text('제한시간 로드 오류: $error'),
             ),
-            const SizedBox(height: 32.0),
-
-            // 섹션 2: 금지시간
-            _buildSection(
-              title: '금지시간 설정',
-              description: '운영시간 내에서 특정 요일의 시간대를 예약 불가로 설정합니다',
-              child: RestrictedTimeListWidget(placeId: placeId),
-            ),
-            const SizedBox(height: 32.0),
-
-            // 섹션 3: 임시 휴무
-            _buildSection(
-              title: '임시 휴무 설정',
-              description: '특정 날짜의 전일 또는 부분 시간대를 예약 불가로 설정합니다',
-              child: PlaceClosureCalendarWidget(placeId: placeId),
-            ),
-            const SizedBox(height: 32.0),
-
-            // 섹션 4: 예약 가능 시간
-            _buildSection(
-              title: '예약 가능 시간 조회',
-              description: '설정된 규칙에 따라 특정 날짜의 예약 가능 시간을 확인합니다',
-              child: AvailableTimesWidget(placeId: placeId),
-            ),
-            const SizedBox(height: 32.0),
-          ],
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Text('운영시간 로드 오류: $error'),
         ),
       ),
     );
   }
 
-  Widget _buildSection({
-    required String title,
-    required String description,
-    required Widget child,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: AppTheme.headlineMedium),
-        const SizedBox(height: 8.0),
-        Text(
-          description,
-          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
-        ),
-        const SizedBox(height: 12.0),
-        child,
-      ],
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    List<OperatingHoursResponse> operatingHours,
+    List<RestrictedTimeResponse> restrictedTimes,
+  ) {
+    final isDesktop = MediaQuery.of(context).size.width >= 900;
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 운영시간 에디터 (내용 크기만큼 표시)
+          PlaceOperatingHoursEditor(
+            placeId: placeId,
+            initialOperatingHours: operatingHours,
+            onSaveOperatingHours: (hours) async {
+              try {
+                final request = SetOperatingHoursRequest(operatingHours: hours);
+                final params = SetOperatingHoursParams(
+                  placeId: placeId,
+                  request: request,
+                );
+                await ref.read(setOperatingHoursProvider(params).future);
+                return true;
+              } catch (e) {
+                return false;
+              }
+            },
+            onSaveCompleted: () {
+              // 저장 성공 시 데이터 새로고침
+              ref.invalidate(operatingHoursProvider(placeId));
+              ref.invalidate(restrictedTimesProvider(placeId));
+            },
+          ),
+
+          // 구분선
+          const Divider(height: 1),
+
+          // 임시 휴무 위젯 (내용 크기만큼 표시)
+          Padding(
+            padding: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
+            child: PlaceClosureCalendarWidget(placeId: placeId),
+          ),
+        ],
+      ),
     );
   }
+
 }

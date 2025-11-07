@@ -48,253 +48,135 @@ return usersAsync.buildWith(
 - recruitment_application_section.dart
 - join_request_section.dart
 - channel_management_page.dart
-- application_management_page.dart
+- (more...)
 
-## 게시글/댓글 시스템
+---
 
-**핵심 패턴**: 채팅형 역방향 스크롤 (reverse: true), 스크롤 위치 유지
+## CompactMonthCalendar - 소형 월간 캘린더 위젯
 
-**구조**:
-- `presentation/widgets/post/`: post_card, post_list, post_composer
-- `presentation/widgets/comment/`: comment_item, comment_composer
-- `core/services/`: post_service, comment_service
+**파일**: presentation/widgets/calendar/compact_month_calendar.dart
+**구현일**: 2025-11-02
 
-## CollapsibleContent - 접기/펼치기 텍스트 위젯
-
-**파일**: presentation/widgets/common/collapsible_content.dart
-**구현일**: 기존 구현
-
-**목적**: 긴 텍스트를 자동으로 축약하고 "더 보기" 버튼으로 펼치기
+**목적**: 그룹 홈 대시보드에서 그룹 일정을 월간 뷰로 미리보기
 
 **주요 기능**:
-- maxLines 초과 자동 감지 및 축약
-- 애니메이션 펼치기/접기 (AnimatedSize)
-- 스크롤 가능한 확장 모드 (expandedScrollable)
-- 커스터마이징 가능한 버튼 텍스트
+- 작은 크기 (280px 높이) 최적화 월간 캘린더
+- 이벤트 표시 (일별 최대 3개 색상 점)
+- 월 네비게이션 (이전/다음 월 버튼)
+- 날짜 선택 시 전체 캘린더로 이동
+- TableCalendar 기반으로 일관된 UX 유지
+
+**구현 특징**:
+- **반응형 디자인**: 고정 높이 300px (헤더 포함)
+- **이벤트 시각화**: Color 리스트를 받아 일별 5px 원형 점 표시
+- **인터랙션**: 날짜 클릭 시 그룹 캘린더 페이지로 이동 (날짜 유지)
+- **네비게이션**: 헤더에 "YYYY년 MM월" 표시 + 화살표 버튼
 
 **사용 예시**:
 
 ```dart
-// 기본 사용 (전체 펼치기)
-CollapsibleContent(
-  content: post.content,
-  maxLines: 5,
-  style: AppTheme.bodyMedium,
-)
-
-// 스크롤 가능한 확장 모드
-CollapsibleContent(
-  content: longText,
-  maxLines: 3,
-  expandedScrollable: true,
-  expandedMaxLines: 10, // 최대 10줄 높이로 제한 + 스크롤
-)
-```
-
-**적용 현황**: 2개 파일
-- recruitment_management_page.dart
-- post_preview_widget.dart
-
-## 권한 기반 UI 제어
-
-**파일**: lib/core/utils/permission_utils.dart
-
-**기능**: 그룹 관리 권한 체크 (GROUP_MANAGE, MEMBER_MANAGE, ROLE_MANAGE)
-
-```dart
-final hasAdminAccess = PermissionUtils.hasAnyGroupManagementPermission(
-  user.permissions
-);
-if (hasAdminAccess) AdminButton()
-```
-
-**API 동적 권한**:
-
-```dart
-final permissions = await channelService.getMyPermissions(channelId);
-if (permissions.contains('POST_WRITE')) PostComposer()
-```
-
-## SectionHeader - 섹션 헤더 컴포넌트
-
-**파일**: presentation/widgets/common/section_header.dart
-**구현일**: 2025-10-24
-
-**목적**: 페이지 내 섹션 제목을 일관되게 표시하는 재사용 가능한 컴포넌트
-
-**주요 기능**:
-- 제목 + 부제목 + trailing 위젯 지원
-- 기본 스타일: headlineSmall (18px, w600)
-- 하단 간격 자동 포함 (AppSpacing.sm = 16px)
-- 커스터마이징 가능한 타이포그래피
-
-**사용 예시**:
-
-```dart
-// 기본 사용
-SectionHeader(title: '빠른 실행')
-
-// trailing 버튼 추가
-SectionHeader(
-  title: '모집 중인 그룹',
-  trailing: TextButton(
-    onPressed: () {},
-    child: Text('전체 보기'),
-  ),
-)
-
-// 부제목 추가
-SectionHeader(
-  title: '내 그룹',
-  subtitle: '현재 참여 중인 그룹 목록입니다',
-)
-```
-
-**적용 현황**: 1개 파일 (9줄 감소)
-- home_page.dart (3곳: 빠른 실행, 모집 중인 그룹, 최근 활동)
-
-**코드 영향**:
-- 변경 전: Text + SizedBox (2줄)
-- 변경 후: SectionHeader (1줄)
-- 줄 감소: 페이지당 3-6줄
-
-## SectionCard - 섹션 카드 컴포넌트
-
-**파일**: presentation/widgets/common/section_card.dart
-**구현일**: 2025-10-24
-
-**목적**: 일관된 스타일의 카드 컨테이너를 제공하는 재사용 가능한 컴포넌트
-
-**주요 기능**:
-- Container + BoxDecoration 패턴 자동화
-- 기본 스타일: 패딩 24px, 모서리 20px, 그림자 elevation-1
-- 커스터마이징 가능한 패딩, 배경색, 그림자
-- 일관된 디자인 토큰 적용
-
-**사용 예시**:
-
-```dart
-// 기본 사용
-SectionCard(
-  child: Text('카드 내용'),
-)
-
-// 커스텀 패딩
-SectionCard(
-  padding: EdgeInsets.all(AppSpacing.lg),
-  child: MyWidget(),
-)
-
-// 그림자 없음
-SectionCard(
-  showShadow: false,
-  child: MyWidget(),
-)
-```
-
-**적용 현황**: 8개 파일 (약 187줄 감소)
-
-**Phase 1 (초기 구현)**: 2개 파일 (약 16줄 감소)
-- member_filter_panel.dart (Container + BoxDecoration → SectionCard)
-- recruitment_management_page.dart (_QuestionCard 위젯)
-
-**Phase 2 (섹션 컴포넌트)**: 6개 파일 (약 171줄 감소)
-- subgroup_request_section.dart
-- join_request_section.dart
-- member_list_section.dart
-- recruitment_application_section.dart
-- role_management_section.dart
-- recruitment_management_page.dart (추가 적용)
-
-**코드 영향**:
-- 변경 전: Container + padding + decoration (10줄)
-- 변경 후: SectionCard (1줄)
-- 줄 감소: 파일당 8-10줄, 섹션 컴포넌트는 20-40줄
-
-**확장 가능성**:
-- 60개 파일에서 Container + BoxDecoration 패턴 발견
-- 추가 점진적 적용으로 100-150줄 추가 감소 가능
-
-## CompactTabBar - 높이 최적화 탭 바
-
-**파일**: presentation/widgets/common/compact_tab_bar.dart
-**구현일**: 기존 구현
-
-**목적**: 공간 효율성을 극대화한 탭 바 (표준 TabBar보다 20% 작음)
-
-**주요 기능**:
-- 최적화된 높이: 52dp (표준 대비 20% 감소)
-- 아이콘 + 라벨 지원
-- 커스터마이징 가능한 색상 및 스타일
-- Toss 디자인 원칙 적용 (단순함, 여백)
-
-**사용 예시**:
-
-```dart
-CompactTabBar(
-  controller: _tabController,
-  tabs: const [
-    CompactTab(icon: Icons.people_outline, label: '멤버 목록'),
-    CompactTab(icon: Icons.admin_panel_settings_outlined, label: '역할 관리'),
-    CompactTab(icon: Icons.inbox_outlined, label: '가입 신청'),
-  ],
-  onTap: (index) {
-    // 탭 변경 로직
+// 그룹 홈 대시보드에서 사용
+CompactMonthCalendar(
+  focusedDate: _focusedDate,
+  selectedDate: _selectedDate,
+  eventColorsByDate: {
+    DateTime(2025, 11, 5): [Colors.blue, Colors.purple],
+    DateTime(2025, 11, 10): [Colors.green],
+  },
+  onPageChanged: (newFocusedDate) {
+    setState(() => _focusedDate = newFocusedDate);
+    _loadEvents();
+  },
+  onEventDateTap: (date) {
+    // Navigate to group calendar with selected date
+    navigateToCalendar(date);
+  },
+  onCalendarTap: () {
+    // Navigate to full calendar view
+    navigateToCalendar(null);
   },
 )
 ```
 
-**적용 현황**:
-- MemberManagementPage (멤버 목록 / 역할 관리 / 가입 신청)
-- 기타 탭 기반 페이지
+**적용 현황**: 1개 파일
+- group_home_view.dart (그룹 홈 대시보드)
 
-## Chip 컴포넌트 (AppChip, AppInputChip)
+---
 
-**목적**: 태그, 필터, 라벨 표시를 위한 커스텀 Chip 컴포넌트
+## CalendarNavigator - 날짜 네비게이션 바
 
-### AppChip (읽기 전용)
-- 태그, 배지 표시
-- 삭제 가능 (onDeleted 콜백)
-- 디자인 토큰 통합
+**파일**: presentation/widgets/calendar/calendar_navigator.dart
+**구현일**: 2025-11-02
 
-### AppInputChip (선택 가능)
-- 필터 선택/해제
-- 선택 상태 스타일링
-- 비활성화 지원
+**목적**: 캘린더 페이지에서 날짜 이동을 위한 공통 네비게이션 컴포넌트
 
-**상세 문서**: [Chip 컴포넌트](chip-components.md)
+**주요 기능**:
+- 이전/다음 버튼으로 날짜 이동
+- 오늘 버튼 (현재 날짜가 아닐 때만 표시)
+- 주간/월간 뷰 모두 지원
+- 2줄 라벨 (주간 뷰) 또는 1줄 라벨 (월간 뷰)
 
-**적용 현황**:
-- 멤버 필터 패널 (역할, 그룹, 학년/학번)
-- 그룹 탐색 필터 (카테고리, 검색)
-- 적용된 필터 칩 바
+**사용 예시**:
+```dart
+// 주간 뷰
+CalendarNavigator(
+  currentDate: _weekStart,
+  isWeekView: true,
+  label: '${_weekStart.year}년 ${_weekStart.month}월 ${_weekNo}주차',
+  subtitle: DateFormatter.formatWeekLabel(_weekStart),
+  onPrevious: () => _changeWeek(-1),
+  onNext: () => _changeWeek(1),
+  onToday: () => _goToToday(),
+)
+```
 
-## 네비게이션 컴포넌트
+**적용 현황**: calendar/tabs/timetable_tab.dart
 
-- **BreadcrumbWidget**: 단순 제목 표시
-- **WorkspaceHeader**: 그룹/채널 + 드롭다운 (Provider 기반 경로 계산)
-- **BottomNavigation**: 모바일용 하단 네비게이션
-- **SidebarNavigation**: 데스크톱용 사이드바 네비게이션
-- **TopNavigation**: 상단 헤더 네비게이션
+---
 
-## 재사용 패턴
+## CalendarErrorBanner - 에러 배너
 
-### WorkspaceEmptyState
+**파일**: presentation/widgets/calendar/calendar_error_banner.dart
+**구현일**: 2025-11-02
 
-**파일**: presentation/pages/workspace/widgets/workspace_empty_state.dart
+**목적**: 캘린더 로딩 중 에러 표시
 
-Enum으로 여러 빈 상태 처리:
-- `WorkspaceEmptyType.groupHome` / `calendar` / `groupAdmin`
-- 아이콘/제목/설명 타입별 자동 선택
+**주요 기능**:
+- 에러 메시지 표시
+- 재시도 버튼 제공
+- 일관된 에러 UI
 
-### SlidePanel
+**적용 현황**: calendar/tabs/timetable_tab.dart
 
-**파일**: presentation/widgets/common/slide_panel.dart
+---
 
-화면 가장자리에서 나타나는 패널 (애니메이션, 백드롭 클릭 닫기)
+## ConfirmDialog - 확인 다이얼로그
+
+**파일**: presentation/widgets/dialogs/confirm_dialog.dart
+**구현일**: 2025-11-02
+
+**목적**: 사용자 확인이 필요한 작업에 사용하는 범용 다이얼로그
+
+**주요 기능**:
+- 일반 확인: PrimaryButton
+- 삭제 확인: ErrorButton (isDestructive: true)
+- 헬퍼 함수 `showConfirmDialog()` 제공
+
+**사용 예시**:
+```dart
+final confirmed = await showConfirmDialog(
+  context,
+  title: '일정 삭제',
+  message: '정말 삭제하시겠습니까?',
+  confirmLabel: '삭제',
+  isDestructive: true,
+);
+```
+
+---
 
 ## 관련 문서
 
-- [상태 관리](state-management.md) - Riverpod Provider 패턴
-- [디자인 시스템](design-system.md) - 컴포넌트 스타일 가이드
-- [반응형 디자인](responsive-design.md) - 레이아웃 패턴
+- [프론트엔드 아키텍처](architecture.md) - 전체 구조
+- [디자인 시스템](../../ui-ux/concepts/design-system.md) - UI 가이드라인
+- [상태 관리](state-management.md) - Riverpod 패턴

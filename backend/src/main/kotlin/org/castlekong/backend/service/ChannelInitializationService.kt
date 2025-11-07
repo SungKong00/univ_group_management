@@ -90,7 +90,6 @@ class ChannelInitializationService(
     ) {
         val fullPerms =
             setOf(
-                ChannelPermission.CHANNEL_VIEW,
                 ChannelPermission.POST_READ,
                 ChannelPermission.POST_WRITE,
                 ChannelPermission.COMMENT_WRITE,
@@ -107,7 +106,6 @@ class ChannelInitializationService(
                 groupRole = memberRole,
                 permissions =
                     setOf(
-                        ChannelPermission.CHANNEL_VIEW,
                         ChannelPermission.POST_READ,
                         ChannelPermission.COMMENT_WRITE,
                     ),
@@ -124,7 +122,6 @@ class ChannelInitializationService(
     ) {
         val fullPerms =
             setOf(
-                ChannelPermission.CHANNEL_VIEW,
                 ChannelPermission.POST_READ,
                 ChannelPermission.POST_WRITE,
                 ChannelPermission.COMMENT_WRITE,
@@ -141,7 +138,6 @@ class ChannelInitializationService(
                 groupRole = memberRole,
                 permissions =
                     setOf(
-                        ChannelPermission.CHANNEL_VIEW,
                         ChannelPermission.POST_READ,
                         ChannelPermission.POST_WRITE,
                         ChannelPermission.COMMENT_WRITE,

@@ -34,6 +34,9 @@ enum class ErrorCode(val message: String) {
 
     // Channel
     CHANNEL_NOT_FOUND("채널을 찾을 수 없습니다."),
+    INVALID_CHANNEL_PERMISSIONS("채널 권한 설정이 올바르지 않습니다."),
+    MISSING_POST_READ_PERMISSION("최소 1개 역할에 POST_READ 권한이 필요합니다."),
+    EMPTY_ROLE_PERMISSIONS("역할별 권한이 비어있습니다."),
 
     // Post
     POST_NOT_FOUND("게시글을 찾을 수 없습니다."),

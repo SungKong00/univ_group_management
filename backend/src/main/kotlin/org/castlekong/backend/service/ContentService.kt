@@ -3,6 +3,7 @@ package org.castlekong.backend.service
 import org.castlekong.backend.dto.ChannelResponse
 import org.castlekong.backend.dto.CommentResponse
 import org.castlekong.backend.dto.CreateChannelRequest
+import org.castlekong.backend.dto.CreateChannelWithPermissionsRequest
 import org.castlekong.backend.dto.CreateCommentRequest
 import org.castlekong.backend.dto.CreatePostRequest
 import org.castlekong.backend.dto.CreateWorkspaceRequest
@@ -15,6 +16,7 @@ import org.castlekong.backend.dto.UserSummaryResponse
 import org.castlekong.backend.dto.WorkspaceResponse
 import org.castlekong.backend.entity.Channel
 import org.castlekong.backend.entity.ChannelPermission
+import org.castlekong.backend.entity.ChannelRoleBinding
 import org.castlekong.backend.entity.ChannelType
 import org.castlekong.backend.entity.Comment
 import org.castlekong.backend.entity.GroupPermission
@@ -215,7 +217,12 @@ class ContentService(
         val member =
             groupMemberRepository.findByGroupIdAndUserId(workspace.group.id, requesterId)
                 .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
-        return channelRepository.findByWorkspace_Id(workspaceId).map { toChannelResponse(it) }
+        // POST_READ 권한이 있는 채널만 필터링 (CHANNEL_VIEW 역할 흡수)
+        return channelRepository.findByWorkspace_Id(workspaceId)
+            .filter { channel ->
+                hasChannelPermission(channel.id, requesterId, ChannelPermission.POST_READ)
+            }
+            .map { toChannelResponse(it) }
     }
 
     fun getChannelsByGroup(
@@ -234,7 +241,40 @@ class ContentService(
 
         // 3. 채널 목록 직접 조회 (workspace 테이블 우회)
         // Note: 현재 구조에서는 채널이 group에 직접 연결되어 있음
-        return channelRepository.findByGroup_Id(groupId).map { toChannelResponse(it) }
+        // POST_READ 권한이 있는 채널만 필터링 (CHANNEL_VIEW 역할 흡수)
+        return channelRepository.findByGroup_Id(groupId)
+            .filter { channel ->
+                hasChannelPermission(channel.id, requesterId, ChannelPermission.POST_READ)
+            }
+            .map { toChannelResponse(it) }
+    }
+
+    /**
+     * 관리자용 채널 조회 (권한 필터링 없음)
+     *
+     * CHANNEL_MANAGE 권한이 있는 사용자가 채널 관리 페이지에서
+     * POST_READ 권한이 없는 채널도 조회하고 관리할 수 있도록 함
+     */
+    fun getChannelsByGroupForAdmin(
+        groupId: Long,
+        requesterId: Long,
+    ): List<ChannelResponse> {
+        // 1. 그룹 존재 확인
+        val group =
+            groupRepository.findById(groupId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+
+        // 2. 사용자 멤버십 확인
+        val member =
+            groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
+                .orElseThrow { BusinessException(ErrorCode.FORBIDDEN) }
+
+        // 3. CHANNEL_MANAGE 권한 확인
+        ensurePermission(groupId, requesterId, GroupPermission.CHANNEL_MANAGE)
+
+        // 4. 권한 필터링 없이 모든 채널 반환
+        return channelRepository.findByGroup_Id(groupId)
+            .map { toChannelResponse(it) }
     }
 
     @Transactional
@@ -273,6 +313,156 @@ class ContentService(
         // setupDefaultChannelPermissions(savedChannel)  // 자동 템플릿 부여 제거
 
         return toChannelResponse(savedChannel)
+    }
+
+    /**
+     * 채널 생성 + 권한 설정 통합 API
+     *
+     * 채널 기본 정보와 역할별 권한을 한 번에 받아
+     * 트랜잭션으로 원자적으로 처리합니다.
+     *
+     * @param workspaceId 워크스페이스 ID
+     * @param request 채널 정보 + 권한 설정
+     * @param creatorId 채널 생성자 ID
+     * @return 생성된 채널 정보
+     */
+    @Transactional
+    fun createChannelWithPermissions(
+        workspaceId: Long,
+        request: CreateChannelWithPermissionsRequest,
+        creatorId: Long,
+    ): ChannelResponse {
+        // 1. Workspace 존재 확인
+        val workspace =
+            workspaceRepository.findById(workspaceId)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+        val group = workspace.group
+
+        // 2. Creator 확인
+        val creator =
+            userRepository.findById(creatorId)
+                .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+
+        // 3. CHANNEL_MANAGE 권한 검증
+        validateChannelManagePermission(group.id, creator.id)
+
+        // 4. 권한 요청 검증
+        validateRolePermissionsRequest(group.id, request.rolePermissions)
+
+        // 5. 채널 엔티티 생성
+        val type =
+            request.type?.let { runCatching { ChannelType.valueOf(it) }.getOrDefault(ChannelType.TEXT) }
+                ?: ChannelType.TEXT
+
+        val channel =
+            Channel(
+                group = group,
+                workspace = workspace,
+                name = request.name,
+                description = request.description,
+                type = type,
+                displayOrder = 0,
+                createdBy = creator,
+            )
+
+        // 6. 채널 저장
+        val savedChannel = channelRepository.save(channel)
+
+        // 7. 권한 바인딩 일괄 생성
+        createChannelRoleBindingsBatch(savedChannel, request.rolePermissions)
+
+        // 8. 응답 반환
+        return toChannelResponse(savedChannel)
+    }
+
+    /**
+     * 역할별 권한 요청 검증
+     *
+     * 1. rolePermissions가 비어있지 않은지 확인
+     * 2. 모든 역할이 그룹에 존재하는지 확인
+     * 3. POST_READ 권한을 가진 역할이 최소 1개 이상인지 확인
+     */
+    private fun validateRolePermissionsRequest(
+        groupId: Long,
+        rolePermissions: Map<Long, Set<String>>,
+    ) {
+        // 1. 빈 권한 체크
+        if (rolePermissions.isEmpty()) {
+            throw BusinessException(ErrorCode.EMPTY_ROLE_PERMISSIONS)
+        }
+
+        // 2. 역할 존재 확인
+        val roleIds = rolePermissions.keys
+        val existingRoles = groupRoleRepository.findAllById(roleIds)
+        if (existingRoles.size != roleIds.size) {
+            throw BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND)
+        }
+
+        // 3. 모든 역할이 해당 그룹 소속인지 확인
+        val invalidRoles = existingRoles.filter { it.group.id != groupId }
+        if (invalidRoles.isNotEmpty()) {
+            throw BusinessException(ErrorCode.FORBIDDEN)
+        }
+
+        // 4. POST_READ 권한 필수 체크
+        val hasPostRead =
+            rolePermissions.values.any { permissions ->
+                permissions.contains("POST_READ")
+            }
+        if (!hasPostRead) {
+            throw BusinessException(ErrorCode.MISSING_POST_READ_PERMISSION)
+        }
+
+        // 5. 각 역할의 권한이 비어있지 않은지 확인
+        rolePermissions.forEach { (roleId, permissions) ->
+            if (permissions.isEmpty()) {
+                throw BusinessException(ErrorCode.EMPTY_ROLE_PERMISSIONS)
+            }
+        }
+    }
+
+    /**
+     * 채널 역할 바인딩 일괄 생성
+     *
+     * @param channel 생성된 채널
+     * @param rolePermissions 역할별 권한 맵
+     */
+    private fun createChannelRoleBindingsBatch(
+        channel: Channel,
+        rolePermissions: Map<Long, Set<String>>,
+    ) {
+        val bindings =
+            rolePermissions.map { (roleId, permissionStrings) ->
+                // 역할 조회
+                val role =
+                    groupRoleRepository.findById(roleId)
+                        .orElseThrow { BusinessException(ErrorCode.GROUP_ROLE_NOT_FOUND) }
+
+                // String -> ChannelPermission 변환
+                val permissions =
+                    permissionStrings
+                        .mapNotNull { permStr ->
+                            try {
+                                ChannelPermission.valueOf(permStr)
+                            } catch (e: IllegalArgumentException) {
+                                logger.warn("Invalid permission string: $permStr")
+                                null
+                            }
+                        }
+                        .toMutableSet()
+
+                // ChannelRoleBinding 생성
+                ChannelRoleBinding(
+                    channel = channel,
+                    groupRole = role,
+                    permissions = permissions,
+                )
+            }
+
+        // 일괄 저장
+        channelRoleBindingRepository.saveAll(bindings)
+
+        logger.info("Created ${bindings.size} channel role bindings for channel ${channel.id}")
     }
 
     @Transactional

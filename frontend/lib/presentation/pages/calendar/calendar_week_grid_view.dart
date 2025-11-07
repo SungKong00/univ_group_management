@@ -15,17 +15,26 @@ import '../../../core/theme/app_colors.dart';
 /// - All-day events shown in a separate area above the grid
 /// - Multi-day events split across date columns
 /// - Highlights today with brand color
+/// - Optional edit mode: onCreate, onUpdate, onDelete callbacks
 class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget {
   const CalendarWeekGridView({
     super.key,
     required this.events,
     required this.weekStart,
     required this.onEventTap,
+    this.onCreate,
+    this.onUpdate,
+    this.onDelete,
   });
 
   final List<T> events;
   final DateTime weekStart;
   final ValueChanged<T> onEventTap;
+
+  /// 편집 모드 콜백 (옵셔널)
+  final void Function(DateTime date, TimeOfDay? startTime)? onCreate;
+  final ValueChanged<T>? onUpdate;
+  final ValueChanged<T>? onDelete;
 
   static const int _minutesPerSlot = 30;
   static const double _slotHeight = 44;

@@ -54,10 +54,10 @@ class PlaceOperatingHours(
     @Enumerated(EnumType.STRING)
     @Column(name = "day_of_week", nullable = false, length = 10)
     var dayOfWeek: DayOfWeek,
-    @Column(name = "start_time", nullable = false)
-    var startTime: LocalTime,
-    @Column(name = "end_time", nullable = false)
-    var endTime: LocalTime,
+    @Column(name = "start_time", nullable = true)
+    var startTime: LocalTime?,
+    @Column(name = "end_time", nullable = true)
+    var endTime: LocalTime?,
     @Column(name = "is_closed", nullable = false)
     var isClosed: Boolean = false,
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -69,7 +69,7 @@ class PlaceOperatingHours(
      * 주어진 시간이 운영시간 내에 있는지 확인
      */
     fun contains(time: LocalTime): Boolean {
-        if (isClosed) return false
+        if (isClosed || startTime == null || endTime == null) return false
         return !time.isBefore(startTime) && !time.isAfter(endTime)
     }
 
@@ -80,7 +80,7 @@ class PlaceOperatingHours(
         start: LocalTime,
         end: LocalTime,
     ): Boolean {
-        if (isClosed) return false
+        if (isClosed || startTime == null || endTime == null) return false
         return !start.isBefore(startTime) && !end.isAfter(endTime)
     }
 
@@ -88,8 +88,8 @@ class PlaceOperatingHours(
      * 운영시간 정보 업데이트
      */
     fun update(
-        startTime: LocalTime,
-        endTime: LocalTime,
+        startTime: LocalTime?,
+        endTime: LocalTime?,
         isClosed: Boolean,
     ): PlaceOperatingHours {
         this.startTime = startTime

@@ -6,6 +6,7 @@ import '../../../../../core/models/place/place_reservation.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme.dart';
 import '../../../../providers/place_calendar_provider.dart';
+import '../../../../widgets/calendar/calendar_event_card.dart';
 import '../../../calendar/calendar_week_grid_view.dart';
 import '../../../calendar/widgets/calendar_month_with_sidebar.dart';
 
@@ -106,85 +107,17 @@ class MultiPlaceCalendarView extends ConsumerWidget {
   }
 
   /// Build custom reservation card for sidebar list
+  /// Uses CalendarEventCard component with Place Calendar mode
   Widget _buildReservationCard(BuildContext context, PlaceReservation reservation) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lightOutline),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 6,
-            height: 60,
-            decoration: BoxDecoration(
-              color: reservation.color,
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  reservation.title,
-                  style: textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.place, size: 14, color: AppColors.neutral600),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        reservation.placeName,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: AppColors.neutral600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    const Icon(Icons.schedule, size: 14, color: AppColors.neutral600),
-                    const SizedBox(width: 4),
-                    Text(
-                      reservation.formattedTimeRange,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: AppColors.neutral600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    const Icon(Icons.person, size: 14, color: AppColors.neutral600),
-                    const SizedBox(width: 4),
-                    Text(
-                      reservation.reservedByName,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: AppColors.neutral600,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return CalendarEventCard(
+      title: reservation.title,
+      color: reservation.color,
+      timeLabel: reservation.formattedTimeRange,
+      location: reservation.placeName,
+      reservedBy: reservation.reservedByName,
+      showIcons: true,
+      colorBarHeight: 60,
+      onTap: null, // onTap is handled by parent InkWell
     );
   }
 }

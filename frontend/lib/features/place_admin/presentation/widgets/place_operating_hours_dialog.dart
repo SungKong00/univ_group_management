@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../presentation/widgets/buttons/primary_button.dart';
 import '../../../../presentation/widgets/buttons/neutral_outlined_button.dart';
 import '../../../../presentation/widgets/buttons/outlined_link_button.dart';
+import 'place_operating_hours_editor.dart';
 
 /// 운영시간 설정 다이얼로그
 ///
@@ -201,15 +202,20 @@ class _PlaceOperatingHoursDialogState
               ),
             ),
       actions: [
-        NeutralOutlinedButton(
-          text: '취소',
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+        Flexible(
+          child: NeutralOutlinedButton(
+            text: '취소',
+            onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          ),
         ),
-        PrimaryButton(
-          text: '저장',
-          variant: PrimaryButtonVariant.brand,
-          isLoading: _isLoading,
-          onPressed: _isLoading ? null : _handleSave,
+        const SizedBox(width: 8),
+        Flexible(
+          child: PrimaryButton(
+            text: '저장',
+            variant: PrimaryButtonVariant.brand,
+            isLoading: _isLoading,
+            onPressed: _isLoading ? null : _handleSave,
+          ),
         ),
       ],
     );
@@ -236,6 +242,7 @@ class _PlaceOperatingHoursDialogState
           SizedBox(
             width: 80,
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Checkbox(
                   value: hours.isClosed,
@@ -251,22 +258,28 @@ class _PlaceOperatingHoursDialogState
           ),
           const SizedBox(width: 12),
 
-          // 시작 시간
+          // 시간 선택 영역
           Expanded(
-            child: OutlinedLinkButton(
-              text: hours.startTime ?? '09:00',
-              onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, true) : null,
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text('-'),
-          const SizedBox(width: 8),
-
-          // 종료 시간
-          Expanded(
-            child: OutlinedLinkButton(
-              text: hours.endTime ?? '18:00',
-              onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, false) : null,
+            child: Row(
+              children: [
+                // 시작 시간
+                Expanded(
+                  child: OutlinedLinkButton(
+                    text: hours.startTime ?? '09:00',
+                    onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, true) : null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text('-'),
+                const SizedBox(width: 8),
+                // 종료 시간
+                Expanded(
+                  child: OutlinedLinkButton(
+                    text: hours.endTime ?? '18:00',
+                    onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, false) : null,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -309,20 +322,44 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '운영시간',
-                  style: AppTheme.titleLarge,
+                Expanded(
+                  child: Text(
+                    '운영시간',
+                    style: AppTheme.titleLarge,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 OutlinedLinkButton(
                   text: '설정 수정',
                   icon: const Icon(Icons.edit, size: 18),
+                  width: 120,
                   onPressed: () async {
+                    // 운영시간 데이터 가져오기
+                    final operatingHours = hoursAsync.valueOrNull ?? [];
+
                     final result = await showDialog<bool>(
                       context: context,
-                      builder: (context) => PlaceOperatingHoursDialog(
-                        placeId: placeId,
-                        initialHours:
-                            hoursAsync.valueOrNull, // 기존 데이터 전달
+                      builder: (dialogContext) => Dialog.fullscreen(
+                        child: PlaceOperatingHoursEditor(
+                          placeId: placeId,
+                          initialOperatingHours: operatingHours,
+                          onSaveOperatingHours: (hours) async {
+                            try {
+                              final request = SetOperatingHoursRequest(operatingHours: hours);
+                              final params = SetOperatingHoursParams(placeId: placeId, request: request);
+                              await ref.read(setOperatingHoursProvider(params).future);
+                              return true;
+                            } catch (e) {
+                              return false;
+                            }
+                          },
+                          onSaveCompleted: () {
+                            Navigator.of(dialogContext).pop(true);
+                          },
+                          onCancel: () {
+                            Navigator.of(dialogContext).pop(false);
+                          },
+                        ),
                       ),
                     );
 

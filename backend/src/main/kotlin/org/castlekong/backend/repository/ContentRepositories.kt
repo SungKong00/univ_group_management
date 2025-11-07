@@ -80,6 +80,15 @@ interface PostRepository : JpaRepository<Post, Long> {
     fun findPostIdsByChannelIds(
         @Param("channelIds") channelIds: List<Long>,
     ): List<Long>
+
+    @Suppress("FunctionNaming")
+    fun countByChannel_Id(channelId: Long): Long
+
+    @Query("SELECT COUNT(p) FROM Post p WHERE p.channel.id = :channelId AND p.id > :postId")
+    fun countByChannelIdAndIdGreaterThan(
+        @Param("channelId") channelId: Long,
+        @Param("postId") postId: Long,
+    ): Long
 }
 
 @Repository

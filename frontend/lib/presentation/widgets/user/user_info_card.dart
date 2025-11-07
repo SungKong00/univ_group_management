@@ -152,11 +152,13 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
               mainAxisAlignment: MainAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Avatar: Transform으로 위치 애니메이션
-                CompositedTransformTarget(
-                  link: _layerLink,
-                  child: Transform.translate(
-                    offset: Offset(avatarDx, 0),
+                // Avatar: Padding으로 위치 애니메이션 (hitTest 영역도 함께 이동)
+                AnimatedPadding(
+                  duration: const Duration(milliseconds: 240),
+                  curve: Curves.easeInOutCubic,
+                  padding: EdgeInsets.only(left: avatarDx),
+                  child: CompositedTransformTarget(
+                    link: _layerLink,
                     child: _AvatarSection(
                       user: widget.user,
                       isCompact: widget.isCompact,
@@ -305,12 +307,22 @@ class _AvatarSection extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(onTap: onTap, child: avatar),
+      // 축소 뷰: 클릭 가능한 아바타
+      return SizedBox(
+        width: size,
+        height: size,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: onTap,
+            behavior: HitTestBehavior.opaque, // 아바타 영역만 클릭 감지
+            child: avatar,
+          ),
+        ),
       );
     }
 
+    // 확장 뷰: 클릭 불가능한 아바타
     return avatar;
   }
 

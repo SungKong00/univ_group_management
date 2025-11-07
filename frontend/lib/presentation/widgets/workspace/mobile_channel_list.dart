@@ -145,6 +145,11 @@ class MobileChannelList extends ConsumerWidget {
   }
 
   Widget _buildChannelList(WidgetRef ref) {
+    // Read unread count map from workspace state (real API data)
+    final unreadCountMap = ref.watch(
+      workspaceStateProvider.select((state) => state.unreadCountMap),
+    );
+
     return Expanded(
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(
@@ -156,7 +161,8 @@ class MobileChannelList extends ConsumerWidget {
           final channel = channels[index];
           final channelId = channel.id.toString();
           const isSelected = false; // 모바일에서는 선택 강조 표시 안 함
-          final unreadCount = unreadCounts[channelId] ?? 0;
+          // Use real unread count from API (Phase 5)
+          final unreadCount = unreadCountMap[channel.id] ?? 0;
 
           return ChannelItem(
             channel: channel,

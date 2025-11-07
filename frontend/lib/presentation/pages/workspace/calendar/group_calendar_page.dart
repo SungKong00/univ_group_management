@@ -8,6 +8,8 @@ import '../../../../core/models/calendar/group_event.dart';
 import '../../../../core/models/calendar/update_scope.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../../core/utils/date_formatter.dart';
+import '../../../adapters/group_event_adapter.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/calendar_view_provider.dart';
 import '../../../providers/focused_date_provider.dart';
@@ -16,9 +18,11 @@ import '../../../providers/group_permission_provider.dart';
 import '../../../utils/responsive_layout_helper.dart';
 import '../../../widgets/common/compact_tab_bar.dart';
 import '../../../widgets/organisms/organisms.dart';
+import '../../../widgets/calendar/calendar_navigator.dart';
 import '../../calendar/calendar_week_grid_view.dart';
 import '../../calendar/widgets/calendar_month_with_sidebar.dart';
 import '../../calendar/widgets/month_event_chip.dart';
+import '../../../widgets/weekly_calendar/weekly_schedule_editor.dart';
 import 'widgets/group_event_form_dialog.dart';
 import 'widgets/place_calendar_tab.dart';
 import '../../../widgets/buttons/neutral_outlined_button.dart';
@@ -39,10 +43,12 @@ enum EventFormalityCategory {
 /// Main page for group calendar.
 class GroupCalendarPage extends ConsumerStatefulWidget {
   final int groupId;
+  final DateTime? initialSelectedDate;
 
   const GroupCalendarPage({
     super.key,
     required this.groupId,
+    this.initialSelectedDate,
   });
 
   @override
@@ -58,6 +64,10 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Set initial selected date if provided
+      if (widget.initialSelectedDate != null) {
+        ref.read(focusedDateProvider.notifier).state = widget.initialSelectedDate!;
+      }
       _loadEvents();
     });
   }
@@ -82,6 +92,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
   @override
   Widget build(BuildContext context) {
+    print('🔍 [GROUP_CALENDAR] Building GroupCalendarPage - NEW VERSION');
     return Column(
       children: [
         _buildTabBar(),
@@ -127,22 +138,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
             AppSpacing.sm,
             AppSpacing.xs,
           ),
-          child: _GroupCalendarHeader(
-            view: currentView,
-            label: _formatFocusedLabel(focusedDate, currentView),
-            isBusy: state.isLoading,
-            onChangeView: (view) {
-              if (view != currentView) {
-                ref.read(calendarViewProvider.notifier).setView(view);
-              }
-            },
-            onPrevious: () => _handlePrevious(currentView),
-            onNext: () => _handleNext(currentView),
-            onToday: () =>
-                ref.read(focusedDateProvider.notifier).resetToToday(),
-            onCreateEvent:
-                state.isLoading ? null : () => _showCreateDialog(),
-          ),
+          child: _buildCalendarHeader(currentView, focusedDate, state.isLoading),
         ),
         Expanded(
           child: _buildCalendarContent(state, currentView),
@@ -181,16 +177,34 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     if (view == CalendarView.week) {
       final weekStart = _getWeekStart(focusedDate);
 
+      // Convert GroupEvent to Event for WeeklyScheduleEditor
+      final events = state.events
+          .map((event) => GroupEventAdapter.toEvent(event, weekStart))
+          .whereType<Event>() // Filter out null values (all-day events)
+          .toList();
+
+      // Check permissions for editing
+      final permissionsAsync = ref.watch(groupPermissionsProvider(widget.groupId));
+      final canEdit = permissionsAsync.maybeWhen(
+        data: (permissions) => permissions.contains('CALENDAR_MANAGE'),
+        orElse: () => false,
+      );
+
       return Padding(
         padding: const EdgeInsets.only(
           left: AppSpacing.sm,
           right: AppSpacing.sm,
           bottom: 80,
         ),
-        child: CalendarWeekGridView<GroupEvent>(
-          events: state.events,
+        child: WeeklyScheduleEditor(
+          allowMultiDaySelection: false, // Group events are single-day only
+          isEditable: canEdit,
+          allowEventOverlap: true,
           weekStart: weekStart,
-          onEventTap: _showEventDetail,
+          initialEvents: events,
+          onEventCreate: (event) => _handleEventCreate(context, event, weekStart),
+          onEventUpdate: (event) => _handleEventUpdate(context, event, weekStart),
+          onEventDelete: (event) => _handleEventDelete(context, event),
         ),
       );
     }
@@ -229,12 +243,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     switch (view) {
       case CalendarView.week:
         final weekStart = _getWeekStart(date);
-        final weekEnd = weekStart.add(const Duration(days: 6));
-        if (weekStart.month == weekEnd.month) {
-          return '${weekStart.year}년 ${weekStart.month}월 ${weekStart.day}일 ~ ${weekEnd.day}일';
-        }
-        return '${DateFormat('M월 d일', 'ko_KR').format(weekStart)} ~ '
-            '${DateFormat('M월 d일', 'ko_KR').format(weekEnd)}';
+        return DateFormatter.formatWeekHeader(weekStart);
       case CalendarView.month:
         return DateFormat('yyyy년 M월', 'ko_KR').format(date);
     }
@@ -266,6 +275,106 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
   Widget _buildPlaceCalendarTab() {
     return PlaceCalendarTab(groupId: widget.groupId);
+  }
+
+  Widget _buildCalendarHeader(CalendarView currentView, DateTime focusedDate, bool isBusy) {
+    print('🔍 [GROUP_CALENDAR] Building header with CalendarNavigator (NEW)');
+    final viewToggle = ToggleButtons(
+      isSelected: CalendarView.values
+          .map((option) => option == currentView)
+          .toList(growable: false),
+      onPressed: (index) {
+        final newView = CalendarView.values.elementAt(index);
+        if (newView != currentView) {
+          ref.read(calendarViewProvider.notifier).setView(newView);
+        }
+      },
+      borderRadius: BorderRadius.circular(AppRadius.button),
+      fillColor: AppColors.brand.withValues(alpha: 0.08),
+      selectedColor: AppColors.brand,
+      constraints: const BoxConstraints(minHeight: 36, minWidth: 56),
+      children: const [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Text('주간', style: TextStyle(fontSize: 13)),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Text('월간', style: TextStyle(fontSize: 13)),
+        ),
+      ],
+    );
+
+    final addButton = PrimaryButton(
+      text: '일정 추가',
+      onPressed: isBusy ? null : () => _showCreateDialog(),
+      icon: const Icon(Icons.add),
+      variant: PrimaryButtonVariant.brand,
+      width: 160,
+    );
+
+    final weekStart = currentView == CalendarView.week ? _getWeekStart(focusedDate) : null;
+
+    final navigator = CalendarNavigator(
+      currentDate: focusedDate,
+      label: _formatFocusedLabel(focusedDate, currentView),
+      subtitle: weekStart != null ? DateFormatter.formatWeekRangeDetailed(weekStart) : null,
+      isWeekView: currentView == CalendarView.week,
+      onPrevious: isBusy ? () {} : () => _handlePrevious(currentView),
+      onNext: isBusy ? () {} : () => _handleNext(currentView),
+      onToday: isBusy ? () {} : () => ref.read(focusedDateProvider.notifier).resetToToday(),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final helper = ResponsiveLayoutHelper(context: context, constraints: constraints);
+        final isCompact = !helper.isWideDesktop;
+
+        if (isCompact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(child: navigator),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: viewToggle,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  addButton,
+                ],
+              ),
+            ],
+          );
+        }
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                viewToggle,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Center(child: navigator),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                addButton,
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   String _formatDateRange(DateTime start, DateTime end, bool isAllDay) {
@@ -799,178 +908,263 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       ),
     );
   }
-}
 
-class _GroupCalendarHeader extends StatelessWidget {
-  const _GroupCalendarHeader({
-    required this.view,
-    required this.label,
-    required this.isBusy,
-    required this.onChangeView,
-    required this.onPrevious,
-    required this.onNext,
-    required this.onToday,
-    required this.onCreateEvent,
-  });
+  // --- CRUD Handlers for WeeklyScheduleEditor ---
 
-  final CalendarView view;
-  final String label;
-  final bool isBusy;
-  final ValueChanged<CalendarView> onChangeView;
-  final VoidCallback onPrevious;
-  final VoidCallback onNext;
-  final VoidCallback onToday;
-  final VoidCallback? onCreateEvent;
+  /// Handle event creation from drag gesture
+  Future<bool> _handleEventCreate(
+    BuildContext context,
+    Event event,
+    DateTime weekStart,
+  ) async {
+    // Step 1: Check permissions
+    final permissions = await ref.read(groupPermissionsProvider(widget.groupId).future);
+    final canCreateOfficial = permissions.contains('CALENDAR_MANAGE');
 
-  @override
-  Widget build(BuildContext context) {
-    final viewToggle = ToggleButtons(
-      isSelected: CalendarView.values
-          .map((option) => option == view)
-          .toList(growable: false),
-      onPressed: (index) =>
-          onChangeView(CalendarView.values.elementAt(index)),
-      borderRadius: BorderRadius.circular(12),
-      fillColor: AppColors.brand.withValues(alpha: 0.08),
-      selectedColor: AppColors.brand,
-      constraints: const BoxConstraints(minHeight: 40),
-      children: const [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text('주간'),
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text('월간'),
-        ),
-      ],
-    );
+    // Step 2: Official/Unofficial selection (only for users with permission)
+    bool isOfficial = false;
+    if (canCreateOfficial) {
+      final selectedFormality = await showSingleStepSelector<EventFormalityCategory>(
+        context: context,
+        title: '새 일정 만들기',
+        subtitle: '일정의 공개 범위를 선택하세요',
+        options: [
+          SelectableOption(
+            value: EventFormalityCategory.official,
+            title: EventFormalityCategory.official.title,
+            description: EventFormalityCategory.official.description,
+            icon: EventFormalityCategory.official.icon,
+          ),
+          SelectableOption(
+            value: EventFormalityCategory.unofficial,
+            title: EventFormalityCategory.unofficial.title,
+            description: EventFormalityCategory.unofficial.description,
+            icon: EventFormalityCategory.unofficial.icon,
+          ),
+        ],
+      );
 
-    final addButton = PrimaryButton(
-      text: '일정 추가',
-      onPressed: onCreateEvent,
-      icon: const Icon(Icons.add),
-      variant: PrimaryButtonVariant.brand,
-      width: 160,
-    );
+      if (selectedFormality == null) return false; // User cancelled
+      if (!mounted) return false;
 
-    final navigator = _GroupCalendarNavigator(
-      label: label,
-      onPrevious: onPrevious,
-      onNext: onNext,
-      onToday: onToday,
-      enabled: !isBusy,
-    );
+      isOfficial = selectedFormality == EventFormalityCategory.official;
+    }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Use project standard: 850px breakpoint for wide desktop
-        final helper = ResponsiveLayoutHelper(context: context, constraints: constraints);
-        final isCompact = !helper.isWideDesktop;
-
-        if (isCompact) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(child: navigator),
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: viewToggle,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  addButton,
-                ],
+    // Step 2.5: Event type selection for official events
+    EventType selectedType = EventType.general;
+    if (isOfficial) {
+      final selected = await showSingleStepSelector<EventType>(
+        context: context,
+        title: '공식 일정 유형 선택',
+        subtitle: '어떤 유형의 공식 일정을 만드시겠습니까?',
+        options: EventType.values
+            .map(
+              (type) => SelectableOption(
+                value: type,
+                title: type.title,
+                description: type.description,
+                icon: type.icon,
               ),
-            ],
-          );
-        }
+            )
+            .toList(),
+      );
 
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                viewToggle,
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Center(child: navigator),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                addButton,
-              ],
-            ),
-          ),
-        );
-      },
+      if (selected == null) return false; // User cancelled
+      if (!mounted) return false;
+      selectedType = selected;
+    }
+
+    // Step 3: Show event form dialog with pre-filled time
+    final result = await showGroupEventFormDialog(
+      context,
+      groupId: widget.groupId,
+      anchorDate: weekStart.add(Duration(days: event.start.day)),
+      canCreateOfficial: canCreateOfficial,
+      initialIsOfficial: isOfficial,
+      eventType: selectedType,
+      // Pre-fill time from drag gesture
+      initialStartTime: event.startTime,
+      initialEndTime: event.endTime,
     );
+
+    if (result == null || !mounted) return false;
+
+    // Step 4: API call
+    try {
+      await ref.read(groupCalendarProvider(widget.groupId).notifier).createEvent(
+        groupId: widget.groupId,
+        title: result.title,
+        description: result.description,
+        locationText: result.locationText ?? '',
+        placeId: result.place?.id,
+        startDate: result.startDate,
+        endDate: result.endDate,
+        isAllDay: result.isAllDay,
+        isOfficial: result.isOfficial,
+        color: result.color.toHex(),
+        recurrence: result.recurrence,
+      );
+
+      if (mounted) {
+        AppSnackBar.info(context, '일정이 추가되었습니다');
+      }
+      return true;
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.error(context, '일정 추가 실패: ${e.toString()}');
+      }
+      return false;
+    }
+  }
+
+  /// Handle event update from drag gesture or click
+  Future<bool> _handleEventUpdate(
+    BuildContext context,
+    Event event,
+    DateTime weekStart,
+  ) async {
+    // Step 1: Find original GroupEvent
+    final eventId = GroupEventAdapter.extractEventId(event.id);
+    if (eventId == null) {
+      AppSnackBar.error(context, '잘못된 일정 ID입니다');
+      return false;
+    }
+
+    final state = ref.read(groupCalendarProvider(widget.groupId));
+    GroupEvent? originalEvent;
+    try {
+      originalEvent = state.events.firstWhere((e) => e.id == eventId);
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.error(context, '일정을 찾을 수 없습니다');
+      }
+      return false;
+    }
+
+    // Step 2: Check if recurring
+    UpdateScope? updateScope;
+    if (originalEvent.isRecurring) {
+      updateScope = await _showUpdateScopeDialog();
+      if (updateScope == null) return false; // User cancelled
+      if (!mounted) return false;
+    }
+
+    // Step 3: Show event form dialog with updated time
+    final result = await showGroupEventFormDialog(
+      context,
+      groupId: widget.groupId,
+      initial: originalEvent,
+      canCreateOfficial: originalEvent.isOfficial,
+      // Pre-fill time from drag gesture
+      initialStartTime: event.startTime,
+      initialEndTime: event.endTime,
+    );
+
+    if (result == null || !mounted) return false;
+
+    // Step 4: API call
+    try {
+      await ref.read(groupCalendarProvider(widget.groupId).notifier).updateEvent(
+        groupId: widget.groupId,
+        eventId: eventId,
+        title: result.title,
+        description: result.description,
+        locationText: result.locationText ?? '',
+        placeId: result.place?.id,
+        startDate: result.startDate,
+        endDate: result.endDate,
+        isAllDay: result.isAllDay,
+        color: result.color.toHex(),
+        updateScope: updateScope ?? UpdateScope.thisEvent,
+      );
+
+      if (mounted) {
+        AppSnackBar.info(context, '일정이 수정되었습니다');
+      }
+      return true;
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.error(context, '일정 수정 실패: ${e.toString()}');
+      }
+      return false;
+    }
+  }
+
+  /// Handle event deletion
+  Future<bool> _handleEventDelete(
+    BuildContext context,
+    Event event,
+  ) async {
+    // Step 1: Find original GroupEvent
+    final eventId = GroupEventAdapter.extractEventId(event.id);
+    if (eventId == null) {
+      AppSnackBar.error(context, '잘못된 일정 ID입니다');
+      return false;
+    }
+
+    final state = ref.read(groupCalendarProvider(widget.groupId));
+    GroupEvent? originalEvent;
+    try {
+      originalEvent = state.events.firstWhere((e) => e.id == eventId);
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.error(context, '일정을 찾을 수 없습니다');
+      }
+      return false;
+    }
+
+    // Step 2: Confirmation dialog
+    final eventTitle = originalEvent.title;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('일정 삭제'),
+        content: Text('정말 "$eventTitle" 일정을 삭제하시겠습니까?'),
+        actions: [
+          NeutralOutlinedButton(
+            text: '취소',
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          PrimaryButton(
+            text: '삭제',
+            onPressed: () => Navigator.of(context).pop(true),
+            variant: PrimaryButtonVariant.error,
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return false;
+
+    // Step 3: Check if recurring
+    UpdateScope? deleteScope;
+    if (originalEvent.isRecurring) {
+      deleteScope = await _showUpdateScopeDialog(isDelete: true);
+      if (deleteScope == null) return false;
+      if (!mounted) return false;
+    }
+
+    // Step 4: API call
+    try {
+      await ref.read(groupCalendarProvider(widget.groupId).notifier).deleteEvent(
+        groupId: widget.groupId,
+        eventId: eventId,
+        deleteScope: deleteScope ?? UpdateScope.thisEvent,
+      );
+
+      if (mounted) {
+        AppSnackBar.info(context, '일정이 삭제되었습니다');
+      }
+      return true;
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.error(context, '일정 삭제 실패: ${e.toString()}');
+      }
+      return false;
+    }
   }
 }
 
-class _GroupCalendarNavigator extends StatelessWidget {
-  const _GroupCalendarNavigator({
-    required this.label,
-    required this.onPrevious,
-    required this.onNext,
-    required this.onToday,
-    required this.enabled,
-  });
-
-  final String label;
-  final VoidCallback onPrevious;
-  final VoidCallback onNext;
-  final VoidCallback onToday;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          tooltip: '이전',
-          onPressed: enabled ? onPrevious : null,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Flexible(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 160, maxWidth: 280),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: textTheme.titleLarge,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-        ),
-        IconButton(
-          tooltip: '다음',
-          onPressed: enabled ? onNext : null,
-          icon: const Icon(Icons.chevron_right),
-        ),
-        // Flexible로 감싸서 Row 내에서 유연한 크기 조정 가능
-        Flexible(
-          child: NeutralOutlinedButton(
-            text: '오늘',
-            onPressed: enabled ? onToday : null,
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 extension on Color {
   String toHex() {

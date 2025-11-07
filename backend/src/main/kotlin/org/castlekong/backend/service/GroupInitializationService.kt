@@ -34,8 +34,9 @@ class GroupInitializationService(
         val response = groupService.createGroup(request, ownerId)
 
         // 2. 엔티티 재조회 (기본 역할 및 채널 생성을 위해)
-        val savedGroup = groupRepository.findById(response.id)
-            .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
+        val savedGroup =
+            groupRepository.findById(response.id)
+                .orElseThrow { BusinessException(ErrorCode.GROUP_NOT_FOUND) }
 
         // 3. 기본 역할 생성 및 소유자 추가
         val (ownerRole, advisorRole, memberRole) = createDefaultRolesAndAddOwner(savedGroup, savedGroup.owner)

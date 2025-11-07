@@ -3,6 +3,7 @@ import '../../../core/models/comment_models.dart';
 import '../../../core/services/comment_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../common/app_empty_state.dart';
 import 'comment_item.dart';
 
 /// 댓글 목록 위젯
@@ -135,31 +136,7 @@ class _CommentListState extends State<CommentList> {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 48,
-              color: AppColors.neutral400,
-            ),
-            SizedBox(height: 16),
-            Text(
-              '아직 댓글이 없습니다',
-              style: TextStyle(fontSize: 14, color: AppColors.neutral600),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '첫 번째 댓글을 작성해보세요',
-              style: TextStyle(fontSize: 12, color: AppColors.neutral500),
-            ),
-          ],
-        ),
-      ),
-    );
+    return AppEmptyState.noComments();
   }
 
   Widget _buildCommentList() {

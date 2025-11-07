@@ -4,10 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../../core/models/calendar/group_event.dart';
 import '../../../providers/my_groups_provider.dart';
 import '../../../providers/workspace_state_provider.dart';
+import '../../../providers/group_calendar_provider.dart';
 import '../../../widgets/dialogs/create_subgroup_dialog.dart';
 import '../../../widgets/common/section_card.dart';
+import '../../../widgets/common/app_empty_state.dart';
+import '../../../widgets/calendar/compact_month_calendar.dart';
 
 /// 그룹 홈 페이지
 ///
@@ -67,9 +71,9 @@ class GroupHomeView extends ConsumerWidget {
               flex: 1,
               child: Column(
                 children: [
-                  _buildCalendarWidget(context),
+                  _buildCalendarWidget(context, ref),
                   SizedBox(height: AppSpacing.md),
-                  _buildScheduleWidget(context),
+                  _buildScheduleWidget(context, ref),
                 ],
               ),
             ),
@@ -93,11 +97,11 @@ class GroupHomeView extends ConsumerWidget {
         SizedBox(height: AppSpacing.md),
 
         // Calendar
-        _buildCalendarWidget(context),
+        _buildCalendarWidget(context, ref),
         SizedBox(height: AppSpacing.md),
 
         // Schedule
-        _buildScheduleWidget(context),
+        _buildScheduleWidget(context, ref),
       ],
     );
   }
@@ -378,7 +382,13 @@ class GroupHomeView extends ConsumerWidget {
     );
   }
 
-  Widget _buildCalendarWidget(BuildContext context) {
+  Widget _buildCalendarWidget(BuildContext context, WidgetRef ref) {
+    final workspaceState = ref.watch(workspaceStateProvider);
+    final selectedGroupId = workspaceState.selectedGroupId;
+
+    // Parse groupId
+    final groupId = selectedGroupId != null ? int.tryParse(selectedGroupId) : null;
+
     return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,7 +413,7 @@ class GroupHomeView extends ConsumerWidget {
           SizedBox(height: AppSpacing.md),
           // Calendar content
           Container(
-            height: 280,
+            height: 300, // Increased from 280px to accommodate compact calendar
             decoration: BoxDecoration(
               color: AppColors.lightBackground,
               borderRadius: BorderRadius.circular(AppRadius.input),
@@ -411,32 +421,38 @@ class GroupHomeView extends ConsumerWidget {
                 color: AppColors.lightOutline,
               ),
             ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 48,
-                    color: AppColors.neutral400,
-                  ),
-                  SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    '달력 위젯 (구현 예정)',
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppColors.neutral600,
+            child: groupId != null
+                ? _GroupCalendarWidget(groupId: groupId)
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 48,
+                          color: AppColors.neutral400,
+                        ),
+                        SizedBox(height: AppSpacing.xxs),
+                        Text(
+                          '그룹을 선택해주세요',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: AppColors.neutral600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildScheduleWidget(BuildContext context) {
+  Widget _buildScheduleWidget(BuildContext context, WidgetRef ref) {
+    final workspaceState = ref.watch(workspaceStateProvider);
+    final selectedGroupId = workspaceState.selectedGroupId;
+    final groupId = selectedGroupId != null ? int.tryParse(selectedGroupId) : null;
+
     return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,38 +475,260 @@ class GroupHomeView extends ConsumerWidget {
             ],
           ),
           SizedBox(height: AppSpacing.md),
-          // Schedule items (skeleton)
-          _buildScheduleItem(
-            date: '10/15',
-            day: '화',
-            title: '프로젝트 중간 발표',
-            time: '14:00',
-          ),
-          Divider(height: AppSpacing.sm),
-          _buildScheduleItem(
-            date: '10/18',
-            day: '금',
-            title: '정기 모임',
-            time: '18:00',
-          ),
-          Divider(height: AppSpacing.sm),
-          _buildScheduleItem(
-            date: '10/22',
-            day: '화',
-            title: '워크샵',
-            time: '10:00',
-          ),
+          // Schedule items (real data)
+          if (groupId != null)
+            _UpcomingEventsWidget(groupId: groupId)
+          else
+            _buildEmptySchedule(),
         ],
       ),
     );
   }
 
+  Widget _buildEmptySchedule() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.event_available_outlined,
+              size: 48,
+              color: AppColors.neutral400,
+            ),
+            SizedBox(height: AppSpacing.xxs),
+            Text(
+              '그룹을 선택해주세요',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppColors.neutral600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Internal widget for displaying group calendar in compact view
+class _GroupCalendarWidget extends ConsumerStatefulWidget {
+  final int groupId;
+
+  const _GroupCalendarWidget({required this.groupId});
+
+  @override
+  ConsumerState<_GroupCalendarWidget> createState() =>
+      _GroupCalendarWidgetState();
+}
+
+class _GroupCalendarWidgetState extends ConsumerState<_GroupCalendarWidget> {
+  DateTime _focusedDate = DateTime.now();
+  DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadEvents();
+    });
+  }
+
+  @override
+  void didUpdateWidget(_GroupCalendarWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.groupId != widget.groupId) {
+      // Group changed, reload events
+      _loadEvents();
+    }
+  }
+
+  Future<void> _loadEvents() async {
+    final startOfMonth = DateTime(_focusedDate.year, _focusedDate.month, 1);
+    final endOfMonth = DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
+
+    await ref.read(groupCalendarProvider(widget.groupId).notifier).loadEvents(
+          groupId: widget.groupId,
+          startDate: startOfMonth,
+          endDate: endOfMonth,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final calendarState = ref.watch(groupCalendarProvider(widget.groupId));
+
+    // Build event colors map from events
+    final eventColorsByDate = <DateTime, List<Color>>{};
+    for (final event in calendarState.events) {
+      final normalizedStart = _normalizeDate(event.startDate);
+      final normalizedEnd = _normalizeDate(event.endDate);
+
+      // Add event color to all dates it spans
+      var currentDate = normalizedStart;
+      while (currentDate.isBefore(normalizedEnd) ||
+          currentDate.isAtSameMomentAs(normalizedEnd)) {
+        eventColorsByDate.putIfAbsent(currentDate, () => []).add(event.color);
+        currentDate = currentDate.add(const Duration(days: 1));
+      }
+    }
+
+    if (calendarState.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (calendarState.errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: AppColors.error,
+            ),
+            SizedBox(height: AppSpacing.xs),
+            Text(
+              '일정을 불러오지 못했습니다',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppColors.neutral600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Use CompactMonthCalendar widget
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: CompactMonthCalendar(
+        focusedDate: _focusedDate,
+        selectedDate: _selectedDate,
+        eventColorsByDate: eventColorsByDate,
+        onPageChanged: (newFocusedDate) {
+          setState(() {
+            _focusedDate = newFocusedDate;
+          });
+          _loadEvents();
+        },
+        onEventDateTap: (date) {
+          // Navigate to group calendar page with the selected date
+          _navigateToGroupCalendar(date);
+        },
+        onCalendarTap: () {
+          // Navigate to group calendar page (full view)
+          _navigateToGroupCalendar(null);
+        },
+      ),
+    );
+  }
+
+  void _navigateToGroupCalendar(DateTime? date) {
+    // Navigate to workspace calendar view using WorkspaceStateNotifier
+    // Pass the selected date to focus on that specific date in the calendar
+    ref.read(workspaceStateProvider.notifier).showCalendar(selectedDate: date);
+  }
+
+  DateTime _normalizeDate(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+}
+
+/// Widget for displaying upcoming 3 events from group calendar
+class _UpcomingEventsWidget extends ConsumerWidget {
+  final int groupId;
+
+  const _UpcomingEventsWidget({required this.groupId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final calendarState = ref.watch(groupCalendarProvider(groupId));
+
+    if (calendarState.isLoading) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (calendarState.errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 32,
+                color: AppColors.error,
+              ),
+              SizedBox(height: AppSpacing.xxs),
+              Text(
+                '일정을 불러오지 못했습니다',
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppColors.neutral600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Filter: Only future events (today or later)
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final upcomingEvents = calendarState.events
+        .where((event) => !event.startDate.isBefore(today)) // Today or later
+        .toList();
+
+    // Sort: By start date (earliest first)
+    upcomingEvents.sort((a, b) => a.startDate.compareTo(b.startDate));
+
+    // Limit: Take only first 3
+    final limitedEvents = upcomingEvents.take(3).toList();
+
+    if (limitedEvents.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: AppEmptyState.noData(
+          message: '예정된 일정이 없습니다',
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        for (int i = 0; i < limitedEvents.length; i++) ...[
+          if (i > 0) Divider(height: AppSpacing.sm),
+          _buildScheduleItem(
+            event: limitedEvents[i],
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildScheduleItem({
-    required String date,
-    required String day,
-    required String title,
-    required String time,
+    required GroupEvent event,
   }) {
+    // Format date: MM/dd
+    final dateStr = '${event.startDate.month}/${event.startDate.day}';
+
+    // Format day of week (Korean)
+    final dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][event.startDate.weekday % 7];
+
+    // Format time: HH:mm or '종일'
+    final timeStr = event.isAllDay
+        ? '종일'
+        : '${event.startDate.hour.toString().padLeft(2, '0')}:${event.startDate.minute.toString().padLeft(2, '0')}';
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: AppSpacing.xxs),
       child: Row(
@@ -500,23 +738,23 @@ class GroupHomeView extends ConsumerWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.actionTonalBg,
+              color: event.color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(AppRadius.input),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  date,
+                  dateStr,
                   style: AppTheme.bodySmall.copyWith(
-                    color: AppColors.action,
+                    color: event.color,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
-                  day,
+                  dayOfWeek,
                   style: AppTheme.bodySmall.copyWith(
-                    color: AppColors.action,
+                    color: event.color,
                     fontSize: 10,
                   ),
                 ),
@@ -531,7 +769,7 @@ class GroupHomeView extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  event.title,
                   style: AppTheme.bodyMedium.copyWith(
                     color: AppColors.lightOnSurface,
                     fontWeight: FontWeight.w500,
@@ -541,7 +779,7 @@ class GroupHomeView extends ConsumerWidget {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  time,
+                  timeStr,
                   style: AppTheme.bodySmall.copyWith(
                     color: AppColors.neutral600,
                   ),
@@ -553,5 +791,4 @@ class GroupHomeView extends ConsumerWidget {
       ),
     );
   }
-
 }
