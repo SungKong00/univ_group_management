@@ -285,7 +285,7 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
         if (mounted && deletedCount > 0) {
           AppSnackBar.info(
             context,
-            '운영시간 변경으로 브레이크 타임 ${deletedCount}개가 삭제되었습니다',
+            '운영시간 변경으로 브레이크 타임 $deletedCount개가 삭제되었습니다',
           );
         }
       }
@@ -372,7 +372,7 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
       if (breakTimeChangeCount > 0) {
         AppSnackBar.success(
           context,
-          '운영시간 및 브레이크 타임 ${breakTimeChangeCount}개가 저장되었습니다',
+          '운영시간 및 브레이크 타임 $breakTimeChangeCount개가 저장되었습니다',
         );
       } else {
         AppSnackBar.success(context, '운영시간이 저장되었습니다');

@@ -19,7 +19,6 @@ import '../../../utils/responsive_layout_helper.dart';
 import '../../../widgets/common/compact_tab_bar.dart';
 import '../../../widgets/organisms/organisms.dart';
 import '../../../widgets/calendar/calendar_navigator.dart';
-import '../../calendar/calendar_week_grid_view.dart';
 import '../../calendar/widgets/calendar_month_with_sidebar.dart';
 import '../../calendar/widgets/month_event_chip.dart';
 import '../../../widgets/weekly_calendar/weekly_schedule_editor.dart';

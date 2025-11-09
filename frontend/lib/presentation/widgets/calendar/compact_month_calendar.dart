@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/theme.dart';
 
 /// Compact month calendar widget for group home.
 ///

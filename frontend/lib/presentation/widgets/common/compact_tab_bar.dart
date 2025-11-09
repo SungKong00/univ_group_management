@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 
 /// 컴팩트 탭 바 위젯

@@ -53,11 +53,11 @@ Future<Place?> showPlacePickerDialog({
       final textTheme = Theme.of(dialogContext).textTheme;
       final showTimeInfo = startTime != null && endTime != null;
 
-      String _formatTimeRange() {
+      String formatTimeRange() {
         final dateLabel =
             DateFormat('M월 d일 (E)', 'ko_KR').format(startTime!);
         final timeLabel =
-            '${DateFormat('HH:mm').format(startTime!)} - ${DateFormat('HH:mm').format(endTime!)}';
+            '${DateFormat('HH:mm').format(startTime)} - ${DateFormat('HH:mm').format(endTime!)}';
         return '$dateLabel · $timeLabel';
       }
 
@@ -82,7 +82,7 @@ Future<Place?> showPlacePickerDialog({
                       borderRadius: BorderRadius.circular(AppRadius.card),
                     ),
                     child: Text(
-                      _formatTimeRange(),
+                      formatTimeRange(),
                       style: textTheme.bodyMedium?.copyWith(
                         color: AppColors.brand,
                         fontWeight: FontWeight.w600,

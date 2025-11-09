@@ -4,8 +4,8 @@ import '../../../../core/theme/app_colors.dart';
 /// Dialog for selecting duration when multiple places are selected
 class DurationInputDialog extends StatefulWidget {
   const DurationInputDialog({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<DurationInputDialog> createState() => _DurationInputDialogState();
@@ -63,9 +63,9 @@ class _DurationInputDialogState extends State<DurationInputDialog> {
     final minutes = duration.inMinutes % 60;
 
     if (minutes == 0) {
-      return '${hours}시간';
+      return '$hours시간';
     } else {
-      return '${hours}시간 ${minutes}분';
+      return '$hours시간 $minutes분';
     }
   }
 

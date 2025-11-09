@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 
 /// 모든 버튼의 로딩 상태를 표시하는 공통 컴포넌트
@@ -30,7 +29,7 @@ class ButtonLoadingChild extends StatelessWidget {
   final TextStyle textStyle;
   final Color indicatorColor;
 
-  const ButtonLoadingChild({
+  const ButtonLoadingChild({super.key, 
     required this.text,
     this.icon,
     required this.isLoading,

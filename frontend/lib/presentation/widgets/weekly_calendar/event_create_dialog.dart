@@ -281,7 +281,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
                     style: TextStyle(color: AppColors.lightSecondary, fontSize: 13),
                   )
                 : DropdownButtonFormField<int>(
-                    value: _selectedPlaceId,
+                    initialValue: _selectedPlaceId,
                     focusNode: _dropdownFocusNode,
                     decoration: const InputDecoration(
                       isDense: true,

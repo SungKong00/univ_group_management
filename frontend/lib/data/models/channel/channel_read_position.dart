@@ -1,6 +1,7 @@
 /// Channel Read Position Models
 ///
 /// Models for tracking and managing read positions in channels.
+library;
 
 /// Represents the last read position in a channel
 class ChannelReadPosition {

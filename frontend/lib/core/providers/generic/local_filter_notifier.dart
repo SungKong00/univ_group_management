@@ -36,7 +36,7 @@ import 'filter_model.dart';
 abstract class LocalFilterNotifier<TFilter extends FilterModel>
     extends StateNotifier<TFilter> {
   /// 초기 필터 상태로 초기화
-  LocalFilterNotifier(TFilter initialFilter) : super(initialFilter);
+  LocalFilterNotifier(super.initialFilter);
 
   /// 필터 상태를 업데이트합니다 (즉시 UI에 반영)
   ///

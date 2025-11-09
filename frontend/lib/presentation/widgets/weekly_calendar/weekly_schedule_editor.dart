@@ -497,7 +497,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             endTime: groupEvent.endDateTime,      // Add DateTime for precise rendering
             color: null,                          // External events use default color
           ));
-          debugPrint('  ✓ Added: ${groupEvent.title} (Day: $eventDay, ${startSlot}-${endSlot})');
+          debugPrint('  ✓ Added: ${groupEvent.title} (Day: $eventDay, $startSlot-$endSlot)');
         }
       }
     }

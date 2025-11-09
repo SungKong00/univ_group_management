@@ -372,7 +372,7 @@ class _AddRestrictedTimeDialogState
               Text('요일', style: AppTheme.titleMedium),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedDayOfWeek,
+                initialValue: _selectedDayOfWeek,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(

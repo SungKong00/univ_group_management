@@ -14,7 +14,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../widgets/weekly_calendar/duration_input_dialog.dart';
 import '../../widgets/weekly_calendar/group_picker_bottom_sheet.dart';
-import '../../widgets/weekly_calendar/group_selection_header.dart';
 import '../../widgets/weekly_calendar/place_selector_bottom_sheet.dart';
 import '../../widgets/weekly_calendar/weekly_navigation_header.dart';
 import '../../widgets/weekly_calendar/weekly_schedule_editor.dart';
@@ -332,9 +331,9 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     final minutes = duration.inMinutes % 60;
 
     if (minutes == 0) {
-      return '${hours}시간';
+      return '$hours시간';
     } else {
-      return '${hours}시간 ${minutes}분';
+      return '$hours시간 $minutes분';
     }
   }
 
@@ -850,7 +849,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
                                   : () => _toggleGroup(group.id, false),
                             ),
                           );
-                        }).toList(),
+                        }),
                         // Place chips
                         ..._selectedPlaces.map((place) {
                           return Padding(
@@ -877,7 +876,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
                               labelStyle: TextStyle(color: AppColors.neutral900),
                             ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),

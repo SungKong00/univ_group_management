@@ -10,9 +10,9 @@ class PlaceSelectorBottomSheet extends StatefulWidget {
   final Function(List<Place>) onPlacesSelected;
 
   const PlaceSelectorBottomSheet({
-    Key? key,
+    super.key,
     required this.onPlacesSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<PlaceSelectorBottomSheet> createState() =>
@@ -22,7 +22,7 @@ class PlaceSelectorBottomSheet extends StatefulWidget {
 class _PlaceSelectorBottomSheetState extends State<PlaceSelectorBottomSheet> {
   final PlaceService _placeService = PlaceService();
   List<Place> _places = [];
-  Set<int> _selectedPlaceIds = {};
+  final Set<int> _selectedPlaceIds = {};
   bool _isLoading = true;
   String? _errorMessage;
 

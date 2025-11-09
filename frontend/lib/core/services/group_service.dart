@@ -1,7 +1,6 @@
 import 'dart:developer' as developer;
 import '../models/group_models.dart';
 import '../models/auth_models.dart';
-import '../models/user_models.dart';
 import '../models/place/place.dart';
 import '../network/dio_client.dart';
 
