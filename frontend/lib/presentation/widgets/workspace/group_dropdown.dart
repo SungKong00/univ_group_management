@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/my_groups_provider.dart';
 import '../../providers/workspace_state_provider.dart';
+import '../../providers/navigation_state_provider.dart';
 
 /// 그룹 선택 드롭다운
 ///
@@ -52,6 +53,8 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
   bool _isExpanded = false;
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
+  bool _isSwitching = false;
+  String? _errorMessage;
 
   /// 주어진 텍스트를 특정 스타일로 렌더링했을 때의 너비를 계산합니다.
   ///
@@ -218,25 +221,54 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
     required int indentLevel,
   }) {
     return InkWell(
-      onTap: () {
-        if (!isSelected) {
-          // Get current view to maintain view type when switching groups
-          final currentView = ref.read(workspaceCurrentViewProvider);
-          ref
-              .read(workspaceStateProvider.notifier)
-              .enterWorkspace(
-                group.id.toString(),
-                membership: group,
-                targetView: currentView, // Pass current view to maintain type
-              );
-          NavigationHelper.navigateWithSync(
-            context,
-            ref,
-            '/workspace/${group.id}',
-          );
-        }
-        _toggleDropdown();
-      },
+      onTap: _isSwitching
+          ? null // Disable tap during group switching
+          : () async {
+              if (!isSelected) {
+                setState(() {
+                  _isSwitching = true;
+                  _errorMessage = null;
+                });
+
+                try {
+                  // Use new declarative navigation with context-aware switching
+                  await ref
+                      .read(navigationStateProvider.notifier)
+                      .switchGroup(group.id);
+
+                  // Update workspace state for compatibility with existing code
+                  ref.read(workspaceStateProvider.notifier).enterWorkspace(
+                        group.id.toString(),
+                        membership: group,
+                      );
+
+                  _toggleDropdown();
+                } catch (e) {
+                  setState(() {
+                    _errorMessage = '그룹 전환에 실패했습니다: ${e.toString()}';
+                  });
+
+                  // Show error snackbar
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(_errorMessage!),
+                        backgroundColor: AppColors.error,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() {
+                      _isSwitching = false;
+                    });
+                  }
+                }
+              } else {
+                _toggleDropdown();
+              }
+            },
       child: Container(
         height: 44,
         padding: EdgeInsets.only(
@@ -268,8 +300,17 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            // 현재 선택된 그룹 표시
-            if (isSelected)
+            // 로딩 표시 또는 현재 선택된 그룹 표시
+            if (_isSwitching && !isSelected)
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.brand),
+                ),
+              )
+            else if (isSelected)
               Icon(Icons.check, size: 20, color: AppColors.action),
           ],
         ),
