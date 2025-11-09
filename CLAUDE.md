@@ -1,5 +1,20 @@
 # 대학 그룹 관리 시스템 (University Group Management)
 
+## 📜 프로젝트 헌법 (Constitution)
+
+**핵심 거버넌스**: [.specify/memory/constitution.md](.specify/memory/constitution.md) - 프로젝트 v1.0.0 헌법
+
+이 헌법은 모든 개발 가이드라인과 프랙티스보다 우선하며, 7가지 핵심 원칙을 정의합니다:
+1. 3-Layer Architecture (비협상)
+2. 표준 응답 형식 ApiResponse<T> (비협상)
+3. RBAC + Override 권한 시스템 (비협상)
+4. 문서화 100줄 원칙
+5. 테스트 피라미드 60/30/10
+6. Flutter MCP 표준 (비협상)
+7. 프론트엔드 통합 원칙
+
+> **중요**: 이 문서(CLAUDE.md)는 일상적인 개발 가이던스를 제공합니다. 헌법은 변경 불가능한 원칙만 정의합니다.
+
 ## 🎯 빠른 네비게이션 (Quick Navigation)
 
 ### 핵심 개념 이해하기

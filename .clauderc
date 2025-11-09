@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "dart&flutter-mcp": {
+      "command": "dart",
+      "args": [
+        "mcp-server"
+      ]
+    },
+    "flutter-mcp-service": {
+      "command": "node",
+      "args": ["/Users/nohsungbeen/dev/ai/mcp/flutter-mcp service v2.0/flutter_mcp_2/src/index.js"],
+      "cwd": "/Users/nohsungbeen/dev/ai/mcp/flutter-mcp service v2.0/flutter_mcp_2",
+      "env": {
+        "FLUTTER_MCP_CACHE_DIR": "/Users/nohsungbeen/dev/ai/mcp/flutter-mcp service v2.0/.cache",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
