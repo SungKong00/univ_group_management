@@ -18,19 +18,83 @@ class _TestRouterAppState extends ConsumerState<TestRouterApp> {
   @override
   Widget build(BuildContext context) {
     // Create delegate in build to ensure it's properly connected to provider scope
-    final delegate = WorkspaceRouterDelegate(ref);
+    final delegate = WorkspaceRouterDelegate(ref, isTestMode: true);
 
-    return MaterialApp.router(
-      routerDelegate: delegate,
-    );
+    return MaterialApp.router(routerDelegate: delegate);
   }
 }
 
 void main() {
   group('Workspace Navigation Integration Tests', () {
     testWidgets(
-        'T053: Multi-step navigation (home → channel → calendar → back → back)',
-        (tester) async {
+      'T053: Multi-step navigation (home → channel → calendar → back → back)',
+      (tester) async {
+        late NavigationStateNotifier notifier;
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              navigationStateProvider.overrideWith((ref) {
+                notifier = NavigationStateNotifier();
+                return notifier;
+              }),
+            ],
+            child: const TestRouterApp(),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Initially empty (loading page)
+        expect(find.text('로딩 중...'), findsOneWidget);
+
+        // Step 1: Navigate to home
+        notifier.push(const WorkspaceRoute.home(groupId: 1));
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.pumpAndSettle();
+        expect(find.text('Home View for Group 1'), findsOneWidget);
+        expect(notifier.state.stack.length, 1);
+        expect(notifier.state.currentIndex, 0);
+
+        // Step 2: Navigate to channel
+        notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.pumpAndSettle();
+        expect(find.text('Channel View 5'), findsOneWidget);
+        expect(notifier.state.stack.length, 2);
+        expect(notifier.state.currentIndex, 1);
+
+        // Step 3: Navigate to calendar
+        notifier.push(const WorkspaceRoute.calendar(groupId: 1));
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.pumpAndSettle();
+        expect(find.text('Calendar View for Group 1'), findsOneWidget);
+        expect(notifier.state.stack.length, 3);
+        expect(notifier.state.currentIndex, 2);
+
+        // Step 4: Go back to channel
+        notifier.pop();
+        await tester.pump(); // Trigger rebuild
+        await tester.pumpAndSettle(); // Wait for animations
+        expect(find.text('Channel View 5'), findsOneWidget);
+        expect(notifier.state.currentIndex, 1);
+
+        // Step 5: Go back to home
+        notifier.pop();
+        await tester.pump(); // Trigger rebuild
+        await tester.pumpAndSettle(); // Wait for animations
+        expect(find.text('Home View for Group 1'), findsOneWidget);
+        expect(notifier.state.currentIndex, 0);
+
+        // Verify we're at root
+        expect(notifier.state.isAtRoot, isTrue);
+        expect(notifier.state.canPop, isFalse);
+      },
+    );
+
+    testWidgets('T054: Exiting workspace from root returns false', (
+      tester,
+    ) async {
       late NavigationStateNotifier notifier;
 
       await tester.pumpWidget(
@@ -45,69 +109,9 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
-
-      // Initially empty (loading page)
-      expect(find.text('Loading...'), findsOneWidget);
-
-      // Step 1: Navigate to home
+      // Start with home route (at root)
       notifier.push(const WorkspaceRoute.home(groupId: 1));
-      await tester.pumpAndSettle();
-      expect(find.text('Home View for Group 1'), findsOneWidget);
-      expect(notifier.state.stack.length, 1);
-      expect(notifier.state.currentIndex, 0);
-
-      // Step 2: Navigate to channel
-      notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
-      await tester.pumpAndSettle();
-      expect(find.text('Channel View 5'), findsOneWidget);
-      expect(notifier.state.stack.length, 2);
-      expect(notifier.state.currentIndex, 1);
-
-      // Step 3: Navigate to calendar
-      notifier.push(const WorkspaceRoute.calendar(groupId: 1));
-      await tester.pumpAndSettle();
-      expect(find.text('Calendar View for Group 1'), findsOneWidget);
-      expect(notifier.state.stack.length, 3);
-      expect(notifier.state.currentIndex, 2);
-
-      // Step 4: Go back to channel
-      notifier.pop();
-      await tester.pump(); // Trigger rebuild
-      await tester.pumpAndSettle(); // Wait for animations
-      expect(find.text('Channel View 5'), findsOneWidget);
-      expect(notifier.state.currentIndex, 1);
-
-      // Step 5: Go back to home
-      notifier.pop();
-      await tester.pump(); // Trigger rebuild
-      await tester.pumpAndSettle(); // Wait for animations
-      expect(find.text('Home View for Group 1'), findsOneWidget);
-      expect(notifier.state.currentIndex, 0);
-
-      // Verify we're at root
-      expect(notifier.state.isAtRoot, isTrue);
-      expect(notifier.state.canPop, isFalse);
-    });
-
-    testWidgets('T054: Exiting workspace from root returns false',
-        (tester) async {
-      late NavigationStateNotifier notifier;
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            navigationStateProvider.overrideWith((ref) {
-              notifier = NavigationStateNotifier();
-              // Start with home route (at root)
-              notifier.push(const WorkspaceRoute.home(groupId: 1));
-              return notifier;
-            }),
-          ],
-          child: const TestRouterApp(),
-        ),
-      );
-
+      await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
 
       // Verify we're at root
@@ -118,8 +122,7 @@ void main() {
       // Try to pop from root - should not change state
       // (In real app, this would be handled by system back button)
       final canPop = notifier.pop();
-      expect(canPop, isFalse,
-          reason: 'pop should return false at root');
+      expect(canPop, isFalse, reason: 'pop should return false at root');
 
       // Verify state unchanged
       expect(notifier.state.isAtRoot, isTrue);
@@ -134,8 +137,6 @@ void main() {
           overrides: [
             navigationStateProvider.overrideWith((ref) {
               notifier = NavigationStateNotifier();
-              notifier.push(const WorkspaceRoute.home(groupId: 1));
-              notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
               return notifier;
             }),
           ],
@@ -143,6 +144,10 @@ void main() {
         ),
       );
 
+      notifier.push(const WorkspaceRoute.home(groupId: 1));
+      await tester.pump(const Duration(milliseconds: 350));
+      notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
+      await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
 
       // Verify we're on channel view (not at root)
@@ -152,8 +157,11 @@ void main() {
 
       // Pop should return true and go back
       final result = notifier.pop();
-      expect(result, isTrue,
-          reason: 'pop should return true when navigation can pop');
+      expect(
+        result,
+        isTrue,
+        reason: 'pop should return true when navigation can pop',
+      );
 
       await tester.pump(); // Trigger rebuild
       await tester.pumpAndSettle(); // Wait for animations
@@ -171,8 +179,6 @@ void main() {
           overrides: [
             navigationStateProvider.overrideWith((ref) {
               notifier = NavigationStateNotifier();
-              notifier.push(const WorkspaceRoute.home(groupId: 1));
-              notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
               return notifier;
             }),
           ],
@@ -180,6 +186,10 @@ void main() {
         ),
       );
 
+      notifier.push(const WorkspaceRoute.home(groupId: 1));
+      await tester.pump(const Duration(milliseconds: 350));
+      notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
+      await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
       expect(find.text('Channel View 5'), findsOneWidget);
 
@@ -201,9 +211,6 @@ void main() {
           overrides: [
             navigationStateProvider.overrideWith((ref) {
               notifier = NavigationStateNotifier();
-              notifier.push(const WorkspaceRoute.home(groupId: 1));
-              notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
-              notifier.push(const WorkspaceRoute.calendar(groupId: 1));
               return notifier;
             }),
           ],
@@ -211,6 +218,12 @@ void main() {
         ),
       );
 
+      notifier.push(const WorkspaceRoute.home(groupId: 1));
+      await tester.pump(const Duration(milliseconds: 350));
+      notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
+      await tester.pump(const Duration(milliseconds: 350));
+      notifier.push(const WorkspaceRoute.calendar(groupId: 1));
+      await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
       expect(notifier.state.stack.length, 3);
 

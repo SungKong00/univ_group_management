@@ -5,8 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 
-import '../../providers/workspace_state_provider.dart'
-    hide MobileWorkspaceView;
+import '../../providers/workspace_state_provider.dart' hide MobileWorkspaceView;
 import '../../../core/navigation/navigation_controller.dart';
 import '../../../core/navigation/layout_mode.dart';
 
@@ -32,7 +31,10 @@ class WorkspacePage extends ConsumerStatefulWidget {
 }
 
 class _WorkspacePageState extends ConsumerState<WorkspacePage>
-    with WidgetsBindingObserver, WorkspaceBackNavigationMixin, WorkspaceResponsiveMixin {
+    with
+        WidgetsBindingObserver,
+        WorkspaceBackNavigationMixin,
+        WorkspaceResponsiveMixin {
   int _postListKey = 0;
   int _commentListKey = 0;
   late final WorkspaceStateNotifier _workspaceNotifier;
@@ -49,9 +51,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
   void initState() {
     super.initState();
     _workspaceNotifier = ref.read(workspaceStateProvider.notifier);
-    _navigationController = ref.read(
-      navigationControllerProvider.notifier,
-    );
+    _navigationController = ref.read(navigationControllerProvider.notifier);
 
     // Add lifecycle observer for app state changes
     WidgetsBinding.instance.addObserver(this);
@@ -123,6 +123,37 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         state == AppLifecycleState.detached) {
       _saveCurrentReadPosition();
     }
+    // Restore session when app returns from background (T103)
+    else if (state == AppLifecycleState.resumed) {
+      _restoreSessionAfterInterruption();
+    }
+  }
+
+  /// Restore session after app returns from background or after interruption
+  ///
+  /// Handles:
+  /// - Workspace state validation
+  /// - Permission context refresh
+  /// - Network reconnection
+  void _restoreSessionAfterInterruption() {
+    if (!mounted) return;
+
+    final workspaceState = ref.read(workspaceStateProvider);
+    final currentGroupId = workspaceState.currentGroupId;
+
+    // If workspace is active, validate and refresh
+    if (currentGroupId != null) {
+      // Refresh workspace state to ensure consistency
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        // Re-initialize workspace to refresh permissions and data
+        _workspaceNotifier.enterWorkspace(
+          currentGroupId,
+          channelId: workspaceState.selectedChannelId,
+        );
+      });
+    }
   }
 
   Future<void> _saveCurrentReadPosition() async {
@@ -134,8 +165,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
       final channelIdInt = int.tryParse(channelId);
       if (channelIdInt != null) {
         try {
-          await ref.read(workspaceStateProvider.notifier)
-            .saveReadPosition(channelIdInt, postId);
+          await ref
+              .read(workspaceStateProvider.notifier)
+              .saveReadPosition(channelIdInt, postId);
         } catch (e) {
           // Silently ignore errors (Best-Effort)
         }
@@ -165,7 +197,11 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
             return;
           }
 
-          handleResponsiveTransition(isMobile, isNarrowDesktop, _workspaceNotifier);
+          handleResponsiveTransition(
+            isMobile,
+            isNarrowDesktop,
+            _workspaceNotifier,
+          );
 
           // 데스크톱에서 댓글창이 열릴 때 게시글 로드
           if (isDesktop && isCommentsVisible) {
@@ -197,7 +233,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
             color: AppColors.lightBackground,
             child: isDesktop
                 ? _buildDesktopWorkspace(isNarrowDesktop: isNarrowDesktop)
-                : MobileWorkspaceView(onRetryLoadWorkspace: _retryLoadWorkspace),
+                : MobileWorkspaceView(
+                    onRetryLoadWorkspace: _retryLoadWorkspace,
+                  ),
           ),
         );
       },

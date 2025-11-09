@@ -12,6 +12,18 @@ class NavigationState with _$NavigationState {
     @JsonKey(fromJson: _stackFromJson, toJson: _stackToJson)
     List<WorkspaceRoute> stack,
     @Default(-1) int currentIndex,
+
+    /// T105: Loading indicator for slow navigation operations (>2s)
+    @Default(false) bool isLoading,
+
+    /// T105: Optional message to display during loading
+    String? loadingMessage,
+
+    /// T107: Last error message for API failures
+    String? lastError,
+
+    /// T108: Offline detection flag
+    @Default(false) bool isOffline,
   }) = _NavigationState;
 
   const NavigationState._();
@@ -19,8 +31,8 @@ class NavigationState with _$NavigationState {
   /// Returns the current active route, or null if stack is empty
   WorkspaceRoute? get current =>
       stack.isNotEmpty && currentIndex >= 0 && currentIndex < stack.length
-          ? stack[currentIndex]
-          : null;
+      ? stack[currentIndex]
+      : null;
 
   /// Returns true if we can pop to a previous route
   bool get canPop => currentIndex > 0;
@@ -34,7 +46,9 @@ class NavigationState with _$NavigationState {
 
 // JSON converters for WorkspaceRoute list
 List<WorkspaceRoute> _stackFromJson(List<dynamic> json) {
-  return json.map((e) => WorkspaceRoute.fromJson(e as Map<String, dynamic>)).toList();
+  return json
+      .map((e) => WorkspaceRoute.fromJson(e as Map<String, dynamic>))
+      .toList();
 }
 
 List<dynamic> _stackToJson(List<WorkspaceRoute> stack) {

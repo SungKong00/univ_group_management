@@ -25,6 +25,18 @@ mixin _$NavigationState {
   List<WorkspaceRoute> get stack => throw _privateConstructorUsedError;
   int get currentIndex => throw _privateConstructorUsedError;
 
+  /// T105: Loading indicator for slow navigation operations (>2s)
+  bool get isLoading => throw _privateConstructorUsedError;
+
+  /// T105: Optional message to display during loading
+  String? get loadingMessage => throw _privateConstructorUsedError;
+
+  /// T107: Last error message for API failures
+  String? get lastError => throw _privateConstructorUsedError;
+
+  /// T108: Offline detection flag
+  bool get isOffline => throw _privateConstructorUsedError;
+
   /// Serializes this NavigationState to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -46,6 +58,10 @@ abstract class $NavigationStateCopyWith<$Res> {
     @JsonKey(fromJson: _stackFromJson, toJson: _stackToJson)
     List<WorkspaceRoute> stack,
     int currentIndex,
+    bool isLoading,
+    String? loadingMessage,
+    String? lastError,
+    bool isOffline,
   });
 }
 
@@ -63,7 +79,14 @@ class _$NavigationStateCopyWithImpl<$Res, $Val extends NavigationState>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? stack = null, Object? currentIndex = null}) {
+  $Res call({
+    Object? stack = null,
+    Object? currentIndex = null,
+    Object? isLoading = null,
+    Object? loadingMessage = freezed,
+    Object? lastError = freezed,
+    Object? isOffline = null,
+  }) {
     return _then(
       _value.copyWith(
             stack: null == stack
@@ -74,6 +97,22 @@ class _$NavigationStateCopyWithImpl<$Res, $Val extends NavigationState>
                 ? _value.currentIndex
                 : currentIndex // ignore: cast_nullable_to_non_nullable
                       as int,
+            isLoading: null == isLoading
+                ? _value.isLoading
+                : isLoading // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            loadingMessage: freezed == loadingMessage
+                ? _value.loadingMessage
+                : loadingMessage // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            lastError: freezed == lastError
+                ? _value.lastError
+                : lastError // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            isOffline: null == isOffline
+                ? _value.isOffline
+                : isOffline // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -93,6 +132,10 @@ abstract class _$$NavigationStateImplCopyWith<$Res>
     @JsonKey(fromJson: _stackFromJson, toJson: _stackToJson)
     List<WorkspaceRoute> stack,
     int currentIndex,
+    bool isLoading,
+    String? loadingMessage,
+    String? lastError,
+    bool isOffline,
   });
 }
 
@@ -109,7 +152,14 @@ class __$$NavigationStateImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? stack = null, Object? currentIndex = null}) {
+  $Res call({
+    Object? stack = null,
+    Object? currentIndex = null,
+    Object? isLoading = null,
+    Object? loadingMessage = freezed,
+    Object? lastError = freezed,
+    Object? isOffline = null,
+  }) {
     return _then(
       _$NavigationStateImpl(
         stack: null == stack
@@ -120,6 +170,22 @@ class __$$NavigationStateImplCopyWithImpl<$Res>
             ? _value.currentIndex
             : currentIndex // ignore: cast_nullable_to_non_nullable
                   as int,
+        isLoading: null == isLoading
+            ? _value.isLoading
+            : isLoading // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        loadingMessage: freezed == loadingMessage
+            ? _value.loadingMessage
+            : loadingMessage // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        lastError: freezed == lastError
+            ? _value.lastError
+            : lastError // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        isOffline: null == isOffline
+            ? _value.isOffline
+            : isOffline // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -132,6 +198,10 @@ class _$NavigationStateImpl extends _NavigationState {
     @JsonKey(fromJson: _stackFromJson, toJson: _stackToJson)
     final List<WorkspaceRoute> stack = const [],
     this.currentIndex = -1,
+    this.isLoading = false,
+    this.loadingMessage,
+    this.lastError,
+    this.isOffline = false,
   }) : _stack = stack,
        super._();
 
@@ -151,9 +221,27 @@ class _$NavigationStateImpl extends _NavigationState {
   @JsonKey()
   final int currentIndex;
 
+  /// T105: Loading indicator for slow navigation operations (>2s)
+  @override
+  @JsonKey()
+  final bool isLoading;
+
+  /// T105: Optional message to display during loading
+  @override
+  final String? loadingMessage;
+
+  /// T107: Last error message for API failures
+  @override
+  final String? lastError;
+
+  /// T108: Offline detection flag
+  @override
+  @JsonKey()
+  final bool isOffline;
+
   @override
   String toString() {
-    return 'NavigationState(stack: $stack, currentIndex: $currentIndex)';
+    return 'NavigationState(stack: $stack, currentIndex: $currentIndex, isLoading: $isLoading, loadingMessage: $loadingMessage, lastError: $lastError, isOffline: $isOffline)';
   }
 
   @override
@@ -163,7 +251,15 @@ class _$NavigationStateImpl extends _NavigationState {
             other is _$NavigationStateImpl &&
             const DeepCollectionEquality().equals(other._stack, _stack) &&
             (identical(other.currentIndex, currentIndex) ||
-                other.currentIndex == currentIndex));
+                other.currentIndex == currentIndex) &&
+            (identical(other.isLoading, isLoading) ||
+                other.isLoading == isLoading) &&
+            (identical(other.loadingMessage, loadingMessage) ||
+                other.loadingMessage == loadingMessage) &&
+            (identical(other.lastError, lastError) ||
+                other.lastError == lastError) &&
+            (identical(other.isOffline, isOffline) ||
+                other.isOffline == isOffline));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -172,6 +268,10 @@ class _$NavigationStateImpl extends _NavigationState {
     runtimeType,
     const DeepCollectionEquality().hash(_stack),
     currentIndex,
+    isLoading,
+    loadingMessage,
+    lastError,
+    isOffline,
   );
 
   /// Create a copy of NavigationState
@@ -196,6 +296,10 @@ abstract class _NavigationState extends NavigationState {
     @JsonKey(fromJson: _stackFromJson, toJson: _stackToJson)
     final List<WorkspaceRoute> stack,
     final int currentIndex,
+    final bool isLoading,
+    final String? loadingMessage,
+    final String? lastError,
+    final bool isOffline,
   }) = _$NavigationStateImpl;
   const _NavigationState._() : super._();
 
@@ -207,6 +311,22 @@ abstract class _NavigationState extends NavigationState {
   List<WorkspaceRoute> get stack;
   @override
   int get currentIndex;
+
+  /// T105: Loading indicator for slow navigation operations (>2s)
+  @override
+  bool get isLoading;
+
+  /// T105: Optional message to display during loading
+  @override
+  String? get loadingMessage;
+
+  /// T107: Last error message for API failures
+  @override
+  String? get lastError;
+
+  /// T108: Offline detection flag
+  @override
+  bool get isOffline;
 
   /// Create a copy of NavigationState
   /// with the given fields replaced by the non-null parameter values.

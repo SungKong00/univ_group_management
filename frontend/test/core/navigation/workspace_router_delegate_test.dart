@@ -18,11 +18,9 @@ class _TestRouterWrapperState extends ConsumerState<_TestRouterWrapper> {
   @override
   Widget build(BuildContext context) {
     // Create delegate in build to ensure it's properly connected to provider scope
-    final delegate = WorkspaceRouterDelegate(ref);
+    final delegate = WorkspaceRouterDelegate(ref, isTestMode: true);
 
-    return MaterialApp.router(
-      routerDelegate: delegate,
-    );
+    return MaterialApp.router(routerDelegate: delegate);
   }
 }
 
@@ -44,27 +42,25 @@ void main() {
       expect(state.currentIndex, -1);
     });
 
-    testWidgets('builds Navigator with empty pages when state is empty',
-        (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _TestRouterWrapper(),
-        ),
-      );
+    testWidgets('builds Navigator with empty pages when state is empty', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const ProviderScope(child: _TestRouterWrapper()));
 
       await tester.pumpAndSettle();
 
       // Should show loading page
-      expect(find.text('Loading...'), findsOneWidget);
+      expect(find.text('로딩 중...'), findsOneWidget);
     });
 
     testWidgets('builds page for single route', (tester) async {
+      late NavigationStateNotifier notifier;
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             navigationStateProvider.overrideWith((ref) {
-              final notifier = NavigationStateNotifier();
-              notifier.push(const WorkspaceRoute.home(groupId: 1));
+              notifier = NavigationStateNotifier();
               return notifier;
             }),
           ],
@@ -72,6 +68,11 @@ void main() {
         ),
       );
 
+      // Push route AFTER widget is built
+      notifier.push(const WorkspaceRoute.home(groupId: 1));
+      await tester.pump(
+        const Duration(milliseconds: 350),
+      ); // Wait for debounce (300ms)
       await tester.pumpAndSettle();
 
       // Verify home view is shown
@@ -79,13 +80,13 @@ void main() {
     });
 
     testWidgets('builds pages for multiple routes', (tester) async {
+      late NavigationStateNotifier notifier;
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             navigationStateProvider.overrideWith((ref) {
-              final notifier = NavigationStateNotifier();
-              notifier.push(const WorkspaceRoute.home(groupId: 1));
-              notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
+              notifier = NavigationStateNotifier();
               return notifier;
             }),
           ],
@@ -93,6 +94,10 @@ void main() {
         ),
       );
 
+      notifier.push(const WorkspaceRoute.home(groupId: 1));
+      await tester.pump(const Duration(milliseconds: 350)); // Wait for debounce
+      notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
+      await tester.pump(const Duration(milliseconds: 350)); // Wait for debounce
       await tester.pumpAndSettle();
 
       // Current page should be channel view
@@ -107,15 +112,17 @@ void main() {
           overrides: [
             navigationStateProvider.overrideWith((ref) {
               notifier = NavigationStateNotifier();
-              notifier.push(const WorkspaceRoute.home(groupId: 1));
-              notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
               return notifier;
             }),
           ],
-          child: _TestRouterWrapper(),
+          child: const _TestRouterWrapper(),
         ),
       );
 
+      notifier.push(const WorkspaceRoute.home(groupId: 1));
+      await tester.pump(const Duration(milliseconds: 350));
+      notifier.push(const WorkspaceRoute.channel(groupId: 1, channelId: 5));
+      await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
       expect(find.text('Channel View 5'), findsOneWidget);
 
