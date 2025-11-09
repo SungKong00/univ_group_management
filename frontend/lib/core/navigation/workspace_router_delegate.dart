@@ -15,16 +15,20 @@ class WorkspaceRouterDelegate extends RouterDelegate<WorkspaceRoute>
   WorkspaceRouterDelegate(this.ref)
       : navigatorKey = GlobalKey<NavigatorState>();
 
-  NavigationState get _navigationState => ref.read(navigationStateProvider);
-
   @override
-  WorkspaceRoute? get currentConfiguration => _navigationState.current;
+  WorkspaceRoute? get currentConfiguration {
+    final state = ref.read(navigationStateProvider);
+    return state.current;
+  }
 
   @override
   Widget build(BuildContext context) {
+    // CRITICAL: Use ref.watch() to automatically rebuild when state changes
+    final navigationState = ref.watch(navigationStateProvider);
+
     return Navigator(
       key: navigatorKey,
-      pages: _buildPages(_navigationState),
+      pages: _buildPages(navigationState),
       onDidRemovePage: (page) {
         // Delay provider modification to avoid modifying during build
         Future.microtask(() {

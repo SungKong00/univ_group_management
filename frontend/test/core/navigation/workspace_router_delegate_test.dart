@@ -15,27 +15,13 @@ class _TestRouterWrapper extends ConsumerStatefulWidget {
 }
 
 class _TestRouterWrapperState extends ConsumerState<_TestRouterWrapper> {
-  WorkspaceRouterDelegate? _delegate;
-
   @override
   Widget build(BuildContext context) {
-    // Create delegate on first build
-    _delegate ??= WorkspaceRouterDelegate(ref);
-
-    // Listen to navigation state changes and notify delegate + rebuild
-    ref.listen<NavigationState>(
-      navigationStateProvider,
-      (previous, next) {
-        _delegate?.notifyListeners();
-        // Force rebuild of this widget to trigger MaterialApp.router rebuild
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
+    // Create delegate in build to ensure it's properly connected to provider scope
+    final delegate = WorkspaceRouterDelegate(ref);
 
     return MaterialApp.router(
-      routerDelegate: _delegate!,
+      routerDelegate: delegate,
     );
   }
 }
