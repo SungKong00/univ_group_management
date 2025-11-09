@@ -13,15 +13,7 @@ class WorkspaceRouterDelegate extends RouterDelegate<WorkspaceRoute>
   final GlobalKey<NavigatorState> navigatorKey;
 
   WorkspaceRouterDelegate(this.ref)
-      : navigatorKey = GlobalKey<NavigatorState>() {
-    // Listen to navigation state changes and notify listeners
-    ref.listen<NavigationState>(
-      navigationStateProvider,
-      (previous, next) {
-        notifyListeners();
-      },
-    );
-  }
+      : navigatorKey = GlobalKey<NavigatorState>();
 
   NavigationState get _navigationState => ref.read(navigationStateProvider);
 
@@ -32,17 +24,19 @@ class WorkspaceRouterDelegate extends RouterDelegate<WorkspaceRoute>
   Widget build(BuildContext context) {
     return Navigator(
       key: navigatorKey,
-      pages: _buildPages(),
+      pages: _buildPages(_navigationState),
       onDidRemovePage: (page) {
-        // Pop from navigation state when page is removed
-        ref.read(navigationStateProvider.notifier).pop();
+        // Delay provider modification to avoid modifying during build
+        Future.microtask(() {
+          ref.read(navigationStateProvider.notifier).pop();
+        });
       },
     );
   }
 
   /// Build list of pages from navigation stack
-  List<Page> _buildPages() {
-    final stack = _navigationState.stack;
+  List<Page> _buildPages(NavigationState navigationState) {
+    final stack = navigationState.stack;
     if (stack.isEmpty) {
       // Return a default empty page to satisfy Navigator's requirement
       return [
@@ -56,7 +50,7 @@ class WorkspaceRouterDelegate extends RouterDelegate<WorkspaceRoute>
     }
 
     // Only show pages up to currentIndex
-    final currentIndex = _navigationState.currentIndex;
+    final currentIndex = navigationState.currentIndex;
     final visibleStack =
         currentIndex >= 0 ? stack.sublist(0, currentIndex + 1) : <WorkspaceRoute>[];
 

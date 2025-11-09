@@ -6,6 +6,40 @@ import 'package:frontend/core/navigation/workspace_route.dart';
 import 'package:frontend/core/navigation/workspace_router_delegate.dart';
 import 'package:frontend/presentation/providers/navigation_state_provider.dart';
 
+/// Wrapper widget to create delegate only once and set up listener
+class _TestRouterWrapper extends ConsumerStatefulWidget {
+  const _TestRouterWrapper({super.key});
+
+  @override
+  ConsumerState<_TestRouterWrapper> createState() => _TestRouterWrapperState();
+}
+
+class _TestRouterWrapperState extends ConsumerState<_TestRouterWrapper> {
+  WorkspaceRouterDelegate? _delegate;
+
+  @override
+  Widget build(BuildContext context) {
+    // Create delegate on first build
+    _delegate ??= WorkspaceRouterDelegate(ref);
+
+    // Listen to navigation state changes and notify delegate + rebuild
+    ref.listen<NavigationState>(
+      navigationStateProvider,
+      (previous, next) {
+        _delegate?.notifyListeners();
+        // Force rebuild of this widget to trigger MaterialApp.router rebuild
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
+
+    return MaterialApp.router(
+      routerDelegate: _delegate!,
+    );
+  }
+}
+
 void main() {
   group('WorkspaceRouterDelegate', () {
     late ProviderContainer container;
@@ -27,15 +61,8 @@ void main() {
     testWidgets('builds Navigator with empty pages when state is empty',
         (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: Consumer(
-            builder: (context, ref, child) {
-              final delegate = WorkspaceRouterDelegate(ref);
-              return MaterialApp.router(
-                routerDelegate: delegate,
-              );
-            },
-          ),
+        const ProviderScope(
+          child: _TestRouterWrapper(),
         ),
       );
 
@@ -55,14 +82,7 @@ void main() {
               return notifier;
             }),
           ],
-          child: Consumer(
-            builder: (context, ref, child) {
-              final delegate = WorkspaceRouterDelegate(ref);
-              return MaterialApp.router(
-                routerDelegate: delegate,
-              );
-            },
-          ),
+          child: const _TestRouterWrapper(),
         ),
       );
 
@@ -83,14 +103,7 @@ void main() {
               return notifier;
             }),
           ],
-          child: Consumer(
-            builder: (context, ref, child) {
-              final delegate = WorkspaceRouterDelegate(ref);
-              return MaterialApp.router(
-                routerDelegate: delegate,
-              );
-            },
-          ),
+          child: const _TestRouterWrapper(),
         ),
       );
 
@@ -113,14 +126,7 @@ void main() {
               return notifier;
             }),
           ],
-          child: Consumer(
-            builder: (context, ref, child) {
-              final delegate = WorkspaceRouterDelegate(ref);
-              return MaterialApp.router(
-                routerDelegate: delegate,
-              );
-            },
-          ),
+          child: _TestRouterWrapper(),
         ),
       );
 
@@ -129,8 +135,8 @@ void main() {
 
       // Pop the route
       notifier.pop();
-
-      await tester.pumpAndSettle();
+      await tester.pump(); // Trigger rebuild
+      await tester.pumpAndSettle(); // Wait for animations
 
       // Should show home view now
       expect(find.text('Home View for Group 1'), findsOneWidget);
