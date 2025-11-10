@@ -28,6 +28,7 @@ fi
 echo "📝 Git hooks 경로 설정 중..."
 cd "$PROJECT_ROOT"
 git config core.hooksPath .githooks
+chmod +x "$PROJECT_ROOT"/.githooks/*
 
 echo "✅ Git hooks 경로 설정 완료: .githooks"
 echo ""
