@@ -442,3 +442,34 @@ cd frontend && flutter analyze
 - Use dart-flutter MCP for all testing (don't use manual `flutter test`)
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
 - Bug fixes across US3-US5 touch same file (post_list.dart) - do sequentially to avoid merge conflicts
+
+---
+
+## Known Issues & Future Improvements
+
+**Documentation**: See [MEMO_known_issues.md](./MEMO_known_issues.md) for detailed issue tracking
+
+### Issue 1: 스크롤 포지션 초기화 오류 (새 게시글 작성 후)
+- **Status**: Documented (2025-11-10)
+- **Priority**: Medium
+- **Severity**: Low (기능 작동, 편의성 저하)
+- **Impact**: 읽지 않은 글 구분선은 표시되지만, 스크롤이 최신 글(맨 아래)로 이동
+- **Cause**: 새로운 게시글 추가 시 읽음 위치 갱신 로직 미흡
+- **Affected Files**:
+  - `frontend/lib/core/utils/read_position_helper.dart`
+  - `frontend/lib/presentation/widgets/post/post_list.dart`
+  - `frontend/lib/presentation/providers/workspace_state_provider.dart`
+- **Recommended Fix**: Next sprint (post-release)
+- **Estimated Effort**: 2-4시간
+- **Test Coverage Required**:
+  - Unit test: 새 게시글 작성 후 읽음 위치 갱신 검증
+  - Widget test: 스크롤 타겟이 읽지 않은 글로 설정되는지 검증
+  - Integration test: 전체 시나리오 End-to-End 테스트
+
+### Future Tasks (TBD)
+
+이 섹션은 향후 개선 작업이 추가될 때 업데이트됩니다.
+
+- [ ] Fix: 스크롤 포지션 초기화 오류 (Issue 1)
+- [ ] Write 26 missing tests (from MEMO_test_failures.md)
+- [ ] Fix 17 pre-existing test failures (from MEMO_test_failures.md)
