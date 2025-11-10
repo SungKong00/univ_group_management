@@ -167,7 +167,7 @@ git worktree add ../project-feature feature-branch
 
 # 3. 바로 개발 시작
 cd ../project-feature
-flutter run  # .env가 이미 있음!
+flutter run -d chrome --web-hostname localhost --web-port 5173  # .env가 이미 있음!
 ```
 
 #### 자동 복사되는 파일들
