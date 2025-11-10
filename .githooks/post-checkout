@@ -123,7 +123,7 @@ else
     echo ""
     echo "   2. 새 worktree 제거 후 재생성:"
     echo "      git worktree remove \"$(basename \"$CURRENT_DIR\")\""
-    echo "      git worktree add $CURRENT_DIR $(git branch --show-current)"
+    echo "      git worktree add \"$CURRENT_DIR\" $(git branch --show-current)"
 fi
 
 echo "================================================"
