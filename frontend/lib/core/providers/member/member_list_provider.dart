@@ -14,24 +14,24 @@ import 'member_filter_provider.dart';
 /// - autoDispose: 사용하지 않을 때 자동 해제
 final filteredGroupMembersProvider = FutureProvider.autoDispose
     .family<List<GroupMember>, int>((ref, groupId) async {
-  // 5분간 캐시 유지
-  ref.cacheFor(const Duration(minutes: 5));
+      // 5분간 캐시 유지
+      ref.cacheFor(const Duration(minutes: 5));
 
-  // 현재 필터 상태 감시
-  final filter = ref.watch(memberFilterStateProvider(groupId));
-  final memberRepository = ref.watch(memberRepositoryProvider);
+      // 현재 필터 상태 감시
+      final filter = ref.watch(memberFilterStateProvider(groupId));
+      final memberRepository = ref.watch(memberRepositoryProvider);
 
-  // 필터가 없으면 전체 조회
-  if (!filter.isActive) {
-    return memberRepository.getGroupMembers(groupId);
-  }
+      // 필터가 없으면 전체 조회
+      if (!filter.isActive) {
+        return memberRepository.getGroupMembers(groupId);
+      }
 
-  // 필터 적용하여 조회
-  return memberRepository.getGroupMembers(
-    groupId,
-    queryParameters: filter.toQueryParameters() as Map<String, String>,
-  );
-});
+      // 필터 적용하여 조회
+      return memberRepository.getGroupMembers(
+        groupId,
+        queryParameters: filter.toQueryParameters() as Map<String, String>,
+      );
+    });
 
 /// 전체 그룹 멤버 목록 조회 Provider (필터 미적용)
 ///
@@ -39,6 +39,6 @@ final filteredGroupMembersProvider = FutureProvider.autoDispose
 /// 주로 통계나 역할 할당 시 사용됩니다.
 final allGroupMembersProvider = FutureProvider.autoDispose
     .family<List<GroupMember>, int>((ref, groupId) async {
-  final memberRepository = ref.watch(memberRepositoryProvider);
-  return memberRepository.getGroupMembers(groupId);
-});
+      final memberRepository = ref.watch(memberRepositoryProvider);
+      return memberRepository.getGroupMembers(groupId);
+    });

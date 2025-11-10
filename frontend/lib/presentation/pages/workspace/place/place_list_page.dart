@@ -17,10 +17,7 @@ import '../../../../core/providers/place_time_providers.dart';
 class PlaceListPage extends ConsumerStatefulWidget {
   final int groupId;
 
-  const PlaceListPage({
-    required this.groupId,
-    super.key,
-  });
+  const PlaceListPage({required this.groupId, super.key});
 
   @override
   ConsumerState<PlaceListPage> createState() => _PlaceListPageState();
@@ -32,7 +29,9 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
   @override
   Widget build(BuildContext context) {
     final placesAsync = ref.watch(placesProvider(widget.groupId));
-    final permissionsAsync = ref.watch(groupPermissionsProvider(widget.groupId));
+    final permissionsAsync = ref.watch(
+      groupPermissionsProvider(widget.groupId),
+    );
 
     final hasCalendarManage = permissionsAsync.when(
       data: (perms) => perms.contains('CALENDAR_MANAGE'),
@@ -71,10 +70,7 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
                 hintStyle: AppTheme.bodyMedium.copyWith(
                   color: AppColors.neutral500,
                 ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: AppColors.neutral600,
-                ),
+                prefixIcon: Icon(Icons.search, color: AppColors.neutral600),
                 filled: true,
                 fillColor: AppColors.neutral100,
                 border: OutlineInputBorder(
@@ -94,18 +90,12 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
           Expanded(
             child: placesAsync.when(
               data: (places) => _buildPlaceList(places),
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: AppColors.error,
-                    ),
+                    Icon(Icons.error_outline, size: 48, color: AppColors.error),
                     SizedBox(height: AppSpacing.sm),
                     Text(
                       '오류가 발생했습니다',
@@ -169,17 +159,13 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
             SizedBox(height: AppSpacing.sm),
             Text(
               _searchQuery.isEmpty ? '등록된 장소가 없습니다' : '검색 결과가 없습니다',
-              style: AppTheme.titleLarge.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.titleLarge.copyWith(color: AppColors.neutral600),
             ),
             if (_searchQuery.isEmpty) ...[
               SizedBox(height: AppSpacing.xxs),
               Text(
                 '새 장소를 추가해보세요',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.neutral500,
-                ),
+                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
               ),
             ],
           ],
@@ -212,19 +198,14 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
           color: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.card),
-            side: BorderSide(
-              color: AppColors.neutral300,
-              width: 1,
-            ),
+            side: BorderSide(color: AppColors.neutral300, width: 1),
           ),
           child: ExpansionTile(
             tilePadding: EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,
               vertical: AppSpacing.xxs,
             ),
-            childrenPadding: EdgeInsets.only(
-              bottom: AppSpacing.xxs,
-            ),
+            childrenPadding: EdgeInsets.only(bottom: AppSpacing.xxs),
             title: Text(
               building,
               style: AppTheme.headlineSmall.copyWith(
@@ -233,9 +214,7 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
             ),
             subtitle: Text(
               '${buildingPlaces.length}개 장소',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             ),
             children: buildingPlaces.map((place) {
               return PlaceCard(
@@ -243,9 +222,7 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
                 groupId: widget.groupId,
                 onEdit: () => _showPlaceFormDialog(place: place),
                 onDelete: () => _deletePlace(place.id),
-                onManageAvailability: () => _showOperatingHoursDialog(
-                  place.id,
-                ),
+                onManageAvailability: () => _showOperatingHoursDialog(place.id),
               );
             }).toList(),
           ),
@@ -274,31 +251,23 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
       builder: (context) => AlertDialog(
         title: Text(
           '장소 삭제',
-          style: AppTheme.titleLarge.copyWith(
-            color: AppColors.neutral900,
-          ),
+          style: AppTheme.titleLarge.copyWith(color: AppColors.neutral900),
         ),
         content: Text(
           '이 장소를 삭제하시겠습니까?\n기존 예약은 유지되지만 신규 예약은 불가능합니다.',
-          style: AppTheme.bodyMedium.copyWith(
-            color: AppColors.neutral700,
-          ),
+          style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral700),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               '취소',
-              style: AppTheme.titleLarge.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.titleLarge.copyWith(color: AppColors.neutral600),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: Text(
               '삭제',
               style: AppTheme.titleLarge.copyWith(
@@ -360,9 +329,7 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
   void _showUsageRequestDialog() {
     showDialog(
       context: context,
-      builder: (context) => PlaceUsageRequestDialog(
-        groupId: widget.groupId,
-      ),
+      builder: (context) => PlaceUsageRequestDialog(groupId: widget.groupId),
     );
   }
 }

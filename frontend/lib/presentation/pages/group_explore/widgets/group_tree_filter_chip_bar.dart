@@ -45,9 +45,9 @@ class GroupTreeFilterChipBar extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xxs),
         Text(
           '※ 대학그룹(대학교, 단과대, 학과)은 항상 표시됩니다',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.neutral500,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: AppColors.neutral500),
         ),
       ],
     );
@@ -70,8 +70,8 @@ class GroupTreeFilterChipBar extends ConsumerWidget {
       checkmarkColor: AppColors.brand,
       backgroundColor: AppColors.neutral100,
       labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: isSelected ? AppColors.brand : AppColors.neutral700,
-          ),
+        color: isSelected ? AppColors.brand : AppColors.neutral700,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.button),
         side: BorderSide(

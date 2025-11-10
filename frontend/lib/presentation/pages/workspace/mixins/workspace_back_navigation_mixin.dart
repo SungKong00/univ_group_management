@@ -12,7 +12,8 @@ import '../../../utils/responsive_layout_helper.dart';
 /// - Narrow Desktop: 댓글 전체화면 ↔ 일반 뷰, 특수 뷰 네비게이션
 /// - Wide Desktop: 특수 뷰 → 댓글 → 채널 히스토리 순서 처리
 /// - Tablet: Wide Desktop과 동일한 로직
-mixin WorkspaceBackNavigationMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
+mixin WorkspaceBackNavigationMixin<T extends ConsumerStatefulWidget>
+    on ConsumerState<T> {
   /// 모바일 뒤로가기 가능 여부 확인
   bool canHandleMobileBack() {
     final currentView = ref.read(workspaceCurrentViewProvider);
@@ -120,7 +121,10 @@ mixin WorkspaceBackNavigationMixin<T extends ConsumerStatefulWidget> on Consumer
   }
 
   /// LayoutMode 기반 뒤로가기 처리
-  void handleBackPressForMode(LayoutMode mode, WorkspaceStateNotifier notifier) {
+  void handleBackPressForMode(
+    LayoutMode mode,
+    WorkspaceStateNotifier notifier,
+  ) {
     switch (mode) {
       case LayoutMode.compact:
         handleMobileBackPress(notifier);

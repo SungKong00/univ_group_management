@@ -15,10 +15,7 @@ class ReadPositionHelper {
   ///   state.lastReadPostIdMap[channelId],
   /// );
   /// ```
-  static int? findFirstUnreadPostIndex(
-    List<Post> posts,
-    int? lastReadPostId,
-  ) {
+  static int? findFirstUnreadPostIndex(List<Post> posts, int? lastReadPostId) {
     if (lastReadPostId == null) {
       return null; // No read history - scroll to latest
     }
@@ -56,7 +53,9 @@ class ReadPositionHelper {
     // 따라서 첫 번째 게시글(index 0)부터 읽지 않은 글로 간주
     // -1: 신규 채널 또는 API가 null을 반환한 경우 (workspace_state_provider에서 설정)
     if (lastReadPostId == null || lastReadPostId == -1) {
-      print('[DEBUG] ReadPositionHelper: lastReadPostId is $lastReadPostId (new channel), all posts are unread (return index 0)');
+      print(
+        '[DEBUG] ReadPositionHelper: lastReadPostId is $lastReadPostId (new channel), all posts are unread (return index 0)',
+      );
       return groupedPosts.isEmpty ? null : 0;
     }
 
@@ -70,10 +69,14 @@ class ReadPositionHelper {
       final posts = groupedPosts[date]!;
 
       for (final post in posts) {
-        print('[DEBUG] ReadPositionHelper: Checking post ${post.id}: globalIndex=$globalIndex, lastReadPostId=$lastReadPostId');
+        print(
+          '[DEBUG] ReadPositionHelper: Checking post ${post.id}: globalIndex=$globalIndex, lastReadPostId=$lastReadPostId',
+        );
 
         if (post.id > lastReadPostId) {
-          print('[DEBUG] ReadPositionHelper: Found first unread post at globalIndex=$globalIndex (postId=${post.id})');
+          print(
+            '[DEBUG] ReadPositionHelper: Found first unread post at globalIndex=$globalIndex (postId=${post.id})',
+          );
           return globalIndex; // First unread post's global index
         }
         globalIndex++;
@@ -97,20 +100,14 @@ class ReadPositionHelper {
   /// Get the unread count for a channel from the map
   ///
   /// Returns 0 if the channel has no unread count data.
-  static int getUnreadCount(
-    Map<int, int> unreadCountMap,
-    int channelId,
-  ) {
+  static int getUnreadCount(Map<int, int> unreadCountMap, int channelId) {
     return unreadCountMap[channelId] ?? 0;
   }
 
   /// Check if a post is unread based on the last read position
   ///
   /// Returns true if the post ID is greater than the last read post ID.
-  static bool isPostUnread(
-    int postId,
-    int? lastReadPostId,
-  ) {
+  static bool isPostUnread(int postId, int? lastReadPostId) {
     if (lastReadPostId == null) return false; // No read history
     return postId > lastReadPostId;
   }
@@ -118,10 +115,7 @@ class ReadPositionHelper {
   /// Calculate the number of unread posts in a list
   ///
   /// Counts posts with ID > lastReadPostId.
-  static int countUnreadPosts(
-    List<Post> posts,
-    int? lastReadPostId,
-  ) {
+  static int countUnreadPosts(List<Post> posts, int? lastReadPostId) {
     if (lastReadPostId == null) return 0;
 
     return posts.where((post) => post.id > lastReadPostId).length;

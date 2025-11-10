@@ -7,9 +7,9 @@ import '../../../../core/services/recruitment_service.dart';
 /// Fetches detailed information about a recruitment post.
 final recruitmentDetailProvider = FutureProvider.autoDispose
     .family<RecruitmentResponse, int>((ref, recruitmentId) async {
-  final service = RecruitmentService();
-  return await service.getRecruitment(recruitmentId);
-});
+      final service = RecruitmentService();
+      return await service.getRecruitment(recruitmentId);
+    });
 
 /// Submit Application Provider
 ///
@@ -31,13 +31,13 @@ class SubmitApplicationParams {
 /// Handles application submission and returns the result.
 final submitApplicationProvider = FutureProvider.autoDispose
     .family<ApplicationResponse, SubmitApplicationParams>((ref, params) async {
-  final service = RecruitmentService();
-  final request = CreateApplicationRequest(
-    motivation: params.motivation,
-    questionAnswers: params.questionAnswers,
-  );
-  return await service.submitApplication(params.recruitmentId, request);
-});
+      final service = RecruitmentService();
+      final request = CreateApplicationRequest(
+        motivation: params.motivation,
+        questionAnswers: params.questionAnswers,
+      );
+      return await service.submitApplication(params.recruitmentId, request);
+    });
 
 /// Has Applied State Provider
 ///

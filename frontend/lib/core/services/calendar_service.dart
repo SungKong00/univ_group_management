@@ -21,8 +21,7 @@ class CalendarService {
   /// Fetch current user's personal schedule entries.
   Future<List<PersonalSchedule>> getPersonalSchedules() async {
     try {
-      final response =
-          await _dioClient.get<Map<String, dynamic>>('/timetable');
+      final response = await _dioClient.get<Map<String, dynamic>>('/timetable');
       if (response.data == null) return const [];
 
       final apiResponse = ApiResponse.fromJson(response.data!, (json) {
@@ -58,10 +57,9 @@ class CalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '일정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '일정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'),
+      );
     }
   }
 
@@ -99,10 +97,9 @@ class CalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '일정 생성에 실패했습니다. 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '일정 생성에 실패했습니다. 다시 시도해주세요.'),
+      );
     }
   }
 
@@ -126,10 +123,7 @@ class CalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log(
-          'Updated personal schedule $id',
-          name: 'CalendarService',
-        );
+        developer.log('Updated personal schedule $id', name: 'CalendarService');
         return apiResponse.data!;
       }
 
@@ -141,10 +135,9 @@ class CalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '일정 수정에 실패했습니다. 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '일정 수정에 실패했습니다. 다시 시도해주세요.'),
+      );
     }
   }
 
@@ -160,10 +153,9 @@ class CalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '일정 삭제에 실패했습니다. 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '일정 삭제에 실패했습니다. 다시 시도해주세요.'),
+      );
     }
   }
 
@@ -209,10 +201,9 @@ class CalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '이벤트를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '이벤트를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'),
+      );
     }
   }
 
@@ -249,10 +240,9 @@ class CalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '이벤트 생성에 실패했습니다. 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '이벤트 생성에 실패했습니다. 다시 시도해주세요.'),
+      );
     }
   }
 
@@ -275,10 +265,7 @@ class CalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log(
-          'Updated personal event $id',
-          name: 'CalendarService',
-        );
+        developer.log('Updated personal event $id', name: 'CalendarService');
         return apiResponse.data!;
       }
 
@@ -290,10 +277,9 @@ class CalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '이벤트 수정에 실패했습니다. 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '이벤트 수정에 실패했습니다. 다시 시도해주세요.'),
+      );
     }
   }
 
@@ -308,18 +294,14 @@ class CalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '이벤트 삭제에 실패했습니다. 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '이벤트 삭제에 실패했습니다. 다시 시도해주세요.'),
+      );
     }
   }
 }
 
-String _friendlyMessage(
-  DioException exception, {
-  required String fallback,
-}) {
+String _friendlyMessage(DioException exception, {required String fallback}) {
   final response = exception.response;
   final status = response?.statusCode;
 

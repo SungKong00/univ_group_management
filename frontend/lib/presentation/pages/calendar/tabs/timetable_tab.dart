@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/models/calendar_models.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -55,8 +54,10 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
     } else {
       // Convert PersonalSchedule to Event for WeeklyScheduleEditor
       final events = state.schedules
-          .map((schedule) =>
-              PersonalScheduleAdapter.toEvent(schedule, state.weekStart))
+          .map(
+            (schedule) =>
+                PersonalScheduleAdapter.toEvent(schedule, state.weekStart),
+          )
           .toList();
 
       content = WeeklyScheduleEditor(
@@ -187,18 +188,15 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
     TimetableStateNotifier notifier,
     PersonalSchedule schedule,
   ) async {
-    final action =
-        await showScheduleDetailSheet(context, schedule: schedule);
+    final action = await showScheduleDetailSheet(context, schedule: schedule);
     if (!context.mounted) return;
     if (action == null) return;
 
     if (action == ScheduleDetailAction.edit) {
-      final request =
-          await showScheduleFormDialog(context, initial: schedule);
+      final request = await showScheduleFormDialog(context, initial: schedule);
       if (!context.mounted) return;
       if (request == null) return;
-      final hasOverlap =
-          notifier.hasOverlap(request, excludeId: schedule.id);
+      final hasOverlap = notifier.hasOverlap(request, excludeId: schedule.id);
       if (hasOverlap) {
         final confirmed = await showConfirmDialog(
           context,
@@ -352,7 +350,9 @@ class _TimetableToolbar extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final weekRange = DateFormatter.weekRange(state.weekStart);
     final weekLabel = DateFormatter.formatWeekHeader(state.weekStart);
-    final weekRangeLabel = DateFormatter.formatWeekRangeDetailed(weekRange.start);
+    final weekRangeLabel = DateFormatter.formatWeekRangeDetailed(
+      weekRange.start,
+    );
 
     return Center(
       child: ConstrainedBox(
@@ -386,8 +386,8 @@ class _TimetableToolbar extends StatelessWidget {
                       label: Text(
                         '수업 추가',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -422,8 +422,9 @@ class _TimetableToolbar extends StatelessWidget {
                     // Primary: 일정 추가 모드 토글 (조건부 렌더링)
                     if (isCompact)
                       IconButton(
-                        onPressed:
-                            isBusy || state.schedules.isEmpty ? null : onCreate,
+                        onPressed: isBusy || state.schedules.isEmpty
+                            ? null
+                            : onCreate,
                         icon: Icon(
                           state.isAddMode
                               ? Icons.check
@@ -455,9 +456,7 @@ class _TimetableToolbar extends StatelessWidget {
                           ),
                           label: Text(
                             state.isAddMode ? '완료' : '일정 추가',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   fontWeight: FontWeight.w500,
                                   color: Colors.white,
@@ -476,9 +475,9 @@ class _TimetableToolbar extends StatelessWidget {
                     IconButton(
                       onPressed: isBusy ? null : onToggleShowAllEvents,
                       icon: Icon(
-                          state.isOverlapView ? Icons.view_week : Icons.layers),
-                      tooltip:
-                          state.isOverlapView ? '겹친 일정 펼치기' : '겹친 일정 접기',
+                        state.isOverlapView ? Icons.view_week : Icons.layers,
+                      ),
+                      tooltip: state.isOverlapView ? '겹친 일정 펼치기' : '겹친 일정 접기',
                       iconSize: 20,
                       padding: const EdgeInsets.all(10),
                       constraints: const BoxConstraints(

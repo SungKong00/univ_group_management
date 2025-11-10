@@ -317,7 +317,9 @@ class MockMemberRepository implements MemberRepository {
           .map((g) => int.parse(g))
           .toList();
       members = members
-          .where((m) => m.academicYear != null && grades.contains(m.academicYear))
+          .where(
+            (m) => m.academicYear != null && grades.contains(m.academicYear),
+          )
           .toList();
     }
 

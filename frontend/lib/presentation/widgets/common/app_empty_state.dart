@@ -69,10 +69,7 @@ class AppEmptyState extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ],
-            if (action != null) ...[
-              const SizedBox(height: 24),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 24), action!],
           ],
         ),
       ),
@@ -110,9 +107,7 @@ class AppEmptyState extends StatelessWidget {
   }
 
   /// 댓글 없음
-  factory AppEmptyState.noComments({
-    Widget? action,
-  }) {
+  factory AppEmptyState.noComments({Widget? action}) {
     return AppEmptyState(
       icon: Icons.comment_outlined,
       message: '아직 댓글이 없습니다',
@@ -122,9 +117,7 @@ class AppEmptyState extends StatelessWidget {
   }
 
   /// 게시글 없음
-  factory AppEmptyState.noPosts({
-    Widget? action,
-  }) {
+  factory AppEmptyState.noPosts({Widget? action}) {
     return AppEmptyState(
       icon: Icons.article_outlined,
       message: '아직 게시글이 없습니다',
@@ -162,9 +155,7 @@ class AppEmptyState extends StatelessWidget {
   }
 
   /// 멤버 없음
-  factory AppEmptyState.noMembers({
-    Widget? action,
-  }) {
+  factory AppEmptyState.noMembers({Widget? action}) {
     return AppEmptyState(
       icon: Icons.people_outline,
       message: '멤버가 없습니다',
@@ -173,9 +164,7 @@ class AppEmptyState extends StatelessWidget {
   }
 
   /// 모집공고 없음
-  factory AppEmptyState.noRecruitments({
-    Widget? action,
-  }) {
+  factory AppEmptyState.noRecruitments({Widget? action}) {
     return AppEmptyState(
       icon: Icons.campaign_outlined,
       message: '모집공고가 없습니다',

@@ -102,9 +102,7 @@ class RecruitmentService {
             name: 'RecruitmentService',
             level: 900,
           );
-          throw Exception(
-            apiResponse.message ?? 'Failed to fetch recruitment',
-          );
+          throw Exception(apiResponse.message ?? 'Failed to fetch recruitment');
         }
       }
 
@@ -135,14 +133,11 @@ class RecruitmentService {
       );
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            // Backend may return null if no active recruitment
-            if (json == null) return null;
-            return RecruitmentResponse.fromJson(json as Map<String, dynamic>);
-          },
-        );
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          // Backend may return null if no active recruitment
+          if (json == null) return null;
+          return RecruitmentResponse.fromJson(json as Map<String, dynamic>);
+        });
 
         if (apiResponse.success) {
           developer.log(
@@ -262,9 +257,7 @@ class RecruitmentService {
             name: 'RecruitmentService',
             level: 900,
           );
-          throw Exception(
-            apiResponse.message ?? 'Failed to close recruitment',
-          );
+          throw Exception(apiResponse.message ?? 'Failed to close recruitment');
         }
       }
 
@@ -353,17 +346,21 @@ class RecruitmentService {
           if (json is Map<String, dynamic> && json.containsKey('content')) {
             final content = json['content'] as List<dynamic>;
             return content
-                .map((item) => ArchivedRecruitmentResponse.fromJson(
-                      item as Map<String, dynamic>,
-                    ))
+                .map(
+                  (item) => ArchivedRecruitmentResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           // Fallback for direct list response
           if (json is List) {
             return json
-                .map((item) => ArchivedRecruitmentResponse.fromJson(
-                      item as Map<String, dynamic>,
-                    ))
+                .map(
+                  (item) => ArchivedRecruitmentResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           return <ArchivedRecruitmentResponse>[];
@@ -408,10 +405,7 @@ class RecruitmentService {
     int size = 20,
   }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'size': size,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'size': size};
       if (keyword != null && keyword.isNotEmpty) {
         queryParams['keyword'] = keyword;
       }
@@ -432,17 +426,21 @@ class RecruitmentService {
           if (json is Map<String, dynamic> && json.containsKey('content')) {
             final content = json['content'] as List<dynamic>;
             return content
-                .map((item) => RecruitmentSummaryResponse.fromJson(
-                      item as Map<String, dynamic>,
-                    ))
+                .map(
+                  (item) => RecruitmentSummaryResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           // Fallback for direct list response
           if (json is List) {
             return json
-                .map((item) => RecruitmentSummaryResponse.fromJson(
-                      item as Map<String, dynamic>,
-                    ))
+                .map(
+                  (item) => RecruitmentSummaryResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           return <RecruitmentSummaryResponse>[];
@@ -557,17 +555,21 @@ class RecruitmentService {
           if (json is Map<String, dynamic> && json.containsKey('content')) {
             final content = json['content'] as List<dynamic>;
             return content
-                .map((item) => ApplicationSummaryResponse.fromJson(
-                      item as Map<String, dynamic>,
-                    ))
+                .map(
+                  (item) => ApplicationSummaryResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           // Fallback for direct list response
           if (json is List) {
             return json
-                .map((item) => ApplicationSummaryResponse.fromJson(
-                      item as Map<String, dynamic>,
-                    ))
+                .map(
+                  (item) => ApplicationSummaryResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           return <ApplicationSummaryResponse>[];
@@ -635,9 +637,7 @@ class RecruitmentService {
             name: 'RecruitmentService',
             level: 900,
           );
-          throw Exception(
-            apiResponse.message ?? 'Failed to fetch application',
-          );
+          throw Exception(apiResponse.message ?? 'Failed to fetch application');
         }
       }
 

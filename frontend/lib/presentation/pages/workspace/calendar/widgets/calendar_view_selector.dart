@@ -19,10 +19,7 @@ class CalendarViewSelector extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          bottom: BorderSide(
-            color: AppColors.neutral200,
-            width: 1,
-          ),
+          bottom: BorderSide(color: AppColors.neutral200, width: 1),
         ),
       ),
       child: Center(
@@ -42,22 +39,22 @@ class CalendarViewSelector extends ConsumerWidget {
             ref.read(calendarViewProvider.notifier).setView(newSelection.first);
           },
           style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.resolveWith<Color>(
-              (Set<WidgetState> states) {
-                if (states.contains(WidgetState.selected)) {
-                  return AppColors.brand;
-                }
+            backgroundColor: WidgetStateProperty.resolveWith<Color>((
+              Set<WidgetState> states,
+            ) {
+              if (states.contains(WidgetState.selected)) {
+                return AppColors.brand;
+              }
+              return Colors.white;
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith<Color>((
+              Set<WidgetState> states,
+            ) {
+              if (states.contains(WidgetState.selected)) {
                 return Colors.white;
-              },
-            ),
-            foregroundColor: WidgetStateProperty.resolveWith<Color>(
-              (Set<WidgetState> states) {
-                if (states.contains(WidgetState.selected)) {
-                  return Colors.white;
-                }
-                return AppColors.neutral700;
-              },
-            ),
+              }
+              return AppColors.neutral700;
+            }),
             side: WidgetStateProperty.all(
               BorderSide(color: AppColors.neutral300),
             ),

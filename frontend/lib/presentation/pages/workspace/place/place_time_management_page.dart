@@ -30,12 +30,7 @@ class PlaceTimeManagementPage extends ConsumerWidget {
       data: (operatingHours) {
         return restrictedTimesAsync.when(
           data: (restrictedTimes) {
-            return _buildContent(
-              context,
-              ref,
-              operatingHours,
-              restrictedTimes,
-            );
+            return _buildContent(context, ref, operatingHours, restrictedTimes);
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => Center(
@@ -104,5 +99,4 @@ class PlaceTimeManagementPage extends ConsumerWidget {
       ),
     );
   }
-
 }

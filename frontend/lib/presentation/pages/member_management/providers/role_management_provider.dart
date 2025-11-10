@@ -4,13 +4,10 @@ import '../../../../core/repositories/repository_providers.dart';
 
 /// 그룹 역할 목록 Provider
 final roleListProvider = FutureProvider.autoDispose
-    .family<List<GroupRole>, int>((
-  ref,
-  groupId,
-) async {
-  final repository = ref.watch(roleRepositoryProvider);
-  return await repository.getGroupRoles(groupId);
-});
+    .family<List<GroupRole>, int>((ref, groupId) async {
+      final repository = ref.watch(roleRepositoryProvider);
+      return await repository.getGroupRoles(groupId);
+    });
 
 /// 역할 생성 Provider
 class CreateRoleParams {

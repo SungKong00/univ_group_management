@@ -186,20 +186,13 @@ class AppInfoBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: _backgroundColor,
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(
-          color: _borderColor,
-          width: 1,
-        ),
+        border: Border.all(color: _borderColor, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 아이콘
-          Icon(
-            icon ?? _defaultIcon,
-            color: _foregroundColor,
-            size: 20,
-          ),
+          Icon(icon ?? _defaultIcon, color: _foregroundColor, size: 20),
           const SizedBox(width: AppSpacing.xs),
 
           // 메시지

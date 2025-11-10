@@ -15,10 +15,8 @@ class GroupCalendarState {
     this.errorMessage,
   });
 
-  factory GroupCalendarState.initial() => const GroupCalendarState(
-        events: [],
-        isLoading: false,
-      );
+  factory GroupCalendarState.initial() =>
+      const GroupCalendarState(events: [], isLoading: false);
 
   final List<GroupEvent> events;
   final bool isLoading;
@@ -267,5 +265,5 @@ class GroupCalendarNotifier extends StateNotifier<GroupCalendarState> {
 /// Use a separate provider per group by using `.family`.
 final groupCalendarProvider = StateNotifierProvider.autoDispose
     .family<GroupCalendarNotifier, GroupCalendarState, int>((ref, groupId) {
-  return GroupCalendarNotifier(GroupCalendarService());
-});
+      return GroupCalendarNotifier(GroupCalendarService());
+    });

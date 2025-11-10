@@ -73,10 +73,7 @@ final pageBreadcrumbFromPathProvider = Provider.autoDispose
           case HomeView.dashboard:
             return const PageBreadcrumb(title: '홈');
           case HomeView.groupExplore:
-            return const PageBreadcrumb(
-              title: '홈 > 그룹탐색',
-              path: ['홈', '그룹탐색'],
-            );
+            return const PageBreadcrumb(title: '홈 > 그룹탐색', path: ['홈', '그룹탐색']);
         }
       }
 

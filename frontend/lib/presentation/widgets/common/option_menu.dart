@@ -23,25 +23,15 @@ class OptionMenu extends StatelessWidget {
   final List<OptionMenuItem> items;
   final EdgeInsetsGeometry? padding;
 
-  const OptionMenu({
-    super.key,
-    required this.items,
-    this.padding,
-  });
+  const OptionMenu({super.key, required this.items, this.padding});
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<int>(
-      icon: Icon(
-        Icons.more_vert,
-        size: 20,
-        color: AppColors.neutral600,
-      ),
+      icon: Icon(Icons.more_vert, size: 20, color: AppColors.neutral600),
       padding: padding ?? EdgeInsets.zero,
       offset: const Offset(0, 32),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       itemBuilder: (context) {
         return items.asMap().entries.map((entry) {
           final index = entry.key;

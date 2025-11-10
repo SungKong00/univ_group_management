@@ -136,8 +136,9 @@ class GroupEvent implements CalendarEventBase {
   @override
   bool occursOn(DateTime date) {
     final dayStart = DateTime(date.year, date.month, date.day);
-    final dayEnd =
-        dayStart.add(const Duration(days: 1)).subtract(const Duration(milliseconds: 1));
+    final dayEnd = dayStart
+        .add(const Duration(days: 1))
+        .subtract(const Duration(milliseconds: 1));
     return startDate.isBefore(dayEnd) && endDate.isAfter(dayStart);
   }
 
@@ -193,5 +194,6 @@ Color _parseColor(String hex) {
   return Color(0xFF000000 | value);
 }
 
-String _colorToHex(Color color) => '#'
+String _colorToHex(Color color) =>
+    '#'
     '${(color.toARGB32() & 0x00FFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';

@@ -102,5 +102,5 @@ class MemberFilterNotifier extends GenericFilterNotifier<MemberFilter> {
 /// 멤버 필터 Provider (groupId별 독립 상태)
 final memberFilterStateProvider =
     StateNotifierProvider.family<MemberFilterNotifier, MemberFilter, int>(
-  (ref, groupId) => MemberFilterNotifier(),
-);
+      (ref, groupId) => MemberFilterNotifier(),
+    );

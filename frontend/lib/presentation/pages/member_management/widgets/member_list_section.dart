@@ -51,16 +51,10 @@ class MemberListSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 필터 패널 (고정 너비 300px)
-        SizedBox(
-          width: 300,
-          child: MemberFilterPanel(groupId: groupId),
-        ),
+        SizedBox(width: 300, child: MemberFilterPanel(groupId: groupId)),
         const SizedBox(width: AppSpacing.md),
         // 구분선
-        Container(
-          width: 1,
-          color: AppColors.neutral300,
-        ),
+        Container(width: 1, color: AppColors.neutral300),
         const SizedBox(width: AppSpacing.md),
         // 멤버 테이블 (나머지 공간)
         Expanded(
@@ -112,9 +106,13 @@ class MemberListSection extends ConsumerWidget {
                     : '필터',
               ),
               style: OutlinedButton.styleFrom(
-                foregroundColor: filter.isActive ? AppColors.brand : AppColors.neutral700,
+                foregroundColor: filter.isActive
+                    ? AppColors.brand
+                    : AppColors.neutral700,
                 side: BorderSide(
-                  color: filter.isActive ? AppColors.brand : AppColors.neutral400,
+                  color: filter.isActive
+                      ? AppColors.brand
+                      : AppColors.neutral400,
                 ),
               ),
             ),
@@ -241,117 +239,117 @@ class MemberListSection extends ConsumerWidget {
           borderRadius: BorderRadius.circular(AppRadius.card),
         ),
         child: Column(
-        children: [
-          // 결과 카운트 (필터 활성화 시에만 표시)
-          if (filter.isActive)
+          children: [
+            // 결과 카운트 (필터 활성화 시에만 표시)
+            if (filter.isActive)
+              SectionCard(
+                padding: const EdgeInsets.all(12),
+                backgroundColor: AppColors.neutral100,
+                borderRadius: AppRadius.card,
+                showShadow: false,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: AppColors.neutral600,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '검색 결과: ${members.length}명',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppColors.neutral700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            // 테이블 헤더
             SectionCard(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               backgroundColor: AppColors.neutral100,
-              borderRadius: AppRadius.card,
+              borderRadius: filter.isActive ? 0 : AppRadius.card,
               showShadow: false,
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: AppColors.neutral600,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '검색 결과: ${members.length}명',
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppColors.neutral700,
-                      fontWeight: FontWeight.w600,
+                  const Expanded(
+                    flex: 3,
+                    child: Text(
+                      '멤버',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.neutral700,
+                      ),
                     ),
                   ),
+                  const Expanded(
+                    flex: 2,
+                    child: Text(
+                      '학번',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.neutral700,
+                      ),
+                    ),
+                  ),
+                  const Expanded(
+                    flex: 1,
+                    child: Text(
+                      '학년',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.neutral700,
+                      ),
+                    ),
+                  ),
+                  const Expanded(
+                    flex: 2,
+                    child: Text(
+                      '역할',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.neutral700,
+                      ),
+                    ),
+                  ),
+                  const Expanded(
+                    flex: 1,
+                    child: Text(
+                      '가입일',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.neutral700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 100), // 액션 버튼 공간
                 ],
               ),
             ),
-          // 테이블 헤더
-          SectionCard(
-            padding: const EdgeInsets.all(16),
-            backgroundColor: AppColors.neutral100,
-            borderRadius: filter.isActive ? 0 : AppRadius.card,
-            showShadow: false,
-            child: Row(
-              children: [
-                const Expanded(
-                  flex: 3,
-                  child: Text(
-                    '멤버',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.neutral700,
-                    ),
-                  ),
-                ),
-                const Expanded(
-                  flex: 2,
-                  child: Text(
-                    '학번',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.neutral700,
-                    ),
-                  ),
-                ),
-                const Expanded(
-                  flex: 1,
-                  child: Text(
-                    '학년',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.neutral700,
-                    ),
-                  ),
-                ),
-                const Expanded(
-                  flex: 2,
-                  child: Text(
-                    '역할',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.neutral700,
-                    ),
-                  ),
-                ),
-                const Expanded(
-                  flex: 1,
-                  child: Text(
-                    '가입일',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.neutral700,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 100), // 액션 버튼 공간
-              ],
+            // 테이블 바디
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: members.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final member = members[index];
+                return _MemberTableRow(
+                  key: ValueKey(member.userId), // 리빌드 최적화
+                  member: member,
+                  roles: roles,
+                  groupId: groupId,
+                );
+              },
             ),
-          ),
-          // 테이블 바디
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: members.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final member = members[index];
-              return _MemberTableRow(
-                key: ValueKey(member.userId), // 리빌드 최적화
-                member: member,
-                roles: roles,
-                groupId: groupId,
-              );
-            },
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -376,24 +374,24 @@ class MemberListSection extends ConsumerWidget {
               borderRadius: AppRadius.button,
               showShadow: false,
               child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 16,
-                  color: AppColors.neutral600,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '검색 결과: ${members.length}명',
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppColors.neutral700,
-                    fontWeight: FontWeight.w600,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: AppColors.neutral600,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Text(
+                    '검색 결과: ${members.length}명',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppColors.neutral700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
         // 멤버 카드 목록
         ListView.separated(
           shrinkWrap: true,
@@ -635,84 +633,84 @@ class _MemberCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(AppRadius.card),
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 이름과 역할
-          Row(
-            children: [
-              Expanded(
-                child: MemberAvatarWithName(
-                  name: member.userName,
-                  imageUrl: member.profileImageUrl,
-                  avatarSize: 40,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.brandLight,
-                  borderRadius: BorderRadius.circular(AppRadius.button),
-                ),
-                child: Text(
-                  member.roleName,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.brand,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 이름과 역할
+            Row(
+              children: [
+                Expanded(
+                  child: MemberAvatarWithName(
+                    name: member.userName,
+                    imageUrl: member.profileImageUrl,
+                    avatarSize: 40,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // 학번과 학년
-          Row(
-            children: [
-              const Icon(Icons.badge, size: 16, color: AppColors.neutral600),
-              const SizedBox(width: 6),
-              Text(
-                '학번: ${member.studentNo ?? '-'}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.neutral700,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandLight,
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                  ),
+                  child: Text(
+                    member.roleName,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.brand,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              const Icon(Icons.school, size: 16, color: AppColors.neutral600),
-              const SizedBox(width: 6),
-              Text(
-                '학년: ${member.academicYear != null ? '${member.academicYear}학년' : '-'}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.neutral700,
+              ],
+            ),
+            const SizedBox(height: 12),
+            // 학번과 학년
+            Row(
+              children: [
+                const Icon(Icons.badge, size: 16, color: AppColors.neutral600),
+                const SizedBox(width: 6),
+                Text(
+                  '학번: ${member.studentNo ?? '-'}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.neutral700,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 가입일
-          Row(
-            children: [
-              const Icon(
-                Icons.calendar_today,
-                size: 16,
-                color: AppColors.neutral600,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '가입일: ${_formatDate(member.joinedAt)}',
-                style: const TextStyle(
-                  fontSize: 12,
+                const SizedBox(width: 16),
+                const Icon(Icons.school, size: 16, color: AppColors.neutral600),
+                const SizedBox(width: 6),
+                Text(
+                  '학년: ${member.academicYear != null ? '${member.academicYear}학년' : '-'}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.neutral700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // 가입일
+            Row(
+              children: [
+                const Icon(
+                  Icons.calendar_today,
+                  size: 16,
                   color: AppColors.neutral600,
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
+                const SizedBox(width: 6),
+                Text(
+                  '가입일: ${_formatDate(member.joinedAt)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.neutral600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

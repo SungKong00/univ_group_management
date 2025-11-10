@@ -5,19 +5,18 @@ library;
 
 /// Preview API 응답 모델
 class MemberPreviewResponse {
-  final int totalCount;                 // 필터 조건에 해당하는 전체 멤버 수
+  final int totalCount; // 필터 조건에 해당하는 전체 멤버 수
   final List<MemberPreviewDto> samples; // 샘플 멤버 목록 (최대 3명)
 
-  MemberPreviewResponse({
-    required this.totalCount,
-    required this.samples,
-  });
+  MemberPreviewResponse({required this.totalCount, required this.samples});
 
   factory MemberPreviewResponse.fromJson(Map<String, dynamic> json) {
     return MemberPreviewResponse(
       totalCount: (json['totalCount'] as num).toInt(),
       samples: (json['samples'] as List<dynamic>)
-          .map((item) => MemberPreviewDto.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) => MemberPreviewDto.fromJson(item as Map<String, dynamic>),
+          )
           .toList(),
     );
   }

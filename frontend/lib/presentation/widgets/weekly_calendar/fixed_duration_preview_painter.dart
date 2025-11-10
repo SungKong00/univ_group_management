@@ -7,9 +7,7 @@ import 'package:flutter/material.dart';
 class FixedDurationPreviewPainter extends CustomPainter {
   final Rect? previewRect;
 
-  FixedDurationPreviewPainter({
-    required this.previewRect,
-  });
+  FixedDurationPreviewPainter({required this.previewRect});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -17,11 +15,13 @@ class FixedDurationPreviewPainter extends CustomPainter {
 
     // Purple preview color (matching the existing system's selection color)
     final fillPaint = Paint()
-      ..color = Colors.deepPurple.withOpacity(0.3) // Semi-transparent purple
+      ..color = Colors.deepPurple
+          .withOpacity(0.3) // Semi-transparent purple
       ..style = PaintingStyle.fill;
 
     final borderPaint = Paint()
-      ..color = Colors.deepPurple.withOpacity(0.6) // Slightly more opaque border
+      ..color = Colors.deepPurple
+          .withOpacity(0.6) // Slightly more opaque border
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
@@ -37,4 +37,3 @@ class FixedDurationPreviewPainter extends CustomPainter {
     return oldDelegate.previewRect != previewRect;
   }
 }
-

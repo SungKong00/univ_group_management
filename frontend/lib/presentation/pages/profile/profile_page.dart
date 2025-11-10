@@ -35,7 +35,9 @@ class ProfilePage extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 '개발자 도구',
-                style: AppTheme.titleLarge.copyWith(color: AppColors.neutral700),
+                style: AppTheme.titleLarge.copyWith(
+                  color: AppColors.neutral700,
+                ),
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(

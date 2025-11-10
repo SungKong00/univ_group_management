@@ -42,7 +42,7 @@ class TopNavigation extends ConsumerWidget {
     final canGoBack = isHome
         ? (homeView == HomeView.groupExplore) // 홈: 그룹 탐색일 때만
         : (navigationState.canGoBackInCurrentTab ||
-            navigationState.currentTab != NavigationTab.home);
+              navigationState.currentTab != NavigationTab.home);
 
     // 워크스페이스 여부 확인
     final isWorkspace = routePath.startsWith('/workspace');
@@ -104,7 +104,10 @@ class TopNavigation extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleBackNavigation(BuildContext context, WidgetRef ref) async {
+  Future<void> _handleBackNavigation(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final currentRoute = GoRouterState.of(context).uri.path;
 
     // Home navigation handling (priority)

@@ -22,9 +22,12 @@ class PlaceDetailResponse {
   factory PlaceDetailResponse.fromJson(Map<String, dynamic> json) {
     return PlaceDetailResponse(
       place: Place.fromJson(json['place'] as Map<String, dynamic>),
-      operatingHours: (json['operatingHours'] as List?)
-              ?.map((oh) =>
-                  OperatingHoursResponse.fromJson(oh as Map<String, dynamic>))
+      operatingHours:
+          (json['operatingHours'] as List?)
+              ?.map(
+                (oh) =>
+                    OperatingHoursResponse.fromJson(oh as Map<String, dynamic>),
+              )
               .toList() ??
           [],
       approvedGroupCount: (json['approvedGroupCount'] as num).toInt(),

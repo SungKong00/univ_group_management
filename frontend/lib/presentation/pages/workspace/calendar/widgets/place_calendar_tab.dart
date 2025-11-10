@@ -19,6 +19,7 @@ import '../../../../utils/responsive_layout_helper.dart';
 import '../../../../widgets/place/place_card.dart';
 import '../../../../widgets/common/app_empty_state.dart';
 import '../../../../widgets/calendar/calendar_navigator.dart';
+import '../../../../widgets/buttons/calendar_add_button.dart';
 import 'multi_place_calendar_view.dart';
 import 'place_reservation_dialog.dart';
 import 'place_selector_button.dart';
@@ -28,10 +29,7 @@ import 'place_selector_button.dart';
 class PlaceCalendarTab extends ConsumerStatefulWidget {
   final int groupId;
 
-  const PlaceCalendarTab({
-    super.key,
-    required this.groupId,
-  });
+  const PlaceCalendarTab({super.key, required this.groupId});
 
   @override
   ConsumerState<PlaceCalendarTab> createState() => _PlaceCalendarTabState();
@@ -69,10 +67,9 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
 
     final dateRange = _calculateDateRange(focusedDate, currentView);
 
-    await ref.read(placeCalendarProvider.notifier).loadReservations(
-          startDate: dateRange.start,
-          endDate: dateRange.end,
-        );
+    await ref
+        .read(placeCalendarProvider.notifier)
+        .loadReservations(startDate: dateRange.start, endDate: dateRange.end);
   }
 
   /// Calculate date range based on calendar view and focused date
@@ -81,13 +78,22 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
       case CalendarView.week:
         // For week view, get the week start (Monday) and end (Sunday)
         final weekStart = _getWeekStart(focusedDate);
-        final weekEnd = weekStart.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+        final weekEnd = weekStart.add(
+          const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
+        );
         return DateTimeRange(start: weekStart, end: weekEnd);
 
       case CalendarView.month:
         // For month view, get the first and last day of the month
         final monthStart = DateTime(focusedDate.year, focusedDate.month, 1);
-        final monthEnd = DateTime(focusedDate.year, focusedDate.month + 1, 0, 23, 59, 59);
+        final monthEnd = DateTime(
+          focusedDate.year,
+          focusedDate.month + 1,
+          0,
+          23,
+          59,
+          59,
+        );
         return DateTimeRange(start: monthStart, end: monthEnd);
     }
   }
@@ -109,6 +115,12 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
       _previousSelectedPlaceIds = state.selectedPlaceIds;
       if (state.selectedPlaceIds.isNotEmpty) {
         shouldLoadReservations = true;
+        // Also load availabilities when places are selected
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref.read(placeCalendarProvider.notifier).loadAvailabilities();
+          }
+        });
       }
     }
 
@@ -142,15 +154,13 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Use project standard: 850px breakpoint for wide desktop
-        final helper = ResponsiveLayoutHelper(context: context, constraints: constraints);
+        final helper = ResponsiveLayoutHelper(
+          context: context,
+          constraints: constraints,
+        );
         final isWideMode = helper.isWideDesktop;
 
-        return _buildContent(
-          state,
-          focusedDate,
-          currentView,
-          isWideMode,
-        );
+        return _buildContent(state, focusedDate, currentView, isWideMode);
       },
     );
   }
@@ -161,36 +171,22 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     CalendarView currentView,
     bool isWideMode,
   ) {
-    return Stack(
+    return Column(
       children: [
-        Column(
-          children: [
-            // Responsive header: 1 row in wide mode, 2 rows in compact mode
-            _buildResponsiveHeader(context, currentView, focusedDate, isWideMode),
-
-            // Selected places chips (from BuildingPlaceSelector)
-            _buildSelectedPlacesChips(state),
-
-            // Calendar view or empty state
-            Expanded(
-              child: _buildCalendarView(state, focusedDate, currentView),
-            ),
-          ],
+        // Responsive header: 1 row in wide mode, 2 rows in compact mode
+        _buildResponsiveHeader(
+          context,
+          currentView,
+          focusedDate,
+          isWideMode,
+          state,
         ),
 
-        // Floating action button for adding reservations
-        // Show button when places are available, regardless of selection
-        if (state.places.isNotEmpty)
-          Positioned(
-            right: AppSpacing.md,
-            bottom: AppSpacing.md,
-            child: FloatingActionButton.extended(
-              onPressed: () => _showReservationDialog(context),
-              icon: const Icon(Icons.add),
-              label: const Text('예약 추가'),
-              backgroundColor: AppColors.brand,
-            ),
-          ),
+        // Selected places chips (from BuildingPlaceSelector)
+        _buildSelectedPlacesChips(state),
+
+        // Calendar view or empty state
+        Expanded(child: _buildCalendarView(state, focusedDate, currentView)),
       ],
     );
   }
@@ -202,9 +198,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
   ) {
     // Loading state
     if (state.isLoading && state.places.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     // Empty state: No places available
@@ -219,6 +213,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     // When no places are selected, calendar will be empty
     // When places are selected, their reservations will be displayed
     return MultiPlaceCalendarView(
+      groupId: widget.groupId,
       view: view,
       focusedDate: focusedDate,
       selectedDate: focusedDate,
@@ -283,17 +278,14 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
                       children: [
                         Text(
                           reservation.title,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           reservation.placeName,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.neutral600,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.neutral600),
                         ),
                       ],
                     ),
@@ -315,25 +307,17 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
                 '시간',
                 reservation.formattedDateRange,
               ),
-              _buildDetailRow(
-                Icons.person,
-                '예약자',
-                reservation.reservedByName,
-              ),
+              _buildDetailRow(Icons.person, '예약자', reservation.reservedByName),
               if (reservation.description != null) ...[
                 const SizedBox(height: AppSpacing.sm),
-                _buildDetailRow(
-                  Icons.notes,
-                  '설명',
-                  reservation.description!,
-                ),
+                _buildDetailRow(Icons.notes, '설명', reservation.description!),
               ],
               const SizedBox(height: AppSpacing.sm),
               Text(
                 '생성: ${_formatDateTime(reservation.createdAt)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.neutral600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.neutral600),
               ),
             ],
           ),
@@ -356,15 +340,12 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
               children: [
                 Text(
                   label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.neutral600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.neutral600),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                Text(value, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
           ),
@@ -424,9 +405,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('예약 취소'),
           ),
         ],
@@ -471,6 +450,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     CalendarView currentView,
     DateTime focusedDate,
     bool isWideMode,
+    PlaceCalendarState state,
   ) {
     final permissions = ref.watch(groupPermissionsProvider(widget.groupId));
     final hasCalendarManage = permissions.when(
@@ -487,29 +467,39 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          bottom: BorderSide(
-            color: AppColors.neutral200,
-            width: 1,
-          ),
+          bottom: BorderSide(color: AppColors.neutral200, width: 1),
         ),
       ),
       child: isWideMode
           ? Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1200),
-                child: _buildWideHeader(context, currentView, focusedDate, hasCalendarManage),
+                child: _buildWideHeader(
+                  context,
+                  currentView,
+                  focusedDate,
+                  hasCalendarManage,
+                  state,
+                ),
               ),
             )
-          : _buildCompactHeader(context, currentView, focusedDate, hasCalendarManage),
+          : _buildCompactHeader(
+              context,
+              currentView,
+              focusedDate,
+              hasCalendarManage,
+              state,
+            ),
     );
   }
 
-  /// Wide mode layout: [주간/월간] | [◀ 2025년 11월 ▶ 오늘] | [건물▼ 장소▼ ⚙️]
+  /// Wide mode layout: [주간/월간] | [◀ 2025년 11월 ▶ 오늘] | [예약 추가] | [건물▼ 장소▼ ⚙️]
   Widget _buildWideHeader(
     BuildContext context,
     CalendarView currentView,
     DateTime focusedDate,
     bool hasCalendarManage,
+    PlaceCalendarState state,
   ) {
     return Row(
       children: [
@@ -518,10 +508,18 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         const SizedBox(width: AppSpacing.md),
 
         // Date navigation (centered, takes remaining space)
-        Expanded(
-          child: _buildDateNavigator(context, currentView, focusedDate),
-        ),
+        Expanded(child: _buildDateNavigator(context, currentView, focusedDate)),
         const SizedBox(width: AppSpacing.md),
+
+        // Add reservation button
+        if (state.places.isNotEmpty) ...[
+          CalendarAddButton(
+            onPressed: () => _showReservationDialog(context),
+            isLoading: state.isLoading,
+            label: '예약 추가',
+          ),
+          const SizedBox(width: AppSpacing.xs),
+        ],
 
         // Place selector + Settings button
         Row(
@@ -538,12 +536,13 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
 
   /// Compact mode layout (2 rows):
   /// Row 1: [주간/월간] | [◀ 2025년 11월 ▶ 오늘]
-  /// Row 2: [건물▼ 장소▼] | [⚙️]
+  /// Row 2: [예약 추가] | [건물▼ 장소▼] | [⚙️]
   Widget _buildCompactHeader(
     BuildContext context,
     CalendarView currentView,
     DateTime focusedDate,
     bool hasCalendarManage,
+    PlaceCalendarState state,
   ) {
     return Column(
       children: [
@@ -559,9 +558,19 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Row 2: Place selector + Settings
+        // Row 2: Add button + Place selector + Settings
         Row(
           children: [
+            // Add reservation button
+            if (state.places.isNotEmpty) ...[
+              CalendarAddButton(
+                onPressed: () => _showReservationDialog(context),
+                isLoading: state.isLoading,
+                label: '예약 추가',
+              ),
+              const SizedBox(width: AppSpacing.xs),
+            ],
+
             // Place selector
             const PlaceSelectorButton(),
             const Spacer(),
@@ -627,10 +636,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          bottom: BorderSide(
-            color: AppColors.neutral200,
-            width: 1,
-          ),
+          bottom: BorderSide(color: AppColors.neutral200, width: 1),
         ),
       ),
       child: Wrap(
@@ -641,9 +647,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
           return Chip(
             label: Text(
               place.displayName,
-              style: AppTheme.bodySmall.copyWith(
-                color: Colors.white,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: Colors.white),
             ),
             backgroundColor: color,
             deleteIconColor: Colors.white,
@@ -666,12 +670,16 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
     CalendarView view,
     DateTime focusedDate,
   ) {
-    final weekStart = view == CalendarView.week ? _getWeekStart(focusedDate) : null;
+    final weekStart = view == CalendarView.week
+        ? _getWeekStart(focusedDate)
+        : null;
 
     return CalendarNavigator(
       currentDate: focusedDate,
       label: _formatFocusedLabel(focusedDate, view),
-      subtitle: weekStart != null ? DateFormatter.formatWeekRangeDetailed(weekStart) : null,
+      subtitle: weekStart != null
+          ? DateFormatter.formatWeekRangeDetailed(weekStart)
+          : null,
       isWeekView: view == CalendarView.week,
       onPrevious: () => _handlePrevious(view),
       onNext: () => _handleNext(view),
@@ -747,10 +755,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                    ),
+                    const Icon(Icons.settings, color: Colors.white),
                     const SizedBox(width: AppSpacing.xs),
                     const Text(
                       '장소 관리',
@@ -774,13 +779,14 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
               Expanded(
                 child: Consumer(
                   builder: (context, ref, _) {
-                    final placesAsync = ref.watch(placesProvider(widget.groupId));
+                    final placesAsync = ref.watch(
+                      placesProvider(widget.groupId),
+                    );
 
                     return placesAsync.when(
                       data: (places) => _buildModalPlaceList(places),
-                      loading: () => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
                       error: (error, _) => Center(
                         child: Padding(
                           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -859,19 +865,14 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
           color: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.card),
-            side: const BorderSide(
-              color: AppColors.neutral300,
-              width: 1,
-            ),
+            side: const BorderSide(color: AppColors.neutral300, width: 1),
           ),
           child: ExpansionTile(
             tilePadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,
               vertical: AppSpacing.xxs,
             ),
-            childrenPadding: const EdgeInsets.only(
-              bottom: AppSpacing.xxs,
-            ),
+            childrenPadding: const EdgeInsets.only(bottom: AppSpacing.xxs),
             title: Text(
               building,
               style: const TextStyle(
@@ -882,10 +883,7 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
             ),
             subtitle: Text(
               '${buildingPlaces.length}개 장소',
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.neutral600,
-              ),
+              style: const TextStyle(fontSize: 12, color: AppColors.neutral600),
             ),
             children: buildingPlaces.map((place) {
               return PlaceCard(
@@ -895,10 +893,9 @@ class _PlaceCalendarTabState extends ConsumerState<PlaceCalendarTab> {
                   // Close modal first
                   Navigator.of(context).pop();
                   // Navigate to time management page using WorkspaceProvider
-                  ref.read(workspaceStateProvider.notifier).showPlaceTimeManagementPage(
-                    place.id,
-                    place.displayName,
-                  );
+                  ref
+                      .read(workspaceStateProvider.notifier)
+                      .showPlaceTimeManagementPage(place.id, place.displayName);
                 },
               );
             }).toList(),

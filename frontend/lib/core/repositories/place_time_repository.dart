@@ -69,8 +69,11 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
           if (json is List) {
             return json
-                .map((item) =>
-                    OperatingHoursResponse.fromJson(item as Map<String, dynamic>))
+                .map(
+                  (item) => OperatingHoursResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           return <OperatingHoursResponse>[];
@@ -120,8 +123,11 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
           if (json is List) {
             return json
-                .map((item) =>
-                    OperatingHoursResponse.fromJson(item as Map<String, dynamic>))
+                .map(
+                  (item) => OperatingHoursResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           return <OperatingHoursResponse>[];
@@ -171,8 +177,11 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
           if (json is List) {
             return json
-                .map((item) =>
-                    RestrictedTimeResponse.fromJson(item as Map<String, dynamic>))
+                .map(
+                  (item) => RestrictedTimeResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           return <RestrictedTimeResponse>[];
@@ -221,7 +230,8 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(
           response.data!,
-          (json) => RestrictedTimeResponse.fromJson(json as Map<String, dynamic>),
+          (json) =>
+              RestrictedTimeResponse.fromJson(json as Map<String, dynamic>),
         );
 
         if (apiResponse.success && apiResponse.data != null) {
@@ -268,7 +278,8 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(
           response.data!,
-          (json) => RestrictedTimeResponse.fromJson(json as Map<String, dynamic>),
+          (json) =>
+              RestrictedTimeResponse.fromJson(json as Map<String, dynamic>),
         );
 
         if (apiResponse.success && apiResponse.data != null) {
@@ -352,18 +363,18 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/places/$placeId/closures',
-        queryParameters: {
-          'from': from,
-          'to': to,
-        },
+        queryParameters: {'from': from, 'to': to},
       );
 
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
           if (json is List) {
             return json
-                .map((item) =>
-                    PlaceClosureResponse.fromJson(item as Map<String, dynamic>))
+                .map(
+                  (item) => PlaceClosureResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           return <PlaceClosureResponse>[];
@@ -376,9 +387,7 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
           );
           return apiResponse.data!;
         } else {
-          throw Exception(
-            apiResponse.message ?? 'Failed to fetch closures',
-          );
+          throw Exception(apiResponse.message ?? 'Failed to fetch closures');
         }
       }
 
@@ -509,9 +518,7 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
             name: 'ApiPlaceTimeRepository',
           );
         } else {
-          throw Exception(
-            apiResponse.message ?? 'Failed to delete closure',
-          );
+          throw Exception(apiResponse.message ?? 'Failed to delete closure');
         }
       }
     } catch (e) {
@@ -541,15 +548,14 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/places/$placeId/available-times',
-        queryParameters: {
-          'date': date,
-        },
+        queryParameters: {'date': date},
       );
 
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(
           response.data!,
-          (json) => AvailableTimesResponse.fromJson(json as Map<String, dynamic>),
+          (json) =>
+              AvailableTimesResponse.fromJson(json as Map<String, dynamic>),
         );
 
         if (apiResponse.success && apiResponse.data != null) {

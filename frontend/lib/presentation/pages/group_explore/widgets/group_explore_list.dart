@@ -56,7 +56,9 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
     final isLoading = ref.watch(groupLoadingProvider);
     final isLoadingMore = ref.watch(isLoadingMoreProvider);
 
-    print('🔍 [DEBUG] GroupExploreList.build() - groups: ${groups.length}, isLoading: $isLoading, isLoadingMore: $isLoadingMore');
+    print(
+      '🔍 [DEBUG] GroupExploreList.build() - groups: ${groups.length}, isLoading: $isLoading, isLoadingMore: $isLoadingMore',
+    );
 
     // Empty state
     if (groups.isEmpty && !isLoading) {
@@ -69,16 +71,16 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
             const SizedBox(height: AppSpacing.md),
             Text(
               '검색 결과가 없습니다',
-              style: AppTheme.headlineSmallTheme(context).copyWith(
-                color: AppColors.neutral900,
-              ),
+              style: AppTheme.headlineSmallTheme(
+                context,
+              ).copyWith(color: AppColors.neutral900),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               '다른 검색어나 필터를 시도해보세요',
-              style: AppTheme.bodyMediumTheme(context).copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMediumTheme(
+                context,
+              ).copyWith(color: AppColors.neutral600),
             ),
           ],
         ),
@@ -100,7 +102,9 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
       builder: (context, constraints) {
         final double screenWidth = constraints.maxWidth;
         final int crossAxisCount = (screenWidth / 350).floor().clamp(1, 4);
-        final double cardWidth = (screenWidth - (crossAxisCount - 1) * AppSpacing.sm) / crossAxisCount;
+        final double cardWidth =
+            (screenWidth - (crossAxisCount - 1) * AppSpacing.sm) /
+            crossAxisCount;
 
         return SingleChildScrollView(
           controller: _scrollController,

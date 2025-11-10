@@ -177,9 +177,7 @@ class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
   }
 
   Widget _buildTitle() {
-    return const AppDialogTitle(
-      title: '그룹 정보 수정',
-    );
+    return const AppDialogTitle(title: '그룹 정보 수정');
   }
 
   Widget _buildNameField() {
@@ -301,9 +299,7 @@ class _EditGroupDialogState extends ConsumerState<EditGroupDialog>
   }
 
   Widget _buildErrorMessage() {
-    return AppInfoBanner.error(
-      message: _errorMessage!,
-    );
+    return AppInfoBanner.error(message: _errorMessage!);
   }
 
   Widget _buildActions() {

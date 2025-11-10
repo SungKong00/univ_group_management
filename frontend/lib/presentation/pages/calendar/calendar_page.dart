@@ -96,10 +96,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: const [
-                TimetableTab(),
-                CalendarTab(),
-              ],
+              children: const [TimetableTab(), CalendarTab()],
             ),
           ),
         ],

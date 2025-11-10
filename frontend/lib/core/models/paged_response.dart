@@ -39,10 +39,7 @@ class PagedData<T> {
   final List<T> content;
   final PaginationInfo pagination;
 
-  const PagedData({
-    required this.content,
-    required this.pagination,
-  });
+  const PagedData({required this.content, required this.pagination});
 
   factory PagedData.fromJson(
     Map<String, dynamic> json,
@@ -52,7 +49,9 @@ class PagedData<T> {
       content: (json['content'] as List<dynamic>)
           .map((item) => fromJsonT(item as Map<String, dynamic>))
           .toList(),
-      pagination: PaginationInfo.fromJson(json['pagination'] as Map<String, dynamic>),
+      pagination: PaginationInfo.fromJson(
+        json['pagination'] as Map<String, dynamic>,
+      ),
     );
   }
 }

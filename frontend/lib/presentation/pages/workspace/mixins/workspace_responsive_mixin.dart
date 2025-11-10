@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../providers/workspace_state_provider.dart';
@@ -9,7 +8,8 @@ import '../../../providers/workspace_state_provider.dart';
 /// - 모바일 ↔ 웹 전환: 뷰 상태 보존 및 복원
 /// - Narrow Desktop ↔ Wide Desktop 전환: 댓글 표시 모드 동기화
 /// - 초기 로드 시 상태 초기화
-mixin WorkspaceResponsiveMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
+mixin WorkspaceResponsiveMixin<T extends ConsumerStatefulWidget>
+    on ConsumerState<T> {
   bool _previousIsMobile = false;
   bool _previousIsNarrowDesktop = false;
   bool _hasResponsiveLayoutInitialized = false;
@@ -54,18 +54,12 @@ mixin WorkspaceResponsiveMixin<T extends ConsumerStatefulWidget> on ConsumerStat
         if (isNarrowDesktop && !isNarrowFullscreen) {
           // Wide → Narrow: 댓글을 전체 화면 모드로 전환
           if (selectedPostId != null) {
-            notifier.showComments(
-              selectedPostId,
-              isNarrowDesktop: true,
-            );
+            notifier.showComments(selectedPostId, isNarrowDesktop: true);
           }
         } else if (!isNarrowDesktop && isNarrowFullscreen) {
           // Narrow → Wide: 댓글을 사이드바 모드로 전환
           if (selectedPostId != null) {
-            notifier.showComments(
-              selectedPostId,
-              isNarrowDesktop: false,
-            );
+            notifier.showComments(selectedPostId, isNarrowDesktop: false);
           }
         }
       }

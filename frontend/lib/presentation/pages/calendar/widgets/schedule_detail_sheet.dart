@@ -16,7 +16,9 @@ Future<ScheduleDetailAction?> showScheduleDetailSheet(
     showDragHandle: true,
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.dialog)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppRadius.dialog),
+      ),
     ),
     builder: (context) => ScheduleDetailSheet(schedule: schedule),
   );
@@ -56,10 +58,7 @@ class ScheduleDetailSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      schedule.title,
-                      style: textTheme.headlineSmall,
-                    ),
+                    Text(schedule.title, style: textTheme.headlineSmall),
                     const SizedBox(height: 4),
                     Text(
                       '${schedule.dayOfWeek.longLabel} · ${schedule.formattedTimeRange}',
@@ -151,9 +150,7 @@ class _InfoRow extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$label:',
-            style: textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(width: 8),
           Expanded(

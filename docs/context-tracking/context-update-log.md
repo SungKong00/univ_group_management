@@ -1,3 +1,60 @@
+### 2025-11-09 - 프로젝트 헌법 v1.0.0 제정 및 Speckit 설정
+
+**유형**: 문서화 + 프로젝트 거버넌스
+**우선순위**: Critical
+**영향 범위**: 프로젝트 전체 (헌법, 개발 워크플로우, 문서 구조)
+
+**작업 개요**:
+프로젝트의 핵심 원칙과 개발 표준을 정의하는 공식 헌법을 제정하고, Speckit 개발 워크플로우 도구를 설정했습니다.
+
+**구현한 내용**:
+
+1. **프로젝트 헌법 작성** (`.specify/memory/constitution.md`):
+   - 비전 및 범위: 대학 조직/장비/일정/권한 통합 관리 플랫폼
+   - 7가지 핵심 원칙 정의:
+     - I. 3-Layer Architecture (비협상)
+     - II. 표준 응답 형식 ApiResponse<T> (비협상)
+     - III. RBAC + Override 권한 시스템 (비협상)
+     - IV. 문서화 100줄 원칙
+     - V. 테스트 피라미드 60/30/10
+     - VI. Flutter MCP 표준 (비협상)
+     - VII. 프론트엔드 통합 원칙
+   - 보안 및 성능 기준 명시
+   - 개발 워크플로우 정의 (GitHub Flow, Conventional Commits)
+   - 거버넌스 절차 수립 (개정, 준수 검증)
+
+2. **Speckit 설정**:
+   - `.specify/templates/`: 5개 템플릿 (spec, plan, tasks, checklist, agent-file)
+   - `.claude/commands/speckit.*.md`: 8개 명령어 (specify, clarify, plan, tasks, analyze, checklist, implement, constitution)
+   - `.clauderc`: Speckit 설정 파일
+
+3. **문서 구조 정립**:
+   - 헌법이 모든 개발 가이드라인보다 우선
+   - CLAUDE.md는 일상적 개발 가이던스 제공
+   - 각 도메인 문서는 구현 세부사항 관리
+
+**변경된 파일**:
+- ✅ `.specify/memory/constitution.md` (신규 209줄)
+- ✅ `.specify/templates/*.md` (5개 템플릿)
+- ✅ `.claude/commands/speckit.*.md` (8개 명령어)
+- ✅ `.clauderc` (설정 파일)
+- 📝 `docs/context-tracking/context-update-log.md` (이 파일)
+- 📝 `docs/context-tracking/sync-status.md` (업데이트 예정)
+- 📝 `CLAUDE.md` (업데이트 예정)
+
+**기대 효과**:
+- 프로젝트 개발 원칙의 명확한 정의와 강제
+- Speckit을 통한 체계적인 기능 개발 워크플로우
+- 문서 중심 개발 문화 정착
+- 코드 리뷰 및 품질 관리 기준 확립
+
+**다음 단계**:
+- CLAUDE.md에 헌법 참조 추가
+- sync-status.md 업데이트
+- Speckit 워크플로우로 첫 기능 개발 테스트
+
+---
+
 ### 2025-11-05 - 모바일 워크스페이스 네비게이션 UX 개선
 
 **유형**: 기능 개선 + 버그 수정

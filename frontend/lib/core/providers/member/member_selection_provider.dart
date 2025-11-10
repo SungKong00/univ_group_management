@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 멤버 선택 상태
 class MemberSelectionState {
-  final Set<int> selectedMemberIds;  // 선택된 멤버 ID
+  final Set<int> selectedMemberIds; // 선택된 멤버 ID
 
   MemberSelectionState({this.selectedMemberIds = const {}});
 
@@ -61,5 +61,5 @@ class MemberSelectionNotifier extends StateNotifier<MemberSelectionState> {
 /// 멤버 선택 Provider (groupId별 독립 상태)
 final memberSelectionProvider = StateNotifierProvider.family
     .autoDispose<MemberSelectionNotifier, MemberSelectionState, int>(
-  (ref, groupId) => MemberSelectionNotifier(),
-);
+      (ref, groupId) => MemberSelectionNotifier(),
+    );

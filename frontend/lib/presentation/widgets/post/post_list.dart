@@ -74,7 +74,9 @@ class _PostListState extends ConsumerState<PostList> {
     _scrollController = AutoScrollController();
     // channelId 기반으로 unique한 GlobalKey 생성
     _lastPostKey = GlobalKey(debugLabel: 'lastPost_${widget.channelId}');
-    _lastDateHeaderKey = GlobalKey(debugLabel: 'lastDateHeader_${widget.channelId}');
+    _lastDateHeaderKey = GlobalKey(
+      debugLabel: 'lastDateHeader_${widget.channelId}',
+    );
 
     // 스크롤 리스너 등록
     _scrollController.addListener(_onScroll);
@@ -150,14 +152,18 @@ class _PostListState extends ConsumerState<PostList> {
 
       // 마지막 시도가 아니면 계속 대기
       if (attempt < maxAttempts - 1) {
-        print('[DEBUG] ⏳ Waiting for read position data... (attempt ${attempt + 1}/$maxAttempts)');
+        print(
+          '[DEBUG] ⏳ Waiting for read position data... (attempt ${attempt + 1}/$maxAttempts)',
+        );
         await Future.delayed(retryDelay);
       }
     }
 
     // 타임아웃: 데이터가 준비되지 않았지만 계속 진행
     // (새 채널이거나 API가 null을 반환한 경우)
-    print('[DEBUG] ⚠️ Read position data not loaded, proceeding without it (new channel or API returned null)');
+    print(
+      '[DEBUG] ⚠️ Read position data not loaded, proceeding without it (new channel or API returned null)',
+    );
   }
 
   /// 게시글 로드 및 읽지 않은 게시글로 스크롤
@@ -189,7 +195,9 @@ class _PostListState extends ConsumerState<PostList> {
       print('[DEBUG] _firstUnreadPostIndex: $_firstUnreadPostIndex');
       print('[DEBUG] _hasScrolledToUnread: $_hasScrolledToUnread');
       print('[DEBUG] Total posts: ${_posts.length}');
-      print('[DEBUG] Grouped posts dates: ${_groupedPosts.keys.toList()..sort()}');
+      print(
+        '[DEBUG] Grouped posts dates: ${_groupedPosts.keys.toList()..sort()}',
+      );
 
       if (_posts.isNotEmpty) {
         print('[DEBUG] First post ID: ${_posts.first.id}');
@@ -210,27 +218,37 @@ class _PostListState extends ConsumerState<PostList> {
           // 뱃지 업데이트는 채널 이탈 시에만 수행 (workspace_state_provider에서 처리)
           if (_posts.isNotEmpty) {
             final latestPostId = _posts.last.id;
-            print('[DEBUG] Updating read position to latest post: $latestPostId');
+            print(
+              '[DEBUG] Updating read position to latest post: $latestPostId',
+            );
 
             // ✅ 읽음 위치만 저장, 뱃지 업데이트는 하지 않음
             final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
-            await workspaceNotifier.saveReadPosition(channelIdInt, latestPostId);
+            await workspaceNotifier.saveReadPosition(
+              channelIdInt,
+              latestPostId,
+            );
           }
         });
       } else {
         // 읽지 않은 게시글 없으면 기존 동작 (최신 게시글로)
         print('[DEBUG] ❌ CONDITION NOT MET: Calling _anchorLastPostAtTop()');
-        print('[DEBUG] Reason: _firstUnreadPostIndex=$_firstUnreadPostIndex, _hasScrolledToUnread=$_hasScrolledToUnread');
+        print(
+          '[DEBUG] Reason: _firstUnreadPostIndex=$_firstUnreadPostIndex, _hasScrolledToUnread=$_hasScrolledToUnread',
+        );
         _anchorLastPostAtTop();
 
         // ✅ 읽지 않은 글 없으면 최신 게시글을 읽음 위치로 설정
         // 뱃지 업데이트는 채널 이탈 시에만 수행 (workspace_state_provider에서 처리)
         if (_posts.isNotEmpty) {
           final latestPostId = _posts.last.id;
-          print('[DEBUG] Updating read position to latest post (no unread): $latestPostId');
+          print(
+            '[DEBUG] Updating read position to latest post (no unread): $latestPostId',
+          );
 
-          await ref.read(workspaceStateProvider.notifier)
-            .saveReadPosition(channelIdInt, latestPostId);
+          await ref
+              .read(workspaceStateProvider.notifier)
+              .saveReadPosition(channelIdInt, latestPostId);
         }
       }
 
@@ -258,7 +276,9 @@ class _PostListState extends ConsumerState<PostList> {
       return;
     }
 
-    print('[DEBUG] ScrollController.hasClients: ${_scrollController.hasClients}');
+    print(
+      '[DEBUG] ScrollController.hasClients: ${_scrollController.hasClients}',
+    );
 
     try {
       // ✅ ScrollController가 준비될 때까지 대기 (최대 300ms)
@@ -269,12 +289,16 @@ class _PostListState extends ConsumerState<PostList> {
 
       // 스크롤 가능 여부 재확인
       if (!_scrollController.hasClients) {
-        print('[DEBUG] ❌ ScrollController still not ready after 300ms, falling back to _anchorLastPostAtTop()');
+        print(
+          '[DEBUG] ❌ ScrollController still not ready after 300ms, falling back to _anchorLastPostAtTop()',
+        );
         _anchorLastPostAtTop();
         return;
       }
 
-      print('[DEBUG] ✅ ScrollController ready, calling scrollToIndex($_firstUnreadPostIndex)');
+      print(
+        '[DEBUG] ✅ ScrollController ready, calling scrollToIndex($_firstUnreadPostIndex)',
+      );
 
       await _scrollController.scrollToIndex(
         _firstUnreadPostIndex!,

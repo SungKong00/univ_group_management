@@ -69,12 +69,15 @@ class TimetableState {
       hasLoaded: hasLoaded ?? this.hasLoaded,
       isOverlapView: isOverlapView ?? this.isOverlapView,
       isAddMode: isAddMode ?? this.isAddMode,
-      loadErrorMessage:
-          clearLoadError ? null : loadErrorMessage ?? this.loadErrorMessage,
-      snackbarMessage:
-          clearSnackbar ? null : snackbarMessage ?? this.snackbarMessage,
-      snackbarIsError:
-          clearSnackbar ? false : snackbarIsError ?? this.snackbarIsError,
+      loadErrorMessage: clearLoadError
+          ? null
+          : loadErrorMessage ?? this.loadErrorMessage,
+      snackbarMessage: clearSnackbar
+          ? null
+          : snackbarMessage ?? this.snackbarMessage,
+      snackbarIsError: clearSnackbar
+          ? false
+          : snackbarIsError ?? this.snackbarIsError,
     );
   }
 }
@@ -104,7 +107,11 @@ class TimetableStateNotifier extends StateNotifier<TimetableState> {
         clearLoadError: true,
       );
     } catch (e) {
-      developer.log('Failed to load schedules: $e', name: 'TimetableProvider', level: 900);
+      developer.log(
+        'Failed to load schedules: $e',
+        name: 'TimetableProvider',
+        level: 900,
+      );
       state = state.copyWith(
         isLoading: false,
         hasLoaded: true,
@@ -119,10 +126,7 @@ class TimetableStateNotifier extends StateNotifier<TimetableState> {
   }
 
   Future<bool> createSchedule(PersonalScheduleRequest request) async {
-    state = state.copyWith(
-      isSubmitting: true,
-      clearSnackbar: true,
-    );
+    state = state.copyWith(isSubmitting: true, clearSnackbar: true);
     try {
       final created = await _service.createPersonalSchedule(request);
       final updated = [...state.schedules, created];
@@ -134,7 +138,11 @@ class TimetableStateNotifier extends StateNotifier<TimetableState> {
       );
       return true;
     } catch (e) {
-      developer.log('Failed to create schedule: $e', name: 'TimetableProvider', level: 900);
+      developer.log(
+        'Failed to create schedule: $e',
+        name: 'TimetableProvider',
+        level: 900,
+      );
       state = state.copyWith(
         isSubmitting: false,
         snackbarMessage: _messageFromError(e),
@@ -144,16 +152,13 @@ class TimetableStateNotifier extends StateNotifier<TimetableState> {
     }
   }
 
-  Future<bool> updateSchedule(
-    int id,
-    PersonalScheduleRequest request,
-  ) async {
-    state = state.copyWith(
-      isSubmitting: true,
-      clearSnackbar: true,
-    );
+  Future<bool> updateSchedule(int id, PersonalScheduleRequest request) async {
+    state = state.copyWith(isSubmitting: true, clearSnackbar: true);
     try {
-      final updatedSchedule = await _service.updatePersonalSchedule(id, request);
+      final updatedSchedule = await _service.updatePersonalSchedule(
+        id,
+        request,
+      );
       final updated = state.schedules
           .map((s) => s.id == id ? updatedSchedule : s)
           .toList();
@@ -165,7 +170,11 @@ class TimetableStateNotifier extends StateNotifier<TimetableState> {
       );
       return true;
     } catch (e) {
-      developer.log('Failed to update schedule: $e', name: 'TimetableProvider', level: 900);
+      developer.log(
+        'Failed to update schedule: $e',
+        name: 'TimetableProvider',
+        level: 900,
+      );
       state = state.copyWith(
         isSubmitting: false,
         snackbarMessage: _messageFromError(e),
@@ -176,10 +185,7 @@ class TimetableStateNotifier extends StateNotifier<TimetableState> {
   }
 
   Future<bool> deleteSchedule(int id) async {
-    state = state.copyWith(
-      isSubmitting: true,
-      clearSnackbar: true,
-    );
+    state = state.copyWith(isSubmitting: true, clearSnackbar: true);
     try {
       await _service.deletePersonalSchedule(id);
       final updated = state.schedules.where((s) => s.id != id).toList();
@@ -191,7 +197,11 @@ class TimetableStateNotifier extends StateNotifier<TimetableState> {
       );
       return true;
     } catch (e) {
-      developer.log('Failed to delete schedule: $e', name: 'TimetableProvider', level: 900);
+      developer.log(
+        'Failed to delete schedule: $e',
+        name: 'TimetableProvider',
+        level: 900,
+      );
       state = state.copyWith(
         isSubmitting: false,
         snackbarMessage: _messageFromError(e),
@@ -267,13 +277,14 @@ class TimetableStateNotifier extends StateNotifier<TimetableState> {
     return sorted;
   }
 
-  static int _minutesSinceMidnight(TimeOfDay value) => value.hour * 60 + value.minute;
+  static int _minutesSinceMidnight(TimeOfDay value) =>
+      value.hour * 60 + value.minute;
 }
 
 final timetableStateProvider =
     StateNotifierProvider<TimetableStateNotifier, TimetableState>((ref) {
-  return TimetableStateNotifier(CalendarService());
-});
+      return TimetableStateNotifier(CalendarService());
+    });
 
 DateTime _startOfWeek(DateTime date) {
   final normalized = DateTime(date.year, date.month, date.day);

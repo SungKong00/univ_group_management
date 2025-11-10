@@ -31,17 +31,11 @@ class PlaceColors {
 
   /// Get lighter variant of a color (for backgrounds)
   static Color lighter(Color color, [double factor = 0.15]) {
-    return Color.alphaBlend(
-      Colors.white.withValues(alpha: factor),
-      color,
-    );
+    return Color.alphaBlend(Colors.white.withValues(alpha: factor), color);
   }
 
   /// Get darker variant of a color (for borders/text)
   static Color darker(Color color, [double factor = 0.2]) {
-    return Color.alphaBlend(
-      Colors.black.withValues(alpha: factor),
-      color,
-    );
+    return Color.alphaBlend(Colors.black.withValues(alpha: factor), color);
   }
 }

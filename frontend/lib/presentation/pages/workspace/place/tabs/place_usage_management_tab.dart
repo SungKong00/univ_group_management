@@ -17,41 +17,28 @@ import '../../../../widgets/buttons/primary_button.dart';
 class PlaceUsageManagementTab extends ConsumerWidget {
   final int groupId;
 
-  const PlaceUsageManagementTab({
-    required this.groupId,
-    super.key,
-  });
+  const PlaceUsageManagementTab({required this.groupId, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final placesAsync = ref.watch(placesProvider(groupId));
 
     return placesAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: AppColors.error,
-            ),
+            Icon(Icons.error_outline, size: 48, color: AppColors.error),
             SizedBox(height: AppSpacing.sm),
             Text(
               '오류가 발생했습니다',
-              style: AppTheme.titleLarge.copyWith(
-                color: AppColors.neutral900,
-              ),
+              style: AppTheme.titleLarge.copyWith(color: AppColors.neutral900),
             ),
             SizedBox(height: AppSpacing.xxs),
             Text(
               e.toString(),
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
               textAlign: TextAlign.center,
             ),
           ],
@@ -67,11 +54,7 @@ class PlaceUsageManagementTab extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.location_off,
-                  size: 64,
-                  color: AppColors.neutral400,
-                ),
+                Icon(Icons.location_off, size: 64, color: AppColors.neutral400),
                 SizedBox(height: AppSpacing.sm),
                 Text(
                   '관리하는 장소가 없습니다',
@@ -109,30 +92,21 @@ class PlaceUsageManagementTab extends ConsumerWidget {
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.card),
-        side: BorderSide(
-          color: AppColors.neutral300,
-          width: 1,
-        ),
+        side: BorderSide(color: AppColors.neutral300, width: 1),
       ),
       child: ExpansionTile(
         tilePadding: EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,
           vertical: AppSpacing.xxs,
         ),
-        childrenPadding: EdgeInsets.only(
-          bottom: AppSpacing.xxs,
-        ),
+        childrenPadding: EdgeInsets.only(bottom: AppSpacing.xxs),
         title: Text(
           place.displayName,
-          style: AppTheme.headlineSmall.copyWith(
-            color: AppColors.neutral900,
-          ),
+          style: AppTheme.headlineSmall.copyWith(color: AppColors.neutral900),
         ),
         subtitle: Text(
           '${place.building} ${place.roomNumber}',
-          style: AppTheme.bodySmall.copyWith(
-            color: AppColors.neutral600,
-          ),
+          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
         ),
         children: [
           _PendingRequestsList(placeId: place.id, groupId: groupId),
@@ -154,10 +128,7 @@ class _PendingRequestsList extends ConsumerWidget {
   final int placeId;
   final int groupId;
 
-  const _PendingRequestsList({
-    required this.placeId,
-    required this.groupId,
-  });
+  const _PendingRequestsList({required this.placeId, required this.groupId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -176,9 +147,7 @@ class _PendingRequestsList extends ConsumerWidget {
         leading: Icon(Icons.error, color: AppColors.error),
         title: Text(
           '오류: $e',
-          style: AppTheme.bodySmall.copyWith(
-            color: AppColors.error,
-          ),
+          style: AppTheme.bodySmall.copyWith(color: AppColors.error),
         ),
       ),
       data: (requests) {
@@ -187,9 +156,7 @@ class _PendingRequestsList extends ConsumerWidget {
             leading: Icon(Icons.check_circle, color: AppColors.success),
             title: Text(
               '대기 중인 신청이 없습니다',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral700,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral700),
             ),
           );
         }
@@ -210,10 +177,9 @@ class _PendingRequestsList extends ConsumerWidget {
                 ),
               ),
             ),
-            ...requests.map((request) => _RequestCard(
-                  placeId: placeId,
-                  request: request,
-                )),
+            ...requests.map(
+              (request) => _RequestCard(placeId: placeId, request: request),
+            ),
           ],
         );
       },
@@ -226,10 +192,7 @@ class _RequestCard extends ConsumerWidget {
   final int placeId;
   final PlaceUsageGroup request;
 
-  const _RequestCard({
-    required this.placeId,
-    required this.request,
-  });
+  const _RequestCard({required this.placeId, required this.request});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -242,10 +205,7 @@ class _RequestCard extends ConsumerWidget {
       color: AppColors.neutral100,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.card),
-        side: BorderSide(
-          color: AppColors.neutral300,
-          width: 1,
-        ),
+        side: BorderSide(color: AppColors.neutral300, width: 1),
       ),
       child: ListTile(
         title: Text(
@@ -257,21 +217,21 @@ class _RequestCard extends ConsumerWidget {
         ),
         subtitle: Text(
           '신청 일시: ${_formatDateTime(request.createdAt)}',
-          style: AppTheme.bodySmall.copyWith(
-            color: AppColors.neutral600,
-          ),
+          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
               icon: Icon(Icons.check, color: AppColors.success),
-              onPressed: () => _showApproveDialog(context, ref, placeId, request),
+              onPressed: () =>
+                  _showApproveDialog(context, ref, placeId, request),
               tooltip: '승인',
             ),
             IconButton(
               icon: Icon(Icons.close, color: AppColors.error),
-              onPressed: () => _showRejectDialog(context, ref, placeId, request),
+              onPressed: () =>
+                  _showRejectDialog(context, ref, placeId, request),
               tooltip: '거절',
             ),
           ],
@@ -298,9 +258,7 @@ class _RequestCard extends ConsumerWidget {
         ),
         content: Text(
           '${request.groupName}의 예약 권한을 승인하시겠습니까?',
-          style: AppTheme.bodyMedium.copyWith(
-            color: AppColors.neutral700,
-          ),
+          style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral700),
         ),
         actions: [
           NeutralOutlinedButton(
@@ -318,7 +276,9 @@ class _RequestCard extends ConsumerWidget {
 
     if (confirmed == true) {
       try {
-        await ref.read(placeServiceProvider).updateUsageStatus(
+        await ref
+            .read(placeServiceProvider)
+            .updateUsageStatus(
               placeId: placeId,
               groupId: request.groupId,
               status: UsageStatus.approved,
@@ -418,7 +378,9 @@ class _RequestCard extends ConsumerWidget {
 
     if (confirmed == true) {
       try {
-        await ref.read(placeServiceProvider).updateUsageStatus(
+        await ref
+            .read(placeServiceProvider)
+            .updateUsageStatus(
               placeId: placeId,
               groupId: request.groupId,
               status: UsageStatus.rejected,
@@ -456,10 +418,7 @@ class _ApprovedGroupsList extends ConsumerWidget {
   final int placeId;
   final int groupId;
 
-  const _ApprovedGroupsList({
-    required this.placeId,
-    required this.groupId,
-  });
+  const _ApprovedGroupsList({required this.placeId, required this.groupId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -478,9 +437,7 @@ class _ApprovedGroupsList extends ConsumerWidget {
         leading: Icon(Icons.error, color: AppColors.error),
         title: Text(
           '오류: $e',
-          style: AppTheme.bodySmall.copyWith(
-            color: AppColors.error,
-          ),
+          style: AppTheme.bodySmall.copyWith(color: AppColors.error),
         ),
       ),
       data: (groups) {
@@ -489,9 +446,7 @@ class _ApprovedGroupsList extends ConsumerWidget {
             leading: Icon(Icons.people_outline, color: AppColors.neutral600),
             title: Text(
               '승인된 사용 그룹이 없습니다',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral700,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral700),
             ),
           );
         }
@@ -512,26 +467,28 @@ class _ApprovedGroupsList extends ConsumerWidget {
                 ),
               ),
             ),
-            ...groups.map((group) => ListTile(
-                  title: Text(
-                    group.groupName,
-                    style: AppTheme.titleMedium.copyWith(
-                      color: AppColors.neutral900,
-                    ),
+            ...groups.map(
+              (group) => ListTile(
+                title: Text(
+                  group.groupName,
+                  style: AppTheme.titleMedium.copyWith(
+                    color: AppColors.neutral900,
                   ),
-                  subtitle: Text(
-                    '승인 일시: ${_formatDateTime(group.updatedAt)}',
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppColors.neutral600,
-                    ),
+                ),
+                subtitle: Text(
+                  '승인 일시: ${_formatDateTime(group.updatedAt)}',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppColors.neutral600,
                   ),
-                  trailing: IconButton(
-                    icon: Icon(Icons.remove_circle, color: AppColors.error),
-                    onPressed: () =>
-                        _showRevokeDialog(context, ref, placeId, group),
-                    tooltip: '권한 취소',
-                  ),
-                )),
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.remove_circle, color: AppColors.error),
+                  onPressed: () =>
+                      _showRevokeDialog(context, ref, placeId, group),
+                  tooltip: '권한 취소',
+                ),
+              ),
+            ),
           ],
         );
       },
@@ -560,9 +517,7 @@ class _ApprovedGroupsList extends ConsumerWidget {
           children: [
             Text(
               '${group.groupName}의 예약 권한을 취소하시겠습니까?',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral700,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral700),
             ),
             SizedBox(height: AppSpacing.md),
             Container(
@@ -606,10 +561,9 @@ class _ApprovedGroupsList extends ConsumerWidget {
 
     if (confirmed == true) {
       try {
-        final result = await ref.read(placeServiceProvider).revokeUsagePermission(
-              placeId: placeId,
-              groupId: group.groupId,
-            );
+        final result = await ref
+            .read(placeServiceProvider)
+            .revokeUsagePermission(placeId: placeId, groupId: group.groupId);
 
         ref.invalidate(approvedUsageGroupsProvider(placeId));
 

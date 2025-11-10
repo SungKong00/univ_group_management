@@ -131,7 +131,8 @@ class _PostItemState extends ConsumerState<PostItem> {
 
   Widget _buildHeader(bool isAuthor) {
     // 수정 여부 판단: updatedAt이 null이 아니고, createdAt과 다른 경우
-    final isEdited = widget.post.updatedAt != null &&
+    final isEdited =
+        widget.post.updatedAt != null &&
         widget.post.updatedAt != widget.post.createdAt;
 
     // 작성 시간 (항상 표시)
@@ -156,9 +157,7 @@ class _PostItemState extends ConsumerState<PostItem> {
         // 작성 시간 (항상 표시)
         Text(
           createdTimeText,
-          style: AppTheme.bodySmall.copyWith(
-            color: AppColors.neutral600,
-          ),
+          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
         ),
         // 수정된 경우 추가 표시
         if (isEdited) ...[

@@ -16,8 +16,7 @@ class BuildingPlaceSelector extends ConsumerStatefulWidget {
       _BuildingPlaceSelectorState();
 }
 
-class _BuildingPlaceSelectorState
-    extends ConsumerState<BuildingPlaceSelector> {
+class _BuildingPlaceSelectorState extends ConsumerState<BuildingPlaceSelector> {
   String? _selectedBuilding;
   int? _selectedPlaceId;
 
@@ -37,10 +36,7 @@ class _BuildingPlaceSelectorState
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          bottom: BorderSide(
-            color: AppColors.neutral200,
-            width: 1,
-          ),
+          bottom: BorderSide(color: AppColors.neutral200, width: 1),
         ),
       ),
       child: Column(
@@ -50,17 +46,11 @@ class _BuildingPlaceSelectorState
           Row(
             children: [
               // Building dropdown
-              Expanded(
-                flex: 2,
-                child: _buildBuildingDropdown(buildings),
-              ),
+              Expanded(flex: 2, child: _buildBuildingDropdown(buildings)),
               const SizedBox(width: AppSpacing.xs),
 
               // Place dropdown
-              Expanded(
-                flex: 3,
-                child: _buildPlaceDropdown(placesForBuilding),
-              ),
+              Expanded(flex: 3, child: _buildPlaceDropdown(placesForBuilding)),
               const SizedBox(width: AppSpacing.xs),
 
               // Add button
@@ -114,10 +104,7 @@ class _BuildingPlaceSelectorState
           : buildings.map((building) {
               return DropdownMenuItem<String>(
                 value: building,
-                child: Text(
-                  building,
-                  style: AppTheme.bodyMedium,
-                ),
+                child: Text(building, style: AppTheme.bodyMedium),
               );
             }).toList(),
       onChanged: (value) {
@@ -128,9 +115,7 @@ class _BuildingPlaceSelectorState
       },
       hint: Text(
         buildings.isEmpty ? '장소 없음' : '건물 선택',
-        style: AppTheme.bodyMedium.copyWith(
-          color: AppColors.neutral500,
-        ),
+        style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral500),
       ),
       isExpanded: true,
       icon: const Icon(Icons.arrow_drop_down, size: 20),
@@ -190,9 +175,7 @@ class _BuildingPlaceSelectorState
         !isEnabled
             ? (_selectedBuilding == null ? '건물을 먼저 선택하세요' : '장소 없음')
             : '장소 선택',
-        style: AppTheme.bodyMedium.copyWith(
-          color: AppColors.neutral500,
-        ),
+        style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral500),
       ),
       isExpanded: true,
       icon: const Icon(Icons.arrow_drop_down, size: 20),
@@ -203,9 +186,7 @@ class _BuildingPlaceSelectorState
     return Chip(
       label: Text(
         place.displayName,
-        style: AppTheme.bodySmall.copyWith(
-          color: Colors.white,
-        ),
+        style: AppTheme.bodySmall.copyWith(color: Colors.white),
       ),
       backgroundColor: color,
       deleteIconColor: Colors.white,

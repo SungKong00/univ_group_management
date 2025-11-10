@@ -107,7 +107,8 @@ class GroupTreeNode extends Equatable {
       ),
       parentId: (json['parentId'] as num?)?.toInt(),
       level: (json['level'] as num?)?.toInt() ?? 0,
-      children: (json['children'] as List<dynamic>?)
+      children:
+          (json['children'] as List<dynamic>?)
               ?.where((e) => e != null && e is Map<String, dynamic>)
               .map((e) => GroupTreeNode.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -125,7 +126,10 @@ class GroupTreeNode extends Equatable {
   }
 
   /// Recursively update a child node by ID
-  GroupTreeNode updateChild(int childId, GroupTreeNode Function(GroupTreeNode) updater) {
+  GroupTreeNode updateChild(
+    int childId,
+    GroupTreeNode Function(GroupTreeNode) updater,
+  ) {
     if (id == childId) {
       return updater(this);
     }
@@ -139,15 +143,15 @@ class GroupTreeNode extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        profileImageUrl,
-        memberCount,
-        isRecruiting,
-        groupType,
-        parentId,
-        level,
-        children,
-        isExpanded,
-      ];
+    id,
+    name,
+    profileImageUrl,
+    memberCount,
+    isRecruiting,
+    groupType,
+    parentId,
+    level,
+    children,
+    isExpanded,
+  ];
 }

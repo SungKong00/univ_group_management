@@ -14,10 +14,7 @@ import '../../../../presentation/widgets/buttons/outlined_link_button.dart';
 class RestrictedTimeListWidget extends ConsumerWidget {
   final int placeId;
 
-  const RestrictedTimeListWidget({
-    super.key,
-    required this.placeId,
-  });
+  const RestrictedTimeListWidget({super.key, required this.placeId});
 
   static const Map<String, String> _dayLabels = {
     'MONDAY': '월요일',
@@ -44,10 +41,7 @@ class RestrictedTimeListWidget extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               mainAxisSize: MainAxisSize.max,
               children: [
-                Text(
-                  '금지시간',
-                  style: AppTheme.titleLarge,
-                ),
+                Text('금지시간', style: AppTheme.titleLarge),
                 Flexible(
                   child: PrimaryButton(
                     text: '추가',
@@ -56,9 +50,8 @@ class RestrictedTimeListWidget extends ConsumerWidget {
                     onPressed: () async {
                       final result = await showDialog<bool>(
                         context: context,
-                        builder: (context) => AddRestrictedTimeDialog(
-                          placeId: placeId,
-                        ),
+                        builder: (context) =>
+                            AddRestrictedTimeDialog(placeId: placeId),
                       );
 
                       if (result == true) {
@@ -106,10 +99,7 @@ class RestrictedTimeListWidget extends ConsumerWidget {
                   separatorBuilder: (context, index) => const Divider(),
                   itemBuilder: (context, index) {
                     final time = sortedTimes[index];
-                    return _RestrictedTimeItem(
-                      time: time,
-                      placeId: placeId,
-                    );
+                    return _RestrictedTimeItem(time: time, placeId: placeId);
                   },
                 );
               },
@@ -138,10 +128,7 @@ class _RestrictedTimeItem extends ConsumerWidget {
   final RestrictedTimeResponse time;
   final int placeId;
 
-  const _RestrictedTimeItem({
-    required this.time,
-    required this.placeId,
-  });
+  const _RestrictedTimeItem({required this.time, required this.placeId});
 
   static const Map<String, String> _dayLabels = {
     'MONDAY': '월요일',
@@ -169,9 +156,7 @@ class _RestrictedTimeItem extends ConsumerWidget {
           const SizedBox(width: 8),
           Text(
             '${time.startTime} - ${time.endTime}',
-            style: AppTheme.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -180,9 +165,7 @@ class _RestrictedTimeItem extends ConsumerWidget {
               padding: const EdgeInsets.only(top: 4.0),
               child: Text(
                 time.reason!,
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.neutral600,
-                ),
+                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
               ),
             )
           : null,
@@ -194,10 +177,8 @@ class _RestrictedTimeItem extends ConsumerWidget {
             onPressed: () async {
               final result = await showDialog<bool>(
                 context: context,
-                builder: (context) => EditRestrictedTimeDialog(
-                  placeId: placeId,
-                  time: time,
-                ),
+                builder: (context) =>
+                    EditRestrictedTimeDialog(placeId: placeId, time: time),
               );
 
               if (result == true) {
@@ -254,10 +235,7 @@ class _RestrictedTimeItem extends ConsumerWidget {
 class AddRestrictedTimeDialog extends ConsumerStatefulWidget {
   final int placeId;
 
-  const AddRestrictedTimeDialog({
-    super.key,
-    required this.placeId,
-  });
+  const AddRestrictedTimeDialog({super.key, required this.placeId});
 
   @override
   ConsumerState<AddRestrictedTimeDialog> createState() =>
@@ -372,7 +350,7 @@ class _AddRestrictedTimeDialogState
               Text('요일', style: AppTheme.titleMedium),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedDayOfWeek,
+                initialValue: _selectedDayOfWeek,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(
@@ -488,10 +466,7 @@ class _EditRestrictedTimeDialogState
 
   TimeOfDay _parseTime(String time) {
     final parts = time.split(':');
-    return TimeOfDay(
-      hour: int.parse(parts[0]),
-      minute: int.parse(parts[1]),
-    );
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
   Future<void> _selectTime(bool isStartTime) async {

@@ -28,10 +28,7 @@ class OperatingHoursResponse {
     if (parts.length < 2) {
       throw FormatException('Invalid time format: $time');
     }
-    return TimeOfDay(
-      hour: int.parse(parts[0]),
-      minute: int.parse(parts[1]),
-    );
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
   /// Format TimeOfDay to backend format (format: "HH:mm:ss")

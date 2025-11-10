@@ -56,9 +56,7 @@ class _ApplicationSubmitDialogState
     final maxHeight = screenHeight * 0.8;
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: maxHeight,
-      ),
+      constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(
@@ -116,16 +114,16 @@ class _ApplicationSubmitDialogState
                     Text(
                       widget.recruitment.title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.neutral900,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.neutral900,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       widget.recruitment.group.name,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.neutral600,
-                          ),
+                        color: AppColors.neutral600,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
@@ -133,7 +131,8 @@ class _ApplicationSubmitDialogState
                     if (widget.recruitment.applicationQuestions.isNotEmpty) ...[
                       Text(
                         '질문 답변 (필수)',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.neutral900,
                             ),
@@ -143,68 +142,74 @@ class _ApplicationSubmitDialogState
                           .asMap()
                           .entries
                           .map((entry) {
-                        final index = entry.key;
-                        final question = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                            final index = entry.key;
+                            final question = entry.value;
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpacing.md,
+                              ),
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.brand,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '${index + 1}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.brand,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '${index + 1}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
+                                      const SizedBox(width: AppSpacing.xs),
+                                      Expanded(
+                                        child: Text(
+                                          question,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w500,
+                                                color: AppColors.neutral800,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: AppSpacing.xs),
-                                  Expanded(
-                                    child: Text(
-                                      question,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColors.neutral800,
-                                          ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  TextFormField(
+                                    controller: _answerControllers[index],
+                                    maxLines: 3,
+                                    decoration: const InputDecoration(
+                                      hintText: '답변을 입력해주세요',
+                                      border: OutlineInputBorder(),
                                     ),
+                                    validator: (value) {
+                                      if (value == null ||
+                                          value.trim().isEmpty) {
+                                        return '답변을 입력해주세요';
+                                      }
+                                      return null;
+                                    },
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: AppSpacing.xs),
-                              TextFormField(
-                                controller: _answerControllers[index],
-                                maxLines: 3,
-                                decoration: const InputDecoration(
-                                  hintText: '답변을 입력해주세요',
-                                  border: OutlineInputBorder(),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return '답변을 입력해주세요';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
+                            );
+                          }),
                     ],
                   ],
                 ),
@@ -247,7 +252,9 @@ class _ApplicationSubmitDialogState
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                onPressed: _isSubmitting
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 child: const Text('취소'),
               ),
             ),

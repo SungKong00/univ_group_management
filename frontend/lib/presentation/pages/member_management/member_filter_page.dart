@@ -20,16 +20,15 @@ import 'selection_method_page.dart';
 class MemberFilterPage extends ConsumerWidget {
   final int groupId;
 
-  const MemberFilterPage({
-    super.key,
-    required this.groupId,
-  });
+  const MemberFilterPage({super.key, required this.groupId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // state를 직접 감시하여 변경 시 UI 리빌드
     final currentFilter = ref.watch(memberFilterStateProvider(groupId));
-    final filterNotifier = ref.read(memberFilterStateProvider(groupId).notifier);
+    final filterNotifier = ref.read(
+      memberFilterStateProvider(groupId).notifier,
+    );
     final rolesAsync = ref.watch(roleListProvider(groupId));
     final subGroupsAsync = ref.watch(subGroupsProvider(groupId));
     final availableYears = ref.watch(availableYearsProvider);
@@ -48,9 +47,7 @@ class MemberFilterPage extends ConsumerWidget {
             // 안내 텍스트
             Text(
               '멤버를 필터링할 조건을 선택하세요',
-              style: AppTheme.bodyLarge.copyWith(
-                color: AppColors.neutral700,
-              ),
+              style: AppTheme.bodyLarge.copyWith(color: AppColors.neutral700),
             ),
             const SizedBox(height: AppSpacing.lg),
 
@@ -120,7 +117,8 @@ class MemberFilterPage extends ConsumerWidget {
     MemberFilter currentFilter,
     MemberFilterNotifier filterNotifier,
   ) {
-    final isEnabled = !currentFilter.isGroupFilterActive &&
+    final isEnabled =
+        !currentFilter.isGroupFilterActive &&
         !currentFilter.isGradeFilterActive &&
         !currentFilter.isYearFilterActive;
 
@@ -154,20 +152,24 @@ class MemberFilterPage extends ConsumerWidget {
               ? ExpandableChipSection<GroupRole>(
                   items: roles,
                   selectedItems: roles
-                      .where((r) => currentFilter.roleIds?.contains(r.id) ?? false)
+                      .where(
+                        (r) => currentFilter.roleIds?.contains(r.id) ?? false,
+                      )
                       .toList(),
                   itemLabel: (role) => role.name,
                   onSelectionChanged: (selectedRoles) {
                     final selectedIds = selectedRoles.map((r) => r.id).toList();
                     // setFilter로 즉시 적용
-                    ref.read(memberFilterStateProvider(groupId).notifier).setFilter(
-                      currentFilter.copyWith(
-                        roleIds: selectedIds.isEmpty ? null : selectedIds,
-                        groupIds: null,
-                        grades: null,
-                        years: null,
-                      ),
-                    );
+                    ref
+                        .read(memberFilterStateProvider(groupId).notifier)
+                        .setFilter(
+                          currentFilter.copyWith(
+                            roleIds: selectedIds.isEmpty ? null : selectedIds,
+                            groupIds: null,
+                            grades: null,
+                            years: null,
+                          ),
+                        );
                   },
                   enabled: true,
                   initialDisplayCount: 6,
@@ -180,10 +182,8 @@ class MemberFilterPage extends ConsumerWidget {
                   ),
                 ),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Text(
-            '역할을 불러올 수 없습니다',
-            style: TextStyle(color: AppColors.error),
-          ),
+          error: (error, _) =>
+              Text('역할을 불러올 수 없습니다', style: TextStyle(color: AppColors.error)),
         ),
       ],
     );
@@ -210,7 +210,9 @@ class MemberFilterPage extends ConsumerWidget {
                 Text(
                   '소속 그룹',
                   style: AppTheme.titleMedium.copyWith(
-                    color: isEnabled ? AppColors.neutral800 : AppColors.neutral400,
+                    color: isEnabled
+                        ? AppColors.neutral800
+                        : AppColors.neutral400,
                   ),
                 ),
                 if (!isEnabled) ...[
@@ -231,18 +233,27 @@ class MemberFilterPage extends ConsumerWidget {
                 ? ExpandableChipSection<GroupSummaryResponse>(
                     items: subGroups,
                     selectedItems: subGroups
-                        .where((g) => currentFilter.groupIds?.contains(g.id) ?? false)
+                        .where(
+                          (g) =>
+                              currentFilter.groupIds?.contains(g.id) ?? false,
+                        )
                         .toList(),
                     itemLabel: (group) => group.name,
                     onSelectionChanged: (selectedGroups) {
-                      final selectedIds = selectedGroups.map((g) => g.id).toList();
+                      final selectedIds = selectedGroups
+                          .map((g) => g.id)
+                          .toList();
                       // setFilter로 즉시 적용
-                      ref.read(memberFilterStateProvider(groupId).notifier).setFilter(
-                        currentFilter.copyWith(
-                          roleIds: null,
-                          groupIds: selectedIds.isEmpty ? null : selectedIds,
-                        ),
-                      );
+                      ref
+                          .read(memberFilterStateProvider(groupId).notifier)
+                          .setFilter(
+                            currentFilter.copyWith(
+                              roleIds: null,
+                              groupIds: selectedIds.isEmpty
+                                  ? null
+                                  : selectedIds,
+                            ),
+                          );
                     },
                     enabled: true,
                     initialDisplayCount: 6,
@@ -319,12 +330,14 @@ class MemberFilterPage extends ConsumerWidget {
             itemLabel: (grade) => gradeLabels[grade] ?? '$grade학년',
             onSelectionChanged: (selectedGrades) {
               // setFilter로 즉시 적용
-              ref.read(memberFilterStateProvider(groupId).notifier).setFilter(
-                currentFilter.copyWith(
-                  roleIds: null,
-                  grades: selectedGrades.isEmpty ? null : selectedGrades,
-                ),
-              );
+              ref
+                  .read(memberFilterStateProvider(groupId).notifier)
+                  .setFilter(
+                    currentFilter.copyWith(
+                      roleIds: null,
+                      grades: selectedGrades.isEmpty ? null : selectedGrades,
+                    ),
+                  );
             },
             enabled: true,
             initialDisplayCount: 5,
@@ -345,12 +358,14 @@ class MemberFilterPage extends ConsumerWidget {
             itemLabel: (year) => '$year년',
             onSelectionChanged: (selectedYears) {
               // setFilter로 즉시 적용
-              ref.read(memberFilterStateProvider(groupId).notifier).setFilter(
-                currentFilter.copyWith(
-                  roleIds: null,
-                  years: selectedYears.isEmpty ? null : selectedYears,
-                ),
-              );
+              ref
+                  .read(memberFilterStateProvider(groupId).notifier)
+                  .setFilter(
+                    currentFilter.copyWith(
+                      roleIds: null,
+                      years: selectedYears.isEmpty ? null : selectedYears,
+                    ),
+                  );
             },
             enabled: true,
             initialDisplayCount: 5,
@@ -377,11 +392,7 @@ class MemberFilterPage extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.people,
-            size: 20,
-            color: AppColors.neutral700,
-          ),
+          const Icon(Icons.people, size: 20, color: AppColors.neutral700),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -473,9 +484,7 @@ class MemberFilterPage extends ConsumerWidget {
       children: [
         Text(
           '선택된 필터',
-          style: AppTheme.titleMedium.copyWith(
-            color: AppColors.neutral800,
-          ),
+          style: AppTheme.titleMedium.copyWith(color: AppColors.neutral800),
         ),
         const SizedBox(height: AppSpacing.xs),
         ...summaries.map(
@@ -483,7 +492,11 @@ class MemberFilterPage extends ConsumerWidget {
             padding: const EdgeInsets.only(top: 4),
             child: Row(
               children: [
-                const Icon(Icons.check_circle, size: 16, color: AppColors.success),
+                const Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: AppColors.success,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -509,23 +522,14 @@ class MemberFilterPage extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => SelectionMethodPage(
-          groupId: groupId,
-          filter: filter,
-        ),
+        builder: (_) => SelectionMethodPage(groupId: groupId, filter: filter),
       ),
     );
   }
 }
 
 // 학년 레이블 매핑
-const gradeLabels = {
-  1: '1학년',
-  2: '2학년',
-  3: '3학년',
-  4: '4학년',
-  5: '졸업생',
-};
+const gradeLabels = {1: '1학년', 2: '2학년', 3: '3학년', 4: '4학년', 5: '졸업생'};
 
 // 학년 옵션
 const availableGrades = [1, 2, 3, 4, 5];

@@ -49,7 +49,9 @@ class _GroupExploreContentWidgetState
       if (!_tabController.indexIsChanging) return; // 애니메이션 중복 방지
 
       // HomeStateNotifier에 탭 변경 알림
-      ref.read(homeStateProvider.notifier).setGroupExploreTab(_tabController.index);
+      ref
+          .read(homeStateProvider.notifier)
+          .setGroupExploreTab(_tabController.index);
     });
 
     // Initialize state: load first page of groups
@@ -109,7 +111,11 @@ class _GroupExploreContentWidgetState
     );
   }
 
-  Widget _buildRecruitmentView(BuildContext context, bool isDesktop, String? errorMessage) {
+  Widget _buildRecruitmentView(
+    BuildContext context,
+    bool isDesktop,
+    String? errorMessage,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -126,18 +132,14 @@ class _GroupExploreContentWidgetState
             showShadow: false,
             child: Row(
               children: [
-                Icon(
-                  Icons.error_outline,
-                  color: AppColors.error,
-                  size: 20,
-                ),
+                Icon(Icons.error_outline, color: AppColors.error, size: 20),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
                     errorMessage,
-                    style: AppTheme.bodyMediumTheme(context).copyWith(
-                      color: AppColors.error,
-                    ),
+                    style: AppTheme.bodyMediumTheme(
+                      context,
+                    ).copyWith(color: AppColors.error),
                   ),
                 ),
               ],
@@ -147,14 +149,16 @@ class _GroupExploreContentWidgetState
         ],
 
         // Recruitment List
-        const Expanded(
-          child: RecruitmentListView(),
-        ),
+        const Expanded(child: RecruitmentListView()),
       ],
     );
   }
 
-  Widget _buildListView(BuildContext context, bool isDesktop, String? errorMessage) {
+  Widget _buildListView(
+    BuildContext context,
+    bool isDesktop,
+    String? errorMessage,
+  ) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,18 +180,14 @@ class _GroupExploreContentWidgetState
               showShadow: false,
               child: Row(
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    color: AppColors.error,
-                    size: 20,
-                  ),
+                  Icon(Icons.error_outline, color: AppColors.error, size: 20),
                   const SizedBox(width: AppSpacing.xs),
                   Expanded(
                     child: Text(
                       errorMessage,
-                      style: AppTheme.bodyMediumTheme(context).copyWith(
-                        color: AppColors.error,
-                      ),
+                      style: AppTheme.bodyMediumTheme(
+                        context,
+                      ).copyWith(color: AppColors.error),
                     ),
                   ),
                 ],

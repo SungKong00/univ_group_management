@@ -54,7 +54,8 @@ class DottedLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFE0E0E0) // neutral300
+      ..color =
+          const Color(0xFFE0E0E0) // neutral300
       ..strokeWidth = 0.5;
 
     const dashWidth = 4.0;
@@ -62,11 +63,7 @@ class DottedLinePainter extends CustomPainter {
     double startX = 0;
 
     while (startX < size.width) {
-      canvas.drawLine(
-        Offset(startX, 0),
-        Offset(startX + dashWidth, 0),
-        paint,
-      );
+      canvas.drawLine(Offset(startX, 0), Offset(startX + dashWidth, 0), paint);
       startX += dashWidth + dashSpace;
     }
   }

@@ -81,8 +81,10 @@ class PersonalScheduleAdapter {
     String? location,
     Color? color,
   }) {
-    assert(event.startTime != null && event.endTime != null,
-        'Event must have startTime and endTime for conversion');
+    assert(
+      event.startTime != null && event.endTime != null,
+      'Event must have startTime and endTime for conversion',
+    );
 
     // Extract DayOfWeek from day index
     final dayOfWeek = DayOfWeek.values[event.start.day];

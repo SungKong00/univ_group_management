@@ -6,8 +6,10 @@ import '../../../../core/services/channel_service.dart';
 ///
 /// 채널 관리 페이지에서 CHANNEL_MANAGE 권한이 있는 사용자가
 /// POST_READ 권한이 없는 채널도 조회하고 관리할 수 있도록 함
-final channelListProvider =
-    FutureProvider.family<List<Channel>, int>((ref, groupId) async {
+final channelListProvider = FutureProvider.family<List<Channel>, int>((
+  ref,
+  groupId,
+) async {
   final service = ChannelService();
   return await service.getChannelsForAdmin(groupId);
 });
@@ -29,14 +31,14 @@ class CreateChannelParams {
 
 final createChannelProvider = FutureProvider.autoDispose
     .family<Channel?, CreateChannelParams>((ref, params) async {
-  final service = ChannelService();
-  return await service.createChannel(
-    workspaceId: params.workspaceId,
-    name: params.name,
-    description: params.description,
-    type: params.type,
-  );
-});
+      final service = ChannelService();
+      return await service.createChannel(
+        workspaceId: params.workspaceId,
+        name: params.name,
+        description: params.description,
+        type: params.type,
+      );
+    });
 
 /// 채널 수정 요청
 class UpdateChannelParams {
@@ -44,26 +46,24 @@ class UpdateChannelParams {
   final String? name;
   final String? description;
 
-  UpdateChannelParams({
-    required this.channelId,
-    this.name,
-    this.description,
-  });
+  UpdateChannelParams({required this.channelId, this.name, this.description});
 }
 
 final updateChannelProvider = FutureProvider.autoDispose
     .family<Channel?, UpdateChannelParams>((ref, params) async {
-  final service = ChannelService();
-  return await service.updateChannel(
-    channelId: params.channelId,
-    name: params.name,
-    description: params.description,
-  );
-});
+      final service = ChannelService();
+      return await service.updateChannel(
+        channelId: params.channelId,
+        name: params.name,
+        description: params.description,
+      );
+    });
 
 /// 채널 삭제 요청
-final deleteChannelProvider =
-    FutureProvider.autoDispose.family<bool, int>((ref, channelId) async {
+final deleteChannelProvider = FutureProvider.autoDispose.family<bool, int>((
+  ref,
+  channelId,
+) async {
   final service = ChannelService();
   return await service.deleteChannel(channelId);
 });

@@ -8,12 +8,14 @@ class Channel {
   final String name;
   final String type; // 'ANNOUNCEMENT', 'TEXT'
   final String? description;
+  final DateTime? createdAt;
 
   const Channel({
     required this.id,
     required this.name,
     required this.type,
     this.description,
+    this.createdAt,
   });
 
   factory Channel.fromJson(Map<String, dynamic> json) {
@@ -22,11 +24,20 @@ class Channel {
       name: json['name'] as String? ?? '',
       type: json['type'] as String? ?? 'TEXT',
       description: json['description'] as String?,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'type': type, 'description': description};
+    return {
+      'id': id,
+      'name': name,
+      'type': type,
+      'description': description,
+      'createdAt': createdAt?.toIso8601String(),
+    };
   }
 
   @override

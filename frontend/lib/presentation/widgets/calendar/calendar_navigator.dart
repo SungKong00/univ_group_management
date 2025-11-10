@@ -75,9 +75,7 @@ class CalendarNavigator extends StatelessWidget {
           icon: const Icon(Icons.chevron_left),
           visualDensity: VisualDensity.compact,
         ),
-        Flexible(
-          child: _buildLabelSection(textTheme),
-        ),
+        Flexible(child: _buildLabelSection(textTheme)),
         IconButton(
           tooltip: isWeekView ? '다음 주' : '다음',
           onPressed: onNext,
@@ -99,10 +97,7 @@ class CalendarNavigator extends StatelessWidget {
             ),
             child: const Text(
               '오늘',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
       ],
@@ -124,9 +119,7 @@ class CalendarNavigator extends StatelessWidget {
           ),
           Text(
             subtitle!,
-            style: textTheme.bodySmall?.copyWith(
-              color: AppColors.neutral500,
-            ),
+            style: textTheme.bodySmall?.copyWith(color: AppColors.neutral500),
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
           ),

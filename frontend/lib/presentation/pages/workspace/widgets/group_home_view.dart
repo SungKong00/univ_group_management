@@ -47,7 +47,11 @@ class GroupHomeView extends ConsumerWidget {
   }
 
   /// Wide Layout (Desktop): 2-column layout
-  Widget _buildWideLayout(BuildContext context, bool hasAnyGroupPermission, WidgetRef ref) {
+  Widget _buildWideLayout(
+    BuildContext context,
+    bool hasAnyGroupPermission,
+    WidgetRef ref,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -60,10 +64,7 @@ class GroupHomeView extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Left: Unread posts
-            Expanded(
-              flex: 2,
-              child: _buildUnreadPostsSection(context),
-            ),
+            Expanded(flex: 2, child: _buildUnreadPostsSection(context)),
             SizedBox(width: AppSpacing.md),
 
             // Right: Calendar + Schedule
@@ -84,7 +85,11 @@ class GroupHomeView extends ConsumerWidget {
   }
 
   /// Narrow Layout (Mobile/Tablet): Single column layout
-  Widget _buildNarrowLayout(BuildContext context, bool hasAnyGroupPermission, WidgetRef ref) {
+  Widget _buildNarrowLayout(
+    BuildContext context,
+    bool hasAnyGroupPermission,
+    WidgetRef ref,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -106,7 +111,11 @@ class GroupHomeView extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool hasAnyGroupPermission, WidgetRef ref) {
+  Widget _buildHeader(
+    BuildContext context,
+    bool hasAnyGroupPermission,
+    WidgetRef ref,
+  ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         // 좁은 화면(< 600px)에서는 버튼을 아래로 배치
@@ -234,9 +243,7 @@ class GroupHomeView extends ConsumerWidget {
             padding: EdgeInsets.only(left: AppSpacing.xxs),
             child: Text(
               '이 그룹의 하위 조직을 만들어 보세요',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             ),
           ),
         ],
@@ -326,11 +333,7 @@ class GroupHomeView extends ConsumerWidget {
         padding: EdgeInsets.symmetric(vertical: AppSpacing.xxs),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: AppColors.brand,
-            ),
+            Icon(icon, size: 20, color: AppColors.brand),
             SizedBox(width: AppSpacing.xs),
             Expanded(
               child: Column(
@@ -371,11 +374,7 @@ class GroupHomeView extends ConsumerWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: AppColors.neutral400,
-            ),
+            Icon(Icons.chevron_right, size: 20, color: AppColors.neutral400),
           ],
         ),
       ),
@@ -387,7 +386,9 @@ class GroupHomeView extends ConsumerWidget {
     final selectedGroupId = workspaceState.selectedGroupId;
 
     // Parse groupId
-    final groupId = selectedGroupId != null ? int.tryParse(selectedGroupId) : null;
+    final groupId = selectedGroupId != null
+        ? int.tryParse(selectedGroupId)
+        : null;
 
     return SectionCard(
       child: Column(
@@ -417,9 +418,7 @@ class GroupHomeView extends ConsumerWidget {
             decoration: BoxDecoration(
               color: AppColors.lightBackground,
               borderRadius: BorderRadius.circular(AppRadius.input),
-              border: Border.all(
-                color: AppColors.lightOutline,
-              ),
+              border: Border.all(color: AppColors.lightOutline),
             ),
             child: groupId != null
                 ? _GroupCalendarWidget(groupId: groupId)
@@ -451,7 +450,9 @@ class GroupHomeView extends ConsumerWidget {
   Widget _buildScheduleWidget(BuildContext context, WidgetRef ref) {
     final workspaceState = ref.watch(workspaceStateProvider);
     final selectedGroupId = workspaceState.selectedGroupId;
-    final groupId = selectedGroupId != null ? int.tryParse(selectedGroupId) : null;
+    final groupId = selectedGroupId != null
+        ? int.tryParse(selectedGroupId)
+        : null;
 
     return SectionCard(
       child: Column(
@@ -500,9 +501,7 @@ class GroupHomeView extends ConsumerWidget {
             SizedBox(height: AppSpacing.xxs),
             Text(
               '그룹을 선택해주세요',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
             ),
           ],
         ),
@@ -547,7 +546,9 @@ class _GroupCalendarWidgetState extends ConsumerState<_GroupCalendarWidget> {
     final startOfMonth = DateTime(_focusedDate.year, _focusedDate.month, 1);
     final endOfMonth = DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
 
-    await ref.read(groupCalendarProvider(widget.groupId).notifier).loadEvents(
+    await ref
+        .read(groupCalendarProvider(widget.groupId).notifier)
+        .loadEvents(
           groupId: widget.groupId,
           startDate: startOfMonth,
           endDate: endOfMonth,
@@ -574,9 +575,7 @@ class _GroupCalendarWidgetState extends ConsumerState<_GroupCalendarWidget> {
     }
 
     if (calendarState.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (calendarState.errorMessage != null) {
@@ -584,17 +583,11 @@ class _GroupCalendarWidgetState extends ConsumerState<_GroupCalendarWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: AppColors.error,
-            ),
+            Icon(Icons.error_outline, size: 48, color: AppColors.error),
             SizedBox(height: AppSpacing.xs),
             Text(
               '일정을 불러오지 못했습니다',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
             ),
           ],
         ),
@@ -662,17 +655,11 @@ class _UpcomingEventsWidget extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 32,
-                color: AppColors.error,
-              ),
+              Icon(Icons.error_outline, size: 32, color: AppColors.error),
               SizedBox(height: AppSpacing.xxs),
               Text(
                 '일정을 불러오지 못했습니다',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.neutral600,
-                ),
+                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
               ),
             ],
           ),
@@ -697,9 +684,7 @@ class _UpcomingEventsWidget extends ConsumerWidget {
     if (limitedEvents.isEmpty) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: AppEmptyState.noData(
-          message: '예정된 일정이 없습니다',
-        ),
+        child: AppEmptyState.noData(message: '예정된 일정이 없습니다'),
       );
     }
 
@@ -707,22 +692,26 @@ class _UpcomingEventsWidget extends ConsumerWidget {
       children: [
         for (int i = 0; i < limitedEvents.length; i++) ...[
           if (i > 0) Divider(height: AppSpacing.sm),
-          _buildScheduleItem(
-            event: limitedEvents[i],
-          ),
+          _buildScheduleItem(event: limitedEvents[i]),
         ],
       ],
     );
   }
 
-  Widget _buildScheduleItem({
-    required GroupEvent event,
-  }) {
+  Widget _buildScheduleItem({required GroupEvent event}) {
     // Format date: MM/dd
     final dateStr = '${event.startDate.month}/${event.startDate.day}';
 
     // Format day of week (Korean)
-    final dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][event.startDate.weekday % 7];
+    final dayOfWeek = [
+      '일',
+      '월',
+      '화',
+      '수',
+      '목',
+      '금',
+      '토',
+    ][event.startDate.weekday % 7];
 
     // Format time: HH:mm or '종일'
     final timeStr = event.isAllDay

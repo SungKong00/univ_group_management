@@ -128,18 +128,18 @@ class _CreateRoleDialogState extends ConsumerState<CreateRoleDialog>
                       title: '역할 생성',
                       onClose: () => Navigator.of(context).pop(false),
                     ),
-                          const SizedBox(height: AppSpacing.md),
-                          _buildNameField(),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildDescriptionField(),
-                          const SizedBox(height: AppSpacing.md),
-                          _buildPermissionsSection(),
-                          if (_errorMessage != null) ...[
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildErrorMessage(),
-                          ],
-                          const SizedBox(height: AppSpacing.md),
-                          _buildActions(),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNameField(),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildDescriptionField(),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildPermissionsSection(),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildErrorMessage(),
+                    ],
+                    const SizedBox(height: AppSpacing.md),
+                    _buildActions(),
                   ],
                 ),
               ),
@@ -273,9 +273,7 @@ class _CreateRoleDialogState extends ConsumerState<CreateRoleDialog>
   }
 
   Widget _buildErrorMessage() {
-    return AppInfoBanner.error(
-      message: _errorMessage!,
-    );
+    return AppInfoBanner.error(message: _errorMessage!);
   }
 
   Widget _buildActions() {
@@ -285,9 +283,7 @@ class _CreateRoleDialogState extends ConsumerState<CreateRoleDialog>
       isConfirmLoading: _isLoading,
       confirmSemanticsLabel: '역할 생성',
       confirmVariant: PrimaryButtonVariant.brand,
-      onCancel: _isLoading
-          ? null
-          : () => Navigator.of(context).pop(false),
+      onCancel: _isLoading ? null : () => Navigator.of(context).pop(false),
       cancelSemanticsLabel: '역할 생성 취소',
     );
   }

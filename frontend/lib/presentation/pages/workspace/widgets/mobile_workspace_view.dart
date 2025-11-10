@@ -14,10 +14,7 @@ import 'mobile_channel_list_view.dart';
 class MobileWorkspaceView extends ConsumerWidget {
   final VoidCallback? onRetryLoadWorkspace;
 
-  const MobileWorkspaceView({
-    super.key,
-    this.onRetryLoadWorkspace,
-  });
+  const MobileWorkspaceView({super.key, this.onRetryLoadWorkspace});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +25,9 @@ class MobileWorkspaceView extends ConsumerWidget {
     final mobileView = ref.watch(provider.workspaceMobileViewProvider);
     final selectedChannelId = ref.watch(provider.currentChannelIdProvider);
     final selectedGroupId = ref.watch(provider.currentGroupIdProvider);
-    final channelPermissions = ref.watch(provider.workspaceChannelPermissionsProvider);
+    final channelPermissions = ref.watch(
+      provider.workspaceChannelPermissionsProvider,
+    );
     final selectedPostId = ref.watch(provider.workspaceSelectedPostIdProvider);
 
     // 1. 로딩 상태 체크
@@ -53,7 +52,10 @@ class MobileWorkspaceView extends ConsumerWidget {
     // 4. 특수 뷰 처리 (groupHome, groupAdmin, memberManagement, calendar 등)
     // 모바일에서는 명시적으로 요청된 특수 뷰만 표시
     if (currentView != provider.WorkspaceView.channel) {
-      final specialView = WorkspaceViewBuilder.buildSpecialView(ref, currentView);
+      final specialView = WorkspaceViewBuilder.buildSpecialView(
+        ref,
+        currentView,
+      );
       if (specialView != null) {
         return specialView;
       }

@@ -40,9 +40,9 @@ class ChannelListSection extends ConsumerWidget {
             Text(
               '채널 목록',
               style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.neutral900,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: AppColors.neutral900,
+              ),
             ),
             Flexible(
               child: ElevatedButton.icon(
@@ -102,11 +102,7 @@ class ChannelListSection extends ConsumerWidget {
                 color: AppColors.brand.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              child: const Icon(
-                Icons.tag,
-                color: AppColors.brand,
-                size: 20,
-              ),
+              child: const Icon(Icons.tag, color: AppColors.brand, size: 20),
             ),
             const SizedBox(width: AppSpacing.md),
             // 채널 정보
@@ -178,7 +174,10 @@ class ChannelListSection extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleChannelSettings(BuildContext context, Channel channel) async {
+  Future<void> _handleChannelSettings(
+    BuildContext context,
+    Channel channel,
+  ) async {
     // 권한 설정 다이얼로그 표시
     final result = await showChannelPermissionsDialog(
       context,
@@ -206,16 +205,13 @@ class ChannelListSection extends ConsumerWidget {
 
       if (response.data == null || !context.mounted) return;
 
-      final apiResponse = ApiResponse.fromJson(
-        response.data!,
-        (json) {
-          if (json is List && json.isNotEmpty) {
-            final workspace = json.first as Map<String, dynamic>;
-            return workspace['id'] as int;
-          }
-          return null;
-        },
-      );
+      final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+        if (json is List && json.isNotEmpty) {
+          final workspace = json.first as Map<String, dynamic>;
+          return workspace['id'] as int;
+        }
+        return null;
+      });
 
       if (!apiResponse.success || apiResponse.data == null) {
         print('[DEBUG] Failed to get workspace: ${apiResponse.message}');
@@ -244,11 +240,14 @@ class ChannelListSection extends ConsumerWidget {
         ref.invalidate(workspaceChannelsProvider); // 워크스페이스 채널 네비게이션 바
 
         // workspace state도 새로고침
-        ref.read(workspaceStateProvider.notifier).loadChannels(
-          groupId.toString(),
-          membership: (await ref.read(myGroupsProvider.future))
-              .firstWhere((g) => g.id == groupId),
-        );
+        ref
+            .read(workspaceStateProvider.notifier)
+            .loadChannels(
+              groupId.toString(),
+              membership: (await ref.read(
+                myGroupsProvider.future,
+              )).firstWhere((g) => g.id == groupId),
+            );
 
         // 성공 메시지
         if (context.mounted) {

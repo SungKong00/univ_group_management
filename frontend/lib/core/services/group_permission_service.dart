@@ -42,9 +42,7 @@ class GroupPermissionService {
         return apiResponse.data!;
       }
 
-      throw Exception(
-        apiResponse.message ?? '권한 정보를 불러오지 못했습니다.',
-      );
+      throw Exception(apiResponse.message ?? '권한 정보를 불러오지 못했습니다.');
     } on DioException catch (e) {
       developer.log(
         'Failed to load permissions for group $groupId: $e',
@@ -52,18 +50,14 @@ class GroupPermissionService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '권한 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '권한 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'),
+      );
     }
   }
 }
 
-String _friendlyMessage(
-  DioException exception, {
-  required String fallback,
-}) {
+String _friendlyMessage(DioException exception, {required String fallback}) {
   final response = exception.response;
   final status = response?.statusCode;
 

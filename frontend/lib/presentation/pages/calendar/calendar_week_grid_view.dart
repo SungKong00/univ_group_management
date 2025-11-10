@@ -16,7 +16,8 @@ import '../../../core/theme/app_colors.dart';
 /// - Multi-day events split across date columns
 /// - Highlights today with brand color
 /// - Optional edit mode: onCreate, onUpdate, onDelete callbacks
-class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget {
+class CalendarWeekGridView<T extends CalendarEventBase>
+    extends StatelessWidget {
   const CalendarWeekGridView({
     super.key,
     required this.events,
@@ -82,17 +83,19 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
 
     final header = _buildHeaderRow(context, dayInfos);
     final allDayArea = _buildAllDayArea(context, dayInfos);
-    final body = _buildBodyGrid(context, dayInfos, totalHeight, startHour, endHour);
+    final body = _buildBodyGrid(
+      context,
+      dayInfos,
+      totalHeight,
+      startHour,
+      endHour,
+    );
 
     final grid = SizedBox(
       width: gridWidth,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          header,
-          if (allDayArea != null) allDayArea,
-          body,
-        ],
+        children: [header, if (allDayArea != null) allDayArea, body],
       ),
     );
 
@@ -124,10 +127,7 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
                   // 뷰포트가 더 넓을 경우, 컨테이너 폭을 뷰포트 이상으로 만들어 중앙 정렬이 보이도록 함
                   // viewportWidth가 infinite가 아님을 보장
                   width: math.max(viewportWidth, gridWidth),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: grid,
-                  ),
+                  child: Align(alignment: Alignment.topCenter, child: grid),
                 ),
               ),
             ),
@@ -137,10 +137,7 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
     );
   }
 
-  Widget _buildHeaderRow(
-    BuildContext context,
-    List<_DayInfo<T>> dayInfos,
-  ) {
+  Widget _buildHeaderRow(BuildContext context, List<_DayInfo<T>> dayInfos) {
     final textTheme = Theme.of(context).textTheme;
     final today = DateTime.now();
 
@@ -191,12 +188,10 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
     );
   }
 
-  Widget? _buildAllDayArea(
-    BuildContext context,
-    List<_DayInfo<T>> dayInfos,
-  ) {
-    final hasAllDayEvents =
-        dayInfos.any((info) => info.allDayEvents.isNotEmpty);
+  Widget? _buildAllDayArea(BuildContext context, List<_DayInfo<T>> dayInfos) {
+    final hasAllDayEvents = dayInfos.any(
+      (info) => info.allDayEvents.isNotEmpty,
+    );
     if (!hasAllDayEvents) return null;
 
     return Container(
@@ -218,9 +213,9 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
                 alignment: Alignment.topRight,
                 child: Text(
                   '종일',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.neutral500,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.neutral500),
                 ),
               ),
             ),
@@ -270,9 +265,9 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.neutral800,
-                fontWeight: FontWeight.w600,
-              ),
+            color: AppColors.neutral800,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -286,21 +281,26 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
     int endHour,
   ) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.lightBackground,
-      ),
+      decoration: const BoxDecoration(color: AppColors.lightBackground),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildTimeColumn(context, totalHeight, startHour, endHour),
-          ...dayInfos
-              .map((info) => _buildDayColumn(context, info, totalHeight, startHour, endHour)),
+          ...dayInfos.map(
+            (info) =>
+                _buildDayColumn(context, info, totalHeight, startHour, endHour),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTimeColumn(BuildContext context, double totalHeight, int startHour, int endHour) {
+  Widget _buildTimeColumn(
+    BuildContext context,
+    double totalHeight,
+    int startHour,
+    int endHour,
+  ) {
     final textTheme = Theme.of(context).textTheme;
     final totalSlots = ((endHour - startHour) * 60) ~/ _minutesPerSlot;
 
@@ -359,12 +359,16 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
       ),
       child: Stack(
         children: [
-          Positioned.fill(
-            child: Container(color: background),
-          ),
+          Positioned.fill(child: Container(color: background)),
           _buildGridLines(totalMinutes),
           ...info.timedEvents.map((event) {
-            return _buildEventBlock(context, event, info.date, totalMinutes, startHour);
+            return _buildEventBlock(
+              context,
+              event,
+              info.date,
+              totalMinutes,
+              startHour,
+            );
           }),
         ],
       ),
@@ -410,8 +414,9 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
     final effectiveStart = event.startDateTime.isBefore(dayStart)
         ? dayStart
         : event.startDateTime;
-    final effectiveEnd =
-        event.endDateTime.isAfter(dayEnd) ? dayEnd : event.endDateTime;
+    final effectiveEnd = event.endDateTime.isAfter(dayEnd)
+        ? dayEnd
+        : event.endDateTime;
 
     final startMinutesOfDay = effectiveStart.hour * 60 + effectiveStart.minute;
     final endMinutesOfDay = effectiveEnd.hour * 60 + effectiveEnd.minute;
@@ -518,11 +523,13 @@ class CalendarWeekGridView<T extends CalendarEventBase> extends StatelessWidget 
 
     // Convert to list
     return dayMap.values
-        .map((collection) => _DayInfo<T>(
-              date: collection.date,
-              allDayEvents: collection.allDayEvents,
-              timedEvents: collection.timedEvents,
-            ))
+        .map(
+          (collection) => _DayInfo<T>(
+            date: collection.date,
+            allDayEvents: collection.allDayEvents,
+            timedEvents: collection.timedEvents,
+          ),
+        )
         .toList();
   }
 

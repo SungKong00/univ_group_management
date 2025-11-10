@@ -23,17 +23,15 @@ class MemberFilterPanel extends ConsumerWidget {
   final int groupId;
   final VoidCallback? onClose; // 모바일 바텀 시트에서 사용
 
-  const MemberFilterPanel({
-    super.key,
-    required this.groupId,
-    this.onClose,
-  });
+  const MemberFilterPanel({super.key, required this.groupId, this.onClose});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rolesAsync = ref.watch(roleListProvider(groupId));
     final filter = ref.watch(memberFilterStateProvider(groupId));
-    final filterNotifier = ref.watch(memberFilterStateProvider(groupId).notifier);
+    final filterNotifier = ref.watch(
+      memberFilterStateProvider(groupId).notifier,
+    );
     final subGroupsAsync = ref.watch(subGroupsProvider(groupId));
     final availableYears = ref.watch(availableYearsProvider);
 
@@ -48,9 +46,7 @@ class MemberFilterPanel extends ConsumerWidget {
           // 헤더: 제목
           Text(
             '필터',
-            style: AppTheme.headlineSmall.copyWith(
-              color: AppColors.neutral900,
-            ),
+            style: AppTheme.headlineSmall.copyWith(color: AppColors.neutral900),
           ),
           const SizedBox(height: AppSpacing.md),
 
@@ -73,7 +69,8 @@ class MemberFilterPanel extends ConsumerWidget {
           rolesAsync.when(
             data: (roles) {
               // 역할 필터 활성화 여부
-              final isEnabled = !draftFilter.isGroupFilterActive &&
+              final isEnabled =
+                  !draftFilter.isGroupFilterActive &&
                   !draftFilter.isGradeFilterActive &&
                   !draftFilter.isYearFilterActive;
 
@@ -113,12 +110,16 @@ class MemberFilterPanel extends ConsumerWidget {
                       label: '역할',
                       items: roles,
                       selectedItems: roles
-                          .where((r) => draftFilter.roleIds?.contains(r.id) ?? false)
+                          .where(
+                            (r) => draftFilter.roleIds?.contains(r.id) ?? false,
+                          )
                           .toList(),
                       itemLabel: (role) => role.name,
                       onChanged: (selectedRoles) {
                         // 선택된 역할 ID 리스트 생성
-                        final selectedIds = selectedRoles.map((r) => r.id).toList();
+                        final selectedIds = selectedRoles
+                            .map((r) => r.id)
+                            .toList();
                         // 역할 필터 업데이트 (다른 필터 초기화 포함)
                         filterNotifier.updateDraft((filter) {
                           return filter.copyWith(
@@ -205,12 +206,17 @@ class MemberFilterPanel extends ConsumerWidget {
                       label: '그룹',
                       items: subGroups,
                       selectedItems: subGroups
-                          .where((g) => draftFilter.groupIds?.contains(g.id) ?? false)
+                          .where(
+                            (g) =>
+                                draftFilter.groupIds?.contains(g.id) ?? false,
+                          )
                           .toList(),
                       itemLabel: (group) => group.name,
                       onChanged: (selectedGroups) {
                         // 선택된 그룹 ID 리스트 생성
-                        final selectedIds = selectedGroups.map((g) => g.id).toList();
+                        final selectedIds = selectedGroups
+                            .map((g) => g.id)
+                            .toList();
                         // 그룹 필터 업데이트 (역할 필터 초기화 포함)
                         filterNotifier.updateDraft((filter) {
                           return filter.copyWith(
@@ -309,7 +315,9 @@ class MemberFilterPanel extends ConsumerWidget {
                         filterNotifier.updateDraft((filter) {
                           return filter.copyWith(
                             roleIds: null,
-                            grades: selectedGrades.isEmpty ? null : selectedGrades,
+                            grades: selectedGrades.isEmpty
+                                ? null
+                                : selectedGrades,
                           );
                         });
                       },
@@ -397,9 +405,7 @@ class _AppliedFilters extends StatelessWidget {
       final roles = rolesAsync.asData?.value ?? [];
       for (final roleId in filter.roleIds!) {
         try {
-          final role = roles.firstWhere(
-            (r) => r.id == roleId,
-          );
+          final role = roles.firstWhere((r) => r.id == roleId);
           chips.add(
             AppInputChip(
               label: '역할: ${role.name}',
@@ -419,9 +425,7 @@ class _AppliedFilters extends StatelessWidget {
       final subGroups = subGroupsAsync.asData?.value ?? [];
       for (final groupId in filter.groupIds!) {
         try {
-          final group = subGroups.firstWhere(
-            (g) => g.id == groupId,
-          );
+          final group = subGroups.firstWhere((g) => g.id == groupId);
           chips.add(
             AppInputChip(
               label: '그룹: ${group.name}',
@@ -505,7 +509,6 @@ class _AppliedFilters extends StatelessWidget {
     );
   }
 }
-
 
 /// 하단 액션 영역 (Phase 1 + Phase 3)
 ///
@@ -626,9 +629,7 @@ class _ActionSection extends ConsumerWidget {
             Expanded(
               child: Text(
                 '결과 개수 확인 중...',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.neutral600,
-                ),
+                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
               ),
             ),
           ],
@@ -647,9 +648,7 @@ class _ActionSection extends ConsumerWidget {
             Expanded(
               child: Text(
                 '결과 개수를 불러올 수 없습니다',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.error,
-                ),
+                style: AppTheme.bodySmall.copyWith(color: AppColors.error),
               ),
             ),
           ],
@@ -672,9 +671,7 @@ class _ActionSection extends ConsumerWidget {
           const SizedBox(width: 4),
           Text(
             '변경 사항 있음',
-            style: AppTheme.bodySmall.copyWith(
-              color: AppColors.warning,
-            ),
+            style: AppTheme.bodySmall.copyWith(color: AppColors.warning),
           ),
         ],
       ),

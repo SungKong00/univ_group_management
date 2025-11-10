@@ -85,9 +85,7 @@ class _CompactBuildingPlaceSelectorState
         },
         hint: Text(
           buildings.isEmpty ? '없음' : '건물',
-          style: AppTheme.bodySmall.copyWith(
-            color: AppColors.neutral500,
-          ),
+          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
         ),
         isExpanded: true,
         icon: const Icon(Icons.arrow_drop_down, size: 18),
@@ -138,12 +136,8 @@ class _CompactBuildingPlaceSelectorState
               }
             : null,
         hint: Text(
-          !isEnabled
-              ? (_selectedBuilding == null ? '건물 먼저' : '없음')
-              : '장소',
-          style: AppTheme.bodySmall.copyWith(
-            color: AppColors.neutral500,
-          ),
+          !isEnabled ? (_selectedBuilding == null ? '건물 먼저' : '없음') : '장소',
+          style: AppTheme.bodySmall.copyWith(color: AppColors.neutral500),
         ),
         isExpanded: true,
         icon: const Icon(Icons.arrow_drop_down, size: 18),

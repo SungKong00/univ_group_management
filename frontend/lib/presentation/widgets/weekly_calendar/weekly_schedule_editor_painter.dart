@@ -37,7 +37,8 @@ class OverlapModalTimeGridPainter extends CustomPainter {
       if (isHourMark) {
         final hour = startHour + (slot ~/ 4);
         final minute = (slot % 4) * 15;
-        final timeText = '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+        final timeText =
+            '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
 
         textPainter.text = TextSpan(
           text: timeText,

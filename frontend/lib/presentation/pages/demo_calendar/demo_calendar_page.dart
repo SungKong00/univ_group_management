@@ -14,7 +14,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../widgets/weekly_calendar/duration_input_dialog.dart';
 import '../../widgets/weekly_calendar/group_picker_bottom_sheet.dart';
-import '../../widgets/weekly_calendar/group_selection_header.dart';
 import '../../widgets/weekly_calendar/place_selector_bottom_sheet.dart';
 import '../../widgets/weekly_calendar/weekly_navigation_header.dart';
 import '../../widgets/weekly_calendar/weekly_schedule_editor.dart';
@@ -180,7 +179,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     }
   }
 
-
   /// Get group color (cycling through palette)
   Color _getGroupColor(int groupId) {
     final colors = [
@@ -267,9 +265,10 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
         });
 
         if (mounted) {
-          AppSnackBar.info(context, 
-                '${selectedPlaces[0].building} ${selectedPlaces[0].roomNumber}가 선택되었습니다',
-              );
+          AppSnackBar.info(
+            context,
+            '${selectedPlaces[0].building} ${selectedPlaces[0].roomNumber}가 선택되었습니다',
+          );
 
           developer.log(
             '🔄 Calling _calculateDisabledSlots() for single place',
@@ -332,9 +331,9 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     final minutes = duration.inMinutes % 60;
 
     if (minutes == 0) {
-      return '${hours}시간';
+      return '$hours시간';
     } else {
-      return '${hours}시간 ${minutes}분';
+      return '$hours시간 $minutes분';
     }
   }
 
@@ -448,11 +447,12 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
         // Calculate per-place disabled slots for validation
         for (final place in _selectedPlaces) {
-          disabledSlotsByPlace[place.id] = _calculateDisabledSlotsForSinglePlace(
-            operatingHours: operatingHoursByPlace[place.id] ?? [],
-            reservations: reservationsByPlace[place.id] ?? [],
-            weekStart: _weekStart,
-          );
+          disabledSlotsByPlace[place.id] =
+              _calculateDisabledSlotsForSinglePlace(
+                operatingHours: operatingHoursByPlace[place.id] ?? [],
+                reservations: reservationsByPlace[place.id] ?? [],
+                weekStart: _weekStart,
+              );
         }
       }
 
@@ -748,18 +748,11 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     // Build selected groups list for header
     final selectedGroupsList = _availableGroups
         .where((g) => _selectedGroupIds.contains(g.id))
-        .map((g) => (
-              id: g.id,
-              name: g.name,
-              color: _getGroupColor(g.id),
-            ))
+        .map((g) => (id: g.id, name: g.name, color: _getGroupColor(g.id)))
         .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('데모 캘린더'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('데모 캘린더'), centerTitle: true),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -820,7 +813,9 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
                           final eventCount = _eventCountByGroup[group.id] ?? 0;
 
                           return Padding(
-                            padding: const EdgeInsets.only(right: AppSpacing.xs),
+                            padding: const EdgeInsets.only(
+                              right: AppSpacing.xs,
+                            ),
                             child: Chip(
                               avatar: CircleAvatar(
                                 backgroundColor: group.color,
@@ -834,27 +829,34 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
                                   ? const SizedBox(
                                       width: 16,
                                       height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     )
                                   : error != null
-                                      ? Tooltip(
-                                          message: '재시도: $error',
-                                          child: const Icon(Icons.error_outline, size: 16),
-                                        )
-                                      : Tooltip(
-                                          message: '제거',
-                                          child: const Icon(Icons.close, size: 16),
-                                        ),
+                                  ? Tooltip(
+                                      message: '재시도: $error',
+                                      child: const Icon(
+                                        Icons.error_outline,
+                                        size: 16,
+                                      ),
+                                    )
+                                  : Tooltip(
+                                      message: '제거',
+                                      child: const Icon(Icons.close, size: 16),
+                                    ),
                               onDeleted: error != null
                                   ? () => _loadEventsForGroup(group.id)
                                   : () => _toggleGroup(group.id, false),
                             ),
                           );
-                        }).toList(),
+                        }),
                         // Place chips
                         ..._selectedPlaces.map((place) {
                           return Padding(
-                            padding: const EdgeInsets.only(right: AppSpacing.xs),
+                            padding: const EdgeInsets.only(
+                              right: AppSpacing.xs,
+                            ),
                             child: Chip(
                               avatar: const Icon(Icons.place, size: 16),
                               label: Text(
@@ -863,21 +865,26 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
                               ),
                               onDeleted: () {
                                 setState(() {
-                                  _selectedPlaces.removeWhere((p) => p.id == place.id);
+                                  _selectedPlaces.removeWhere(
+                                    (p) => p.id == place.id,
+                                  );
                                   _requiredDuration = null;
                                   _calculateDisabledSlots();
                                 });
 
-                                AppSnackBar.info(context, 
-                                      '${place.building} ${place.roomNumber} 선택이 해제되었습니다',
-                                    );
+                                AppSnackBar.info(
+                                  context,
+                                  '${place.building} ${place.roomNumber} 선택이 해제되었습니다',
+                                );
                               },
                               deleteIconColor: AppColors.neutral600,
                               backgroundColor: AppColors.brandLight,
-                              labelStyle: TextStyle(color: AppColors.neutral900),
+                              labelStyle: TextStyle(
+                                color: AppColors.neutral900,
+                              ),
                             ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),
@@ -891,7 +898,10 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
                   style: OutlinedButton.styleFrom(
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
                   ),
                   onPressed: _showPlacePicker,
                 ),
@@ -904,7 +914,10 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
                   style: OutlinedButton.styleFrom(
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
                   ),
                   onPressed: _showGroupPicker,
                 ),
@@ -925,8 +938,12 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
               disabledSlots: _disabledSlots,
               availablePlaces: _selectedPlaces,
               disabledSlotsByPlace: _disabledSlotsByPlace,
-              preSelectedPlaceId: _selectedPlaces.length == 1 ? _selectedPlaces.first.id : null,
-              requiredDuration: _selectedPlaces.length >= 2 ? _requiredDuration : null, // Fixed Duration Mode
+              preSelectedPlaceId: _selectedPlaces.length == 1
+                  ? _selectedPlaces.first.id
+                  : null,
+              requiredDuration: _selectedPlaces.length >= 2
+                  ? _requiredDuration
+                  : null, // Fixed Duration Mode
             ),
           ),
         ],

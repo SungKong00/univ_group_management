@@ -65,9 +65,7 @@ class _PlaceSelectorButtonState extends ConsumerState<PlaceSelectorButton> {
             child: GestureDetector(
               onTap: _removePopover,
               behavior: HitTestBehavior.translucent,
-              child: Container(
-                color: Colors.transparent,
-              ),
+              child: Container(color: Colors.transparent),
             ),
           ),
 
@@ -79,9 +77,7 @@ class _PlaceSelectorButtonState extends ConsumerState<PlaceSelectorButton> {
               targetAnchor: targetAnchor,
               followerAnchor: followerAnchor,
               offset: Offset(0, size.height + 8), // 8px gap below button
-              child: PlaceSelectorPopover(
-                onClose: _removePopover,
-              ),
+              child: PlaceSelectorPopover(onClose: _removePopover),
             ),
           ),
         ],
@@ -144,13 +140,12 @@ class _PlaceSelectorButtonState extends ConsumerState<PlaceSelectorButton> {
             if (state.selectedPlaceIds.isNotEmpty) ...[
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.brand,
-                  borderRadius: BorderRadius.circular(AppComponents.badgeRadius),
+                  borderRadius: BorderRadius.circular(
+                    AppComponents.badgeRadius,
+                  ),
                 ),
                 child: Text(
                   '${state.selectedPlaceIds.length}',

@@ -74,7 +74,8 @@ class PlaceReservation implements CalendarEventBase {
 
   /// Format date range for display
   String get formattedDateRange {
-    final sameDay = startDateTime.year == endDateTime.year &&
+    final sameDay =
+        startDateTime.year == endDateTime.year &&
         startDateTime.month == endDateTime.month &&
         startDateTime.day == endDateTime.day;
 
@@ -181,25 +182,18 @@ class CreatePlaceReservationRequest {
   final int groupEventId;
 
   Map<String, dynamic> toJson() {
-    return {
-      'placeId': placeId,
-      'groupEventId': groupEventId,
-    };
+    return {'placeId': placeId, 'groupEventId': groupEventId};
   }
 }
 
 /// Request payload for updating a place reservation
 class UpdatePlaceReservationRequest {
-  const UpdatePlaceReservationRequest({
-    this.placeId,
-  });
+  const UpdatePlaceReservationRequest({this.placeId});
 
   final int? placeId;
 
   Map<String, dynamic> toJson() {
-    return {
-      if (placeId != null) 'placeId': placeId,
-    };
+    return {if (placeId != null) 'placeId': placeId};
   }
 }
 

@@ -7,7 +7,9 @@ import '../../../../core/providers/unified_group_provider.dart';
 /// 통합 데이터 소스에서 필터링된 그룹 목록을 제공합니다.
 /// 필터 변경 시 자동으로 업데이트됩니다.
 final listViewGroupsProvider = Provider<List<GroupSummaryResponse>>((ref) {
-  final groups = ref.watch(unifiedGroupProvider.select((s) => s.filteredGroups));
+  final groups = ref.watch(
+    unifiedGroupProvider.select((s) => s.filteredGroups),
+  );
   print('🔍 [DEBUG] listViewGroupsProvider: ${groups.length} groups');
   return groups;
 });

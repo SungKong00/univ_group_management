@@ -31,12 +31,17 @@ class HomeState extends Equatable {
     return HomeState(
       currentView: currentView ?? this.currentView,
       previousView: previousView,
-      groupExploreInitialTab: groupExploreInitialTab ?? this.groupExploreInitialTab,
+      groupExploreInitialTab:
+          groupExploreInitialTab ?? this.groupExploreInitialTab,
     );
   }
 
   @override
-  List<Object?> get props => [currentView, previousView, groupExploreInitialTab];
+  List<Object?> get props => [
+    currentView,
+    previousView,
+    groupExploreInitialTab,
+  ];
 }
 
 /// Home Snapshot - 홈 페이지 상태를 메모리에 캐싱하기 위한 스냅샷

@@ -60,9 +60,7 @@ abstract class GenericFilterNotifier<TFilter extends FilterModel>
   /// 드래프트 필터 (UI 표시용)
   TFilter _draftFilter;
 
-  GenericFilterNotifier(TFilter initialFilter)
-      : _draftFilter = initialFilter,
-        super(initialFilter);
+  GenericFilterNotifier(super.initialFilter) : _draftFilter = initialFilter;
 
   /// 드래프트가 적용된 상태와 다른지 확인
   ///
