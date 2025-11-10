@@ -42,9 +42,9 @@ class NeutralOutlinedButton extends StatelessWidget {
         child: ButtonLoadingChild(
           text: text,
           isLoading: isLoading,
-          textStyle: AppTheme.bodyLargeTheme(context).copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: AppTheme.bodyLargeTheme(
+            context,
+          ).copyWith(fontWeight: FontWeight.w600),
           indicatorColor: AppColors.neutral600,
         ),
       ),

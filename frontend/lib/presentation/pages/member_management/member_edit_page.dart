@@ -59,10 +59,14 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
   @override
   Widget build(BuildContext context) {
     final selectedState = ref.watch(memberSelectionProvider(widget.groupId));
-    final membersAsync = ref.watch(filteredGroupMembersProvider(widget.groupId));
+    final membersAsync = ref.watch(
+      filteredGroupMembersProvider(widget.groupId),
+    );
     // state를 직접 감시 (notifier 감시 시 무한 리빌드 발생)
     final currentFilter = ref.watch(memberFilterStateProvider(widget.groupId));
-    final filterNotifier = ref.read(memberFilterStateProvider(widget.groupId).notifier);
+    final filterNotifier = ref.read(
+      memberFilterStateProvider(widget.groupId).notifier,
+    );
     final rolesAsync = ref.watch(roleListProvider(widget.groupId));
     final subGroupsAsync = ref.watch(subGroupsProvider(widget.groupId));
     final availableYears = ref.watch(availableYearsProvider);
@@ -152,23 +156,32 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: AppColors.error,
+                      ),
                       const SizedBox(height: AppSpacing.md),
                       Text(
                         '데이터를 불러올 수 없습니다',
-                        style: AppTheme.titleMedium.copyWith(color: AppColors.error),
+                        style: AppTheme.titleMedium.copyWith(
+                          color: AppColors.error,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         error.toString(),
-                        style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppColors.neutral600,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       PrimaryButton(
                         text: '다시 시도',
-                        onPressed: () =>
-                            ref.invalidate(filteredGroupMembersProvider(widget.groupId)),
+                        onPressed: () => ref.invalidate(
+                          filteredGroupMembersProvider(widget.groupId),
+                        ),
                         icon: const Icon(Icons.refresh),
                         variant: PrimaryButtonVariant.action,
                       ),
@@ -205,7 +218,9 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
                 label: '역할',
                 items: roles,
                 selectedItems: roles
-                    .where((r) => currentFilter.roleIds?.contains(r.id) ?? false)
+                    .where(
+                      (r) => currentFilter.roleIds?.contains(r.id) ?? false,
+                    )
                     .toList(),
                 itemLabel: (role) => role.name,
                 onChanged: (selectedRoles) {
@@ -236,11 +251,16 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
                       label: '그룹',
                       items: subGroups,
                       selectedItems: subGroups
-                          .where((g) => currentFilter.groupIds?.contains(g.id) ?? false)
+                          .where(
+                            (g) =>
+                                currentFilter.groupIds?.contains(g.id) ?? false,
+                          )
                           .toList(),
                       itemLabel: (group) => group.name,
                       onChanged: (selectedGroups) {
-                        final selectedIds = selectedGroups.map((g) => g.id).toList();
+                        final selectedIds = selectedGroups
+                            .map((g) => g.id)
+                            .toList();
                         filterNotifier.setFilter(
                           currentFilter.copyWith(
                             roleIds: null,
@@ -322,9 +342,7 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
       padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppColors.neutral200),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.neutral200)),
       ),
       child: Row(
         children: [
@@ -332,9 +350,7 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
           const SizedBox(width: 8),
           Text(
             '선택됨: ${selectedState.selectedMemberIds.length}명',
-            style: AppTheme.titleMedium.copyWith(
-              color: AppColors.brand,
-            ),
+            style: AppTheme.titleMedium.copyWith(color: AppColors.brand),
           ),
           const Spacer(),
           OutlinedLinkButton(
@@ -358,7 +374,8 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
                     ref
                         .read(memberSelectionProvider(widget.groupId).notifier)
                         .deselectDisplayed(
-                            displayedMembers.map((m) => m.id).toList());
+                          displayedMembers.map((m) => m.id).toList(),
+                        );
                   },
             icon: const Icon(Icons.deselect, size: 16),
             variant: ButtonVariant.outlined,
@@ -384,17 +401,13 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
           },
           title: Text(
             member.userName,
-            style: AppTheme.bodyLarge.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w500),
           ),
           subtitle: Text(
             '${member.academicYear != null ? "${member.academicYear}학년" : "학년 정보 없음"} · '
             '${member.studentNo?.substring(0, 4) ?? "학번 정보 없음"}학번 · '
             '${member.roleName}',
-            style: AppTheme.bodySmall.copyWith(
-              color: AppColors.neutral600,
-            ),
+            style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
           ),
           activeColor: AppColors.brand,
           controlAffinity: ListTileControlAffinity.leading,
@@ -414,9 +427,6 @@ class _MemberEditPageState extends ConsumerState<MemberEditPage> {
       return;
     }
 
-    Navigator.pop(
-      context,
-      MemberSelectionResult.static(selectedIds),
-    );
+    Navigator.pop(context, MemberSelectionResult.static(selectedIds));
   }
 }

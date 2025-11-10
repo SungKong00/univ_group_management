@@ -125,10 +125,7 @@ class _WeeklyNavigationHeaderState extends State<WeeklyNavigationHeader> {
                 tooltip: '이전 주',
                 iconSize: 24,
               ),
-              Text(
-                dateRange,
-                style: AppTheme.bodyMedium,
-              ),
+              Text(dateRange, style: AppTheme.bodyMedium),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: _nextWeek,
@@ -155,13 +152,9 @@ class _WeeklyNavigationHeaderState extends State<WeeklyNavigationHeader> {
                     minimumSize: const Size(0, 32),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text(
-                    '오늘',
-                    style: TextStyle(fontSize: 13),
-                  ),
+                  child: const Text('오늘', style: TextStyle(fontSize: 13)),
                 ),
-              if (widget.showAddButton)
-                const SizedBox(width: AppSpacing.xs),
+              if (widget.showAddButton) const SizedBox(width: AppSpacing.xs),
               if (widget.showAddButton)
                 IconButton(
                   icon: const Icon(Icons.add),

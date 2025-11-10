@@ -89,10 +89,7 @@ mixin DialogAnimationMixin<T extends StatefulWidget>
       builder: (context, _) {
         return FadeTransition(
           opacity: fadeAnimation,
-          child: ScaleTransition(
-            scale: scaleAnimation,
-            child: child,
-          ),
+          child: ScaleTransition(scale: scaleAnimation, child: child),
         );
       },
     );

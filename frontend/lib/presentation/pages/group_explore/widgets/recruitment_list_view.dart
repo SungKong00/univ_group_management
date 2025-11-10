@@ -52,12 +52,7 @@ class _RecruitmentListViewState extends ConsumerState<RecruitmentListView> {
     final isLoading = ref.watch(exploreRecruitmentIsLoadingProvider);
     final hasMore = ref.watch(exploreRecruitmentHasMoreProvider);
 
-    return _buildRecruitmentList(
-      context,
-      recruitments,
-      isLoading,
-      hasMore,
-    );
+    return _buildRecruitmentList(context, recruitments, isLoading, hasMore);
   }
 
   Widget _buildRecruitmentList(
@@ -85,7 +80,9 @@ class _RecruitmentListViewState extends ConsumerState<RecruitmentListView> {
       builder: (context, constraints) {
         final double screenWidth = constraints.maxWidth;
         final int crossAxisCount = (screenWidth / 350).floor().clamp(1, 4);
-        final double cardWidth = (screenWidth - (crossAxisCount - 1) * AppSpacing.sm) / crossAxisCount;
+        final double cardWidth =
+            (screenWidth - (crossAxisCount - 1) * AppSpacing.sm) /
+            crossAxisCount;
 
         return Wrap(
           spacing: AppSpacing.sm,
@@ -93,10 +90,7 @@ class _RecruitmentListViewState extends ConsumerState<RecruitmentListView> {
           children: [
             ...recruitments.map((recruitment) {
               return ConstrainedBox(
-                constraints: BoxConstraints(
-                  minWidth: 300,
-                  maxWidth: cardWidth,
-                ),
+                constraints: BoxConstraints(minWidth: 300, maxWidth: cardWidth),
                 child: RecruitmentCard(recruitment: recruitment),
               );
             }),

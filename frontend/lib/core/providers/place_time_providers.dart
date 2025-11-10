@@ -12,21 +12,18 @@ final placeTimeRepositoryProvider = Provider<PlaceTimeRepository>((ref) {
 // ========================================
 
 /// 운영시간 조회 Provider
-final operatingHoursProvider = FutureProvider.autoDispose.family<
-    List<OperatingHoursResponse>, int>((ref, placeId) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  return await repository.getOperatingHours(placeId);
-});
+final operatingHoursProvider = FutureProvider.autoDispose
+    .family<List<OperatingHoursResponse>, int>((ref, placeId) async {
+      final repository = ref.read(placeTimeRepositoryProvider);
+      return await repository.getOperatingHours(placeId);
+    });
 
 /// 운영시간 설정 Provider (Mutation)
 class SetOperatingHoursParams {
   final int placeId;
   final SetOperatingHoursRequest request;
 
-  const SetOperatingHoursParams({
-    required this.placeId,
-    required this.request,
-  });
+  const SetOperatingHoursParams({required this.placeId, required this.request});
 
   @override
   bool operator ==(Object other) {
@@ -42,40 +39,39 @@ class SetOperatingHoursParams {
 }
 
 final setOperatingHoursProvider = FutureProvider.autoDispose
-    .family<List<OperatingHoursResponse>, SetOperatingHoursParams>(
-        (ref, params) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  final result = await repository.setOperatingHours(
-    params.placeId,
-    params.request,
-  );
+    .family<List<OperatingHoursResponse>, SetOperatingHoursParams>((
+      ref,
+      params,
+    ) async {
+      final repository = ref.read(placeTimeRepositoryProvider);
+      final result = await repository.setOperatingHours(
+        params.placeId,
+        params.request,
+      );
 
-  // 성공 후 목록 새로고침
-  ref.invalidate(operatingHoursProvider(params.placeId));
+      // 성공 후 목록 새로고침
+      ref.invalidate(operatingHoursProvider(params.placeId));
 
-  return result;
-});
+      return result;
+    });
 
 // ========================================
 // 금지시간 Providers
 // ========================================
 
 /// 금지시간 조회 Provider
-final restrictedTimesProvider = FutureProvider.autoDispose.family<
-    List<RestrictedTimeResponse>, int>((ref, placeId) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  return await repository.getRestrictedTimes(placeId);
-});
+final restrictedTimesProvider = FutureProvider.autoDispose
+    .family<List<RestrictedTimeResponse>, int>((ref, placeId) async {
+      final repository = ref.read(placeTimeRepositoryProvider);
+      return await repository.getRestrictedTimes(placeId);
+    });
 
 /// 금지시간 추가 Provider (Mutation)
 class AddRestrictedTimeParams {
   final int placeId;
   final AddRestrictedTimeRequest request;
 
-  const AddRestrictedTimeParams({
-    required this.placeId,
-    required this.request,
-  });
+  const AddRestrictedTimeParams({required this.placeId, required this.request});
 
   @override
   bool operator ==(Object other) {
@@ -91,18 +87,21 @@ class AddRestrictedTimeParams {
 }
 
 final addRestrictedTimeProvider = FutureProvider.autoDispose
-    .family<RestrictedTimeResponse, AddRestrictedTimeParams>((ref, params) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  final result = await repository.addRestrictedTime(
-    params.placeId,
-    params.request,
-  );
+    .family<RestrictedTimeResponse, AddRestrictedTimeParams>((
+      ref,
+      params,
+    ) async {
+      final repository = ref.read(placeTimeRepositoryProvider);
+      final result = await repository.addRestrictedTime(
+        params.placeId,
+        params.request,
+      );
 
-  // 성공 후 목록 새로고침
-  ref.invalidate(restrictedTimesProvider(params.placeId));
+      // 성공 후 목록 새로고침
+      ref.invalidate(restrictedTimesProvider(params.placeId));
 
-  return result;
-});
+      return result;
+    });
 
 /// 금지시간 수정 Provider (Mutation)
 class UpdateRestrictedTimeParams {
@@ -132,19 +131,22 @@ class UpdateRestrictedTimeParams {
 }
 
 final updateRestrictedTimeProvider = FutureProvider.autoDispose
-    .family<RestrictedTimeResponse, UpdateRestrictedTimeParams>((ref, params) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  final result = await repository.updateRestrictedTime(
-    params.placeId,
-    params.restrictedTimeId,
-    params.request,
-  );
+    .family<RestrictedTimeResponse, UpdateRestrictedTimeParams>((
+      ref,
+      params,
+    ) async {
+      final repository = ref.read(placeTimeRepositoryProvider);
+      final result = await repository.updateRestrictedTime(
+        params.placeId,
+        params.restrictedTimeId,
+        params.request,
+      );
 
-  // 성공 후 목록 새로고침
-  ref.invalidate(restrictedTimesProvider(params.placeId));
+      // 성공 후 목록 새로고침
+      ref.invalidate(restrictedTimesProvider(params.placeId));
 
-  return result;
-});
+      return result;
+    });
 
 /// 금지시간 삭제 Provider (Mutation)
 class DeleteRestrictedTimeParams {
@@ -169,18 +171,17 @@ class DeleteRestrictedTimeParams {
   int get hashCode => placeId.hashCode ^ restrictedTimeId.hashCode;
 }
 
-final deleteRestrictedTimeProvider =
-    FutureProvider.autoDispose.family<void, DeleteRestrictedTimeParams>(
-        (ref, params) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  await repository.deleteRestrictedTime(
-    params.placeId,
-    params.restrictedTimeId,
-  );
+final deleteRestrictedTimeProvider = FutureProvider.autoDispose
+    .family<void, DeleteRestrictedTimeParams>((ref, params) async {
+      final repository = ref.read(placeTimeRepositoryProvider);
+      await repository.deleteRestrictedTime(
+        params.placeId,
+        params.restrictedTimeId,
+      );
 
-  // 성공 후 목록 새로고침
-  ref.invalidate(restrictedTimesProvider(params.placeId));
-});
+      // 성공 후 목록 새로고침
+      ref.invalidate(restrictedTimesProvider(params.placeId));
+    });
 
 // ========================================
 // 임시 휴무 Providers
@@ -214,23 +215,20 @@ class GetClosuresParams {
 
 final closuresProvider = FutureProvider.autoDispose
     .family<List<PlaceClosureResponse>, GetClosuresParams>((ref, params) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  return await repository.getClosures(
-    params.placeId,
-    params.from,
-    params.to,
-  );
-});
+      final repository = ref.read(placeTimeRepositoryProvider);
+      return await repository.getClosures(
+        params.placeId,
+        params.from,
+        params.to,
+      );
+    });
 
 /// 전일 휴무 추가 Provider (Mutation)
 class AddFullDayClosureParams {
   final int placeId;
   final AddFullDayClosureRequest request;
 
-  const AddFullDayClosureParams({
-    required this.placeId,
-    required this.request,
-  });
+  const AddFullDayClosureParams({required this.placeId, required this.request});
 
   @override
   bool operator ==(Object other) {
@@ -247,23 +245,17 @@ class AddFullDayClosureParams {
 
 final addFullDayClosureProvider = FutureProvider.autoDispose
     .family<PlaceClosureResponse, AddFullDayClosureParams>((ref, params) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  return await repository.addFullDayClosure(
-    params.placeId,
-    params.request,
-  );
-  // Note: 목록 새로고침은 호출하는 쪽에서 날짜 범위에 따라 처리
-});
+      final repository = ref.read(placeTimeRepositoryProvider);
+      return await repository.addFullDayClosure(params.placeId, params.request);
+      // Note: 목록 새로고침은 호출하는 쪽에서 날짜 범위에 따라 처리
+    });
 
 /// 부분 시간 휴무 추가 Provider (Mutation)
 class AddPartialClosureParams {
   final int placeId;
   final AddPartialClosureRequest request;
 
-  const AddPartialClosureParams({
-    required this.placeId,
-    required this.request,
-  });
+  const AddPartialClosureParams({required this.placeId, required this.request});
 
   @override
   bool operator ==(Object other) {
@@ -280,23 +272,17 @@ class AddPartialClosureParams {
 
 final addPartialClosureProvider = FutureProvider.autoDispose
     .family<PlaceClosureResponse, AddPartialClosureParams>((ref, params) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  return await repository.addPartialClosure(
-    params.placeId,
-    params.request,
-  );
-  // Note: 목록 새로고침은 호출하는 쪽에서 날짜 범위에 따라 처리
-});
+      final repository = ref.read(placeTimeRepositoryProvider);
+      return await repository.addPartialClosure(params.placeId, params.request);
+      // Note: 목록 새로고침은 호출하는 쪽에서 날짜 범위에 따라 처리
+    });
 
 /// 임시 휴무 삭제 Provider (Mutation)
 class DeleteClosureParams {
   final int placeId;
   final int closureId;
 
-  const DeleteClosureParams({
-    required this.placeId,
-    required this.closureId,
-  });
+  const DeleteClosureParams({required this.placeId, required this.closureId});
 
   @override
   bool operator ==(Object other) {
@@ -311,16 +297,12 @@ class DeleteClosureParams {
   int get hashCode => placeId.hashCode ^ closureId.hashCode;
 }
 
-final deleteClosureProvider =
-    FutureProvider.autoDispose.family<void, DeleteClosureParams>(
-        (ref, params) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  await repository.deleteClosure(
-    params.placeId,
-    params.closureId,
-  );
-  // Note: 목록 새로고침은 호출하는 쪽에서 날짜 범위에 따라 처리
-});
+final deleteClosureProvider = FutureProvider.autoDispose
+    .family<void, DeleteClosureParams>((ref, params) async {
+      final repository = ref.read(placeTimeRepositoryProvider);
+      await repository.deleteClosure(params.placeId, params.closureId);
+      // Note: 목록 새로고침은 호출하는 쪽에서 날짜 범위에 따라 처리
+    });
 
 // ========================================
 // 예약 가능 시간 Provider
@@ -330,10 +312,7 @@ class GetAvailableTimesParams {
   final int placeId;
   final String date; // YYYY-MM-DD
 
-  const GetAvailableTimesParams({
-    required this.placeId,
-    required this.date,
-  });
+  const GetAvailableTimesParams({required this.placeId, required this.date});
 
   @override
   bool operator ==(Object other) {
@@ -349,10 +328,10 @@ class GetAvailableTimesParams {
 }
 
 final availableTimesProvider = FutureProvider.autoDispose
-    .family<AvailableTimesResponse, GetAvailableTimesParams>((ref, params) async {
-  final repository = ref.read(placeTimeRepositoryProvider);
-  return await repository.getAvailableTimes(
-    params.placeId,
-    params.date,
-  );
-});
+    .family<AvailableTimesResponse, GetAvailableTimesParams>((
+      ref,
+      params,
+    ) async {
+      final repository = ref.read(placeTimeRepositoryProvider);
+      return await repository.getAvailableTimes(params.placeId, params.date);
+    });

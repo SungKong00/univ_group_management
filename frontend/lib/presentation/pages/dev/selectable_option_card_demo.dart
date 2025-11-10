@@ -43,9 +43,7 @@ class _SelectableOptionCardDemoState extends State<SelectableOptionCardDemo> {
             const SizedBox(height: AppSpacing.xxs),
             Text(
               '다단계 선택 UI의 기본 빌딩 블록',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
             ),
             const SizedBox(height: AppSpacing.lg),
 
@@ -151,9 +149,7 @@ class _SelectableOptionCardDemoState extends State<SelectableOptionCardDemo> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: AppTheme.titleLarge.copyWith(
-        color: AppColors.neutral900,
-      ),
+      style: AppTheme.titleLarge.copyWith(color: AppColors.neutral900),
     );
   }
 }

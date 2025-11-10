@@ -51,14 +51,8 @@ class _RecurrenceSelectorState extends State<RecurrenceSelector> {
           const SizedBox(height: 16),
           SegmentedButton<RecurrenceType>(
             segments: const [
-              ButtonSegment(
-                value: RecurrenceType.daily,
-                label: Text('매일'),
-              ),
-              ButtonSegment(
-                value: RecurrenceType.weekly,
-                label: Text('요일 선택'),
-              ),
+              ButtonSegment(value: RecurrenceType.daily, label: Text('매일')),
+              ButtonSegment(value: RecurrenceType.weekly, label: Text('요일 선택')),
             ],
             selected: {_type},
             onSelectionChanged: (Set<RecurrenceType> newSelection) {

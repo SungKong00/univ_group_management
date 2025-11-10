@@ -39,8 +39,9 @@ class RecruitmentApplicationSection extends ConsumerWidget {
         }
 
         // 2. 지원자 목록 조회 (활성 모집이 있을 때만)
-        final applicationsAsync =
-            ref.watch(recruitmentApplicationsProvider(recruitment.id));
+        final applicationsAsync = ref.watch(
+          recruitmentApplicationsProvider(recruitment.id),
+        );
 
         return applicationsAsync.when(
           data: (applications) {
@@ -70,8 +71,7 @@ class RecruitmentApplicationSection extends ConsumerWidget {
               children: [
                 Icon(Icons.error_outline, size: 48, color: AppColors.error),
                 const SizedBox(height: 16),
-                Text('지원자 목록을 불러올 수 없습니다',
-                    style: AppTheme.bodyLarge),
+                Text('지원자 목록을 불러올 수 없습니다', style: AppTheme.bodyLarge),
               ],
             ),
           ),
@@ -96,9 +96,7 @@ class RecruitmentApplicationSection extends ConsumerWidget {
   }
 
   Widget _buildEmptyState() {
-    return AppEmptyState.noData(
-      message: '대기 중인 지원자가 없습니다',
-    );
+    return AppEmptyState.noData(message: '대기 중인 지원자가 없습니다');
   }
 }
 
@@ -131,7 +129,8 @@ class _ApplicationCard extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           // 지원 동기
-          if (application.motivation != null && application.motivation!.isNotEmpty)
+          if (application.motivation != null &&
+              application.motivation!.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -152,8 +151,7 @@ class _ApplicationCard extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Text(
                     application.motivation!,
-                    style:
-                        TextStyle(fontSize: 13, color: AppColors.neutral900),
+                    style: TextStyle(fontSize: 13, color: AppColors.neutral900),
                   ),
                 ],
               ),
@@ -268,9 +266,7 @@ class _ApplicationCard extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               '승인 시 "멤버" 역할로 자동 추가됩니다.',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             ),
           ],
         ),
@@ -292,10 +288,7 @@ class _ApplicationCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleApprove(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _handleApprove(BuildContext context, WidgetRef ref) async {
     try {
       await ref.read(
         reviewApplicationProvider(
@@ -307,7 +300,10 @@ class _ApplicationCard extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        AppSnackBar.success(context, '${application.applicant.name}님의 지원을 승인했습니다');
+        AppSnackBar.success(
+          context,
+          '${application.applicant.name}님의 지원을 승인했습니다',
+        );
 
         // 지원자 목록 새로고침
         ref.invalidate(recruitmentApplicationsProvider(recruitmentId));
@@ -350,7 +346,10 @@ class _ApplicationCard extends ConsumerWidget {
         );
 
         if (context.mounted) {
-          AppSnackBar.info(context, '${application.applicant.name}님의 지원을 거절했습니다');
+          AppSnackBar.info(
+            context,
+            '${application.applicant.name}님의 지원을 거절했습니다',
+          );
 
           // 지원자 목록 새로고침
           ref.invalidate(recruitmentApplicationsProvider(recruitmentId));

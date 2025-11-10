@@ -37,6 +37,15 @@ mixin _$NavigationState {
   /// T108: Offline detection flag
   bool get isOffline => throw _privateConstructorUsedError;
 
+  /// T111: Scroll positions for each route (key: route hash, value: scroll offset)
+  /// Stores up to 5 most recent positions
+  Map<int, double> get scrollPositions => throw _privateConstructorUsedError;
+
+  /// T112: Form data for each route (key: route hash, value: form data)
+  /// Stores up to 5 most recent form states
+  Map<int, Map<String, dynamic>> get formData =>
+      throw _privateConstructorUsedError;
+
   /// Serializes this NavigationState to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -62,6 +71,8 @@ abstract class $NavigationStateCopyWith<$Res> {
     String? loadingMessage,
     String? lastError,
     bool isOffline,
+    Map<int, double> scrollPositions,
+    Map<int, Map<String, dynamic>> formData,
   });
 }
 
@@ -86,6 +97,8 @@ class _$NavigationStateCopyWithImpl<$Res, $Val extends NavigationState>
     Object? loadingMessage = freezed,
     Object? lastError = freezed,
     Object? isOffline = null,
+    Object? scrollPositions = null,
+    Object? formData = null,
   }) {
     return _then(
       _value.copyWith(
@@ -113,6 +126,14 @@ class _$NavigationStateCopyWithImpl<$Res, $Val extends NavigationState>
                 ? _value.isOffline
                 : isOffline // ignore: cast_nullable_to_non_nullable
                       as bool,
+            scrollPositions: null == scrollPositions
+                ? _value.scrollPositions
+                : scrollPositions // ignore: cast_nullable_to_non_nullable
+                      as Map<int, double>,
+            formData: null == formData
+                ? _value.formData
+                : formData // ignore: cast_nullable_to_non_nullable
+                      as Map<int, Map<String, dynamic>>,
           )
           as $Val,
     );
@@ -136,6 +157,8 @@ abstract class _$$NavigationStateImplCopyWith<$Res>
     String? loadingMessage,
     String? lastError,
     bool isOffline,
+    Map<int, double> scrollPositions,
+    Map<int, Map<String, dynamic>> formData,
   });
 }
 
@@ -159,6 +182,8 @@ class __$$NavigationStateImplCopyWithImpl<$Res>
     Object? loadingMessage = freezed,
     Object? lastError = freezed,
     Object? isOffline = null,
+    Object? scrollPositions = null,
+    Object? formData = null,
   }) {
     return _then(
       _$NavigationStateImpl(
@@ -186,6 +211,14 @@ class __$$NavigationStateImplCopyWithImpl<$Res>
             ? _value.isOffline
             : isOffline // ignore: cast_nullable_to_non_nullable
                   as bool,
+        scrollPositions: null == scrollPositions
+            ? _value._scrollPositions
+            : scrollPositions // ignore: cast_nullable_to_non_nullable
+                  as Map<int, double>,
+        formData: null == formData
+            ? _value._formData
+            : formData // ignore: cast_nullable_to_non_nullable
+                  as Map<int, Map<String, dynamic>>,
       ),
     );
   }
@@ -202,7 +235,11 @@ class _$NavigationStateImpl extends _NavigationState {
     this.loadingMessage,
     this.lastError,
     this.isOffline = false,
+    final Map<int, double> scrollPositions = const {},
+    final Map<int, Map<String, dynamic>> formData = const {},
   }) : _stack = stack,
+       _scrollPositions = scrollPositions,
+       _formData = formData,
        super._();
 
   factory _$NavigationStateImpl.fromJson(Map<String, dynamic> json) =>
@@ -239,9 +276,37 @@ class _$NavigationStateImpl extends _NavigationState {
   @JsonKey()
   final bool isOffline;
 
+  /// T111: Scroll positions for each route (key: route hash, value: scroll offset)
+  /// Stores up to 5 most recent positions
+  final Map<int, double> _scrollPositions;
+
+  /// T111: Scroll positions for each route (key: route hash, value: scroll offset)
+  /// Stores up to 5 most recent positions
+  @override
+  @JsonKey()
+  Map<int, double> get scrollPositions {
+    if (_scrollPositions is EqualUnmodifiableMapView) return _scrollPositions;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_scrollPositions);
+  }
+
+  /// T112: Form data for each route (key: route hash, value: form data)
+  /// Stores up to 5 most recent form states
+  final Map<int, Map<String, dynamic>> _formData;
+
+  /// T112: Form data for each route (key: route hash, value: form data)
+  /// Stores up to 5 most recent form states
+  @override
+  @JsonKey()
+  Map<int, Map<String, dynamic>> get formData {
+    if (_formData is EqualUnmodifiableMapView) return _formData;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_formData);
+  }
+
   @override
   String toString() {
-    return 'NavigationState(stack: $stack, currentIndex: $currentIndex, isLoading: $isLoading, loadingMessage: $loadingMessage, lastError: $lastError, isOffline: $isOffline)';
+    return 'NavigationState(stack: $stack, currentIndex: $currentIndex, isLoading: $isLoading, loadingMessage: $loadingMessage, lastError: $lastError, isOffline: $isOffline, scrollPositions: $scrollPositions, formData: $formData)';
   }
 
   @override
@@ -259,7 +324,12 @@ class _$NavigationStateImpl extends _NavigationState {
             (identical(other.lastError, lastError) ||
                 other.lastError == lastError) &&
             (identical(other.isOffline, isOffline) ||
-                other.isOffline == isOffline));
+                other.isOffline == isOffline) &&
+            const DeepCollectionEquality().equals(
+              other._scrollPositions,
+              _scrollPositions,
+            ) &&
+            const DeepCollectionEquality().equals(other._formData, _formData));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -272,6 +342,8 @@ class _$NavigationStateImpl extends _NavigationState {
     loadingMessage,
     lastError,
     isOffline,
+    const DeepCollectionEquality().hash(_scrollPositions),
+    const DeepCollectionEquality().hash(_formData),
   );
 
   /// Create a copy of NavigationState
@@ -300,6 +372,8 @@ abstract class _NavigationState extends NavigationState {
     final String? loadingMessage,
     final String? lastError,
     final bool isOffline,
+    final Map<int, double> scrollPositions,
+    final Map<int, Map<String, dynamic>> formData,
   }) = _$NavigationStateImpl;
   const _NavigationState._() : super._();
 
@@ -327,6 +401,16 @@ abstract class _NavigationState extends NavigationState {
   /// T108: Offline detection flag
   @override
   bool get isOffline;
+
+  /// T111: Scroll positions for each route (key: route hash, value: scroll offset)
+  /// Stores up to 5 most recent positions
+  @override
+  Map<int, double> get scrollPositions;
+
+  /// T112: Form data for each route (key: route hash, value: form data)
+  /// Stores up to 5 most recent form states
+  @override
+  Map<int, Map<String, dynamic>> get formData;
 
   /// Create a copy of NavigationState
   /// with the given fields replaced by the non-null parameter values.

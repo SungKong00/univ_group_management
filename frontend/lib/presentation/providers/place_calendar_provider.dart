@@ -15,7 +15,7 @@ class PlaceCalendarState {
     this.selectedPlaceIds = const {},
     this.reservations = const [],
     this.availabilitiesMap = const {},
-      this.requiredDuration,
+    this.requiredDuration,
     this.isLoading = false,
     this.error,
   });
@@ -100,8 +100,9 @@ class PlaceCalendarState {
       selectedPlaceIds: selectedPlaceIds ?? this.selectedPlaceIds,
       reservations: reservations ?? this.reservations,
       availabilitiesMap: availabilitiesMap ?? this.availabilitiesMap,
-      requiredDuration:
-          clearDuration ? null : (requiredDuration ?? this.requiredDuration),
+      requiredDuration: clearDuration
+          ? null
+          : (requiredDuration ?? this.requiredDuration),
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
     );
@@ -145,13 +146,15 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
             // Convert OperatingHoursResponse → PlaceAvailability
             final availabilities = placeDetail.operatingHours
                 .where((oh) => !oh.isClosed) // Skip closed days
-                .map((oh) => PlaceAvailability(
-                      id: oh.id,
-                      dayOfWeek: oh.dayOfWeek,
-                      startTime: oh.startTime,
-                      endTime: oh.endTime,
-                      displayOrder: 0, // Single slot per day
-                    ))
+                .map(
+                  (oh) => PlaceAvailability(
+                    id: oh.id,
+                    dayOfWeek: oh.dayOfWeek,
+                    startTime: oh.startTime,
+                    endTime: oh.endTime,
+                    displayOrder: 0, // Single slot per day
+                  ),
+                )
                 .toList();
 
             availabilitiesMap[placeId] = availabilities;
@@ -249,10 +252,7 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
         name: 'PlaceCalendarProvider',
       );
 
-      state = state.copyWith(
-        reservations: reservations,
-        isLoading: false,
-      );
+      state = state.copyWith(reservations: reservations, isLoading: false);
     } catch (e) {
       developer.log(
         'Error loading reservations: $e',
@@ -298,10 +298,7 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
     final newSelection = Set<int>.from(state.selectedPlaceIds)..add(placeId);
     state = state.copyWith(selectedPlaceIds: newSelection);
 
-    developer.log(
-      'Selected place $placeId',
-      name: 'PlaceCalendarProvider',
-    );
+    developer.log('Selected place $placeId', name: 'PlaceCalendarProvider');
   }
 
   /// Deselect a place
@@ -312,15 +309,13 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
       clearDuration: newSelection.length <= 1,
     );
 
-    developer.log(
-      'Deselected place $placeId',
-      name: 'PlaceCalendarProvider',
-    );
+    developer.log('Deselected place $placeId', name: 'PlaceCalendarProvider');
   }
 
   /// Select multiple places
   void selectPlaces(List<int> placeIds) {
-    final newSelection = Set<int>.from(state.selectedPlaceIds)..addAll(placeIds);
+    final newSelection = Set<int>.from(state.selectedPlaceIds)
+      ..addAll(placeIds);
     state = state.copyWith(selectedPlaceIds: newSelection);
 
     developer.log(
@@ -331,10 +326,7 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
 
   /// Clear all place selections
   void clearSelection() {
-    state = state.copyWith(
-      selectedPlaceIds: {},
-      clearDuration: true,
-    );
+    state = state.copyWith(selectedPlaceIds: {}, clearDuration: true);
 
     developer.log(
       'Cleared all place selections',
@@ -357,10 +349,7 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
     if (state.requiredDuration == null) return;
     state = state.copyWith(clearDuration: true);
 
-    developer.log(
-      'Cleared required duration',
-      name: 'PlaceCalendarProvider',
-    );
+    developer.log('Cleared required duration', name: 'PlaceCalendarProvider');
   }
 
   /// Create a new place reservation
@@ -403,10 +392,7 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
         name: 'PlaceCalendarProvider',
         level: 900,
       );
-      state = state.copyWith(
-        isLoading: false,
-        error: '예약 추가에 실패했습니다: $e',
-      );
+      state = state.copyWith(isLoading: false, error: '예약 추가에 실패했습니다: $e');
       rethrow;
     }
   }
@@ -458,10 +444,7 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
         name: 'PlaceCalendarProvider',
         level: 900,
       );
-      state = state.copyWith(
-        isLoading: false,
-        error: '예약 수정에 실패했습니다: $e',
-      );
+      state = state.copyWith(isLoading: false, error: '예약 수정에 실패했습니다: $e');
       rethrow;
     }
   }
@@ -496,10 +479,7 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
         name: 'PlaceCalendarProvider',
         level: 900,
       );
-      state = state.copyWith(
-        isLoading: false,
-        error: '예약 취소에 실패했습니다: $e',
-      );
+      state = state.copyWith(isLoading: false, error: '예약 취소에 실패했습니다: $e');
       rethrow;
     }
   }
@@ -513,5 +493,5 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
 /// Provider instance
 final placeCalendarProvider =
     StateNotifierProvider<PlaceCalendarNotifier, PlaceCalendarState>((ref) {
-  return PlaceCalendarNotifier();
-});
+      return PlaceCalendarNotifier();
+    });

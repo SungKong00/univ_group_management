@@ -56,18 +56,27 @@ class MultiPlaceCalendarView extends ConsumerWidget {
       onDateSelected: onDateSelected,
       onPageChanged: onPageChanged,
       onEventTap: onReservationTap,
-      eventChipBuilder: (reservation) => _buildReservationChip(context, reservation),
-      eventCardBuilder: (reservation) => _buildReservationCard(context, reservation),
+      eventChipBuilder: (reservation) =>
+          _buildReservationChip(context, reservation),
+      eventCardBuilder: (reservation) =>
+          _buildReservationCard(context, reservation),
     );
   }
 
   /// Build week view using WeeklyScheduleEditor
-  Widget _buildWeekView(BuildContext context, WidgetRef ref, PlaceCalendarState state) {
+  Widget _buildWeekView(
+    BuildContext context,
+    WidgetRef ref,
+    PlaceCalendarState state,
+  ) {
     final weekStart = _getWeekStart(focusedDate);
 
     // 1. Convert PlaceReservation → Event
     final events = state.selectedPlaceReservations
-        .map((reservation) => PlaceReservationAdapter.toEvent(reservation, weekStart))
+        .map(
+          (reservation) =>
+              PlaceReservationAdapter.toEvent(reservation, weekStart),
+        )
         .whereType<Event>()
         .toList();
 
@@ -75,28 +84,33 @@ class MultiPlaceCalendarView extends ConsumerWidget {
     final availabilitiesMap = state.selectedPlaceAvailabilities;
     final reservationsMap = <int, List<PlaceReservation>>{};
     for (final reservation in state.selectedPlaceReservations) {
-      reservationsMap.putIfAbsent(reservation.placeId, () => []).add(reservation);
+      reservationsMap
+          .putIfAbsent(reservation.placeId, () => [])
+          .add(reservation);
     }
 
     // 3. Calculate per-place disabled slots (operating hours + reservations)
     final disabledSlotsByPlace = <int, Set<DateTime>>{};
-    final hasFullAvailabilityData = state.selectedPlaceIds
-        .every((id) => availabilitiesMap.containsKey(id));
+    final hasFullAvailabilityData = state.selectedPlaceIds.every(
+      (id) => availabilitiesMap.containsKey(id),
+    );
 
     for (final place in state.selectedPlaces) {
       final availabilities = availabilitiesMap[place.id] ?? [];
       final reservations = reservationsMap[place.id] ?? [];
-      disabledSlotsByPlace[place.id] = PlaceAvailabilityHelper.calculateDisabledSlotsForPlace(
-        availabilities: availabilities,
-        reservations: reservations,
-        weekStart: weekStart,
-      );
+      disabledSlotsByPlace[place.id] =
+          PlaceAvailabilityHelper.calculateDisabledSlotsForPlace(
+            availabilities: availabilities,
+            reservations: reservations,
+            weekStart: weekStart,
+          );
     }
 
     // 4. Calculate merged disabled slots for grid rendering
     Set<DateTime> disabledSlots = {};
-    final requiredDuration =
-        state.selectedPlaces.length > 1 ? state.requiredDuration : null;
+    final requiredDuration = state.selectedPlaces.length > 1
+        ? state.requiredDuration
+        : null;
 
     if (state.selectedPlaces.isEmpty) {
       disabledSlots = {};
@@ -105,12 +119,13 @@ class MultiPlaceCalendarView extends ConsumerWidget {
       disabledSlots = disabledSlotsByPlace[singleId] ?? {};
     } else if (requiredDuration != null) {
       if (hasFullAvailabilityData) {
-        disabledSlots = PlaceAvailabilityHelper.calculateDisabledSlotsWithDuration(
-          availabilitiesMap: availabilitiesMap,
-          reservationsMap: reservationsMap,
-          requiredDuration: requiredDuration,
-          weekStart: weekStart,
-        );
+        disabledSlots =
+            PlaceAvailabilityHelper.calculateDisabledSlotsWithDuration(
+              availabilitiesMap: availabilitiesMap,
+              reservationsMap: reservationsMap,
+              requiredDuration: requiredDuration,
+              weekStart: weekStart,
+            );
       } else {
         disabledSlots = {};
       }
@@ -131,8 +146,10 @@ class MultiPlaceCalendarView extends ConsumerWidget {
       requiredDuration: requiredDuration,
       availablePlaces: state.selectedPlaces,
       disabledSlotsByPlace: disabledSlotsByPlace,
-      onEventCreate: (event) => _handleReservationCreate(context, ref, event, weekStart),
-      onEventUpdate: (event) => _handleReservationUpdate(context, ref, event, weekStart),
+      onEventCreate: (event) =>
+          _handleReservationCreate(context, ref, event, weekStart),
+      onEventUpdate: (event) =>
+          _handleReservationUpdate(context, ref, event, weekStart),
       onEventDelete: (event) => _handleReservationDelete(context, ref, event),
     );
   }
@@ -153,9 +170,9 @@ class MultiPlaceCalendarView extends ConsumerWidget {
     final state = ref.read(placeCalendarProvider);
 
     if (event.startTime == null || event.endTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('선택한 시간 정보를 불러오지 못했습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('선택한 시간 정보를 불러오지 못했습니다')));
       return false;
     }
 
@@ -163,24 +180,26 @@ class MultiPlaceCalendarView extends ConsumerWidget {
     final endTime = event.endTime!;
 
     if (!startTime.isBefore(endTime)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('종료 시간은 시작 시간보다 늦어야 합니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('종료 시간은 시작 시간보다 늦어야 합니다')));
       return false;
     }
 
     final selectedPlaces = state.selectedPlaces;
     if (selectedPlaces.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('예약할 장소를 먼저 선택해주세요')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('예약할 장소를 먼저 선택해주세요')));
       return false;
     }
 
     final availabilitiesMap = state.selectedPlaceAvailabilities;
     final reservationsMap = <int, List<PlaceReservation>>{};
     for (final reservation in state.selectedPlaceReservations) {
-      reservationsMap.putIfAbsent(reservation.placeId, () => []).add(reservation);
+      reservationsMap
+          .putIfAbsent(reservation.placeId, () => [])
+          .add(reservation);
     }
 
     final availablePlaces = <Place>[];
@@ -204,16 +223,16 @@ class MultiPlaceCalendarView extends ConsumerWidget {
     }
 
     if (selectedPlaces.length == 1 && availablePlaces.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('선택한 장소가 해당 시간에 예약 불가합니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('선택한 장소가 해당 시간에 예약 불가합니다')));
       return false;
     }
 
     if (selectedPlaces.length > 1 && availablePlaces.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('선택한 장소 중 예약 가능한 장소가 없습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('선택한 장소 중 예약 가능한 장소가 없습니다')));
       return false;
     }
 
@@ -280,11 +299,13 @@ class MultiPlaceCalendarView extends ConsumerWidget {
     DateTime weekStart,
   ) async {
     // Step 1: Extract reservation ID
-    final reservationId = PlaceReservationAdapter.extractReservationId(event.id);
+    final reservationId = PlaceReservationAdapter.extractReservationId(
+      event.id,
+    );
     if (reservationId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('잘못된 예약 ID입니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('잘못된 예약 ID입니다')));
       return false;
     }
 
@@ -292,20 +313,22 @@ class MultiPlaceCalendarView extends ConsumerWidget {
     final state = ref.read(placeCalendarProvider);
     PlaceReservation? originalReservation;
     try {
-      originalReservation = state.reservations.firstWhere((r) => r.id == reservationId);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('예약을 찾을 수 없습니다')),
+      originalReservation = state.reservations.firstWhere(
+        (r) => r.id == reservationId,
       );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('예약을 찾을 수 없습니다')));
       return false;
     }
 
     // Step 3: TODO - Check permissions (only owner or place manager can update)
 
     // Step 4: TODO - Show update form dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('예약 수정 폼 다이얼로그 구현 예정')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('예약 수정 폼 다이얼로그 구현 예정')));
     return false;
   }
 
@@ -322,11 +345,13 @@ class MultiPlaceCalendarView extends ConsumerWidget {
     Event event,
   ) async {
     // Step 1: Extract reservation ID
-    final reservationId = PlaceReservationAdapter.extractReservationId(event.id);
+    final reservationId = PlaceReservationAdapter.extractReservationId(
+      event.id,
+    );
     if (reservationId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('잘못된 예약 ID입니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('잘못된 예약 ID입니다')));
       return false;
     }
 
@@ -334,11 +359,13 @@ class MultiPlaceCalendarView extends ConsumerWidget {
     final state = ref.read(placeCalendarProvider);
     PlaceReservation? originalReservation;
     try {
-      originalReservation = state.reservations.firstWhere((r) => r.id == reservationId);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('예약을 찾을 수 없습니다')),
+      originalReservation = state.reservations.firstWhere(
+        (r) => r.id == reservationId,
       );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('예약을 찾을 수 없습니다')));
       return false;
     }
 
@@ -369,15 +396,17 @@ class MultiPlaceCalendarView extends ConsumerWidget {
 
     // Step 4: Delete reservation via API
     try {
-      await ref.read(placeCalendarProvider.notifier).cancelReservation(reservationId);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('예약이 취소되었습니다')),
-      );
+      await ref
+          .read(placeCalendarProvider.notifier)
+          .cancelReservation(reservationId);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('예약이 취소되었습니다')));
       return true;
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('예약 취소 실패: ${e.toString()}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('예약 취소 실패: ${e.toString()}')));
       return false;
     }
   }
@@ -391,7 +420,10 @@ class MultiPlaceCalendarView extends ConsumerWidget {
   }
 
   /// Build custom reservation chip for calendar cells
-  Widget _buildReservationChip(BuildContext context, PlaceReservation reservation) {
+  Widget _buildReservationChip(
+    BuildContext context,
+    PlaceReservation reservation,
+  ) {
     final textTheme = Theme.of(context).textTheme;
 
     return Container(
@@ -433,7 +465,10 @@ class MultiPlaceCalendarView extends ConsumerWidget {
 
   /// Build custom reservation card for sidebar list
   /// Uses CalendarEventCard component with Place Calendar mode
-  Widget _buildReservationCard(BuildContext context, PlaceReservation reservation) {
+  Widget _buildReservationCard(
+    BuildContext context,
+    PlaceReservation reservation,
+  ) {
     return CalendarEventCard(
       title: reservation.title,
       color: reservation.color,

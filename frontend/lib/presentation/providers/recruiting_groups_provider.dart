@@ -36,7 +36,7 @@ class RecruitingGroupsState {
 /// Notifier for recruiting groups
 class RecruitingGroupsNotifier extends StateNotifier<RecruitingGroupsState> {
   RecruitingGroupsNotifier(this._recruitmentService)
-      : super(const RecruitingGroupsState()) {
+    : super(const RecruitingGroupsState()) {
     // Automatically load data on creation
     loadRecruitingGroups();
   }
@@ -86,10 +86,7 @@ class RecruitingGroupsNotifier extends StateNotifier<RecruitingGroupsState> {
         stackTrace: stackTrace,
       );
 
-      state = state.copyWith(
-        isLoading: false,
-        error: '모집 중인 그룹을 불러오는데 실패했습니다',
-      );
+      state = state.copyWith(isLoading: false, error: '모집 중인 그룹을 불러오는데 실패했습니다');
     }
   }
 
@@ -105,9 +102,9 @@ class RecruitingGroupsNotifier extends StateNotifier<RecruitingGroupsState> {
 
 /// Provider for recruiting groups state
 final recruitingGroupsProvider =
-    StateNotifierProvider<RecruitingGroupsNotifier, RecruitingGroupsState>(
-  (ref) {
-    final recruitmentService = ref.watch(recruitmentServiceProvider);
-    return RecruitingGroupsNotifier(recruitmentService);
-  },
-);
+    StateNotifierProvider<RecruitingGroupsNotifier, RecruitingGroupsState>((
+      ref,
+    ) {
+      final recruitmentService = ref.watch(recruitmentServiceProvider);
+      return RecruitingGroupsNotifier(recruitmentService);
+    });

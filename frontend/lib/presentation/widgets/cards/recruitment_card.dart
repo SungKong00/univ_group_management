@@ -64,10 +64,13 @@ class RecruitmentCard extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: semanticsLabel ??
+      label:
+          semanticsLabel ??
           '$groupName. $recruitmentTitle. ${formattedEndDate ?? ''}${showApplicantCount && applicantCount != null ? '. 지원자 $applicantCount명' : ''}',
       child: Container(
-        width: AppComponents.groupCardWidth + 20, // Slightly wider for more content
+        width:
+            AppComponents.groupCardWidth +
+            20, // Slightly wider for more content
         margin: const EdgeInsets.only(right: AppSpacing.sm),
         child: Card(
           child: InkWell(
@@ -97,9 +100,9 @@ class RecruitmentCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           groupName,
-                          style: AppTheme.bodySmallTheme(context).copyWith(
-                            color: AppColors.neutral600,
-                          ),
+                          style: AppTheme.bodySmallTheme(
+                            context,
+                          ).copyWith(color: AppColors.neutral600),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -160,10 +163,9 @@ class RecruitmentCard extends StatelessWidget {
                             const SizedBox(width: 2),
                             Text(
                               '$applicantCount명',
-                              style:
-                                  AppTheme.labelSmallTheme(context).copyWith(
-                                color: AppColors.neutral600,
-                              ),
+                              style: AppTheme.labelSmallTheme(
+                                context,
+                              ).copyWith(color: AppColors.neutral600),
                             ),
                           ],
                         ),

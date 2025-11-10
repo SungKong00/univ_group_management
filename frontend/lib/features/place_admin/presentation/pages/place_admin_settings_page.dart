@@ -44,10 +44,7 @@ class PlaceAdminSettingsPage extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: AppColors.brand,
-                    ),
+                    Icon(Icons.info_outline, color: AppColors.brand),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -64,64 +61,44 @@ class PlaceAdminSettingsPage extends StatelessWidget {
             const SizedBox(height: 24),
 
             // 섹션 1: 운영시간
-            Text(
-              '1. 운영시간 설정',
-              style: AppTheme.headlineMedium,
-            ),
+            Text('1. 운영시간 설정', style: AppTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
               '요일별 기본 운영시간을 설정합니다',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             ),
             const SizedBox(height: 12),
             PlaceOperatingHoursDisplay(placeId: placeId),
             const SizedBox(height: 32),
 
             // 섹션 2: 금지시간
-            Text(
-              '2. 금지시간 설정',
-              style: AppTheme.headlineMedium,
-            ),
+            Text('2. 금지시간 설정', style: AppTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
               '운영시간 내에서 특정 요일의 시간대를 예약 불가로 설정합니다',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             ),
             const SizedBox(height: 12),
             RestrictedTimeListWidget(placeId: placeId),
             const SizedBox(height: 32),
 
             // 섹션 3: 임시 휴무
-            Text(
-              '3. 임시 휴무 설정',
-              style: AppTheme.headlineMedium,
-            ),
+            Text('3. 임시 휴무 설정', style: AppTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
               '특정 날짜의 전일 또는 부분 시간대를 예약 불가로 설정합니다',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             ),
             const SizedBox(height: 12),
             PlaceClosureCalendarWidget(placeId: placeId),
             const SizedBox(height: 32),
 
             // 섹션 4: 예약 가능 시간 조회
-            Text(
-              '4. 예약 가능 시간 조회',
-              style: AppTheme.headlineMedium,
-            ),
+            Text('4. 예약 가능 시간 조회', style: AppTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
               '설정된 규칙에 따라 특정 날짜의 예약 가능 시간을 확인합니다',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             ),
             const SizedBox(height: 12),
             AvailableTimesWidget(placeId: placeId),

@@ -2,7 +2,7 @@
 
 ## 📜 프로젝트 헌법 (Constitution)
 
-**핵심 거버넌스**: [.specify/memory/constitution.md](.specify/memory/constitution.md) - 프로젝트 v1.1.0 헌법
+**핵심 거버넌스**: [.specify/memory/constitution.md](.specify/memory/constitution.md) - 프로젝트 v1.2.0 헌법
 
 이 헌법은 모든 개발 가이드라인과 프랙티스보다 우선하며, 8가지 핵심 원칙을 정의합니다:
 1. 3-Layer Architecture (비협상)
@@ -300,6 +300,57 @@ flutter run -d chrome --web-hostname localhost --web-port 5173
 - **컨텍스트 추적 업데이트**: 커밋 후 [context-tracking/](docs/context-tracking/) 폴더의 문서 상태 업데이트
 - **커밋 메시지 컨벤션 준수**: [커밋 규칙](docs/conventions/commit-conventions.md) 참고
 - **문서 동기화 확인**: 코드 변경 시 관련 문서도 함께 업데이트
+
+### MCP 사용 원칙 (필수 ⭐⭐⭐⭐⭐)
+- **항상 MCP 우선 사용**: 별도 요청 없이도 작업에 적합한 MCP를 자동으로 선택하여 사용
+- **dart-flutter MCP** (필수):
+  - 테스트 실행: `mcp__dart-flutter__run_tests`
+  - 코드 분석: `mcp__dart-flutter__analyze_files`
+  - 포맷팅: `mcp__dart-flutter__dart_format`
+  - 패키지 관리: `mcp__dart-flutter__pub`
+- **flutter-service MCP** (보조):
+  - 패키지 탐색: `mcp__flutter-service__flutter_search`
+  - 패키지 분석: `mcp__flutter-service__analyze_pub_package`
+  - 코드 개선 제안: `mcp__flutter-service__suggest_improvements`
+- **사용 타이밍**:
+  - 코드 수정 후 즉시 `dart_format` 실행
+  - 기능 구현 완료 시 `analyze_files` 실행
+  - 테스트 작성/수정 시 `run_tests` 실행
+- **상세 가이드**: [헌법 원칙 VI](.specify/memory/constitution.md#vi-mcp-사용-표준-비협상) 참조
+
+### 에러 메시지 및 UI 텍스트 규칙
+- **사용자 메시지는 한글**: 모든 UI 텍스트, 에러 메시지, 알림은 한글로 작성
+- **디버깅 정보는 영어/원문 유지**: 에러 원인, 스택 트레이스, 로그는 영어 유지
+- **혼합 형식 허용**: 사용자 메시지(한글) + 디버깅 정보(영어)
+  ```dart
+  // ✅ Good: 사용자에게는 한글, 개발자에게는 상세 정보
+  '그룹 전환에 실패했습니다 (${error.toString()})'
+
+  // ❌ Bad: 모두 영어
+  'Failed to switch groups: ${error.toString()}'
+
+  // ❌ Bad: 디버깅 정보도 번역
+  '그룹 전환에 실패했습니다 (예외: 네트워크 오류)'
+  ```
+- **적용 대상**:
+  - SnackBar, Dialog, AlertDialog 메시지
+  - 로딩 인디케이터 텍스트
+  - 버튼 라벨 (저장, 취소, 확인 등)
+  - 폼 검증 메시지
+  - 빈 상태 메시지 (EmptyState)
+- **예외**:
+  - 로그 메시지 (`print`, `debugPrint`)
+  - 개발자용 주석 (Dartdoc, 코드 주석)
+  - 기술 용어/변수명 (Exception, Error, API 등)
+
+### Speckit 작업 진행 시
+- **Phase 완료 시 tasks.md 업데이트 필수** ([헌법 v1.2.0](.specify/memory/constitution.md#speckit-작업-진행-관리) 참조)
+  - 각 Phase 완료 시 `specs/*/tasks.md`의 완료된 태스크를 `[ ] → [X]`로 체크
+  - 통합 테스트 통과 결과를 tasks.md 또는 별도 검증 문서에 기록
+  - 미완료 태스크가 있는 경우 이유와 다음 액션 명시
+- **문서-코드 동기화**: 구현 완료 시점에 spec.md, plan.md, tasks.md도 함께 업데이트
+- **진행 상황 가시성**: 다음 작업 시작 시 tasks.md를 신뢰할 수 있도록 실시간 동기화 유지
+- **체크포인트 검증**: Phase 체크포인트에서 완료 태스크 개수 확인 및 테스트 결과 기록
 
 ## 📚 컨텍스트 가이드
 

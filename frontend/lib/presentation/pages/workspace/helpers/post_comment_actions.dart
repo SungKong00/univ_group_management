@@ -27,10 +27,12 @@ class PostCommentActions {
     // ✅ 새 글 작성 후 읽음 위치 자동 업데이트 (자신의 글은 읽지 않은 글 표시 안 함)
     final channelIdInt = int.tryParse(channelId);
     if (channelIdInt != null) {
-      await ref.read(workspaceStateProvider.notifier)
+      await ref
+          .read(workspaceStateProvider.notifier)
           .saveReadPosition(channelIdInt, newPost.id);
       // 뱃지 업데이트 (읽지 않은 글 개수 재계산)
-      await ref.read(workspaceStateProvider.notifier)
+      await ref
+          .read(workspaceStateProvider.notifier)
           .loadUnreadCount(channelIdInt);
     }
 

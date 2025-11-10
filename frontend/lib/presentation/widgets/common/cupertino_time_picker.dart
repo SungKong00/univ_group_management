@@ -35,7 +35,8 @@ class _CupertinoTimePickerState extends State<CupertinoTimePicker> {
   late DateTime _currentTime;
   bool _isUpdatingFromParent = false; // Flag to prevent callback during update
 
-  int get _effectiveInterval => widget.freeInputMode ? 1 : widget.minuteInterval;
+  int get _effectiveInterval =>
+      widget.freeInputMode ? 1 : widget.minuteInterval;
   int get _minuteItemCount => 60 ~/ _effectiveInterval;
 
   @override
@@ -118,7 +119,9 @@ class _CupertinoTimePickerState extends State<CupertinoTimePicker> {
           child: Text(
             i.toString().padLeft(2, '0'),
             style: AppTheme.headlineMedium.copyWith(
-              color: widget.enabled ? AppColors.neutral900 : AppColors.neutral500,
+              color: widget.enabled
+                  ? AppColors.neutral900
+                  : AppColors.neutral500,
             ),
           ),
         );
@@ -137,7 +140,9 @@ class _CupertinoTimePickerState extends State<CupertinoTimePicker> {
           child: Text(
             minute.toString().padLeft(2, '0'),
             style: AppTheme.headlineMedium.copyWith(
-              color: widget.enabled ? AppColors.neutral900 : AppColors.neutral500,
+              color: widget.enabled
+                  ? AppColors.neutral900
+                  : AppColors.neutral500,
             ),
           ),
         );
@@ -155,7 +160,9 @@ class _CupertinoTimePickerState extends State<CupertinoTimePicker> {
           Text(
             widget.label!,
             style: AppTheme.titleLarge.copyWith(
-              color: widget.enabled ? AppColors.neutral800 : AppColors.neutral500,
+              color: widget.enabled
+                  ? AppColors.neutral800
+                  : AppColors.neutral500,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -166,7 +173,9 @@ class _CupertinoTimePickerState extends State<CupertinoTimePicker> {
             color: widget.enabled ? AppColors.surface : AppColors.neutral100,
             borderRadius: BorderRadius.circular(AppRadius.card),
             border: Border.all(
-              color: widget.enabled ? AppColors.lightOutline : AppColors.neutral300,
+              color: widget.enabled
+                  ? AppColors.lightOutline
+                  : AppColors.neutral300,
             ),
           ),
           child: ClipRRect(
@@ -183,7 +192,9 @@ class _CupertinoTimePickerState extends State<CupertinoTimePicker> {
                     child: Text(
                       ':',
                       style: AppTheme.headlineMedium.copyWith(
-                        color: widget.enabled ? AppColors.neutral900 : AppColors.neutral500,
+                        color: widget.enabled
+                            ? AppColors.neutral900
+                            : AppColors.neutral500,
                       ),
                     ),
                   ),

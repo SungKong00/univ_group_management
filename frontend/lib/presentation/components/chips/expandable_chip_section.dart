@@ -61,7 +61,8 @@ class ExpandableChipSection<T> extends StatefulWidget {
   });
 
   @override
-  State<ExpandableChipSection<T>> createState() => _ExpandableChipSectionState<T>();
+  State<ExpandableChipSection<T>> createState() =>
+      _ExpandableChipSectionState<T>();
 }
 
 class _ExpandableChipSectionState<T> extends State<ExpandableChipSection<T>> {
@@ -87,15 +88,14 @@ class _ExpandableChipSectionState<T> extends State<ExpandableChipSection<T>> {
         child: Center(
           child: Text(
             '선택 가능한 항목이 없습니다',
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppColors.neutral600,
-            ),
+            style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
           ),
         ),
       );
     }
 
-    final shouldShowExpandButton = widget.items.length > widget.initialDisplayCount;
+    final shouldShowExpandButton =
+        widget.items.length > widget.initialDisplayCount;
     final displayedItems = _isExpanded
         ? widget.items
         : widget.items.take(widget.initialDisplayCount).toList();
@@ -127,11 +127,13 @@ class _ExpandableChipSectionState<T> extends State<ExpandableChipSection<T>> {
         if (shouldShowExpandButton) ...[
           const SizedBox(height: AppSpacing.xs),
           InkWell(
-            onTap: widget.enabled ? () {
-              setState(() {
-                _isExpanded = !_isExpanded;
-              });
-            } : null,
+            onTap: widget.enabled
+                ? () {
+                    setState(() {
+                      _isExpanded = !_isExpanded;
+                    });
+                  }
+                : null,
             borderRadius: BorderRadius.circular(4),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
@@ -143,7 +145,9 @@ class _ExpandableChipSectionState<T> extends State<ExpandableChipSection<T>> {
                         ? widget.collapseText
                         : '${widget.expandText} (${widget.items.length - widget.initialDisplayCount}개 더)',
                     style: AppTheme.bodySmall.copyWith(
-                      color: widget.enabled ? AppColors.action : AppColors.neutral400,
+                      color: widget.enabled
+                          ? AppColors.action
+                          : AppColors.neutral400,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -151,7 +155,9 @@ class _ExpandableChipSectionState<T> extends State<ExpandableChipSection<T>> {
                   Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
                     size: 16,
-                    color: widget.enabled ? AppColors.action : AppColors.neutral400,
+                    color: widget.enabled
+                        ? AppColors.action
+                        : AppColors.neutral400,
                   ),
                 ],
               ),

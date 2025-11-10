@@ -50,7 +50,9 @@ class UnifiedGroupState extends Equatable {
   /// 필터링된 그룹 목록 (리스트 뷰용)
   List<GroupSummaryResponse> get filteredGroups {
     final result = _filterGroups(allGroups, filter);
-    print('🔍 [DEBUG] filteredGroups getter: allGroups.length=${allGroups.length}, filtered.length=${result.length}');
+    print(
+      '🔍 [DEBUG] filteredGroups getter: allGroups.length=${allGroups.length}, filtered.length=${result.length}',
+    );
     print('🔍 [DEBUG] filter: ${filter.toQueryParameters()}');
     return result;
   }
@@ -85,7 +87,9 @@ class UnifiedGroupState extends Equatable {
       if (filter.groupTypes?.isNotEmpty ?? false) {
         final groupTypeStr = group.groupType.name.toUpperCase();
         final matches = filter.groupTypes!.contains(groupTypeStr);
-        print('🔍 [DEBUG] ${group.name}: groupType=$groupTypeStr, 필터=${filter.groupTypes}, 일치=$matches');
+        print(
+          '🔍 [DEBUG] ${group.name}: groupType=$groupTypeStr, 필터=${filter.groupTypes}, 일치=$matches',
+        );
         if (!matches) {
           return false;
         }
@@ -94,7 +98,9 @@ class UnifiedGroupState extends Equatable {
       // recruiting 필터
       if (filter.recruiting != null) {
         final matches = group.isRecruiting == filter.recruiting;
-        print('🔍 [DEBUG] ${group.name}: isRecruiting=${group.isRecruiting}, 필터=${filter.recruiting}, 일치=$matches');
+        print(
+          '🔍 [DEBUG] ${group.name}: isRecruiting=${group.isRecruiting}, 필터=${filter.recruiting}, 일치=$matches',
+        );
         if (!matches) {
           return false;
         }
@@ -102,16 +108,17 @@ class UnifiedGroupState extends Equatable {
 
       // tags 필터
       if (filter.tags?.isNotEmpty ?? false) {
-        final hasAllTags = filter.tags!
-            .every((tag) => group.tags.contains(tag));
+        final hasAllTags = filter.tags!.every(
+          (tag) => group.tags.contains(tag),
+        );
         if (!hasAllTags) return false;
       }
 
       // searchQuery 필터
       if (filter.searchQuery?.isNotEmpty ?? false) {
-        if (!group.name
-            .toLowerCase()
-            .contains(filter.searchQuery!.toLowerCase())) {
+        if (!group.name.toLowerCase().contains(
+          filter.searchQuery!.toLowerCase(),
+        )) {
           return false;
         }
       }
@@ -193,16 +200,16 @@ class UnifiedGroupState extends Equatable {
 
   @override
   List<Object?> get props => [
-        allGroups,
-        filter,
-        isLoading,
-        errorMessage,
-        currentPage,
-        hasMore,
-        isLoadingMore,
-        totalCount,
-        usePagination,
-      ];
+    allGroups,
+    filter,
+    isLoading,
+    errorMessage,
+    currentPage,
+    hasMore,
+    isLoadingMore,
+    totalCount,
+    usePagination,
+  ];
 }
 
 /// 통합 그룹 데이터 Notifier
@@ -212,8 +219,7 @@ class UnifiedGroupState extends Equatable {
 /// - 필터: 통합 (groupExploreFilterProvider)
 /// - 데이터: 양쪽 뷰에서 공유
 class UnifiedGroupStateNotifier extends StateNotifier<UnifiedGroupState> {
-  UnifiedGroupStateNotifier(this.ref)
-      : super(UnifiedGroupState());
+  UnifiedGroupStateNotifier(this.ref) : super(UnifiedGroupState());
 
   final Ref ref;
   final GroupExploreService _service = GroupExploreService();
@@ -225,7 +231,9 @@ class UnifiedGroupStateNotifier extends StateNotifier<UnifiedGroupState> {
   /// 3. 그룹 개수 > 500: 페이지네이션 (getGroups) + 무한 스크롤
   Future<void> initialize() async {
     print('🔍 [DEBUG] initialize() 시작');
-    print('🔍 [DEBUG] 현재 상태: allGroups.length=${state.allGroups.length}, isLoading=${state.isLoading}');
+    print(
+      '🔍 [DEBUG] 현재 상태: allGroups.length=${state.allGroups.length}, isLoading=${state.isLoading}',
+    );
 
     // 이미 로드됨
     if (state.allGroups.isNotEmpty && !state.isLoading) {
@@ -259,7 +267,9 @@ class UnifiedGroupStateNotifier extends StateNotifier<UnifiedGroupState> {
           usePagination: false,
           isLoading: false,
         );
-        print('🔍 [DEBUG] 상태 업데이트 완료: allGroups.length=${state.allGroups.length}');
+        print(
+          '🔍 [DEBUG] 상태 업데이트 완료: allGroups.length=${state.allGroups.length}',
+        );
       } else {
         // 페이지네이션 모드
         print('🔍 [DEBUG] 페이지네이션 모드 선택 (totalCount=$totalCount)');
@@ -277,7 +287,9 @@ class UnifiedGroupStateNotifier extends StateNotifier<UnifiedGroupState> {
           usePagination: true,
           isLoading: false,
         );
-        print('🔍 [DEBUG] 상태 업데이트 완료: allGroups.length=${state.allGroups.length}');
+        print(
+          '🔍 [DEBUG] 상태 업데이트 완료: allGroups.length=${state.allGroups.length}',
+        );
       }
     } catch (e) {
       print('❌ [DEBUG] initialize() 에러: $e');
@@ -300,11 +312,7 @@ class UnifiedGroupStateNotifier extends StateNotifier<UnifiedGroupState> {
     }
 
     // 페이지네이션 모드: API 재호출
-    state = state.copyWith(
-      filter: filter,
-      isLoading: true,
-      errorMessage: null,
-    );
+    state = state.copyWith(filter: filter, isLoading: true, errorMessage: null);
 
     try {
       final response = await _service.getGroups(
@@ -320,10 +328,7 @@ class UnifiedGroupStateNotifier extends StateNotifier<UnifiedGroupState> {
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: '필터 적용에 실패했습니다.',
-      );
+      state = state.copyWith(isLoading: false, errorMessage: '필터 적용에 실패했습니다.');
     }
   }
 
@@ -369,23 +374,21 @@ class UnifiedGroupStateNotifier extends StateNotifier<UnifiedGroupState> {
 
 /// 통합 그룹 데이터 Provider
 final unifiedGroupProvider =
-    StateNotifierProvider<UnifiedGroupStateNotifier, UnifiedGroupState>(
-  (ref) {
-    print('🔍 [DEBUG] unifiedGroupProvider 생성');
-    final notifier = UnifiedGroupStateNotifier(ref);
+    StateNotifierProvider<UnifiedGroupStateNotifier, UnifiedGroupState>((ref) {
+      print('🔍 [DEBUG] unifiedGroupProvider 생성');
+      final notifier = UnifiedGroupStateNotifier(ref);
 
-    // 필터 변경 감지 및 자동 적용
-    ref.listen<GroupExploreFilter>(
-      groupExploreFilterProvider,
-      (previous, next) {
+      // 필터 변경 감지 및 자동 적용
+      ref.listen<GroupExploreFilter>(groupExploreFilterProvider, (
+        previous,
+        next,
+      ) {
         print('🔍 [DEBUG] 필터 변경 감지: previous=$previous, next=$next');
         if (previous != next) {
           print('🔍 [DEBUG] applyFilter() 호출');
           notifier.applyFilter(next);
         }
-      },
-    );
+      });
 
-    return notifier;
-  },
-);
+      return notifier;
+    });

@@ -32,10 +32,7 @@ void main() {
         100,
         (i) => WorkspaceRoute.channel(groupId: 1, channelId: i),
       );
-      notifier.state = NavigationState(
-        stack: stack,
-        currentIndex: 99,
-      );
+      notifier.state = NavigationState(stack: stack, currentIndex: 99);
 
       stopwatch.stop();
 
@@ -53,10 +50,7 @@ void main() {
         100,
         (i) => WorkspaceRoute.channel(groupId: 1, channelId: i),
       );
-      notifier.state = NavigationState(
-        stack: stack,
-        currentIndex: 99,
-      );
+      notifier.state = NavigationState(stack: stack, currentIndex: 99);
 
       final stopwatch = Stopwatch()..start();
 
@@ -91,10 +85,7 @@ void main() {
         100,
         (i) => WorkspaceRoute.channel(groupId: 1, channelId: i),
       );
-      notifier.state = NavigationState(
-        stack: stack,
-        currentIndex: 99,
-      );
+      notifier.state = NavigationState(stack: stack, currentIndex: 99);
 
       final stopwatch = Stopwatch()..start();
 
@@ -102,7 +93,9 @@ void main() {
       for (int i = 0; i < 100; i++) {
         final current = notifier.state.current;
         expect(
-            current, const WorkspaceRoute.channel(groupId: 1, channelId: 99));
+          current,
+          const WorkspaceRoute.channel(groupId: 1, channelId: 99),
+        );
       }
 
       stopwatch.stop();
@@ -129,15 +122,14 @@ void main() {
         100,
         (i) => WorkspaceRoute.channel(groupId: 1, channelId: i),
       );
-      notifier.state = NavigationState(
-        stack: stack,
-        currentIndex: 99,
-      );
+      notifier.state = NavigationState(stack: stack, currentIndex: 99);
 
       final stopwatch = Stopwatch()..start();
 
       // 최상단 route 교체
-      notifier.replace(const WorkspaceRoute.channel(groupId: 1, channelId: 999));
+      notifier.replace(
+        const WorkspaceRoute.channel(groupId: 1, channelId: 999),
+      );
 
       stopwatch.stop();
 
@@ -162,10 +154,7 @@ void main() {
 
       final stopwatch = Stopwatch()..start();
 
-      notifier.state = NavigationState(
-        stack: stack,
-        currentIndex: 499,
-      );
+      notifier.state = NavigationState(stack: stack, currentIndex: 499);
 
       stopwatch.stop();
 
@@ -202,10 +191,7 @@ void main() {
         50,
         (i) => WorkspaceRoute.channel(groupId: 1, channelId: i),
       );
-      notifier.state = NavigationState(
-        stack: initialStack,
-        currentIndex: 49,
-      );
+      notifier.state = NavigationState(stack: initialStack, currentIndex: 49);
 
       // 49번 pop 연산 (currentIndex: 49 → 0)
       for (int i = 0; i < 49; i++) {
@@ -234,17 +220,15 @@ void main() {
         100,
         (i) => WorkspaceRoute.channel(groupId: 1, channelId: i),
       );
-      notifier.state = NavigationState(
-        stack: stack,
-        currentIndex: 50,
-      );
+      notifier.state = NavigationState(stack: stack, currentIndex: 50);
 
       final stopwatch = Stopwatch()..start();
 
       // 50번 replace 연산 (currentIndex 50번 교체)
       for (int i = 0; i < 50; i++) {
         notifier.replace(
-            WorkspaceRoute.channel(groupId: 1, channelId: 1000 + i));
+          WorkspaceRoute.channel(groupId: 1, channelId: 1000 + i),
+        );
       }
 
       stopwatch.stop();

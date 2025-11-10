@@ -73,6 +73,7 @@ dev_dependencies:
 
   # Linting
   flutter_lints: ^5.0.0
+  contrast_checker: ^0.0.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

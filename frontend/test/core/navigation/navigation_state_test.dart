@@ -23,10 +23,7 @@ void main() {
     test('current returns the route at currentIndex', () {
       const route1 = WorkspaceRoute.home(groupId: 1);
       const route2 = WorkspaceRoute.channel(groupId: 1, channelId: 5);
-      const state = NavigationState(
-        stack: [route1, route2],
-        currentIndex: 1,
-      );
+      const state = NavigationState(stack: [route1, route2], currentIndex: 1);
 
       expect(state.current, equals(route2));
     });
@@ -44,10 +41,7 @@ void main() {
     test('canPop returns true when currentIndex > 0', () {
       const route1 = WorkspaceRoute.home(groupId: 1);
       const route2 = WorkspaceRoute.channel(groupId: 1, channelId: 5);
-      const state = NavigationState(
-        stack: [route1, route2],
-        currentIndex: 1,
-      );
+      const state = NavigationState(stack: [route1, route2], currentIndex: 1);
 
       expect(state.canPop, isTrue);
     });
@@ -62,10 +56,7 @@ void main() {
     test('isAtRoot returns false when currentIndex is not 0', () {
       const route1 = WorkspaceRoute.home(groupId: 1);
       const route2 = WorkspaceRoute.channel(groupId: 1, channelId: 5);
-      const state = NavigationState(
-        stack: [route1, route2],
-        currentIndex: 1,
-      );
+      const state = NavigationState(stack: [route1, route2], currentIndex: 1);
 
       expect(state.isAtRoot, isFalse);
     });

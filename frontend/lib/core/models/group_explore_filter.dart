@@ -91,9 +91,7 @@ class GroupExploreFilter implements FilterModel {
       recruiting: recruiting == _undefined
           ? this.recruiting
           : (recruiting as bool?),
-      tags: tags == _undefined
-          ? this.tags
-          : (tags as List<String>?),
+      tags: tags == _undefined ? this.tags : (tags as List<String>?),
       searchQuery: searchQuery == _undefined
           ? this.searchQuery
           : (searchQuery as String?),
@@ -117,13 +115,12 @@ class GroupExploreFilter implements FilterModel {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(
-        _listHashCode(groupTypes),
-        recruiting,
-        _listHashCode(tags),
-        searchQuery,
-      );
+  int get hashCode => Object.hash(
+    _listHashCode(groupTypes),
+    recruiting,
+    _listHashCode(tags),
+    searchQuery,
+  );
 
   /// 리스트 비교 헬퍼
   bool _listEquals(List<String>? a, List<String>? b) {

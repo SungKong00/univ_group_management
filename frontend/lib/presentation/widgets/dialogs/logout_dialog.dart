@@ -76,9 +76,7 @@ class _LogoutDialogState extends State<LogoutDialog>
 
   /// 타이틀: "로그아웃" (18-20 bold, onSurface)
   Widget _buildTitle() {
-    return const AppDialogTitle(
-      title: '로그아웃',
-    );
+    return const AppDialogTitle(title: '로그아웃');
   }
 
   /// 설명: 줄 간격 여유 있게 (14-15 regular, 회색 톤)
@@ -134,8 +132,5 @@ class _LogoutDialogState extends State<LogoutDialog>
 /// }
 /// ```
 Future<bool> showLogoutDialog(BuildContext context) {
-  return AppDialogHelpers.showConfirm(
-    context,
-    dialog: const LogoutDialog(),
-  );
+  return AppDialogHelpers.showConfirm(context, dialog: const LogoutDialog());
 }

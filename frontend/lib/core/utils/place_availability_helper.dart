@@ -54,10 +54,12 @@ class PlaceAvailabilityHelper {
       final dayOfWeek = _dartDayOfWeekToEnum(date.weekday);
 
       // Find availability windows for this day
-      final dayAvailabilities = availabilities
-          .where((a) => a.dayOfWeek == dayOfWeek)
-          .toList()
-        ..sort((a, b) => _timeToMinutes(a.startTime).compareTo(_timeToMinutes(b.startTime)));
+      final dayAvailabilities =
+          availabilities.where((a) => a.dayOfWeek == dayOfWeek).toList()..sort(
+            (a, b) => _timeToMinutes(
+              a.startTime,
+            ).compareTo(_timeToMinutes(b.startTime)),
+          );
 
       if (dayAvailabilities.isEmpty) {
         // No operating hours → entire day disabled
@@ -143,7 +145,9 @@ class PlaceAvailabilityHelper {
   static void _addAllSlotsForDay(Set<DateTime> disabledSlots, DateTime date) {
     for (var hour = 0; hour < 24; hour++) {
       for (var minute = 0; minute < 60; minute += 15) {
-        disabledSlots.add(DateTime(date.year, date.month, date.day, hour, minute));
+        disabledSlots.add(
+          DateTime(date.year, date.month, date.day, hour, minute),
+        );
       }
     }
   }
@@ -157,10 +161,16 @@ class PlaceAvailabilityHelper {
     // Disable slots before first window
     final firstWindow = sortedAvailabilities.first;
     final firstStartMinutes = _timeToMinutes(firstWindow.startTime);
-    for (var totalMinutes = 0; totalMinutes < firstStartMinutes; totalMinutes += 15) {
+    for (
+      var totalMinutes = 0;
+      totalMinutes < firstStartMinutes;
+      totalMinutes += 15
+    ) {
       final hour = totalMinutes ~/ 60;
       final minute = totalMinutes % 60;
-      disabledSlots.add(DateTime(date.year, date.month, date.day, hour, minute));
+      disabledSlots.add(
+        DateTime(date.year, date.month, date.day, hour, minute),
+      );
     }
 
     // Disable gaps between windows
@@ -171,22 +181,32 @@ class PlaceAvailabilityHelper {
       final gapStartMinutes = _timeToMinutes(currentWindow.endTime);
       final gapEndMinutes = _timeToMinutes(nextWindow.startTime);
 
-      for (var totalMinutes = gapStartMinutes;
-          totalMinutes < gapEndMinutes;
-          totalMinutes += 15) {
+      for (
+        var totalMinutes = gapStartMinutes;
+        totalMinutes < gapEndMinutes;
+        totalMinutes += 15
+      ) {
         final hour = totalMinutes ~/ 60;
         final minute = totalMinutes % 60;
-        disabledSlots.add(DateTime(date.year, date.month, date.day, hour, minute));
+        disabledSlots.add(
+          DateTime(date.year, date.month, date.day, hour, minute),
+        );
       }
     }
 
     // Disable slots after last window
     final lastWindow = sortedAvailabilities.last;
     final lastEndMinutes = _timeToMinutes(lastWindow.endTime);
-    for (var totalMinutes = lastEndMinutes; totalMinutes < 24 * 60; totalMinutes += 15) {
+    for (
+      var totalMinutes = lastEndMinutes;
+      totalMinutes < 24 * 60;
+      totalMinutes += 15
+    ) {
       final hour = totalMinutes ~/ 60;
       final minute = totalMinutes % 60;
-      disabledSlots.add(DateTime(date.year, date.month, date.day, hour, minute));
+      disabledSlots.add(
+        DateTime(date.year, date.month, date.day, hour, minute),
+      );
     }
   }
 
@@ -298,7 +318,13 @@ class PlaceAvailabilityHelper {
       // Process each 15-minute slot in the day
       for (var hour = 0; hour < 24; hour++) {
         for (var minute = 0; minute < 60; minute += 15) {
-          final slotTime = DateTime(date.year, date.month, date.day, hour, minute);
+          final slotTime = DateTime(
+            date.year,
+            date.month,
+            date.day,
+            hour,
+            minute,
+          );
 
           // Check if ANY place can accommodate this reservation
           bool anyPlaceAvailable = false;
@@ -404,8 +430,9 @@ class PlaceAvailabilityHelper {
     final slotMinutes = _timeToMinutes(slotTime);
 
     // Find all availability windows for this day
-    final dayAvailabilities =
-        availabilities.where((a) => a.dayOfWeek == dayOfWeek).toList();
+    final dayAvailabilities = availabilities
+        .where((a) => a.dayOfWeek == dayOfWeek)
+        .toList();
 
     if (availabilities.isEmpty) {
       return true; // Treat no configured availability as 24/7 open

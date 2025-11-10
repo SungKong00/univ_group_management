@@ -8,14 +8,11 @@ import '../../core/services/group_permission_service.dart';
 ///
 /// FutureProvider.family를 사용하여 그룹 ID별로 캐시됩니다.
 /// autoDispose를 사용하여 사용하지 않을 때 자동으로 메모리에서 해제됩니다.
-final groupPermissionsProvider =
-    FutureProvider.family.autoDispose<Set<String>, int>((
-  ref,
-  groupId,
-) async {
-  final service = GroupPermissionService();
-  return await service.getMyPermissions(groupId);
-});
+final groupPermissionsProvider = FutureProvider.family
+    .autoDispose<Set<String>, int>((ref, groupId) async {
+      final service = GroupPermissionService();
+      return await service.getMyPermissions(groupId);
+    });
 
 /// 특정 그룹에서 특정 권한을 가지고 있는지 확인하는 헬퍼 Provider
 ///
@@ -26,11 +23,9 @@ final groupPermissionsProvider =
 /// );
 /// ```
 final hasPermissionProvider = FutureProvider.family
-    .autoDispose<bool, ({int groupId, String permission})>((
-  ref,
-  params,
-) async {
-  final permissions =
-      await ref.watch(groupPermissionsProvider(params.groupId).future);
-  return permissions.contains(params.permission);
-});
+    .autoDispose<bool, ({int groupId, String permission})>((ref, params) async {
+      final permissions = await ref.watch(
+        groupPermissionsProvider(params.groupId).future,
+      );
+      return permissions.contains(params.permission);
+    });

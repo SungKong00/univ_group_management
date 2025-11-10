@@ -121,17 +121,29 @@ class AppChip extends StatelessWidget {
         label: _buildLabel(specs),
         selected: selected,
         onSelected: enabled ? onSelected : null,
-        avatar: leadingIcon != null ? Icon(leadingIcon, size: specs.iconSize) : null,
-        deleteIcon: onDeleted != null ? Icon(Icons.close, size: specs.iconSize) : null,
+        avatar: leadingIcon != null
+            ? Icon(leadingIcon, size: specs.iconSize)
+            : null,
+        deleteIcon: onDeleted != null
+            ? Icon(Icons.close, size: specs.iconSize)
+            : null,
         onDeleted: enabled && onDeleted != null ? onDeleted : null,
-        backgroundColor: enabled ? colors.backgroundColor : AppColors.disabledBgLight,
-        selectedColor: enabled ? colors.selectedBackgroundColor : AppColors.disabledBgLight,
-        checkmarkColor: enabled ? colors.selectedForegroundColor : AppColors.disabledTextLight,
+        backgroundColor: enabled
+            ? colors.backgroundColor
+            : AppColors.disabledBgLight,
+        selectedColor: enabled
+            ? colors.selectedBackgroundColor
+            : AppColors.disabledBgLight,
+        checkmarkColor: enabled
+            ? colors.selectedForegroundColor
+            : AppColors.disabledTextLight,
         labelStyle: TextStyle(
           fontSize: specs.fontSize,
           fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
           color: enabled
-              ? (selected ? colors.selectedForegroundColor : colors.foregroundColor)
+              ? (selected
+                    ? colors.selectedForegroundColor
+                    : colors.foregroundColor)
               : AppColors.disabledTextLight,
         ),
         padding: specs.padding,
@@ -142,7 +154,9 @@ class AppChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(specs.borderRadius),
           side: BorderSide(
             color: enabled
-                ? (selected ? colors.selectedBackgroundColor : colors.borderColor)
+                ? (selected
+                      ? colors.selectedBackgroundColor
+                      : colors.borderColor)
                 : AppColors.disabledBgLight,
             width: 1,
           ),
@@ -157,18 +171,24 @@ class AppChip extends StatelessWidget {
           ? Icon(
               leadingIcon,
               size: specs.iconSize,
-              color: enabled ? colors.foregroundColor : AppColors.disabledTextLight,
+              color: enabled
+                  ? colors.foregroundColor
+                  : AppColors.disabledTextLight,
             )
           : null,
       deleteIcon: onDeleted != null
           ? Icon(
               Icons.close,
               size: specs.iconSize,
-              color: enabled ? colors.foregroundColor : AppColors.disabledTextLight,
+              color: enabled
+                  ? colors.foregroundColor
+                  : AppColors.disabledTextLight,
             )
           : null,
       onDeleted: enabled && onDeleted != null ? onDeleted : null,
-      backgroundColor: enabled ? colors.backgroundColor : AppColors.disabledBgLight,
+      backgroundColor: enabled
+          ? colors.backgroundColor
+          : AppColors.disabledBgLight,
       labelStyle: TextStyle(
         fontSize: specs.fontSize,
         fontWeight: FontWeight.w400,
@@ -204,7 +224,9 @@ class AppChip extends StatelessWidget {
             trailingIcon,
             size: specs.iconSize,
             color: enabled
-                ? (selected ? _getColors().selectedForegroundColor : _getColors().foregroundColor)
+                ? (selected
+                      ? _getColors().selectedForegroundColor
+                      : _getColors().foregroundColor)
                 : AppColors.disabledTextLight,
           ),
         ],

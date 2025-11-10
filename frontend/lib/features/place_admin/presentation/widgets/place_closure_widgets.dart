@@ -16,10 +16,7 @@ import '../../../../presentation/widgets/buttons/outlined_link_button.dart';
 class PlaceClosureCalendarWidget extends ConsumerStatefulWidget {
   final int placeId;
 
-  const PlaceClosureCalendarWidget({
-    super.key,
-    required this.placeId,
-  });
+  const PlaceClosureCalendarWidget({super.key, required this.placeId});
 
   @override
   ConsumerState<PlaceClosureCalendarWidget> createState() =>
@@ -38,19 +35,13 @@ class _PlaceClosureCalendarWidgetState
 
   void _previousMonth() {
     setState(() {
-      _currentMonth = DateTime(
-        _currentMonth.year,
-        _currentMonth.month - 1,
-      );
+      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
     });
   }
 
   void _nextMonth() {
     setState(() {
-      _currentMonth = DateTime(
-        _currentMonth.year,
-        _currentMonth.month + 1,
-      );
+      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
     });
   }
 
@@ -83,10 +74,7 @@ class _PlaceClosureCalendarWidgetState
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '임시 휴무',
-                  style: AppTheme.titleLarge,
-                ),
+                Text('임시 휴무', style: AppTheme.titleLarge),
                 Row(
                   children: [
                     IconButton(
@@ -117,7 +105,9 @@ class _PlaceClosureCalendarWidgetState
                 // 날짜별 휴무 맵 생성
                 final closureMap = <String, List<PlaceClosureResponse>>{};
                 for (final closure in closures) {
-                  closureMap.putIfAbsent(closure.closureDate, () => []).add(closure);
+                  closureMap
+                      .putIfAbsent(closure.closureDate, () => [])
+                      .add(closure);
                 }
 
                 return _buildCalendar(closureMap);
@@ -181,7 +171,9 @@ class _PlaceClosureCalendarWidgetState
         const SizedBox(height: 8),
 
         // 날짜 그리드
-        ...List.generate((lastDay.day + startWeekday - 1) ~/ 7 + 1, (weekIndex) {
+        ...List.generate((lastDay.day + startWeekday - 1) ~/ 7 + 1, (
+          weekIndex,
+        ) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 4.0),
             child: Row(
@@ -191,13 +183,15 @@ class _PlaceClosureCalendarWidgetState
                   return Expanded(child: Container());
                 }
 
-                final date = DateTime(_currentMonth.year, _currentMonth.month, dayNumber);
+                final date = DateTime(
+                  _currentMonth.year,
+                  _currentMonth.month,
+                  dayNumber,
+                );
                 final dateStr = _formatDateForApi(date);
                 final closures = closureMap[dateStr] ?? [];
 
-                return Expanded(
-                  child: _buildDayCell(date, closures),
-                );
+                return Expanded(child: _buildDayCell(date, closures));
               }),
             ),
           );
@@ -217,7 +211,8 @@ class _PlaceClosureCalendarWidgetState
       bgColor = Colors.orange.withOpacity(0.1);
     }
 
-    final isToday = date.year == DateTime.now().year &&
+    final isToday =
+        date.year == DateTime.now().year &&
         date.month == DateTime.now().month &&
         date.day == DateTime.now().day;
 
@@ -256,8 +251,8 @@ class _PlaceClosureCalendarWidgetState
                   color: hasFullDay
                       ? AppColors.error
                       : hasPartial
-                          ? Colors.orange
-                          : AppColors.neutral900,
+                      ? Colors.orange
+                      : AppColors.neutral900,
                 ),
               ),
               if (closures.isNotEmpty)
@@ -299,15 +294,15 @@ class _PlaceClosureCalendarWidgetState
   Future<bool?> _showAddClosureDialog(DateTime date) {
     return showDialog<bool>(
       context: context,
-      builder: (context) => AddClosureDialogSelector(
-        placeId: widget.placeId,
-        date: date,
-      ),
+      builder: (context) =>
+          AddClosureDialogSelector(placeId: widget.placeId, date: date),
     );
   }
 
   Future<void> _showClosureDetailDialog(
-      DateTime date, List<PlaceClosureResponse> closures) async {
+    DateTime date,
+    List<PlaceClosureResponse> closures,
+  ) async {
     await showDialog(
       context: context,
       builder: (context) => ClosureDetailDialog(
@@ -373,10 +368,8 @@ class AddClosureDialogSelector extends StatelessWidget {
   Future<void> _showFullDayDialog(BuildContext context) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AddFullDayClosureDialog(
-        placeId: placeId,
-        date: date,
-      ),
+      builder: (context) =>
+          AddFullDayClosureDialog(placeId: placeId, date: date),
     );
 
     if (result == true && context.mounted) {
@@ -387,10 +380,8 @@ class AddClosureDialogSelector extends StatelessWidget {
   Future<void> _showPartialDialog(BuildContext context) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AddPartialClosureDialog(
-        placeId: placeId,
-        date: date,
-      ),
+      builder: (context) =>
+          AddPartialClosureDialog(placeId: placeId, date: date),
     );
 
     if (result == true && context.mounted) {

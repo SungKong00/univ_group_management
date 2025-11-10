@@ -8,10 +8,7 @@ import '../../../../core/models/recruitment_models.dart';
 ///
 /// Displays a single recruitment announcement in a card format
 class RecruitmentCard extends StatelessWidget {
-  const RecruitmentCard({
-    required this.recruitment,
-    super.key,
-  });
+  const RecruitmentCard({required this.recruitment, super.key});
 
   final RecruitmentSummaryResponse recruitment;
 
@@ -37,11 +34,7 @@ class RecruitmentCard extends StatelessWidget {
               // Group Name
               Row(
                 children: [
-                  Icon(
-                    Icons.groups,
-                    size: 16,
-                    color: AppColors.brand,
-                  ),
+                  Icon(Icons.groups, size: 16, color: AppColors.brand),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -72,9 +65,9 @@ class RecruitmentCard extends StatelessWidget {
                   recruitment.content!,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyMediumTheme(context).copyWith(
-                    color: AppColors.neutral700,
-                  ),
+                  style: AppTheme.bodyMediumTheme(
+                    context,
+                  ).copyWith(color: AppColors.neutral700),
                 ),
                 const SizedBox(height: 8),
               ],
@@ -83,34 +76,26 @@ class RecruitmentCard extends StatelessWidget {
               Row(
                 children: [
                   // Deadline
-                  Icon(
-                    Icons.schedule,
-                    size: 16,
-                    color: AppColors.neutral600,
-                  ),
+                  Icon(Icons.schedule, size: 16, color: AppColors.neutral600),
                   const SizedBox(width: 4),
                   Text(
                     _formatDeadline(recruitment.recruitmentEndDate),
-                    style: AppTheme.bodySmallTheme(context).copyWith(
-                      color: AppColors.neutral600,
-                    ),
+                    style: AppTheme.bodySmallTheme(
+                      context,
+                    ).copyWith(color: AppColors.neutral600),
                   ),
                   const Spacer(),
 
                   // Applicant Count (if visible)
                   if (recruitment.showApplicantCount &&
                       recruitment.maxApplicants != null) ...[
-                    Icon(
-                      Icons.people,
-                      size: 16,
-                      color: AppColors.neutral600,
-                    ),
+                    Icon(Icons.people, size: 16, color: AppColors.neutral600),
                     const SizedBox(width: 4),
                     Text(
                       '${recruitment.currentApplicantCount ?? 0}/${recruitment.maxApplicants}',
-                      style: AppTheme.bodySmallTheme(context).copyWith(
-                        color: AppColors.neutral600,
-                      ),
+                      style: AppTheme.bodySmallTheme(
+                        context,
+                      ).copyWith(color: AppColors.neutral600),
                     ),
                   ],
                 ],

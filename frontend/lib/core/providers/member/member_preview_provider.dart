@@ -14,30 +14,32 @@ import '../../network/dio_client.dart';
 /// groupId와 filter를 받아서 미리보기 데이터를 조회합니다.
 /// 응답: {totalCount: int, samples: [{id, name, grade, year, roleName}]}
 final memberPreviewProvider = FutureProvider.family
-    .autoDispose<MemberPreviewResponse, (int, MemberFilter)>(
-  (ref, params) async {
-    final (groupId, filter) = params;
-    final queryParams = filter.toQueryParameters();
-    final dioClient = DioClient();
+    .autoDispose<MemberPreviewResponse, (int, MemberFilter)>((
+      ref,
+      params,
+    ) async {
+      final (groupId, filter) = params;
+      final queryParams = filter.toQueryParameters();
+      final dioClient = DioClient();
 
-    final response = await dioClient.get<Map<String, dynamic>>(
-      '/groups/$groupId/members/preview',
-      queryParameters: queryParams,
-    );
-
-    if (response.data != null) {
-      final apiResponse = ApiResponse.fromJson(
-        response.data!,
-        (json) => MemberPreviewResponse.fromJson(json as Map<String, dynamic>),
+      final response = await dioClient.get<Map<String, dynamic>>(
+        '/groups/$groupId/members/preview',
+        queryParameters: queryParams,
       );
 
-      if (apiResponse.success && apiResponse.data != null) {
-        return apiResponse.data!;
-      } else {
-        throw Exception(apiResponse.message ?? 'Failed to fetch preview');
-      }
-    }
+      if (response.data != null) {
+        final apiResponse = ApiResponse.fromJson(
+          response.data!,
+          (json) =>
+              MemberPreviewResponse.fromJson(json as Map<String, dynamic>),
+        );
 
-    throw Exception('Empty response from server');
-  },
-);
+        if (apiResponse.success && apiResponse.data != null) {
+          return apiResponse.data!;
+        } else {
+          throw Exception(apiResponse.message ?? 'Failed to fetch preview');
+        }
+      }
+
+      throw Exception('Empty response from server');
+    });

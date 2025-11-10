@@ -13,7 +13,6 @@ import 'package:frontend/core/navigation/permission_context.dart';
 
 void main() {
   group('T140: Permission Cache Performance Tests', () {
-
     test('cache hit should complete in <10ms', () {
       // Note: 실제 PermissionContextNotifier는 DioClient를 내부에서 생성하므로
       // 단순한 LRU 캐시 로직 테스트로 대체

@@ -21,7 +21,10 @@ final placeServiceProvider = Provider<PlaceService>((ref) {
 /// Returns a list of places that the given group is approved to use.
 /// Uses family to pass the groupId.
 /// Automatically disposes when no longer in use.
-final placesProvider = FutureProvider.family.autoDispose<List<Place>, int>((ref, groupId) async {
+final placesProvider = FutureProvider.family.autoDispose<List<Place>, int>((
+  ref,
+  groupId,
+) async {
   final placeService = ref.watch(placeServiceProvider);
 
   developer.log(
@@ -56,40 +59,40 @@ final placesProvider = FutureProvider.family.autoDispose<List<Place>, int>((ref,
 /// Uses family pattern to support multiple place IDs.
 final placeDetailProvider = FutureProvider.family
     .autoDispose<PlaceDetailResponse?, int>((ref, placeId) async {
-  final placeService = ref.watch(placeServiceProvider);
+      final placeService = ref.watch(placeServiceProvider);
 
-  developer.log(
-    'Fetching place detail for place $placeId',
-    name: 'PlaceProvider',
-  );
-
-  try {
-    final detail = await placeService.getPlaceDetail(placeId);
-
-    if (detail != null) {
       developer.log(
-        'Successfully fetched place detail for place $placeId',
+        'Fetching place detail for place $placeId',
         name: 'PlaceProvider',
       );
-    } else {
-      developer.log(
-        'Place detail not found for place $placeId',
-        name: 'PlaceProvider',
-        level: 900,
-      );
-    }
 
-    return detail;
-  } catch (e, stack) {
-    developer.log(
-      'Failed to fetch place detail for place $placeId: $e',
-      name: 'PlaceProvider',
-      error: e,
-      stackTrace: stack,
-    );
-    rethrow;
-  }
-});
+      try {
+        final detail = await placeService.getPlaceDetail(placeId);
+
+        if (detail != null) {
+          developer.log(
+            'Successfully fetched place detail for place $placeId',
+            name: 'PlaceProvider',
+          );
+        } else {
+          developer.log(
+            'Place detail not found for place $placeId',
+            name: 'PlaceProvider',
+            level: 900,
+          );
+        }
+
+        return detail;
+      } catch (e, stack) {
+        developer.log(
+          'Failed to fetch place detail for place $placeId: $e',
+          name: 'PlaceProvider',
+          error: e,
+          stackTrace: stack,
+        );
+        rethrow;
+      }
+    });
 
 // ===== State Management Provider =====
 
@@ -134,7 +137,7 @@ class PlaceManagementState {
 /// Notifier for place management operations
 class PlaceManagementNotifier extends StateNotifier<PlaceManagementState> {
   PlaceManagementNotifier(this._placeService)
-      : super(const PlaceManagementState());
+    : super(const PlaceManagementState());
 
   final PlaceService _placeService;
 
@@ -180,10 +183,7 @@ class PlaceManagementNotifier extends StateNotifier<PlaceManagementState> {
     state = state.copyWith(isUpdating: true, clearError: true);
 
     try {
-      developer.log(
-        'Updating place $id',
-        name: 'PlaceManagementNotifier',
-      );
+      developer.log('Updating place $id', name: 'PlaceManagementNotifier');
 
       final place = await _placeService.updatePlace(id, request);
 
@@ -217,10 +217,7 @@ class PlaceManagementNotifier extends StateNotifier<PlaceManagementState> {
     state = state.copyWith(isDeleting: true, clearError: true);
 
     try {
-      developer.log(
-        'Deleting place $id',
-        name: 'PlaceManagementNotifier',
-      );
+      developer.log('Deleting place $id', name: 'PlaceManagementNotifier');
 
       await _placeService.deletePlace(id);
 
@@ -297,11 +294,10 @@ class PlaceManagementNotifier extends StateNotifier<PlaceManagementState> {
 
 /// Provider for place management operations
 final placeManagementProvider =
-    StateNotifierProvider<PlaceManagementNotifier, PlaceManagementState>(
-        (ref) {
-  final placeService = ref.watch(placeServiceProvider);
-  return PlaceManagementNotifier(placeService);
-});
+    StateNotifierProvider<PlaceManagementNotifier, PlaceManagementState>((ref) {
+      final placeService = ref.watch(placeServiceProvider);
+      return PlaceManagementNotifier(placeService);
+    });
 
 // ===== Place Usage Permission Providers =====
 
@@ -311,32 +307,32 @@ final placeManagementProvider =
 /// Uses family pattern to support multiple place IDs.
 final pendingUsageRequestsProvider = FutureProvider.family
     .autoDispose<List<PlaceUsageGroup>, int>((ref, placeId) async {
-  final placeService = ref.watch(placeServiceProvider);
+      final placeService = ref.watch(placeServiceProvider);
 
-  developer.log(
-    'Fetching pending usage requests for place $placeId',
-    name: 'PlaceProvider',
-  );
+      developer.log(
+        'Fetching pending usage requests for place $placeId',
+        name: 'PlaceProvider',
+      );
 
-  try {
-    final requests = await placeService.getPendingRequests(placeId);
+      try {
+        final requests = await placeService.getPendingRequests(placeId);
 
-    developer.log(
-      'Successfully fetched ${requests.length} pending requests',
-      name: 'PlaceProvider',
-    );
+        developer.log(
+          'Successfully fetched ${requests.length} pending requests',
+          name: 'PlaceProvider',
+        );
 
-    return requests;
-  } catch (e, stack) {
-    developer.log(
-      'Failed to fetch pending requests for place $placeId: $e',
-      name: 'PlaceProvider',
-      error: e,
-      stackTrace: stack,
-    );
-    rethrow;
-  }
-});
+        return requests;
+      } catch (e, stack) {
+        developer.log(
+          'Failed to fetch pending requests for place $placeId: $e',
+          name: 'PlaceProvider',
+          error: e,
+          stackTrace: stack,
+        );
+        rethrow;
+      }
+    });
 
 /// Provider for fetching approved usage groups for a place
 ///
@@ -344,29 +340,29 @@ final pendingUsageRequestsProvider = FutureProvider.family
 /// Uses family pattern to support multiple place IDs.
 final approvedUsageGroupsProvider = FutureProvider.family
     .autoDispose<List<PlaceUsageGroup>, int>((ref, placeId) async {
-  final placeService = ref.watch(placeServiceProvider);
+      final placeService = ref.watch(placeServiceProvider);
 
-  developer.log(
-    'Fetching approved usage groups for place $placeId',
-    name: 'PlaceProvider',
-  );
+      developer.log(
+        'Fetching approved usage groups for place $placeId',
+        name: 'PlaceProvider',
+      );
 
-  try {
-    final groups = await placeService.getApprovedGroups(placeId);
+      try {
+        final groups = await placeService.getApprovedGroups(placeId);
 
-    developer.log(
-      'Successfully fetched ${groups.length} approved groups',
-      name: 'PlaceProvider',
-    );
+        developer.log(
+          'Successfully fetched ${groups.length} approved groups',
+          name: 'PlaceProvider',
+        );
 
-    return groups;
-  } catch (e, stack) {
-    developer.log(
-      'Failed to fetch approved groups for place $placeId: $e',
-      name: 'PlaceProvider',
-      error: e,
-      stackTrace: stack,
-    );
-    rethrow;
-  }
-});
+        return groups;
+      } catch (e, stack) {
+        developer.log(
+          'Failed to fetch approved groups for place $placeId: $e',
+          name: 'PlaceProvider',
+          error: e,
+          stackTrace: stack,
+        );
+        rethrow;
+      }
+    });

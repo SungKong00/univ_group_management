@@ -17,7 +17,8 @@ class GroupTreeState extends Equatable {
   final List<GroupTreeNode> rootNodes;
   final bool isLoading;
   final String? errorMessage;
-  final Map<String, dynamic> filters; // showRecruiting, showAutonomous, showOfficial
+  final Map<String, dynamic>
+  filters; // showRecruiting, showAutonomous, showOfficial
   final Set<int> userGroupIds; // 🆕 사용자가 속한 그룹 ID들
 
   GroupTreeState copyWith({
@@ -37,7 +38,13 @@ class GroupTreeState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [rootNodes, isLoading, errorMessage, filters, userGroupIds]; // 🆕 userGroupIds 추가
+  List<Object?> get props => [
+    rootNodes,
+    isLoading,
+    errorMessage,
+    filters,
+    userGroupIds,
+  ]; // 🆕 userGroupIds 추가
 }
 
 /// Group Tree State Notifier
@@ -80,14 +87,22 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
   }
 
   // 🆕 사용자가 속한 그룹과 그 상위 그룹들을 자동으로 펼치는 함수
-  List<GroupTreeNode> _expandUserGroups(List<GroupTreeNode> nodes, Set<int> userGroupIds) {
+  List<GroupTreeNode> _expandUserGroups(
+    List<GroupTreeNode> nodes,
+    Set<int> userGroupIds,
+  ) {
     // 🆕 동일 계층에서 사용자 그룹을 우선 표시
     final sortedNodes = _sortNodesByUserPriority(nodes, userGroupIds);
-    return sortedNodes.map((node) => _expandNodeIfNeeded(node, userGroupIds)).toList();
+    return sortedNodes
+        .map((node) => _expandNodeIfNeeded(node, userGroupIds))
+        .toList();
   }
 
   // 🆕 동일 계층 내에서 사용자 그룹을 우선 표시하도록 정렬
-  List<GroupTreeNode> _sortNodesByUserPriority(List<GroupTreeNode> nodes, Set<int> userGroupIds) {
+  List<GroupTreeNode> _sortNodesByUserPriority(
+    List<GroupTreeNode> nodes,
+    Set<int> userGroupIds,
+  ) {
     final userGroups = <GroupTreeNode>[];
     final otherGroups = <GroupTreeNode>[];
 
@@ -111,16 +126,17 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
         .toList();
 
     // 🆕 자식 노드들도 사용자 그룹 우선으로 정렬
-    final sortedChildren = _sortNodesByUserPriority(expandedChildren, userGroupIds);
+    final sortedChildren = _sortNodesByUserPriority(
+      expandedChildren,
+      userGroupIds,
+    );
 
     // 현재 노드 또는 자손 노드 중 하나라도 사용자가 속한 그룹이 있는지 확인
-    final shouldExpand = userGroupIds.contains(node.id) ||
-                        _hasUserGroupInDescendants(node, userGroupIds);
+    final shouldExpand =
+        userGroupIds.contains(node.id) ||
+        _hasUserGroupInDescendants(node, userGroupIds);
 
-    return node.copyWith(
-      children: sortedChildren,
-      isExpanded: shouldExpand,
-    );
+    return node.copyWith(children: sortedChildren, isExpanded: shouldExpand);
   }
 
   // 🆕 자손 노드 중에 사용자가 속한 그룹이 있는지 확인
@@ -148,7 +164,9 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
   }
 
   /// Build tree structure from hierarchy nodes (with parentId)
-  List<GroupTreeNode> _buildTreeFromHierarchyNodes(List<GroupHierarchyNode> nodes) {
+  List<GroupTreeNode> _buildTreeFromHierarchyNodes(
+    List<GroupHierarchyNode> nodes,
+  ) {
     if (nodes.isEmpty) return [];
 
     // Find root nodes (nodes with no parent)
@@ -159,7 +177,10 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
   }
 
   /// Recursively build a tree node with its children
-  GroupTreeNode _buildNodeRecursive(GroupHierarchyNode node, List<GroupHierarchyNode> allNodes) {
+  GroupTreeNode _buildNodeRecursive(
+    GroupHierarchyNode node,
+    List<GroupHierarchyNode> allNodes,
+  ) {
     // Find direct children of this node
     final children = allNodes.where((n) => n.parentId == node.id).toList();
 
@@ -167,7 +188,9 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
     final level = _calculateLevel(node, allNodes);
 
     // Recursively build children
-    final childNodes = children.map((child) => _buildNodeRecursive(child, allNodes)).toList();
+    final childNodes = children
+        .map((child) => _buildNodeRecursive(child, allNodes))
+        .toList();
 
     // Convert to GroupTreeNode
     return GroupTreeNode(
@@ -184,7 +207,10 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
   }
 
   /// Calculate the level (depth) of a node in the tree
-  int _calculateLevel(GroupHierarchyNode node, List<GroupHierarchyNode> allNodes) {
+  int _calculateLevel(
+    GroupHierarchyNode node,
+    List<GroupHierarchyNode> allNodes,
+  ) {
     int level = 0;
     int? currentParentId = node.parentId;
 
@@ -224,9 +250,11 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
     }
   }
 
-
   /// Recursively update a node's expansion state
-  List<GroupTreeNode> _updateNodeRecursive(List<GroupTreeNode> nodes, int targetId) {
+  List<GroupTreeNode> _updateNodeRecursive(
+    List<GroupTreeNode> nodes,
+    int targetId,
+  ) {
     return nodes.map((node) {
       if (node.id == targetId) {
         return node.toggleExpanded();
@@ -258,8 +286,8 @@ class GroupTreeStateNotifier extends StateNotifier<GroupTreeState> {
 // State Provider
 final groupTreeStateProvider =
     StateNotifierProvider<GroupTreeStateNotifier, GroupTreeState>(
-  (ref) => GroupTreeStateNotifier(),
-);
+      (ref) => GroupTreeStateNotifier(),
+    );
 
 // Selective Providers
 final treeRootNodesProvider = Provider<List<GroupTreeNode>>((ref) {
@@ -298,17 +326,25 @@ final filteredTreeRootNodesProvider = Provider<List<GroupTreeNode>>((ref) {
   }
 
   // 필터 적용: 재귀적으로 노드 필터링
-  return rootNodes.map((node) => _filterNodeRecursive(node, filters)).where((node) => node != null).cast<GroupTreeNode>().toList();
+  return rootNodes
+      .map((node) => _filterNodeRecursive(node, filters))
+      .where((node) => node != null)
+      .cast<GroupTreeNode>()
+      .toList();
 });
 
 /// 재귀적으로 노드와 자식 노드를 필터링
-GroupTreeNode? _filterNodeRecursive(GroupTreeNode node, Map<String, dynamic> filters) {
+GroupTreeNode? _filterNodeRecursive(
+  GroupTreeNode node,
+  Map<String, dynamic> filters,
+) {
   final showRecruiting = filters['showRecruiting'] == true;
   final showAutonomous = filters['showAutonomous'] == true;
   final showOfficial = filters['showOfficial'] == true;
 
   // 대학 그룹(UNIVERSITY, COLLEGE, DEPARTMENT)은 항상 표시
-  final isUniversityGroup = node.groupType == GroupType.university ||
+  final isUniversityGroup =
+      node.groupType == GroupType.university ||
       node.groupType == GroupType.college ||
       node.groupType == GroupType.department;
 

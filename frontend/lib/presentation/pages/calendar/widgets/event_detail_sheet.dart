@@ -17,7 +17,9 @@ Future<EventDetailAction?> showEventDetailSheet(
     showDragHandle: true,
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.dialog)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppRadius.dialog),
+      ),
     ),
     builder: (context) => _EventDetailSheet(event: event),
   );
@@ -42,7 +44,11 @@ class _EventDetailSheet extends StatelessWidget {
           '${timeFormatter.format(event.startDateTime)} ~ ${timeFormatter.format(event.endDateTime)}';
     }
 
-    final dateLabel = _buildDateLabel(dateFormatter, event.startDateTime, event.endDateTime);
+    final dateLabel = _buildDateLabel(
+      dateFormatter,
+      event.startDateTime,
+      event.endDateTime,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -124,16 +130,20 @@ class _EventDetailSheet extends StatelessWidget {
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.edit_outlined),
                   label: const Text('수정'),
-                  onPressed: () => Navigator.of(context).pop(EventDetailAction.edit),
+                  onPressed: () =>
+                      Navigator.of(context).pop(EventDetailAction.edit),
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: FilledButton.icon(
-                  style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                  ),
                   icon: const Icon(Icons.delete_outline),
                   label: const Text('삭제'),
-                  onPressed: () => Navigator.of(context).pop(EventDetailAction.delete),
+                  onPressed: () =>
+                      Navigator.of(context).pop(EventDetailAction.delete),
                 ),
               ),
             ],

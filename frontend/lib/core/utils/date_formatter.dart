@@ -130,7 +130,10 @@ class DateFormatter {
   /// - Output: "2025.10.14 (월) ~ 2025.10.20 (일)"
   static String formatWeekRangeDetailed(DateTime weekStart) {
     final end = weekStart.add(const Duration(days: 6));
-    final startFormatted = DateFormat('yyyy.MM.dd (E)', 'ko_KR').format(weekStart);
+    final startFormatted = DateFormat(
+      'yyyy.MM.dd (E)',
+      'ko_KR',
+    ).format(weekStart);
     final endFormatted = DateFormat('yyyy.MM.dd (E)', 'ko_KR').format(end);
     return '$startFormatted ~ $endFormatted';
   }

@@ -51,14 +51,10 @@ class _GroupSearchBarState extends ConsumerState<GroupSearchBar> {
         onChanged: _onSearchChanged,
         decoration: InputDecoration(
           hintText: '그룹 이름을 검색하세요',
-          hintStyle: AppTheme.bodyMediumTheme(context).copyWith(
-            color: AppColors.neutral500,
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: AppColors.neutral600,
-            size: 20,
-          ),
+          hintStyle: AppTheme.bodyMediumTheme(
+            context,
+          ).copyWith(color: AppColors.neutral500),
+          prefixIcon: Icon(Icons.search, color: AppColors.neutral600, size: 20),
           suffixIcon: _controller.text.isNotEmpty
               ? IconButton(
                   icon: Icon(

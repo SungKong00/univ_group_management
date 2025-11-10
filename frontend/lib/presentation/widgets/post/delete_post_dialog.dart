@@ -13,11 +13,7 @@ class DeletePostDialog extends ConsumerStatefulWidget {
   final int postId;
   final VoidCallback? onSuccess;
 
-  const DeletePostDialog({
-    super.key,
-    required this.postId,
-    this.onSuccess,
-  });
+  const DeletePostDialog({super.key, required this.postId, this.onSuccess});
 
   @override
   ConsumerState<DeletePostDialog> createState() => _DeletePostDialogState();
@@ -52,9 +48,7 @@ class _DeletePostDialogState extends ConsumerState<DeletePostDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         width: 400,
         padding: const EdgeInsets.all(24),

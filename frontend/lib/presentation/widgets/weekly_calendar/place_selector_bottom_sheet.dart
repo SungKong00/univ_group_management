@@ -9,10 +9,7 @@ import '../common/app_empty_state.dart';
 class PlaceSelectorBottomSheet extends StatefulWidget {
   final Function(List<Place>) onPlacesSelected;
 
-  const PlaceSelectorBottomSheet({
-    super.key,
-    required this.onPlacesSelected,
-  });
+  const PlaceSelectorBottomSheet({super.key, required this.onPlacesSelected});
 
   @override
   State<PlaceSelectorBottomSheet> createState() =>
@@ -70,8 +67,9 @@ class _PlaceSelectorBottomSheetState extends State<PlaceSelectorBottomSheet> {
     // Sort by building name
     final sortedKeys = grouped.keys.toList()..sort();
     return {
-      for (final key in sortedKeys) key: grouped[key]!
-        ..sort((a, b) => a.displayName.compareTo(b.displayName))
+      for (final key in sortedKeys)
+        key: grouped[key]!
+          ..sort((a, b) => a.displayName.compareTo(b.displayName)),
     };
   }
 
@@ -81,9 +79,7 @@ class _PlaceSelectorBottomSheetState extends State<PlaceSelectorBottomSheet> {
     final maxHeight = screenHeight * 0.6; // 화면 높이의 60%로 제한
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: maxHeight,
-      ),
+      constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -99,10 +95,7 @@ class _PlaceSelectorBottomSheetState extends State<PlaceSelectorBottomSheet> {
               children: [
                 const Text(
                   '장소 선택',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -146,8 +139,7 @@ class _PlaceSelectorBottomSheetState extends State<PlaceSelectorBottomSheet> {
                       itemCount: _groupPlacesByBuilding().length,
                       itemBuilder: (context, index) {
                         final buildings = _groupPlacesByBuilding();
-                        final buildingName =
-                            buildings.keys.elementAt(index);
+                        final buildingName = buildings.keys.elementAt(index);
                         final places = buildings[buildingName]!;
 
                         return Column(
@@ -161,18 +153,17 @@ class _PlaceSelectorBottomSheetState extends State<PlaceSelectorBottomSheet> {
                               ),
                               child: Text(
                                 '📍 $buildingName (${places.length})',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                             ),
                             // Place items
                             ...places.map((place) {
-                              final isSelected =
-                                  _selectedPlaceIds.contains(place.id);
+                              final isSelected = _selectedPlaceIds.contains(
+                                place.id,
+                              );
                               return CheckboxListTile(
-                                contentPadding:
-                                    const EdgeInsets.symmetric(
+                                contentPadding: const EdgeInsets.symmetric(
                                   horizontal: AppSpacing.md + 16,
                                 ),
                                 title: Text(place.displayName),

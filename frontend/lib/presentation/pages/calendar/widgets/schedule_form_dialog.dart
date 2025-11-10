@@ -136,7 +136,8 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   spacing: AppSpacing.xs,
                   runSpacing: AppSpacing.xs,
                   children: kPersonalScheduleColors.map((color) {
-                    final isSelected = color.toARGB32() == _selectedColor.toARGB32();
+                    final isSelected =
+                        color.toARGB32() == _selectedColor.toARGB32();
                     return GestureDetector(
                       onTap: () {
                         setState(() {

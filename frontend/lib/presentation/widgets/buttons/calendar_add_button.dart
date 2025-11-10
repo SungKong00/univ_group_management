@@ -52,15 +52,16 @@ class CalendarAddButton extends StatelessWidget {
           label: Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
           ),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             backgroundColor: Theme.of(context).colorScheme.primary,
-            disabledBackgroundColor:
-                Theme.of(context).colorScheme.primary.withOpacity(0.5),
+            disabledBackgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withOpacity(0.5),
           ),
         ),
       ),

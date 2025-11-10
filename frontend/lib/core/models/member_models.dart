@@ -209,8 +209,12 @@ class JoinRequest {
       email: user?['email'] as String? ?? 'unknown@example.com',
       profileImageUrl: user?['profileImageUrl'] as String?,
       message: json['requestMessage'] as String? ?? '',
-      requestedAt: DateTime.parse(json['createdAt'] as String? ?? DateTime.now().toIso8601String()),
-      status: JoinRequestStatus.fromString(json['status'] as String? ?? 'PENDING'),
+      requestedAt: DateTime.parse(
+        json['createdAt'] as String? ?? DateTime.now().toIso8601String(),
+      ),
+      status: JoinRequestStatus.fromString(
+        json['status'] as String? ?? 'PENDING',
+      ),
     );
   }
 

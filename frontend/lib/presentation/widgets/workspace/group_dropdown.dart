@@ -237,10 +237,9 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
                       .switchGroup(group.id);
 
                   // Update workspace state for compatibility with existing code
-                  ref.read(workspaceStateProvider.notifier).enterWorkspace(
-                        group.id.toString(),
-                        membership: group,
-                      );
+                  ref
+                      .read(workspaceStateProvider.notifier)
+                      .enterWorkspace(group.id.toString(), membership: group);
 
                   _toggleDropdown();
                 } catch (e) {

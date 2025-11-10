@@ -106,11 +106,7 @@ class CalendarEventCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 // Location (Place Calendar only, before time)
                 if (showIcons && location != null) ...[
-                  _buildInfoRow(
-                    context,
-                    Icons.place,
-                    location!,
-                  ),
+                  _buildInfoRow(context, Icons.place, location!),
                   const SizedBox(height: 2),
                 ],
                 // Time + Reserved By (inline for space efficiency)
@@ -165,9 +161,9 @@ class CalendarEventCard extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.neutral600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.neutral600),
             overflow: TextOverflow.ellipsis,
           ),
         ),

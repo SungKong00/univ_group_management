@@ -34,7 +34,10 @@ class ViewContextResolver {
         return _resolveHomeRoute(targetGroupId);
 
       case ViewType.channel:
-        final channelRoute = await _resolveChannelRoute(targetGroupId, permissions);
+        final channelRoute = await _resolveChannelRoute(
+          targetGroupId,
+          permissions,
+        );
         return channelRoute ?? _resolveHomeRoute(targetGroupId);
 
       case ViewType.calendar:
@@ -45,7 +48,10 @@ class ViewContextResolver {
         return adminRoute ?? _resolveHomeRoute(targetGroupId);
 
       case ViewType.memberManagement:
-        final memberRoute = await _resolveMemberManagementRoute(targetGroupId, permissions);
+        final memberRoute = await _resolveMemberManagementRoute(
+          targetGroupId,
+          permissions,
+        );
         return memberRoute ?? _resolveHomeRoute(targetGroupId);
     }
   }

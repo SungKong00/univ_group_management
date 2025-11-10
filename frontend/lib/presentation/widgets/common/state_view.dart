@@ -100,9 +100,9 @@ class StateView<T> extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               loadingMessage!,
-              style: AppTheme.bodyMediumTheme(context).copyWith(
-                color: AppColors.neutral700,
-              ),
+              style: AppTheme.bodyMediumTheme(
+                context,
+              ).copyWith(color: AppColors.neutral700),
             ),
           ],
         ],
@@ -122,25 +122,21 @@ class StateView<T> extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: AppSpacing.md),
             Text(
               displayMessage,
-              style: AppTheme.headlineSmallTheme(context).copyWith(
-                color: AppColors.neutral900,
-              ),
+              style: AppTheme.headlineSmallTheme(
+                context,
+              ).copyWith(color: AppColors.neutral900),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               '문제가 지속되면 관리자에게 문의하세요',
-              style: AppTheme.bodyMediumTheme(context).copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMediumTheme(
+                context,
+              ).copyWith(color: AppColors.neutral600),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -174,18 +170,18 @@ class StateView<T> extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               emptyTitle ?? '데이터가 없습니다',
-              style: AppTheme.headlineSmallTheme(context).copyWith(
-                color: AppColors.neutral900,
-              ),
+              style: AppTheme.headlineSmallTheme(
+                context,
+              ).copyWith(color: AppColors.neutral900),
               textAlign: TextAlign.center,
             ),
             if (emptyDescription != null) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
                 emptyDescription!,
-                style: AppTheme.bodyMediumTheme(context).copyWith(
-                  color: AppColors.neutral600,
-                ),
+                style: AppTheme.bodyMediumTheme(
+                  context,
+                ).copyWith(color: AppColors.neutral600),
                 textAlign: TextAlign.center,
               ),
             ],

@@ -279,11 +279,7 @@ class _ExternalEventsOverlayState extends State<ExternalEventsOverlay> {
         const SizedBox(height: AppSpacing.md),
 
         // Calendar Grid with external events
-        Expanded(
-          child: SingleChildScrollView(
-            child: _buildCalendarGrid(),
-          ),
-        ),
+        Expanded(child: SingleChildScrollView(child: _buildCalendarGrid())),
       ],
     );
   }
@@ -316,10 +312,7 @@ class _ExternalEventsOverlayState extends State<ExternalEventsOverlay> {
           // Week range display
           Expanded(
             child: Center(
-              child: Text(
-                _formatWeekRange(),
-                style: AppTheme.titleMedium,
-              ),
+              child: Text(_formatWeekRange(), style: AppTheme.titleMedium),
             ),
           ),
 
@@ -369,10 +362,7 @@ class _ExternalEventsOverlayState extends State<ExternalEventsOverlay> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Panel header
-          Text(
-            '그룹 일정 표시',
-            style: AppTheme.titleMedium,
-          ),
+          Text('그룹 일정 표시', style: AppTheme.titleMedium),
           const SizedBox(height: AppSpacing.xs),
 
           // Group checkboxes
@@ -441,7 +431,9 @@ class _ExternalEventsOverlayState extends State<ExternalEventsOverlay> {
                   Text(
                     '$eventCount개 일정',
                     style: AppTheme.bodySmall.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
               ],
@@ -529,11 +521,7 @@ class _ExternalEventsOverlayState extends State<ExternalEventsOverlay> {
             }
 
             final rect = _eventToRect(event, dayColumnWidth);
-            eventRects.add((
-              rect: rect,
-              title: event.title,
-              color: groupColor,
-            ));
+            eventRects.add((rect: rect, title: event.title, color: groupColor));
           }
         }
 
@@ -581,8 +569,10 @@ class _ExternalEventsPainter extends CustomPainter {
         ..color = event.color.withValues(alpha: 0.7)
         ..style = PaintingStyle.fill;
 
-      final rrect =
-          RRect.fromRectAndRadius(event.rect, const Radius.circular(4));
+      final rrect = RRect.fromRectAndRadius(
+        event.rect,
+        const Radius.circular(4),
+      );
       canvas.drawRRect(rrect, paint);
 
       // Draw border for better visibility
@@ -608,15 +598,9 @@ class _ExternalEventsPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       );
 
-      textPainter.layout(
-        minWidth: 0,
-        maxWidth: event.rect.width - 8,
-      );
+      textPainter.layout(minWidth: 0, maxWidth: event.rect.width - 8);
 
-      textPainter.paint(
-        canvas,
-        event.rect.topLeft + const Offset(4, 4),
-      );
+      textPainter.paint(canvas, event.rect.topLeft + const Offset(4, 4));
     }
   }
 

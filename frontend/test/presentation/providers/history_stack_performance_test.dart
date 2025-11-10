@@ -103,7 +103,9 @@ void main() {
       for (int i = 0; i < 100; i++) {
         final current = notifier.state.current;
         expect(
-            current, const WorkspaceRoute.channel(groupId: 1, channelId: 20));
+          current,
+          const WorkspaceRoute.channel(groupId: 1, channelId: 20),
+        );
       }
 
       stopwatch.stop();
@@ -130,10 +132,7 @@ void main() {
         50,
         (i) => WorkspaceRoute.channel(groupId: 1, channelId: i),
       );
-      notifier.state = NavigationState(
-        stack: largeStack,
-        currentIndex: 49,
-      );
+      notifier.state = NavigationState(stack: largeStack, currentIndex: 49);
 
       final stopwatch = Stopwatch()..start();
 
@@ -168,10 +167,7 @@ void main() {
         30,
         (i) => WorkspaceRoute.channel(groupId: 1, channelId: i),
       );
-      notifier.state = NavigationState(
-        stack: stack,
-        currentIndex: 15,
-      );
+      notifier.state = NavigationState(stack: stack, currentIndex: 15);
 
       final stopwatch = Stopwatch()..start();
 

@@ -91,10 +91,7 @@ class _GroupPickerBottomSheetState extends State<GroupPickerBottomSheet> {
             ),
 
             // Title
-            Text(
-              '그룹 선택',
-              style: AppTheme.headlineSmall,
-            ),
+            Text('그룹 선택', style: AppTheme.headlineSmall),
             const SizedBox(height: AppSpacing.sm),
 
             // Loading state
@@ -159,10 +156,7 @@ class _GroupPickerBottomSheetState extends State<GroupPickerBottomSheet> {
                 final isSelected = _localSelectedIds.contains(group.id);
 
                 return CheckboxListTile(
-                  title: Text(
-                    group.name,
-                    style: AppTheme.bodyMedium,
-                  ),
+                  title: Text(group.name, style: AppTheme.bodyMedium),
                   value: isSelected,
                   onChanged: (checked) {
                     setState(() {
@@ -190,9 +184,7 @@ class _GroupPickerBottomSheetState extends State<GroupPickerBottomSheet> {
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.sm,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               ),
               child: const Text('완료'),
             ),

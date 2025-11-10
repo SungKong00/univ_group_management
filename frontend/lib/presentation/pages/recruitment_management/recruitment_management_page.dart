@@ -87,7 +87,10 @@ class _RecruitmentManagementPageState
       final request = data.toCreateRequest();
 
       // 3. Call API via Provider
-      final params = CreateRecruitmentParams(groupId: groupId, request: request);
+      final params = CreateRecruitmentParams(
+        groupId: groupId,
+        request: request,
+      );
       await ref.read(createRecruitmentProvider(params).future);
 
       // 4. Success feedback
@@ -225,16 +228,14 @@ class _RecruitmentManagementPageState
           children: [
             Text(
               '모집 공고 관리',
-              style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                color: AppColors.neutral900,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineLarge!.copyWith(color: AppColors.neutral900),
             ),
             SizedBox(height: AppSpacing.xs),
             Text(
               '활성 모집 현황을 확인하고 새 모집 공고를 등록하세요.',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
             ),
             SizedBox(height: AppSpacing.lg),
             ActiveRecruitmentSection(
@@ -273,7 +274,8 @@ class ActiveRecruitmentSection extends ConsumerStatefulWidget {
   final Future<void> Function(
     RecruitmentResponse recruitment,
     RecruitmentFormData data,
-  ) onUpdate;
+  )
+  onUpdate;
   final Future<void> Function(RecruitmentResponse recruitment) onClose;
   final Future<void> Function(RecruitmentResponse recruitment) onDelete;
 
@@ -301,7 +303,8 @@ class _ActiveRecruitmentSectionState
       isEmphasized: true,
       child: StateView<RecruitmentResponse?>(
         value: widget.activeRecruitment,
-        onRetry: () => ref.invalidate(activeRecruitmentProvider(widget.groupId)),
+        onRetry: () =>
+            ref.invalidate(activeRecruitmentProvider(widget.groupId)),
         builder: (context, recruitment) {
           if (recruitment == null || _isEditing) {
             return RecruitmentForm(
@@ -345,31 +348,25 @@ class RecruitmentDetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final infoStyle = AppTheme.bodyMedium.copyWith(
-      color: AppColors.neutral600,
-    );
+    final infoStyle = AppTheme.bodyMedium.copyWith(color: AppColors.neutral600);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           recruitment.title,
-          style: AppTheme.headlineMedium.copyWith(
-            color: AppColors.neutral900,
-          ),
+          style: AppTheme.headlineMedium.copyWith(color: AppColors.neutral900),
         ),
         SizedBox(height: AppSpacing.xs),
         Row(
           children: [
             _StatusBadge(status: recruitment.status),
             SizedBox(width: AppSpacing.xs),
-            Text(
-              '작성일 ${_formatDate(recruitment.createdAt)}',
-              style: infoStyle,
-            ),
+            Text('작성일 ${_formatDate(recruitment.createdAt)}', style: infoStyle),
           ],
         ),
-        if (recruitment.content != null && recruitment.content!.trim().isNotEmpty)
+        if (recruitment.content != null &&
+            recruitment.content!.trim().isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.sm),
             child: CollapsibleContent(
@@ -378,30 +375,32 @@ class RecruitmentDetailsCard extends StatelessWidget {
             ),
           ),
         SizedBox(height: AppSpacing.sm),
-        _InfoGrid(items: [
-          _InfoItem(
-            label: '현재 지원자 수',
-            value: recruitment.showApplicantCount
-                ? '${recruitment.currentApplicantCount}명'
-                : '비공개',
-          ),
-          _InfoItem(
-            label: '최대 모집 인원',
-            value: recruitment.maxApplicants != null
-                ? '${recruitment.maxApplicants}명'
-                : '제한 없음',
-          ),
-          _InfoItem(
-            label: '모집 시작일',
-            value: _formatDateTime(recruitment.recruitmentStartDate),
-          ),
-          _InfoItem(
-            label: '모집 마감일',
-            value: recruitment.recruitmentEndDate != null
-                ? _formatDateTime(recruitment.recruitmentEndDate!)
-                : '마감일 미설정',
-          ),
-        ]),
+        _InfoGrid(
+          items: [
+            _InfoItem(
+              label: '현재 지원자 수',
+              value: recruitment.showApplicantCount
+                  ? '${recruitment.currentApplicantCount}명'
+                  : '비공개',
+            ),
+            _InfoItem(
+              label: '최대 모집 인원',
+              value: recruitment.maxApplicants != null
+                  ? '${recruitment.maxApplicants}명'
+                  : '제한 없음',
+            ),
+            _InfoItem(
+              label: '모집 시작일',
+              value: _formatDateTime(recruitment.recruitmentStartDate),
+            ),
+            _InfoItem(
+              label: '모집 마감일',
+              value: recruitment.recruitmentEndDate != null
+                  ? _formatDateTime(recruitment.recruitmentEndDate!)
+                  : '마감일 미설정',
+            ),
+          ],
+        ),
         SizedBox(height: AppSpacing.sm),
         Text(
           '지원서 질문',
@@ -448,10 +447,7 @@ class RecruitmentDetailsCard extends StatelessWidget {
                 ),
                 SizedBox(width: AppSpacing.xs),
                 Expanded(
-                  child: ErrorButton(
-                    text: '모집 삭제',
-                    onPressed: onDelete,
-                  ),
+                  child: ErrorButton(text: '모집 삭제', onPressed: onDelete),
                 ),
               ],
             ),
@@ -636,7 +632,8 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
   }) {
     _titleController.text = recruitment?.title ?? '';
     _contentController.text = recruitment?.content ?? '';
-    _maxApplicantsController.text = recruitment?.maxApplicants?.toString() ?? '';
+    _maxApplicantsController.text =
+        recruitment?.maxApplicants?.toString() ?? '';
     _showApplicantCount = recruitment?.showApplicantCount ?? true;
     _selectedEndDate = recruitment?.recruitmentEndDate;
 
@@ -784,9 +781,7 @@ class _RecruitmentFormState extends ConsumerState<RecruitmentForm> {
         children: [
           Text(
             isEditing ? '모집 공고 수정' : '새 모집 공고 작성',
-            style: AppTheme.headlineSmall.copyWith(
-              color: AppColors.neutral900,
-            ),
+            style: AppTheme.headlineSmall.copyWith(color: AppColors.neutral900),
           ),
           SizedBox(height: AppSpacing.sm),
           TextFormField(
@@ -1038,7 +1033,8 @@ class _ArchivedRecruitmentTile extends ConsumerWidget {
   void _showDetailModal(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => RecruitmentDetailModal(recruitmentId: recruitment.id),
+      builder: (context) =>
+          RecruitmentDetailModal(recruitmentId: recruitment.id),
     );
   }
 
@@ -1055,77 +1051,73 @@ class _ArchivedRecruitmentTile extends ConsumerWidget {
             borderRadius: BorderRadius.circular(AppRadius.card),
           ),
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    recruitment.title,
-                    style: AppTheme.titleLarge.copyWith(
-                      color: AppColors.neutral900,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      recruitment.title,
+                      style: AppTheme.titleLarge.copyWith(
+                        color: AppColors.neutral900,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                _StatusBadge(status: RecruitmentStatus.closed),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.xs),
-              child: Text(
-                '${recruitment.group.name} · ${_formatDate(recruitment.createdAt)} 시작 · ${_formatDate(recruitment.closedAt)} 종료',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.neutral600,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                  _StatusBadge(status: RecruitmentStatus.closed),
+                ],
               ),
-            ),
-            SizedBox(height: AppSpacing.xs),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: 4,
-              children: [
-                _ChipText(
-                  icon: Icons.article_outlined,
-                  text: '총 ${recruitment.totalApplications}건 지원',
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
+                child: Text(
+                  '${recruitment.group.name} · ${_formatDate(recruitment.createdAt)} 시작 · ${_formatDate(recruitment.closedAt)} 종료',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppColors.neutral600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                _ChipText(
-                  icon: Icons.check_circle_outline,
-                  text: '승인 ${recruitment.approvedApplications}건',
-                ),
-                _ChipText(
-                  icon: Icons.cancel_outlined,
-                  text: '거부 ${recruitment.rejectedApplications}건',
-                ),
-                _ChipText(
-                  icon: Icons.info_outline,
-                  text: '자세히 보기',
-                ),
-              ],
-            ),
-          ],
+              ),
+              SizedBox(height: AppSpacing.xs),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: 4,
+                children: [
+                  _ChipText(
+                    icon: Icons.article_outlined,
+                    text: '총 ${recruitment.totalApplications}건 지원',
+                  ),
+                  _ChipText(
+                    icon: Icons.check_circle_outline,
+                    text: '승인 ${recruitment.approvedApplications}건',
+                  ),
+                  _ChipText(
+                    icon: Icons.cancel_outlined,
+                    text: '거부 ${recruitment.rejectedApplications}건',
+                  ),
+                  _ChipText(icon: Icons.info_outline, text: '자세히 보기'),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
 }
 
 class RecruitmentDetailModal extends ConsumerWidget {
-  const RecruitmentDetailModal({
-    super.key,
-    required this.recruitmentId,
-  });
+  const RecruitmentDetailModal({super.key, required this.recruitmentId});
 
   final int recruitmentId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final recruitmentAsync = ref.watch(recruitmentDetailProvider(recruitmentId));
+    final recruitmentAsync = ref.watch(
+      recruitmentDetailProvider(recruitmentId),
+    );
 
     return Dialog(
       shape: RoundedRectangleBorder(
@@ -1226,30 +1218,36 @@ class RecruitmentDetailModal extends ConsumerWidget {
                         ),
                       ),
                       SizedBox(height: AppSpacing.xs),
-                      _InfoGrid(items: [
-                        _InfoItem(
-                          label: '현재 지원자 수',
-                          value: recruitment.showApplicantCount
-                              ? '${recruitment.currentApplicantCount}명'
-                              : '비공개',
-                        ),
-                        _InfoItem(
-                          label: '최대 모집 인원',
-                          value: recruitment.maxApplicants != null
-                              ? '${recruitment.maxApplicants}명'
-                              : '제한 없음',
-                        ),
-                        _InfoItem(
-                          label: '모집 시작일',
-                          value: _formatDateTime(recruitment.recruitmentStartDate),
-                        ),
-                        _InfoItem(
-                          label: '모집 마감일',
-                          value: recruitment.recruitmentEndDate != null
-                              ? _formatDateTime(recruitment.recruitmentEndDate!)
-                              : '마감일 미설정',
-                        ),
-                      ]),
+                      _InfoGrid(
+                        items: [
+                          _InfoItem(
+                            label: '현재 지원자 수',
+                            value: recruitment.showApplicantCount
+                                ? '${recruitment.currentApplicantCount}명'
+                                : '비공개',
+                          ),
+                          _InfoItem(
+                            label: '최대 모집 인원',
+                            value: recruitment.maxApplicants != null
+                                ? '${recruitment.maxApplicants}명'
+                                : '제한 없음',
+                          ),
+                          _InfoItem(
+                            label: '모집 시작일',
+                            value: _formatDateTime(
+                              recruitment.recruitmentStartDate,
+                            ),
+                          ),
+                          _InfoItem(
+                            label: '모집 마감일',
+                            value: recruitment.recruitmentEndDate != null
+                                ? _formatDateTime(
+                                    recruitment.recruitmentEndDate!,
+                                  )
+                                : '마감일 미설정',
+                          ),
+                        ],
+                      ),
                       SizedBox(height: AppSpacing.sm),
                       Text(
                         '지원서 질문',
@@ -1269,9 +1267,15 @@ class RecruitmentDetailModal extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            for (var i = 0; i < recruitment.applicationQuestions.length; i++)
+                            for (
+                              var i = 0;
+                              i < recruitment.applicationQuestions.length;
+                              i++
+                            )
                               Padding(
-                                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.xs,
+                                ),
                                 child: _QuestionChip(
                                   index: i + 1,
                                   text: recruitment.applicationQuestions[i],
@@ -1325,44 +1329,47 @@ class _SectionContainer extends StatelessWidget {
       child: Container(
         decoration: isEmphasized
             ? BoxDecoration(
-                border: Border.all(color: AppColors.brand.withValues(alpha: 0.2), width: 2),
+                border: Border.all(
+                  color: AppColors.brand.withValues(alpha: 0.2),
+                  width: 2,
+                ),
                 borderRadius: BorderRadius.circular(AppRadius.card),
               )
             : null,
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: AppColors.brand),
-              SizedBox(width: AppSpacing.xs),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTheme.headlineSmall.copyWith(
-                        color: AppColors.neutral900,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: AppColors.brand),
+                SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTheme.headlineSmall.copyWith(
+                          color: AppColors.neutral900,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppColors.neutral600,
+                      SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppColors.neutral600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: AppSpacing.md),
-          child,
-        ],
-      ),
+              ],
+            ),
+            SizedBox(height: AppSpacing.md),
+            child,
+          ],
+        ),
       ),
     );
   }
@@ -1378,13 +1385,19 @@ class _InfoGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Calculate number of columns based on screen width
-        final int crossAxisCount = _calculateCrossAxisCount(constraints.maxWidth);
+        final int crossAxisCount = _calculateCrossAxisCount(
+          constraints.maxWidth,
+        );
 
         // Calculate spacing based on design system
         const spacing = AppSpacing.xs;
 
         // Calculate item width with minimum/maximum constraints
-        final itemWidth = _calculateItemWidth(constraints.maxWidth, crossAxisCount, spacing);
+        final itemWidth = _calculateItemWidth(
+          constraints.maxWidth,
+          crossAxisCount,
+          spacing,
+        );
 
         return Wrap(
           spacing: spacing,
@@ -1463,9 +1476,7 @@ class _InfoTile extends StatelessWidget {
         children: [
           Text(
             item.label,
-            style: AppTheme.bodySmall.copyWith(
-              color: AppColors.neutral600,
-            ),
+            style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
           ),
           SizedBox(height: 4),
           Text(
@@ -1505,25 +1516,25 @@ class _QuestionChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.card / 2),
         ),
         child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Q$index',
-            style: Theme.of(context).textTheme.labelLarge!.copyWith(
-              color: AppColors.brand,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Q$index',
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge!.copyWith(color: AppColors.brand),
             ),
-          ),
-          SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Text(
-              text,
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral800,
+            SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Text(
+                text,
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppColors.neutral800,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -1550,53 +1561,49 @@ class _QuestionCard extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              SectionCard(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xs,
-                  vertical: 6,
-                ),
-                backgroundColor: AppColors.brandLight,
-                borderRadius: AppRadius.button / 2,
-                showShadow: false,
-                child: Text(
-                  '질문 ${index + 1}',
-                  style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                    color: AppColors.brand,
-                    fontWeight: FontWeight.w600,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                SectionCard(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                    vertical: 6,
+                  ),
+                  backgroundColor: AppColors.brandLight,
+                  borderRadius: AppRadius.button / 2,
+                  showShadow: false,
+                  child: Text(
+                    '질문 ${index + 1}',
+                    style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                      color: AppColors.brand,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-              const Spacer(),
-              ErrorButton(
-                text: '삭제',
-                onPressed: onRemove,
-                width: 80,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: '질문 내용',
-              hintText: '지원자에게 물어보고 싶은 질문을 입력하세요.',
+                const Spacer(),
+                ErrorButton(text: '삭제', onPressed: onRemove, width: 80),
+              ],
             ),
-            maxLines: 2,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '질문을 입력해주세요.';
-              }
-              if (value.trim().length > 500) {
-                return '질문은 500자를 초과할 수 없습니다.';
-              }
-              return null;
-            },
-          ),
-        ],
+            const SizedBox(height: AppSpacing.sm),
+            TextFormField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: '질문 내용',
+                hintText: '지원자에게 물어보고 싶은 질문을 입력하세요.',
+              ),
+              maxLines: 2,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return '질문을 입력해주세요.';
+                }
+                if (value.trim().length > 500) {
+                  return '질문은 500자를 초과할 수 없습니다.';
+                }
+                return null;
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -1604,10 +1611,7 @@ class _QuestionCard extends StatelessWidget {
 }
 
 class _ChipText extends StatelessWidget {
-  const _ChipText({
-    required this.icon,
-    required this.text,
-  });
+  const _ChipText({required this.icon, required this.text});
 
   final IconData icon;
   final String text;
@@ -1657,9 +1661,7 @@ class _StatusBadge extends StatelessWidget {
       showShadow: false,
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelMedium!.copyWith(
-          color: color,
-        ),
+        style: Theme.of(context).textTheme.labelMedium!.copyWith(color: color),
       ),
     );
   }

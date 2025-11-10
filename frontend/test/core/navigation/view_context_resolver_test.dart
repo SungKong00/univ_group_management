@@ -29,7 +29,11 @@ void main() {
           isAdmin: false,
         );
 
-        final result = await resolver.resolveTargetRoute(context, 2, permissions);
+        final result = await resolver.resolveTargetRoute(
+          context,
+          2,
+          permissions,
+        );
 
         expect(result, isA<WorkspaceRoute>());
         result.when(
@@ -49,7 +53,11 @@ void main() {
           isAdmin: false,
         );
 
-        final result = await resolver.resolveTargetRoute(context, 2, permissions);
+        final result = await resolver.resolveTargetRoute(
+          context,
+          2,
+          permissions,
+        );
 
         expect(result, isA<WorkspaceRoute>());
         result.when(
@@ -69,7 +77,11 @@ void main() {
           isAdmin: false,
         );
 
-        final result = await resolver.resolveTargetRoute(context, 2, permissions);
+        final result = await resolver.resolveTargetRoute(
+          context,
+          2,
+          permissions,
+        );
 
         expect(result, isA<WorkspaceRoute>());
         result.when(
@@ -81,25 +93,32 @@ void main() {
         );
       });
 
-      test('resolves admin → home fallback when user lacks permission', () async {
-        final context = const ViewContext(type: ViewType.admin);
-        final permissions = const PermissionContext(
-          groupId: 2,
-          permissions: {},
-          isAdmin: false,
-        );
+      test(
+        'resolves admin → home fallback when user lacks permission',
+        () async {
+          final context = const ViewContext(type: ViewType.admin);
+          final permissions = const PermissionContext(
+            groupId: 2,
+            permissions: {},
+            isAdmin: false,
+          );
 
-        final result = await resolver.resolveTargetRoute(context, 2, permissions);
+          final result = await resolver.resolveTargetRoute(
+            context,
+            2,
+            permissions,
+          );
 
-        expect(result, isA<WorkspaceRoute>());
-        result.when(
-          home: (groupId) => expect(groupId, 2),
-          channel: (_, __) => fail('Expected home fallback'),
-          calendar: (_) => fail('Expected home fallback'),
-          admin: (_) => fail('Expected home fallback'),
-          memberManagement: (_) => fail('Expected home fallback'),
-        );
-      });
+          expect(result, isA<WorkspaceRoute>());
+          result.when(
+            home: (groupId) => expect(groupId, 2),
+            channel: (_, __) => fail('Expected home fallback'),
+            calendar: (_) => fail('Expected home fallback'),
+            admin: (_) => fail('Expected home fallback'),
+            memberManagement: (_) => fail('Expected home fallback'),
+          );
+        },
+      );
 
       test('resolves admin → admin when user is admin', () async {
         final context = const ViewContext(type: ViewType.admin);
@@ -109,7 +128,11 @@ void main() {
           isAdmin: true,
         );
 
-        final result = await resolver.resolveTargetRoute(context, 2, permissions);
+        final result = await resolver.resolveTargetRoute(
+          context,
+          2,
+          permissions,
+        );
 
         expect(result, isA<WorkspaceRoute>());
         result.when(
@@ -121,45 +144,59 @@ void main() {
         );
       });
 
-      test('resolves memberManagement → memberManagement when user has permission', () async {
-        final context = const ViewContext(type: ViewType.memberManagement);
-        final permissions = const PermissionContext(
-          groupId: 2,
-          permissions: {'MEMBER_MANAGE'},
-          isAdmin: false,
-        );
+      test(
+        'resolves memberManagement → memberManagement when user has permission',
+        () async {
+          final context = const ViewContext(type: ViewType.memberManagement);
+          final permissions = const PermissionContext(
+            groupId: 2,
+            permissions: {'MEMBER_MANAGE'},
+            isAdmin: false,
+          );
 
-        final result = await resolver.resolveTargetRoute(context, 2, permissions);
+          final result = await resolver.resolveTargetRoute(
+            context,
+            2,
+            permissions,
+          );
 
-        expect(result, isA<WorkspaceRoute>());
-        result.when(
-          home: (_) => fail('Expected memberManagement route'),
-          channel: (_, __) => fail('Expected memberManagement route'),
-          calendar: (_) => fail('Expected memberManagement route'),
-          admin: (_) => fail('Expected memberManagement route'),
-          memberManagement: (groupId) => expect(groupId, 2),
-        );
-      });
+          expect(result, isA<WorkspaceRoute>());
+          result.when(
+            home: (_) => fail('Expected memberManagement route'),
+            channel: (_, __) => fail('Expected memberManagement route'),
+            calendar: (_) => fail('Expected memberManagement route'),
+            admin: (_) => fail('Expected memberManagement route'),
+            memberManagement: (groupId) => expect(groupId, 2),
+          );
+        },
+      );
 
-      test('resolves memberManagement → home fallback when user lacks permission', () async {
-        final context = const ViewContext(type: ViewType.memberManagement);
-        final permissions = const PermissionContext(
-          groupId: 2,
-          permissions: {},
-          isAdmin: false,
-        );
+      test(
+        'resolves memberManagement → home fallback when user lacks permission',
+        () async {
+          final context = const ViewContext(type: ViewType.memberManagement);
+          final permissions = const PermissionContext(
+            groupId: 2,
+            permissions: {},
+            isAdmin: false,
+          );
 
-        final result = await resolver.resolveTargetRoute(context, 2, permissions);
+          final result = await resolver.resolveTargetRoute(
+            context,
+            2,
+            permissions,
+          );
 
-        expect(result, isA<WorkspaceRoute>());
-        result.when(
-          home: (groupId) => expect(groupId, 2),
-          channel: (_, __) => fail('Expected home fallback'),
-          calendar: (_) => fail('Expected home fallback'),
-          admin: (_) => fail('Expected home fallback'),
-          memberManagement: (_) => fail('Expected home fallback'),
-        );
-      });
+          expect(result, isA<WorkspaceRoute>());
+          result.when(
+            home: (groupId) => expect(groupId, 2),
+            channel: (_, __) => fail('Expected home fallback'),
+            calendar: (_) => fail('Expected home fallback'),
+            admin: (_) => fail('Expected home fallback'),
+            memberManagement: (_) => fail('Expected home fallback'),
+          );
+        },
+      );
     });
 
     group('channel resolution', () {

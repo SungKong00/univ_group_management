@@ -70,7 +70,9 @@ class _PlaceOperatingHoursDialogState
 
     try {
       // 백엔드에서 최신 데이터 가져오기
-      final hours = await ref.read(operatingHoursProvider(widget.placeId).future);
+      final hours = await ref.read(
+        operatingHoursProvider(widget.placeId).future,
+      );
 
       if (hours.isNotEmpty) {
         // 백엔드 데이터로 초기화
@@ -170,10 +172,7 @@ class _PlaceOperatingHoursDialogState
 
   TimeOfDay _parseTime(String time) {
     final parts = time.split(':');
-    return TimeOfDay(
-      hour: int.parse(parts[0]),
-      minute: int.parse(parts[1]),
-    );
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
   String _formatTime(TimeOfDay time) {
@@ -188,16 +187,16 @@ class _PlaceOperatingHoursDialogState
           ? const SizedBox(
               width: 500,
               height: 300,
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: Center(child: CircularProgressIndicator()),
             )
           : SizedBox(
               width: 500,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: _daysOfWeek.map((day) => _buildDayRow(day)).toList(),
+                  children: _daysOfWeek
+                      .map((day) => _buildDayRow(day))
+                      .toList(),
                 ),
               ),
             ),
@@ -231,10 +230,7 @@ class _PlaceOperatingHoursDialogState
           // 요일 라벨
           SizedBox(
             width: 60,
-            child: Text(
-              _dayLabels[dayOfWeek]!,
-              style: AppTheme.bodyMedium,
-            ),
+            child: Text(_dayLabels[dayOfWeek]!, style: AppTheme.bodyMedium),
           ),
           const SizedBox(width: 12),
 
@@ -266,7 +262,9 @@ class _PlaceOperatingHoursDialogState
                 Expanded(
                   child: OutlinedLinkButton(
                     text: hours.startTime ?? '09:00',
-                    onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, true) : null,
+                    onPressed: !hours.isClosed
+                        ? () => _selectTime(dayOfWeek, true)
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -276,7 +274,9 @@ class _PlaceOperatingHoursDialogState
                 Expanded(
                   child: OutlinedLinkButton(
                     text: hours.endTime ?? '18:00',
-                    onPressed: !hours.isClosed ? () => _selectTime(dayOfWeek, false) : null,
+                    onPressed: !hours.isClosed
+                        ? () => _selectTime(dayOfWeek, false)
+                        : null,
                   ),
                 ),
               ],
@@ -286,17 +286,13 @@ class _PlaceOperatingHoursDialogState
       ),
     );
   }
-
 }
 
 /// 운영시간 표시 + 수정 버튼 위젯
 class PlaceOperatingHoursDisplay extends ConsumerWidget {
   final int placeId;
 
-  const PlaceOperatingHoursDisplay({
-    super.key,
-    required this.placeId,
-  });
+  const PlaceOperatingHoursDisplay({super.key, required this.placeId});
 
   static const Map<String, String> _dayLabels = {
     'MONDAY': '월',
@@ -322,12 +318,7 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Text(
-                    '운영시간',
-                    style: AppTheme.titleLarge,
-                  ),
-                ),
+                Expanded(child: Text('운영시간', style: AppTheme.titleLarge)),
                 const SizedBox(width: 8),
                 OutlinedLinkButton(
                   text: '설정 수정',
@@ -345,9 +336,16 @@ class PlaceOperatingHoursDisplay extends ConsumerWidget {
                           initialOperatingHours: operatingHours,
                           onSaveOperatingHours: (hours) async {
                             try {
-                              final request = SetOperatingHoursRequest(operatingHours: hours);
-                              final params = SetOperatingHoursParams(placeId: placeId, request: request);
-                              await ref.read(setOperatingHoursProvider(params).future);
+                              final request = SetOperatingHoursRequest(
+                                operatingHours: hours,
+                              );
+                              final params = SetOperatingHoursParams(
+                                placeId: placeId,
+                                request: request,
+                              );
+                              await ref.read(
+                                setOperatingHoursProvider(params).future,
+                              );
                               return true;
                             } catch (e) {
                               return false;

@@ -104,25 +104,18 @@ class PlaceUsageGroup {
 
 /// Request payload for creating a usage permission request
 class CreateUsageRequestRequest {
-  const CreateUsageRequestRequest({
-    this.reason,
-  });
+  const CreateUsageRequestRequest({this.reason});
 
   final String? reason;
 
   Map<String, dynamic> toJson() {
-    return {
-      if (reason != null && reason!.trim().isNotEmpty) 'reason': reason,
-    };
+    return {if (reason != null && reason!.trim().isNotEmpty) 'reason': reason};
   }
 }
 
 /// Request payload for updating usage permission status
 class UpdateUsageStatusRequest {
-  const UpdateUsageStatusRequest({
-    required this.status,
-    this.rejectionReason,
-  });
+  const UpdateUsageStatusRequest({required this.status, this.rejectionReason});
 
   final UsageStatus status;
   final String? rejectionReason;

@@ -75,10 +75,12 @@ class OptionCardGroup extends StatelessWidget {
       result.add(children[i]);
       // 마지막 요소가 아니면 간격 추가
       if (i < children.length - 1) {
-        result.add(SizedBox(
-          width: direction == Axis.horizontal ? spacing : 0,
-          height: direction == Axis.vertical ? spacing : 0,
-        ));
+        result.add(
+          SizedBox(
+            width: direction == Axis.horizontal ? spacing : 0,
+            height: direction == Axis.vertical ? spacing : 0,
+          ),
+        );
       }
     }
     return result;

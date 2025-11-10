@@ -108,8 +108,7 @@ void main() {
       for (int i = 0; i < 50; i++) {
         notifier.state = notifier.state.copyWith(
           isLoading: !notifier.state.isLoading,
-          loadingMessage:
-              notifier.state.isLoading ? null : '처리 중 ${i}...',
+          loadingMessage: notifier.state.isLoading ? null : '처리 중 ${i}...',
         );
       }
 

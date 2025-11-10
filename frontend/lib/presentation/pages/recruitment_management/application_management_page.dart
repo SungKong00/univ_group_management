@@ -46,16 +46,14 @@ class ApplicationManagementPage extends ConsumerWidget {
             // 헤더
             Text(
               '지원자 관리',
-              style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                color: AppColors.neutral900,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineLarge!.copyWith(color: AppColors.neutral900),
             ),
             SizedBox(height: AppSpacing.xs),
             Text(
               '모집 공고에 대한 지원자를 확인하고 승인/거절 처리하세요.',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
             ),
             SizedBox(height: AppSpacing.lg),
             // 지원자 목록 섹션 (모집 공고 기반)

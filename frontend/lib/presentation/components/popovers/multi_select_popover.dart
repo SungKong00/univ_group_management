@@ -130,9 +130,7 @@ class _MultiSelectPopoverState<T> extends State<MultiSelectPopover<T>> {
         behavior: HitTestBehavior.translucent,
         child: Stack(
           children: [
-            Positioned.fill(
-              child: Container(color: Colors.transparent),
-            ),
+            Positioned.fill(child: Container(color: Colors.transparent)),
             Positioned(
               width: 300,
               child: CompositedTransformFollower(
@@ -234,10 +232,7 @@ class _MultiSelectPopoverState<T> extends State<MultiSelectPopover<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: _buildButton(),
-    );
+    return CompositedTransformTarget(link: _layerLink, child: _buildButton());
   }
 
   /// 버튼 (닫힌 상태)
@@ -276,8 +271,9 @@ class _MultiSelectPopoverState<T> extends State<MultiSelectPopover<T>> {
                     color: displayCount == 0
                         ? AppColors.neutral600
                         : AppColors.neutral900,
-                    fontWeight:
-                        displayCount == 0 ? FontWeight.w400 : FontWeight.w600,
+                    fontWeight: displayCount == 0
+                        ? FontWeight.w400
+                        : FontWeight.w600,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
@@ -305,10 +301,7 @@ class _MultiSelectPopoverState<T> extends State<MultiSelectPopover<T>> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(
-            color: AppColors.neutral200,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.neutral200, width: 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -342,9 +335,7 @@ class _MultiSelectPopoverState<T> extends State<MultiSelectPopover<T>> {
         children: [
           Text(
             '${widget.label} 선택',
-            style: AppTheme.titleMedium.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTheme.titleMedium.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(width: AppSpacing.xs),
           if (draftCount > 0)
@@ -372,10 +363,7 @@ class _MultiSelectPopoverState<T> extends State<MultiSelectPopover<T>> {
             icon: const Icon(Icons.close, size: 20),
             iconSize: 20,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 32,
-              minHeight: 32,
-            ),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
         ],
       ),
@@ -390,9 +378,7 @@ class _MultiSelectPopoverState<T> extends State<MultiSelectPopover<T>> {
         child: Center(
           child: Text(
             '선택 가능한 항목이 없습니다',
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppColors.neutral600,
-            ),
+            style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
           ),
         ),
       );

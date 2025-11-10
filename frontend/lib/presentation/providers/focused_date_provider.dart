@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Provider for managing currently focused date in calendar
 final focusedDateProvider =
     StateNotifierProvider<FocusedDateNotifier, DateTime>((ref) {
-  return FocusedDateNotifier();
-});
+      return FocusedDateNotifier();
+    });
 
 /// Notifier for focused date state management
 class FocusedDateNotifier extends StateNotifier<DateTime> {

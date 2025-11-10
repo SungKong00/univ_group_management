@@ -66,20 +66,18 @@ class StepHeader extends StatelessWidget {
         // 제목
         Text(
           title,
-          style: titleStyle ??
-              AppTheme.headlineSmall.copyWith(
-                color: AppColors.neutral900,
-              ),
+          style:
+              titleStyle ??
+              AppTheme.headlineSmall.copyWith(color: AppColors.neutral900),
         ),
         // 부제목 (있을 경우에만)
         if (subtitle != null) ...[
           const SizedBox(height: 4),
           Text(
             subtitle!,
-            style: subtitleStyle ??
-                AppTheme.bodyMedium.copyWith(
-                  color: AppColors.neutral600,
-                ),
+            style:
+                subtitleStyle ??
+                AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
           ),
         ],
       ],

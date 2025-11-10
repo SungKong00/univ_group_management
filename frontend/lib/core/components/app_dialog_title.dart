@@ -27,11 +27,7 @@ class AppDialogTitle extends StatelessWidget {
   /// 닫기 버튼 콜백 (선택, null이면 버튼 표시 안 함)
   final VoidCallback? onClose;
 
-  const AppDialogTitle({
-    super.key,
-    required this.title,
-    this.onClose,
-  });
+  const AppDialogTitle({super.key, required this.title, this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +55,9 @@ class AppDialogTitle extends StatelessWidget {
             IconButton(
               icon: Icon(
                 Icons.close,
-                color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+                color: isDark
+                    ? AppColors.darkOnSurface
+                    : AppColors.lightOnSurface,
                 size: 24,
               ),
               onPressed: onClose,

@@ -30,9 +30,7 @@ void main() {
       expect(notifier.state.lastError, isNull);
 
       // T107: 에러 발생 (한글 메시지)
-      notifier.state = notifier.state.copyWith(
-        lastError: '그룹 전환에 실패했습니다',
-      );
+      notifier.state = notifier.state.copyWith(lastError: '그룹 전환에 실패했습니다');
 
       expect(notifier.state.lastError, isNotNull);
       expect(notifier.state.lastError, '그룹 전환에 실패했습니다');
@@ -45,9 +43,7 @@ void main() {
       // 사용자 메시지 + 개발자 정보 형식
       const errorMessage = '권한 확인에 실패했습니다 (Permission denied)';
 
-      notifier.state = notifier.state.copyWith(
-        lastError: errorMessage,
-      );
+      notifier.state = notifier.state.copyWith(lastError: errorMessage);
 
       expect(notifier.state.lastError, contains('권한 확인에 실패했습니다'));
       expect(notifier.state.lastError, contains('Permission denied'));
@@ -55,9 +51,7 @@ void main() {
 
     test('clearError should remove error state', () {
       // 에러 설정
-      notifier.state = notifier.state.copyWith(
-        lastError: '데이터 로딩에 실패했습니다',
-      );
+      notifier.state = notifier.state.copyWith(lastError: '데이터 로딩에 실패했습니다');
 
       expect(notifier.state.lastError, isNotNull);
 
@@ -78,9 +72,7 @@ void main() {
       ];
 
       for (final message in errorMessages) {
-        notifier.state = notifier.state.copyWith(
-          lastError: message,
-        );
+        notifier.state = notifier.state.copyWith(lastError: message);
 
         // 메시지가 비어있지 않은지 검증
         expect(notifier.state.lastError, isNotEmpty);
@@ -118,9 +110,7 @@ void main() {
       ];
 
       for (final errorMessage in apiErrorExamples) {
-        notifier.state = notifier.state.copyWith(
-          lastError: errorMessage,
-        );
+        notifier.state = notifier.state.copyWith(lastError: errorMessage);
 
         // "사용자 메시지 (개발자 정보)" 패턴 검증
         expect(
@@ -134,16 +124,12 @@ void main() {
 
     test('error state should persist until explicitly cleared', () {
       // 에러 설정
-      notifier.state = notifier.state.copyWith(
-        lastError: '테스트 에러',
-      );
+      notifier.state = notifier.state.copyWith(lastError: '테스트 에러');
 
       expect(notifier.state.lastError, '테스트 에러');
 
       // 다른 상태 변경 (에러는 유지되어야 함)
-      notifier.state = notifier.state.copyWith(
-        isLoading: true,
-      );
+      notifier.state = notifier.state.copyWith(isLoading: true);
 
       expect(notifier.state.lastError, '테스트 에러'); // 여전히 존재
       expect(notifier.state.isLoading, isTrue);
@@ -155,23 +141,17 @@ void main() {
 
     test('multiple consecutive errors should be handled correctly', () {
       // 첫 번째 에러
-      notifier.state = notifier.state.copyWith(
-        lastError: '첫 번째 에러',
-      );
+      notifier.state = notifier.state.copyWith(lastError: '첫 번째 에러');
 
       expect(notifier.state.lastError, '첫 번째 에러');
 
       // 두 번째 에러로 덮어쓰기
-      notifier.state = notifier.state.copyWith(
-        lastError: '두 번째 에러',
-      );
+      notifier.state = notifier.state.copyWith(lastError: '두 번째 에러');
 
       expect(notifier.state.lastError, '두 번째 에러');
 
       // 세 번째 에러
-      notifier.state = notifier.state.copyWith(
-        lastError: '세 번째 에러',
-      );
+      notifier.state = notifier.state.copyWith(lastError: '세 번째 에러');
 
       expect(notifier.state.lastError, '세 번째 에러');
     });
@@ -185,9 +165,7 @@ void main() {
       ];
 
       for (final message in errorMessages) {
-        notifier.state = notifier.state.copyWith(
-          lastError: message,
-        );
+        notifier.state = notifier.state.copyWith(lastError: message);
 
         // 100자 이내 권장
         expect(

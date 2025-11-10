@@ -72,7 +72,8 @@ class Place {
   String get fullLocation => '$building $roomNumber';
 
   @override
-  String toString() => 'Place(id: $id, displayName: $displayName, '
+  String toString() =>
+      'Place(id: $id, displayName: $displayName, '
       'building: $building, capacity: $capacity)';
 
   @override

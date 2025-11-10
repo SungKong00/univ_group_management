@@ -3,23 +3,27 @@
 <!--
 Sync Impact Report
 ==================
-Version: 1.0.0 → 1.1.0
+Version: 1.1.1 → 1.2.0
 Modified principles:
-  - Added "기술 스택 (비협상)" section under Vision & Scope
-  - Added Principle VIII "API 진화 및 리팩터링 원칙"
+  - Added "Speckit 작업 진행 관리" section under Development Workflow
+  - Updated "리뷰 체크리스트" to include tasks.md synchronization
 Added sections:
-  - 기술 스택: Flutter, Spring Boot + Kotlin, H2/PostgreSQL, Google OAuth + JWT
-  - API 진화 및 리팩터링 원칙: 기존 API 활용, 적극적 개선, Breaking Change 관리
+  - Speckit 작업 진행 관리: Phase 완료 시 tasks.md 업데이트 필수, 문서-코드 동기화, 진행 상황 가시성
+  - 강제 사항: Phase 완료 후 커밋 전 tasks.md 업데이트, 테스트 결과 기록, 미완료 태스크 이유 명시
 Removed sections: N/A
 Templates status:
-  ⚠️  plan-template.md - REQUIRES UPDATE: Add "API Modifications" section for refactoring/modification tasks
-  ✅ spec-template.md - No updates required (spec remains implementation-agnostic)
-  ✅ tasks-template.md - No updates required (principles align with task structure)
+  ✅ spec-template.md - No updates required
+  ✅ plan-template.md - No updates required (API Modifications already added)
+  ✅ tasks-template.md - No updates required (workflow guidance only)
   ✅ agent-file-template.md - No updates required
   ✅ checklist-template.md - No updates required
 Follow-up TODOs:
-  1. Update plan-template.md to include "API Modifications" section
-  2. Update CLAUDE.md to reference new Principle VIII
+  1. Update CLAUDE.md to reference new Speckit workflow guidance
+  2. Add reminder in /speckit.implement workflow to check tasks.md sync
+Impact:
+  - All future Phase completions MUST update tasks.md before commit
+  - PR reviews MUST verify tasks.md synchronization
+  - Prevents duplicate work from outdated task status
 -->
 
 ## 비전 및 범위 (Vision & Scope)
@@ -230,12 +234,24 @@ Follow-up TODOs:
 - **동기화 상태**: `docs/context-tracking/sync-status.md`에서 문서 동기화율 관리
 - **문서 업데이트**: 코드 변경 시 관련 문서 함께 업데이트 필수
 
+### Speckit 작업 진행 관리
+- **Phase 완료 시 tasks.md 업데이트 필수**: 각 Phase 완료 시 `specs/*/tasks.md`의 완료된 태스크를 `[X]`로 체크
+- **문서-코드 동기화**: 구현 완료 시점에 관련 문서(spec.md, plan.md, tasks.md)도 함께 업데이트
+- **진행 상황 가시성**: 다음 작업 시작 시 tasks.md를 신뢰할 수 있도록 실시간 동기화 유지
+- **체크포인트 검증**: Phase 체크포인트에서 완료 태스크 개수 확인 및 테스트 결과 기록
+
+**강제 사항**:
+- Phase 완료 후 커밋 전에 tasks.md에서 완료된 태스크 `[ ] → [X]` 업데이트
+- 통합 테스트 통과 결과를 tasks.md 또는 별도 검증 문서에 기록
+- 미완료 태스크가 있는 경우 이유와 다음 액션 명시
+
 ### 리뷰 체크리스트
 - [ ] 3-Layer Architecture 준수
 - [ ] `ApiResponse<T>` 형식 사용
 - [ ] 권한 검증 로직 포함
 - [ ] 테스트 커버리지 목표 달성
 - [ ] 문서 업데이트 완료
+- [ ] **Speckit tasks.md 동기화 완료** (Phase 완료 시)
 - [ ] 커밋 메시지 컨벤션 준수
 
 ## 거버넌스 (Governance)
@@ -262,9 +278,17 @@ Follow-up TODOs:
 ### 런타임 가이던스
 일상적인 개발 가이던스는 `CLAUDE.md`를 참조한다. 헌법은 변경 불가능한 원칙만 정의하며, 구현 세부사항은 각 도메인 문서에서 관리한다.
 
-**Version**: 1.1.1 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-11-09
+**Version**: 1.2.0 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-11-10
 
 ## 변경 이력 (Change History)
+
+### v1.2.0 (2025-11-10)
+- **추가**: "Speckit 작업 진행 관리" 섹션 신설
+  - Phase 완료 시 tasks.md 업데이트 필수 규정
+  - 문서-코드 동기화 의무화
+  - 진행 상황 가시성 유지 및 체크포인트 검증 규칙
+- **수정**: 리뷰 체크리스트에 "Speckit tasks.md 동기화 완료" 항목 추가
+- **근거**: Phase 완료 후 tasks.md 미업데이트로 인한 중복 작업 방지
 
 ### v1.1.1 (2025-11-09)
 - **수정**: 원칙 IV "문서화 100줄 원칙" 예외 범위 확대

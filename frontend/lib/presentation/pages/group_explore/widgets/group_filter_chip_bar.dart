@@ -30,10 +30,10 @@ class GroupFilterChipBar extends ConsumerWidget {
           checkmarkColor: AppColors.brand,
           backgroundColor: AppColors.neutral100,
           labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: filter.recruiting == true
-                    ? AppColors.brand
-                    : AppColors.neutral700,
-              ),
+            color: filter.recruiting == true
+                ? AppColors.brand
+                : AppColors.neutral700,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.button),
             side: BorderSide(
@@ -47,7 +47,8 @@ class GroupFilterChipBar extends ConsumerWidget {
         // University Group Filter (includes UNIVERSITY, COLLEGE, DEPARTMENT)
         FilterChip(
           label: const Text('대학그룹'),
-          selected: groupTypes.contains('UNIVERSITY') ||
+          selected:
+              groupTypes.contains('UNIVERSITY') ||
               groupTypes.contains('COLLEGE') ||
               groupTypes.contains('DEPARTMENT'),
           onSelected: (selected) {
@@ -58,29 +59,36 @@ class GroupFilterChipBar extends ConsumerWidget {
               if (!current.contains('COLLEGE')) current.add('COLLEGE');
               if (!current.contains('DEPARTMENT')) current.add('DEPARTMENT');
             } else {
-              current.removeWhere((type) =>
-                  type == 'UNIVERSITY' || type == 'COLLEGE' || type == 'DEPARTMENT');
+              current.removeWhere(
+                (type) =>
+                    type == 'UNIVERSITY' ||
+                    type == 'COLLEGE' ||
+                    type == 'DEPARTMENT',
+              );
             }
-            ref.read(groupExploreFilterProvider.notifier).updateFilter(
-              (f) => f.copyWith(
-                groupTypes: current.isEmpty ? null : current,
-              ),
-            );
+            ref
+                .read(groupExploreFilterProvider.notifier)
+                .updateFilter(
+                  (f) =>
+                      f.copyWith(groupTypes: current.isEmpty ? null : current),
+                );
           },
           selectedColor: AppColors.brandLight,
           checkmarkColor: AppColors.brand,
           backgroundColor: AppColors.neutral100,
           labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: (groupTypes.contains('UNIVERSITY') ||
-                        groupTypes.contains('COLLEGE') ||
-                        groupTypes.contains('DEPARTMENT'))
-                    ? AppColors.brand
-                    : AppColors.neutral700,
-              ),
+            color:
+                (groupTypes.contains('UNIVERSITY') ||
+                    groupTypes.contains('COLLEGE') ||
+                    groupTypes.contains('DEPARTMENT'))
+                ? AppColors.brand
+                : AppColors.neutral700,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.button),
             side: BorderSide(
-              color: (groupTypes.contains('UNIVERSITY') ||
+              color:
+                  (groupTypes.contains('UNIVERSITY') ||
                       groupTypes.contains('COLLEGE') ||
                       groupTypes.contains('DEPARTMENT'))
                   ? AppColors.brand
@@ -127,8 +135,8 @@ class GroupFilterChipBar extends ConsumerWidget {
       checkmarkColor: AppColors.brand,
       backgroundColor: AppColors.neutral100,
       labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: isSelected ? AppColors.brand : AppColors.neutral700,
-          ),
+        color: isSelected ? AppColors.brand : AppColors.neutral700,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.button),
         side: BorderSide(

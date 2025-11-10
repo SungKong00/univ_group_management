@@ -50,13 +50,13 @@ class TimeSpinner extends StatefulWidget {
     this.label,
     this.freeInputMode = false,
   }) : assert(
-          minuteInterval == 1 ||
-              minuteInterval == 5 ||
-              minuteInterval == 10 ||
-              minuteInterval == 15 ||
-              minuteInterval == 30,
-          'minuteInterval must be 1, 5, 10, 15, or 30',
-        );
+         minuteInterval == 1 ||
+             minuteInterval == 5 ||
+             minuteInterval == 10 ||
+             minuteInterval == 15 ||
+             minuteInterval == 30,
+         'minuteInterval must be 1, 5, 10, 15, or 30',
+       );
 
   @override
   State<TimeSpinner> createState() => _TimeSpinnerState();
@@ -348,7 +348,9 @@ class _TimeSpinnerState extends State<TimeSpinner> {
               border: Border.all(
                 color: _hasError
                     ? Colors.red
-                    : (widget.enabled ? AppColors.lightOutline : AppColors.neutral300),
+                    : (widget.enabled
+                          ? AppColors.lightOutline
+                          : AppColors.neutral300),
                 width: 1,
               ),
             ),
@@ -372,7 +374,9 @@ class _TimeSpinnerState extends State<TimeSpinner> {
                 : Text(
                     value.toString().padLeft(2, '0'),
                     style: AppTheme.headlineMedium.copyWith(
-                      color: widget.enabled ? AppColors.neutral900 : AppColors.neutral500,
+                      color: widget.enabled
+                          ? AppColors.neutral900
+                          : AppColors.neutral500,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -407,7 +411,9 @@ class _TimeSpinnerState extends State<TimeSpinner> {
           Text(
             widget.label!,
             style: AppTheme.titleLarge.copyWith(
-              color: widget.enabled ? AppColors.neutral800 : AppColors.neutral500,
+              color: widget.enabled
+                  ? AppColors.neutral800
+                  : AppColors.neutral500,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -435,7 +441,9 @@ class _TimeSpinnerState extends State<TimeSpinner> {
               child: Text(
                 ':',
                 style: AppTheme.headlineMedium.copyWith(
-                  color: widget.enabled ? AppColors.neutral900 : AppColors.neutral500,
+                  color: widget.enabled
+                      ? AppColors.neutral900
+                      : AppColors.neutral500,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -465,10 +473,7 @@ class _SpinnerButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
 
-  const _SpinnerButton({
-    required this.icon,
-    this.onPressed,
-  });
+  const _SpinnerButton({required this.icon, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -480,7 +485,9 @@ class _SpinnerButton extends StatelessWidget {
         onPressed: onPressed,
         color: onPressed != null ? AppColors.brand : AppColors.neutral400,
         style: IconButton.styleFrom(
-          backgroundColor: onPressed != null ? AppColors.brandLight : AppColors.neutral100,
+          backgroundColor: onPressed != null
+              ? AppColors.brandLight
+              : AppColors.neutral100,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.button),
           ),

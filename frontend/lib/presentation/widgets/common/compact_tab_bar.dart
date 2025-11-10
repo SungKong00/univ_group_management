@@ -95,23 +95,14 @@ class CompactTabBar extends StatelessWidget {
               // 세로 패딩 최소화 (위아래 2px씩)
               labelPadding: EdgeInsets.zero,
               indicator: UnderlineTabIndicator(
-                borderSide: BorderSide(
-                  color: indicatorColor,
-                  width: 2,
-                ),
+                borderSide: BorderSide(color: indicatorColor, width: 2),
               ),
-              tabs: tabs
-                  .map((tab) => _buildCompactTabContent(tab))
-                  .toList(),
+              tabs: tabs.map((tab) => _buildCompactTabContent(tab)).toList(),
             ),
           ),
           // 하단 분할선 (선택사항)
           if (dividerColor != null)
-            Divider(
-              height: 1,
-              color: dividerColor,
-              thickness: 1,
-            ),
+            Divider(height: 1, color: dividerColor, thickness: 1),
         ],
       ),
     );
@@ -137,12 +128,7 @@ class CompactTabBar extends StatelessWidget {
                 size: 19, // 19px
               ),
             ),
-          Text(
-            tab.label,
-            style: AppTheme.titleMedium.copyWith(
-              height: 1.2,
-            ),
-          ),
+          Text(tab.label, style: AppTheme.titleMedium.copyWith(height: 1.2)),
         ],
       ),
     );
@@ -153,10 +139,7 @@ class CompactTabBar extends StatelessWidget {
 ///
 /// CompactTabBar에서 사용할 탭의 정보를 정의합니다.
 class CompactTab {
-  const CompactTab({
-    required this.label,
-    this.icon,
-  });
+  const CompactTab({required this.label, this.icon});
 
   /// 탭 레이블 (필수)
   final String label;

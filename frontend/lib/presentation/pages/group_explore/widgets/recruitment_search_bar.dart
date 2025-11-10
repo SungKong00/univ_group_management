@@ -48,19 +48,13 @@ class _RecruitmentSearchBarState extends ConsumerState<RecruitmentSearchBar> {
       controller: _controller,
       decoration: InputDecoration(
         hintText: '모집 공고 검색...',
-        hintStyle: AppTheme.bodyMediumTheme(context).copyWith(
-          color: AppColors.neutral500,
-        ),
-        prefixIcon: Icon(
-          Icons.search,
-          color: AppColors.neutral600,
-        ),
+        hintStyle: AppTheme.bodyMediumTheme(
+          context,
+        ).copyWith(color: AppColors.neutral500),
+        prefixIcon: Icon(Icons.search, color: AppColors.neutral600),
         suffixIcon: _controller.text.isNotEmpty
             ? IconButton(
-                icon: Icon(
-                  Icons.clear,
-                  color: AppColors.neutral600,
-                ),
+                icon: Icon(Icons.clear, color: AppColors.neutral600),
                 onPressed: _handleClear,
                 tooltip: '검색어 지우기',
               )

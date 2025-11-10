@@ -29,7 +29,8 @@ class ButtonLoadingChild extends StatelessWidget {
   final TextStyle textStyle;
   final Color indicatorColor;
 
-  const ButtonLoadingChild({super.key, 
+  const ButtonLoadingChild({
+    super.key,
     required this.text,
     this.icon,
     required this.isLoading,

@@ -163,7 +163,9 @@ class NavigationController extends StateNotifier<NavigationState> {
   Future<void> restoreLastTab() async {
     try {
       final lastTabIndex = await LocalStorage.instance.getLastTabIndex();
-      if (lastTabIndex != null && lastTabIndex >= 0 && lastTabIndex < NavigationTab.values.length) {
+      if (lastTabIndex != null &&
+          lastTabIndex >= 0 &&
+          lastTabIndex < NavigationTab.values.length) {
         final tab = NavigationTab.values[lastTabIndex];
         navigateToTabRoot(tab);
 

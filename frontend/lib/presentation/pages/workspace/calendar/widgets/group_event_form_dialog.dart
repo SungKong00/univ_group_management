@@ -268,7 +268,11 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.verified, size: 16, color: AppColors.brand),
+                        const Icon(
+                          Icons.verified,
+                          size: 16,
+                          color: AppColors.brand,
+                        ),
                         const SizedBox(width: AppSpacing.xs),
                         Text(
                           '공식 일정',
@@ -302,7 +306,11 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(_eventType.icon, size: 16, color: AppColors.neutral700),
+                        Icon(
+                          _eventType.icon,
+                          size: 16,
+                          color: AppColors.neutral700,
+                        ),
                         const SizedBox(width: AppSpacing.xs),
                         Text(
                           _eventType.title,
@@ -394,11 +402,9 @@ class _GroupEventFormDialogState extends State<_GroupEventFormDialog> {
         ConfirmCancelActions(
           confirmText: _isEditing ? '수정' : '추가',
           onConfirm: _handleSubmit,
-          confirmSemanticsLabel:
-              _isEditing ? '그룹 일정 수정 완료' : '그룹 일정 추가 완료',
+          confirmSemanticsLabel: _isEditing ? '그룹 일정 수정 완료' : '그룹 일정 추가 완료',
           onCancel: () => Navigator.of(context).pop(),
-          cancelSemanticsLabel:
-              _isEditing ? '그룹 일정 수정 취소' : '그룹 일정 추가 취소',
+          cancelSemanticsLabel: _isEditing ? '그룹 일정 수정 취소' : '그룹 일정 추가 취소',
           confirmVariant: PrimaryButtonVariant.brand,
         ),
       ],

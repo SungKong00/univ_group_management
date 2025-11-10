@@ -58,18 +58,12 @@ class _MemberManagementPageState extends ConsumerState<MemberManagementPage>
           CompactTabBar(
             controller: _tabController,
             tabs: const [
-              CompactTab(
-                icon: Icons.people_outline,
-                label: '멤버 목록',
-              ),
+              CompactTab(icon: Icons.people_outline, label: '멤버 목록'),
               CompactTab(
                 icon: Icons.admin_panel_settings_outlined,
                 label: '역할 관리',
               ),
-              CompactTab(
-                icon: Icons.inbox_outlined,
-                label: '가입 신청',
-              ),
+              CompactTab(icon: Icons.inbox_outlined, label: '가입 신청'),
             ],
             labelColor: AppColors.brand,
             unselectedLabelColor: AppColors.neutral600,

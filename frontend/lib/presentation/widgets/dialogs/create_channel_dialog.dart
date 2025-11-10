@@ -105,7 +105,9 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
 
   /// 역할 목록 로드
   Future<void> _loadRoles() async {
-    print('[DEBUG] CreateChannelDialog: Loading roles for group ${widget.groupId}');
+    print(
+      '[DEBUG] CreateChannelDialog: Loading roles for group ${widget.groupId}',
+    );
     setState(() {
       _isLoadingRoles = true;
       _errorMessage = null;
@@ -186,7 +188,9 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
         }
       }
 
-      print('[DEBUG] CreateChannelDialog: Calling API with rolePermissions: $rolePermissions');
+      print(
+        '[DEBUG] CreateChannelDialog: Calling API with rolePermissions: $rolePermissions',
+      );
 
       // API 호출
       final channelService = ChannelService();
@@ -200,14 +204,18 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
         rolePermissions: rolePermissions,
       );
 
-      print('[DEBUG] CreateChannelDialog: API returned channel: ${channel?.name ?? 'null'}');
+      print(
+        '[DEBUG] CreateChannelDialog: API returned channel: ${channel?.name ?? 'null'}',
+      );
 
       if (channel != null && mounted) {
         // 성공 시 채널 객체 반환
         print('[DEBUG] CreateChannelDialog: Closing dialog with channel');
         Navigator.of(context).pop(channel);
       } else {
-        print('[DEBUG] CreateChannelDialog: Channel creation failed or context not mounted');
+        print(
+          '[DEBUG] CreateChannelDialog: Channel creation failed or context not mounted',
+        );
         setState(() {
           _errorMessage = '채널 생성에 실패했습니다';
         });
@@ -300,9 +308,7 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
   }
 
   Widget _buildTitle() {
-    return const AppDialogTitle(
-      title: '새 채널 만들기',
-    );
+    return const AppDialogTitle(title: '새 채널 만들기');
   }
 
   Widget _buildNameField() {
@@ -384,9 +390,7 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
     }
 
     if (_roles.isEmpty) {
-      return AppInfoBanner.error(
-        message: '역할 목록을 불러올 수 없습니다',
-      );
+      return AppInfoBanner.error(message: '역할 목록을 불러올 수 없습니다');
     }
 
     return Column(
@@ -401,9 +405,7 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        AppInfoBanner.warning(
-          message: '최소 1개 역할에 "게시글 읽기" 권한을 부여해야 합니다',
-        ),
+        AppInfoBanner.warning(message: '최소 1개 역할에 "게시글 읽기" 권한을 부여해야 합니다'),
         const SizedBox(height: AppSpacing.sm),
         ..._permissionMatrix.keys.map((permission) {
           return _buildPermissionSection(permission);
@@ -434,10 +436,7 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
             ),
             if (isRequired)
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.xs),
@@ -453,10 +452,7 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
               ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 2,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: selectedCount > 0
                     ? AppColors.brand.withValues(alpha: 0.1)
@@ -467,7 +463,9 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
                 '$selectedCount개 선택',
                 style: TextStyle(
                   fontSize: 11,
-                  color: selectedCount > 0 ? AppColors.brand : AppColors.neutral600,
+                  color: selectedCount > 0
+                      ? AppColors.brand
+                      : AppColors.neutral600,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -478,10 +476,7 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
           padding: const EdgeInsets.only(top: 4),
           child: Text(
             info['description'] as String,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.neutral600,
-            ),
+            style: const TextStyle(fontSize: 12, color: AppColors.neutral600),
           ),
         ),
         children: _roles.map((role) {
@@ -490,10 +485,7 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
             title: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    role.name,
-                    style: const TextStyle(fontSize: 14),
-                  ),
+                  child: Text(role.name, style: const TextStyle(fontSize: 14)),
                 ),
                 if (role.isSystemRole)
                   Container(
@@ -530,15 +522,15 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
   }
 
   Widget _buildErrorMessage() {
-    return AppInfoBanner.error(
-      message: _errorMessage!,
-    );
+    return AppInfoBanner.error(message: _errorMessage!);
   }
 
   Widget _buildActions() {
     return ConfirmCancelActions(
       confirmText: '채널 만들기',
-      onConfirm: (_isCreating || !_hasPostReadPermission) ? null : _handleCreate,
+      onConfirm: (_isCreating || !_hasPostReadPermission)
+          ? null
+          : _handleCreate,
       isConfirmLoading: _isCreating,
       confirmSemanticsLabel: '채널 생성',
       confirmVariant: PrimaryButtonVariant.brand,
@@ -558,9 +550,6 @@ Future<Channel?> showCreateChannelDialog(
 }) {
   return AppDialogHelpers.show<Channel>(
     context,
-    dialog: CreateChannelDialog(
-      workspaceId: workspaceId,
-      groupId: groupId,
-    ),
+    dialog: CreateChannelDialog(workspaceId: workspaceId, groupId: groupId),
   );
 }

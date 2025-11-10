@@ -140,8 +140,9 @@ class _AdminContentView extends ConsumerWidget {
     // 대기 중인 하위 그룹 생성 신청 개수 확인하여 섹션 배치
     // 대기 신청 개수에 따라 위치를 동적으로 결정
     if (subGroupRequestSection != null && currentGroup != null) {
-      final pendingCountAsync =
-          ref.watch(pendingSubGroupRequestCountProvider(currentGroup.id));
+      final pendingCountAsync = ref.watch(
+        pendingSubGroupRequestCountProvider(currentGroup.id),
+      );
 
       // 대기 신청이 있는지에 따라 섹션 위치 결정
       final shouldInsertAtTop = pendingCountAsync.when(
@@ -182,7 +183,8 @@ class _AdminContentView extends ConsumerWidget {
           // 너비가 충분할 때만 2열, 좁아지면 1열로 전환
           // 각 섹션의 최소 너비를 500px로 설정 (카드들이 제대로 보이기 위한 최소 공간)
           const minSectionWidth = 325.0;
-          final shouldUseDoubleColumn = availableWidth >= (minSectionWidth * 2 + AppSpacing.md);
+          final shouldUseDoubleColumn =
+              availableWidth >= (minSectionWidth * 2 + AppSpacing.md);
 
           if (shouldUseDoubleColumn) {
             // 2열 레이아웃
@@ -191,7 +193,9 @@ class _AdminContentView extends ConsumerWidget {
               spacing: AppSpacing.md,
               runSpacing: AppSpacing.md,
               children: sections
-                  .map((section) => SizedBox(width: sectionWidth, child: section))
+                  .map(
+                    (section) => SizedBox(width: sectionWidth, child: section),
+                  )
                   .toList(),
             );
           } else {
@@ -200,7 +204,9 @@ class _AdminContentView extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children:
                   sections
-                      .expand((section) => [section, SizedBox(height: AppSpacing.md)])
+                      .expand(
+                        (section) => [section, SizedBox(height: AppSpacing.md)],
+                      )
                       .toList()
                     ..removeLast(), // 마지막 SizedBox 제거
             );
@@ -317,7 +323,9 @@ class _AdminContentView extends ConsumerWidget {
           icon: Icons.list_outlined,
           title: '채널 목록 및 관리',
           description: '채널 목록 조회, 생성, 권한 설정',
-          onTap: () => ref.read(workspaceStateProvider.notifier).showChannelManagementPage(),
+          onTap: () => ref
+              .read(workspaceStateProvider.notifier)
+              .showChannelManagementPage(),
         ),
       ],
       isDesktop: isDesktop,
@@ -334,14 +342,17 @@ class _AdminContentView extends ConsumerWidget {
           icon: Icons.post_add_outlined,
           title: '모집 공고 관리',
           description: '활성 공고를 확인하고 새 공고를 등록하세요',
-          onTap: () =>
-              ref.read(workspaceStateProvider.notifier).showRecruitmentManagementPage(),
+          onTap: () => ref
+              .read(workspaceStateProvider.notifier)
+              .showRecruitmentManagementPage(),
         ),
         ActionCard(
           icon: Icons.inbox_outlined,
           title: '지원자 관리',
           description: '지원자를 확인하고 승인하세요',
-          onTap: () => ref.read(workspaceStateProvider.notifier).showApplicationManagementPage(),
+          onTap: () => ref
+              .read(workspaceStateProvider.notifier)
+              .showApplicationManagementPage(),
         ),
       ],
       isDesktop: isDesktop,
@@ -352,7 +363,6 @@ class _AdminContentView extends ConsumerWidget {
     // 멤버 관리 페이지로 전환
     ref.read(workspaceStateProvider.notifier).showMemberManagementPage();
   }
-
 
   void _handleEditGroup(BuildContext context, WidgetRef ref) async {
     // Get current group information from currentGroupProvider
@@ -421,9 +431,9 @@ class _AdminSection extends StatelessWidget {
     this.expandableContent,
     required this.isDesktop,
   }) : assert(
-          actions != null || expandableContent != null,
-          'Either actions or expandableContent must be provided',
-        );
+         actions != null || expandableContent != null,
+         'Either actions or expandableContent must be provided',
+       );
 
   @override
   Widget build(BuildContext context) {

@@ -18,7 +18,8 @@ import '../../../../presentation/widgets/buttons/neutral_outlined_button.dart';
 class PlaceOperatingHoursEditor extends ConsumerStatefulWidget {
   final int placeId;
   final List<OperatingHoursResponse> initialOperatingHours;
-  final Future<bool> Function(List<OperatingHoursItem> operatingHours) onSaveOperatingHours;
+  final Future<bool> Function(List<OperatingHoursItem> operatingHours)
+  onSaveOperatingHours;
   final VoidCallback? onSaveCompleted;
   final VoidCallback? onCancel;
 
@@ -32,10 +33,12 @@ class PlaceOperatingHoursEditor extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<PlaceOperatingHoursEditor> createState() => _PlaceOperatingHoursEditorState();
+  ConsumerState<PlaceOperatingHoursEditor> createState() =>
+      _PlaceOperatingHoursEditorState();
 }
 
-class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursEditor> {
+class _PlaceOperatingHoursEditorState
+    extends ConsumerState<PlaceOperatingHoursEditor> {
   // 요일별 운영 상태 (true = 운영, false = 휴무)
   final Map<int, bool> _isOperating = {};
 
@@ -89,7 +92,10 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
         _isOperating[day] = true;
         final startSlot = _timeStringToSlot(oh.startTime!);
         final endSlot = _timeStringToSlot(oh.endTime!);
-        _timeRanges[day] = RangeValues(startSlot.toDouble(), endSlot.toDouble());
+        _timeRanges[day] = RangeValues(
+          startSlot.toDouble(),
+          endSlot.toDouble(),
+        );
       }
     }
 
@@ -114,7 +120,15 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
 
   /// 인덱스를 요일 문자열로 변환
   String _indexToDayOfWeek(int index) {
-    const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+    const days = [
+      'MONDAY',
+      'TUESDAY',
+      'WEDNESDAY',
+      'THURSDAY',
+      'FRIDAY',
+      'SATURDAY',
+      'SUNDAY',
+    ];
     return days[index];
   }
 
@@ -149,9 +163,7 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Icon(Icons.warning, color: AppColors.warning, size: 24),
@@ -168,21 +180,27 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
               style: AppTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
-            ...conflicts.map((c) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Icon(Icons.access_time, color: AppColors.neutral600, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${c.reason ?? '브레이크 타임'}: ${c.startTime} - ${c.endTime}',
-                      style: AppTheme.bodySmall,
+            ...conflicts.map(
+              (c) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      color: AppColors.neutral600,
+                      size: 16,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${c.reason ?? '브레이크 타임'}: ${c.startTime} - ${c.endTime}',
+                        style: AppTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
         actions: [
@@ -227,7 +245,9 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
 
     try {
       // 1. 모든 브레이크 타임 가져오기 (동기 접근)
-      final restrictedTimesAsync = ref.read(restrictedTimesProvider(widget.placeId));
+      final restrictedTimesAsync = ref.read(
+        restrictedTimesProvider(widget.placeId),
+      );
       final allRestrictedTimes = restrictedTimesAsync.asData?.value ?? [];
 
       // 2. 각 요일별로 충돌 검증
@@ -254,7 +274,10 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
           final conflicts = entry.value;
           final dayLabel = _indexToDayOfWeekKorean(dayIndex);
 
-          final confirmed = await _showConflictWarningDialog(dayLabel, conflicts);
+          final confirmed = await _showConflictWarningDialog(
+            dayLabel,
+            conflicts,
+          );
 
           if (!confirmed) {
             // 취소 선택 시 저장 중단
@@ -292,7 +315,9 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
 
       // 5. 운영시간 저장 (기존 로직)
       final operatingHoursItems = _buildOperatingHoursItems();
-      final saveSuccess = await widget.onSaveOperatingHours(operatingHoursItems);
+      final saveSuccess = await widget.onSaveOperatingHours(
+        operatingHoursItems,
+      );
 
       if (!saveSuccess) {
         if (!mounted) return;
@@ -400,19 +425,23 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
 
       if (_isOperating[day] == true) {
         final range = _timeRanges[day]!;
-        items.add(OperatingHoursItem(
-          dayOfWeek: dayOfWeek,
-          startTime: _slotToTimeString(range.start.toInt()),
-          endTime: _slotToTimeString(range.end.toInt()),
-          isClosed: false,
-        ));
+        items.add(
+          OperatingHoursItem(
+            dayOfWeek: dayOfWeek,
+            startTime: _slotToTimeString(range.start.toInt()),
+            endTime: _slotToTimeString(range.end.toInt()),
+            isClosed: false,
+          ),
+        );
       } else {
-        items.add(OperatingHoursItem(
-          dayOfWeek: dayOfWeek,
-          startTime: null,
-          endTime: null,
-          isClosed: true,
-        ));
+        items.add(
+          OperatingHoursItem(
+            dayOfWeek: dayOfWeek,
+            startTime: null,
+            endTime: null,
+            isClosed: true,
+          ),
+        );
       }
     }
 
@@ -492,10 +521,7 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '시설 운영시간 관리',
-                    style: AppTheme.displayMedium,
-                  ),
+                  Text('시설 운영시간 관리', style: AppTheme.displayMedium),
                   const SizedBox(height: 8),
                   Text(
                     '주간 운영시간과 임시 휴무를 관리합니다',
@@ -523,10 +549,7 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
                         color: AppColors.neutral900,
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        '주간 운영시간',
-                        style: AppTheme.headlineMedium,
-                      ),
+                      Text('주간 운영시간', style: AppTheme.headlineMedium),
                       // 여백 (유연)
                       const Spacer(),
                       // 버튼 영역 (조건부 표시)
@@ -568,25 +591,31 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
     final dayOfWeek = _indexToDayOfWeek(day);
 
     // 브레이크 타임 데이터 가져오기
-    final restrictedTimesAsync = ref.watch(restrictedTimesProvider(widget.placeId));
+    final restrictedTimesAsync = ref.watch(
+      restrictedTimesProvider(widget.placeId),
+    );
 
     return restrictedTimesAsync.when(
       data: (allRestrictedTimes) {
         // 해당 요일의 브레이크 타임만 필터링
-        final dayRestrictedTimes = allRestrictedTimes
-            .where((rt) => rt.dayOfWeek == dayOfWeek)
-            .toList()
-          ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+        final dayRestrictedTimes =
+            allRestrictedTimes.where((rt) => rt.dayOfWeek == dayOfWeek).toList()
+              ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
 
         return _buildDayCardContent(day, dayOfWeek, dayRestrictedTimes);
       },
-      loading: () => _buildDayCardContent(day, dayOfWeek, []),  // 로딩 중에는 빈 리스트
-      error: (err, stack) => _buildDayCardContent(day, dayOfWeek, []),  // 에러 시 빈 리스트
+      loading: () => _buildDayCardContent(day, dayOfWeek, []), // 로딩 중에는 빈 리스트
+      error: (err, stack) =>
+          _buildDayCardContent(day, dayOfWeek, []), // 에러 시 빈 리스트
     );
   }
 
   /// 요일별 카드 컨텐츠 빌드
-  Widget _buildDayCardContent(int day, String dayOfWeek, List<RestrictedTimeResponse> restrictedTimes) {
+  Widget _buildDayCardContent(
+    int day,
+    String dayOfWeek,
+    List<RestrictedTimeResponse> restrictedTimes,
+  ) {
     final isOperating = _isOperating[day] ?? false;
     final timeRange = _timeRanges[day] ?? const RangeValues(36, 72);
 
@@ -622,10 +651,7 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
                 ),
                 const SizedBox(width: 8),
                 // 요일 텍스트
-                Text(
-                  _indexToDayOfWeekKorean(day),
-                  style: AppTheme.titleLarge,
-                ),
+                Text(_indexToDayOfWeekKorean(day), style: AppTheme.titleLarge),
               ],
             ),
           ),
@@ -722,7 +748,9 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
                   // 휴무 상태
                   Text(
                     '전체 휴무',
-                    style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppColors.neutral600,
+                    ),
                   ),
                 ],
               ],
@@ -734,7 +762,11 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
   }
 
   /// 브레이크 타임 섹션 빌드 (좌측 정렬 제목 + 우측 "+" 버튼)
-  Widget _buildBreakTimeSection(int dayIndex, String dayOfWeek, List<RestrictedTimeResponse> restrictedTimes) {
+  Widget _buildBreakTimeSection(
+    int dayIndex,
+    String dayOfWeek,
+    List<RestrictedTimeResponse> restrictedTimes,
+  ) {
     // 로컬에서 추가된 브레이크 타임 (아직 서버에 저장되지 않음)
     final pendingAdds = (_pendingBreakTimeChanges[dayIndex] ?? [])
         .where((change) => change.type == BreakTimeChangeType.add)
@@ -782,7 +814,12 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
         else ...[
           // 서버 데이터 (기존 브레이크 타임)
           ...restrictedTimes.asMap().entries.map(
-            (entry) => _buildBreakTimeItem(dayIndex, dayOfWeek, entry.value, entry.key),
+            (entry) => _buildBreakTimeItem(
+              dayIndex,
+              dayOfWeek,
+              entry.value,
+              entry.key,
+            ),
           ),
           // 로컬 추가 항목 (아직 저장 안 됨)
           ...pendingAdds.map(
@@ -794,12 +831,17 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
   }
 
   /// 로컬 추가 브레이크 타임 아이템 빌드 (아직 저장 안 됨)
-  Widget _buildPendingBreakTimeItem(int dayIndex, String dayOfWeek, RestrictedTimeChange change) {
+  Widget _buildPendingBreakTimeItem(
+    int dayIndex,
+    String dayOfWeek,
+    RestrictedTimeChange change,
+  ) {
     // 임시 고유 키 생성 (저장 전이므로 ID가 없음)
     final tempKey = '${dayOfWeek}_${change.startTime}_${change.endTime}';
 
     // 현재 Range 값 (로컬 상태 또는 기본값)
-    final currentRange = _breakTimeRanges[tempKey.hashCode] ??
+    final currentRange =
+        _breakTimeRanges[tempKey.hashCode] ??
         RangeValues(
           _timeStringToSlot(change.startTime).toDouble(),
           _timeStringToSlot(change.endTime).toDouble(),
@@ -824,7 +866,10 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
                   ),
                   backgroundColor: Colors.transparent,
                   side: const BorderSide(color: AppColors.neutral400, width: 1),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
@@ -849,7 +894,11 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
               const Spacer(),
               // 삭제 버튼
               IconButton(
-                icon: const Icon(Icons.close, size: 16, color: AppColors.neutral600),
+                icon: const Icon(
+                  Icons.close,
+                  size: 16,
+                  color: AppColors.neutral600,
+                ),
                 onPressed: () => _deletePendingBreakTimeLocal(dayIndex, change),
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
@@ -916,7 +965,8 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
                 _breakTimeRanges[tempKey.hashCode] = values;
               });
             },
-            onChangeEnd: (values) => _savePendingBreakTimeRangeLocal(dayIndex, change, values),
+            onChangeEnd: (values) =>
+                _savePendingBreakTimeRangeLocal(dayIndex, change, values),
           ),
         ],
       ),
@@ -924,9 +974,15 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
   }
 
   /// 개별 브레이크 타임 아이템 빌드 (Range Slider 방식)
-  Widget _buildBreakTimeItem(int dayIndex, String dayOfWeek, RestrictedTimeResponse rt, int index) {
+  Widget _buildBreakTimeItem(
+    int dayIndex,
+    String dayOfWeek,
+    RestrictedTimeResponse rt,
+    int index,
+  ) {
     // 현재 브레이크 타임의 Range 값 (로컬 상태 또는 서버 데이터)
-    final currentRange = _breakTimeRanges[rt.id] ?? _parseRestrictedTimeToRange(rt);
+    final currentRange =
+        _breakTimeRanges[rt.id] ?? _parseRestrictedTimeToRange(rt);
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Column(
@@ -946,14 +1002,21 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
                   ),
                   backgroundColor: Colors.transparent,
                   side: const BorderSide(color: AppColors.neutral400, width: 1),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
               const Spacer(),
               // 삭제 버튼
               IconButton(
-                icon: const Icon(Icons.close, size: 16, color: AppColors.neutral600),
+                icon: const Icon(
+                  Icons.close,
+                  size: 16,
+                  color: AppColors.neutral600,
+                ),
                 onPressed: () => _deleteBreakTimeLocal(rt),
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
@@ -1034,10 +1097,7 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('브레이크 타임 삭제', style: AppTheme.headlineSmall),
-        content: Text(
-          '이 브레이크 타임을 삭제하시겠습니까?',
-          style: AppTheme.bodyMedium,
-        ),
+        content: Text('이 브레이크 타임을 삭제하시겠습니까?', style: AppTheme.bodyMedium),
         actions: [
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1193,10 +1253,7 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
         if (!_isTimeInRange(breakStart, operatingStart, operatingEnd) ||
             !_isTimeInRange(breakEnd, operatingStart, operatingEnd)) {
           if (mounted) {
-            AppSnackBar.error(
-              context,
-              '브레이크 타임은 운영시간 범위 내에 있어야 합니다',
-            );
+            AppSnackBar.error(context, '브레이크 타임은 운영시간 범위 내에 있어야 합니다');
           }
           // 원래 값으로 복원
           setState(() {
@@ -1247,7 +1304,10 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
           !_isTimeInRange(defaultBreakEnd, operatingStart, operatingEnd)) {
         // 운영 시작 시간 + 1시간을 기본값으로 설정
         startTime = _slotToTimeString(operatingRange.start.toInt());
-        final endSlot = (operatingRange.start.toInt() + 4).clamp(0, operatingRange.end.toInt());
+        final endSlot = (operatingRange.start.toInt() + 4).clamp(
+          0,
+          operatingRange.end.toInt(),
+        );
         endTime = _slotToTimeString(endSlot);
       }
     }
@@ -1358,7 +1418,10 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
   }
 
   /// 미저장 브레이크 타임 이름 수정 (로컬 상태)
-  Future<void> _editPendingReasonLocal(int dayIndex, RestrictedTimeChange change) async {
+  Future<void> _editPendingReasonLocal(
+    int dayIndex,
+    RestrictedTimeChange change,
+  ) async {
     final controller = TextEditingController(text: change.reason ?? '');
 
     final result = await showDialog<String>(
@@ -1416,7 +1479,11 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
   }
 
   /// 미저장 브레이크 타임 시간 변경 (로컬 상태)
-  void _savePendingBreakTimeRangeLocal(int dayIndex, RestrictedTimeChange change, RangeValues values) {
+  void _savePendingBreakTimeRangeLocal(
+    int dayIndex,
+    RestrictedTimeChange change,
+    RangeValues values,
+  ) {
     final startTime = _formatSlotTime(values.start);
     final endTime = _formatSlotTime(values.end);
 
@@ -1433,13 +1500,11 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
       if (!_isTimeInRange(breakStart, operatingStart, operatingEnd) ||
           !_isTimeInRange(breakEnd, operatingStart, operatingEnd)) {
         if (mounted) {
-          AppSnackBar.error(
-            context,
-            '브레이크 타임은 운영시간 범위 내에 있어야 합니다',
-          );
+          AppSnackBar.error(context, '브레이크 타임은 운영시간 범위 내에 있어야 합니다');
         }
         // 원래 값으로 복원
-        final tempKey = '${change.dayOfWeek}_${change.startTime}_${change.endTime}';
+        final tempKey =
+            '${change.dayOfWeek}_${change.startTime}_${change.endTime}';
         setState(() {
           _breakTimeRanges.remove(tempKey.hashCode);
         });
@@ -1466,7 +1531,7 @@ class _PlaceOperatingHoursEditorState extends ConsumerState<PlaceOperatingHoursE
 
 /// 브레이크 타임 변경 타입
 enum BreakTimeChangeType {
-  add,    // 새로 추가
+  add, // 새로 추가
   update, // 수정
   delete, // 삭제
 }
@@ -1474,7 +1539,7 @@ enum BreakTimeChangeType {
 /// 브레이크 타임 변경사항
 class RestrictedTimeChange {
   final BreakTimeChangeType type;
-  final int? id;  // update/delete 시 사용
+  final int? id; // update/delete 시 사용
   final String dayOfWeek;
   final String startTime;
   final String endTime;

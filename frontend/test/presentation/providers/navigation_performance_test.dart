@@ -98,32 +98,34 @@ void main() {
       );
     });
 
-    test('multiple rapid push() operations should maintain performance',
-        () async {
-      final stopwatch = Stopwatch()..start();
+    test(
+      'multiple rapid push() operations should maintain performance',
+      () async {
+        final stopwatch = Stopwatch()..start();
 
-      // 10번 연속 push (디바운싱으로 인해 마지막 것만 실행됨)
-      for (int i = 1; i <= 10; i++) {
-        notifier.push(WorkspaceRoute.channel(groupId: 1, channelId: i));
-      }
+        // 10번 연속 push (디바운싱으로 인해 마지막 것만 실행됨)
+        for (int i = 1; i <= 10; i++) {
+          notifier.push(WorkspaceRoute.channel(groupId: 1, channelId: i));
+        }
 
-      stopwatch.stop();
+        stopwatch.stop();
 
-      // push() 호출 자체는 즉시 완료되어야 함
-      expect(
-        stopwatch.elapsedMilliseconds,
-        lessThan(200),
-        reason: '10번의 push() 호출은 200ms 이내에 완료되어야 합니다',
-      );
+        // push() 호출 자체는 즉시 완료되어야 함
+        expect(
+          stopwatch.elapsedMilliseconds,
+          lessThan(200),
+          reason: '10번의 push() 호출은 200ms 이내에 완료되어야 합니다',
+        );
 
-      // 디바운싱 대기 후 최종 상태 검증 (마지막 push만 실행됨)
-      await Future.delayed(const Duration(milliseconds: 350));
-      expect(notifier.state.stack.length, 1);
-      expect(
-        notifier.state.stack.last,
-        const WorkspaceRoute.channel(groupId: 1, channelId: 10),
-      );
-    });
+        // 디바운싱 대기 후 최종 상태 검증 (마지막 push만 실행됨)
+        await Future.delayed(const Duration(milliseconds: 350));
+        expect(notifier.state.stack.length, 1);
+        expect(
+          notifier.state.stack.last,
+          const WorkspaceRoute.channel(groupId: 1, channelId: 10),
+        );
+      },
+    );
 
     test('complex route stack operations should maintain performance', () {
       // Setup: 초기 스택 직접 구성 (디바운싱 없이)
@@ -144,7 +146,8 @@ void main() {
       notifier.pop(); // currentIndex: 4 → 3
       notifier.pop(); // currentIndex: 3 → 2
       notifier.replace(
-          const WorkspaceRoute.channel(groupId: 1, channelId: 99)); // index 2 교체
+        const WorkspaceRoute.channel(groupId: 1, channelId: 99),
+      ); // index 2 교체
 
       stopwatch.stop();
 

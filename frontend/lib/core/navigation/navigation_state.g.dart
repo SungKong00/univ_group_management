@@ -17,6 +17,16 @@ _$NavigationStateImpl _$$NavigationStateImplFromJson(
   loadingMessage: json['loadingMessage'] as String?,
   lastError: json['lastError'] as String?,
   isOffline: json['isOffline'] as bool? ?? false,
+  scrollPositions:
+      (json['scrollPositions'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(int.parse(k), (e as num).toDouble()),
+      ) ??
+      const {},
+  formData:
+      (json['formData'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(int.parse(k), e as Map<String, dynamic>),
+      ) ??
+      const {},
 );
 
 Map<String, dynamic> _$$NavigationStateImplToJson(
@@ -28,4 +38,8 @@ Map<String, dynamic> _$$NavigationStateImplToJson(
   'loadingMessage': instance.loadingMessage,
   'lastError': instance.lastError,
   'isOffline': instance.isOffline,
+  'scrollPositions': instance.scrollPositions.map(
+    (k, e) => MapEntry(k.toString(), e),
+  ),
+  'formData': instance.formData.map((k, e) => MapEntry(k.toString(), e)),
 };

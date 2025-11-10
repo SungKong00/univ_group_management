@@ -26,10 +26,7 @@ class DateNavigationHeader extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          bottom: BorderSide(
-            color: AppColors.neutral200,
-            width: 1,
-          ),
+          bottom: BorderSide(color: AppColors.neutral200, width: 1),
         ),
       ),
       child: Row(
@@ -46,9 +43,9 @@ class DateNavigationHeader extends ConsumerWidget {
             child: Center(
               child: Text(
                 _formatDateText(focusedDate, currentView),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ),

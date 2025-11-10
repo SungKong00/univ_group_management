@@ -68,7 +68,7 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
   /// Execute push immediately without debouncing
   void _executePush(WorkspaceRoute route) {
     final newStack = [...state.stack, route];
-    state = NavigationState(stack: newStack, currentIndex: newStack.length - 1);
+    state = state.copyWith(stack: newStack, currentIndex: newStack.length - 1);
   }
 
   /// Pop the current route from the navigation stack
@@ -78,10 +78,7 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
       return false;
     }
 
-    state = NavigationState(
-      stack: state.stack,
-      currentIndex: state.currentIndex - 1,
-    );
+    state = state.copyWith(currentIndex: state.currentIndex - 1);
     return true;
   }
 
@@ -95,12 +92,13 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
 
     final newStack = List<WorkspaceRoute>.from(state.stack);
     newStack[state.currentIndex] = route;
-    state = NavigationState(stack: newStack, currentIndex: state.currentIndex);
+    state = state.copyWith(stack: newStack);
   }
 
   /// Reset the navigation stack to a single root route
   /// Used when entering a workspace
   void resetToRoot(WorkspaceRoute root) {
+    // Reset clears all preserved state (scroll positions, form data)
     state = NavigationState(stack: [root], currentIndex: 0);
   }
 
@@ -108,6 +106,76 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
   /// Used when exiting the workspace
   void clear() {
     state = const NavigationState();
+  }
+
+  /// T111: Save scroll position for current route
+  /// Maintains up to 5 most recent scroll positions (LRU)
+  void saveScrollPosition(double offset) {
+    final currentRoute = state.current;
+    if (currentRoute == null) return;
+
+    final routeHash = currentRoute.hashCode;
+    final updatedPositions = Map<int, double>.from(state.scrollPositions);
+    updatedPositions[routeHash] = offset;
+
+    // Keep only 5 most recent positions (LRU eviction)
+    if (updatedPositions.length > 5) {
+      final oldestKey = updatedPositions.keys.first;
+      updatedPositions.remove(oldestKey);
+    }
+
+    state = state.copyWith(scrollPositions: updatedPositions);
+  }
+
+  /// T111: Get scroll position for current route
+  /// Returns null if no position saved
+  double? getScrollPosition() {
+    final currentRoute = state.current;
+    if (currentRoute == null) return null;
+
+    final routeHash = currentRoute.hashCode;
+    return state.scrollPositions[routeHash];
+  }
+
+  /// T112: Save form data for current route
+  /// Maintains up to 5 most recent form states (LRU)
+  void saveFormData(Map<String, dynamic> data) {
+    final currentRoute = state.current;
+    if (currentRoute == null) return;
+
+    final routeHash = currentRoute.hashCode;
+    final updatedFormData = Map<int, Map<String, dynamic>>.from(state.formData);
+    updatedFormData[routeHash] = Map<String, dynamic>.from(data);
+
+    // Keep only 5 most recent form states (LRU eviction)
+    if (updatedFormData.length > 5) {
+      final oldestKey = updatedFormData.keys.first;
+      updatedFormData.remove(oldestKey);
+    }
+
+    state = state.copyWith(formData: updatedFormData);
+  }
+
+  /// T112: Get form data for current route
+  /// Returns null if no form data saved
+  Map<String, dynamic>? getFormData() {
+    final currentRoute = state.current;
+    if (currentRoute == null) return null;
+
+    final routeHash = currentRoute.hashCode;
+    return state.formData[routeHash];
+  }
+
+  /// T112: Clear form data for current route
+  void clearFormData() {
+    final currentRoute = state.current;
+    if (currentRoute == null) return;
+
+    final routeHash = currentRoute.hashCode;
+    final updatedFormData = Map<int, Map<String, dynamic>>.from(state.formData);
+    updatedFormData.remove(routeHash);
+
+    state = state.copyWith(formData: updatedFormData);
   }
 
   /// Switch to a different group while maintaining view context

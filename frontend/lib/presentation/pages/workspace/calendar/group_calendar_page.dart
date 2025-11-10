@@ -66,7 +66,8 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Set initial selected date if provided
       if (widget.initialSelectedDate != null) {
-        ref.read(focusedDateProvider.notifier).state = widget.initialSelectedDate!;
+        ref.read(focusedDateProvider.notifier).state =
+            widget.initialSelectedDate!;
       }
       _loadEvents();
     });
@@ -83,7 +84,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     final startOfMonth = DateTime(focusedDate.year, focusedDate.month, 1);
     final endOfMonth = DateTime(focusedDate.year, focusedDate.month + 1, 0);
 
-    await ref.read(groupCalendarProvider(widget.groupId).notifier).loadEvents(
+    await ref
+        .read(groupCalendarProvider(widget.groupId).notifier)
+        .loadEvents(
           groupId: widget.groupId,
           startDate: startOfMonth,
           endDate: endOfMonth,
@@ -96,9 +99,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     return Column(
       children: [
         _buildTabBar(),
-        Expanded(
-          child: _buildTabContent(),
-        ),
+        Expanded(child: _buildTabContent()),
       ],
     );
   }
@@ -117,10 +118,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   Widget _buildTabContent() {
     return TabBarView(
       controller: _tabController,
-      children: [
-        _buildGroupCalendarTab(),
-        _buildPlaceCalendarTab(),
-      ],
+      children: [_buildGroupCalendarTab(), _buildPlaceCalendarTab()],
     );
   }
 
@@ -138,11 +136,13 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
             AppSpacing.sm,
             AppSpacing.xs,
           ),
-          child: _buildCalendarHeader(currentView, focusedDate, state.isLoading),
+          child: _buildCalendarHeader(
+            currentView,
+            focusedDate,
+            state.isLoading,
+          ),
         ),
-        Expanded(
-          child: _buildCalendarContent(state, currentView),
-        ),
+        Expanded(child: _buildCalendarContent(state, currentView)),
       ],
     );
   }
@@ -165,10 +165,8 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
             ref.read(focusedDateProvider.notifier).setDate(focused);
           },
           onEventTap: _showEventDetail,
-          eventChipBuilder: (event) => MonthEventChip(
-            label: event.title,
-            color: event.color,
-          ),
+          eventChipBuilder: (event) =>
+              MonthEventChip(label: event.title, color: event.color),
         ),
       );
     }
@@ -184,7 +182,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
           .toList();
 
       // Check permissions for editing
-      final permissionsAsync = ref.watch(groupPermissionsProvider(widget.groupId));
+      final permissionsAsync = ref.watch(
+        groupPermissionsProvider(widget.groupId),
+      );
       final canEdit = permissionsAsync.maybeWhen(
         data: (permissions) => permissions.contains('CALENDAR_MANAGE'),
         orElse: () => false,
@@ -202,8 +202,10 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
           allowEventOverlap: true,
           weekStart: weekStart,
           initialEvents: events,
-          onEventCreate: (event) => _handleEventCreate(context, event, weekStart),
-          onEventUpdate: (event) => _handleEventUpdate(context, event, weekStart),
+          onEventCreate: (event) =>
+              _handleEventCreate(context, event, weekStart),
+          onEventUpdate: (event) =>
+              _handleEventUpdate(context, event, weekStart),
           onEventDelete: (event) => _handleEventDelete(context, event),
         ),
       );
@@ -215,9 +217,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Text(
           '지원하지 않는 뷰: ${_getViewName(view)}',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.error,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(color: AppColors.error),
           textAlign: TextAlign.center,
         ),
       ),
@@ -277,7 +279,11 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     return PlaceCalendarTab(groupId: widget.groupId);
   }
 
-  Widget _buildCalendarHeader(CalendarView currentView, DateTime focusedDate, bool isBusy) {
+  Widget _buildCalendarHeader(
+    CalendarView currentView,
+    DateTime focusedDate,
+    bool isBusy,
+  ) {
     print('🔍 [GROUP_CALENDAR] Building header with CalendarNavigator (NEW)');
     final viewToggle = ToggleButtons(
       isSelected: CalendarView.values
@@ -310,21 +316,30 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       isLoading: isBusy,
     );
 
-    final weekStart = currentView == CalendarView.week ? _getWeekStart(focusedDate) : null;
+    final weekStart = currentView == CalendarView.week
+        ? _getWeekStart(focusedDate)
+        : null;
 
     final navigator = CalendarNavigator(
       currentDate: focusedDate,
       label: _formatFocusedLabel(focusedDate, currentView),
-      subtitle: weekStart != null ? DateFormatter.formatWeekRangeDetailed(weekStart) : null,
+      subtitle: weekStart != null
+          ? DateFormatter.formatWeekRangeDetailed(weekStart)
+          : null,
       isWeekView: currentView == CalendarView.week,
       onPrevious: isBusy ? () {} : () => _handlePrevious(currentView),
       onNext: isBusy ? () {} : () => _handleNext(currentView),
-      onToday: isBusy ? () {} : () => ref.read(focusedDateProvider.notifier).resetToToday(),
+      onToday: isBusy
+          ? () {}
+          : () => ref.read(focusedDateProvider.notifier).resetToToday(),
     );
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final helper = ResponsiveLayoutHelper(context: context, constraints: constraints);
+        final helper = ResponsiveLayoutHelper(
+          context: context,
+          constraints: constraints,
+        );
         final isCompact = !helper.isWideDesktop;
 
         if (isCompact) {
@@ -361,9 +376,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
               children: [
                 viewToggle,
                 const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Center(child: navigator),
-                ),
+                Expanded(child: Center(child: navigator)),
                 const SizedBox(width: AppSpacing.sm),
                 addButton,
               ],
@@ -412,8 +425,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     final focusedDate = ref.read(focusedDateProvider);
 
     // Check user's CALENDAR_MANAGE permission
-    final permissionsAsync =
-        ref.read(groupPermissionsProvider(widget.groupId));
+    final permissionsAsync = ref.read(groupPermissionsProvider(widget.groupId));
 
     // Wait for permissions to load if not already loaded
     final permissions = await permissionsAsync.when(
@@ -432,30 +444,29 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     if (canCreateOfficial) {
       final selectedFormality =
           await showSingleStepSelector<EventFormalityCategory>(
-        context: context,
-        title: '새 일정 만들기',
-        subtitle: '일정의 공개 범위를 선택하세요',
-        options: [
-          SelectableOption(
-            value: EventFormalityCategory.official,
-            title: EventFormalityCategory.official.title,
-            description: EventFormalityCategory.official.description,
-            icon: EventFormalityCategory.official.icon,
-          ),
-          SelectableOption(
-            value: EventFormalityCategory.unofficial,
-            title: EventFormalityCategory.unofficial.title,
-            description: EventFormalityCategory.unofficial.description,
-            icon: EventFormalityCategory.unofficial.icon,
-          ),
-        ],
-      );
+            context: context,
+            title: '새 일정 만들기',
+            subtitle: '일정의 공개 범위를 선택하세요',
+            options: [
+              SelectableOption(
+                value: EventFormalityCategory.official,
+                title: EventFormalityCategory.official.title,
+                description: EventFormalityCategory.official.description,
+                icon: EventFormalityCategory.official.icon,
+              ),
+              SelectableOption(
+                value: EventFormalityCategory.unofficial,
+                title: EventFormalityCategory.unofficial.title,
+                description: EventFormalityCategory.unofficial.description,
+                icon: EventFormalityCategory.unofficial.icon,
+              ),
+            ],
+          );
 
       if (selectedFormality == null || !mounted) return;
 
       // Step 2: Show event form with selected formality
-      final isOfficial =
-          selectedFormality == EventFormalityCategory.official;
+      final isOfficial = selectedFormality == EventFormalityCategory.official;
       await _createGroupEvent(isOfficial: isOfficial, anchorDate: focusedDate);
     } else {
       // No permission: Skip Step 1, create unofficial event directly
@@ -511,18 +522,18 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         await ref
             .read(groupCalendarProvider(widget.groupId).notifier)
             .createEvent(
-          groupId: widget.groupId,
-          title: result.title,
-          description: result.description,
-          locationText: locationText,
-          placeId: placeId,
-          startDate: result.startDate,
-          endDate: result.endDate,
-          isAllDay: result.isAllDay,
-          isOfficial: result.isOfficial,
-          color: result.color.toHex(),
-          recurrence: result.recurrence,
-        );
+              groupId: widget.groupId,
+              title: result.title,
+              description: result.description,
+              locationText: locationText,
+              placeId: placeId,
+              startDate: result.startDate,
+              endDate: result.endDate,
+              isAllDay: result.isAllDay,
+              isOfficial: result.isOfficial,
+              color: result.color.toHex(),
+              recurrence: result.recurrence,
+            );
 
         if (mounted) {
           AppSnackBar.info(context, '일정이 추가되었습니다');
@@ -541,8 +552,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     if (currentUser == null) return false;
 
     // Check if user has CALENDAR_MANAGE permission
-    final permissionsAsync =
-        ref.read(groupPermissionsProvider(widget.groupId));
+    final permissionsAsync = ref.read(groupPermissionsProvider(widget.groupId));
     final hasCalendarManage = permissionsAsync.maybeWhen(
       data: (permissions) => permissions.contains('CALENDAR_MANAGE'),
       orElse: () => false,
@@ -609,9 +619,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
                                 ),
                                 child: Text(
                                   '공식',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
+                                  style: Theme.of(context).textTheme.labelSmall
                                       ?.copyWith(
                                         color: AppColors.brand,
                                         fontWeight: FontWeight.bold,
@@ -646,36 +654,32 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
               _buildDetailRow(
                 Icons.schedule,
                 '시간',
-                _formatDateRange(event.startDate, event.endDate, event.isAllDay),
+                _formatDateRange(
+                  event.startDate,
+                  event.endDate,
+                  event.isAllDay,
+                ),
               ),
               if (event.location != null)
                 _buildDetailRow(Icons.place, '장소', event.location!),
               if (event.description != null) ...[
                 const SizedBox(height: AppSpacing.sm),
-                _buildDetailRow(
-                  Icons.notes,
-                  '설명',
-                  event.description!,
-                ),
+                _buildDetailRow(Icons.notes, '설명', event.description!),
               ],
               const SizedBox(height: AppSpacing.sm),
-              _buildDetailRow(
-                Icons.person,
-                '작성자',
-                event.creatorName,
-              ),
+              _buildDetailRow(Icons.person, '작성자', event.creatorName),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 '생성: ${_formatDateTime(event.createdAt)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.neutral600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.neutral600),
               ),
               Text(
                 '수정: ${_formatDateTime(event.updatedAt)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.neutral600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.neutral600),
               ),
             ],
           ),
@@ -698,15 +702,12 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
               children: [
                 Text(
                   label,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppColors.neutral600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: AppColors.neutral600),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                Text(value, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
           ),
@@ -718,7 +719,6 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   String _formatDateTime(DateTime dateTime) {
     return '${_format(dateTime, 'yyyy-MM-dd')} ${_format(dateTime, 'HH:mm')}';
   }
-
 
   Future<void> _showEventActions(GroupEvent event) async {
     await showModalBottomSheet(
@@ -788,18 +788,18 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         await ref
             .read(groupCalendarProvider(widget.groupId).notifier)
             .updateEvent(
-          groupId: widget.groupId,
-          eventId: event.id,
-          title: result.title,
-          description: result.description,
-          locationText: locationText,
-          placeId: placeId,
-          startDate: result.startDate,
-          endDate: result.endDate,
-          isAllDay: result.isAllDay,
-          color: result.color.toHex(),
-          updateScope: updateScope ?? UpdateScope.thisEvent,
-        );
+              groupId: widget.groupId,
+              eventId: event.id,
+              title: result.title,
+              description: result.description,
+              locationText: locationText,
+              placeId: placeId,
+              startDate: result.startDate,
+              endDate: result.endDate,
+              isAllDay: result.isAllDay,
+              color: result.color.toHex(),
+              updateScope: updateScope ?? UpdateScope.thisEvent,
+            );
 
         if (mounted) {
           AppSnackBar.info(context, '일정이 수정되었습니다');
@@ -850,10 +850,10 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
         await ref
             .read(groupCalendarProvider(widget.groupId).notifier)
             .deleteEvent(
-          groupId: widget.groupId,
-          eventId: event.id,
-          deleteScope: deleteScope ?? UpdateScope.thisEvent,
-        );
+              groupId: widget.groupId,
+              eventId: event.id,
+              deleteScope: deleteScope ?? UpdateScope.thisEvent,
+            );
 
         if (mounted) {
           AppSnackBar.info(context, '일정이 삭제되었습니다');
@@ -875,23 +875,17 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              isDelete
-                  ? '어떤 일정을 삭제하시겠습니까?'
-                  : '어떤 일정을 수정하시겠습니까?',
-            ),
+            Text(isDelete ? '어떤 일정을 삭제하시겠습니까?' : '어떤 일정을 수정하시겠습니까?'),
             const SizedBox(height: AppSpacing.md),
             PrimaryButton(
               text: '이 일정만',
-              onPressed: () =>
-                  Navigator.of(context).pop(UpdateScope.thisEvent),
+              onPressed: () => Navigator.of(context).pop(UpdateScope.thisEvent),
               variant: PrimaryButtonVariant.brand,
             ),
             const SizedBox(height: AppSpacing.xs),
             PrimaryButton(
               text: '이후 모든 반복 일정',
-              onPressed: () =>
-                  Navigator.of(context).pop(UpdateScope.allEvents),
+              onPressed: () => Navigator.of(context).pop(UpdateScope.allEvents),
               variant: PrimaryButtonVariant.brand,
             ),
           ],
@@ -915,31 +909,34 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     DateTime weekStart,
   ) async {
     // Step 1: Check permissions
-    final permissions = await ref.read(groupPermissionsProvider(widget.groupId).future);
+    final permissions = await ref.read(
+      groupPermissionsProvider(widget.groupId).future,
+    );
     final canCreateOfficial = permissions.contains('CALENDAR_MANAGE');
 
     // Step 2: Official/Unofficial selection (only for users with permission)
     bool isOfficial = false;
     if (canCreateOfficial) {
-      final selectedFormality = await showSingleStepSelector<EventFormalityCategory>(
-        context: context,
-        title: '새 일정 만들기',
-        subtitle: '일정의 공개 범위를 선택하세요',
-        options: [
-          SelectableOption(
-            value: EventFormalityCategory.official,
-            title: EventFormalityCategory.official.title,
-            description: EventFormalityCategory.official.description,
-            icon: EventFormalityCategory.official.icon,
-          ),
-          SelectableOption(
-            value: EventFormalityCategory.unofficial,
-            title: EventFormalityCategory.unofficial.title,
-            description: EventFormalityCategory.unofficial.description,
-            icon: EventFormalityCategory.unofficial.icon,
-          ),
-        ],
-      );
+      final selectedFormality =
+          await showSingleStepSelector<EventFormalityCategory>(
+            context: context,
+            title: '새 일정 만들기',
+            subtitle: '일정의 공개 범위를 선택하세요',
+            options: [
+              SelectableOption(
+                value: EventFormalityCategory.official,
+                title: EventFormalityCategory.official.title,
+                description: EventFormalityCategory.official.description,
+                icon: EventFormalityCategory.official.icon,
+              ),
+              SelectableOption(
+                value: EventFormalityCategory.unofficial,
+                title: EventFormalityCategory.unofficial.title,
+                description: EventFormalityCategory.unofficial.description,
+                icon: EventFormalityCategory.unofficial.icon,
+              ),
+            ],
+          );
 
       if (selectedFormality == null) return false; // User cancelled
       if (!mounted) return false;
@@ -988,19 +985,21 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
     // Step 4: API call
     try {
-      await ref.read(groupCalendarProvider(widget.groupId).notifier).createEvent(
-        groupId: widget.groupId,
-        title: result.title,
-        description: result.description,
-        locationText: result.locationText ?? '',
-        placeId: result.place?.id,
-        startDate: result.startDate,
-        endDate: result.endDate,
-        isAllDay: result.isAllDay,
-        isOfficial: result.isOfficial,
-        color: result.color.toHex(),
-        recurrence: result.recurrence,
-      );
+      await ref
+          .read(groupCalendarProvider(widget.groupId).notifier)
+          .createEvent(
+            groupId: widget.groupId,
+            title: result.title,
+            description: result.description,
+            locationText: result.locationText ?? '',
+            placeId: result.place?.id,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            isAllDay: result.isAllDay,
+            isOfficial: result.isOfficial,
+            color: result.color.toHex(),
+            recurrence: result.recurrence,
+          );
 
       if (mounted) {
         AppSnackBar.info(context, '일정이 추가되었습니다');
@@ -1061,19 +1060,21 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
     // Step 4: API call
     try {
-      await ref.read(groupCalendarProvider(widget.groupId).notifier).updateEvent(
-        groupId: widget.groupId,
-        eventId: eventId,
-        title: result.title,
-        description: result.description,
-        locationText: result.locationText ?? '',
-        placeId: result.place?.id,
-        startDate: result.startDate,
-        endDate: result.endDate,
-        isAllDay: result.isAllDay,
-        color: result.color.toHex(),
-        updateScope: updateScope ?? UpdateScope.thisEvent,
-      );
+      await ref
+          .read(groupCalendarProvider(widget.groupId).notifier)
+          .updateEvent(
+            groupId: widget.groupId,
+            eventId: eventId,
+            title: result.title,
+            description: result.description,
+            locationText: result.locationText ?? '',
+            placeId: result.place?.id,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            isAllDay: result.isAllDay,
+            color: result.color.toHex(),
+            updateScope: updateScope ?? UpdateScope.thisEvent,
+          );
 
       if (mounted) {
         AppSnackBar.info(context, '일정이 수정되었습니다');
@@ -1088,10 +1089,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   }
 
   /// Handle event deletion
-  Future<bool> _handleEventDelete(
-    BuildContext context,
-    Event event,
-  ) async {
+  Future<bool> _handleEventDelete(BuildContext context, Event event) async {
     // Step 1: Find original GroupEvent
     final eventId = GroupEventAdapter.extractEventId(event.id);
     if (eventId == null) {
@@ -1143,11 +1141,13 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
     // Step 4: API call
     try {
-      await ref.read(groupCalendarProvider(widget.groupId).notifier).deleteEvent(
-        groupId: widget.groupId,
-        eventId: eventId,
-        deleteScope: deleteScope ?? UpdateScope.thisEvent,
-      );
+      await ref
+          .read(groupCalendarProvider(widget.groupId).notifier)
+          .deleteEvent(
+            groupId: widget.groupId,
+            eventId: eventId,
+            deleteScope: deleteScope ?? UpdateScope.thisEvent,
+          );
 
       if (mounted) {
         AppSnackBar.info(context, '일정이 삭제되었습니다');
@@ -1161,7 +1161,6 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     }
   }
 }
-
 
 extension on Color {
   String toHex() {

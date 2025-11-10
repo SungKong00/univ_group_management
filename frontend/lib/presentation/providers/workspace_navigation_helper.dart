@@ -86,7 +86,8 @@ class WorkspaceNavigationHelper {
     // 1. targetView is null (default behavior)
     // 2. targetView is explicitly WorkspaceView.channel
     // Do NOT auto-select for special views (groupHome, calendar, admin pages)
-    if (targetView == null) return false; // Changed: null means use default (groupHome), don't select channel
+    if (targetView == null)
+      return false; // Changed: null means use default (groupHome), don't select channel
     return targetView == WorkspaceView.channel;
   }
 

@@ -29,9 +29,9 @@ Future<Place?> showPlacePickerDialog({
       resolvedAvailable = await PlaceService().getReservablePlaces(groupId);
     } catch (e) {
       if (navigator.mounted) {
-        ScaffoldMessenger.of(navigator.context).showSnackBar(
-          SnackBar(content: Text('장소 목록을 불러오지 못했습니다: $e')),
-        );
+        ScaffoldMessenger.of(
+          navigator.context,
+        ).showSnackBar(SnackBar(content: Text('장소 목록을 불러오지 못했습니다: $e')));
       }
       return null;
     }
@@ -39,9 +39,9 @@ Future<Place?> showPlacePickerDialog({
 
   if (resolvedAvailable.isEmpty) {
     if (navigator.mounted) {
-      ScaffoldMessenger.of(navigator.context).showSnackBar(
-        const SnackBar(content: Text('선택 가능한 장소가 없습니다')),
-      );
+      ScaffoldMessenger.of(
+        navigator.context,
+      ).showSnackBar(const SnackBar(content: Text('선택 가능한 장소가 없습니다')));
     }
     return null;
   }
@@ -54,8 +54,7 @@ Future<Place?> showPlacePickerDialog({
       final showTimeInfo = startTime != null && endTime != null;
 
       String formatTimeRange() {
-        final dateLabel =
-            DateFormat('M월 d일 (E)', 'ko_KR').format(startTime!);
+        final dateLabel = DateFormat('M월 d일 (E)', 'ko_KR').format(startTime!);
         final timeLabel =
             '${DateFormat('HH:mm').format(startTime)} - ${DateFormat('HH:mm').format(endTime!)}';
         return '$dateLabel · $timeLabel';
@@ -100,32 +99,30 @@ Future<Place?> showPlacePickerDialog({
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
-                      ...resolvedAvailable.asMap().entries.map(
-                        (entry) {
-                          final index = entry.key;
-                          final place = entry.value;
-                          return RadioListTile<int>(
-                            value: index,
-                            groupValue: selectedIndex,
-                            onChanged: (value) {
-                              if (value == null) return;
-                              setState(() => selectedIndex = value);
-                            },
-                            title: Text(
-                              place.displayName,
-                              style: textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                      ...resolvedAvailable.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final place = entry.value;
+                        return RadioListTile<int>(
+                          value: index,
+                          groupValue: selectedIndex,
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() => selectedIndex = value);
+                          },
+                          title: Text(
+                            place.displayName,
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
                             ),
-                            subtitle: Text(
-                              place.fullLocation,
-                              style: textTheme.bodySmall,
-                            ),
-                            dense: true,
-                            visualDensity: VisualDensity.compact,
-                          );
-                        },
-                      ),
+                          ),
+                          subtitle: Text(
+                            place.fullLocation,
+                            style: textTheme.bodySmall,
+                          ),
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                        );
+                      }),
                       if (resolvedUnavailable.isNotEmpty) ...[
                         const SizedBox(height: AppSpacing.md),
                         Text(

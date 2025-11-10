@@ -62,10 +62,7 @@ class WorkspaceViewBuilder {
         if (placeId == null || placeName == null) {
           return const WorkspaceStateView(type: WorkspaceStateType.noGroup);
         }
-        return PlaceTimeManagementPage(
-          placeId: placeId,
-          placeName: placeName,
-        );
+        return PlaceTimeManagementPage(placeId: placeId, placeName: placeName);
 
       case WorkspaceView.channel:
         return null;

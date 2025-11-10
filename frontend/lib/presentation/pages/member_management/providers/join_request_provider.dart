@@ -4,24 +4,18 @@ import '../../../../core/repositories/repository_providers.dart';
 import '../../../../core/providers/member/member_list_provider.dart';
 
 /// 가입 신청 목록 Provider
-final joinRequestListProvider =
-    FutureProvider.autoDispose.family<List<JoinRequest>, int>((
-  ref,
-  groupId,
-) async {
-  final repository = ref.watch(joinRequestRepositoryProvider);
-  return await repository.getPendingRequests(groupId);
-});
+final joinRequestListProvider = FutureProvider.autoDispose
+    .family<List<JoinRequest>, int>((ref, groupId) async {
+      final repository = ref.watch(joinRequestRepositoryProvider);
+      return await repository.getPendingRequests(groupId);
+    });
 
 /// 가입 신청 승인 Provider
 class ApproveRequestParams {
   final int groupId;
   final int requestId;
 
-  ApproveRequestParams({
-    required this.groupId,
-    required this.requestId,
-  });
+  ApproveRequestParams({required this.groupId, required this.requestId});
 
   @override
   bool operator ==(Object other) =>
@@ -38,10 +32,7 @@ class ApproveRequestParams {
 final approveJoinRequestProvider = FutureProvider.autoDispose
     .family<void, ApproveRequestParams>((ref, params) async {
       final repository = ref.watch(joinRequestRepositoryProvider);
-      await repository.approveRequest(
-        params.groupId,
-        params.requestId,
-      );
+      await repository.approveRequest(params.groupId, params.requestId);
 
       // 성공 후 신청 목록 및 멤버 목록 새로고침
       ref.invalidate(joinRequestListProvider(params.groupId));

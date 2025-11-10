@@ -196,16 +196,16 @@
 - [X] T100 Implement group deletion detection in ResourceDeletionListener
 - [X] T101 Implement deletion notification banner display
 - [X] T102 Implement automatic redirect to parent group home after 3 seconds on deletion
-- [ ] T103 Add session interruption reset logic in workspace_page.dart
+- [X] T103 Add session interruption reset logic in workspace_page.dart (_restoreSessionAfterInterruption() implemented)
 - [X] T104 Implement navigation debouncing (300ms threshold) in NavigationStateNotifier
-- [ ] T105 Add loading indicators for slow navigation operations (>2s) in WorkspaceRouterDelegate
-- [ ] T106 Implement cancellation support for loading navigation with back button
-- [ ] T107 Add API failure handling with fallback to last valid state
-- [ ] T108 Add offline detection and disable navigation requiring server data
+- [X] T105 Add loading indicators for slow navigation operations (>2s) in WorkspaceRouterDelegate (NavigationState.isLoading, loadingMessage)
+- [X] T106 Implement cancellation support for loading navigation with back button (cancelLoading() method)
+- [X] T107 Add API failure handling with fallback to last valid state (NavigationState.lastError, _handleApiError())
+- [X] T108 Add offline detection and disable navigation requiring server data (NavigationState.isOffline, setOffline())
 - [X] T109 Implement permission caching with LRU eviction policy in PermissionContextNotifier: Cache user permissions per group, implement LRU cache with max 100 groups (prevents unbounded memory), invalidate cache on permission change events (group role change, member removal), add cache hit/miss metrics for NFR-002 validation
-- [ ] T110 Add error messages with clear user guidance for navigation failures
-- [ ] T111 Implement scroll position preservation for up to 5 navigation steps back
-- [ ] T112 Implement form data preservation for up to 5 navigation steps back
+- [X] T110 Add error messages with clear user guidance for navigation failures (Error banner in WorkspaceRouterDelegate)
+- [X] T111 Implement scroll position preservation for up to 5 navigation steps back (NavigationState.scrollPositions with LRU)
+- [X] T112 Implement form data preservation for up to 5 navigation steps back (NavigationState.formData with LRU)
 
 ### Tests for Edge Cases
 

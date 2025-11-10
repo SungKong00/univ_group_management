@@ -13,9 +13,9 @@ import '../common/time_spinner.dart';
 class EventCreateResult {
   final String title;
   final LocationSelection locationSelection;
-  final DateTime? startTime;  // Updated time from dialog
-  final DateTime? endTime;    // Updated time from dialog
-  final Color color;          // Selected color
+  final DateTime? startTime; // Updated time from dialog
+  final DateTime? endTime; // Updated time from dialog
+  final Color color; // Selected color
 
   const EventCreateResult({
     required this.title,
@@ -38,17 +38,20 @@ class LocationSelection {
     this.selectedPlaceId,
   });
 
-  const LocationSelection.none() : type = LocationType.none, customLocation = null, selectedPlaceId = null;
+  const LocationSelection.none()
+    : type = LocationType.none,
+      customLocation = null,
+      selectedPlaceId = null;
 
   const LocationSelection.custom(String location)
-      : type = LocationType.custom,
-        customLocation = location,
-        selectedPlaceId = null;
+    : type = LocationType.custom,
+      customLocation = location,
+      selectedPlaceId = null;
 
   const LocationSelection.place(int placeId)
-      : type = LocationType.place,
-        customLocation = null,
-        selectedPlaceId = placeId;
+    : type = LocationType.place,
+      customLocation = null,
+      selectedPlaceId = placeId;
 }
 
 enum LocationType { none, custom, place }
@@ -133,7 +136,8 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
 
       // Auto-focus dropdown when multiple places are selected (and no pre-selection)
       // This helps user attention but doesn't auto-open (which is not natively supported)
-      if (widget.availablePlaces.length >= 2 && widget.preSelectedPlaceId == null) {
+      if (widget.availablePlaces.length >= 2 &&
+          widget.preSelectedPlaceId == null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             _dropdownFocusNode.requestFocus();
@@ -160,7 +164,8 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
       _startTime = newStartTime;
 
       // Automatically adjust end time if it's before the new start time
-      if (_endTime.isBefore(_startTime) || _endTime.isAtSameMomentAs(_startTime)) {
+      if (_endTime.isBefore(_startTime) ||
+          _endTime.isAtSameMomentAs(_startTime)) {
         _endTime = _startTime.add(const Duration(minutes: 15));
       }
     });
@@ -172,7 +177,8 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
       _endTime = newEndTime;
 
       // Automatically adjust start time if it's after the new end time
-      if (_startTime.isAfter(_endTime) || _startTime.isAtSameMomentAs(_endTime)) {
+      if (_startTime.isAfter(_endTime) ||
+          _startTime.isAtSameMomentAs(_endTime)) {
         _startTime = _endTime.subtract(const Duration(minutes: 15));
       }
     });
@@ -244,7 +250,10 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
         // Conditional: TextField for custom location
         if (_selectedLocationType == LocationType.custom)
           Padding(
-            padding: const EdgeInsets.only(left: AppSpacing.md, top: AppSpacing.xs),
+            padding: const EdgeInsets.only(
+              left: AppSpacing.md,
+              top: AppSpacing.xs,
+            ),
             child: TextField(
               controller: _customLocationController,
               decoration: const InputDecoration(
@@ -274,11 +283,17 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
         // Conditional: Dropdown for place selection
         if (_selectedLocationType == LocationType.place)
           Padding(
-            padding: const EdgeInsets.only(left: AppSpacing.md, top: AppSpacing.xs),
+            padding: const EdgeInsets.only(
+              left: AppSpacing.md,
+              top: AppSpacing.xs,
+            ),
             child: widget.availablePlaces.isEmpty
                 ? const Text(
                     '선택 가능한 장소가 없습니다',
-                    style: TextStyle(color: AppColors.lightSecondary, fontSize: 13),
+                    style: TextStyle(
+                      color: AppColors.lightSecondary,
+                      fontSize: 13,
+                    ),
                   )
                 : DropdownButtonFormField<int>(
                     initialValue: _selectedPlaceId,
@@ -306,7 +321,9 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
                                   color: isAvailable
                                       ? AppColors.lightOnSurface
                                       : AppColors.lightSecondary,
-                                  fontWeight: isAvailable ? FontWeight.normal : FontWeight.w300,
+                                  fontWeight: isAvailable
+                                      ? FontWeight.normal
+                                      : FontWeight.w300,
                                 ),
                               ),
                             ),
@@ -418,7 +435,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
       title: title,
       locationSelection: locationSelection,
       startTime: _startTime, // Pass updated start time
-      endTime: _endTime,     // Pass updated end time
+      endTime: _endTime, // Pass updated end time
       color: _selectedColor, // Pass selected color
     );
 
@@ -449,7 +466,11 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
                   // Date display (read-only)
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today, size: 16, color: AppColors.lightSecondary),
+                      const Icon(
+                        Icons.calendar_today,
+                        size: 16,
+                        color: AppColors.lightSecondary,
+                      ),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         DateFormat('M월 d일 (E)', 'ko_KR').format(_startTime),
@@ -535,10 +556,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('취소'),
         ),
-        TextButton(
-          onPressed: _handleSave,
-          child: const Text('저장'),
-        ),
+        TextButton(onPressed: _handleSave, child: const Text('저장')),
       ],
     );
   }

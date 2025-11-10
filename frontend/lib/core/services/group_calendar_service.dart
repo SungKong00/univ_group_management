@@ -49,9 +49,7 @@ class GroupCalendarService {
       final apiResponse = ApiResponse.fromJson(response.data!, (json) {
         if (json is List) {
           return json
-              .map(
-                (item) => GroupEvent.fromJson(item as Map<String, dynamic>),
-              )
+              .map((item) => GroupEvent.fromJson(item as Map<String, dynamic>))
               .toList();
         }
         return <GroupEvent>[];
@@ -67,9 +65,7 @@ class GroupCalendarService {
         return apiResponse.data!;
       }
 
-      throw Exception(
-        apiResponse.message ?? '그룹 일정을 불러오지 못했습니다.',
-      );
+      throw Exception(apiResponse.message ?? '그룹 일정을 불러오지 못했습니다.');
     } on DioException catch (e) {
       if (enableLogging) {
         developer.log(
@@ -79,10 +75,9 @@ class GroupCalendarService {
           error: e,
         );
       }
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '그룹 일정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '그룹 일정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'),
+      );
     }
   }
 
@@ -118,13 +113,17 @@ class GroupCalendarService {
         '/groups/$groupId/events',
         data: {
           'title': title,
-          'description': description?.trim().isEmpty == true ? null : description,
-          'locationText': locationText?.trim().isEmpty == true ? null : locationText,
+          'description': description?.trim().isEmpty == true
+              ? null
+              : description,
+          'locationText': locationText?.trim().isEmpty == true
+              ? null
+              : locationText,
           'placeId': placeId,
-          'startDate': startDateOnly,  // yyyy-MM-dd
-          'endDate': endDateOnly,      // yyyy-MM-dd
-          'startTime': startTimeOnly,  // HH:mm:ss
-          'endTime': endTimeOnly,      // HH:mm:ss
+          'startDate': startDateOnly, // yyyy-MM-dd
+          'endDate': endDateOnly, // yyyy-MM-dd
+          'startTime': startTimeOnly, // HH:mm:ss
+          'endTime': endTimeOnly, // HH:mm:ss
           'isAllDay': isAllDay,
           'isOfficial': isOfficial,
           'color': color,
@@ -140,9 +139,7 @@ class GroupCalendarService {
       final apiResponse = ApiResponse.fromJson(response.data!, (json) {
         if (json is List) {
           return json
-              .map(
-                (item) => GroupEvent.fromJson(item as Map<String, dynamic>),
-              )
+              .map((item) => GroupEvent.fromJson(item as Map<String, dynamic>))
               .toList();
         }
         return <GroupEvent>[];
@@ -156,9 +153,7 @@ class GroupCalendarService {
         return apiResponse.data!;
       }
 
-      throw Exception(
-        apiResponse.message ?? '그룹 일정 생성에 실패했습니다.',
-      );
+      throw Exception(apiResponse.message ?? '그룹 일정 생성에 실패했습니다.');
     } on DioException catch (e) {
       developer.log(
         'Failed to create group event for group $groupId: $e',
@@ -166,10 +161,9 @@ class GroupCalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '그룹 일정 생성에 실패했습니다. 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '그룹 일정 생성에 실패했습니다. 다시 시도해주세요.'),
+      );
     }
   }
 
@@ -201,11 +195,15 @@ class GroupCalendarService {
         '/groups/$groupId/events/$eventId',
         data: {
           'title': title,
-          'description': description?.trim().isEmpty == true ? null : description,
-          'locationText': locationText?.trim().isEmpty == true ? null : locationText,
+          'description': description?.trim().isEmpty == true
+              ? null
+              : description,
+          'locationText': locationText?.trim().isEmpty == true
+              ? null
+              : locationText,
           'placeId': placeId,
-          'startTime': startTimeOnly,  // HH:mm:ss
-          'endTime': endTimeOnly,      // HH:mm:ss
+          'startTime': startTimeOnly, // HH:mm:ss
+          'endTime': endTimeOnly, // HH:mm:ss
           'isAllDay': isAllDay,
           'color': color,
           'updateScope': updateScope.apiValue,
@@ -219,9 +217,7 @@ class GroupCalendarService {
       final apiResponse = ApiResponse.fromJson(response.data!, (json) {
         if (json is List) {
           return json
-              .map(
-                (item) => GroupEvent.fromJson(item as Map<String, dynamic>),
-              )
+              .map((item) => GroupEvent.fromJson(item as Map<String, dynamic>))
               .toList();
         }
         return <GroupEvent>[];
@@ -235,9 +231,7 @@ class GroupCalendarService {
         return apiResponse.data!;
       }
 
-      throw Exception(
-        apiResponse.message ?? '그룹 일정 수정에 실패했습니다.',
-      );
+      throw Exception(apiResponse.message ?? '그룹 일정 수정에 실패했습니다.');
     } on DioException catch (e) {
       developer.log(
         'Failed to update group event $eventId for group $groupId: $e',
@@ -245,10 +239,9 @@ class GroupCalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '그룹 일정 수정에 실패했습니다. 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '그룹 일정 수정에 실패했습니다. 다시 시도해주세요.'),
+      );
     }
   }
 
@@ -261,9 +254,7 @@ class GroupCalendarService {
     try {
       await _dioClient.delete<void>(
         '/groups/$groupId/events/$eventId',
-        queryParameters: {
-          'scope': deleteScope.apiValue,
-        },
+        queryParameters: {'scope': deleteScope.apiValue},
       );
       developer.log(
         'Deleted group event $eventId for group $groupId',
@@ -276,18 +267,14 @@ class GroupCalendarService {
         level: 900,
         error: e,
       );
-      throw Exception(_friendlyMessage(
-        e,
-        fallback: '그룹 일정 삭제에 실패했습니다. 다시 시도해주세요.',
-      ));
+      throw Exception(
+        _friendlyMessage(e, fallback: '그룹 일정 삭제에 실패했습니다. 다시 시도해주세요.'),
+      );
     }
   }
 }
 
-String _friendlyMessage(
-  DioException exception, {
-  required String fallback,
-}) {
+String _friendlyMessage(DioException exception, {required String fallback}) {
   final response = exception.response;
   final status = response?.statusCode;
 

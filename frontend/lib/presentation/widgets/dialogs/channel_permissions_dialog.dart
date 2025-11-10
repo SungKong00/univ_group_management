@@ -40,7 +40,6 @@ class ChannelPermissionsDialog extends ConsumerStatefulWidget {
 class _ChannelPermissionsDialogState
     extends ConsumerState<ChannelPermissionsDialog>
     with SingleTickerProviderStateMixin, DialogAnimationMixin {
-
   List<GroupRole> _roles = [];
   bool _isLoadingRoles = true;
   bool _isSubmitting = false;
@@ -80,8 +79,9 @@ class _ChannelPermissionsDialogState
 
       // 2. 기존 권한 바인딩 로드
       final channelService = ChannelService();
-      final bindings =
-          await channelService.getChannelRoleBindings(widget.channelId);
+      final bindings = await channelService.getChannelRoleBindings(
+        widget.channelId,
+      );
 
       // 3. 바인딩을 _permissionMatrix로 변환 (기존 권한을 체크박스에 표시)
       for (final binding in bindings) {
@@ -259,18 +259,12 @@ class _ChannelPermissionsDialogState
           padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
             color: AppColors.action.withValues(alpha: 0.1),
-            border: Border.all(
-              color: AppColors.action.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: AppColors.action.withValues(alpha: 0.3)),
             borderRadius: BorderRadius.circular(AppRadius.input),
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.info_outline,
-                color: AppColors.action,
-                size: 18,
-              ),
+              Icon(Icons.info_outline, color: AppColors.action, size: 18),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
@@ -294,23 +288,11 @@ class _ChannelPermissionsDialogState
           isRequired: true,
         ),
         const SizedBox(height: AppSpacing.sm),
-        _buildPermissionSection(
-          'POST_WRITE',
-          '게시글 쓰기',
-          '새 게시글 작성',
-        ),
+        _buildPermissionSection('POST_WRITE', '게시글 쓰기', '새 게시글 작성'),
         const SizedBox(height: AppSpacing.sm),
-        _buildPermissionSection(
-          'COMMENT_WRITE',
-          '댓글 쓰기',
-          '댓글 작성',
-        ),
+        _buildPermissionSection('COMMENT_WRITE', '댓글 쓰기', '댓글 작성'),
         const SizedBox(height: AppSpacing.sm),
-        _buildPermissionSection(
-          'FILE_UPLOAD',
-          '파일 업로드',
-          '파일 첨부',
-        ),
+        _buildPermissionSection('FILE_UPLOAD', '파일 업로드', '파일 첨부'),
 
         // 에러 메시지
         if (_errorMessage != null) ...[
@@ -402,10 +384,7 @@ class _ChannelPermissionsDialogState
                 ),
               ),
               subtitle: role.isSystemRole
-                  ? const Text(
-                      '시스템 역할',
-                      style: TextStyle(fontSize: 12),
-                    )
+                  ? const Text('시스템 역할', style: TextStyle(fontSize: 12))
                   : null,
               dense: true,
               controlAffinity: ListTileControlAffinity.leading,

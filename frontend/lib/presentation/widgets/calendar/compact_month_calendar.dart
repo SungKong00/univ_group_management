@@ -18,7 +18,8 @@ class CompactMonthCalendar extends StatelessWidget {
   final DateTime? selectedDate;
 
   /// Callback when user selects a date
-  final void Function(DateTime selectedDay, DateTime focusedDay)? onDateSelected;
+  final void Function(DateTime selectedDay, DateTime focusedDay)?
+  onDateSelected;
 
   /// Callback when user changes month
   final void Function(DateTime focusedDay)? onPageChanged;
@@ -50,7 +51,8 @@ class CompactMonthCalendar extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     // Day of week style (smaller font)
-    final baseDowStyle = textTheme.labelSmall ??
+    final baseDowStyle =
+        textTheme.labelSmall ??
         const TextStyle(fontSize: 11, fontWeight: FontWeight.w500);
     final dowTextStyle = baseDowStyle.copyWith(
       color: AppColors.neutral500,
@@ -62,7 +64,6 @@ class CompactMonthCalendar extends StatelessWidget {
         // Month header with navigation arrows
         _buildMonthHeader(context),
         const SizedBox(height: 4), // Reduced from AppSpacing.xs (12px) to 4px
-
         // Compact calendar grid
         TableCalendar<void>(
           locale: 'ko_KR',
@@ -152,10 +153,7 @@ class CompactMonthCalendar extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.chevron_left, size: 20),
               padding: const EdgeInsets.all(4),
-              constraints: const BoxConstraints(
-                minWidth: 32,
-                minHeight: 32,
-              ),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               onPressed: () {
                 final prevMonth = DateTime(
                   focusedDate.year,
@@ -170,10 +168,7 @@ class CompactMonthCalendar extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.chevron_right, size: 20),
               padding: const EdgeInsets.all(4),
-              constraints: const BoxConstraints(
-                minWidth: 32,
-                minHeight: 32,
-              ),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               onPressed: () {
                 final nextMonth = DateTime(
                   focusedDate.year,
@@ -211,8 +206,8 @@ class CompactMonthCalendar extends StatelessWidget {
       color: isSelected
           ? AppColors.brandStrong
           : isOutsideMonth
-              ? AppColors.neutral400
-              : AppColors.neutral800,
+          ? AppColors.neutral400
+          : AppColors.neutral800,
     );
 
     return Container(
@@ -265,10 +260,7 @@ class CompactMonthCalendar extends StatelessWidget {
           child: Container(
             width: 5,
             height: 5,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
         );
       }).toList(),

@@ -24,6 +24,14 @@ class NavigationState with _$NavigationState {
 
     /// T108: Offline detection flag
     @Default(false) bool isOffline,
+
+    /// T111: Scroll positions for each route (key: route hash, value: scroll offset)
+    /// Stores up to 5 most recent positions
+    @Default({}) Map<int, double> scrollPositions,
+
+    /// T112: Form data for each route (key: route hash, value: form data)
+    /// Stores up to 5 most recent form states
+    @Default({}) Map<int, Map<String, dynamic>> formData,
   }) = _NavigationState;
 
   const NavigationState._();

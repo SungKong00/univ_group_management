@@ -56,7 +56,9 @@ class PlaceService {
             name: 'PlaceService',
             level: 900,
           );
-          throw Exception(apiResponse.message ?? 'Failed to create reservation');
+          throw Exception(
+            apiResponse.message ?? 'Failed to create reservation',
+          );
         }
       } else {
         throw Exception('Empty response from server');
@@ -92,10 +94,7 @@ class PlaceService {
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/places/$placeId/reservations',
-        queryParameters: {
-          'startDate': startDateStr,
-          'endDate': endDateStr,
-        },
+        queryParameters: {'startDate': startDateStr, 'endDate': endDateStr},
       );
 
       if (response.data != null) {
@@ -175,7 +174,9 @@ class PlaceService {
             name: 'PlaceService',
             level: 900,
           );
-          throw Exception(apiResponse.message ?? 'Failed to update reservation');
+          throw Exception(
+            apiResponse.message ?? 'Failed to update reservation',
+          );
         }
       } else {
         throw Exception('Empty response from server');
@@ -221,7 +222,9 @@ class PlaceService {
         name: 'PlaceService',
         level: 900,
       );
-      throw Exception('Failed to cancel reservation: Unexpected response status');
+      throw Exception(
+        'Failed to cancel reservation: Unexpected response status',
+      );
     } catch (e) {
       developer.log(
         'Error canceling reservation: $e',
@@ -269,8 +272,9 @@ class PlaceService {
               final map = item as Map<String, dynamic>;
               final placeId = (map['placeId'] as num).toInt();
               final reservations = (map['reservations'] as List)
-                  .map((r) =>
-                      PlaceReservation.fromJson(r as Map<String, dynamic>))
+                  .map(
+                    (r) => PlaceReservation.fromJson(r as Map<String, dynamic>),
+                  )
                   .toList();
               result[placeId] = reservations;
             }
@@ -314,10 +318,7 @@ class PlaceService {
   /// Returns list of all places
   Future<List<Place>> getAllPlaces() async {
     try {
-      developer.log(
-        'Fetching all places',
-        name: 'PlaceService',
-      );
+      developer.log('Fetching all places', name: 'PlaceService');
 
       final response = await _dioClient.get<Map<String, dynamic>>('/places');
 
@@ -378,7 +379,9 @@ class PlaceService {
         name: 'PlaceService',
       );
 
-      final response = await _dioClient.get<Map<String, dynamic>>('/groups/$groupId/reservable-places');
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/groups/$groupId/reservable-places',
+      );
 
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
@@ -435,8 +438,9 @@ class PlaceService {
         name: 'PlaceService',
       );
 
-      final response =
-          await _dioClient.get<Map<String, dynamic>>('/places/$id');
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/places/$id',
+      );
 
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(
@@ -534,10 +538,7 @@ class PlaceService {
   /// Returns the updated place
   Future<Place> updatePlace(int id, UpdatePlaceRequest request) async {
     try {
-      developer.log(
-        'Updating place $id',
-        name: 'PlaceService',
-      );
+      developer.log('Updating place $id', name: 'PlaceService');
 
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/places/$id',
@@ -551,10 +552,7 @@ class PlaceService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully updated place $id',
-            name: 'PlaceService',
-          );
+          developer.log('Successfully updated place $id', name: 'PlaceService');
           return apiResponse.data!;
         } else {
           developer.log(
@@ -582,13 +580,11 @@ class PlaceService {
   /// DELETE /api/places/{id}
   Future<void> deletePlace(int id) async {
     try {
-      developer.log(
-        'Deleting place $id',
-        name: 'PlaceService',
-      );
+      developer.log('Deleting place $id', name: 'PlaceService');
 
-      final response =
-          await _dioClient.delete<Map<String, dynamic>>('/places/$id');
+      final response = await _dioClient.delete<Map<String, dynamic>>(
+        '/places/$id',
+      );
 
       // Handle 204 No Content response (successful deletion)
       if (response.statusCode == 204) {
@@ -606,10 +602,7 @@ class PlaceService {
         );
 
         if (apiResponse.success) {
-          developer.log(
-            'Successfully deleted place $id',
-            name: 'PlaceService',
-          );
+          developer.log('Successfully deleted place $id', name: 'PlaceService');
         } else {
           developer.log(
             'Failed to delete place: ${apiResponse.message}',
@@ -891,8 +884,10 @@ class PlaceService {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
           if (json is List) {
             return json
-                .map((item) =>
-                    PlaceUsageGroup.fromJson(item as Map<String, dynamic>))
+                .map(
+                  (item) =>
+                      PlaceUsageGroup.fromJson(item as Map<String, dynamic>),
+                )
                 .toList();
           }
           return <PlaceUsageGroup>[];
@@ -944,8 +939,10 @@ class PlaceService {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
           if (json is List) {
             return json
-                .map((item) =>
-                    PlaceUsageGroup.fromJson(item as Map<String, dynamic>))
+                .map(
+                  (item) =>
+                      PlaceUsageGroup.fromJson(item as Map<String, dynamic>),
+                )
                 .toList();
           }
           return <PlaceUsageGroup>[];

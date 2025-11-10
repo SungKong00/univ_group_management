@@ -57,10 +57,7 @@ class UnreadCountResponse {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'channelId': channelId,
-      'unreadCount': unreadCount,
-    };
+    return {'channelId': channelId, 'unreadCount': unreadCount};
   }
 
   @override

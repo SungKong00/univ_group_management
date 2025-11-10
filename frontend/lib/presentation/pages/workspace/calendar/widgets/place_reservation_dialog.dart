@@ -46,7 +46,8 @@ class _PlaceReservationDialogState
     super.initState();
     _selectedDate = widget.initialDate ?? DateTime.now();
     _startTime = widget.initialStartTime ?? const TimeOfDay(hour: 9, minute: 0);
-    _endTime = widget.initialEndTime ??
+    _endTime =
+        widget.initialEndTime ??
         TimeOfDay(
           hour: (_startTime!.hour + 2) % 24,
           minute: _startTime!.minute,
@@ -66,9 +67,7 @@ class _PlaceReservationDialogState
     final places = state.places;
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         width: 500,
         constraints: const BoxConstraints(maxHeight: 700),
@@ -164,8 +163,9 @@ class _PlaceReservationDialogState
                             context: context,
                             initialDate: _selectedDate ?? DateTime.now(),
                             firstDate: DateTime.now(),
-                            lastDate: DateTime.now()
-                                .add(const Duration(days: 365)),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365),
+                            ),
                           );
                           if (picked != null) {
                             setState(() => _selectedDate = picked);
@@ -218,7 +218,9 @@ class _PlaceReservationDialogState
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   OutlinedButton(
-                    onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(80, 44),
                     ),
@@ -283,7 +285,9 @@ class _PlaceReservationDialogState
       );
 
       // Create the event using GroupCalendarNotifier
-      await ref.read(groupCalendarProvider(widget.groupId).notifier).createEvent(
+      await ref
+          .read(groupCalendarProvider(widget.groupId).notifier)
+          .createEvent(
             groupId: widget.groupId,
             title: _titleController.text.trim(),
             description: '장소 예약',
@@ -309,7 +313,9 @@ class _PlaceReservationDialogState
         groupEventId: createdEvent.id, // ✅ 실제 존재하는 ID
       );
 
-      await ref.read(placeCalendarProvider.notifier).createReservation(
+      await ref
+          .read(placeCalendarProvider.notifier)
+          .createReservation(
             placeId: _selectedPlaceId!,
             request: reservationRequest,
           );
@@ -349,9 +355,7 @@ class _PlaceReservationDialogState
         }
       },
       child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: isStart ? '시작 시간' : '종료 시간',
-        ),
+        decoration: InputDecoration(labelText: isStart ? '시작 시간' : '종료 시간'),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

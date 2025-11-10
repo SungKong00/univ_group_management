@@ -169,6 +169,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
+  contrast_checker:
+    dependency: "direct dev"
+    description:
+      name: contrast_checker
+      sha256: ea5f67083e3590517a681c464d71aa19dadfac7ee7c7c8a857d003ae3db25b98
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   convert:
     dependency: transitive
     description:

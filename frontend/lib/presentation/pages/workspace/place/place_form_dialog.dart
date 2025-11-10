@@ -39,8 +39,12 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
   @override
   void initState() {
     super.initState();
-    _buildingController = TextEditingController(text: widget.place?.building ?? '');
-    _roomNumberController = TextEditingController(text: widget.place?.roomNumber ?? '');
+    _buildingController = TextEditingController(
+      text: widget.place?.building ?? '',
+    );
+    _roomNumberController = TextEditingController(
+      text: widget.place?.roomNumber ?? '',
+    );
     _aliasController = TextEditingController(text: widget.place?.alias ?? '');
     _capacityController = TextEditingController(
       text: widget.place?.capacity?.toString() ?? '',
@@ -96,10 +100,7 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: BorderSide(
-                      color: AppColors.brand,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: AppColors.brand, width: 2),
                   ),
                 ),
                 validator: (value) {
@@ -136,10 +137,7 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: BorderSide(
-                      color: AppColors.brand,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: AppColors.brand, width: 2),
                   ),
                 ),
                 validator: (value) {
@@ -176,10 +174,7 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: BorderSide(
-                      color: AppColors.brand,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: AppColors.brand, width: 2),
                   ),
                 ),
               ),
@@ -210,17 +205,12 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: BorderSide(
-                      color: AppColors.brand,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: AppColors.brand, width: 2),
                   ),
                   suffixText: '명',
                 ),
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 validator: (value) {
                   if (value != null && value.isNotEmpty) {
                     final capacity = int.tryParse(value);
@@ -285,18 +275,18 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
           capacity: capacity,
         );
 
-        await ref.read(placeManagementProvider.notifier).updatePlace(
-              widget.place!.id,
-              request,
-            );
+        await ref
+            .read(placeManagementProvider.notifier)
+            .updatePlace(widget.place!.id, request);
       }
 
       if (mounted) {
         Navigator.pop(context);
 
-        AppSnackBar.success(context, 
-              widget.place == null ? '장소가 추가되었습니다' : '장소가 수정되었습니다',
-            );
+        AppSnackBar.success(
+          context,
+          widget.place == null ? '장소가 추가되었습니다' : '장소가 수정되었습니다',
+        );
 
         // Call callback to refresh list
         widget.onSaved?.call();
@@ -305,7 +295,10 @@ class _PlaceFormDialogState extends ConsumerState<PlaceFormDialog> {
       setState(() => _isSubmitting = false);
 
       if (mounted) {
-        AppSnackBar.error(context, '${widget.place == null ? '추가' : '수정'} 실패: ${e.toString()}');
+        AppSnackBar.error(
+          context,
+          '${widget.place == null ? '추가' : '수정'} 실패: ${e.toString()}',
+        );
       }
     }
   }

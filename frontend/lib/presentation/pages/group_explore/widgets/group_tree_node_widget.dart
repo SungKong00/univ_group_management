@@ -79,10 +79,7 @@ class GroupTreeNodeWidget extends ConsumerWidget {
         onTap: node.hasChildren ? () => onToggle(node.id) : null,
         borderRadius: BorderRadius.circular(AppRadius.button),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Row(
             children: [
               // Expand/Collapse Icon
@@ -113,7 +110,9 @@ class GroupTreeNodeWidget extends ConsumerWidget {
                   child: Icon(
                     Icons.group,
                     size: 16,
-                    color: isUserGroup ? AppColors.brand : AppColors.brand.withValues(alpha: 0.6),
+                    color: isUserGroup
+                        ? AppColors.brand
+                        : AppColors.brand.withValues(alpha: 0.6),
                   ),
                 ),
               const SizedBox(width: 12),
@@ -128,9 +127,14 @@ class GroupTreeNodeWidget extends ConsumerWidget {
                         Flexible(
                           child: Text(
                             node.name,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: isUserGroup ? FontWeight.w700 : FontWeight.w600,
-                                  color: isUserGroup ? AppColors.brand : AppColors.neutral900,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: isUserGroup
+                                      ? FontWeight.w700
+                                      : FontWeight.w600,
+                                  color: isUserGroup
+                                      ? AppColors.brand
+                                      : AppColors.neutral900,
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -150,7 +154,8 @@ class GroupTreeNodeWidget extends ConsumerWidget {
                             ),
                             child: Text(
                               '내 그룹',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
                                     color: Colors.white,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
@@ -171,9 +176,8 @@ class GroupTreeNodeWidget extends ConsumerWidget {
                         const SizedBox(width: 4),
                         Text(
                           '${node.memberCount}명',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.neutral600,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.neutral600),
                         ),
                         if (node.isRecruiting) ...[
                           const SizedBox(width: 8),
@@ -188,11 +192,11 @@ class GroupTreeNodeWidget extends ConsumerWidget {
                             ),
                             child: Text(
                               '모집중',
-                              style:
-                                  Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        color: AppColors.success,
-                                        fontSize: 10,
-                                      ),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: AppColors.success,
+                                    fontSize: 10,
+                                  ),
                             ),
                           ),
                         ],
@@ -216,9 +220,9 @@ class GroupTreeNodeWidget extends ConsumerWidget {
                   child: Text(
                     'L$depth',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.neutral600,
-                          fontSize: 9,
-                        ),
+                      color: AppColors.neutral600,
+                      fontSize: 9,
+                    ),
                   ),
                 ),
             ],
