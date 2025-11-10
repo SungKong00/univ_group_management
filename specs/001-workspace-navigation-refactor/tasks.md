@@ -272,8 +272,8 @@
 - [ ] T152 Review and refactor WorkspaceRouterDelegate for code clarity
 - [ ] T153 Review and refactor NavigationStateNotifier for code clarity
 - [ ] T154 Review and refactor ViewContextResolver for code clarity
-- [ ] T155 Run full test suite with flutter test --coverage
-- [ ] T156 Verify test coverage meets 60/30/10 pyramid (60% widget integration, 30% unit, 10% E2E)
+- [X] T155 Run full test suite with flutter test --coverage
+- [X] T156 Verify test coverage meets 60/30/10 pyramid (60% widget integration, 30% unit, 10% E2E)
 - [ ] T157 Run quickstart.md validation steps to ensure guide accuracy
 - [ ] T158 Perform security review of permission checking logic
 - [ ] T159 Manual test: Complete end-to-end user journey validation
