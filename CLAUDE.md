@@ -292,6 +292,39 @@ flutter run -d chrome --web-hostname localhost --web-port 5173
 ./gradlew test
 ```
 
+### Git Worktree 설정 (필수)
+
+프로젝트는 Git Worktree를 지원하며, 새 worktree 생성 시 `.env` 등 개발 필수 파일을 자동으로 복사하는 Hook이 설정되어 있습니다.
+
+#### 초기 설정 (최초 1회)
+```bash
+# Git Hooks 활성화
+./scripts/install-git-hooks.sh
+```
+
+#### 사용 방법
+```bash
+# 1. 메인 worktree에 .env 준비 (최초 1회)
+cd frontend
+cp .env.example .env
+# 실제 Google OAuth 값으로 수정
+
+# 2. 새 worktree 생성 (자동으로 .env 복사됨)
+git worktree add ../project-feature feature-branch
+
+# 3. 바로 개발 시작
+cd ../project-feature
+flutter run  # .env가 이미 있음!
+```
+
+#### 자동 복사되는 파일들
+- ⭐ `frontend/.env` - Frontend 환경변수 (필수)
+- 🔧 `backend/.env` - Backend 환경변수 (있으면)
+- 🤖 `frontend/android/local.properties` - Android SDK 경로
+- 🔑 `frontend/android/key.properties` - Android 릴리즈 키
+
+**참고**: Hook은 메인 worktree의 파일을 복사하므로, 메인 worktree에 `.env`가 없으면 `.env.example`을 복사하고 경고를 표시합니다.
+
 ## ⚠️ 개발 진행 중 주의사항
 
 ### 커밋 관련
