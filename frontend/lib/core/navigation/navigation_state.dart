@@ -8,9 +8,7 @@ part 'navigation_state.g.dart';
 @freezed
 class NavigationState with _$NavigationState {
   const factory NavigationState({
-    @Default([])
-    @JsonKey(fromJson: _stackFromJson, toJson: _stackToJson)
-    List<WorkspaceRoute> stack,
+    @Default([]) List<WorkspaceRoute> stack,
     @Default(-1) int currentIndex,
 
     /// T105: Loading indicator for slow navigation operations (>2s)
@@ -50,15 +48,4 @@ class NavigationState with _$NavigationState {
 
   factory NavigationState.fromJson(Map<String, dynamic> json) =>
       _$NavigationStateFromJson(json);
-}
-
-// JSON converters for WorkspaceRoute list
-List<WorkspaceRoute> _stackFromJson(List<dynamic> json) {
-  return json
-      .map((e) => WorkspaceRoute.fromJson(e as Map<String, dynamic>))
-      .toList();
-}
-
-List<dynamic> _stackToJson(List<WorkspaceRoute> stack) {
-  return stack.map((e) => e.toJson()).toList();
 }

@@ -9,9 +9,11 @@ part of 'navigation_state.dart';
 _$NavigationStateImpl _$$NavigationStateImplFromJson(
   Map<String, dynamic> json,
 ) => _$NavigationStateImpl(
-  stack: json['stack'] == null
-      ? const []
-      : _stackFromJson(json['stack'] as List),
+  stack:
+      (json['stack'] as List<dynamic>?)
+          ?.map((e) => WorkspaceRoute.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
   currentIndex: (json['currentIndex'] as num?)?.toInt() ?? -1,
   isLoading: json['isLoading'] as bool? ?? false,
   loadingMessage: json['loadingMessage'] as String?,
@@ -32,7 +34,7 @@ _$NavigationStateImpl _$$NavigationStateImplFromJson(
 Map<String, dynamic> _$$NavigationStateImplToJson(
   _$NavigationStateImpl instance,
 ) => <String, dynamic>{
-  'stack': _stackToJson(instance.stack),
+  'stack': instance.stack,
   'currentIndex': instance.currentIndex,
   'isLoading': instance.isLoading,
   'loadingMessage': instance.loadingMessage,

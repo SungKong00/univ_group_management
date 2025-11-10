@@ -4,7 +4,6 @@ import 'package:frontend/core/navigation/navigation_state.dart';
 import 'package:frontend/core/navigation/workspace_route.dart';
 import 'package:frontend/core/navigation/view_context.dart';
 import 'package:frontend/core/navigation/view_context_resolver.dart';
-import 'package:frontend/core/navigation/permission_context.dart';
 import 'package:frontend/presentation/providers/permission_context_provider.dart';
 
 /// StateNotifier for managing navigation state
@@ -17,6 +16,8 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
   static const _loadingThreshold = Duration(
     seconds: 2,
   ); // T105: Show loading after 2s
+  static const _maxPreservedRoutes =
+      5; // T111, T112: Maximum preserved scroll/form states
 
   NavigationStateNotifier([this._ref]) : super(const NavigationState());
 
@@ -97,29 +98,49 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
 
   /// Reset the navigation stack to a single root route
   /// Used when entering a workspace
+  ///
+  /// IMPORTANT: This intentionally clears ALL preserved state including:
+  /// - Scroll positions (scrollPositions)
+  /// - Form data (formData)
+  /// - Loading state (isLoading, loadingMessage)
+  /// - Error state (lastError)
+  /// - Offline flag (isOffline)
+  ///
+  /// This ensures a clean slate when entering a new workspace context.
   void resetToRoot(WorkspaceRoute root) {
-    // Reset clears all preserved state (scroll positions, form data)
+    _debounceTimer?.cancel();
+    _loadingTimer?.cancel();
     state = NavigationState(stack: [root], currentIndex: 0);
   }
 
   /// Clear all navigation state
   /// Used when exiting the workspace
   void clear() {
+    _debounceTimer?.cancel();
+    _loadingTimer?.cancel();
     state = const NavigationState();
   }
 
   /// T111: Save scroll position for current route
   /// Maintains up to 5 most recent scroll positions (LRU)
+  ///
+  /// LRU Implementation: When a route is accessed (scroll position updated),
+  /// it is moved to the end of the map. When exceeding max size, the first
+  /// entry (least recently used) is evicted.
   void saveScrollPosition(double offset) {
     final currentRoute = state.current;
     if (currentRoute == null) return;
 
     final routeHash = currentRoute.hashCode;
     final updatedPositions = Map<int, double>.from(state.scrollPositions);
+
+    // Remove existing entry to ensure re-insertion updates order (LRU)
+    updatedPositions.remove(routeHash);
+    // Re-insert at the end (most recently used)
     updatedPositions[routeHash] = offset;
 
-    // Keep only 5 most recent positions (LRU eviction)
-    if (updatedPositions.length > 5) {
+    // Keep only most recent positions (LRU eviction)
+    if (updatedPositions.length > _maxPreservedRoutes) {
       final oldestKey = updatedPositions.keys.first;
       updatedPositions.remove(oldestKey);
     }
@@ -139,16 +160,24 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
 
   /// T112: Save form data for current route
   /// Maintains up to 5 most recent form states (LRU)
+  ///
+  /// LRU Implementation: When a route is accessed (form data updated),
+  /// it is moved to the end of the map. When exceeding max size, the first
+  /// entry (least recently used) is evicted.
   void saveFormData(Map<String, dynamic> data) {
     final currentRoute = state.current;
     if (currentRoute == null) return;
 
     final routeHash = currentRoute.hashCode;
     final updatedFormData = Map<int, Map<String, dynamic>>.from(state.formData);
+
+    // Remove existing entry to ensure re-insertion updates order (LRU)
+    updatedFormData.remove(routeHash);
+    // Re-insert at the end (most recently used)
     updatedFormData[routeHash] = Map<String, dynamic>.from(data);
 
-    // Keep only 5 most recent form states (LRU eviction)
-    if (updatedFormData.length > 5) {
+    // Keep only most recent form states (LRU eviction)
+    if (updatedFormData.length > _maxPreservedRoutes) {
       final oldestKey = updatedFormData.keys.first;
       updatedFormData.remove(oldestKey);
     }
@@ -230,17 +259,17 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
       final context = ViewContext.fromRoute(currentRoute);
 
       // Load permissions for target group
-      await _ref!
+      await _ref
           .read(permissionContextProvider.notifier)
           .loadPermissions(targetGroupId);
 
       // T106: Check if cancelled
       if (_isCancelled) return;
 
-      final permissions = _ref!.read(permissionContextProvider);
+      final permissions = _ref.read(permissionContextProvider);
 
       // Resolve target route based on context
-      final resolver = _ref!.read(viewContextResolverProvider);
+      final resolver = _ref.read(viewContextResolverProvider);
       final targetRoute = await resolver.resolveTargetRoute(
         context,
         targetGroupId,
