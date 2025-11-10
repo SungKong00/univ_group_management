@@ -19,6 +19,9 @@ Future<Place?> showPlacePickerDialog({
   List<Place>? availablePlaces,
   List<Place>? unavailablePlaces,
 }) async {
+  // Capture navigator before async calls to ensure context remains valid and
+  // to allow proper mounted checks after awaits. This is a common Flutter pattern
+  // to avoid issues if the widget is disposed during async operations.
   final navigator = Navigator.of(context);
 
   List<Place> resolvedAvailable = availablePlaces ?? [];
