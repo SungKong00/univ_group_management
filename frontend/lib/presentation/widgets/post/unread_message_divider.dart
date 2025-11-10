@@ -28,6 +28,7 @@ class UnreadMessageDivider extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
+                  letterSpacing: 0.5,
                   color: AppColors.brand,
                 ),
               ),

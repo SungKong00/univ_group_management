@@ -230,6 +230,8 @@
 - Dart 3.x (Flutter SDK 3.x)
 - Navigator 2.0 (declarative navigation)
 - In-memory navigation state (session-scoped)
+- Dart 3.x (Flutter SDK 3.x) + Riverpod (state management), go_router (navigation), scroll_to_index (scroll control), visibility_detector (scroll tracking) (002-workspace-bugs-fix)
+- In-memory session state (Navigator 2.0), API-persisted read positions (002-workspace-bugs-fix)
 
 ## Recent Changes
 - 2025-11-10: Navigator 2.0 리팩터링 완료, develop 브랜치 병합
