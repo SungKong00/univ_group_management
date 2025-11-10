@@ -1,0 +1,130 @@
+#!/bin/bash
+# Post-checkout Hook: Worktree 환경 설정 자동화
+# .gitignore된 개발 필수 파일들을 메인 worktree에서 자동 복사
+
+# 브랜치 체크아웃이 아니면 종료 (파일 체크아웃 무시)
+if [ "$3" != "1" ]; then
+    exit 0
+fi
+
+CURRENT_DIR=$(pwd)
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir)
+
+# 메인 worktree 경로 계산
+if [ "$GIT_COMMON_DIR" = ".git" ]; then
+    MAIN_WORKTREE="$CURRENT_DIR"
+    IS_MAIN_WORKTREE=true
+else
+    MAIN_WORKTREE=$(dirname "$GIT_COMMON_DIR")
+    IS_MAIN_WORKTREE=false
+fi
+
+# 메인 worktree에서는 실행하지 않음
+if [ "$IS_MAIN_WORKTREE" = true ]; then
+    exit 0
+fi
+
+echo "================================================"
+echo "🔧 Worktree 환경 설정 자동화"
+echo "================================================"
+echo "📍 현재 worktree: $CURRENT_DIR"
+echo "📍 메인 worktree: $MAIN_WORKTREE"
+echo ""
+
+# 파일 복사 함수
+# 인자: 상대경로, 설명, 필수여부(required/optional)
+setup_file() {
+    local rel_path=$1
+    local description=$2
+    local is_required=$3
+
+    local current_file="$CURRENT_DIR/$rel_path"
+    local main_file="$MAIN_WORKTREE/$rel_path"
+    local example_file="$CURRENT_DIR/$rel_path.example"
+
+    # 이미 있으면 스킵
+    if [ -f "$current_file" ]; then
+        echo "✅ $description: 이미 존재함 (스킵)"
+        return 0
+    fi
+
+    # 메인 worktree에서 복사 시도
+    if [ -f "$main_file" ]; then
+        # 디렉토리가 없으면 생성
+        mkdir -p "$(dirname "$current_file")"
+        cp "$main_file" "$current_file"
+        echo "✅ $description: 메인에서 복사 완료"
+        return 0
+    fi
+
+    # .example 파일 복사 시도
+    if [ -f "$example_file" ]; then
+        mkdir -p "$(dirname "$current_file")"
+        cp "$example_file" "$current_file"
+        echo "⚠️  $description: .example에서 복사됨 (설정 필요!)"
+        return 1
+    fi
+
+    # 파일 없음
+    if [ "$is_required" = "required" ]; then
+        echo "❌ $description: 파일을 찾을 수 없음 (필수!)"
+        return 2
+    else
+        echo "⏭️  $description: 파일 없음 (선택사항)"
+        return 0
+    fi
+}
+
+# 개발 필수 파일들 처리
+echo "📦 환경 설정 파일 복사 중..."
+echo ""
+
+# 1. Frontend .env (필수)
+setup_file "frontend/.env" "Frontend 환경변수" "required"
+FRONTEND_ENV_STATUS=$?
+
+# 2. Backend .env (선택)
+if [ -d "$CURRENT_DIR/backend" ]; then
+    setup_file "backend/.env" "Backend 환경변수" "optional"
+fi
+
+# 3. Android local.properties (선택)
+if [ -d "$CURRENT_DIR/frontend/android" ]; then
+    setup_file "frontend/android/local.properties" "Android SDK 경로" "optional"
+fi
+
+# 4. Android key.properties (선택)
+if [ -d "$CURRENT_DIR/frontend/android" ]; then
+    setup_file "frontend/android/key.properties" "Android 릴리즈 키" "optional"
+fi
+
+echo ""
+echo "================================================"
+
+# 최종 결과 요약
+if [ $FRONTEND_ENV_STATUS -eq 0 ]; then
+    echo "✅ 환경 설정 완료! 바로 개발 가능합니다."
+elif [ $FRONTEND_ENV_STATUS -eq 1 ]; then
+    echo "⚠️  환경 설정 필요!"
+    echo ""
+    echo "📝 다음 파일을 수정하세요:"
+    echo "   $CURRENT_DIR/frontend/.env"
+    echo ""
+    echo "💡 또는 메인 worktree에 먼저 설정하면 자동 복사됩니다:"
+    echo "   $MAIN_WORKTREE/frontend/.env"
+else
+    echo "❌ 환경 설정 실패!"
+    echo ""
+    echo "🔧 해결 방법:"
+    echo "   1. 메인 worktree에 .env 파일 생성:"
+    echo "      cd $MAIN_WORKTREE/frontend"
+    echo "      cp .env.example .env"
+    echo "      # 실제 값으로 수정"
+    echo ""
+    echo "   2. 새 worktree 제거 후 재생성:"
+    echo "      git worktree remove \"$(basename \"$CURRENT_DIR\")\""
+    echo "      git worktree add \"$CURRENT_DIR\" $(git branch --show-current)"
+fi
+
+echo "================================================"
+exit 0
