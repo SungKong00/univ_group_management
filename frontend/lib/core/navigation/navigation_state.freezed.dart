@@ -222,7 +222,8 @@ class __$$NavigationStateImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
+@JsonSerializable(explicitToJson: true)
 class _$NavigationStateImpl extends _NavigationState {
   const _$NavigationStateImpl({
     final List<WorkspaceRoute> stack = const [],

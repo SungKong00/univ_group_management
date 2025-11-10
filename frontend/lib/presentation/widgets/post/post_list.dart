@@ -146,24 +146,14 @@ class _PostListState extends ConsumerState<PostList> {
 
       // 읽음 위치 데이터가 로드되었는지 확인
       if (workspaceState.lastReadPostIdMap.containsKey(channelId)) {
-        print('[DEBUG] ✅ Read position data ready on attempt ${attempt + 1}');
         return;
       }
 
       // 마지막 시도가 아니면 계속 대기
       if (attempt < maxAttempts - 1) {
-        print(
-          '[DEBUG] ⏳ Waiting for read position data... (attempt ${attempt + 1}/$maxAttempts)',
-        );
         await Future.delayed(retryDelay);
       }
     }
-
-    // 타임아웃: 데이터가 준비되지 않았지만 계속 진행
-    // (새 채널이거나 API가 null을 반환한 경우)
-    print(
-      '[DEBUG] ⚠️ Read position data not loaded, proceeding without it (new channel or API returned null)',
-    );
   }
 
   /// 게시글 로드 및 읽지 않은 게시글로 스크롤
@@ -188,39 +178,15 @@ class _PostListState extends ConsumerState<PostList> {
         lastReadPostId,
       );
 
-      // ✅ 강화된 디버그 로그
-      print('[DEBUG] ===== SCROLL DEBUG START =====');
-      print('[DEBUG] Channel: $channelIdInt');
-      print('[DEBUG] lastReadPostId: $lastReadPostId');
-      print('[DEBUG] _firstUnreadPostIndex: $_firstUnreadPostIndex');
-      print('[DEBUG] _hasScrolledToUnread: $_hasScrolledToUnread');
-      print('[DEBUG] Total posts: ${_posts.length}');
-      print(
-        '[DEBUG] Grouped posts dates: ${_groupedPosts.keys.toList()..sort()}',
-      );
-
-      if (_posts.isNotEmpty) {
-        print('[DEBUG] First post ID: ${_posts.first.id}');
-        print('[DEBUG] Last post ID: ${_posts.last.id}');
-      }
-
       // 3. 즉시 스크롤 (duration: 0ms)
       if (_firstUnreadPostIndex != null && !_hasScrolledToUnread) {
-        print('[DEBUG] ✅ CONDITION MET: Calling _scrollToUnreadPost()');
-        print('[DEBUG] Target index: $_firstUnreadPostIndex');
-
         WidgetsBinding.instance.addPostFrameCallback((_) async {
-          print('[DEBUG] Inside postFrameCallback, about to scroll...');
           await _scrollToUnreadPost();
-          print('[DEBUG] _scrollToUnreadPost() completed');
 
           // ✅ 수정: 최신 게시글을 읽음 위치로 저장 (모든 읽지 않은 글 해제)
           // 뱃지 업데이트는 채널 이탈 시에만 수행 (workspace_state_provider에서 처리)
           if (_posts.isNotEmpty) {
             final latestPostId = _posts.last.id;
-            print(
-              '[DEBUG] Updating read position to latest post: $latestPostId',
-            );
 
             // ✅ 읽음 위치만 저장, 뱃지 업데이트는 하지 않음
             final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
@@ -232,98 +198,65 @@ class _PostListState extends ConsumerState<PostList> {
         });
       } else {
         // 읽지 않은 게시글 없으면 기존 동작 (최신 게시글로)
-        print('[DEBUG] ❌ CONDITION NOT MET: Calling _anchorLastPostAtTop()');
-        print(
-          '[DEBUG] Reason: _firstUnreadPostIndex=$_firstUnreadPostIndex, _hasScrolledToUnread=$_hasScrolledToUnread',
-        );
         _anchorLastPostAtTop();
 
         // ✅ 읽지 않은 글 없으면 최신 게시글을 읽음 위치로 설정
         // 뱃지 업데이트는 채널 이탈 시에만 수행 (workspace_state_provider에서 처리)
         if (_posts.isNotEmpty) {
           final latestPostId = _posts.last.id;
-          print(
-            '[DEBUG] Updating read position to latest post (no unread): $latestPostId',
-          );
 
           await ref
               .read(workspaceStateProvider.notifier)
               .saveReadPosition(channelIdInt, latestPostId);
         }
       }
-
-      print('[DEBUG] ===== SCROLL DEBUG END =====');
     } else {
       // channelId 파싱 실패 시 기존 동작
-      print('[DEBUG] ERROR: channelId parsing failed');
       _anchorLastPostAtTop();
     }
   }
 
   /// 읽지 않은 게시글로 즉시 스크롤 (duration: 0ms)
   Future<void> _scrollToUnreadPost() async {
-    print('[DEBUG] >>> _scrollToUnreadPost() called');
-    print('[DEBUG] _firstUnreadPostIndex: $_firstUnreadPostIndex');
-    print('[DEBUG] _hasScrolledToUnread: $_hasScrolledToUnread');
-
     if (_firstUnreadPostIndex == null) {
-      print('[DEBUG] ❌ ABORT: _firstUnreadPostIndex is null');
       return;
     }
 
     if (_hasScrolledToUnread) {
-      print('[DEBUG] ❌ ABORT: Already scrolled (_hasScrolledToUnread=true)');
       return;
     }
-
-    print(
-      '[DEBUG] ScrollController.hasClients: ${_scrollController.hasClients}',
-    );
 
     try {
       // ✅ ScrollController가 준비될 때까지 대기 (최대 300ms)
       if (!_scrollController.hasClients) {
-        print('[DEBUG] ⏳ Waiting for ScrollController (300ms)...');
         await Future.delayed(const Duration(milliseconds: 300));
       }
 
       // 스크롤 가능 여부 재확인
       if (!_scrollController.hasClients) {
-        print(
-          '[DEBUG] ❌ ScrollController still not ready after 300ms, falling back to _anchorLastPostAtTop()',
-        );
         _anchorLastPostAtTop();
         return;
       }
 
-      print(
-        '[DEBUG] ✅ ScrollController ready, calling scrollToIndex($_firstUnreadPostIndex)',
-      );
-
       await _scrollController.scrollToIndex(
         _firstUnreadPostIndex!,
         preferPosition: AutoScrollPosition.begin,
-        duration: const Duration(milliseconds: 1), // 최소 duration (즉시 스크롤)
+        duration: Duration
+            .zero, // ✅ FIX: Instant positioning (0ms, no visible animation)
       );
 
       _hasScrolledToUnread = true;
-      print('[DEBUG] ✅ Scroll SUCCESS! _hasScrolledToUnread set to true');
 
       // 스크롤 완료 후 화면 표시
       if (mounted) {
         setState(() {
           _isInitialAnchoring = false;
         });
-        print('[DEBUG] _isInitialAnchoring set to false (screen visible)');
       }
     } catch (e, stackTrace) {
-      print('[DEBUG] ❌ Scroll FAILED with error: $e');
-      print('[DEBUG] Stack trace: $stackTrace');
       // 실패 시 기존 동작
       _anchorLastPostAtTop();
     }
-
-    print('[DEBUG] <<< _scrollToUnreadPost() finished');
   }
 
   Future<void> _loadPosts() async {

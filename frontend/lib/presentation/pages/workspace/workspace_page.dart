@@ -139,7 +139,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     if (!mounted) return;
 
     final workspaceState = ref.read(workspaceStateProvider);
-    final currentGroupId = workspaceState.groupId;
+    final currentGroupId = workspaceState.selectedGroupId;
 
     // If workspace is active, validate and refresh
     if (currentGroupId != null) {

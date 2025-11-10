@@ -7,6 +7,7 @@ import '../../core/models/group_models.dart';
 import '../../core/services/channel_service.dart';
 import '../../core/services/local_storage.dart';
 import '../../core/utils/permission_utils.dart';
+import '../../core/navigation/navigation_controller.dart';
 import 'my_groups_provider.dart';
 import 'place_calendar_provider.dart';
 import 'auth_provider.dart';
@@ -392,6 +393,14 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     return _workspaceSnapshots[groupId];
   }
 
+  /// Check if a session snapshot exists for the given group
+  ///
+  /// Returns true if a snapshot exists (not first-time access),
+  /// false otherwise (first-time access or cleared after global home return)
+  bool hasSnapshot(String groupId) {
+    return _workspaceSnapshots.containsKey(groupId);
+  }
+
   void _applySnapshot(WorkspaceSnapshot snapshot) {
     final updatedContext = Map<String, dynamic>.from(state.workspaceContext);
 
@@ -694,8 +703,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     );
 
     // ✅ 모바일 UX 조정: 그룹 전환 시 mobileView가 channelList이면 currentView를 channel로 설정
+    // ⚠️ FIX: 모바일에서만 적용 (데스크톱은 groupHome 유지)
     WorkspaceView adjustedView = finalView;
-    if (!isSameGroup && finalMobileView == MobileWorkspaceView.channelList) {
+    if (!kIsWeb &&
+        !isSameGroup &&
+        finalMobileView == MobileWorkspaceView.channelList) {
       // 그룹 전환 시 모바일의 기본 뷰는 채널 리스트
       // 특수 뷰(calendar, admin 등)가 아니면 channel 뷰로 강제
       if (targetView == null || targetView == WorkspaceView.groupHome) {
@@ -1305,8 +1317,28 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       }
     }
 
-    // 2. Save workspace snapshot and reset state
-    _saveCurrentWorkspaceSnapshot();
+    // 2. Check if user returned to global home via back navigation
+    // If so, clear all workspace snapshots (next workspace entry will be "first-time")
+    final navigationController = _ref.read(navigationControllerProvider.notifier);
+    final isReturnToGlobalHome = navigationController.state.isAtGlobalHome;
+
+    if (isReturnToGlobalHome) {
+      // Clear all workspace snapshots - user wants fresh start
+      _workspaceSnapshots.clear();
+      _lastGroupId = null;
+
+      if (kDebugMode) {
+        developer.log(
+          'Cleared all workspace snapshots (returned to global home)',
+          name: 'WorkspaceStateNotifier',
+        );
+      }
+    } else {
+      // Normal exit: save current snapshot for later restoration
+      _saveCurrentWorkspaceSnapshot();
+    }
+
+    // 3. Reset state
     state = const WorkspaceState();
   }
 

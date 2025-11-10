@@ -34,7 +34,7 @@ _$NavigationStateImpl _$$NavigationStateImplFromJson(
 Map<String, dynamic> _$$NavigationStateImplToJson(
   _$NavigationStateImpl instance,
 ) => <String, dynamic>{
-  'stack': instance.stack,
+  'stack': instance.stack.map((e) => e.toJson()).toList(),
   'currentIndex': instance.currentIndex,
   'isLoading': instance.isLoading,
   'loadingMessage': instance.loadingMessage,
