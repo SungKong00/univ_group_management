@@ -340,7 +340,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _handleMockLogin(String mockToken) async {
     setState(() => _isLoading = true);
     try {
-      final loginResponse = await ref.read(authProvider.notifier).loginWithMockToken(mockToken);
+      final loginResponse = await ref
+          .read(authProvider.notifier)
+          .loginWithMockToken(mockToken);
       if (!mounted) return;
       await _handlePostLogin(loginResponse);
     } catch (e) {

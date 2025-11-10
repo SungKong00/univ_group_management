@@ -35,16 +35,11 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: SafeArea(
-        child: _buildViewForCurrentState(context, currentView),
-      ),
+      body: SafeArea(child: _buildViewForCurrentState(context, currentView)),
     );
   }
 
-  Widget _buildViewForCurrentState(
-    BuildContext context,
-    HomeView currentView,
-  ) {
+  Widget _buildViewForCurrentState(BuildContext context, HomeView currentView) {
     switch (currentView) {
       case HomeView.dashboard:
         return _buildDashboardView(context);
@@ -103,7 +98,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                       icon: Icons.campaign,
                       title: '모집 공고 보기',
                       description: '지금 모집 중인 공고를 확인하세요',
-                      onTap: () => ref.read(homeStateProvider.notifier).showGroupExplore(initialTab: 2),
+                      onTap: () => ref
+                          .read(homeStateProvider.notifier)
+                          .showGroupExplore(initialTab: 2),
                       semanticsLabel: '모집 공고 보기 버튼',
                     ),
                   ),
@@ -113,7 +110,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                       icon: Icons.search,
                       title: '그룹 탐색',
                       description: '관심있는 그룹을 찾아보세요',
-                      onTap: () => ref.read(homeStateProvider.notifier).showGroupExplore(),
+                      onTap: () => ref
+                          .read(homeStateProvider.notifier)
+                          .showGroupExplore(),
                       semanticsLabel: '그룹 탐색 버튼',
                     ),
                   ),
@@ -125,7 +124,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                     icon: Icons.campaign,
                     title: '모집 공고 보기',
                     description: '지금 모집 중인 공고를 확인하세요',
-                    onTap: () => ref.read(homeStateProvider.notifier).showGroupExplore(initialTab: 2),
+                    onTap: () => ref
+                        .read(homeStateProvider.notifier)
+                        .showGroupExplore(initialTab: 2),
                     semanticsLabel: '모집 공고 보기 버튼',
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -133,7 +134,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                     icon: Icons.search,
                     title: '그룹 탐색',
                     description: '관심있는 그룹을 찾아보세요',
-                    onTap: () => ref.read(homeStateProvider.notifier).showGroupExplore(),
+                    onTap: () =>
+                        ref.read(homeStateProvider.notifier).showGroupExplore(),
                     semanticsLabel: '그룹 탐색 버튼',
                   ),
                 ],
@@ -172,11 +174,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildRecruitingGroupsList(RecruitingGroupsState state) {
     // Loading state
     if (state.isLoading) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: AppColors.brand,
-        ),
-      );
+      return Center(child: CircularProgressIndicator(color: AppColors.brand));
     }
 
     // Error state
@@ -185,17 +183,13 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              color: AppColors.error,
-              size: 32,
-            ),
+            Icon(Icons.error_outline, color: AppColors.error, size: 32),
             const SizedBox(height: AppSpacing.xs),
             Text(
               state.error!,
-              style: AppTheme.bodySmallTheme(context).copyWith(
-                color: AppColors.error,
-              ),
+              style: AppTheme.bodySmallTheme(
+                context,
+              ).copyWith(color: AppColors.error),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -216,17 +210,13 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              color: AppColors.neutral600,
-              size: 32,
-            ),
+            Icon(Icons.search_off, color: AppColors.neutral600, size: 32),
             const SizedBox(height: AppSpacing.xs),
             Text(
               '현재 모집 중인 그룹이 없습니다',
-              style: AppTheme.bodySmallTheme(context).copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmallTheme(
+                context,
+              ).copyWith(color: AppColors.neutral600),
             ),
           ],
         ),

@@ -9,10 +9,7 @@ import '../../../providers/workspace_state_provider.dart';
 ///
 /// Displays a single group's summary information with a clickable card.
 class GroupExploreCard extends ConsumerWidget {
-  const GroupExploreCard({
-    super.key,
-    required this.group,
-  });
+  const GroupExploreCard({super.key, required this.group});
 
   final GroupSummaryResponse group;
 
@@ -34,7 +31,8 @@ class GroupExploreCard extends ConsumerWidget {
 
     return Semantics(
       button: true,
-      label: '${group.name} 그룹 카드. ${group.isRecruiting ? "모집중" : "모집안함"}. ${group.memberCount}명.',
+      label:
+          '${group.name} 그룹 카드. ${group.isRecruiting ? "모집중" : "모집안함"}. ${group.memberCount}명.',
       child: Card(
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -87,9 +85,9 @@ class GroupExploreCard extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     breadcrumbText,
-                    style: AppTheme.bodySmallTheme(context).copyWith(
-                      color: AppColors.neutral600,
-                    ),
+                    style: AppTheme.bodySmallTheme(
+                      context,
+                    ).copyWith(color: AppColors.neutral600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -119,8 +117,9 @@ class GroupExploreCard extends ConsumerWidget {
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.neutral100,
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.button),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.button,
+                              ),
                               border: Border.all(
                                 color: AppColors.neutral300,
                                 width: 1,
@@ -128,10 +127,9 @@ class GroupExploreCard extends ConsumerWidget {
                             ),
                             child: Text(
                               tag,
-                              style:
-                                  AppTheme.labelSmallTheme(context).copyWith(
-                                color: AppColors.neutral700,
-                              ),
+                              style: AppTheme.labelSmallTheme(
+                                context,
+                              ).copyWith(color: AppColors.neutral700),
                             ),
                           );
                         }).toList(),
@@ -146,9 +144,9 @@ class GroupExploreCard extends ConsumerWidget {
                     const SizedBox(width: 4),
                     Text(
                       '${group.memberCount}명',
-                      style: AppTheme.bodySmallTheme(context).copyWith(
-                        color: AppColors.neutral700,
-                      ),
+                      style: AppTheme.bodySmallTheme(
+                        context,
+                      ).copyWith(color: AppColors.neutral700),
                     ),
                   ],
                 ),

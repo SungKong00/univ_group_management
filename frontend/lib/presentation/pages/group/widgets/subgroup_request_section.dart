@@ -62,9 +62,7 @@ class SubGroupRequestSection extends ConsumerWidget {
   }
 
   Widget _buildEmptyState() {
-    return AppEmptyState.noData(
-      message: '대기 중인 하위 그룹 생성 신청이 없습니다',
-    );
+    return AppEmptyState.noData(message: '대기 중인 하위 그룹 생성 신청이 없습니다');
   }
 }
 
@@ -356,7 +354,8 @@ class _SubGroupRequestCard extends ConsumerWidget {
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
-                onChanged: (value) => rejectMessage = value.trim().isEmpty ? null : value,
+                onChanged: (value) =>
+                    rejectMessage = value.trim().isEmpty ? null : value,
               ),
             ],
           ),

@@ -18,7 +18,10 @@ void main() {
       controller.navigateTo('${AppConstants.workspaceRoute}/group-1');
       await Future.delayed(Duration.zero);
 
-      expect(controller.state.currentRoute, '${AppConstants.workspaceRoute}/group-1');
+      expect(
+        controller.state.currentRoute,
+        '${AppConstants.workspaceRoute}/group-1',
+      );
 
       final targetRoute = controller.goBack();
       await Future.delayed(Duration.zero);
@@ -28,41 +31,47 @@ void main() {
       expect(controller.state.currentTab, NavigationTab.home);
     });
 
-    test('returns to previous workspace entry before exiting to home', () async {
-      controller.navigateTo('${AppConstants.workspaceRoute}/group-1');
-      await Future.delayed(Duration.zero);
-      controller.navigateTo('${AppConstants.workspaceRoute}/group-2');
-      await Future.delayed(Duration.zero);
+    test(
+      'returns to previous workspace entry before exiting to home',
+      () async {
+        controller.navigateTo('${AppConstants.workspaceRoute}/group-1');
+        await Future.delayed(Duration.zero);
+        controller.navigateTo('${AppConstants.workspaceRoute}/group-2');
+        await Future.delayed(Duration.zero);
 
-      final firstBack = controller.goBack();
-      await Future.delayed(Duration.zero);
+        final firstBack = controller.goBack();
+        await Future.delayed(Duration.zero);
 
-      expect(firstBack, '${AppConstants.workspaceRoute}/group-1');
-      expect(controller.state.currentRoute, '${AppConstants.workspaceRoute}/group-1');
-      expect(controller.state.currentTab, NavigationTab.workspace);
+        expect(firstBack, '${AppConstants.workspaceRoute}/group-1');
+        expect(
+          controller.state.currentRoute,
+          '${AppConstants.workspaceRoute}/group-1',
+        );
+        expect(controller.state.currentTab, NavigationTab.workspace);
 
-      final secondBack = controller.goBack();
-      await Future.delayed(Duration.zero);
+        final secondBack = controller.goBack();
+        await Future.delayed(Duration.zero);
 
-      expect(secondBack, AppConstants.homeRoute);
-      expect(controller.state.currentRoute, AppConstants.homeRoute);
-      expect(controller.state.currentTab, NavigationTab.home);
-    });
+        expect(secondBack, AppConstants.homeRoute);
+        expect(controller.state.currentRoute, AppConstants.homeRoute);
+        expect(controller.state.currentTab, NavigationTab.home);
+      },
+    );
 
     test('persists navigation context for future workspace pages', () async {
       controller.navigateTo(
         '${AppConstants.workspaceRoute}/group-1/channel/notice',
-        context: {
-          'groupId': 'group-1',
-          'channelId': 'notice',
-        },
+        context: {'groupId': 'group-1', 'channelId': 'notice'},
       );
       await Future.delayed(Duration.zero);
 
       final history = controller.state.tabHistories[NavigationTab.workspace];
 
       expect(history, isNotNull);
-      expect(history!.last.route, '${AppConstants.workspaceRoute}/group-1/channel/notice');
+      expect(
+        history!.last.route,
+        '${AppConstants.workspaceRoute}/group-1/channel/notice',
+      );
 
       final context = history.last.context;
       expect(context, isNotNull);

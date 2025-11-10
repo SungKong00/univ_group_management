@@ -71,7 +71,8 @@ class GroupEventAdapter {
 
     // Convert TimeOfDay to slot (15-minute intervals)
     final startSlot = _timeToSlot(TimeOfDay.fromDateTime(effectiveStartDate));
-    final endSlot = _timeToSlot(TimeOfDay.fromDateTime(endDateTime)) - 1; // Exclusive end
+    final endSlot =
+        _timeToSlot(TimeOfDay.fromDateTime(endDateTime)) - 1; // Exclusive end
 
     return (
       id: 'group-${event.id}', // Prefix to distinguish from personal schedules
@@ -101,8 +102,10 @@ class GroupEventAdapter {
     DateTime weekStart, {
     GroupEvent? original,
   }) {
-    assert(event.startTime != null && event.endTime != null,
-        'Event must have startTime and endTime for conversion');
+    assert(
+      event.startTime != null && event.endTime != null,
+      'Event must have startTime and endTime for conversion',
+    );
 
     // Calculate actual date from day index
     final date = weekStart.add(Duration(days: event.start.day));
@@ -178,6 +181,7 @@ class GroupEventAdapter {
   }
 
   /// Convert Color to hex string
-  static String _colorToHex(Color color) => '#'
+  static String _colorToHex(Color color) =>
+      '#'
       '${(color.toARGB32() & 0x00FFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
 }

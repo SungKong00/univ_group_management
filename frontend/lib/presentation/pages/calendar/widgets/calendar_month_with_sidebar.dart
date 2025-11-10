@@ -16,7 +16,8 @@ import '../../../widgets/calendar/calendar_event_card.dart';
 /// - Customizable event rendering via builder callbacks
 ///
 /// Type parameter T must extend CalendarEventBase interface.
-class CalendarMonthWithSidebar<T extends CalendarEventBase> extends StatefulWidget {
+class CalendarMonthWithSidebar<T extends CalendarEventBase>
+    extends StatefulWidget {
   /// List of all events to display
   final List<T> events;
 
@@ -91,7 +92,8 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final textTheme = Theme.of(context).textTheme;
-    final baseDowStyle = textTheme.labelMedium ??
+    final baseDowStyle =
+        textTheme.labelMedium ??
         textTheme.bodyMedium ??
         const TextStyle(fontSize: 12, fontWeight: FontWeight.w500);
     final dowTextStyle = baseDowStyle.copyWith(
@@ -124,8 +126,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
         selectedDayPredicate: (day) => isSameDay(day, widget.selectedDate),
         onDaySelected: widget.onDateSelected,
         onPageChanged: widget.onPageChanged,
-        eventLoader: (day) =>
-            eventsByDate[_normalizeDate(day)] ?? <T>[],
+        eventLoader: (day) => eventsByDate[_normalizeDate(day)] ?? <T>[],
         calendarStyle: const CalendarStyle(
           isTodayHighlighted: false,
           cellMargin: EdgeInsets.all(4),
@@ -166,15 +167,15 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
           children: [
             Text(
               widget.selectedDate != null
-                  ? DateFormat('M월 d일 (E)', 'ko_KR')
-                      .format(widget.selectedDate!)
+                  ? DateFormat(
+                      'M월 d일 (E)',
+                      'ko_KR',
+                    ).format(widget.selectedDate!)
                   : '날짜를 선택하세요',
               style: textTheme.titleMedium,
             ),
             const SizedBox(height: AppSpacing.xs),
-            Expanded(
-              child: _buildEventList(),
-            ),
+            Expanded(child: _buildEventList()),
           ],
         ),
       ),
@@ -193,15 +194,14 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 7,
-                child: calendarWidget,
-              ),
+              Expanded(flex: 7, child: calendarWidget),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 flex: 3,
                 child: SizedBox(
-                  height: hasFiniteHeight ? constraints.maxHeight : double.infinity,
+                  height: hasFiniteHeight
+                      ? constraints.maxHeight
+                      : double.infinity,
                   child: eventListWidget,
                 ),
               ),
@@ -228,8 +228,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
 
   /// Build day cell with events
   Widget _buildDayCell(DateTime day, DateTime focusedDay, DateTime now) {
-    final events =
-        eventsByDate[_normalizeDate(day)] ?? <T>[];
+    final events = eventsByDate[_normalizeDate(day)] ?? <T>[];
     final sortedEvents = _sortEventsForDay(events, day);
 
     final isToday = isSameDay(day, now);
@@ -244,8 +243,8 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
       color: isSelected
           ? AppColors.brandStrong
           : isOutsideMonth
-              ? AppColors.neutral400
-              : AppColors.neutral800,
+          ? AppColors.neutral400
+          : AppColors.neutral800,
     );
 
     Widget dayLabel = Text('${day.day}', style: dayTextStyle);
@@ -265,10 +264,7 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: borderColor,
-          width: isSelected ? 2 : 1,
-        ),
+        border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
       ),
       alignment: Alignment.topLeft,
       child: ClipRRect(
@@ -303,9 +299,9 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
       return Center(
         child: Text(
           '날짜를 선택하세요',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.neutral500,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.neutral500),
           textAlign: TextAlign.center,
         ),
       );
@@ -315,9 +311,9 @@ class _CalendarMonthWithSidebarState<T extends CalendarEventBase>
       return Center(
         child: Text(
           '선택한 날짜에 일정이 없습니다.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.neutral500,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.neutral500),
           textAlign: TextAlign.center,
         ),
       );

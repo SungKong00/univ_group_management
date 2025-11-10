@@ -2,16 +2,23 @@
 
 ## 📜 프로젝트 헌법 (Constitution)
 
-**핵심 거버넌스**: [.specify/memory/constitution.md](.specify/memory/constitution.md) - 프로젝트 v1.0.0 헌법
+**핵심 거버넌스**: [.specify/memory/constitution.md](.specify/memory/constitution.md) - 프로젝트 v1.2.0 헌법
 
-이 헌법은 모든 개발 가이드라인과 프랙티스보다 우선하며, 7가지 핵심 원칙을 정의합니다:
+이 헌법은 모든 개발 가이드라인과 프랙티스보다 우선하며, 8가지 핵심 원칙을 정의합니다:
 1. 3-Layer Architecture (비협상)
 2. 표준 응답 형식 ApiResponse<T> (비협상)
 3. RBAC + Override 권한 시스템 (비협상)
 4. 문서화 100줄 원칙
 5. 테스트 피라미드 60/30/10
-6. Flutter MCP 표준 (비협상)
+6. MCP 사용 표준 (비협상)
 7. 프론트엔드 통합 원칙
+8. API 진화 및 리팩터링 원칙 (비협상)
+
+**기술 스택** (비협상):
+- 프론트엔드: Flutter (Web)
+- 백엔드: Spring Boot 3.x + Kotlin
+- 데이터베이스: H2 (개발), PostgreSQL (프로덕션)
+- 인증: Google OAuth 2.0 + JWT
 
 > **중요**: 이 문서(CLAUDE.md)는 일상적인 개발 가이던스를 제공합니다. 헌법은 변경 불가능한 원칙만 정의합니다.
 
@@ -151,6 +158,76 @@
 ### 문제 해결
 - **권한 에러**: [docs/troubleshooting/permission-errors.md](docs/troubleshooting/permission-errors.md)
 
+## 🛠️ MCP 사용 가이드 (필독)
+
+### 상황별 MCP 선택 전략
+
+**dart-flutter MCP** (필수 ⭐⭐⭐⭐⭐):
+```yaml
+용도: 코드 실행, 테스트, 디버깅
+언제 쓰나:
+  - 테스트 실행할 때 (run_tests)
+  - 버그 고칠 때 (analyze_files)
+  - 코드 포맷팅 (dart_format)
+  - 패키지 설치 (pub add/get)
+
+강점: 정확한 에러 위치, 실제 실행 결과, 반복 검증
+```
+
+**flutter-service MCP** (선택 ⭐⭐):
+```yaml
+용도: 패키지 탐색, 일반 패턴 참고
+언제 쓰나:
+  - 새 패키지 찾을 때 (pub_dev_search)
+  - 패키지 비교할 때 (analyze_pub_package)
+  - 일반 패턴 참고 (suggest_improvements)
+
+한계: 구체적 버그 못 찾음, 논리 오류 탐지 불가
+```
+
+### 상황별 의사결정 트리
+
+```
+문제 해결:
+├─ 테스트 실패?        → dart-flutter (run_tests)
+├─ 버그 수정?          → dart-flutter (analyze_files)
+└─ 패키지 뭐 쓸까?     → flutter-service (pub_dev_search)
+
+새 기능 개발:
+├─ 구현 및 테스트      → dart-flutter
+└─ 패키지 선택 고민    → flutter-service → dart-flutter로 검증
+
+학습 및 탐색:
+├─ 구체적 문제?        → dart-flutter
+└─ 일반적 지식?        → 공식 문서 (MCP는 보조)
+```
+
+### 실전 예시
+
+❌ **잘못된 사용**:
+```
+버그: "테스트가 실패해"
+→ flutter-service의 validate_flutter_docs 호출
+→ "코드는 괜찮습니다" (문제 못 찾음)
+```
+
+✅ **올바른 사용**:
+```
+버그: "테스트가 실패해"
+→ dart-flutter의 run_tests 호출
+→ "line 84: expect failed - Channel View 5 not found"
+→ 정확한 위치와 원인 파악
+```
+
+### 헌법 준수 사항
+
+- **필수**: 모든 테스트는 dart-flutter MCP로 실행
+- **금지**: 버그 수정 시 flutter-service에 의존
+- **권장**: 패키지 추가 시 flutter-service로 분석 후 dart-flutter로 테스트
+- **PR**: dart-flutter 테스트 로그 포함 필수
+
+상세 내용은 [헌법 원칙 VI](`.specify/memory/constitution.md#vi-mcp-사용-표준-비협상`)를 참조하세요.
+
 ## 📋 프로젝트 개요
 
 **목적**: 대학 내 그룹(학과, 동아리, 학회) 관리 및 소통 플랫폼
@@ -224,6 +301,57 @@ flutter run -d chrome --web-hostname localhost --web-port 5173
 - **커밋 메시지 컨벤션 준수**: [커밋 규칙](docs/conventions/commit-conventions.md) 참고
 - **문서 동기화 확인**: 코드 변경 시 관련 문서도 함께 업데이트
 
+### MCP 사용 원칙 (필수 ⭐⭐⭐⭐⭐)
+- **항상 MCP 우선 사용**: 별도 요청 없이도 작업에 적합한 MCP를 자동으로 선택하여 사용
+- **dart-flutter MCP** (필수):
+  - 테스트 실행: `mcp__dart-flutter__run_tests`
+  - 코드 분석: `mcp__dart-flutter__analyze_files`
+  - 포맷팅: `mcp__dart-flutter__dart_format`
+  - 패키지 관리: `mcp__dart-flutter__pub`
+- **flutter-service MCP** (보조):
+  - 패키지 탐색: `mcp__flutter-service__flutter_search`
+  - 패키지 분석: `mcp__flutter-service__analyze_pub_package`
+  - 코드 개선 제안: `mcp__flutter-service__suggest_improvements`
+- **사용 타이밍**:
+  - 코드 수정 후 즉시 `dart_format` 실행
+  - 기능 구현 완료 시 `analyze_files` 실행
+  - 테스트 작성/수정 시 `run_tests` 실행
+- **상세 가이드**: [헌법 원칙 VI](.specify/memory/constitution.md#vi-mcp-사용-표준-비협상) 참조
+
+### 에러 메시지 및 UI 텍스트 규칙
+- **사용자 메시지는 한글**: 모든 UI 텍스트, 에러 메시지, 알림은 한글로 작성
+- **디버깅 정보는 영어/원문 유지**: 에러 원인, 스택 트레이스, 로그는 영어 유지
+- **혼합 형식 허용**: 사용자 메시지(한글) + 디버깅 정보(영어)
+  ```dart
+  // ✅ Good: 사용자에게는 한글, 개발자에게는 상세 정보
+  '그룹 전환에 실패했습니다 (${error.toString()})'
+
+  // ❌ Bad: 모두 영어
+  'Failed to switch groups: ${error.toString()}'
+
+  // ❌ Bad: 디버깅 정보도 번역
+  '그룹 전환에 실패했습니다 (예외: 네트워크 오류)'
+  ```
+- **적용 대상**:
+  - SnackBar, Dialog, AlertDialog 메시지
+  - 로딩 인디케이터 텍스트
+  - 버튼 라벨 (저장, 취소, 확인 등)
+  - 폼 검증 메시지
+  - 빈 상태 메시지 (EmptyState)
+- **예외**:
+  - 로그 메시지 (`print`, `debugPrint`)
+  - 개발자용 주석 (Dartdoc, 코드 주석)
+  - 기술 용어/변수명 (Exception, Error, API 등)
+
+### Speckit 작업 진행 시
+- **Phase 완료 시 tasks.md 업데이트 필수** ([헌법 v1.2.0](.specify/memory/constitution.md#speckit-작업-진행-관리) 참조)
+  - 각 Phase 완료 시 `specs/*/tasks.md`의 완료된 태스크를 `[ ] → [X]`로 체크
+  - 통합 테스트 통과 결과를 tasks.md 또는 별도 검증 문서에 기록
+  - 미완료 태스크가 있는 경우 이유와 다음 액션 명시
+- **문서-코드 동기화**: 구현 완료 시점에 spec.md, plan.md, tasks.md도 함께 업데이트
+- **진행 상황 가시성**: 다음 작업 시작 시 tasks.md를 신뢰할 수 있도록 실시간 동기화 유지
+- **체크포인트 검증**: Phase 체크포인트에서 완료 태스크 개수 확인 및 테스트 결과 기록
+
 ## 📚 컨텍스트 가이드
 
 ### 개발 시작 전 필독
@@ -251,3 +379,10 @@ flutter run -d chrome --web-hostname localhost --web-port 5173
 - **구현 가이드** → 개념 설명으로 역링크
 - **에러 문서** → 관련 개념/구현으로 링크
 - **UI/UX 문서** → 구현 예시로 링크
+
+## Active Technologies
+- Dart 3.x (Flutter SDK 3.x) (001-workspace-navigation-refactor)
+- In-memory navigation state (session-scoped), no persistence (001-workspace-navigation-refactor)
+
+## Recent Changes
+- 001-workspace-navigation-refactor: Added Dart 3.x (Flutter SDK 3.x)

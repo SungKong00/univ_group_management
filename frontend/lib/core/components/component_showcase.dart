@@ -111,27 +111,19 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
             const SizedBox(height: AppSpacing.sm),
 
             // 기본 정보 배너
-            const AppInfoBanner(
-              message: '기본 정보 메시지입니다. 이 작업에 대한 안내를 제공합니다.',
-            ),
+            const AppInfoBanner(message: '기본 정보 메시지입니다. 이 작업에 대한 안내를 제공합니다.'),
             const SizedBox(height: AppSpacing.md),
 
             // 경고 배너
-            AppInfoBanner.warning(
-              message: '주의가 필요합니다. 이 작업을 수행하기 전에 확인해주세요.',
-            ),
+            AppInfoBanner.warning(message: '주의가 필요합니다. 이 작업을 수행하기 전에 확인해주세요.'),
             const SizedBox(height: AppSpacing.md),
 
             // 에러 배너
-            AppInfoBanner.error(
-              message: '오류가 발생했습니다. 입력 내용을 확인하고 다시 시도해주세요.',
-            ),
+            AppInfoBanner.error(message: '오류가 발생했습니다. 입력 내용을 확인하고 다시 시도해주세요.'),
             const SizedBox(height: AppSpacing.md),
 
             // 성공 배너
-            AppInfoBanner.success(
-              message: '성공적으로 완료되었습니다!',
-            ),
+            AppInfoBanner.success(message: '성공적으로 완료되었습니다!'),
             const SizedBox(height: AppSpacing.md),
 
             // 닫기 버튼이 있는 배너
@@ -168,9 +160,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
             const SizedBox(height: AppSpacing.sm),
 
             // 에러 배너
-            AppInfoBanner.error(
-              message: '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.',
-            ),
+            AppInfoBanner.error(message: '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.'),
             const SizedBox(height: AppSpacing.md),
 
             // 폼 필드들
@@ -191,9 +181,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
             const SizedBox(height: AppSpacing.md),
 
             // 정보 배너
-            const AppInfoBanner(
-              message: '대학 이메일로만 로그인할 수 있습니다.',
-            ),
+            const AppInfoBanner(message: '대학 이메일로만 로그인할 수 있습니다.'),
             const SizedBox(height: AppSpacing.xl),
           ],
         ),
@@ -205,9 +193,9 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
     return Text(
       title,
       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.brand,
-          ),
+        fontWeight: FontWeight.w700,
+        color: AppColors.brand,
+      ),
     );
   }
 }

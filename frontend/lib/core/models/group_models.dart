@@ -1,6 +1,13 @@
 import 'user_models.dart';
 
-enum GroupNodeType { university, college, department, official, autonomous, other }
+enum GroupNodeType {
+  university,
+  college,
+  department,
+  official,
+  autonomous,
+  other,
+}
 
 enum GroupType {
   autonomous, // AUTONOMOUS
@@ -270,19 +277,27 @@ class SubGroupRequestResponse {
   factory SubGroupRequestResponse.fromJson(Map<String, dynamic> json) {
     return SubGroupRequestResponse(
       id: (json['id'] as num).toInt(),
-      requester: UserSummaryResponse.fromJson(json['requester'] as Map<String, dynamic>),
-      parentGroup: GroupSummaryResponse.fromJson(json['parentGroup'] as Map<String, dynamic>),
+      requester: UserSummaryResponse.fromJson(
+        json['requester'] as Map<String, dynamic>,
+      ),
+      parentGroup: GroupSummaryResponse.fromJson(
+        json['parentGroup'] as Map<String, dynamic>,
+      ),
       requestedGroupName: json['requestedGroupName'] as String,
       requestedGroupDescription: json['requestedGroupDescription'] as String?,
       requestedUniversity: json['requestedUniversity'] as String?,
       requestedCollege: json['requestedCollege'] as String?,
       requestedDepartment: json['requestedDepartment'] as String?,
-      requestedGroupType: GroupSummaryResponse._parseGroupType(json['requestedGroupType'] as String),
+      requestedGroupType: GroupSummaryResponse._parseGroupType(
+        json['requestedGroupType'] as String,
+      ),
       requestedMaxMembers: (json['requestedMaxMembers'] as num?)?.toInt(),
       status: json['status'] as String,
       responseMessage: json['responseMessage'] as String?,
       reviewedBy: json['reviewedBy'] != null
-          ? UserSummaryResponse.fromJson(json['reviewedBy'] as Map<String, dynamic>)
+          ? UserSummaryResponse.fromJson(
+              json['reviewedBy'] as Map<String, dynamic>,
+            )
           : null,
       reviewedAt: json['reviewedAt'] != null
           ? DateTime.parse(json['reviewedAt'] as String)
@@ -298,10 +313,7 @@ class ReviewSubGroupRequestRequest {
   final String action; // "APPROVE" or "REJECT"
   final String? responseMessage;
 
-  ReviewSubGroupRequestRequest({
-    required this.action,
-    this.responseMessage,
-  });
+  ReviewSubGroupRequestRequest({required this.action, this.responseMessage});
 
   Map<String, dynamic> toJson() {
     return {

@@ -42,10 +42,9 @@ class ErrorButton extends StatelessWidget {
         child: ButtonLoadingChild(
           text: text,
           isLoading: isLoading,
-          textStyle: AppTheme.bodyLargeTheme(context).copyWith(
-            color: AppColors.onPrimary,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: AppTheme.bodyLargeTheme(
+            context,
+          ).copyWith(color: AppColors.onPrimary, fontWeight: FontWeight.w600),
           indicatorColor: AppColors.onPrimary,
         ),
       ),

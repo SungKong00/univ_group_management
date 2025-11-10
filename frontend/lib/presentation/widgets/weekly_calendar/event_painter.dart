@@ -2,25 +2,53 @@ import 'package:flutter/material.dart';
 import '../calendar/color_generator.dart';
 
 class EventPainter extends CustomPainter {
-  final List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span, DateTime? startTime, String? location, Color? color})> events;
+  final List<
+    ({
+      Rect rect,
+      String title,
+      String id,
+      int? columnIndex,
+      int? totalColumns,
+      int? span,
+      DateTime? startTime,
+      String? location,
+      Color? color,
+    })
+  >
+  events;
 
   EventPainter({required this.events});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final sortedEvents = List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span, DateTime? startTime, String? location, Color? color})>.from(events)
-      ..sort((a, b) {
-        final topCompare = a.rect.top.compareTo(b.rect.top);
-        if (topCompare != 0) return topCompare;
-        final heightA = a.rect.height;
-        final heightB = b.rect.height;
-        return heightB.compareTo(heightA);
-      });
+    final sortedEvents =
+        List<
+            ({
+              Rect rect,
+              String title,
+              String id,
+              int? columnIndex,
+              int? totalColumns,
+              int? span,
+              DateTime? startTime,
+              String? location,
+              Color? color,
+            })
+          >.from(events)
+          ..sort((a, b) {
+            final topCompare = a.rect.top.compareTo(b.rect.top);
+            if (topCompare != 0) return topCompare;
+            final heightA = a.rect.height;
+            final heightB = b.rect.height;
+            return heightB.compareTo(heightA);
+          });
 
     for (final event in sortedEvents) {
       Rect eventRect = event.rect;
 
-      if (event.columnIndex != null && event.totalColumns != null && event.totalColumns! > 0) {
+      if (event.columnIndex != null &&
+          event.totalColumns != null &&
+          event.totalColumns! > 0) {
         final int totalColumns = event.totalColumns!;
         final double columnWidth = event.rect.width / totalColumns;
         final int span = event.span ?? 1;
@@ -35,9 +63,11 @@ class EventPainter extends CustomPainter {
 
       // Use event color if available, otherwise use ColorGenerator
       final isExternalEvent = event.id.startsWith('ext-');
-      final baseColor = event.color ??
+      final baseColor =
+          event.color ??
           (isExternalEvent
-              ? Colors.blue // External events remain blue
+              ? Colors
+                    .blue // External events remain blue
               : ColorGenerator.getColorForSchedule(event.id));
 
       // Apply opacity for better readability
@@ -51,7 +81,10 @@ class EventPainter extends CustomPainter {
         ..style = PaintingStyle.fill
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
-      final rrect = RRect.fromRectAndRadius(eventRect, const Radius.circular(6));
+      final rrect = RRect.fromRectAndRadius(
+        eventRect,
+        const Radius.circular(6),
+      );
 
       // Draw shadow
       canvas.drawRRect(rrect.shift(const Offset(0, 1)), shadowPaint);
@@ -71,7 +104,8 @@ class EventPainter extends CustomPainter {
       // Draw time if available
       double textOffset = 4;
       if (event.startTime != null) {
-        final timeText = '${event.startTime!.hour.toString().padLeft(2, '0')}:${event.startTime!.minute.toString().padLeft(2, '0')}';
+        final timeText =
+            '${event.startTime!.hour.toString().padLeft(2, '0')}:${event.startTime!.minute.toString().padLeft(2, '0')}';
         final timePainter = TextPainter(
           text: TextSpan(
             text: timeText,
@@ -108,14 +142,13 @@ class EventPainter extends CustomPainter {
       textOffset += textPainter.height + 2;
 
       // Draw location if available and there's space
-      if (event.location != null && event.location!.isNotEmpty && eventRect.height > 50) {
+      if (event.location != null &&
+          event.location!.isNotEmpty &&
+          eventRect.height > 50) {
         final locationPainter = TextPainter(
           text: TextSpan(
             text: '📍 ${event.location}',
-            style: TextStyle(
-              color: textColor.withOpacity(0.85),
-              fontSize: 10,
-            ),
+            style: TextStyle(color: textColor.withOpacity(0.85), fontSize: 10),
           ),
           maxLines: 1,
           ellipsis: '...',
@@ -123,7 +156,10 @@ class EventPainter extends CustomPainter {
         );
         locationPainter.layout(minWidth: 0, maxWidth: eventRect.width - 8);
         if (textOffset + locationPainter.height < eventRect.height - 4) {
-          locationPainter.paint(canvas, eventRect.topLeft + Offset(4, textOffset));
+          locationPainter.paint(
+            canvas,
+            eventRect.topLeft + Offset(4, textOffset),
+          );
         }
       }
     }

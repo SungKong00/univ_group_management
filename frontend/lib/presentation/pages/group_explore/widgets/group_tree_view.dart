@@ -28,14 +28,14 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredNodes = ref.watch(filteredTreeRootNodesProvider); // 필터링된 노드 사용
+    final filteredNodes = ref.watch(
+      filteredTreeRootNodesProvider,
+    ); // 필터링된 노드 사용
     final isLoading = ref.watch(treeIsLoadingProvider);
     final errorMessage = ref.watch(treeErrorMessageProvider);
 
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (errorMessage != null) {
@@ -43,17 +43,13 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: AppColors.error,
-            ),
+            Icon(Icons.error_outline, size: 48, color: AppColors.error),
             const SizedBox(height: AppSpacing.sm),
             Text(
               errorMessage,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.error,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.error),
             ),
             const SizedBox(height: AppSpacing.md),
             ElevatedButton(
@@ -80,9 +76,9 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
             const SizedBox(height: AppSpacing.sm),
             Text(
               '필터 조건에 맞는 그룹이 없습니다',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.neutral600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.neutral600),
             ),
           ],
         ),
@@ -102,16 +98,16 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
               Text(
                 '그룹 계층 구조',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: AppColors.neutral900,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: AppColors.neutral900,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 '그룹의 계층 관계를 확인하고 탐색할 수 있습니다',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.neutral600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.neutral600),
               ),
               const SizedBox(height: AppSpacing.md),
 
@@ -120,12 +116,16 @@ class _GroupTreeViewState extends ConsumerState<GroupTreeView> {
               const SizedBox(height: AppSpacing.md),
 
               // Tree View
-              ...filteredNodes.map((node) => GroupTreeNodeWidget(
-                node: node,
-                onToggle: (nodeId) {
-                  ref.read(groupTreeStateProvider.notifier).toggleNode(nodeId);
-                },
-              )),
+              ...filteredNodes.map(
+                (node) => GroupTreeNodeWidget(
+                  node: node,
+                  onToggle: (nodeId) {
+                    ref
+                        .read(groupTreeStateProvider.notifier)
+                        .toggleNode(nodeId);
+                  },
+                ),
+              ),
             ],
           ),
         );

@@ -225,11 +225,7 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.account_tree_outlined,
-            size: 20,
-            color: AppColors.brand,
-          ),
+          Icon(Icons.account_tree_outlined, size: 20, color: AppColors.brand),
           const SizedBox(width: AppSpacing.xxs),
           Expanded(
             child: Column(
@@ -264,9 +260,7 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
       children: [
         Text(
           '그룹 이름',
-          style: AppTheme.titleMedium.copyWith(
-            color: AppColors.onSurface,
-          ),
+          style: AppTheme.titleMedium.copyWith(color: AppColors.onSurface),
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -314,9 +308,7 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
       children: [
         Text(
           '그룹 설명 (선택)',
-          style: AppTheme.titleMedium.copyWith(
-            color: AppColors.onSurface,
-          ),
+          style: AppTheme.titleMedium.copyWith(color: AppColors.onSurface),
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -354,9 +346,7 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
           children: [
             Text(
               '그룹 종류',
-              style: AppTheme.titleMedium.copyWith(
-                color: AppColors.onSurface,
-              ),
+              style: AppTheme.titleMedium.copyWith(color: AppColors.onSurface),
             ),
             const SizedBox(width: 4),
             Tooltip(
@@ -466,16 +456,11 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
           children: [
             Text(
               '태그',
-              style: AppTheme.titleMedium.copyWith(
-                color: AppColors.neutral500,
-              ),
+              style: AppTheme.titleMedium.copyWith(color: AppColors.neutral500),
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 2,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: AppColors.neutral200,
                 borderRadius: BorderRadius.circular(4),
@@ -525,8 +510,9 @@ class _CreateSubgroupDialogState extends ConsumerState<CreateSubgroupDialog>
     final isWide = MediaQuery.of(context).size.width > 900;
 
     return Row(
-      mainAxisAlignment:
-          isWide ? MainAxisAlignment.end : MainAxisAlignment.start,
+      mainAxisAlignment: isWide
+          ? MainAxisAlignment.end
+          : MainAxisAlignment.start,
       children: [
         if (isWide) ...[
           Flexible(

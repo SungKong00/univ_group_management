@@ -41,13 +41,13 @@ class RecruitmentExploreState extends Equatable {
 
   @override
   List<Object?> get props => [
-        searchQuery,
-        recruitments,
-        isLoading,
-        hasMore,
-        currentPage,
-        errorMessage,
-      ];
+    searchQuery,
+    recruitments,
+    isLoading,
+    hasMore,
+    currentPage,
+    errorMessage,
+  ];
 }
 
 /// Recruitment Explore State Notifier
@@ -84,8 +84,9 @@ class RecruitmentExploreStateNotifier
         size: pageSize,
       );
 
-      final newRecruitments =
-          reset ? response : [...state.recruitments, ...response];
+      final newRecruitments = reset
+          ? response
+          : [...state.recruitments, ...response];
 
       state = state.copyWith(
         recruitments: newRecruitments,
@@ -121,21 +122,23 @@ class RecruitmentExploreStateNotifier
 }
 
 // State Provider
-final recruitmentExploreStateProvider = StateNotifierProvider<
-    RecruitmentExploreStateNotifier, RecruitmentExploreState>(
-  (ref) => RecruitmentExploreStateNotifier(),
-);
+final recruitmentExploreStateProvider =
+    StateNotifierProvider<
+      RecruitmentExploreStateNotifier,
+      RecruitmentExploreState
+    >((ref) => RecruitmentExploreStateNotifier());
 
 // Selective Providers (prevent unnecessary rebuilds)
-final exploreRecruitmentsProvider =
-    Provider<List<RecruitmentSummaryResponse>>((ref) {
-  return ref
-      .watch(recruitmentExploreStateProvider.select((s) => s.recruitments));
+final exploreRecruitmentsProvider = Provider<List<RecruitmentSummaryResponse>>((
+  ref,
+) {
+  return ref.watch(
+    recruitmentExploreStateProvider.select((s) => s.recruitments),
+  );
 });
 
 final exploreRecruitmentIsLoadingProvider = Provider<bool>((ref) {
-  return ref
-      .watch(recruitmentExploreStateProvider.select((s) => s.isLoading));
+  return ref.watch(recruitmentExploreStateProvider.select((s) => s.isLoading));
 });
 
 final exploreRecruitmentHasMoreProvider = Provider<bool>((ref) {
@@ -143,11 +146,13 @@ final exploreRecruitmentHasMoreProvider = Provider<bool>((ref) {
 });
 
 final exploreRecruitmentErrorMessageProvider = Provider<String?>((ref) {
-  return ref
-      .watch(recruitmentExploreStateProvider.select((s) => s.errorMessage));
+  return ref.watch(
+    recruitmentExploreStateProvider.select((s) => s.errorMessage),
+  );
 });
 
 final exploreRecruitmentSearchQueryProvider = Provider<String>((ref) {
-  return ref
-      .watch(recruitmentExploreStateProvider.select((s) => s.searchQuery));
+  return ref.watch(
+    recruitmentExploreStateProvider.select((s) => s.searchQuery),
+  );
 });

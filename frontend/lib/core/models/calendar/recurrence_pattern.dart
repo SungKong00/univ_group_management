@@ -18,10 +18,7 @@ enum RecurrenceType {
 /// Represents a recurrence pattern for group events.
 /// daysOfWeek: 1=Monday, 7=Sunday (ISO 8601 weekday numbering).
 class RecurrencePattern {
-  const RecurrencePattern({
-    required this.type,
-    this.daysOfWeek,
-  });
+  const RecurrencePattern({required this.type, this.daysOfWeek});
 
   final RecurrenceType type;
   final List<int>? daysOfWeek;
@@ -43,20 +40,14 @@ class RecurrencePattern {
   }
 
   /// Factory for creating a daily recurrence pattern.
-  static RecurrencePattern daily() => const RecurrencePattern(
-        type: RecurrenceType.daily,
-      );
+  static RecurrencePattern daily() =>
+      const RecurrencePattern(type: RecurrenceType.daily);
 
   /// Factory for creating a weekly recurrence pattern with specific days.
-  static RecurrencePattern weekly(List<int> days) => RecurrencePattern(
-        type: RecurrenceType.weekly,
-        daysOfWeek: days,
-      );
+  static RecurrencePattern weekly(List<int> days) =>
+      RecurrencePattern(type: RecurrenceType.weekly, daysOfWeek: days);
 
-  RecurrencePattern copyWith({
-    RecurrenceType? type,
-    List<int>? daysOfWeek,
-  }) {
+  RecurrencePattern copyWith({RecurrenceType? type, List<int>? daysOfWeek}) {
     return RecurrencePattern(
       type: type ?? this.type,
       daysOfWeek: daysOfWeek ?? this.daysOfWeek,

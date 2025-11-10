@@ -3,23 +3,39 @@
 <!--
 Sync Impact Report
 ==================
-Version: 1.0.0 → Initial ratification
-Modified principles: N/A (new constitution)
-Added sections: All sections (initial creation)
+Version: 1.1.1 → 1.2.0
+Modified principles:
+  - Added "Speckit 작업 진행 관리" section under Development Workflow
+  - Updated "리뷰 체크리스트" to include tasks.md synchronization
+Added sections:
+  - Speckit 작업 진행 관리: Phase 완료 시 tasks.md 업데이트 필수, 문서-코드 동기화, 진행 상황 가시성
+  - 강제 사항: Phase 완료 후 커밋 전 tasks.md 업데이트, 테스트 결과 기록, 미완료 태스크 이유 명시
 Removed sections: N/A
 Templates status:
-  ✅ plan-template.md - No updates required (principles align with planning approach)
-  ✅ spec-template.md - No updates required (principles align with spec requirements)
-  ✅ tasks-template.md - No updates required (principles align with task structure)
+  ✅ spec-template.md - No updates required
+  ✅ plan-template.md - No updates required (API Modifications already added)
+  ✅ tasks-template.md - No updates required (workflow guidance only)
   ✅ agent-file-template.md - No updates required
   ✅ checklist-template.md - No updates required
-Follow-up TODOs: None
+Follow-up TODOs:
+  1. Update CLAUDE.md to reference new Speckit workflow guidance
+  2. Add reminder in /speckit.implement workflow to check tasks.md sync
+Impact:
+  - All future Phase completions MUST update tasks.md before commit
+  - PR reviews MUST verify tasks.md synchronization
+  - Prevents duplicate work from outdated task status
 -->
 
 ## 비전 및 범위 (Vision & Scope)
 
 ### 프로젝트 미션
 대학 조직(학과, 동아리, 연구실), 장비, 일정, 권한을 통합적으로 관리하는 엔터프라이즈급 협업 플랫폼을 구축한다.
+
+### 기술 스택 (비협상)
+- **프론트엔드**: Flutter (Web)
+- **백엔드**: Spring Boot 3.x + Kotlin
+- **데이터베이스**: H2 (개발), PostgreSQL (프로덕션)
+- **인증**: Google OAuth 2.0 + JWT
 
 ### 핵심 가치
 1. **일관된 권한 시스템**: RBAC + Individual Override 패턴으로 모든 기능에 통합된 권한 체계 적용
@@ -82,7 +98,7 @@ Follow-up TODOs: None
 
 ### IV. 문서화 100줄 원칙
 **원칙**:
-- 모든 컨텍스트 문서는 100줄 이내로 작성 (예외: API/DB 레퍼런스, 테스트 전략, 개발 계획)
+- 모든 컨텍스트 문서는 100줄 이내로 작성 (예외: API/DB 레퍼런스, 테스트 전략, 개발 계획, speckit 문서)
 - 긴 내용은 여러 파일로 분할하고 상호 참조 링크 유지
 - 코드 참조는 파일 경로 + 클래스/함수명만 명시 (상세 구현 코드 포함 금지)
 
@@ -91,6 +107,7 @@ Follow-up TODOs: None
 - `implementation/`: 구현 가이드, 파일 경로 + 함수명만
 - `backend/`: 기술 설계, 파일 경로 + 클래스명만
 - `CLAUDE.md`: 마스터 인덱스, 모든 문서 링크 관리
+- `specs/*/`: speckit 생성 문서 (spec.md, plan.md, tasks.md 등)는 100줄 제한 예외
 
 **검증**:
 - 문서 커밋 전 `markdown-guidelines.md` 체크리스트 확인 필수
@@ -112,20 +129,42 @@ Follow-up TODOs: None
 - CI/CD에서 테스트 커버리지 보고서 생성 (JaCoCo)
 - Service Layer 90%, Controller Layer 80%, Repository Layer 70% 목표
 
-### VI. Flutter MCP 표준 (비협상)
+### VI. MCP 사용 표준 (비협상)
 **원칙**:
-- **Flutter 개발 시 flutter-mcp-service를 필수로 사용**하여 코드 분석, 도구 호출, 캐시 관리 수행
-- **dart&flutter-mcp를 통해 검증 및 디버깅** 진행 (`flutter_analyze`, `flutter_status` 등)
-- 로컬 명령(`flutter run`, `dart analyze` 등) 직접 호출 금지
+- **dart-flutter MCP**: 코드 실행, 테스트, 디버깅의 필수 도구
+- **flutter-service MCP**: 패키지 탐색, 일반 패턴 참고의 보조 도구
+- **github MCP**: PR/Issue 관리 (필요 시)
+- 로컬 명령 직접 호출은 최소화
+
+**상황별 MCP 선택**:
+```
+버그 수정/디버깅:
+  - 필수: dart-flutter (run_tests, analyze_files)
+  - 금지: flutter-service (구체적 버그 탐지 불가)
+
+새 기능 개발:
+  - 필수: dart-flutter (테스트, 검증)
+  - 선택: flutter-service (패키지 탐색)
+
+패키지 선택:
+  - 추천: flutter-service (pub_dev_search, analyze_pub_package)
+  - 보조: dart-flutter (설치 및 테스트)
+
+일반 학습/탐색:
+  - 선택: flutter-service (suggest_improvements)
+  - 우선: 공식 문서
+```
 
 **강제 사항**:
-- 모든 Flutter 코드 변경은 MCP를 통해 분석 및 검증
-- PR에 MCP 로그 포함 필수 (flutter_analyze, flutter_status)
-- MCP 미사용 코드는 검증 절차에서 자동 거부
+- 모든 테스트는 dart-flutter MCP로 실행 (flutter test 직접 호출 금지)
+- 버그 수정 시 flutter-service MCP 의존 금지 (논리 오류 탐지 불가)
+- 패키지 추가/분석 시에만 flutter-service MCP 활용
+- PR에 dart-flutter MCP 테스트 로그 포함 필수
 
 **검증**:
-- PR 템플릿에 MCP 로그 첨부 항목 추가
-- CI/CD에서 MCP 기반 검증 스크립트 실행
+- PR 리뷰 시 MCP 사용 여부 확인
+- 버그 수정 시 dart-flutter 테스트 결과 필수
+- 패키지 추가 시 flutter-service 분석 결과 권장
 
 ### VII. 프론트엔드 통합 원칙
 **원칙**:
@@ -142,6 +181,28 @@ Follow-up TODOs: None
 **검증**:
 - UI 리뷰 시 디자인 토큰 사용 여부 확인
 - API 통합 시 에러 핸들링 시나리오 테스트 필수
+
+### VIII. API 진화 및 리팩터링 원칙
+**원칙**:
+- **기존 API 우선 활용**: 리팩터링 및 기능 수정 시 기존 API를 최대한 재사용
+- **적극적 API 개선**: 기존 API가 요구사항에 부적합하면 수정 또는 재설계 검토
+- **Breaking Change 관리**: API 변경 시 영향 범위 분석 및 마이그레이션 계획 수립
+- **버전 관리**: 하위 호환성 유지가 불가능한 경우 API 버전 분리 (v1, v2)
+
+**강제 사항**:
+- 리팩터링 작업 시작 전 기존 API 목록 및 활용 가능성 분석 필수
+- API 수정이 필요한 경우 plan.md의 "API Modifications" 섹션에 명시:
+  - 수정 대상 API 엔드포인트
+  - 수정 이유 (성능, 기능 확장, 설계 개선 등)
+  - Breaking Change 여부
+  - 영향받는 프론트엔드 코드 범위
+- 새 API 추가 시 `docs/implementation/api-reference.md` 업데이트 필수
+- API 변경 시 관련 통합 테스트 업데이트 또는 추가
+
+**검증**:
+- PR에 API 변경 사항 명시 및 영향 범위 문서화
+- Breaking Change 발생 시 프론트엔드 마이그레이션 가이드 제공
+- API 테스트 커버리지 유지 (기존 테스트 유지 + 신규 테스트 추가)
 
 ## 보안 및 성능 기준 (Security & Performance Standards)
 
@@ -173,12 +234,24 @@ Follow-up TODOs: None
 - **동기화 상태**: `docs/context-tracking/sync-status.md`에서 문서 동기화율 관리
 - **문서 업데이트**: 코드 변경 시 관련 문서 함께 업데이트 필수
 
+### Speckit 작업 진행 관리
+- **Phase 완료 시 tasks.md 업데이트 필수**: 각 Phase 완료 시 `specs/*/tasks.md`의 완료된 태스크를 `[X]`로 체크
+- **문서-코드 동기화**: 구현 완료 시점에 관련 문서(spec.md, plan.md, tasks.md)도 함께 업데이트
+- **진행 상황 가시성**: 다음 작업 시작 시 tasks.md를 신뢰할 수 있도록 실시간 동기화 유지
+- **체크포인트 검증**: Phase 체크포인트에서 완료 태스크 개수 확인 및 테스트 결과 기록
+
+**강제 사항**:
+- Phase 완료 후 커밋 전에 tasks.md에서 완료된 태스크 `[ ] → [X]` 업데이트
+- 통합 테스트 통과 결과를 tasks.md 또는 별도 검증 문서에 기록
+- 미완료 태스크가 있는 경우 이유와 다음 액션 명시
+
 ### 리뷰 체크리스트
 - [ ] 3-Layer Architecture 준수
 - [ ] `ApiResponse<T>` 형식 사용
 - [ ] 권한 검증 로직 포함
 - [ ] 테스트 커버리지 목표 달성
 - [ ] 문서 업데이트 완료
+- [ ] **Speckit tasks.md 동기화 완료** (Phase 완료 시)
 - [ ] 커밋 메시지 컨벤션 준수
 
 ## 거버넌스 (Governance)
@@ -205,4 +278,29 @@ Follow-up TODOs: None
 ### 런타임 가이던스
 일상적인 개발 가이던스는 `CLAUDE.md`를 참조한다. 헌법은 변경 불가능한 원칙만 정의하며, 구현 세부사항은 각 도메인 문서에서 관리한다.
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-11-09
+**Version**: 1.2.0 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-11-10
+
+## 변경 이력 (Change History)
+
+### v1.2.0 (2025-11-10)
+- **추가**: "Speckit 작업 진행 관리" 섹션 신설
+  - Phase 완료 시 tasks.md 업데이트 필수 규정
+  - 문서-코드 동기화 의무화
+  - 진행 상황 가시성 유지 및 체크포인트 검증 규칙
+- **수정**: 리뷰 체크리스트에 "Speckit tasks.md 동기화 완료" 항목 추가
+- **근거**: Phase 완료 후 tasks.md 미업데이트로 인한 중복 작업 방지
+
+### v1.1.1 (2025-11-09)
+- **수정**: 원칙 IV "문서화 100줄 원칙" 예외 범위 확대
+  - speckit 생성 문서 (spec.md, plan.md, tasks.md 등)를 100줄 제한 예외로 추가
+  - `specs/*/` 디렉토리 내 모든 문서는 100줄 제한 적용 제외
+
+### v1.1.0 (2025-11-09)
+- **추가**: 기술 스택 명시 (Flutter, Spring Boot + Kotlin, H2/PostgreSQL, Google OAuth + JWT)
+- **추가**: 원칙 VIII "API 진화 및 리팩터링 원칙" 신설
+  - 기존 API 우선 활용 및 적극적 개선 정책
+  - plan.md에 "API Modifications" 섹션 필수 명시
+  - Breaking Change 관리 및 영향 범위 분석 의무화
+
+### v1.0.0 (2025-11-09)
+- 초기 헌법 비준

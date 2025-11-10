@@ -167,83 +167,83 @@ class _RoleCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.card),
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          role.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.neutral900,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        if (role.isSystemRole)
-                          SectionCard(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            role.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.neutral900,
                             ),
-                            backgroundColor: AppColors.neutral200,
-                            borderRadius: 4,
-                            showShadow: false,
-                            child: const Text(
-                              '시스템',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.neutral600,
+                          ),
+                          const SizedBox(width: 8),
+                          if (role.isSystemRole)
+                            SectionCard(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              backgroundColor: AppColors.neutral200,
+                              borderRadius: 4,
+                              showShadow: false,
+                              child: const Text(
+                                '시스템',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.neutral600,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      role.description,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.neutral600,
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        role.description,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.neutral600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              if (!role.isSystemRole) ...[
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20),
-                  onPressed: onEdit,
-                  color: AppColors.neutral600,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 20),
-                  onPressed: onDelete,
-                  color: AppColors.error,
-                ),
+                if (!role.isSystemRole) ...[
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    onPressed: onEdit,
+                    color: AppColors.neutral600,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    onPressed: onDelete,
+                    color: AppColors.error,
+                  ),
+                ],
               ],
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              ...role.permissions.map(
-                (permission) => _PermissionChip(permission: permission),
-              ),
-              _InfoChip(label: '멤버 ${role.memberCount}명'),
-            ],
-          ),
-        ],
-      ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                ...role.permissions.map(
+                  (permission) => _PermissionChip(permission: permission),
+                ),
+                _InfoChip(label: '멤버 ${role.memberCount}명'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

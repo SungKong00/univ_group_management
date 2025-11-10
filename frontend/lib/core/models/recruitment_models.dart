@@ -109,10 +109,7 @@ class UpdateRecruitmentRequest {
 }
 
 class CreateApplicationRequest {
-  CreateApplicationRequest({
-    this.motivation,
-    this.questionAnswers = const {},
-  });
+  CreateApplicationRequest({this.motivation, this.questionAnswers = const {}});
 
   final String? motivation;
   final Map<int, String> questionAnswers;
@@ -128,19 +125,13 @@ class CreateApplicationRequest {
 }
 
 class ReviewApplicationRequest {
-  ReviewApplicationRequest({
-    required this.action,
-    this.reviewComment,
-  });
+  ReviewApplicationRequest({required this.action, this.reviewComment});
 
   final String action; // "APPROVE" or "REJECT"
   final String? reviewComment;
 
   Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'action': action,
-      'reviewComment': reviewComment,
-    };
+    return <String, dynamic>{'action': action, 'reviewComment': reviewComment};
   }
 }
 
@@ -179,8 +170,9 @@ class RecruitmentResponse {
       content: json['content'] as String?,
       maxApplicants: (json['maxApplicants'] as num?)?.toInt(),
       currentApplicantCount: (json['currentApplicantCount'] as num).toInt(),
-      recruitmentStartDate:
-          DateTime.parse(json['recruitmentStartDate'] as String),
+      recruitmentStartDate: DateTime.parse(
+        json['recruitmentStartDate'] as String,
+      ),
       recruitmentEndDate: json['recruitmentEndDate'] != null
           ? DateTime.parse(json['recruitmentEndDate'] as String)
           : null,

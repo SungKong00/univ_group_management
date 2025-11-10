@@ -46,23 +46,18 @@ class ChannelManagementPage extends ConsumerWidget {
             // 헤더
             Text(
               '채널 관리',
-              style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                color: AppColors.neutral900,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineLarge!.copyWith(color: AppColors.neutral900),
             ),
             SizedBox(height: AppSpacing.xs),
             Text(
               '그룹 채널 목록을 조회하고 새 채널을 추가하세요.',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
             ),
             SizedBox(height: AppSpacing.lg),
             // 채널 목록 섹션
-            ChannelListSection(
-              groupId: groupId,
-              isDesktop: isDesktop,
-            ),
+            ChannelListSection(groupId: groupId, isDesktop: isDesktop),
           ],
         ),
       ),

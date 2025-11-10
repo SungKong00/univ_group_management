@@ -7,10 +7,13 @@ import '../../services/group_service.dart';
 /// 멤버 필터링에서 소속 그룹 선택 시 사용됩니다.
 /// API: GET /api/groups/{groupId}/sub-groups
 final subGroupsProvider =
-    FutureProvider.family<List<GroupSummaryResponse>, int>((ref, groupId) async {
-  final service = GroupService();
-  return service.getSubGroups(groupId);
-});
+    FutureProvider.family<List<GroupSummaryResponse>, int>((
+      ref,
+      groupId,
+    ) async {
+      final service = GroupService();
+      return service.getSubGroups(groupId);
+    });
 
 /// 학번 목록 Provider
 ///

@@ -94,12 +94,7 @@ class AppSnackBar {
     String message, {
     Duration duration = const Duration(seconds: 2),
   }) {
-    _show(
-      context,
-      message,
-      backgroundColor: Colors.orange,
-      duration: duration,
-    );
+    _show(context, message, backgroundColor: Colors.orange, duration: duration);
   }
 
   /// Shows an info message with default grey background
@@ -115,12 +110,7 @@ class AppSnackBar {
     String message, {
     Duration duration = const Duration(seconds: 2),
   }) {
-    _show(
-      context,
-      message,
-      backgroundColor: Colors.grey,
-      duration: duration,
-    );
+    _show(context, message, backgroundColor: Colors.grey, duration: duration);
   }
 
   /// Shows a custom SnackBar with specified background color

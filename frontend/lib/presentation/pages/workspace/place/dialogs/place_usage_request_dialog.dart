@@ -15,10 +15,7 @@ import '../../../../providers/place_provider.dart';
 class PlaceUsageRequestDialog extends ConsumerStatefulWidget {
   final int groupId;
 
-  const PlaceUsageRequestDialog({
-    required this.groupId,
-    super.key,
-  });
+  const PlaceUsageRequestDialog({required this.groupId, super.key});
 
   @override
   ConsumerState<PlaceUsageRequestDialog> createState() =>
@@ -70,10 +67,7 @@ class _PlaceUsageRequestDialogState
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: AppColors.neutral600,
-                          ),
+                          Icon(Icons.info_outline, color: AppColors.neutral600),
                           SizedBox(width: AppSpacing.xs),
                           Expanded(
                             child: Text(
@@ -104,24 +98,30 @@ class _PlaceUsageRequestDialogState
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppRadius.input),
-                        borderSide: BorderSide(color: AppColors.brand, width: 2),
+                        borderSide: BorderSide(
+                          color: AppColors.brand,
+                          width: 2,
+                        ),
                       ),
                       filled: true,
                       fillColor: Colors.white,
                     ),
                     initialValue: _selectedPlaceId,
                     items: availablePlaces
-                        .map((p) => DropdownMenuItem(
-                              value: p.id,
-                              child: Text(
-                                p.displayName,
-                                style: AppTheme.bodyMedium.copyWith(
-                                  color: AppColors.neutral900,
-                                ),
+                        .map(
+                          (p) => DropdownMenuItem(
+                            value: p.id,
+                            child: Text(
+                              p.displayName,
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: AppColors.neutral900,
                               ),
-                            ))
+                            ),
+                          ),
+                        )
                         .toList(),
-                    onChanged: (value) => setState(() => _selectedPlaceId = value),
+                    onChanged: (value) =>
+                        setState(() => _selectedPlaceId = value),
                   );
                 },
                 loading: () => Container(
@@ -214,7 +214,9 @@ class _PlaceUsageRequestDialogState
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(placeServiceProvider).createUsageRequest(
+      await ref
+          .read(placeServiceProvider)
+          .createUsageRequest(
             placeId: _selectedPlaceId!,
             reason: _reasonController.text.trim().isEmpty
                 ? null
@@ -227,7 +229,10 @@ class _PlaceUsageRequestDialogState
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.error(context, '신청 실패: ${e.toString().replaceFirst('Exception: ', '')}');
+        AppSnackBar.error(
+          context,
+          '신청 실패: ${e.toString().replaceFirst('Exception: ', '')}',
+        );
       }
     } finally {
       if (mounted) {

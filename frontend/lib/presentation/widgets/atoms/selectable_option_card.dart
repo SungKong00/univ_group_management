@@ -105,11 +105,7 @@ class SelectableOptionCard extends StatelessWidget {
               ),
               // 선택 체크 아이콘
               if (isSelected)
-                Icon(
-                  Icons.check_circle,
-                  color: effectiveAccentColor,
-                  size: 24,
-                ),
+                Icon(Icons.check_circle, color: effectiveAccentColor, size: 24),
             ],
           ),
         ),

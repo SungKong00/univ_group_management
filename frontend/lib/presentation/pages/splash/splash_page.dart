@@ -27,12 +27,10 @@ class SplashPage extends StatelessWidget {
             _buildLogo(),
 
             const SizedBox(height: 48), // xl spacing
-
             // 로딩 인디케이터
             _buildLoadingIndicator(),
 
             const SizedBox(height: 16), // sm spacing
-
             // 로딩 안내 문구
             _buildLoadingText(),
           ],
@@ -55,11 +53,7 @@ class SplashPage extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: const Icon(
-        Icons.school,
-        size: 28,
-        color: AppColors.brand,
-      ),
+      child: const Icon(Icons.school, size: 28, color: AppColors.brand),
     );
   }
 

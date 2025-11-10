@@ -5,8 +5,8 @@ import '../../core/enums/calendar_view.dart';
 /// Provider for managing calendar view mode (day/week/month)
 final calendarViewProvider =
     StateNotifierProvider<CalendarViewNotifier, CalendarView>((ref) {
-  return CalendarViewNotifier();
-});
+      return CalendarViewNotifier();
+    });
 
 /// Notifier for calendar view state management
 class CalendarViewNotifier extends StateNotifier<CalendarView> {

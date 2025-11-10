@@ -97,9 +97,9 @@ class AppFormField extends StatelessWidget {
     this.textInputAction,
     this.autofocus = false,
   }) : assert(
-          controller == null || initialValue == null,
-          'controller와 initialValue는 동시에 사용할 수 없습니다.',
-        );
+         controller == null || initialValue == null,
+         'controller와 initialValue는 동시에 사용할 수 없습니다.',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +119,9 @@ class AppFormField extends StatelessWidget {
               fontSize: 14,
               fontWeight: FontWeight.w600,
               height: 1.4,
-              color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+              color: isDark
+                  ? AppColors.darkOnSurface
+                  : AppColors.lightOnSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -145,10 +147,12 @@ class AppFormField extends StatelessWidget {
               fontWeight: FontWeight.w400,
               height: 1.5,
               color: enabled
-                  ? (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface)
+                  ? (isDark
+                        ? AppColors.darkOnSurface
+                        : AppColors.lightOnSurface)
                   : (isDark
-                      ? AppColors.disabledTextDark
-                      : AppColors.disabledTextLight),
+                        ? AppColors.disabledTextDark
+                        : AppColors.disabledTextLight),
             ),
             decoration: InputDecoration(
               hintText: hintText,
@@ -157,12 +161,10 @@ class AppFormField extends StatelessWidget {
               suffixIcon: suffixIcon,
               filled: true,
               fillColor: enabled
-                  ? (isDark
-                      ? AppColors.darkSurface
-                      : Colors.white)
+                  ? (isDark ? AppColors.darkSurface : Colors.white)
                   : (isDark
-                      ? AppColors.disabledBgDark
-                      : AppColors.disabledBgLight),
+                        ? AppColors.disabledBgDark
+                        : AppColors.disabledBgLight),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.sm,
                 vertical: AppSpacing.xs,
@@ -170,20 +172,22 @@ class AppFormField extends StatelessWidget {
               hintStyle: GoogleFonts.notoSansKr(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: isDark
-                    ? AppColors.darkSecondary
-                    : AppColors.neutral500,
+                color: isDark ? AppColors.darkSecondary : AppColors.neutral500,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.input),
                 borderSide: BorderSide(
-                  color: isDark ? AppColors.darkOutline : AppColors.lightOutline,
+                  color: isDark
+                      ? AppColors.darkOutline
+                      : AppColors.lightOutline,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.input),
                 borderSide: BorderSide(
-                  color: isDark ? AppColors.darkOutline : AppColors.lightOutline,
+                  color: isDark
+                      ? AppColors.darkOutline
+                      : AppColors.lightOutline,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
@@ -195,16 +199,11 @@ class AppFormField extends StatelessWidget {
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.input),
-                borderSide: BorderSide(
-                  color: AppColors.error,
-                ),
+                borderSide: BorderSide(color: AppColors.error),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.input),
-                borderSide: const BorderSide(
-                  color: AppColors.error,
-                  width: 2,
-                ),
+                borderSide: const BorderSide(color: AppColors.error, width: 2),
               ),
               disabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.input),

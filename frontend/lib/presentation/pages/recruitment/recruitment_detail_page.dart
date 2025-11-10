@@ -16,17 +16,16 @@ import 'widgets/application_submit_dialog.dart';
 /// Displays detailed information about a recruitment announcement
 /// and allows users to apply
 class RecruitmentDetailPage extends ConsumerWidget {
-  const RecruitmentDetailPage({
-    required this.recruitmentId,
-    super.key,
-  });
+  const RecruitmentDetailPage({required this.recruitmentId, super.key});
 
   final String recruitmentId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recruitmentIdInt = int.parse(recruitmentId);
-    final recruitmentAsync = ref.watch(recruitmentDetailProvider(recruitmentIdInt));
+    final recruitmentAsync = ref.watch(
+      recruitmentDetailProvider(recruitmentIdInt),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
@@ -34,8 +33,10 @@ class RecruitmentDetailPage extends ConsumerWidget {
         value: recruitmentAsync,
         loadingMessage: '모집 공고를 불러오는 중...',
         errorMessageExtractor: (error) => '모집 공고를 불러올 수 없습니다',
-        onRetry: () => ref.invalidate(recruitmentDetailProvider(recruitmentIdInt)),
-        builder: (context, recruitment) => _buildContent(context, ref, recruitment),
+        onRetry: () =>
+            ref.invalidate(recruitmentDetailProvider(recruitmentIdInt)),
+        builder: (context, recruitment) =>
+            _buildContent(context, ref, recruitment),
       ),
       bottomNavigationBar: recruitmentAsync.maybeWhen(
         data: (recruitment) => _buildBottomBar(context, ref, recruitment),
@@ -44,7 +45,11 @@ class RecruitmentDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref, RecruitmentResponse recruitment) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    RecruitmentResponse recruitment,
+  ) {
     final isWide = MediaQuery.of(context).size.width > 900;
     final maxWidth = isWide ? 800.0 : double.infinity;
 
@@ -69,7 +74,8 @@ class RecruitmentDetailPage extends ConsumerWidget {
               const SizedBox(height: AppSpacing.md),
 
               // 모집 내용
-              if (recruitment.content != null && recruitment.content!.isNotEmpty)
+              if (recruitment.content != null &&
+                  recruitment.content!.isNotEmpty)
                 _buildContentSection(context, recruitment),
 
               // 지원 질문 섹션
@@ -89,7 +95,10 @@ class RecruitmentDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildGroupInfoSection(BuildContext context, RecruitmentResponse recruitment) {
+  Widget _buildGroupInfoSection(
+    BuildContext context,
+    RecruitmentResponse recruitment,
+  ) {
     return SectionCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
@@ -106,16 +115,16 @@ class RecruitmentDetailPage extends ConsumerWidget {
               children: [
                 Text(
                   recruitment.group.name,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _buildGroupPath(recruitment.group),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.neutral600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.neutral600),
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -136,7 +145,10 @@ class RecruitmentDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecruitmentHeader(BuildContext context, RecruitmentResponse recruitment) {
+  Widget _buildRecruitmentHeader(
+    BuildContext context,
+    RecruitmentResponse recruitment,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       child: Column(
@@ -145,9 +157,9 @@ class RecruitmentDetailPage extends ConsumerWidget {
           Text(
             recruitment.title,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.neutral900,
-                ),
+              fontWeight: FontWeight.bold,
+              color: AppColors.neutral900,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
@@ -165,10 +177,12 @@ class RecruitmentDetailPage extends ConsumerWidget {
                   label: _formatDeadline(recruitment.recruitmentEndDate!),
                   color: _getDeadlineColor(recruitment.recruitmentEndDate!),
                 ),
-              if (recruitment.showApplicantCount && recruitment.maxApplicants != null)
+              if (recruitment.showApplicantCount &&
+                  recruitment.maxApplicants != null)
                 _buildInfoChip(
                   icon: Icons.people,
-                  label: '${recruitment.currentApplicantCount}/${recruitment.maxApplicants}',
+                  label:
+                      '${recruitment.currentApplicantCount}/${recruitment.maxApplicants}',
                   color: AppColors.brand,
                 ),
             ],
@@ -210,7 +224,10 @@ class RecruitmentDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildContentSection(BuildContext context, RecruitmentResponse recruitment) {
+  Widget _buildContentSection(
+    BuildContext context,
+    RecruitmentResponse recruitment,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       child: Column(
@@ -218,24 +235,27 @@ class RecruitmentDetailPage extends ConsumerWidget {
         children: [
           Text(
             '모집 내용',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             recruitment.content!,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.neutral700,
-                  height: 1.6,
-                ),
+              color: AppColors.neutral700,
+              height: 1.6,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuestionsSection(BuildContext context, RecruitmentResponse recruitment) {
+  Widget _buildQuestionsSection(
+    BuildContext context,
+    RecruitmentResponse recruitment,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       child: Column(
@@ -243,9 +263,9 @@ class RecruitmentDetailPage extends ConsumerWidget {
         children: [
           Text(
             '지원 시 답변할 질문',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppSpacing.sm),
           ...recruitment.applicationQuestions.asMap().entries.map((entry) {
@@ -283,9 +303,8 @@ class RecruitmentDetailPage extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           question,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.neutral700,
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.neutral700),
                         ),
                       ),
                     ],
@@ -299,7 +318,11 @@ class RecruitmentDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, WidgetRef ref, RecruitmentResponse recruitment) {
+  Widget _buildBottomBar(
+    BuildContext context,
+    WidgetRef ref,
+    RecruitmentResponse recruitment,
+  ) {
     final hasApplied = ref.watch(hasAppliedProvider);
     final colorScheme = Theme.of(context).colorScheme;
 

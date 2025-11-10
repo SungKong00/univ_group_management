@@ -62,9 +62,7 @@ class JoinRequestSection extends ConsumerWidget {
   }
 
   Widget _buildEmptyState() {
-    return AppEmptyState.noData(
-      message: '대기 중인 가입 신청이 없습니다',
-    );
+    return AppEmptyState.noData(message: '대기 중인 가입 신청이 없습니다');
   }
 }
 
@@ -172,9 +170,7 @@ class _JoinRequestCard extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               '승인 시 "멤버" 역할로 자동 추가됩니다.',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             ),
           ],
         ),
@@ -196,17 +192,11 @@ class _JoinRequestCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleApprove(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _handleApprove(BuildContext context, WidgetRef ref) async {
     try {
       await ref.read(
         approveJoinRequestProvider(
-          ApproveRequestParams(
-            groupId: groupId,
-            requestId: request.id,
-          ),
+          ApproveRequestParams(groupId: groupId, requestId: request.id),
         ).future,
       );
 

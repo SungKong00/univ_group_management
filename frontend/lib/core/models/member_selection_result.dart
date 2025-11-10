@@ -17,21 +17,14 @@ enum SelectionType {
 /// 멤버 선택 결과
 class MemberSelectionResult {
   final SelectionType type;
-  final MemberFilter? filter;      // DYNAMIC 선택 시
-  final List<int>? memberIds;      // STATIC 선택 시
+  final MemberFilter? filter; // DYNAMIC 선택 시
+  final List<int>? memberIds; // STATIC 선택 시
 
-  MemberSelectionResult._({
-    required this.type,
-    this.filter,
-    this.memberIds,
-  });
+  MemberSelectionResult._({required this.type, this.filter, this.memberIds});
 
   /// DYNAMIC 방식 선택 결과 생성
   factory MemberSelectionResult.dynamic(MemberFilter filter) {
-    return MemberSelectionResult._(
-      type: SelectionType.dynamic,
-      filter: filter,
-    );
+    return MemberSelectionResult._(type: SelectionType.dynamic, filter: filter);
   }
 
   /// STATIC 방식 선택 결과 생성

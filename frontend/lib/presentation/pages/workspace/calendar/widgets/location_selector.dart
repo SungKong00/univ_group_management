@@ -81,7 +81,12 @@ class _LocationSelectorState extends State<LocationSelector> {
         widget.onLocationChanged(null, null);
       } else if (_mode == LocationMode.text) {
         _selectedPlace = null;
-        widget.onLocationChanged(_textController.text.trim().isEmpty ? null : _textController.text.trim(), null);
+        widget.onLocationChanged(
+          _textController.text.trim().isEmpty
+              ? null
+              : _textController.text.trim(),
+          null,
+        );
       } else if (_mode == LocationMode.place) {
         _textController.clear();
         widget.onLocationChanged(null, _selectedPlace);
@@ -158,9 +163,9 @@ class _LocationSelectorState extends State<LocationSelector> {
           const SizedBox(width: AppSpacing.xs),
           Text(
             '장소가 지정되지 않습니다',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.neutral600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.neutral600),
           ),
         ],
       ),
@@ -203,15 +208,15 @@ class _LocationSelectorState extends State<LocationSelector> {
                       Text(
                         _selectedPlace!.displayName,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: AppColors.brand,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          color: AppColors.brand,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       Text(
                         _selectedPlace!.fullLocation,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.neutral700,
-                            ),
+                          color: AppColors.neutral700,
+                        ),
                       ),
                     ],
                   ),
@@ -232,17 +237,24 @@ class _LocationSelectorState extends State<LocationSelector> {
             decoration: BoxDecoration(
               color: AppColors.neutral100,
               borderRadius: BorderRadius.circular(AppRadius.button),
-              border: Border.all(color: AppColors.neutral300, style: BorderStyle.solid),
+              border: Border.all(
+                color: AppColors.neutral300,
+                style: BorderStyle.solid,
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.place_outlined, size: 16, color: AppColors.neutral600),
+                Icon(
+                  Icons.place_outlined,
+                  size: 16,
+                  color: AppColors.neutral600,
+                ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   '장소를 선택해주세요',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.neutral600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.neutral600),
                 ),
               ],
             ),

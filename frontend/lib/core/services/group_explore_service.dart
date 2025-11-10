@@ -97,12 +97,14 @@ class GroupExploreService {
       );
       print('🔍 [DEBUG] getAllGroups() 시작: /groups/all 호출');
 
-      final response = await _dioClient.get<dynamic>(
-        '/groups/all',
-      );
+      final response = await _dioClient.get<dynamic>('/groups/all');
 
-      print('🔍 [DEBUG] getAllGroups() API 응답: statusCode=${response.statusCode}');
-      print('🔍 [DEBUG] getAllGroups() response.data type: ${response.data.runtimeType}');
+      print(
+        '🔍 [DEBUG] getAllGroups() API 응답: statusCode=${response.statusCode}',
+      );
+      print(
+        '🔍 [DEBUG] getAllGroups() response.data type: ${response.data.runtimeType}',
+      );
       print('🔍 [DEBUG] getAllGroups() response.data: ${response.data}');
 
       if (response.data != null) {
@@ -127,8 +129,7 @@ class GroupExploreService {
           else if (map.containsKey('items') && map['items'] is List) {
             data = map['items'] as List<dynamic>;
             print('🔍 [DEBUG] items 키에서 List 추출: ${data.length}개 항목');
-          }
-          else {
+          } else {
             print('❌ [DEBUG] Map이지만 data/content/items 키가 없거나 List가 아님');
             print('❌ [DEBUG] 사용 가능한 키: ${map.keys.toList()}');
             return [];
@@ -145,8 +146,10 @@ class GroupExploreService {
         }
 
         final groups = data
-            .map((item) => GroupSummaryResponse.fromJson(
-                item as Map<String, dynamic>))
+            .map(
+              (item) =>
+                  GroupSummaryResponse.fromJson(item as Map<String, dynamic>),
+            )
             .toList();
 
         print('🔍 [DEBUG] 파싱 완료: ${groups.length}개 그룹');
@@ -193,10 +196,7 @@ class GroupExploreService {
         name: 'GroupExploreService',
       );
 
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'size': size,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'size': size};
 
       // Add search query
       if (query != null && query.isNotEmpty) {
@@ -206,7 +206,8 @@ class GroupExploreService {
       // Add filters
       if (filters != null) {
         // Multi-select group types (comma-separated)
-        if (filters['groupTypes'] != null && (filters['groupTypes'] as List).isNotEmpty) {
+        if (filters['groupTypes'] != null &&
+            (filters['groupTypes'] as List).isNotEmpty) {
           queryParams['groupTypes'] = (filters['groupTypes'] as List).join(',');
         }
         // Recruiting filter (use 'recruiting' parameter name)
@@ -236,16 +237,22 @@ class GroupExploreService {
             final content = json['content'];
             if (content is List) {
               return content
-                  .map((item) =>
-                      GroupSummaryResponse.fromJson(item as Map<String, dynamic>))
+                  .map(
+                    (item) => GroupSummaryResponse.fromJson(
+                      item as Map<String, dynamic>,
+                    ),
+                  )
                   .toList();
             }
           }
           // Fallback for direct array response
           if (json is List) {
             return json
-                .map((item) =>
-                    GroupSummaryResponse.fromJson(item as Map<String, dynamic>))
+                .map(
+                  (item) => GroupSummaryResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
                 .toList();
           }
           return <GroupSummaryResponse>[];

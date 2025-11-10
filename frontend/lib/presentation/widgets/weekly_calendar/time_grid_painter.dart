@@ -65,11 +65,13 @@ class TimeGridPainter extends CustomPainter {
             style: TextStyle(color: Colors.grey[600], fontSize: 11),
           ),
           textDirection: TextDirection.ltr,
-        )
-          ..layout();
+        )..layout();
         final double labelX = timeColumnWidth - textPainter.width - 6;
         final double labelY = hourY - 8;
-        textPainter.paint(canvas, Offset(labelX, labelY.clamp(0.0, size.height)));
+        textPainter.paint(
+          canvas,
+          Offset(labelX, labelY.clamp(0.0, size.height)),
+        );
       }
 
       // Draw bottom boundary line for the grid
@@ -126,8 +128,7 @@ class TimeGridPainter extends CustomPainter {
             ),
           ),
           textDirection: TextDirection.ltr,
-        )
-          ..layout(minWidth: dayColumnWidth, maxWidth: dayColumnWidth);
+        )..layout(minWidth: dayColumnWidth, maxWidth: dayColumnWidth);
 
         final double x = timeColumnWidth + dayIndex * dayColumnWidth;
         headerPainter.paint(canvas, Offset(x, 4));

@@ -14,11 +14,7 @@ class MonthEventChip extends StatelessWidget {
   final String label;
   final Color color;
 
-  const MonthEventChip({
-    super.key,
-    required this.label,
-    required this.color,
-  });
+  const MonthEventChip({super.key, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {

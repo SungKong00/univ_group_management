@@ -1,7 +1,6 @@
 import 'dart:developer' as developer;
 import '../models/group_models.dart';
 import '../models/auth_models.dart';
-import '../models/user_models.dart';
 import '../models/place/place.dart';
 import '../network/dio_client.dart';
 
@@ -119,7 +118,9 @@ class GroupService {
     try {
       developer.log('Fetching group hierarchy', name: 'GroupService');
 
-      final response = await _dioClient.get<Map<String, dynamic>>('/groups/hierarchy');
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/groups/hierarchy',
+      );
 
       if (response.data != null) {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
@@ -246,7 +247,9 @@ class GroupService {
             name: 'GroupService',
             level: 900,
           );
-          throw Exception(apiResponse.message ?? 'Failed to create subgroup request');
+          throw Exception(
+            apiResponse.message ?? 'Failed to create subgroup request',
+          );
         }
       } else {
         throw Exception('Empty response from server');
@@ -303,7 +306,9 @@ class GroupService {
             name: 'GroupService',
             level: 900,
           );
-          throw Exception(apiResponse.message ?? 'Failed to fetch subgroup requests');
+          throw Exception(
+            apiResponse.message ?? 'Failed to fetch subgroup requests',
+          );
         }
       }
 
@@ -356,7 +361,9 @@ class GroupService {
             name: 'GroupService',
             level: 900,
           );
-          throw Exception(apiResponse.message ?? 'Failed to review subgroup request');
+          throw Exception(
+            apiResponse.message ?? 'Failed to review subgroup request',
+          );
         }
       } else {
         throw Exception('Empty response from server');
@@ -390,9 +397,7 @@ class GroupService {
         final apiResponse = ApiResponse.fromJson(response.data!, (json) {
           if (json is List) {
             return json
-                .map(
-                  (item) => Place.fromJson(item as Map<String, dynamic>),
-                )
+                .map((item) => Place.fromJson(item as Map<String, dynamic>))
                 .toList();
           }
           return <Place>[];
@@ -410,7 +415,9 @@ class GroupService {
             name: 'GroupService',
             level: 900,
           );
-          throw Exception(apiResponse.message ?? 'Failed to fetch available places');
+          throw Exception(
+            apiResponse.message ?? 'Failed to fetch available places',
+          );
         }
       }
 
@@ -445,7 +452,9 @@ class GroupService {
           if (json is List) {
             return json
                 .map(
-                  (item) => GroupSummaryResponse.fromJson(item as Map<String, dynamic>),
+                  (item) => GroupSummaryResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
                 )
                 .toList();
           }

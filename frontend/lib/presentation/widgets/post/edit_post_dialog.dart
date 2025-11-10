@@ -63,10 +63,7 @@ class _EditPostDialogState extends ConsumerState<EditPostDialog> {
     });
 
     try {
-      final params = UpdatePostParams(
-        postId: widget.postId,
-        content: content,
-      );
+      final params = UpdatePostParams(postId: widget.postId, content: content);
 
       await ref.read(updatePostProvider(params).future);
 
@@ -90,14 +87,10 @@ class _EditPostDialogState extends ConsumerState<EditPostDialog> {
     final isMobile = screenWidth < 900;
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         width: isMobile ? screenWidth * 0.9 : 600,
-        constraints: BoxConstraints(
-          maxHeight: screenHeight * 0.8,
-        ),
+        constraints: BoxConstraints(maxHeight: screenHeight * 0.8),
         padding: const EdgeInsets.all(24),
         child: SingleChildScrollView(
           child: Column(
@@ -130,7 +123,10 @@ class _EditPostDialogState extends ConsumerState<EditPostDialog> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppColors.brand, width: 2),
+                    borderSide: const BorderSide(
+                      color: AppColors.brand,
+                      width: 2,
+                    ),
                   ),
                   filled: true,
                   fillColor: AppColors.neutral100,

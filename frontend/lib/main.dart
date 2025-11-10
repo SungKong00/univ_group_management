@@ -28,15 +28,27 @@ void main() async {
     // 웹 환경에서 폰트 프리로드 (FOUC 방지)
     // 비차단 방식: Regular(400)만 백그라운드 로드, 앱 시작 차단 방지
     if (kIsWeb) {
-      developer.log('Starting Noto Sans KR Regular font preload (non-blocking)...', name: 'main');
+      developer.log(
+        'Starting Noto Sans KR Regular font preload (non-blocking)...',
+        name: 'main',
+      );
       // await 제거! 백그라운드에서 로드
       GoogleFonts.pendingFonts([
-        GoogleFonts.notoSansKr(), // Regular(400)만 프리로드
-      ]).then((_) {
-        developer.log('Noto Sans KR Regular font loaded successfully', name: 'main');
-      }).catchError((e) {
-        developer.log('Font preloading failed (continuing anyway): $e', name: 'main', level: 900);
-      });
+            GoogleFonts.notoSansKr(), // Regular(400)만 프리로드
+          ])
+          .then((_) {
+            developer.log(
+              'Noto Sans KR Regular font loaded successfully',
+              name: 'main',
+            );
+          })
+          .catchError((e) {
+            developer.log(
+              'Font preloading failed (continuing anyway): $e',
+              name: 'main',
+              level: 900,
+            );
+          });
     }
 
     // Initialize Korean locale for date formatting
@@ -53,10 +65,7 @@ void main() async {
     // Try auto login (블로킹 방식으로 변경, 인증 상태 확인 후 앱 실행)
     try {
       await authService.tryAutoLogin();
-      developer.log(
-        'Auto login completed',
-        name: 'main',
-      );
+      developer.log('Auto login completed', name: 'main');
     } catch (error) {
       developer.log(
         'Auto login failed, continuing with manual login: $error',

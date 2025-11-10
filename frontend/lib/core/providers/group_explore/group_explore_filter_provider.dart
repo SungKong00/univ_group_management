@@ -18,9 +18,7 @@ class GroupExploreFilterNotifier
           ? current.where((t) => t != type).toList()
           : [...current, type];
 
-      return filter.copyWith(
-        groupTypes: updated.isEmpty ? null : updated,
-      );
+      return filter.copyWith(groupTypes: updated.isEmpty ? null : updated);
     });
   }
 
@@ -41,18 +39,14 @@ class GroupExploreFilterNotifier
           ? current.where((t) => t != tag).toList()
           : [...current, tag];
 
-      return filter.copyWith(
-        tags: updated.isEmpty ? null : updated,
-      );
+      return filter.copyWith(tags: updated.isEmpty ? null : updated);
     });
   }
 
   /// 검색어 설정
   void setSearchQuery(String query) {
     updateFilter((filter) {
-      return filter.copyWith(
-        searchQuery: query.isEmpty ? null : query,
-      );
+      return filter.copyWith(searchQuery: query.isEmpty ? null : query);
     });
   }
 }
@@ -60,5 +54,5 @@ class GroupExploreFilterNotifier
 /// 그룹 탐색 필터 Provider
 final groupExploreFilterProvider =
     StateNotifierProvider<GroupExploreFilterNotifier, GroupExploreFilter>(
-  (ref) => GroupExploreFilterNotifier(),
-);
+      (ref) => GroupExploreFilterNotifier(),
+    );

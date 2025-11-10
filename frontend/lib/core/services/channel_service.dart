@@ -293,10 +293,7 @@ class ChannelService {
           'description': description,
           'type': type,
           'rolePermissions': rolePermissions.map(
-            (roleId, permissions) => MapEntry(
-              roleId.toString(),
-              permissions,
-            ),
+            (roleId, permissions) => MapEntry(roleId.toString(), permissions),
           ),
         },
       );
@@ -350,10 +347,7 @@ class ChannelService {
 
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/channels/$channelId/role-bindings',
-        data: {
-          'groupRoleId': roleId,
-          'permissions': permissions,
-        },
+        data: {'groupRoleId': roleId, 'permissions': permissions},
       );
 
       if (response.data != null) {
@@ -398,10 +392,7 @@ class ChannelService {
     String? description,
   }) async {
     try {
-      developer.log(
-        'Updating channel: $channelId',
-        name: 'ChannelService',
-      );
+      developer.log('Updating channel: $channelId', name: 'ChannelService');
 
       final response = await _dioClient.put<Map<String, dynamic>>(
         '/channels/$channelId',
@@ -418,10 +409,7 @@ class ChannelService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully updated channel',
-            name: 'ChannelService',
-          );
+          developer.log('Successfully updated channel', name: 'ChannelService');
           return apiResponse.data!;
         } else {
           developer.log(
@@ -449,10 +437,7 @@ class ChannelService {
   /// DELETE /channels/{channelId}
   Future<bool> deleteChannel(int channelId) async {
     try {
-      developer.log(
-        'Deleting channel: $channelId',
-        name: 'ChannelService',
-      );
+      developer.log('Deleting channel: $channelId', name: 'ChannelService');
 
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/channels/$channelId',
@@ -465,10 +450,7 @@ class ChannelService {
         );
 
         if (apiResponse.success) {
-          developer.log(
-            'Successfully deleted channel',
-            name: 'ChannelService',
-          );
+          developer.log('Successfully deleted channel', name: 'ChannelService');
           return true;
         } else {
           developer.log(
@@ -508,15 +490,12 @@ class ChannelService {
       );
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            if (json is List) {
-              return json.cast<Map<String, dynamic>>();
-            }
-            return <Map<String, dynamic>>[];
-          },
-        );
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json.cast<Map<String, dynamic>>();
+          }
+          return <Map<String, dynamic>>[];
+        });
 
         if (apiResponse.success && apiResponse.data != null) {
           developer.log(
@@ -561,9 +540,7 @@ class ChannelService {
 
       final response = await _dioClient.put<Map<String, dynamic>>(
         '/channels/$channelId/role-bindings/$bindingId',
-        data: {
-          'permissions': permissions,
-        },
+        data: {'permissions': permissions},
       );
 
       if (response.data != null) {
@@ -669,13 +646,10 @@ class ChannelService {
       );
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            if (json == null) return null;
-            return ChannelReadPosition.fromJson(json as Map<String, dynamic>);
-          },
-        );
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json == null) return null;
+          return ChannelReadPosition.fromJson(json as Map<String, dynamic>);
+        });
 
         if (apiResponse.success) {
           developer.log(
@@ -799,23 +773,24 @@ class ChannelService {
       );
 
       if (response.data != null) {
-        final apiResponse = ApiResponse.fromJson(
-          response.data!,
-          (json) {
-            if (json is List) {
-              return json
-                  .map((item) =>
-                      UnreadCountResponse.fromJson(item as Map<String, dynamic>))
-                  .toList();
-            }
-            return <UnreadCountResponse>[];
-          },
-        );
+        final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+          if (json is List) {
+            return json
+                .map(
+                  (item) => UnreadCountResponse.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
+                .toList();
+          }
+          return <UnreadCountResponse>[];
+        });
 
         if (apiResponse.success && apiResponse.data != null) {
           final unreadMap = Map.fromEntries(
-            apiResponse.data!.map((unread) =>
-                MapEntry(unread.channelId, unread.unreadCount)),
+            apiResponse.data!.map(
+              (unread) => MapEntry(unread.channelId, unread.unreadCount),
+            ),
           );
 
           developer.log(

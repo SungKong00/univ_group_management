@@ -11,12 +11,7 @@ class MemberFilter implements FilterModel {
   final List<int>? grades; // 학년 목록
   final List<int>? years; // 학번(입학년도) 목록
 
-  MemberFilter({
-    this.roleIds,
-    this.groupIds,
-    this.grades,
-    this.years,
-  });
+  MemberFilter({this.roleIds, this.groupIds, this.grades, this.years});
 
   /// API 쿼리 파라미터로 변환
   ///
@@ -86,18 +81,12 @@ class MemberFilter implements FilterModel {
     Object? years = _undefined,
   }) {
     return MemberFilter(
-      roleIds: roleIds == _undefined
-          ? this.roleIds
-          : (roleIds as List<int>?),
+      roleIds: roleIds == _undefined ? this.roleIds : (roleIds as List<int>?),
       groupIds: groupIds == _undefined
           ? this.groupIds
           : (groupIds as List<int>?),
-      grades: grades == _undefined
-          ? this.grades
-          : (grades as List<int>?),
-      years: years == _undefined
-          ? this.years
-          : (years as List<int>?),
+      grades: grades == _undefined ? this.grades : (grades as List<int>?),
+      years: years == _undefined ? this.years : (years as List<int>?),
     );
   }
 
@@ -118,13 +107,12 @@ class MemberFilter implements FilterModel {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(
-        _listHashCode(roleIds),
-        _listHashCode(groupIds),
-        _listHashCode(grades),
-        _listHashCode(years),
-      );
+  int get hashCode => Object.hash(
+    _listHashCode(roleIds),
+    _listHashCode(groupIds),
+    _listHashCode(grades),
+    _listHashCode(years),
+  );
 
   /// 리스트 비교 헬퍼
   bool _listEquals(List<int>? a, List<int>? b) {

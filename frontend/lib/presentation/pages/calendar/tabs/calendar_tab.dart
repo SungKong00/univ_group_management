@@ -9,8 +9,6 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/snack_bar_helper.dart';
 import '../../../adapters/personal_event_adapter.dart';
 import '../../../providers/calendar_events_provider.dart';
-import '../../../widgets/buttons/error_button.dart';
-import '../../../widgets/buttons/neutral_outlined_button.dart';
 import '../../../widgets/buttons/calendar_add_button.dart';
 import '../../../widgets/calendar/calendar_error_banner.dart';
 import '../../../widgets/calendar/calendar_event_card.dart';
@@ -139,13 +137,12 @@ class _CalendarTabState extends ConsumerState<CalendarTab> {
             events: state.events,
             focusedDate: state.focusedDate,
             selectedDate: state.selectedDate,
-            onDateSelected: (selected, focused) => notifier.selectDate(selected),
+            onDateSelected: (selected, focused) =>
+                notifier.selectDate(selected),
             onPageChanged: notifier.setFocusedDate,
             onEventTap: (event) => _handleEventTap(context, notifier, event),
-            eventChipBuilder: (event) => MonthEventChip(
-              label: event.title,
-              color: event.color,
-            ),
+            eventChipBuilder: (event) =>
+                MonthEventChip(label: event.title, color: event.color),
           ),
         );
       case CalendarViewType.week:
@@ -181,10 +178,7 @@ class _CalendarHeader extends StatelessWidget {
       state.focusedDate,
       state.selectedDate,
     );
-    final subtitle = _buildSubtitle(
-      state.view,
-      state.focusedDate,
-    );
+    final subtitle = _buildSubtitle(state.view, state.focusedDate);
 
     final viewTypes = [
       CalendarViewType.day,
@@ -308,10 +302,7 @@ class _CalendarHeader extends StatelessWidget {
     }
   }
 
-  String? _buildSubtitle(
-    CalendarViewType view,
-    DateTime focused,
-  ) {
+  String? _buildSubtitle(CalendarViewType view, DateTime focused) {
     switch (view) {
       case CalendarViewType.week:
         final range = DateFormatter.weekRange(focused);
@@ -413,7 +404,8 @@ class _EventListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectivePadding = padding ??
+    final effectivePadding =
+        padding ??
         const EdgeInsets.only(
           left: AppSpacing.sm,
           right: AppSpacing.sm,
@@ -425,10 +417,9 @@ class _EventListView extends StatelessWidget {
           padding: effectivePadding,
           child: Text(
             emptyMessage,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppColors.neutral500),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.neutral500),
             textAlign: TextAlign.center,
           ),
         ),

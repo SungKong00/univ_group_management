@@ -91,8 +91,11 @@ void main() {
 
           final event = PersonalScheduleAdapter.toEvent(schedule, weekStart);
 
-          expect(event.start.day, expectedIndex,
-              reason: 'Day index for $dayOfWeek should be $expectedIndex');
+          expect(
+            event.start.day,
+            expectedIndex,
+            reason: 'Day index for $dayOfWeek should be $expectedIndex',
+          );
         }
       });
 
@@ -121,9 +124,12 @@ void main() {
 
           final event = PersonalScheduleAdapter.toEvent(schedule, weekStart);
 
-          expect(event.start.slot, expectedSlot,
-              reason:
-                  'Slot for ${time.hour}:${time.minute} should be $expectedSlot');
+          expect(
+            event.start.slot,
+            expectedSlot,
+            reason:
+                'Slot for ${time.hour}:${time.minute} should be $expectedSlot',
+          );
         }
       });
     });
@@ -193,9 +199,12 @@ void main() {
 
           final request = PersonalScheduleAdapter.fromEvent(event, weekStart);
 
-          expect(request.dayOfWeek, DayOfWeek.values[dayIndex],
-              reason:
-                  'Day index $dayIndex should map to ${DayOfWeek.values[dayIndex]}');
+          expect(
+            request.dayOfWeek,
+            DayOfWeek.values[dayIndex],
+            reason:
+                'Day index $dayIndex should map to ${DayOfWeek.values[dayIndex]}',
+          );
         }
       });
     });
@@ -231,8 +240,7 @@ void main() {
         );
 
         // When/Then
-        expect(
-            PersonalScheduleAdapter.isPersonalScheduleEvent(psEvent), true);
+        expect(PersonalScheduleAdapter.isPersonalScheduleEvent(psEvent), true);
       });
 
       test('다른 접두사 이벤트는 외부 이벤트로 식별', () {
@@ -248,8 +256,10 @@ void main() {
         );
 
         // When/Then
-        expect(PersonalScheduleAdapter.isPersonalScheduleEvent(extEvent),
-            false);
+        expect(
+          PersonalScheduleAdapter.isPersonalScheduleEvent(extEvent),
+          false,
+        );
       });
     });
 
@@ -267,8 +277,10 @@ void main() {
         );
 
         // When: 양방향 변환
-        final event =
-            PersonalScheduleAdapter.toEvent(originalSchedule, weekStart);
+        final event = PersonalScheduleAdapter.toEvent(
+          originalSchedule,
+          weekStart,
+        );
         final request = PersonalScheduleAdapter.fromEvent(
           event,
           weekStart,

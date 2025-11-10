@@ -78,9 +78,9 @@ class _GroupExplorePageState extends ConsumerState<GroupExplorePage> {
                       Expanded(
                         child: Text(
                           errorMessage,
-                          style: AppTheme.bodyMediumTheme(context).copyWith(
-                            color: AppColors.error,
-                          ),
+                          style: AppTheme.bodyMediumTheme(
+                            context,
+                          ).copyWith(color: AppColors.error),
                         ),
                       ),
                     ],

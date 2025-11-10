@@ -96,10 +96,7 @@ void main() {
       );
 
       // When: roleIds는 null로, groupIds는 새 값으로 변경
-      final result = filter.copyWith(
-        roleIds: null,
-        groupIds: [10, 20],
-      );
+      final result = filter.copyWith(roleIds: null, groupIds: [10, 20]);
 
       // Then
       expect(result.roleIds, isNull); // null로 설정됨

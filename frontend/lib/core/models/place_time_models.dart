@@ -114,14 +114,10 @@ class OperatingHoursItem {
 class SetOperatingHoursRequest {
   final List<OperatingHoursItem> operatingHours;
 
-  const SetOperatingHoursRequest({
-    required this.operatingHours,
-  });
+  const SetOperatingHoursRequest({required this.operatingHours});
 
   Map<String, dynamic> toJson() {
-    return {
-      'operatingHours': operatingHours.map((e) => e.toJson()).toList(),
-    };
+    return {'operatingHours': operatingHours.map((e) => e.toJson()).toList()};
   }
 }
 
@@ -256,16 +252,10 @@ class AddFullDayClosureRequest {
   final String closureDate; // YYYY-MM-DD
   final String? reason;
 
-  const AddFullDayClosureRequest({
-    required this.closureDate,
-    this.reason,
-  });
+  const AddFullDayClosureRequest({required this.closureDate, this.reason});
 
   Map<String, dynamic> toJson() {
-    return {
-      'closureDate': closureDate,
-      'reason': reason,
-    };
+    return {'closureDate': closureDate, 'reason': reason};
   }
 }
 
@@ -324,7 +314,8 @@ class AvailableTimesResponse {
       isClosed: json['isClosed'] as bool,
       operatingHours: json['operatingHours'] != null
           ? OperatingHoursInfo.fromJson(
-              json['operatingHours'] as Map<String, dynamic>)
+              json['operatingHours'] as Map<String, dynamic>,
+            )
           : null,
       restrictedTimes: (json['restrictedTimes'] as List<dynamic>)
           .map((e) => RestrictedTimeInfo.fromJson(e as Map<String, dynamic>))

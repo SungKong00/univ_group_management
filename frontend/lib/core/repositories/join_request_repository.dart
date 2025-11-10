@@ -78,9 +78,7 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
 
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/groups/$groupId/join-requests/$requestId',
-        data: {
-          'action': 'APPROVE',
-        },
+        data: {'action': 'APPROVE'},
       );
 
       if (response.data != null) {
@@ -188,7 +186,9 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
       requestedAt: DateTime.parse(
         json['createdAt'] as String? ?? DateTime.now().toIso8601String(),
       ),
-      status: JoinRequestStatus.fromString(json['status'] as String? ?? 'PENDING'),
+      status: JoinRequestStatus.fromString(
+        json['status'] as String? ?? 'PENDING',
+      ),
     );
   }
 }

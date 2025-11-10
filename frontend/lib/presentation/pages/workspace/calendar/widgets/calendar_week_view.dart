@@ -35,10 +35,7 @@ class CalendarWeekView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 시간축 (고정)
-                      SizedBox(
-                        width: 48,
-                        child: TimelineGrid(),
-                      ),
+                      SizedBox(width: 48, child: TimelineGrid()),
                       // 7개 요일 컬럼
                       Expanded(
                         child: Row(
@@ -107,7 +104,9 @@ class CalendarWeekView extends StatelessWidget {
                         '${date.day}',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: isToday ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: isToday
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                           color: isToday
                               ? Colors.white
                               : const Color(0xFF212121), // neutral900
@@ -169,8 +168,12 @@ class CalendarWeekView extends StatelessWidget {
                   final index = entry.key;
                   final event = entry.value;
                   final columnWidth = constraints.maxWidth;
-                  final blockWidth = count > 1 ? (columnWidth - 8) / count : columnWidth - 8;
-                  final leftOffset = count > 1 ? (blockWidth + 4) * index.toDouble() : 0.0;
+                  final blockWidth = count > 1
+                      ? (columnWidth - 8) / count
+                      : columnWidth - 8;
+                  final leftOffset = count > 1
+                      ? (blockWidth + 4) * index.toDouble()
+                      : 0.0;
 
                   return EventBlock(
                     event: event,
@@ -192,8 +195,7 @@ class CalendarWeekView extends StatelessWidget {
       return event.startTime.year == date.year &&
           event.startTime.month == date.month &&
           event.startTime.day == date.day;
-    }).toList()
-      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+    }).toList()..sort((a, b) => a.startTime.compareTo(b.startTime));
   }
 
   List<List<CalendarEvent>> _detectOverlaps(List<CalendarEvent> dayEvents) {

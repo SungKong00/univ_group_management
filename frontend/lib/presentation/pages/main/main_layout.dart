@@ -42,7 +42,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     _isInitialized = true;
 
     // 탭 복원
-    final navigationController = ref.read(navigationControllerProvider.notifier);
+    final navigationController = ref.read(
+      navigationControllerProvider.notifier,
+    );
     await navigationController.restoreLastTab();
 
     if (!mounted) {

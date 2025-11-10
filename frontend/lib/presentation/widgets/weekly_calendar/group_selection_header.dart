@@ -90,14 +90,14 @@ class GroupSelectionHeader extends StatelessWidget {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : error != null
-                              ? Tooltip(
-                                  message: '재시도: $error',
-                                  child: const Icon(Icons.error_outline, size: 16),
-                                )
-                              : Tooltip(
-                                  message: '제거',
-                                  child: const Icon(Icons.close, size: 16),
-                                ),
+                          ? Tooltip(
+                              message: '재시도: $error',
+                              child: const Icon(Icons.error_outline, size: 16),
+                            )
+                          : Tooltip(
+                              message: '제거',
+                              child: const Icon(Icons.close, size: 16),
+                            ),
                       onDeleted: error != null
                           ? () => onRetryPressed(group.id)
                           : () => onRemoveGroupPressed(group.id),
@@ -113,10 +113,7 @@ class GroupSelectionHeader extends StatelessWidget {
             icon: const Icon(Icons.add, size: 16),
             label: const Text('추가', style: TextStyle(fontSize: 13)),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               minimumSize: const Size(0, 32),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),

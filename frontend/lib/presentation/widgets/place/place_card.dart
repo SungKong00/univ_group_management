@@ -43,10 +43,7 @@ class PlaceCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.neutral100,
         borderRadius: BorderRadius.circular(AppRadius.button),
-        border: Border.all(
-          color: AppColors.neutral300,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.neutral300, width: 1),
       ),
       child: ListTile(
         contentPadding: EdgeInsets.symmetric(
@@ -66,17 +63,13 @@ class PlaceCard extends ConsumerWidget {
             SizedBox(height: 4),
             Text(
               place.fullLocation,
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral700,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral700),
             ),
             if (place.capacity != null) ...[
               SizedBox(height: 2),
               Text(
                 '수용 인원: ${place.capacity}명',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppColors.neutral600,
-                ),
+                style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
               ),
             ],
             if (!isManagingGroup) ...[
@@ -113,11 +106,7 @@ class PlaceCard extends ConsumerWidget {
 
                   // Edit button
                   IconButton(
-                    icon: Icon(
-                      Icons.edit,
-                      color: AppColors.action,
-                      size: 20,
-                    ),
+                    icon: Icon(Icons.edit, color: AppColors.action, size: 20),
                     onPressed: onEdit,
                     tooltip: '수정',
                     padding: const EdgeInsets.all(8),
@@ -129,11 +118,7 @@ class PlaceCard extends ConsumerWidget {
 
                   // Delete button
                   IconButton(
-                    icon: Icon(
-                      Icons.delete,
-                      color: AppColors.error,
-                      size: 20,
-                    ),
+                    icon: Icon(Icons.delete, color: AppColors.error, size: 20),
                     onPressed: onDelete,
                     tooltip: '삭제',
                     padding: const EdgeInsets.all(8),

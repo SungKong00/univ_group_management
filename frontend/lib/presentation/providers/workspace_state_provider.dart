@@ -109,13 +109,15 @@ class WorkspaceState extends Equatable {
   final WorkspaceView?
   previousView; // Previous view for back navigation from special views (groupAdmin, memberManagement, etc.)
   final int? selectedPlaceId; // Selected place ID for place time management
-  final String? selectedPlaceName; // Selected place name for place time management
+  final String?
+  selectedPlaceName; // Selected place name for place time management
   final List<NavigationHistoryEntry>
   navigationHistory; // Unified navigation history (channels, views, groups)
   final DateTime? selectedCalendarDate; // Selected date for calendar view
   final Map<int, int> lastReadPostIdMap; // {channelId: lastReadPostId}
   final Map<int, int> unreadCountMap; // {channelId: unreadCount}
-  final int? currentVisiblePostId; // Currently visible post ID for tracking read position
+  final int?
+  currentVisiblePostId; // Currently visible post ID for tracking read position
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -343,7 +345,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
             }
           } catch (_) {
             // Invalid view type: 플랫폼별 기본 동작
-            shouldUseChannelView = !kIsWeb; // 웹: false (groupHome), 모바일: true (channel)
+            shouldUseChannelView =
+                !kIsWeb; // 웹: false (groupHome), 모바일: true (channel)
           }
         } else {
           // No saved view type: 플랫폼별 기본 동작
@@ -362,16 +365,10 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         // 뷰 타입에 따라 적절한 방식으로 워크스페이스 진입
         if (shouldUseChannelView) {
           // 채널 뷰: channelId 전달 (있으면) 또는 첫 번째 채널 자동 선택
-          await enterWorkspace(
-            lastGroupId,
-            channelId: lastChannelId,
-          );
+          await enterWorkspace(lastGroupId, channelId: lastChannelId);
         } else if (restoredView != null) {
           // 특수 뷰 (groupHome, calendar 등): targetView로 뷰 타입 명시
-          await enterWorkspace(
-            lastGroupId,
-            targetView: restoredView,
-          );
+          await enterWorkspace(lastGroupId, targetView: restoredView);
         } else {
           // Fallback: groupHome으로 진입 (웹 기본값)
           await enterWorkspace(
@@ -472,16 +469,20 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       }
     }
 
-    final newHistory = List<NavigationHistoryEntry>.from(state.navigationHistory);
-    newHistory.add(NavigationHistoryEntry(
-      groupId: groupId,
-      view: view,
-      mobileView: mobileView,
-      channelId: channelId,
-      postId: postId,
-      isCommentsVisible: isCommentsVisible,
-      timestamp: DateTime.now(),
-    ));
+    final newHistory = List<NavigationHistoryEntry>.from(
+      state.navigationHistory,
+    );
+    newHistory.add(
+      NavigationHistoryEntry(
+        groupId: groupId,
+        view: view,
+        mobileView: mobileView,
+        channelId: channelId,
+        postId: postId,
+        isCommentsVisible: isCommentsVisible,
+        timestamp: DateTime.now(),
+      ),
+    );
     state = state.copyWith(navigationHistory: newHistory);
   }
 
@@ -492,7 +493,9 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       return false;
     }
 
-    final newHistory = List<NavigationHistoryEntry>.from(state.navigationHistory);
+    final newHistory = List<NavigationHistoryEntry>.from(
+      state.navigationHistory,
+    );
     final previousEntry = newHistory.removeLast();
 
     // Update history first (prevent re-adding when navigating)
@@ -601,8 +604,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     try {
       await loadChannels(
         groupId,
-        autoSelectChannelId:
-            channelId ?? navigationTarget.autoSelectChannelId,
+        autoSelectChannelId: channelId ?? navigationTarget.autoSelectChannelId,
         membership: resolvedMembership,
         targetView: navigationTarget.finalView,
       );
@@ -702,7 +704,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     }
 
     // Determine if channel should be auto-selected
-    final String? autoSelectChannelId = channelId ?? snapshot?.selectedChannelId;
+    final String? autoSelectChannelId =
+        channelId ?? snapshot?.selectedChannelId;
 
     return _NavigationTarget(
       finalView: adjustedView,
@@ -728,8 +731,9 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       isCommentsVisible: hasMobileState
           ? state.isCommentsVisible
           : (snapshot?.isCommentsVisible ?? false),
-      selectedPostId:
-          hasMobileState ? state.selectedPostId : snapshot?.selectedPostId,
+      selectedPostId: hasMobileState
+          ? state.selectedPostId
+          : snapshot?.selectedPostId,
       currentView: navigationTarget.finalView,
       mobileView: navigationTarget.finalMobileView,
       isNarrowDesktopCommentsFullscreen: hasMobileState
@@ -782,10 +786,10 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       );
       final selectedChannelId = shouldSelectChannel
           ? (WorkspaceNavigationHelper.selectFirstChannel(
-                channels: channels,
-                shouldSelectChannel: true,
-              ) ??
-              autoSelectChannelId)
+                  channels: channels,
+                  shouldSelectChannel: true,
+                ) ??
+                autoSelectChannelId)
           : autoSelectChannelId;
 
       // Step 6: Update state
@@ -800,7 +804,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         currentView: finalView,
         workspaceContext: selectedChannelId != null
             ? (Map.from(state.workspaceContext)
-              ..['channelId'] = selectedChannelId)
+                ..['channelId'] = selectedChannelId)
             : state.workspaceContext,
       );
 
@@ -821,8 +825,9 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// Extract permission information from membership
   _PermissionInfo _extractPermissionInfo(GroupMembership membership) {
     final permissions = membership.permissions;
-    final hasAnyPermission =
-        PermissionUtils.hasAnyGroupManagementPermission(permissions);
+    final hasAnyPermission = PermissionUtils.hasAnyGroupManagementPermission(
+      permissions,
+    );
     final currentRole = membership.role;
     final currentPermissions = permissions.toList();
 
@@ -923,7 +928,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       currentView: WorkspaceView.channel,
       // Reset previousView when entering channel view
       previousView: null,
-      clearCurrentVisiblePostId: true, // Clear visible post when switching channels
+      clearCurrentVisiblePostId:
+          true, // Clear visible post when switching channels
       workspaceContext: Map.from(state.workspaceContext)
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
@@ -968,7 +974,9 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     state = state.copyWith(
       lastReadPostIdMap: {
         ...state.lastReadPostIdMap,
-        channelId: position?.lastReadPostId ?? -1, // -1 = new channel or no read history
+        channelId:
+            position?.lastReadPostId ??
+            -1, // -1 = new channel or no read history
       },
     );
   }
@@ -984,10 +992,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
     // Update local state
     state = state.copyWith(
-      lastReadPostIdMap: {
-        ...state.lastReadPostIdMap,
-        channelId: postId,
-      },
+      lastReadPostIdMap: {...state.lastReadPostIdMap, channelId: postId},
     );
 
     // Badge update is NOT performed here - it should be done when leaving channel
@@ -1003,10 +1008,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     final count = await _channelService.getUnreadCount(channelId);
 
     state = state.copyWith(
-      unreadCountMap: {
-        ...state.unreadCountMap,
-        channelId: count,
-      },
+      unreadCountMap: {...state.unreadCountMap, channelId: count},
     );
   }
 
@@ -1015,10 +1017,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     final counts = await _channelService.getUnreadCounts(channelIds);
 
     state = state.copyWith(
-      unreadCountMap: {
-        ...state.unreadCountMap,
-        ...counts,
-      },
+      unreadCountMap: {...state.unreadCountMap, ...counts},
     );
   }
 
@@ -1436,7 +1435,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       mobileView: MobileWorkspaceView.channelPosts,
       isCommentsVisible: false,
       selectedPostId: null,
-      clearCurrentVisiblePostId: true, // Clear visible post when switching channels
+      clearCurrentVisiblePostId:
+          true, // Clear visible post when switching channels
       workspaceContext: Map.from(state.workspaceContext)
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
@@ -1634,8 +1634,9 @@ final workspaceCurrentGroupPermissionsProvider = Provider<List<String>?>((ref) {
   );
 });
 
-final workspaceNavigationHistoryProvider = Provider<List<NavigationHistoryEntry>>((ref) {
-  return ref.watch(
-    workspaceStateProvider.select((state) => state.navigationHistory),
-  );
-});
+final workspaceNavigationHistoryProvider =
+    Provider<List<NavigationHistoryEntry>>((ref) {
+      return ref.watch(
+        workspaceStateProvider.select((state) => state.navigationHistory),
+      );
+    });

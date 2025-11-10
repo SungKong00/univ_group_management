@@ -106,7 +106,10 @@ class EventBlock extends StatelessWidget {
     final height = ((endMinutes - startMinutes) / 60) * hourHeight;
 
     // 최소 높이 30px: 제목(13px) + 패딩(8px) + 여백(9px)을 고려한 안전한 최소값
-    return (top: top.clamp(0, double.infinity), height: height.clamp(30, double.infinity));
+    return (
+      top: top.clamp(0, double.infinity),
+      height: height.clamp(30, double.infinity),
+    );
   }
 
   String _formatTime(DateTime time) {

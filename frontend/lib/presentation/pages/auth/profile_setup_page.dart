@@ -1017,7 +1017,9 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     height: 48,
                     child: OutlinedLinkButton(
                       text: _otpRemaining == null ? '인증 코드 받기' : '재전송',
-                      onPressed: _emailVerified || _isSendingOtp ? null : _sendOtp,
+                      onPressed: _emailVerified || _isSendingOtp
+                          ? null
+                          : _sendOtp,
                       isLoading: _isSendingOtp,
                     ),
                   ),
@@ -1045,7 +1047,9 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                       height: 48,
                       child: OutlinedLinkButton(
                         text: _otpRemaining == null ? '인증 코드 받기' : '재전송',
-                        onPressed: _emailVerified || _isSendingOtp ? null : _sendOtp,
+                        onPressed: _emailVerified || _isSendingOtp
+                            ? null
+                            : _sendOtp,
                         isLoading: _isSendingOtp,
                       ),
                     ),

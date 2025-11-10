@@ -17,15 +17,52 @@
   the iteration process.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
 **Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Project Type**: [single/web/mobile - determines source structure]
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
 **Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+
+## API Modifications
+
+<!--
+  REQUIRED FOR REFACTORING/MODIFICATION TASKS (Constitution Principle VIII)
+
+  When modifying existing features or refactoring code that interacts with APIs,
+  document all API-related changes here. Delete this section if creating entirely new features.
+-->
+
+### Existing APIs Analysis
+
+**APIs to Reuse**:
+- [Endpoint]: [Why it's suitable for reuse]
+- [Endpoint]: [Why it's suitable for reuse]
+
+**APIs Requiring Modification**:
+
+| Endpoint | Current Behavior | Required Changes | Breaking Change? | Impact Scope |
+|----------|------------------|------------------|------------------|--------------|
+| [e.g., GET /api/groups/:id] | [Current response/behavior] | [What needs to change and why] | Yes/No | [Affected frontend components] |
+
+**New APIs to Create**:
+- [Endpoint]: [Purpose and why existing APIs insufficient]
+
+### Migration Strategy
+
+**For Breaking Changes**:
+- Version strategy: [e.g., API v2, feature flag, gradual rollout]
+- Frontend migration steps: [Steps to update frontend code]
+- Rollback plan: [How to revert if issues occur]
+
+**Testing Plan**:
+- [ ] Update existing API integration tests
+- [ ] Add new test cases for modified endpoints
+- [ ] Verify backward compatibility (if applicable)
+- [ ] Update API documentation in `docs/implementation/api-reference.md`
 
 ## Constitution Check
 

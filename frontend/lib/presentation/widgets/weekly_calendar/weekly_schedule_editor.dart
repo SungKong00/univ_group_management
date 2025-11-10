@@ -22,7 +22,15 @@ import '../buttons/neutral_outlined_button.dart';
 import '../buttons/error_button.dart';
 import '../buttons/primary_button.dart';
 
-typedef Event = ({String id, String title, ({int day, int slot}) start, ({int day, int slot}) end, DateTime? startTime, DateTime? endTime, Color? color});
+typedef Event = ({
+  String id,
+  String title,
+  ({int day, int slot}) start,
+  ({int day, int slot}) end,
+  DateTime? startTime,
+  DateTime? endTime,
+  Color? color,
+});
 
 /// Calculate event position (top, height) based on DateTime or slot
 ///
@@ -76,15 +84,15 @@ typedef Event = ({String id, String title, ({int day, int slot}) start, ({int da
 
 /// Calendar interaction mode
 enum CalendarMode {
-  add,   // Add new events (ignores existing event blocks)
-  edit,  // Edit/delete existing events
-  view,  // Read-only mode
+  add, // Add new events (ignores existing event blocks)
+  edit, // Edit/delete existing events
+  view, // Read-only mode
 }
 
 /// Haptic feedback intensity types
 enum HapticFeedbackType {
-  medium,  // Strong feedback for important actions
-  light,   // Light feedback for completion
+  medium, // Strong feedback for important actions
+  light, // Light feedback for completion
   selection, // Subtle feedback for selection changes
 }
 
@@ -204,7 +212,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   // State
   final List<Event> _events = [];
-  CalendarMode _mode = CalendarMode.edit; // Default to edit mode for viewing/editing
+  CalendarMode _mode =
+      CalendarMode.edit; // Default to edit mode for viewing/editing
   bool _isOverlapView = true; // Default to overlap view (side-by-side)
   bool _isSelecting = false;
   ({int day, int slot})? _startCell;
@@ -227,8 +236,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   // Auto-scroll
   late ScrollController _scrollController;
   Timer? _autoScrollTimer;
-  static const double _edgeScrollThreshold = 50.0; // Pixels from edge to trigger scroll
-  static const double _scrollSpeed = 5.0; // Pixels per timer tick (reduced from 30.0)
+  static const double _edgeScrollThreshold =
+      50.0; // Pixels from edge to trigger scroll
+  static const double _scrollSpeed =
+      5.0; // Pixels per timer tick (reduced from 30.0)
   int _autoScrollDirection = 0;
   double _autoScrollDayColumnWidth = 0;
 
@@ -253,12 +264,16 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     final initialRange = _calculateVisibleHourRange();
     _visibleStartHour = initialRange.startHour;
     _visibleEndHour = initialRange.endHour;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _applyInitialScrollIfNeeded(),
+    );
   }
 
   // Public method to toggle between edit and add modes
   void toggleMode() {
-    final newMode = _mode == CalendarMode.edit ? CalendarMode.add : CalendarMode.edit;
+    final newMode = _mode == CalendarMode.edit
+        ? CalendarMode.add
+        : CalendarMode.edit;
     final range = _calculateVisibleHourRange(modeOverride: newMode);
 
     setState(() {
@@ -274,7 +289,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     });
 
     // Reapply scroll to match new hour range
-    WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _applyInitialScrollIfNeeded(),
+    );
   }
 
   // Get current mode for external state tracking
@@ -335,8 +352,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     }
 
     final double maxExtent = _scrollController.position.maxScrollExtent;
-    final double targetOffset = (_scrollController.offset + _autoScrollDirection * _scrollSpeed)
-        .clamp(0.0, maxExtent);
+    final double targetOffset =
+        (_scrollController.offset + _autoScrollDirection * _scrollSpeed).clamp(
+          0.0,
+          maxExtent,
+        );
 
     if (targetOffset == _scrollController.offset) {
       _stopAutoScroll();
@@ -354,13 +374,16 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     }
   }
 
-  DateTime get _effectiveWeekStart => widget.weekStart ?? _getWeekStart(DateTime.now());
+  DateTime get _effectiveWeekStart =>
+      widget.weekStart ?? _getWeekStart(DateTime.now());
 
   DateTime _getWeekStart(DateTime date) {
     return date.subtract(Duration(days: date.weekday - 1));
   }
 
-  ({int startHour, int endHour}) _calculateVisibleHourRange({CalendarMode? modeOverride}) {
+  ({int startHour, int endHour}) _calculateVisibleHourRange({
+    CalendarMode? modeOverride,
+  }) {
     final CalendarMode mode = modeOverride ?? _mode;
 
     if (mode == CalendarMode.add) {
@@ -400,8 +423,12 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     if (!_scrollController.hasClients) return;
 
     final int desiredHour = _mode == CalendarMode.add ? 9 : _visibleStartHour;
-    final int clampedHour = desiredHour.clamp(_visibleStartHour, _visibleEndHour - 1);
-    final double offset = (clampedHour - _visibleStartHour) * 4 * _minSlotHeight;
+    final int clampedHour = desiredHour.clamp(
+      _visibleStartHour,
+      _visibleEndHour - 1,
+    );
+    final double offset =
+        (clampedHour - _visibleStartHour) * 4 * _minSlotHeight;
 
     final double maxExtent = _scrollController.position.maxScrollExtent;
     final double targetOffset = offset.clamp(0.0, maxExtent);
@@ -415,7 +442,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   void _updateVisibleRangeForCurrentState() {
     final range = _calculateVisibleHourRange();
-    if (_visibleStartHour != range.startHour || _visibleEndHour != range.endHour) {
+    if (_visibleStartHour != range.startHour ||
+        _visibleEndHour != range.endHour) {
       _visibleStartHour = range.startHour;
       _visibleEndHour = range.endHour;
       _hasAppliedInitialScroll = false;
@@ -438,13 +466,15 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     }
 
     final newRange = _calculateVisibleHourRange();
-    if (newRange.startHour != _visibleStartHour || newRange.endHour != _visibleEndHour) {
+    if (newRange.startHour != _visibleStartHour ||
+        newRange.endHour != _visibleEndHour) {
       setState(() {
         _visibleStartHour = newRange.startHour;
         _visibleEndHour = newRange.endHour;
         _hasAppliedInitialScroll = false;
       });
-    } else if (widget.weekStart != oldWidget.weekStart || widget.externalEvents != oldWidget.externalEvents) {
+    } else if (widget.weekStart != oldWidget.weekStart ||
+        widget.externalEvents != oldWidget.externalEvents) {
       _hasAppliedInitialScroll = false;
     }
   }
@@ -453,7 +483,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
   /// Convert GroupEvent to internal Event format
   /// Filters events within the current week
-  List<Event> _convertGroupEventsToEvents(List<GroupEvent> groupEvents, DateTime weekStart) {
+  List<Event> _convertGroupEventsToEvents(
+    List<GroupEvent> groupEvents,
+    DateTime weekStart,
+  ) {
     final weekEnd = weekStart.add(const Duration(days: 6));
     final List<Event> convertedEvents = [];
 
@@ -462,14 +495,18 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       return convertedEvents;
     }
 
-    debugPrint('[WeeklyScheduleEditor] Converting ${groupEvents.length} events for week: $weekStart ~ $weekEnd');
+    debugPrint(
+      '[WeeklyScheduleEditor] Converting ${groupEvents.length} events for week: $weekStart ~ $weekEnd',
+    );
 
     for (final groupEvent in groupEvents) {
       // Filter events within the current week
-      if (groupEvent.startDateTime.isBefore(weekEnd) && groupEvent.endDateTime.isAfter(weekStart)) {
+      if (groupEvent.startDateTime.isBefore(weekEnd) &&
+          groupEvent.endDateTime.isAfter(weekStart)) {
         // Calculate day (0=Monday, 6=Sunday)
         int eventDay = groupEvent.startDateTime.weekday - 1;
-        if (eventDay >= _daysInWeek) eventDay = _daysInWeek - 1; // Cap at Sunday
+        if (eventDay >= _daysInWeek)
+          eventDay = _daysInWeek - 1; // Cap at Sunday
 
         // Calculate start slot (15-minute intervals)
         final startHour = groupEvent.startDateTime.hour;
@@ -493,16 +530,22 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             title: groupEvent.title,
             start: (day: eventDay, slot: startSlot),
             end: (day: eventDay, slot: endSlot),
-            startTime: groupEvent.startDateTime,  // Add DateTime for precise rendering
-            endTime: groupEvent.endDateTime,      // Add DateTime for precise rendering
-            color: null,                          // External events use default color
+            startTime:
+                groupEvent.startDateTime, // Add DateTime for precise rendering
+            endTime:
+                groupEvent.endDateTime, // Add DateTime for precise rendering
+            color: null, // External events use default color
           ));
-          debugPrint('  ✓ Added: ${groupEvent.title} (Day: $eventDay, ${startSlot}-${endSlot})');
+          debugPrint(
+            '  ✓ Added: ${groupEvent.title} (Day: $eventDay, $startSlot-$endSlot)',
+          );
         }
       }
     }
 
-    debugPrint('[WeeklyScheduleEditor] Result: ${convertedEvents.length}/${groupEvents.length} events rendered');
+    debugPrint(
+      '[WeeklyScheduleEditor] Result: ${convertedEvents.length}/${groupEvents.length} events rendered',
+    );
     return convertedEvents;
   }
 
@@ -512,7 +555,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
     // Add external group events
     if (widget.externalEvents != null && widget.weekStart != null) {
-      final externalEvents = _convertGroupEventsToEvents(widget.externalEvents!, widget.weekStart!);
+      final externalEvents = _convertGroupEventsToEvents(
+        widget.externalEvents!,
+        widget.weekStart!,
+      );
       allEvents.addAll(externalEvents);
     }
 
@@ -522,8 +568,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   // --- Helper Functions ---
 
   /// New layout algorithm based on the provided Javascript snippet.
-  Map<String, ({int columnIndex, int totalColumns, int span})> _calculateEventLayout(List<Event> events) {
-    final Map<String, ({int columnIndex, int totalColumns, int span})> layout = {};
+  Map<String, ({int columnIndex, int totalColumns, int span})>
+  _calculateEventLayout(List<Event> events) {
+    final Map<String, ({int columnIndex, int totalColumns, int span})> layout =
+        {};
     final Map<int, List<Event>> eventsByDay = {};
 
     // 1. Group events by day
@@ -543,7 +591,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       for (final event in dayEvents) {
         bool placed = false;
         for (int i = 0; i < columns.length; i++) {
-          bool overlaps = columns[i].any((existingEvent) => _eventsOverlap(event, existingEvent));
+          bool overlaps = columns[i].any(
+            (existingEvent) => _eventsOverlap(event, existingEvent),
+          );
           if (!overlaps) {
             columns[i].add(event);
             placed = true;
@@ -570,7 +620,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         for (final event in columns[i]) {
           int span = 1;
           for (int j = i + 1; j < columns.length; j++) {
-            bool canSpan = !columns[j].any((otherEvent) => _eventsOverlap(event, otherEvent));
+            bool canSpan = !columns[j].any(
+              (otherEvent) => _eventsOverlap(event, otherEvent),
+            );
             if (canSpan) {
               span++;
             } else {
@@ -587,7 +639,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     }
     return layout;
   }
-
 
   /// Handle auto-scrolling when drag reaches screen edge
   void _handleEdgeScrolling(Offset globalPosition, double dayColumnWidth) {
@@ -610,7 +661,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
     // Bottom threshold: 현재 화면에 보이는 영역의 하단 기준
     // Use the saved viewport height instead of renderBox size
-    final double bottomThreshold = _currentViewportHeight - _edgeScrollThreshold;
+    final double bottomThreshold =
+        _currentViewportHeight - _edgeScrollThreshold;
 
     int direction = 0;
 
@@ -625,7 +677,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     } else {
       _autoScrollDirection = direction;
       _autoScrollDayColumnWidth = dayColumnWidth;
-      _autoScrollTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
+      _autoScrollTimer ??= Timer.periodic(const Duration(milliseconds: 16), (
+        _,
+      ) {
         _performAutoScrollTick();
       });
     }
@@ -663,7 +717,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               Vibration.vibrate(duration: 70);
               break;
             case HapticFeedbackType.selection:
-              Vibration.vibrate(duration: 100); // Same as medium for noticeable feedback
+              Vibration.vibrate(
+                duration: 100,
+              ); // Same as medium for noticeable feedback
               break;
           }
         }
@@ -688,7 +744,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     return (day: day, slot: slot);
   }
 
-  Rect _cellToRect(({int day, int slot}) start, ({int day, int slot}) end, double dayColumnWidth) {
+  Rect _cellToRect(
+    ({int day, int slot}) start,
+    ({int day, int slot}) end,
+    double dayColumnWidth,
+  ) {
     final double slotHeight = _minSlotHeight;
 
     final startDay = start.day < end.day ? start.day : end.day;
@@ -736,9 +796,12 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       position.top + position.height,
     );
   }
-  int _eventStartSlot(Event event) => math.min(event.start.slot, event.end.slot);
 
-  int _eventEndSlotExclusive(Event event) => math.max(event.start.slot, event.end.slot) + 1;
+  int _eventStartSlot(Event event) =>
+      math.min(event.start.slot, event.end.slot);
+
+  int _eventEndSlotExclusive(Event event) =>
+      math.max(event.start.slot, event.end.slot) + 1;
 
   bool _eventsOverlap(Event a, Event b) {
     // Check if events are on the same day. If not, they don't overlap.
@@ -752,14 +815,25 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     return startA < endB && endA > startB;
   }
 
-  bool _isOverlapping(({int day, int slot}) startCell, ({int day, int slot}) endCell) {
-    final newStartSlot = startCell.slot < endCell.slot ? startCell.slot : endCell.slot;
-    final newEndSlot = startCell.slot > endCell.slot ? startCell.slot : endCell.slot;
+  bool _isOverlapping(
+    ({int day, int slot}) startCell,
+    ({int day, int slot}) endCell,
+  ) {
+    final newStartSlot = startCell.slot < endCell.slot
+        ? startCell.slot
+        : endCell.slot;
+    final newEndSlot = startCell.slot > endCell.slot
+        ? startCell.slot
+        : endCell.slot;
 
     for (final event in _events) {
       if (event.start.day == startCell.day) {
-        final existingStartSlot = event.start.slot < event.end.slot ? event.start.slot : event.end.slot;
-        final existingEndSlot = event.start.slot > event.end.slot ? event.start.slot : event.end.slot;
+        final existingStartSlot = event.start.slot < event.end.slot
+            ? event.start.slot
+            : event.end.slot;
+        final existingEndSlot = event.start.slot > event.end.slot
+            ? event.start.slot
+            : event.end.slot;
 
         if (newStartSlot < existingEndSlot && newEndSlot > existingStartSlot) {
           return true;
@@ -777,11 +851,17 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     final allEvents = _getAllEvents();
 
     for (final event in allEvents) {
-      final eventStartSlot = event.start.slot < event.end.slot ? event.start.slot : event.end.slot;
-      final eventEndSlot = event.start.slot > event.end.slot ? event.start.slot : event.end.slot;
+      final eventStartSlot = event.start.slot < event.end.slot
+          ? event.start.slot
+          : event.end.slot;
+      final eventEndSlot = event.start.slot > event.end.slot
+          ? event.start.slot
+          : event.end.slot;
 
       // Check if event is on the same day and overlaps with the cell
-      if (event.start.day == cell.day && cell.slot >= eventStartSlot && cell.slot <= eventEndSlot) {
+      if (event.start.day == cell.day &&
+          cell.slot >= eventStartSlot &&
+          cell.slot <= eventEndSlot) {
         overlappingEvents.add(event);
       }
     }
@@ -817,7 +897,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   bool get _isFixedDurationMode => widget.requiredDuration != null;
 
   /// Calculate end cell from start cell based on required duration (same day only)
-  ({int day, int slot})? _calculateFixedDurationEndCell(({int day, int slot}) startCell) {
+  ({int day, int slot})? _calculateFixedDurationEndCell(
+    ({int day, int slot}) startCell,
+  ) {
     if (widget.requiredDuration == null) return null;
 
     final int durationSlots = (widget.requiredDuration!.inMinutes / 15).ceil();
@@ -852,7 +934,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   }
 
   /// Update fixed duration preview based on current pointer position
-  void _updateFixedDurationPreview(Offset localPosition, double dayColumnWidth) {
+  void _updateFixedDurationPreview(
+    Offset localPosition,
+    double dayColumnWidth,
+  ) {
     if (!_isFixedDurationMode) return;
 
     final cell = _pixelToCell(localPosition, dayColumnWidth);
@@ -918,10 +1003,22 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   void _showEventDetailDialog(Event event) {
     // 🟢 수정: event.startTime/endTime 우선 사용 (정확한 분 단위)
     // 없으면 slot 기반 계산 사용 (fallback)
-    final startTime = event.startTime ??
-        DateTime(2024, 1, 1, _startHour).add(Duration(minutes: event.start.slot * 15));
-    final endTime = event.endTime ??
-        DateTime(2024, 1, 1, _startHour).add(Duration(minutes: (event.end.slot + 1) * 15));
+    final startTime =
+        event.startTime ??
+        DateTime(
+          2024,
+          1,
+          1,
+          _startHour,
+        ).add(Duration(minutes: event.start.slot * 15));
+    final endTime =
+        event.endTime ??
+        DateTime(
+          2024,
+          1,
+          1,
+          _startHour,
+        ).add(Duration(minutes: (event.end.slot + 1) * 15));
     final dayNames = ['월', '화', '수', '목', '금', '토', '일'];
     final isExternal = _isExternalEvent(event);
 
@@ -935,7 +1032,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           children: [
             Icon(
               isExternal ? Icons.group : Icons.event,
-              color: isExternal ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.primary,
+              color: isExternal
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).colorScheme.primary,
               size: 24,
             ),
             SizedBox(width: AppSpacing.xxs),
@@ -960,15 +1059,16 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Title
-            Text(
-              event.title,
-              style: AppTheme.headlineSmall,
-            ),
+            Text(event.title, style: AppTheme.headlineSmall),
             SizedBox(height: AppSpacing.sm),
             // Day
             Row(
               children: [
-                Icon(Icons.calendar_today, size: AppComponents.infoIconSize, color: Colors.grey),
+                Icon(
+                  Icons.calendar_today,
+                  size: AppComponents.infoIconSize,
+                  color: Colors.grey,
+                ),
                 SizedBox(width: AppSpacing.xxs),
                 Text(
                   dayNames[event.start.day],
@@ -980,7 +1080,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             // Time range
             Row(
               children: [
-                Icon(Icons.access_time, size: AppComponents.infoIconSize, color: Colors.grey),
+                Icon(
+                  Icons.access_time,
+                  size: AppComponents.infoIconSize,
+                  color: Colors.grey,
+                ),
                 SizedBox(width: AppSpacing.xxs),
                 Text(
                   '${DateFormat.jm().format(startTime)} - ${DateFormat.jm().format(endTime)}',
@@ -1010,7 +1114,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   }
 
   /// Show overlapping events selection dialog
-  void _showOverlappingEventsDialog(List<Event> events, ({int day, int slot}) cell) {
+  void _showOverlappingEventsDialog(
+    List<Event> events,
+    ({int day, int slot}) cell,
+  ) {
     final dayNames = ['월', '화', '수', '목', '금', '토', '일'];
 
     showDialog(
@@ -1021,10 +1128,17 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         ),
         title: Row(
           children: [
-            Icon(Icons.layers, color: Theme.of(context).colorScheme.primary, size: 24),
+            Icon(
+              Icons.layers,
+              color: Theme.of(context).colorScheme.primary,
+              size: 24,
+            ),
             SizedBox(width: AppSpacing.xxs),
             Expanded(
-              child: Text('겹친 일정 (${events.length}개)', style: AppTheme.headlineSmall),
+              child: Text(
+                '겹친 일정 (${events.length}개)',
+                style: AppTheme.headlineSmall,
+              ),
             ),
             // X 닫기 버튼
             IconButton(
@@ -1039,10 +1153,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         ),
         contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
         content: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 600,
-            maxHeight: 500,
-          ),
+          constraints: const BoxConstraints(maxWidth: 600, maxHeight: 500),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1136,9 +1247,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                 title: titleController.text,
                 start: event.start,
                 end: event.end,
-                startTime: event.startTime,  // Preserve DateTime
-                endTime: event.endTime,      // Preserve DateTime
-                color: event.color,          // Preserve color
+                startTime: event.startTime, // Preserve DateTime
+                endTime: event.endTime, // Preserve DateTime
+                color: event.color, // Preserve color
               );
 
               // If callback provided, call it (for server-backed calendars)
@@ -1169,7 +1280,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     );
   }
 
-  void _showCreateDialog(({int day, int slot}) startCell, ({int day, int slot}) endCell) async {
+  void _showCreateDialog(
+    ({int day, int slot}) startCell,
+    ({int day, int slot}) endCell,
+  ) async {
     // Calculate actual DateTime from cell positions and weekStart
     final weekStart = widget.weekStart ?? DateTime.now();
     final startDate = weekStart.add(Duration(days: startCell.day));
@@ -1238,9 +1352,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       title: result.title,
       start: startCell,
       end: endCell,
-      startTime: finalStartTime,  // Store precise time
-      endTime: finalEndTime,      // Store precise time
-      color: result.color,        // Store selected color
+      startTime: finalStartTime, // Store precise time
+      endTime: finalEndTime, // Store precise time
+      color: result.color, // Store selected color
     );
 
     // If callback provided, call it (for server-backed calendars)
@@ -1260,7 +1374,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
       // Return to edit mode after successful creation
       if (_mode == CalendarMode.add) {
-        final range = _calculateVisibleHourRange(modeOverride: CalendarMode.edit);
+        final range = _calculateVisibleHourRange(
+          modeOverride: CalendarMode.edit,
+        );
         _mode = CalendarMode.edit;
         _visibleStartHour = range.startHour;
         _visibleEndHour = range.endHour;
@@ -1330,13 +1446,19 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       _highlightRect = null; // Clear highlight on completion
     });
 
-    if (finalStartCell != null && finalEndCell != null && finalEndCell.slot >= finalStartCell.slot) {
+    if (finalStartCell != null &&
+        finalEndCell != null &&
+        finalEndCell.slot >= finalStartCell.slot) {
       _showCreateDialog(finalStartCell, finalEndCell);
     }
   }
 
   /// Handle tap for web (two-click mode)
-  void _handleTap(Offset position, double dayColumnWidth, List<({Rect rect, Event event})> eventRects) {
+  void _handleTap(
+    Offset position,
+    double dayColumnWidth,
+    List<({Rect rect, Event event})> eventRects,
+  ) {
     if (!widget.isEditable) return;
 
     final clampedPosition = _clampLocalToContent(position, dayColumnWidth);
@@ -1388,7 +1510,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   }
 
   /// Handle long press start for mobile
-  void _handleLongPressStart(LongPressStartDetails details, double dayColumnWidth) {
+  void _handleLongPressStart(
+    LongPressStartDetails details,
+    double dayColumnWidth,
+  ) {
     if (!widget.isEditable) return;
 
     // View mode: no interaction
@@ -1397,8 +1522,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     // Edit mode: no drag-to-create (only edit existing events)
     if (_mode != CalendarMode.add) return;
 
-    final localPosition =
-        _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
+    final localPosition = _clampLocalToContent(
+      _globalToGestureLocal(details.globalPosition),
+      dayColumnWidth,
+    );
     final cell = _pixelToCell(localPosition, dayColumnWidth);
 
     // Check if cell is disabled (gray cell)
@@ -1432,14 +1559,12 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     if (!widget.isEditable || _startCell == null) return;
 
     _activePointerGlobalPosition = globalPosition;
-    final localPosition =
-        _clampLocalToContent(_globalToGestureLocal(globalPosition), dayColumnWidth);
-
-    _updateSelectionCell(
-      localPosition,
+    final localPosition = _clampLocalToContent(
+      _globalToGestureLocal(globalPosition),
       dayColumnWidth,
-      enableHaptics: true,
     );
+
+    _updateSelectionCell(localPosition, dayColumnWidth, enableHaptics: true);
 
     if (checkAutoScroll) {
       _handleEdgeScrolling(globalPosition, dayColumnWidth);
@@ -1452,8 +1577,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
     // Edit mode or View mode: check for overlapping events
     if (_mode == CalendarMode.edit || _mode == CalendarMode.view) {
-      final localPosition =
-          _clampLocalToContent(_globalToGestureLocal(globalPosition), dayColumnWidth);
+      final localPosition = _clampLocalToContent(
+        _globalToGestureLocal(globalPosition),
+        dayColumnWidth,
+      );
       final cell = _pixelToCell(localPosition, dayColumnWidth);
       final overlappingEvents = _findEventsAtCell(cell);
 
@@ -1489,7 +1616,8 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               color: Theme.of(context).primaryColor.withOpacity(0.1),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline,
+                  Icon(
+                    Icons.info_outline,
                     size: 18,
                     color: Theme.of(context).primaryColor,
                   ),
@@ -1537,28 +1665,50 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final double dayColumnWidth = (constraints.maxWidth - _timeColumnWidth) / _daysInWeek;
-                      final double contentHeight = (_visibleEndHour - _visibleStartHour) * 4 * _minSlotHeight;
+                      final double dayColumnWidth =
+                          (constraints.maxWidth - _timeColumnWidth) /
+                          _daysInWeek;
+                      final double contentHeight =
+                          (_visibleEndHour - _visibleStartHour) *
+                          4 *
+                          _minSlotHeight;
 
                       _currentDayColumnWidth = dayColumnWidth;
                       _currentContentHeight = contentHeight;
-                      _currentViewportHeight = constraints.maxHeight; // 실제 뷰포트 높이 저장
+                      _currentViewportHeight =
+                          constraints.maxHeight; // 실제 뷰포트 높이 저장
 
                       final allEvents = _getAllEvents();
-                      final List<({Rect rect, Event event})> eventRects = allEvents.map((event) {
-                        return (rect: _eventToRect(event, dayColumnWidth), event: event);
-                      }).toList();
+                      final List<({Rect rect, Event event})> eventRects =
+                          allEvents.map((event) {
+                            return (
+                              rect: _eventToRect(event, dayColumnWidth),
+                              event: event,
+                            );
+                          }).toList();
 
-                      WidgetsBinding.instance.addPostFrameCallback((_) => _applyInitialScrollIfNeeded());
+                      WidgetsBinding.instance.addPostFrameCallback(
+                        (_) => _applyInitialScrollIfNeeded(),
+                      );
 
                       return SingleChildScrollView(
                         controller: _scrollController,
-                        physics: _isSelecting ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
+                        physics: _isSelecting
+                            ? const NeverScrollableScrollPhysics()
+                            : const ClampingScrollPhysics(),
                         child: SizedBox(
                           height: contentHeight,
                           child: kIsWeb
-                              ? _buildWebGestureHandler(dayColumnWidth, eventRects, contentHeight)
-                              : _buildMobileGestureHandler(dayColumnWidth, eventRects, contentHeight),
+                              ? _buildWebGestureHandler(
+                                  dayColumnWidth,
+                                  eventRects,
+                                  contentHeight,
+                                )
+                              : _buildMobileGestureHandler(
+                                  dayColumnWidth,
+                                  eventRects,
+                                  contentHeight,
+                                ),
                         ),
                       );
                     },
@@ -1579,7 +1729,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     double contentHeight,
   ) {
     return MouseRegion(
-      cursor: _mode == CalendarMode.view ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      cursor: _mode == CalendarMode.view
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
       onHover: (event) {
         if (!widget.isEditable || _mode == CalendarMode.view) return;
 
@@ -1595,7 +1747,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         } else {
           final currentCell = _pixelToCell(event.localPosition, dayColumnWidth);
           setState(() {
-            _highlightRect = _cellToRect(currentCell, currentCell, dayColumnWidth);
+            _highlightRect = _cellToRect(
+              currentCell,
+              currentCell,
+              dayColumnWidth,
+            );
           });
         }
       },
@@ -1612,7 +1768,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       child: GestureDetector(
         onTapDown: (details) {
           // Fixed Duration Mode: Confirm on click
-          if (_isFixedDurationMode && widget.isEditable && _mode != CalendarMode.view) {
+          if (_isFixedDurationMode &&
+              widget.isEditable &&
+              _mode != CalendarMode.view) {
             _confirmFixedDurationSelection();
             return;
           }
@@ -1638,8 +1796,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
       onTapDown: (details) {
         if (_mode == CalendarMode.view) return;
 
-        final localPosition =
-            _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
+        final localPosition = _clampLocalToContent(
+          _globalToGestureLocal(details.globalPosition),
+          dayColumnWidth,
+        );
         final touchedCell = _pixelToCell(localPosition, dayColumnWidth);
 
         // Fixed Duration Mode: Show preview immediately on touch
@@ -1648,7 +1808,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         } else {
           // Normal Mode: existing highlight behavior
           setState(() {
-            _highlightRect = _cellToRect(touchedCell, touchedCell, dayColumnWidth);
+            _highlightRect = _cellToRect(
+              touchedCell,
+              touchedCell,
+              dayColumnWidth,
+            );
           });
         }
 
@@ -1689,8 +1853,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         if (_isFixedDurationMode) {
           // Fixed Duration Mode: Haptic feedback and show preview
           _triggerHaptic(HapticFeedbackType.medium);
-          final localPosition =
-              _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
+          final localPosition = _clampLocalToContent(
+            _globalToGestureLocal(details.globalPosition),
+            dayColumnWidth,
+          );
           _updateFixedDurationPreview(localPosition, dayColumnWidth);
           _activePointerGlobalPosition = details.globalPosition;
         } else {
@@ -1702,8 +1868,10 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         if (_isFixedDurationMode) {
           // Fixed Duration Mode: Update preview position as user drags
           _activePointerGlobalPosition = details.globalPosition;
-          final localPosition =
-              _clampLocalToContent(_globalToGestureLocal(details.globalPosition), dayColumnWidth);
+          final localPosition = _clampLocalToContent(
+            _globalToGestureLocal(details.globalPosition),
+            dayColumnWidth,
+          );
           _updateFixedDurationPreview(localPosition, dayColumnWidth);
 
           // Handle edge scrolling
@@ -1723,7 +1891,11 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
         } else if (_isSelecting) {
           // Normal Mode: existing behavior
           _triggerHaptic(HapticFeedbackType.light);
-          _updateSelectionFromPointer(details.globalPosition, dayColumnWidth, checkAutoScroll: false);
+          _updateSelectionFromPointer(
+            details.globalPosition,
+            dayColumnWidth,
+            checkAutoScroll: false,
+          );
           _completeSelection();
           _handleLongPressEnd(details);
         }
@@ -1740,40 +1912,82 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     double contentHeight,
   ) {
     // Prepare event data for EventPainter
-    List<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span, DateTime? startTime, String? location, Color? color})> eventData;
+    List<
+      ({
+        Rect rect,
+        String title,
+        String id,
+        int? columnIndex,
+        int? totalColumns,
+        int? span,
+        DateTime? startTime,
+        String? location,
+        Color? color,
+      })
+    >
+    eventData;
 
     if (_isOverlapView) {
       // Overlap view: analyze and assign columns
       final allEvents = _getAllEvents();
       final layoutInfo = _calculateEventLayout(allEvents);
 
-      eventData = eventRects.map<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span, DateTime? startTime, String? location, Color? color})>((e) {
-        final info = layoutInfo[e.event.id];
-        return (
-          rect: e.rect,
-          title: e.event.title,
-          id: e.event.id,
-          columnIndex: info?.columnIndex,
-          totalColumns: info?.totalColumns,
-          span: info?.span,
-          startTime: e.event.startTime,
-          location: null, // Location not available in current Event typedef
-          color: e.event.color, // Pass event color
-        );
-      }).toList();
+      eventData =
+          eventRects.map<
+            ({
+              Rect rect,
+              String title,
+              String id,
+              int? columnIndex,
+              int? totalColumns,
+              int? span,
+              DateTime? startTime,
+              String? location,
+              Color? color,
+            })
+          >((e) {
+            final info = layoutInfo[e.event.id];
+            return (
+              rect: e.rect,
+              title: e.event.title,
+              id: e.event.id,
+              columnIndex: info?.columnIndex,
+              totalColumns: info?.totalColumns,
+              span: info?.span,
+              startTime: e.event.startTime,
+              location: null, // Location not available in current Event typedef
+              color: e.event.color, // Pass event color
+            );
+          }).toList();
     } else {
       // Compact view: no column layout
-      eventData = eventRects.map<({Rect rect, String title, String id, int? columnIndex, int? totalColumns, int? span, DateTime? startTime, String? location, Color? color})>((e) => (
-        rect: e.rect,
-        title: e.event.title,
-        id: e.event.id,
-        columnIndex: null,
-        totalColumns: null,
-        span: null,
-        startTime: e.event.startTime,
-        location: null, // Location not available in current Event typedef
-        color: e.event.color, // Pass event color
-      )).toList();
+      eventData = eventRects
+          .map<
+            ({
+              Rect rect,
+              String title,
+              String id,
+              int? columnIndex,
+              int? totalColumns,
+              int? span,
+              DateTime? startTime,
+              String? location,
+              Color? color,
+            })
+          >(
+            (e) => (
+              rect: e.rect,
+              title: e.event.title,
+              id: e.event.id,
+              columnIndex: null,
+              totalColumns: null,
+              span: null,
+              startTime: e.event.startTime,
+              location: null, // Location not available in current Event typedef
+              color: e.event.color, // Pass event color
+            ),
+          )
+          .toList();
     }
 
     return SizedBox(
@@ -1796,9 +2010,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
 
           // 2. Events
           Positioned.fill(
-            child: CustomPaint(
-              painter: EventPainter(events: eventData),
-            ),
+            child: CustomPaint(painter: EventPainter(events: eventData)),
           ),
 
           // 3. Disabled slots (gray cells) - painted AFTER events but BEFORE preview
@@ -1818,7 +2030,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               ),
             ),
 
-
           // 4. Interactive overlays (only when editable)
           if (widget.isEditable) ...[
             // 4a. Fixed Duration Mode Preview - renders ABOVE disabled slots
@@ -1827,7 +2038,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             if (_durationPreviewRect != null)
               Positioned.fill(
                 child: CustomPaint(
-                  painter: FixedDurationPreviewPainter(previewRect: _durationPreviewRect),
+                  painter: FixedDurationPreviewPainter(
+                    previewRect: _durationPreviewRect,
+                  ),
                 ),
               ),
 
@@ -1993,11 +2206,18 @@ class _OverlappingEventsVisualization extends StatelessWidget {
 
                       // 일정 블록들
                       ...events.map((event) {
-                        final eventStartSlot = math.min(event.start.slot, event.end.slot);
-                        final eventEndSlot = math.max(event.start.slot, event.end.slot);
+                        final eventStartSlot = math.min(
+                          event.start.slot,
+                          event.end.slot,
+                        );
+                        final eventEndSlot = math.max(
+                          event.start.slot,
+                          event.end.slot,
+                        );
 
                         // 이벤트가 시간 ���위 밖에 있으면 렌더링하지 않음
-                        if (eventEndSlot < timeRange.minSlot || eventStartSlot > timeRange.maxSlot) {
+                        if (eventEndSlot < timeRange.minSlot ||
+                            eventStartSlot > timeRange.maxSlot) {
                           return const Positioned(child: SizedBox.shrink());
                         }
 
@@ -2015,17 +2235,28 @@ class _OverlappingEventsVisualization extends StatelessWidget {
                         final double height = position.height;
 
                         // duration: slot 단위 길이 (텍스트 표시 조건용)
-                        final int duration = event.startTime != null && event.endTime != null
-                            ? ((event.endTime!.difference(event.startTime!).inMinutes) / 15.0).ceil()
+                        final int duration =
+                            event.startTime != null && event.endTime != null
+                            ? ((event.endTime!
+                                          .difference(event.startTime!)
+                                          .inMinutes) /
+                                      15.0)
+                                  .ceil()
                             : eventEndSlot - eventStartSlot + 1;
 
-                        final totalVisibleHeight = (timeRange.maxSlot - timeRange.minSlot + 1) * _slotHeight;
+                        final totalVisibleHeight =
+                            (timeRange.maxSlot - timeRange.minSlot + 1) *
+                            _slotHeight;
 
                         // 뷰포트를 벗어나는 높이 클리핑
-                        final clippedHeight = math.min(top + height, totalVisibleHeight) - top;
+                        final clippedHeight =
+                            math.min(top + height, totalVisibleHeight) - top;
 
                         return Positioned(
-                          left: _timeColumnWidth + events.indexOf(event) * blockWidth + 4,
+                          left:
+                              _timeColumnWidth +
+                              events.indexOf(event) * blockWidth +
+                              4,
                           top: top,
                           width: blockWidth - 8,
                           height: clippedHeight - 2, // -2 for padding
@@ -2033,7 +2264,9 @@ class _OverlappingEventsVisualization extends StatelessWidget {
                             onTap: () => onEventTap(event),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: _getEventColor(event).withValues(alpha: 0.85),
+                                color: _getEventColor(
+                                  event,
+                                ).withValues(alpha: 0.85),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: _getEventColor(event),
@@ -2041,7 +2274,9 @@ class _OverlappingEventsVisualization extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: _getEventColor(event).withValues(alpha: 0.2),
+                                    color: _getEventColor(
+                                      event,
+                                    ).withValues(alpha: 0.2),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -2064,17 +2299,19 @@ class _OverlappingEventsVisualization extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  if (duration > 2)
-                                    SizedBox(height: 2),
+                                  if (duration > 2) SizedBox(height: 2),
                                   if (duration > 2)
                                     Text(
                                       // 🟢 수정: event.startTime/endTime 우선 사용 (정확한 분 단위)
                                       // 없으면 slot 기반 계산 (fallback)
-                                      event.startTime != null && event.endTime != null
+                                      event.startTime != null &&
+                                              event.endTime != null
                                           ? '${_formatTimeFromDateTime(event.startTime!)} - ${_formatTimeFromDateTime(event.endTime!)}'
                                           : '${_formatTime(eventStartSlot)} - ${_formatTime(eventEndSlot + 1)}',
                                       style: TextStyle(
-                                        color: Colors.white.withValues(alpha: 0.85),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.85,
+                                        ),
                                         fontSize: 9,
                                       ),
                                       maxLines: 1,

@@ -82,7 +82,11 @@ class DisabledSlotsPainter extends CustomPainter {
       // BUG FIX: Normalize to date-only (remove time) before calculating difference
       // This prevents time-of-day from affecting the day calculation
       final slotDateOnly = DateTime(slot.year, slot.month, slot.day);
-      final weekStartDateOnly = DateTime(weekStart.year, weekStart.month, weekStart.day);
+      final weekStartDateOnly = DateTime(
+        weekStart.year,
+        weekStart.month,
+        weekStart.day,
+      );
       final dayIndex = slotDateOnly.difference(weekStartDateOnly).inDays;
 
       // Log first few Monday slots for debugging
@@ -135,10 +139,7 @@ class DisabledSlotsPainter extends CustomPainter {
       }
 
       // Draw gray rectangle
-      canvas.drawRect(
-        Rect.fromLTRB(left, top, right, bottom),
-        paint,
-      );
+      canvas.drawRect(Rect.fromLTRB(left, top, right, bottom), paint);
       paintedCount++;
     }
 

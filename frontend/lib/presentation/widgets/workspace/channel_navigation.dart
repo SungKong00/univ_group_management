@@ -354,7 +354,8 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
             onTap: () {
               ref.read(workspaceStateProvider.notifier).showGroupAdminPage();
             },
-            isSelected: currentView == WorkspaceView.groupAdmin ||
+            isSelected:
+                currentView == WorkspaceView.groupAdmin ||
                 currentView == WorkspaceView.memberManagement ||
                 currentView == WorkspaceView.recruitmentManagement,
           ),
@@ -389,16 +390,13 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
 
               if (response.data == null) return;
 
-              final apiResponse = ApiResponse.fromJson(
-                response.data!,
-                (json) {
-                  if (json is List && json.isNotEmpty) {
-                    final workspace = json.first as Map<String, dynamic>;
-                    return workspace['id'] as int;
-                  }
-                  return null;
-                },
-              );
+              final apiResponse = ApiResponse.fromJson(response.data!, (json) {
+                if (json is List && json.isNotEmpty) {
+                  final workspace = json.first as Map<String, dynamic>;
+                  return workspace['id'] as int;
+                }
+                return null;
+              });
 
               if (!apiResponse.success || apiResponse.data == null) {
                 if (context.mounted) {
@@ -424,11 +422,14 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
                 ref.invalidate(workspaceChannelsProvider); // 워크스페이스 채널 네비게이션 바
 
                 // workspace state도 새로고침
-                ref.read(workspaceStateProvider.notifier).loadChannels(
-                  groupIdStr,
-                  membership: (await ref.read(myGroupsProvider.future))
-                      .firstWhere((g) => g.id.toString() == groupIdStr),
-                );
+                ref
+                    .read(workspaceStateProvider.notifier)
+                    .loadChannels(
+                      groupIdStr,
+                      membership: (await ref.read(
+                        myGroupsProvider.future,
+                      )).firstWhere((g) => g.id.toString() == groupIdStr),
+                    );
 
                 // 새로 생성된 채널로 네비게이션
                 ref

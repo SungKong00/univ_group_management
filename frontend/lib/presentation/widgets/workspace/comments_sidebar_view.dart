@@ -40,9 +40,7 @@ class CommentsSidebarView extends ConsumerWidget {
         Column(
           children: [
             // 게시글 미리보기
-            PostPreviewWidget(
-              onClose: onClose,
-            ),
+            PostPreviewWidget(onClose: onClose),
 
             const Divider(height: 1, thickness: 1),
 

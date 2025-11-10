@@ -18,25 +18,21 @@ class GroupRecruitmentView extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.campaign,
-              size: 64,
-              color: AppColors.neutral400,
-            ),
+            Icon(Icons.campaign, size: 64, color: AppColors.neutral400),
             const SizedBox(height: AppSpacing.md),
             Text(
               '모집 공고',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppColors.neutral700,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: AppColors.neutral700,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               '그룹 모집 공고 목록이 여기에 표시됩니다.',
-              style: AppTheme.bodyMediumTheme(context).copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMediumTheme(
+                context,
+              ).copyWith(color: AppColors.neutral600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xs),

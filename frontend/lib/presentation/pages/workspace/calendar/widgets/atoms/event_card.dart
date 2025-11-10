@@ -15,11 +15,7 @@ class EventCard extends StatelessWidget {
   final GroupEvent event;
   final VoidCallback? onTap;
 
-  const EventCard({
-    super.key,
-    required this.event,
-    this.onTap,
-  });
+  const EventCard({super.key, required this.event, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +45,9 @@ class EventCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: event.isOfficial ? AppColors.brand : AppColors.neutral700,
+                color: event.isOfficial
+                    ? AppColors.brand
+                    : AppColors.neutral700,
               ),
             ),
             const SizedBox(width: 4),

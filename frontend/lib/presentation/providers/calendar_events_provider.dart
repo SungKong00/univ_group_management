@@ -91,12 +91,15 @@ class CalendarEventsState {
       selectedDate: selectedDate ?? this.selectedDate,
       rangeStart: rangeStart ?? this.rangeStart,
       rangeEnd: rangeEnd ?? this.rangeEnd,
-      loadErrorMessage:
-          clearLoadError ? null : loadErrorMessage ?? this.loadErrorMessage,
-      snackbarMessage:
-          clearSnackbar ? null : snackbarMessage ?? this.snackbarMessage,
-      snackbarIsError:
-          clearSnackbar ? false : snackbarIsError ?? this.snackbarIsError,
+      loadErrorMessage: clearLoadError
+          ? null
+          : loadErrorMessage ?? this.loadErrorMessage,
+      snackbarMessage: clearSnackbar
+          ? null
+          : snackbarMessage ?? this.snackbarMessage,
+      snackbarIsError: clearSnackbar
+          ? false
+          : snackbarIsError ?? this.snackbarIsError,
       hasInitialized: hasInitialized ?? this.hasInitialized,
     );
   }
@@ -256,7 +259,11 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
   Future<void> loadEvents({bool force = false}) async {
     if (state.isLoading) return;
 
-    final range = _calculateRange(state.view, state.focusedDate, state.selectedDate);
+    final range = _calculateRange(
+      state.view,
+      state.focusedDate,
+      state.selectedDate,
+    );
     if (!force &&
         state.rangeStart != null &&
         state.rangeEnd != null &&
@@ -265,10 +272,7 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
       return;
     }
 
-    state = state.copyWith(
-      isLoading: true,
-      clearLoadError: true,
-    );
+    state = state.copyWith(isLoading: true, clearLoadError: true);
 
     try {
       final events = await _service.getPersonalEvents(range.start, range.end);
@@ -280,8 +284,12 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
         clearLoadError: true,
       );
     } catch (e, stack) {
-      developer.log('Failed to load personal events: $e',
-          name: 'CalendarEventsNotifier', error: e, stackTrace: stack);
+      developer.log(
+        'Failed to load personal events: $e',
+        name: 'CalendarEventsNotifier',
+        error: e,
+        stackTrace: stack,
+      );
       state = state.copyWith(
         isLoading: false,
         loadErrorMessage: e.toString().replaceFirst('Exception: ', ''),
@@ -295,8 +303,9 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
 
   void changeView(CalendarViewType view) {
     if (state.view == view) return;
-    final adjusted =
-        view == CalendarViewType.day ? state.selectedDate : state.focusedDate;
+    final adjusted = view == CalendarViewType.day
+        ? state.selectedDate
+        : state.focusedDate;
     state = state.copyWith(view: view, focusedDate: adjusted);
     _saveToLocalStorage(); // 뷰 변경 시 즉시 저장
     loadEvents();
@@ -309,21 +318,13 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
   }
 
   void goToNextRange() {
-    final next = _advance(
-      state.focusedDate,
-      state.view,
-      forward: true,
-    );
+    final next = _advance(state.focusedDate, state.view, forward: true);
     state = state.copyWith(focusedDate: next);
     loadEvents();
   }
 
   void goToPreviousRange() {
-    final previous = _advance(
-      state.focusedDate,
-      state.view,
-      forward: false,
-    );
+    final previous = _advance(state.focusedDate, state.view, forward: false);
     state = state.copyWith(focusedDate: previous);
     loadEvents();
   }
@@ -354,8 +355,12 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
       );
       return true;
     } catch (e, stack) {
-      developer.log('Failed to create event: $e',
-          name: 'CalendarEventsNotifier', error: e, stackTrace: stack);
+      developer.log(
+        'Failed to create event: $e',
+        name: 'CalendarEventsNotifier',
+        error: e,
+        stackTrace: stack,
+      );
       state = state.copyWith(
         isMutating: false,
         snackbarMessage: e.toString().replaceFirst('Exception: ', ''),
@@ -369,8 +374,9 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
     state = state.copyWith(isMutating: true, clearSnackbar: true);
     try {
       final updated = await _service.updatePersonalEvent(id, request);
-      final events =
-          state.events.map((event) => event.id == id ? updated : event).toList();
+      final events = state.events
+          .map((event) => event.id == id ? updated : event)
+          .toList();
       state = state.copyWith(
         isMutating: false,
         events: _sortedEvents(events),
@@ -379,8 +385,12 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
       );
       return true;
     } catch (e, stack) {
-      developer.log('Failed to update event: $e',
-          name: 'CalendarEventsNotifier', error: e, stackTrace: stack);
+      developer.log(
+        'Failed to update event: $e',
+        name: 'CalendarEventsNotifier',
+        error: e,
+        stackTrace: stack,
+      );
       state = state.copyWith(
         isMutating: false,
         snackbarMessage: e.toString().replaceFirst('Exception: ', ''),
@@ -403,8 +413,12 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
       );
       return true;
     } catch (e, stack) {
-      developer.log('Failed to delete event: $e',
-          name: 'CalendarEventsNotifier', error: e, stackTrace: stack);
+      developer.log(
+        'Failed to delete event: $e',
+        name: 'CalendarEventsNotifier',
+        error: e,
+        stackTrace: stack,
+      );
       state = state.copyWith(
         isMutating: false,
         snackbarMessage: e.toString().replaceFirst('Exception: ', ''),
@@ -433,8 +447,8 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
 
 final calendarEventsProvider =
     StateNotifierProvider<CalendarEventsNotifier, CalendarEventsState>((ref) {
-  return CalendarEventsNotifier(CalendarService());
-});
+      return CalendarEventsNotifier(CalendarService());
+    });
 
 class _DateRange {
   const _DateRange({required this.start, required this.end});
@@ -451,8 +465,11 @@ _DateRange _calculateRange(
   switch (view) {
     case CalendarViewType.month:
       final startOfMonth = DateTime(focused.year, focused.month, 1);
-      final endOfMonth = DateTime(focused.year, focused.month + 1, 1)
-          .subtract(const Duration(days: 1));
+      final endOfMonth = DateTime(
+        focused.year,
+        focused.month + 1,
+        1,
+      ).subtract(const Duration(days: 1));
       return _DateRange(start: startOfMonth, end: endOfMonth);
     case CalendarViewType.week:
       final weekday = focused.weekday; // 1 = Monday … 7 = Sunday
@@ -481,4 +498,5 @@ DateTime _advance(
   }
 }
 
-DateTime _normalizeDate(DateTime date) => DateTime(date.year, date.month, date.day);
+DateTime _normalizeDate(DateTime date) =>
+    DateTime(date.year, date.month, date.day);

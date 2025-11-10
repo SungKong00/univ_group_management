@@ -102,7 +102,8 @@ class _MultiSelectPopoverDemoPageState
 
   /// 멤버 필터 섹션 (실제 사용 시나리오)
   Widget _buildMemberFilterSection() {
-    final hasSelection = selectedRoles.isNotEmpty ||
+    final hasSelection =
+        selectedRoles.isNotEmpty ||
         selectedGroups.isNotEmpty ||
         selectedGrades.isNotEmpty;
 
@@ -116,11 +117,7 @@ class _MultiSelectPopoverDemoPageState
             // 헤더
             Row(
               children: [
-                Icon(
-                  Icons.filter_list,
-                  size: 20,
-                  color: AppColors.brand,
-                ),
+                Icon(Icons.filter_list, size: 20, color: AppColors.brand),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   '멤버 필터링',
@@ -201,50 +198,24 @@ class _MultiSelectPopoverDemoPageState
           children: [
             Text(
               'CompactChip 상태별 예시',
-              style: AppTheme.titleMedium.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTheme.titleMedium.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: AppSpacing.sm),
 
             // 미선택 상태
             _buildChipRow('미선택', [
-              CompactChip(
-                label: '그룹장',
-                selected: false,
-                onTap: () {},
-              ),
-              CompactChip(
-                label: '교수',
-                selected: false,
-                onTap: () {},
-              ),
-              CompactChip(
-                label: '멤버',
-                selected: false,
-                onTap: () {},
-              ),
+              CompactChip(label: '그룹장', selected: false, onTap: () {}),
+              CompactChip(label: '교수', selected: false, onTap: () {}),
+              CompactChip(label: '멤버', selected: false, onTap: () {}),
             ]),
 
             const SizedBox(height: AppSpacing.sm),
 
             // 선택 상태
             _buildChipRow('선택', [
-              CompactChip(
-                label: '그룹장',
-                selected: true,
-                onTap: () {},
-              ),
-              CompactChip(
-                label: '교수',
-                selected: true,
-                onTap: () {},
-              ),
-              CompactChip(
-                label: '멤버',
-                selected: false,
-                onTap: () {},
-              ),
+              CompactChip(label: '그룹장', selected: true, onTap: () {}),
+              CompactChip(label: '교수', selected: true, onTap: () {}),
+              CompactChip(label: '멤버', selected: false, onTap: () {}),
             ]),
 
             const SizedBox(height: AppSpacing.sm),
@@ -279,9 +250,7 @@ class _MultiSelectPopoverDemoPageState
           width: 80,
           child: Text(
             label,
-            style: AppTheme.bodySmall.copyWith(
-              color: AppColors.neutral600,
-            ),
+            style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -306,9 +275,7 @@ class _MultiSelectPopoverDemoPageState
           children: [
             Text(
               'MultiSelectPopover 필터 바',
-              style: AppTheme.titleMedium.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTheme.titleMedium.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: AppSpacing.sm),
 
@@ -360,7 +327,8 @@ class _MultiSelectPopoverDemoPageState
 
   /// 선택 요약
   Widget _buildSelectionSummary() {
-    final hasSelection = selectedRoles.isNotEmpty ||
+    final hasSelection =
+        selectedRoles.isNotEmpty ||
         selectedGroups.isNotEmpty ||
         selectedGrades.isNotEmpty;
 
@@ -382,8 +350,9 @@ class _MultiSelectPopoverDemoPageState
                 Text(
                   hasSelection ? '선택된 필터' : '필터를 선택하세요',
                   style: AppTheme.titleMedium.copyWith(
-                    color:
-                        hasSelection ? AppColors.brand : AppColors.neutral700,
+                    color: hasSelection
+                        ? AppColors.brand
+                        : AppColors.neutral700,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -407,9 +376,12 @@ class _MultiSelectPopoverDemoPageState
               const Divider(height: 1),
               const SizedBox(height: AppSpacing.sm),
 
-              if (selectedRoles.isNotEmpty) _buildSelectionItem('역할', selectedRoles),
-              if (selectedGroups.isNotEmpty) _buildSelectionItem('그룹', selectedGroups),
-              if (selectedGrades.isNotEmpty) _buildSelectionItem('학년', selectedGrades),
+              if (selectedRoles.isNotEmpty)
+                _buildSelectionItem('역할', selectedRoles),
+              if (selectedGroups.isNotEmpty)
+                _buildSelectionItem('그룹', selectedGroups),
+              if (selectedGrades.isNotEmpty)
+                _buildSelectionItem('학년', selectedGrades),
             ],
           ],
         ),
