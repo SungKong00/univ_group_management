@@ -123,7 +123,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         state == AppLifecycleState.detached) {
       _saveCurrentReadPosition();
     }
-    // Restore session when app returns from background (T103)
+    // Restore session after app returns from background or interruption
     else if (state == AppLifecycleState.resumed) {
       _restoreSessionAfterInterruption();
     }
