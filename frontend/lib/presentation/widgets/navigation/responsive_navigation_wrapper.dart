@@ -101,8 +101,9 @@ class _ResponsiveNavigationWrapperState
           if (isShiftPressed) {
             _selectedIndex =
                 (_selectedIndex - 1) % widget.navigationItems.length;
-            if (_selectedIndex < 0)
+            if (_selectedIndex < 0) {
               _selectedIndex = widget.navigationItems.length - 1;
+            }
           } else {
             _selectedIndex =
                 (_selectedIndex + 1) % widget.navigationItems.length;
@@ -139,8 +140,9 @@ class _ResponsiveNavigationWrapperState
         // Arrow up: Move to previous item
         setState(() {
           _selectedIndex = (_selectedIndex - 1) % widget.navigationItems.length;
-          if (_selectedIndex < 0)
+          if (_selectedIndex < 0) {
             _selectedIndex = widget.navigationItems.length - 1;
+          }
         });
         return KeyEventResult.handled;
 

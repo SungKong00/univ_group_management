@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/core/navigation/navigation_state.dart';
 import 'package:frontend/core/navigation/workspace_route.dart';
 import 'package:frontend/core/navigation/workspace_router_delegate.dart';
 import 'package:frontend/presentation/providers/navigation_state_provider.dart';
 
 /// Wrapper widget to create delegate only once and set up listener
 class _TestRouterWrapper extends ConsumerStatefulWidget {
-  const _TestRouterWrapper({super.key});
+  const _TestRouterWrapper();
 
   @override
   ConsumerState<_TestRouterWrapper> createState() => _TestRouterWrapperState();

@@ -13,6 +13,7 @@ import 'core/router/app_router.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/local_storage.dart';
 import 'core/constants/app_constants.dart';
+import 'core/lifecycle/app_lifecycle_observer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -88,11 +89,39 @@ void main() async {
   runApp(const ProviderScope(child: UniversityGroupApp()));
 }
 
-class UniversityGroupApp extends ConsumerWidget {
+class UniversityGroupApp extends ConsumerStatefulWidget {
   const UniversityGroupApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<UniversityGroupApp> createState() => _UniversityGroupAppState();
+}
+
+class _UniversityGroupAppState extends ConsumerState<UniversityGroupApp> {
+  late final AppLifecycleObserver _lifecycleObserver;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Phase 3: Register AppLifecycleObserver for app termination handling
+    _lifecycleObserver = AppLifecycleObserver(ref);
+    WidgetsBinding.instance.addObserver(_lifecycleObserver);
+
+    developer.log(
+      'AppLifecycleObserver registered',
+      name: 'UniversityGroupApp',
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+    _lifecycleObserver.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // 테마 모드 감시 (다크모드 전환 대응)
     final themeMode = ref.watch(themeModeProvider);
 

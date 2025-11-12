@@ -14,7 +14,7 @@ import 'package:frontend/core/theme/app_colors.dart';
 void main() {
   /// Calculate relative luminance according to WCAG 2.1
   /// https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
-  double _relativeLuminance(Color color) {
+  double relativeLuminance(Color color) {
     final r = color.red / 255.0;
     final g = color.green / 255.0;
     final b = color.blue / 255.0;
@@ -34,9 +34,9 @@ void main() {
 
   /// Calculate contrast ratio according to WCAG 2.1
   /// https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio
-  double _contrastRatio(Color foreground, Color background) {
-    final l1 = _relativeLuminance(foreground);
-    final l2 = _relativeLuminance(background);
+  double contrastRatio(Color foreground, Color background) {
+    final l1 = relativeLuminance(foreground);
+    final l2 = relativeLuminance(background);
 
     final lighter = math.max(l1, l2);
     final darker = math.min(l1, l2);
@@ -45,7 +45,7 @@ void main() {
   }
 
   /// Convert Color to hex string for debugging
-  String _colorToHex(Color color) {
+  String colorToHex(Color color) {
     return '#${color.value.toRadixString(16).padLeft(8, '0').substring(2)}';
   }
 
@@ -57,7 +57,7 @@ void main() {
       String label, {
       double minRatio = 4.5, // Default: normal text
     }) {
-      final ratio = _contrastRatio(foreground, background);
+      final ratio = contrastRatio(foreground, background);
       final passed = ratio >= minRatio;
 
       expect(
@@ -66,8 +66,8 @@ void main() {
         reason:
             '''
 ❌ WCAG 2.1 AA VIOLATION: $label
-   Foreground: ${_colorToHex(foreground)}
-   Background: ${_colorToHex(background)}
+   Foreground: ${colorToHex(foreground)}
+   Background: ${colorToHex(background)}
    Contrast Ratio: ${ratio.toStringAsFixed(2)}:1
    Required: ≥${minRatio.toStringAsFixed(1)}:1
    Status: ${passed ? '✓ PASS' : '✗ FAIL'}
@@ -228,7 +228,7 @@ void main() {
       // ignore: avoid_print
       print('\n=== WCAG 2.1 AA Contrast Ratio Summary ===');
       for (final (label, fg, bg) in combinations) {
-        final ratio = _contrastRatio(fg, bg);
+        final ratio = contrastRatio(fg, bg);
         final normalPass = ratio >= 4.5;
         final largePass = ratio >= 3.0;
 

@@ -202,7 +202,61 @@ if (groupId == null) {
 }
 ```
 
+## 읽음 위치 저장 메커니즘
+
+### 저장 트리거
+읽음 위치는 다음 이벤트에서 자동 저장됩니다:
+
+1. **채널 전환 (`selectChannel`)**: 현재 채널에서 다른 채널로 이동
+2. **워크스페이스 이탈 (`exitWorkspace`)**: 글로벌 네비게이션 또는 로그아웃
+3. **앱 종료 (웹 전용)**: beforeunload 이벤트 (페이지 닫기/새로고침)
+
+### 라우트 기반 자동 감지 (router_listener.dart)
+`RouterListener`가 라우트 변경을 감지하여 워크스페이스 이탈 시 자동 저장:
+
+```dart
+void _handleWorkspaceStateTransition(String route, NavigationController navigationController) {
+  final isWorkspaceRoute = route.startsWith('/workspace');
+  final previousRoute = _previousRoute;
+
+  // 워크스페이스 벗어날 시 자동 확장 및 읽음 위치 저장
+  if (previousRoute != null && previousRoute.startsWith('/workspace') && !isWorkspaceRoute) {
+    ref.read(workspaceStateProvider.notifier).exitWorkspace();
+    navigationController.exitWorkspace();
+  }
+}
+```
+
+### 조건부 Import (테스트 환경 지원)
+웹/테스트 환경 분리를 위한 조건부 import 적용:
+
+```dart
+// workspace_state_provider.dart
+import 'workspace_state_provider_stub.dart'
+    if (dart.library.html) 'workspace_state_provider_web.dart' as web_utils;
+
+// 웹: localStorage 동기 접근 (beforeunload 타이밍 보장)
+// 테스트: No-op 구현
+```
+
+**파일 구조**:
+- `workspace_state_provider_web.dart`: 웹 전용 JS interop (dart:html, dart:js)
+- `workspace_state_provider_stub.dart`: 테스트 환경용 stub (no-op)
+
+### Best-Effort 전략
+읽음 위치 저장은 Best-Effort 방식으로 에러를 무시:
+
+```dart
+try {
+  await saveReadPosition(channelId, postId);
+  await loadUnreadCount(channelId);
+} catch (e) {
+  // Silently ignore errors
+}
+```
+
 ## 참조
 
 - [워크스페이스 페이지 체크리스트](workspace-page-checklist.md) - 단계별 가이드
 - [워크스페이스 트러블슈팅](workspace-troubleshooting.md) - 문제 해결
+- [워크스페이스 네비게이션 플로우](../ui-ux/pages/workspace-navigation-flow.md) - 읽음 위치 저장 시점

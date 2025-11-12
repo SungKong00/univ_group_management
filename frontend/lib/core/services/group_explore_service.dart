@@ -142,7 +142,7 @@ class GroupExploreService {
       }
 
       return [];
-    } catch (e, stackTrace) {
+    } catch (e) {
       developer.log(
         'Error fetching all groups: $e',
         name: 'GroupExploreService',

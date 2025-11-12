@@ -50,10 +50,6 @@ class UnifiedGroupState extends Equatable {
   /// 필터링된 그룹 목록 (리스트 뷰용)
   List<GroupSummaryResponse> get filteredGroups {
     final result = _filterGroups(allGroups, filter);
-    print(
-      '🔍 [DEBUG] filteredGroups getter: allGroups.length=${allGroups.length}, filtered.length=${result.length}',
-    );
-    print('🔍 [DEBUG] filter: ${filter.toQueryParameters()}');
     return result;
   }
 
@@ -72,13 +68,8 @@ class UnifiedGroupState extends Equatable {
     List<GroupSummaryResponse> groups,
     GroupExploreFilter filter,
   ) {
-    print('🔍 [DEBUG] _filterGroups 시작: ${groups.length}개 그룹');
-    print('🔍 [DEBUG] filter.groupTypes: ${filter.groupTypes}');
-    print('🔍 [DEBUG] filter.recruiting: ${filter.recruiting}');
-
     // 필터가 비활성 상태면 전체 그룹 반환
     if (!filter.isActive) {
-      print('🔍 [DEBUG] 필터 비활성, 전체 반환');
       return groups;
     }
 
@@ -87,9 +78,6 @@ class UnifiedGroupState extends Equatable {
       if (filter.groupTypes?.isNotEmpty ?? false) {
         final groupTypeStr = group.groupType.name.toUpperCase();
         final matches = filter.groupTypes!.contains(groupTypeStr);
-        print(
-          '🔍 [DEBUG] ${group.name}: groupType=$groupTypeStr, 필터=${filter.groupTypes}, 일치=$matches',
-        );
         if (!matches) {
           return false;
         }
@@ -98,9 +86,6 @@ class UnifiedGroupState extends Equatable {
       // recruiting 필터
       if (filter.recruiting != null) {
         final matches = group.isRecruiting == filter.recruiting;
-        print(
-          '🔍 [DEBUG] ${group.name}: isRecruiting=${group.isRecruiting}, 필터=${filter.recruiting}, 일치=$matches',
-        );
         if (!matches) {
           return false;
         }
@@ -126,7 +111,6 @@ class UnifiedGroupState extends Equatable {
       return true;
     }).toList();
 
-    print('🔍 [DEBUG] 필터링 완료: ${filtered.length}개 그룹');
     return filtered;
   }
 
@@ -230,55 +214,39 @@ class UnifiedGroupStateNotifier extends StateNotifier<UnifiedGroupState> {
   /// 2. 그룹 개수 ≤ 500: 전체 로드 (getAllGroups) + 로컬 필터링
   /// 3. 그룹 개수 > 500: 페이지네이션 (getGroups) + 무한 스크롤
   Future<void> initialize() async {
-    print('🔍 [DEBUG] initialize() 시작');
-    print(
-      '🔍 [DEBUG] 현재 상태: allGroups.length=${state.allGroups.length}, isLoading=${state.isLoading}',
-    );
-
     // 이미 로드됨
     if (state.allGroups.isNotEmpty && !state.isLoading) {
-      print('🔍 [DEBUG] 이미 로드됨, 초기화 스킵');
       return;
     }
 
     state = state.copyWith(isLoading: true, errorMessage: null);
-    print('🔍 [DEBUG] 로딩 시작, isLoading=true');
 
     try {
       // 1. 먼저 전체 개수 확인 (page=0, size=1)
-      print('🔍 [DEBUG] 전체 개수 확인 API 호출...');
       final countResponse = await _service.getGroups(
         page: 0,
         size: 1,
         queryParams: {},
       );
       final totalCount = countResponse.data.pagination.totalElements;
-      print('🔍 [DEBUG] totalCount: $totalCount');
 
       // 2. 전략 결정
       if (totalCount <= 500) {
         // 전체 로드 모드
-        print('🔍 [DEBUG] 전체 로드 모드 선택 (totalCount=$totalCount)');
         final allGroups = await _service.getAllGroups();
-        print('🔍 [DEBUG] 전체 로드 완료: ${allGroups.length}개 그룹');
         state = state.copyWith(
           allGroups: allGroups,
           totalCount: totalCount,
           usePagination: false,
           isLoading: false,
         );
-        print(
-          '🔍 [DEBUG] 상태 업데이트 완료: allGroups.length=${state.allGroups.length}',
-        );
       } else {
         // 페이지네이션 모드
-        print('🔍 [DEBUG] 페이지네이션 모드 선택 (totalCount=$totalCount)');
         final response = await _service.getGroups(
           page: 0,
           size: 20,
           queryParams: state.filter.toQueryParameters(),
         );
-        print('🔍 [DEBUG] 첫 페이지 로드 완료: ${response.data.content.length}개 그룹');
         state = state.copyWith(
           allGroups: response.data.content,
           currentPage: 0,
@@ -287,12 +255,8 @@ class UnifiedGroupStateNotifier extends StateNotifier<UnifiedGroupState> {
           usePagination: true,
           isLoading: false,
         );
-        print(
-          '🔍 [DEBUG] 상태 업데이트 완료: allGroups.length=${state.allGroups.length}',
-        );
       }
     } catch (e) {
-      print('❌ [DEBUG] initialize() 에러: $e');
       state = state.copyWith(
         isLoading: false,
         errorMessage: '그룹을 불러오는데 실패했습니다.',
@@ -375,7 +339,6 @@ class UnifiedGroupStateNotifier extends StateNotifier<UnifiedGroupState> {
 /// 통합 그룹 데이터 Provider
 final unifiedGroupProvider =
     StateNotifierProvider<UnifiedGroupStateNotifier, UnifiedGroupState>((ref) {
-      print('🔍 [DEBUG] unifiedGroupProvider 생성');
       final notifier = UnifiedGroupStateNotifier(ref);
 
       // 필터 변경 감지 및 자동 적용
@@ -383,9 +346,7 @@ final unifiedGroupProvider =
         previous,
         next,
       ) {
-        print('🔍 [DEBUG] 필터 변경 감지: previous=$previous, next=$next');
         if (previous != next) {
-          print('🔍 [DEBUG] applyFilter() 호출');
           notifier.applyFilter(next);
         }
       });
