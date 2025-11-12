@@ -31,12 +31,14 @@ class PostComposer extends StatefulWidget {
 class _PostComposerState extends State<PostComposer> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  final FocusNode _keyboardListenerFocusNode = FocusNode();
   bool _isSending = false;
 
   @override
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
+    _keyboardListenerFocusNode.dispose();
     super.dispose();
   }
 
@@ -44,12 +46,14 @@ class _PostComposerState extends State<PostComposer> {
     final content = _controller.text.trim();
     if (content.isEmpty || _isSending || !widget.canWrite) return;
 
+    _focusNode.unfocus(); // 포커스를 먼저 해제
+
     setState(() => _isSending = true);
 
     try {
       await widget.onSubmit(content);
-      // 전송 성공 후 입력창 초기화 (중복 전송 방지)
-      _controller.clear();
+      // 전송 성공 후 입력창 초기화 (composing-related 이슈 방지)
+      _controller.value = TextEditingValue.empty;
     } catch (e) {
       // 에러 처리는 부모 컴포넌트에서 처리
       if (mounted) {
@@ -106,7 +110,7 @@ class _PostComposerState extends State<PostComposer> {
                 maxHeight: 120, // 최대 5줄 (24px * 5)
               ),
               child: KeyboardListener(
-                focusNode: FocusNode(),
+                focusNode: _keyboardListenerFocusNode,
                 onKeyEvent: (event) {
                   // Enter 키 감지: Shift 없이 Enter만 누른 경우 전송
                   if (event is KeyDownEvent &&
