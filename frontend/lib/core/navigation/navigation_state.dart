@@ -5,7 +5,7 @@ part 'navigation_state.freezed.dart';
 part 'navigation_state.g.dart';
 
 /// Maintains the navigation history stack and current position
-@Freezed
+@freezed
 class NavigationState with _$NavigationState {
   @JsonSerializable(explicitToJson: true)
   const factory NavigationState({

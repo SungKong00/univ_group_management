@@ -105,9 +105,6 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
 
   /// 역할 목록 로드
   Future<void> _loadRoles() async {
-    print(
-      '[DEBUG] CreateChannelDialog: Loading roles for group ${widget.groupId}',
-    );
     setState(() {
       _isLoadingRoles = true;
       _errorMessage = null;
@@ -116,14 +113,12 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
     try {
       final roleRepository = ApiRoleRepository();
       final roles = await roleRepository.getGroupRoles(widget.groupId);
-      print('[DEBUG] CreateChannelDialog: Loaded ${roles.length} roles');
 
       setState(() {
         _roles = roles;
         _isLoadingRoles = false;
       });
     } catch (e) {
-      print('[DEBUG] CreateChannelDialog: Failed to load roles: $e');
       setState(() {
         _isLoadingRoles = false;
         _errorMessage = '역할 목록을 불러올 수 없습니다';
@@ -149,24 +144,19 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
 
   /// 채널 생성 처리
   Future<void> _handleCreate() async {
-    print('[DEBUG] CreateChannelDialog: _handleCreate called');
-
     // 폼 검증
     if (!_formKey.currentState!.validate()) {
-      print('[DEBUG] CreateChannelDialog: Form validation failed');
       return;
     }
 
     // POST_READ 권한 검증
     if (!_hasPostReadPermission) {
-      print('[DEBUG] CreateChannelDialog: POST_READ permission not granted');
       setState(() {
         _errorMessage = '최소 1개 역할에 "게시글 읽기" 권한을 부여해야 합니다';
       });
       return;
     }
 
-    print('[DEBUG] CreateChannelDialog: Starting channel creation');
     setState(() {
       _isCreating = true;
       _errorMessage = null;
@@ -188,10 +178,6 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
         }
       }
 
-      print(
-        '[DEBUG] CreateChannelDialog: Calling API with rolePermissions: $rolePermissions',
-      );
-
       // API 호출
       final channelService = ChannelService();
       final channel = await channelService.createChannelWithPermissions(
@@ -204,24 +190,15 @@ class _CreateChannelDialogState extends ConsumerState<CreateChannelDialog>
         rolePermissions: rolePermissions,
       );
 
-      print(
-        '[DEBUG] CreateChannelDialog: API returned channel: ${channel?.name ?? 'null'}',
-      );
-
       if (channel != null && mounted) {
         // 성공 시 채널 객체 반환
-        print('[DEBUG] CreateChannelDialog: Closing dialog with channel');
         Navigator.of(context).pop(channel);
       } else {
-        print(
-          '[DEBUG] CreateChannelDialog: Channel creation failed or context not mounted',
-        );
         setState(() {
           _errorMessage = '채널 생성에 실패했습니다';
         });
       }
     } catch (e) {
-      print('[DEBUG] CreateChannelDialog: Exception during creation: $e');
       setState(() {
         if (e.toString().contains('권한')) {
           _errorMessage = '채널 관리 권한이 없습니다';

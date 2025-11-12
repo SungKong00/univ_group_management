@@ -505,8 +505,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
           groupEvent.endDateTime.isAfter(weekStart)) {
         // Calculate day (0=Monday, 6=Sunday)
         int eventDay = groupEvent.startDateTime.weekday - 1;
-        if (eventDay >= _daysInWeek)
+        if (eventDay >= _daysInWeek) {
           eventDay = _daysInWeek - 1; // Cap at Sunday
+        }
 
         // Calculate start slot (15-minute intervals)
         final startHour = groupEvent.startDateTime.hour;

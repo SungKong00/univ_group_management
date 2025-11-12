@@ -38,5 +38,51 @@
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
+
+  <!-- 브라우저 닫기/새로고침 시 읽음 위치 저장 -->
+  <script>
+    // 읽음 위치 캐시 (Flutter에서 업데이트)
+    window._readPositionCache = {
+      channelId: null,
+      postId: null,
+      token: null,
+      apiBaseUrl: null
+    };
+
+    // beforeunload: 브라우저 닫기, 새로고침, 다른 사이트 이동 감지
+    window.addEventListener('beforeunload', function(e) {
+      const cache = window._readPositionCache;
+
+      if (cache.channelId && cache.postId && cache.token && cache.apiBaseUrl) {
+        // sendBeacon으로 동기 전송 (브라우저가 전송 보장)
+        const url = cache.apiBaseUrl + '/api/channels/' + cache.channelId + '/read-position?token=' + encodeURIComponent(cache.token);
+        // ✅ text/plain으로 변경하여 CORS preflight 방지
+        const data = new Blob(
+          [JSON.stringify({ lastReadPostId: cache.postId })],
+          { type: 'text/plain' }
+        );
+
+        const sent = navigator.sendBeacon(url, data);
+        console.log('[beforeunload] Read position save attempt:', sent ? 'SUCCESS' : 'FAILED', '(channel:', cache.channelId, 'post:', cache.postId + ')');
+      }
+    });
+
+    // pagehide: 모바일 Safari 및 일부 브라우저 대응 (beforeunload 백업)
+    window.addEventListener('pagehide', function(e) {
+      const cache = window._readPositionCache;
+
+      if (cache.channelId && cache.postId && cache.token && cache.apiBaseUrl) {
+        const url = cache.apiBaseUrl + '/api/channels/' + cache.channelId + '/read-position?token=' + encodeURIComponent(cache.token);
+        // ✅ text/plain으로 변경하여 CORS preflight 방지
+        const data = new Blob(
+          [JSON.stringify({ lastReadPostId: cache.postId })],
+          { type: 'text/plain' }
+        );
+
+        navigator.sendBeacon(url, data);
+        console.log('[pagehide] Read position save sent (channel:', cache.channelId, 'post:', cache.postId + ')');
+      }
+    });
+  </script>
 </body>
 </html>

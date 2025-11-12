@@ -119,9 +119,36 @@
 - LocalStorage에 저장된 마지막 뷰가 없으면 채널 목록 표시
 - 채널이 있으면 첫 번째 채널 자동 선택 가능 (모바일 UX 우선)
 
+## 7. 읽음 위치 저장 (Read Position Persistence)
+
+### 7.1. 저장 시점
+읽음 위치는 다음 시점에 자동으로 저장됩니다:
+
+- **채널 전환**: 다른 채널 선택 시
+- **워크스페이스 이탈**: 글로벌 네비게이션(홈, 내 활동 등) 클릭 시
+- **앱 종료**: 브라우저 닫기, 탭 이동, 새로고침 시 (웹 전용)
+
+### 7.2. 라우트 기반 감지 (router_listener.dart)
+`RouterListener`는 라우트 변경을 감지하여 워크스페이스 이탈을 자동 처리:
+
+```dart
+// 워크스페이스에서 벗어날 때 자동 감지
+if (previousRoute != null && previousRoute.startsWith('/workspace')) {
+  // 이전 라우트가 워크스페이스였다면 읽음 위치 저장
+  ref.read(workspaceStateProvider.notifier).exitWorkspace();
+}
+```
+
+### 7.3. 조건부 Import (테스트 지원)
+웹 환경에서만 JS interop을 사용하도록 조건부 import 적용:
+
+- **workspace_state_provider_web.dart**: 웹에서 localStorage 동기 접근 (beforeunload 타이밍 보장)
+- **workspace_state_provider_stub.dart**: 테스트 환경에서 no-op 구현
+
 ## 관련 문서
 
 - [네비게이션 및 페이지 플로우](navigation-and-page-flow.md) - 기본 네비게이션 구조
 - [워크스페이스 페이지](workspace-pages.md) - 워크스페이스 전체 구조
 - [워크스페이스 채널 뷰](workspace-channel-view.md) - 채널 및 게시글 시스템
+- [워크스페이스 상태 관리](../../implementation/workspace-state-management.md) - 상태 관리 세부사항
 - [디자인 시스템](../concepts/design-system.md) - 디자인 원칙 및 토큰

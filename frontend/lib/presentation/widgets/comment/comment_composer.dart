@@ -28,12 +28,14 @@ class CommentComposer extends StatefulWidget {
 class _CommentComposerState extends State<CommentComposer> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  final FocusNode _keyboardListenerFocusNode = FocusNode();
   bool _isSending = false;
 
   @override
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
+    _keyboardListenerFocusNode.dispose();
     super.dispose();
   }
 
@@ -82,7 +84,7 @@ class _CommentComposerState extends State<CommentComposer> {
                 maxHeight: 120, // 최대 5줄
               ),
               child: KeyboardListener(
-                focusNode: FocusNode(),
+                focusNode: _keyboardListenerFocusNode,
                 onKeyEvent: (event) {
                   // Enter 키 감지: Shift 없이 Enter만 누른 경우 전송
                   if (event is KeyDownEvent &&

@@ -56,13 +56,8 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
     final isLoading = ref.watch(groupLoadingProvider);
     final isLoadingMore = ref.watch(isLoadingMoreProvider);
 
-    print(
-      '🔍 [DEBUG] GroupExploreList.build() - groups: ${groups.length}, isLoading: $isLoading, isLoadingMore: $isLoadingMore',
-    );
-
     // Empty state
     if (groups.isEmpty && !isLoading) {
-      print('🔍 [DEBUG] 빈 상태 표시: groups.isEmpty && !isLoading');
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -89,11 +84,9 @@ class _GroupExploreListState extends ConsumerState<GroupExploreList> {
 
     // Initial loading state
     if (groups.isEmpty && isLoading) {
-      print('🔍 [DEBUG] 로딩 표시: groups.isEmpty && isLoading');
       return const Center(child: CircularProgressIndicator());
     }
 
-    print('🔍 [DEBUG] 그룹 그리드 렌더링: ${groups.length}개 그룹');
     return _buildGroupGrid(groups, isLoadingMore);
   }
 

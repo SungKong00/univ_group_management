@@ -107,9 +107,6 @@ class GroupEventAdapter {
       'Event must have startTime and endTime for conversion',
     );
 
-    // Calculate actual date from day index
-    final date = weekStart.add(Duration(days: event.start.day));
-
     // Create DateTime from Event (precise minute-level)
     final startDate = event.startTime!;
     final endDate = event.endTime!;

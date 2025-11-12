@@ -1,8 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 import '../../core/models/auth_models.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/navigation/navigation_controller.dart';
 import '../../core/providers/provider_reset.dart';
+import 'workspace_state_provider.dart';
 
 class AuthState {
   final UserInfo? user;
@@ -136,6 +139,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // ✅ 로그아웃 전 읽음 위치 저장 (isLoggingOut 플래그 설정 전)
+    await _saveReadPositionBeforeLogout();
+
     state = state.copyWith(isLoading: true, error: null, isLoggingOut: true);
 
     try {
@@ -158,6 +164,39 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoggingOut: false,
       );
       rethrow;
+    }
+  }
+
+  /// 로그아웃 전 읽음 위치 저장
+  Future<void> _saveReadPositionBeforeLogout() async {
+    try {
+      final workspaceState = _ref.read(workspaceStateProvider);
+      final channelId = workspaceState.selectedChannelId;
+      final postId = workspaceState.currentVisiblePostId;
+
+      if (channelId != null && postId != null) {
+        final channelIdInt = int.tryParse(channelId);
+        if (channelIdInt != null) {
+          // isLoggingOut 플래그가 아직 false이므로 저장 가능
+          await _ref
+              .read(workspaceStateProvider.notifier)
+              .saveReadPosition(channelIdInt, postId);
+
+          if (kDebugMode) {
+            developer.log(
+              '✅ 로그아웃 전 읽음 위치 저장 - 채널: $channelIdInt, 게시글: $postId',
+              name: 'AuthProvider',
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        developer.log(
+          '⚠️ 로그아웃 전 저장 실패 (무시) - $e',
+          name: 'AuthProvider',
+        );
+      }
     }
   }
 
