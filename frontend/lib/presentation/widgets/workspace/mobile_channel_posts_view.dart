@@ -30,6 +30,7 @@ class MobileChannelPostsView extends ConsumerStatefulWidget {
 class _MobileChannelPostsViewState
     extends ConsumerState<MobileChannelPostsView> {
   int _postListKey = 0;
+  int _composerKey = 0;
   final PostService _postService = PostService();
 
   @override
@@ -61,6 +62,7 @@ class _MobileChannelPostsViewState
               ),
             ),
             child: PostComposer(
+              key: ValueKey('post_composer_${widget.channelId}_$_composerKey'),
               canWrite: widget.permissions?.canWritePost ?? false,
               canUploadFile: widget.permissions?.canUploadFile ?? false,
               isLoading: false,
@@ -92,9 +94,10 @@ class _MobileChannelPostsViewState
             .loadUnreadCount(channelIdInt);
       }
 
-      // 게시글 목록 새로고침
+      // 게시글 목록 및 작성기 새로고침
       setState(() {
         _postListKey++;
+        _composerKey++;
       });
     } catch (e) {
       // 에러 처리 (TODO: 사용자에게 에러 메시지 표시)
