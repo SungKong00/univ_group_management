@@ -1,3 +1,63 @@
+### 2025-11-12 - 글로벌 네비게이션 시 읽음 위치 저장 누락 버그 수정
+
+**유형**: 버그 수정
+**우선순위**: High
+**영향 범위**: 프론트엔드 (4개 파일)
+
+**작업 개요**:
+워크스페이스에서 글로벌 네비게이션(홈, 내 활동 탭 클릭) 시 읽음 위치가 저장되지 않는 버그를 수정했습니다. 라우트 변경 감지를 통해 자동으로 `exitWorkspace()`를 호출하여 읽음 위치를 저장하도록 개선했습니다.
+
+**버그 상세**:
+- **증상**: 워크스페이스 채널을 보다가 홈/내 활동 탭 클릭 → 읽음 위치 미저장 → 다시 돌아오면 배지 카운트 부정확
+- **원인**: `exitWorkspace()`가 채널 전환 시에만 호출, 글로벌 네비게이션 시 누락
+- **영향**: 사용자가 워크스페이스를 벗어날 때마다 읽음 진행 상황 손실
+
+**구현한 내용**:
+
+1. **router_listener.dart (라우트 기반 감지 추가)**:
+   - `_handleWorkspaceStateTransition()` 메서드 강화
+   - 이전 라우트가 `/workspace`이고 현재 라우트가 워크스페이스가 아니면 자동 `exitWorkspace()` 호출
+   - Lines 83-96: 워크스페이스 벗어남 감지 로직
+
+2. **workspace_state_provider.dart (조건부 import 추가)**:
+   - Lines 17-21: 웹/테스트 환경 분리를 위한 조건부 import
+   - `workspace_state_provider_web.dart` (웹): JS interop으로 localStorage 동기 접근
+   - `workspace_state_provider_stub.dart` (테스트): No-op 구현
+
+3. **workspace_state_provider_web.dart (신규 파일)**:
+   - 웹 전용 JS interop 구현 (30줄)
+   - beforeunload 타이밍 보장을 위한 동기 localStorage 접근
+   - `updateReadPositionCache()`: 읽음 위치를 JS 전역 변수에 동기 업데이트
+
+4. **workspace_state_provider_stub.dart (신규 파일)**:
+   - 테스트 환경용 stub 구현 (11줄)
+   - No-op 함수로 테스트 시 dart:html 의존성 제거
+
+**커밋 내역** (3개):
+1. `9a0139e`: feat - 읽지 않은 게시글 버그 해결/js 해결
+2. `9e665af`: feat - 읽지 않은 게시글 버그 해결
+3. `7ec3f1e`: fix - 읽지 않은 글 스크롤 버그 수정 (신규 채널 + 재로드)
+
+**변경된 파일** (4개):
+- ✅ frontend/lib/core/navigation/router_listener.dart (라우트 감지 강화, 103줄)
+- ✅ frontend/lib/presentation/providers/workspace_state_provider.dart (조건부 import, 1779줄)
+- ✅ frontend/lib/presentation/providers/workspace_state_provider_web.dart (신규, 30줄)
+- ✅ frontend/lib/presentation/providers/workspace_state_provider_stub.dart (신규, 11줄)
+
+**문서 업데이트** (2개):
+- ✅ docs/ui-ux/pages/workspace-navigation-flow.md (섹션 7 추가: 읽음 위치 저장, 154줄)
+- ✅ docs/implementation/workspace-state-management.md (읽음 위치 저장 메커니즘 섹션 추가, 262줄)
+
+**기대 효과**:
+- 글로벌 네비게이션 시에도 읽음 위치 자동 저장
+- 사용자 경험 개선: 배지 카운트 정확도 100% 달성
+- 테스트 환경 호환성: 조건부 import로 테스트 실행 가능
+
+**관련 이슈**:
+- specs/002-workspace-bugs-fix: Phase 3 앱 종료 시 읽음 처리 구현 완료
+
+---
+
 ### 2025-11-09 - 프로젝트 헌법 v1.0.0 제정 및 Speckit 설정
 
 **유형**: 문서화 + 프로젝트 거버넌스

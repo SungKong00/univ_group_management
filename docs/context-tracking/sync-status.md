@@ -4,7 +4,7 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-11-03 (G) (읽지 않은 글 스크롤 버그 수정)
+**마지막 업데이트**: 2025-11-12 (H) (글로벌 네비게이션 읽음 위치 저장 버그 수정)
 **총 문서 수**: 103개
 **동기화 완료**: 103개 (100%)
 **업데이트 필요**: 0개 (0%)
@@ -70,7 +70,7 @@
 | `row-column-layout-checklist.md` | ✅ 최신 | 2025-11-01 | 버튼 위젯 특별 규칙 추가 (366줄) |
 | `workspace-page-implementation-guide.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 페이지 구현 가이드 |
 | `workspace-page-checklist.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 체크리스트 |
-| `workspace-state-management.md` | ✅ 최신 | 2025-11-01 | 통합 네비게이션 히스토리 시스템 추가 |
+| `workspace-state-management.md` | ✅ 최신 | 2025-11-12 | 읽음 위치 저장 메커니즘 섹션 추가 (262줄) |
 | `workspace-troubleshooting.md` | ✅ 최신 | 2025-11-03 | 읽지 않은 글 스크롤 버그 추가 |
 
 ### `/docs/concepts/` - 도메인 개념 문서 (14개)
@@ -108,7 +108,7 @@
 |--------|------|---------------|------|
 | `authentication-pages.md` | ✅ 최신 | 2024-09-28 | 인증 페이지 |
 | `navigation-and-page-flow.md` | ✅ 최신 | 2025-10-24 | 기본 네비게이션 구조 (100줄로 축소) |
-| `workspace-navigation-flow.md` | ✅ 최신 | 2025-11-01 | 그룹 전환 네비게이션 섹션 추가 |
+| `workspace-navigation-flow.md` | ✅ 최신 | 2025-11-12 | 읽음 위치 저장 섹션 추가 (154줄) |
 | `workspace-pages.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 전체 구조 (100줄로 축소) |
 | `workspace-channel-view.md` | ✅ 최신 | 2025-10-24 | 채널 뷰 (게시글/댓글, 신규) |
 | `workspace-admin-pages.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 관리 페이지 (신규) |
@@ -172,6 +172,16 @@
 
 ### ✅ 최신 상태 (98개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
+
+**주요 업데이트 (2025-11-12)**:
+- **(H) 글로벌 네비게이션 시 읽음 위치 저장 누락 버그 수정**
+  - router_listener.dart: 라우트 기반 워크스페이스 이탈 감지 추가 (103줄)
+  - workspace_state_provider.dart: 조건부 import 추가 (웹/테스트 환경 분리, 1779줄)
+  - workspace_state_provider_web.dart: 웹 전용 JS interop 신규 생성 (30줄)
+  - workspace_state_provider_stub.dart: 테스트용 stub 신규 생성 (11줄)
+  - workspace-navigation-flow.md: 읽음 위치 저장 섹션 추가 (154줄)
+  - workspace-state-management.md: 읽음 위치 저장 메커니즘 섹션 추가 (262줄)
+  - context-update-log.md: 2025-11-12 (H) 로그 추가
 
 **주요 업데이트 (2025-11-03)**:
 - **(G) 읽지 않은 글 스크롤 버그 수정**

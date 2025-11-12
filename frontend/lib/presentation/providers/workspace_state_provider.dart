@@ -7,10 +7,18 @@ import '../../core/models/group_models.dart';
 import '../../core/services/channel_service.dart';
 import '../../core/services/local_storage.dart';
 import '../../core/utils/permission_utils.dart';
+import '../../core/navigation/navigation_controller.dart';
 import 'my_groups_provider.dart';
 import 'place_calendar_provider.dart';
 import 'auth_provider.dart';
 import 'workspace_navigation_helper.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// 웹 플랫폼에서만 JS interop 및 HTML API 사용 (조건부 import)
+// ignore: uri_does_not_exist
+import 'workspace_state_provider_stub.dart'
+    if (dart.library.html) 'workspace_state_provider_web.dart'
+    as web_utils;
 
 /// Workspace View Type
 enum WorkspaceView {
@@ -392,6 +400,14 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     return _workspaceSnapshots[groupId];
   }
 
+  /// Check if a session snapshot exists for the given group
+  ///
+  /// Returns true if a snapshot exists (not first-time access),
+  /// false otherwise (first-time access or cleared after global home return)
+  bool hasSnapshot(String groupId) {
+    return _workspaceSnapshots.containsKey(groupId);
+  }
+
   void _applySnapshot(WorkspaceSnapshot snapshot) {
     final updatedContext = Map<String, dynamic>.from(state.workspaceContext);
 
@@ -694,8 +710,11 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     );
 
     // ✅ 모바일 UX 조정: 그룹 전환 시 mobileView가 channelList이면 currentView를 channel로 설정
+    // ⚠️ FIX: 모바일에서만 적용 (데스크톱은 groupHome 유지)
     WorkspaceView adjustedView = finalView;
-    if (!isSameGroup && finalMobileView == MobileWorkspaceView.channelList) {
+    if (!kIsWeb &&
+        !isSameGroup &&
+        finalMobileView == MobileWorkspaceView.channelList) {
       // 그룹 전환 시 모바일의 기본 뷰는 채널 리스트
       // 특수 뷰(calendar, admin 등)가 아니면 channel 뷰로 강제
       if (targetView == null || targetView == WorkspaceView.groupHome) {
@@ -987,8 +1006,37 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// Note: Badge update (unread count) is NOT performed here.
   /// It should be manually called when leaving the channel (selectChannel, exitWorkspace)
   Future<void> saveReadPosition(int channelId, int postId) async {
+    // 안전장치: 로그아웃 중에는 저장하지 않음
+    final isLoggingOut = _ref.read(authProvider).isLoggingOut;
+    if (isLoggingOut) {
+      if (kDebugMode) {
+        developer.log(
+          '읽음 위치 저장 스킵 (로그아웃 중) - 채널: $channelId',
+          name: 'WorkspaceState',
+        );
+      }
+      return;
+    }
+
     // API call (Best-Effort, error ignored)
-    await _channelService.updateReadPosition(channelId, postId);
+    try {
+      await _channelService.updateReadPosition(channelId, postId);
+
+      if (kDebugMode) {
+        developer.log(
+          '✅ 읽음 위치 저장 완료 - 채널: $channelId, 게시글: $postId',
+          name: 'WorkspaceState',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        developer.log(
+          '⚠️ 읽음 위치 저장 실패 (무시) - 채널: $channelId, 에러: $e',
+          name: 'WorkspaceState',
+        );
+      }
+      // Best-Effort: 에러 무시
+    }
 
     // Update local state
     state = state.copyWith(
@@ -1001,6 +1049,54 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// Update currently visible post ID (called during scrolling)
   void updateCurrentVisiblePost(int postId) {
     state = state.copyWith(currentVisiblePostId: postId);
+
+    // ✅ 웹 환경에서 즉시 동기 업데이트 (beforeunload 타이밍 보장)
+    if (kIsWeb) {
+      _updateJsReadPositionCacheSync(postId);
+    }
+  }
+
+  /// 웹 전용: JS 캐시를 동기적으로 업데이트 (beforeunload 타이밍 보장)
+  ///
+  /// 스크롤 시 즉시 호출되어 JS 전역 변수를 업데이트합니다.
+  /// 브라우저 닫기/새로고침 시 beforeunload 이벤트가 이 캐시를 읽어
+  /// sendBeacon으로 서버에 전송합니다.
+  void _updateJsReadPositionCacheSync(int postId) {
+    if (!kIsWeb) return;
+
+    try {
+      final channelId = state.selectedChannelId;
+      if (channelId == null) {
+        if (kDebugMode) {
+          developer.log(
+            '⚠️ JS 캐시 업데이트 스킵 - channelId null',
+            name: 'WorkspaceState',
+          );
+        }
+        return;
+      }
+
+      // API base URL
+      final apiBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:8080';
+
+      // ✅ 웹 유틸리티를 통해 JS 캐시 업데이트 (조건부 import)
+      web_utils.updateReadPositionCache(
+        channelId: channelId,
+        postId: postId,
+        apiBaseUrl: apiBaseUrl,
+      );
+
+      if (kDebugMode) {
+        developer.log(
+          '🔄 JS 캐시 동기 업데이트 - 채널: $channelId, 게시글: $postId',
+          name: 'WorkspaceState',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        developer.log('⚠️ JS 캐시 동기 업데이트 실패 - $e', name: 'WorkspaceState');
+      }
+    }
   }
 
   /// Load unread count for a single channel
@@ -1018,6 +1114,91 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
     state = state.copyWith(
       unreadCountMap: {...state.unreadCountMap, ...counts},
+    );
+  }
+
+  /// Helper: Save read position for current channel before leaving
+  ///
+  /// 채널 이탈 시 읽음 위치 저장 + 배지 업데이트를 수행합니다.
+  /// Best-Effort 방식으로 에러는 무시됩니다.
+  Future<void> _saveReadPositionForCurrentChannel() async {
+    final currentChannelId = state.selectedChannelId;
+    if (currentChannelId != null && state.currentVisiblePostId != null) {
+      final channelIdInt = int.tryParse(currentChannelId);
+      if (channelIdInt != null) {
+        try {
+          await saveReadPosition(channelIdInt, state.currentVisiblePostId!);
+
+          // ✅ 이탈 시 배지 업데이트 (읽지 않은 글 개수 재계산)
+          await loadUnreadCount(channelIdInt);
+        } catch (e) {
+          // Best-Effort: ignore errors
+          if (kDebugMode) {
+            developer.log(
+              'Failed to save read position when leaving channel: $e',
+              name: 'WorkspaceStateNotifier',
+              level: 300,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /// Universal view transition handler (Template Method Pattern)
+  ///
+  /// Automatically handles:
+  /// - Read position save (best-effort)
+  /// - Navigation history update
+  /// - State synchronization
+  ///
+  /// Usage:
+  /// ```dart
+  /// await _transitionToView(
+  ///   targetView: WorkspaceView.groupHome,
+  ///   stateUpdates: {'selectedChannelId': null},
+  /// );
+  /// ```
+  Future<void> _transitionToView({
+    required WorkspaceView targetView,
+    Map<String, dynamic>? stateUpdates,
+  }) async {
+    // Step 1: Save read position (Best-Effort)
+    // MUST complete before state update to ensure data consistency
+    await _saveReadPositionForCurrentChannel();
+
+    // Step 2: Add to navigation history
+    if (state.selectedGroupId != null) {
+      _addToNavigationHistory(
+        groupId: state.selectedGroupId!,
+        view: state.currentView,
+        mobileView: state.mobileView,
+        channelId: state.selectedChannelId,
+        postId: state.selectedPostId,
+        isCommentsVisible: state.isCommentsVisible,
+      );
+    }
+
+    // Step 3: Update state
+    state = _applyStateUpdates(targetView, stateUpdates);
+  }
+
+  /// Helper: Apply state updates for view transition
+  WorkspaceState _applyStateUpdates(
+    WorkspaceView targetView,
+    Map<String, dynamic>? updates,
+  ) {
+    return state.copyWith(
+      previousView: state.currentView,
+      currentView: targetView,
+      selectedChannelId: updates?['selectedChannelId'] as String?,
+      isCommentsVisible: updates?['isCommentsVisible'] as bool? ?? false,
+      selectedPostId: updates?['selectedPostId'] as String?,
+      isNarrowDesktopCommentsFullscreen:
+          updates?['isNarrowDesktopCommentsFullscreen'] as bool? ?? false,
+      selectedCalendarDate: updates?['selectedCalendarDate'] as DateTime?,
+      selectedPlaceId: updates?['selectedPlaceId'] as int?,
+      selectedPlaceName: updates?['selectedPlaceName'] as String?,
     );
   }
 
@@ -1046,200 +1227,97 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   /// Show group home view
-  void showGroupHome() {
-    // Add current state to navigation history
-    if (state.selectedGroupId != null) {
-      _addToNavigationHistory(
-        groupId: state.selectedGroupId!,
-        view: state.currentView,
-        mobileView: state.mobileView,
-        channelId: state.selectedChannelId,
-        postId: state.selectedPostId,
-        isCommentsVisible: state.isCommentsVisible,
-      );
-    }
-
-    state = state.copyWith(
-      previousView: state.currentView,
-      currentView: WorkspaceView.groupHome,
-      selectedChannelId: null,
-      isCommentsVisible: false,
-      selectedPostId: null,
-      isNarrowDesktopCommentsFullscreen: false,
-      selectedCalendarDate: null,
-    );
-  }
+  Future<void> showGroupHome() => _transitionToView(
+    targetView: WorkspaceView.groupHome,
+    stateUpdates: {
+      'selectedChannelId': null,
+      'isCommentsVisible': false,
+      'selectedPostId': null,
+      'isNarrowDesktopCommentsFullscreen': false,
+      'selectedCalendarDate': null,
+    },
+  );
 
   /// Show calendar view
-  void showCalendar({DateTime? selectedDate}) {
-    // Add current state to navigation history
-    if (state.selectedGroupId != null) {
-      _addToNavigationHistory(
-        groupId: state.selectedGroupId!,
-        view: state.currentView,
-        mobileView: state.mobileView,
-        channelId: state.selectedChannelId,
-        postId: state.selectedPostId,
-        isCommentsVisible: state.isCommentsVisible,
-      );
-    }
-
-    state = state.copyWith(
-      previousView: state.currentView,
-      currentView: WorkspaceView.calendar,
-      selectedChannelId: null,
-      isCommentsVisible: false,
-      selectedPostId: null,
-      isNarrowDesktopCommentsFullscreen: false,
-      selectedCalendarDate: selectedDate,
-    );
-  }
+  Future<void> showCalendar({DateTime? selectedDate}) => _transitionToView(
+    targetView: WorkspaceView.calendar,
+    stateUpdates: {
+      'selectedChannelId': null,
+      'isCommentsVisible': false,
+      'selectedPostId': null,
+      'isNarrowDesktopCommentsFullscreen': false,
+      'selectedCalendarDate': selectedDate,
+    },
+  );
 
   /// Show group admin/management page view
-  void showGroupAdminPage() {
-    // Add current state to navigation history
-    if (state.selectedGroupId != null) {
-      _addToNavigationHistory(
-        groupId: state.selectedGroupId!,
-        view: state.currentView,
-        mobileView: state.mobileView,
-        channelId: state.selectedChannelId,
-        postId: state.selectedPostId,
-        isCommentsVisible: state.isCommentsVisible,
-      );
-    }
-
-    state = state.copyWith(
-      previousView: state.currentView,
-      currentView: WorkspaceView.groupAdmin,
-      selectedChannelId: null,
-      isCommentsVisible: false,
-      selectedPostId: null,
-      isNarrowDesktopCommentsFullscreen: false,
-    );
-  }
+  Future<void> showGroupAdminPage() => _transitionToView(
+    targetView: WorkspaceView.groupAdmin,
+    stateUpdates: {
+      'selectedChannelId': null,
+      'isCommentsVisible': false,
+      'selectedPostId': null,
+      'isNarrowDesktopCommentsFullscreen': false,
+    },
+  );
 
   /// Show member management page view
-  void showMemberManagementPage() {
-    // Add current state to navigation history
-    if (state.selectedGroupId != null) {
-      _addToNavigationHistory(
-        groupId: state.selectedGroupId!,
-        view: state.currentView,
-        mobileView: state.mobileView,
-        channelId: state.selectedChannelId,
-        postId: state.selectedPostId,
-        isCommentsVisible: state.isCommentsVisible,
-      );
-    }
-
-    state = state.copyWith(
-      previousView: state.currentView,
-      currentView: WorkspaceView.memberManagement,
-      selectedChannelId: null,
-      isCommentsVisible: false,
-      selectedPostId: null,
-      isNarrowDesktopCommentsFullscreen: false,
-    );
-  }
+  Future<void> showMemberManagementPage() => _transitionToView(
+    targetView: WorkspaceView.memberManagement,
+    stateUpdates: {
+      'selectedChannelId': null,
+      'isCommentsVisible': false,
+      'selectedPostId': null,
+      'isNarrowDesktopCommentsFullscreen': false,
+    },
+  );
 
   /// Show recruitment management page view
-  void showRecruitmentManagementPage() {
-    // Add current state to navigation history
-    if (state.selectedGroupId != null) {
-      _addToNavigationHistory(
-        groupId: state.selectedGroupId!,
-        view: state.currentView,
-        mobileView: state.mobileView,
-        channelId: state.selectedChannelId,
-        postId: state.selectedPostId,
-        isCommentsVisible: state.isCommentsVisible,
-      );
-    }
-
-    state = state.copyWith(
-      previousView: state.currentView,
-      currentView: WorkspaceView.recruitmentManagement,
-      selectedChannelId: null,
-      isCommentsVisible: false,
-      selectedPostId: null,
-      isNarrowDesktopCommentsFullscreen: false,
-    );
-  }
+  Future<void> showRecruitmentManagementPage() => _transitionToView(
+    targetView: WorkspaceView.recruitmentManagement,
+    stateUpdates: {
+      'selectedChannelId': null,
+      'isCommentsVisible': false,
+      'selectedPostId': null,
+      'isNarrowDesktopCommentsFullscreen': false,
+    },
+  );
 
   /// Show application management page view (모집 지원자 관리)
-  void showApplicationManagementPage() {
-    // Add current state to navigation history
-    if (state.selectedGroupId != null) {
-      _addToNavigationHistory(
-        groupId: state.selectedGroupId!,
-        view: state.currentView,
-        mobileView: state.mobileView,
-        channelId: state.selectedChannelId,
-        postId: state.selectedPostId,
-        isCommentsVisible: state.isCommentsVisible,
-      );
-    }
-
-    state = state.copyWith(
-      previousView: state.currentView,
-      currentView: WorkspaceView.applicationManagement,
-      selectedChannelId: null,
-      isCommentsVisible: false,
-      selectedPostId: null,
-      isNarrowDesktopCommentsFullscreen: false,
-    );
-  }
+  Future<void> showApplicationManagementPage() => _transitionToView(
+    targetView: WorkspaceView.applicationManagement,
+    stateUpdates: {
+      'selectedChannelId': null,
+      'isCommentsVisible': false,
+      'selectedPostId': null,
+      'isNarrowDesktopCommentsFullscreen': false,
+    },
+  );
 
   /// Show place time management page view (장소 시간 관리)
-  void showPlaceTimeManagementPage(int placeId, String placeName) {
-    // Add current state to navigation history
-    if (state.selectedGroupId != null) {
-      _addToNavigationHistory(
-        groupId: state.selectedGroupId!,
-        view: state.currentView,
-        mobileView: state.mobileView,
-        channelId: state.selectedChannelId,
-        postId: state.selectedPostId,
-        isCommentsVisible: state.isCommentsVisible,
+  Future<void> showPlaceTimeManagementPage(int placeId, String placeName) =>
+      _transitionToView(
+        targetView: WorkspaceView.placeTimeManagement,
+        stateUpdates: {
+          'selectedChannelId': null,
+          'isCommentsVisible': false,
+          'selectedPostId': null,
+          'isNarrowDesktopCommentsFullscreen': false,
+          'selectedPlaceId': placeId,
+          'selectedPlaceName': placeName,
+        },
       );
-    }
 
-    state = state.copyWith(
-      previousView: state.currentView,
-      currentView: WorkspaceView.placeTimeManagement,
-      selectedChannelId: null,
-      isCommentsVisible: false,
-      selectedPostId: null,
-      isNarrowDesktopCommentsFullscreen: false,
-      selectedPlaceId: placeId,
-      selectedPlaceName: placeName,
-    );
-  }
-
-  /// Show channel management page view
-  void showChannelManagementPage() {
-    // Add current state to navigation history
-    if (state.selectedGroupId != null) {
-      _addToNavigationHistory(
-        groupId: state.selectedGroupId!,
-        view: state.currentView,
-        mobileView: state.mobileView,
-        channelId: state.selectedChannelId,
-        postId: state.selectedPostId,
-        isCommentsVisible: state.isCommentsVisible,
-      );
-    }
-
-    state = state.copyWith(
-      previousView: state.currentView,
-      currentView: WorkspaceView.channelManagement,
-      selectedChannelId: null,
-      isCommentsVisible: false,
-      selectedPostId: null,
-      isNarrowDesktopCommentsFullscreen: false,
-    );
-  }
+  /// Show channel management page view (채널 관리)
+  Future<void> showChannelManagementPage() => _transitionToView(
+    targetView: WorkspaceView.channelManagement,
+    stateUpdates: {
+      'selectedChannelId': null,
+      'isCommentsVisible': false,
+      'selectedPostId': null,
+      'isNarrowDesktopCommentsFullscreen': false,
+    },
+  );
 
   /// Show channel view
   void showChannel(String channelId) {
@@ -1280,6 +1358,42 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     );
   }
 
+  /// 읽은 위치만 저장 (상태는 유지)
+  ///
+  /// 앱이 일시적으로 백그라운드로 가거나 웹 탭이 숨겨질 때 사용.
+  /// 현재 보고 있던 채널 정보는 유지하면서 읽은 위치만 서버에 저장.
+  Future<void> saveReadPositionOnly() async {
+    final currentChannelId = state.selectedChannelId;
+    if (currentChannelId != null && state.currentVisiblePostId != null) {
+      final channelIdInt = int.tryParse(currentChannelId);
+      if (channelIdInt != null) {
+        try {
+          await saveReadPosition(channelIdInt, state.currentVisiblePostId!);
+          await loadUnreadCount(channelIdInt);
+
+          if (kDebugMode) {
+            developer.log(
+              'Read position saved (state preserved)',
+              name: 'WorkspaceStateNotifier',
+            );
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            developer.log(
+              'Failed to save read position: $e',
+              name: 'WorkspaceStateNotifier',
+              level: 300,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /// 워크스페이스 완전 종료 (상태 초기화)
+  ///
+  /// 앱이 완전히 종료되거나 사용자가 명시적으로 워크스페이스를 나갈 때 사용.
+  /// 읽은 위치 저장 + 상태 초기화를 수행.
   void exitWorkspace() async {
     // 1. Save read position for current channel if we have a visible post
     final currentChannelId = state.selectedChannelId;
@@ -1305,8 +1419,30 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       }
     }
 
-    // 2. Save workspace snapshot and reset state
-    _saveCurrentWorkspaceSnapshot();
+    // 2. Check if user returned to global home via back navigation
+    // If so, clear all workspace snapshots (next workspace entry will be "first-time")
+    final navigationController = _ref.read(
+      navigationControllerProvider.notifier,
+    );
+    final isReturnToGlobalHome = navigationController.state.isAtGlobalHome;
+
+    if (isReturnToGlobalHome) {
+      // Clear all workspace snapshots - user wants fresh start
+      _workspaceSnapshots.clear();
+      _lastGroupId = null;
+
+      if (kDebugMode) {
+        developer.log(
+          'Cleared all workspace snapshots (returned to global home)',
+          name: 'WorkspaceStateNotifier',
+        );
+      }
+    } else {
+      // Normal exit: save current snapshot for later restoration
+      _saveCurrentWorkspaceSnapshot();
+    }
+
+    // 3. Reset state
     state = const WorkspaceState();
   }
 

@@ -118,6 +118,18 @@ class NavigationState extends Equatable {
     return currentTab.isRootRoute(currentRoute);
   }
 
+  /// Check if user has returned to global home (app-level home, not tab-level)
+  ///
+  /// Returns true when:
+  /// - Current tab is HOME
+  /// - At the root of HOME tab (no navigation history)
+  ///
+  /// This is used to determine when to clear workspace snapshots
+  /// (user pressed back repeatedly until reaching the global home screen)
+  bool get isAtGlobalHome {
+    return currentTab == NavigationTab.home && isAtTabRoot;
+  }
+
   /// 사이드바를 강제로 축소해야 하는지 확인
   /// - MEDIUM 모드: 항상 축소
   /// - WIDE 모드 + 워크스페이스: 워크스페이스 상태에 따라 축소

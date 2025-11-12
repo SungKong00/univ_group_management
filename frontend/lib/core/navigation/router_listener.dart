@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'navigation_controller.dart';
+import '../../presentation/providers/workspace_state_provider.dart';
 
 /// Go Router와 NavigationController 동기화를 위한 리스너
 class RouterListener extends ConsumerStatefulWidget {
@@ -70,15 +71,28 @@ class _RouterListenerState extends ConsumerState<RouterListener> {
     NavigationController navigationController,
   ) {
     final isWorkspaceRoute = route.startsWith('/workspace');
-    final currentState = ref.read(navigationControllerProvider);
+    final previousRoute = _previousRoute;
 
     // 워크스페이스 진입 시 자동 축소
-    if (isWorkspaceRoute && !currentState.isWorkspaceCollapsed) {
-      navigationController.enterWorkspace();
+    if (isWorkspaceRoute) {
+      final currentState = ref.read(navigationControllerProvider);
+      if (!currentState.isWorkspaceCollapsed) {
+        navigationController.enterWorkspace();
+      }
     }
-    // 워크스페이스 벗어날 시 자동 확장
-    else if (!isWorkspaceRoute && currentState.isWorkspaceCollapsed) {
+    // 워크스페이스 벗어날 시 자동 확장 및 읽음 위치 저장
+    else if (previousRoute != null && previousRoute.startsWith('/workspace')) {
+      // ✅ FIX: 이전 라우트가 워크스페이스였다면 무조건 exitWorkspace() 호출
+      // (사이드바 상태와 관계없이 읽음 위치 저장 필요)
+      ref.read(workspaceStateProvider.notifier).exitWorkspace();
       navigationController.exitWorkspace();
+
+      if (kDebugMode) {
+        developer.log(
+          '🔄 Workspace exit: $previousRoute → $route',
+          name: 'RouterListener',
+        );
+      }
     }
   }
 

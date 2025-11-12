@@ -53,9 +53,7 @@ class ReadPositionHelper {
     // 따라서 첫 번째 게시글(index 0)부터 읽지 않은 글로 간주
     // -1: 신규 채널 또는 API가 null을 반환한 경우 (workspace_state_provider에서 설정)
     if (lastReadPostId == null || lastReadPostId == -1) {
-      print(
-        '[DEBUG] ReadPositionHelper: lastReadPostId is $lastReadPostId (new channel), all posts are unread (return index 0)',
-      );
+      // Debug log removed for production code
       return groupedPosts.isEmpty ? null : 0;
     }
 
@@ -63,27 +61,23 @@ class ReadPositionHelper {
 
     // Sort dates (oldest to newest)
     final sortedDates = groupedPosts.keys.toList()..sort();
-    print('[DEBUG] ReadPositionHelper: Sorted dates: $sortedDates');
+    // Debug log removed for production code
 
     for (final date in sortedDates) {
       final posts = groupedPosts[date]!;
 
       for (final post in posts) {
-        print(
-          '[DEBUG] ReadPositionHelper: Checking post ${post.id}: globalIndex=$globalIndex, lastReadPostId=$lastReadPostId',
-        );
+        // Debug log removed for production code
 
         if (post.id > lastReadPostId) {
-          print(
-            '[DEBUG] ReadPositionHelper: Found first unread post at globalIndex=$globalIndex (postId=${post.id})',
-          );
+          // Debug log removed for production code
           return globalIndex; // First unread post's global index
         }
         globalIndex++;
       }
     }
 
-    print('[DEBUG] ReadPositionHelper: All posts read');
+    // Debug log removed for production code
     return null; // All posts are read
   }
 
@@ -119,5 +113,46 @@ class ReadPositionHelper {
     if (lastReadPostId == null) return 0;
 
     return posts.where((post) => post.id > lastReadPostId).length;
+  }
+
+  /// Find the Post ID of the first unread post in grouped posts
+  ///
+  /// Returns the ID of the first post that is newer than lastReadPostId,
+  /// or null if all posts are read.
+  ///
+  /// This simplifies the index system by using Post IDs directly
+  /// instead of converting between global and local indices.
+  static int? findFirstUnreadPostId(
+    Map<DateTime, List<Post>> groupedPosts,
+    int? lastReadPostId,
+  ) {
+    // If no read history, return first post's ID
+    if (lastReadPostId == null || lastReadPostId == -1) {
+      if (groupedPosts.isEmpty) return null;
+
+      // Get the first post from the oldest date group
+      final sortedDates = groupedPosts.keys.toList()..sort();
+      if (sortedDates.isEmpty) return null;
+
+      final firstGroup = groupedPosts[sortedDates.first];
+      if (firstGroup == null || firstGroup.isEmpty) return null;
+
+      return firstGroup.first.id;
+    }
+
+    // Sort dates (oldest to newest)
+    final sortedDates = groupedPosts.keys.toList()..sort();
+
+    for (final date in sortedDates) {
+      final posts = groupedPosts[date]!;
+
+      for (final post in posts) {
+        if (post.id > lastReadPostId) {
+          return post.id; // First unread post's ID
+        }
+      }
+    }
+
+    return null; // All posts are read
   }
 }

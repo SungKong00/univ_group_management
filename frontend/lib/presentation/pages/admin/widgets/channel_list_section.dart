@@ -193,15 +193,12 @@ class ChannelListSection extends ConsumerWidget {
   }
 
   Future<void> _handleCreateChannel(BuildContext context, WidgetRef ref) async {
-    print('[DEBUG] _handleCreateChannel called for groupId: $groupId');
     try {
       // 워크스페이스 ID 조회
-      print('[DEBUG] Fetching workspace for group $groupId');
       final dioClient = DioClient();
       final response = await dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/workspaces',
       );
-      print('[DEBUG] Workspace response: ${response.data}');
 
       if (response.data == null || !context.mounted) return;
 
@@ -214,7 +211,6 @@ class ChannelListSection extends ConsumerWidget {
       });
 
       if (!apiResponse.success || apiResponse.data == null) {
-        print('[DEBUG] Failed to get workspace: ${apiResponse.message}');
         if (context.mounted) {
           AppSnackBar.error(context, '워크스페이스를 찾을 수 없습니다');
         }
@@ -222,17 +218,14 @@ class ChannelListSection extends ConsumerWidget {
       }
 
       final workspaceId = apiResponse.data!;
-      print('[DEBUG] Got workspaceId: $workspaceId');
 
       // 채널 생성 다이얼로그 (권한 설정 통합)
       if (!context.mounted) return;
-      print('[DEBUG] Showing CreateChannelDialog...');
       final channel = await showCreateChannelDialog(
         context,
         workspaceId: workspaceId,
         groupId: groupId,
       );
-      print('[DEBUG] Dialog returned: ${channel?.name ?? 'null'}');
 
       if (channel != null) {
         // 채널 목록 새로고침 (여러 Provider 무효화)
@@ -259,8 +252,6 @@ class ChannelListSection extends ConsumerWidget {
         }
       }
     } catch (e) {
-      print('[DEBUG] Exception in _handleCreateChannel: $e');
-      print('[DEBUG] Stack trace: ${StackTrace.current}');
       if (context.mounted) {
         AppSnackBar.error(context, '오류가 발생했습니다: $e');
       }

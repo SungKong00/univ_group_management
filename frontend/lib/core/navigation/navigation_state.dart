@@ -7,6 +7,7 @@ part 'navigation_state.g.dart';
 /// Maintains the navigation history stack and current position
 @freezed
 class NavigationState with _$NavigationState {
+  @JsonSerializable(explicitToJson: true)
   const factory NavigationState({
     @Default([]) List<WorkspaceRoute> stack,
     @Default(-1) int currentIndex,

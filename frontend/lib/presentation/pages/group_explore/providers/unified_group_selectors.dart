@@ -10,7 +10,6 @@ final listViewGroupsProvider = Provider<List<GroupSummaryResponse>>((ref) {
   final groups = ref.watch(
     unifiedGroupProvider.select((s) => s.filteredGroups),
   );
-  print('🔍 [DEBUG] listViewGroupsProvider: ${groups.length} groups');
   return groups;
 });
 

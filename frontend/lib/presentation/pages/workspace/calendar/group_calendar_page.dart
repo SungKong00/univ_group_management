@@ -95,7 +95,6 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
   @override
   Widget build(BuildContext context) {
-    print('🔍 [GROUP_CALENDAR] Building GroupCalendarPage - NEW VERSION');
     return Column(
       children: [
         _buildTabBar(),
@@ -284,7 +283,6 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     DateTime focusedDate,
     bool isBusy,
   ) {
-    print('🔍 [GROUP_CALENDAR] Building header with CalendarNavigator (NEW)');
     final viewToggle = ToggleButtons(
       isSelected: CalendarView.values
           .map((option) => option == currentView)
