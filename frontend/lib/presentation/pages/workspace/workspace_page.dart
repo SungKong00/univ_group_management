@@ -110,6 +110,11 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     // Remove lifecycle observer
     WidgetsBinding.instance.removeObserver(this);
 
+    // ⚠️ dispose에서 ref 사용 불가능 (Riverpod 제약)
+    // 대신 PostList dispose에서 JS 캐시를 업데이트하므로
+    // 브라우저 닫기 시 beforeunload가 최신 읽음 위치를 전송함
+    // 로그아웃은 auth_provider에서 별도 처리
+
     _workspaceNotifier.cacheCurrentWorkspaceState();
     _postScrollController.dispose();
     _commentScrollController.dispose();
@@ -123,40 +128,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
         state == AppLifecycleState.detached) {
       _saveCurrentReadPosition();
     }
-    // Restore session after app returns from background or interruption
-    else if (state == AppLifecycleState.resumed) {
-      _restoreSessionAfterInterruption();
-    }
-  }
-
-  /// Restore session after app returns from background or after interruption
-  ///
-  /// Handles:
-  /// - Workspace state validation
-  /// - Permission context refresh
-  /// - Network reconnection
-  void _restoreSessionAfterInterruption() {
-    if (!mounted) return;
-
-    final workspaceState = ref.read(workspaceStateProvider);
-    final currentGroupId = workspaceState.selectedGroupId;
-
-    // If workspace is active, validate and refresh
-    if (currentGroupId != null) {
-      // Refresh workspace state to ensure consistency
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-
-        // Re-initialize workspace to refresh permissions and data
-        _workspaceNotifier.enterWorkspace(
-          currentGroupId,
-          channelId: workspaceState.selectedChannelId,
-        );
-      });
-    }
+    // resumed: No action needed - state is preserved in memory
+    // Removed _restoreSessionAfterInterruption() to prevent unnecessary API calls
   }
 
   Future<void> _saveCurrentReadPosition() async {
+    if (!mounted) return; // 안전장치 1: dispose 후 실행 방지
+
     final workspaceState = ref.read(workspaceStateProvider);
     final channelId = workspaceState.selectedChannelId;
     final postId = workspaceState.currentVisiblePostId;
@@ -164,12 +142,15 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     if (channelId != null && postId != null) {
       final channelIdInt = int.tryParse(channelId);
       if (channelIdInt != null) {
+        if (!mounted) return; // 안전장치 2: await 전 체크
+
         try {
           await ref
               .read(workspaceStateProvider.notifier)
               .saveReadPosition(channelIdInt, postId);
         } catch (e) {
           // Silently ignore errors (Best-Effort)
+          if (!mounted) return; // 안전장치 3: await 후 체크
         }
       }
     }
