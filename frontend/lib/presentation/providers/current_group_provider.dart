@@ -1,33 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/group_models.dart';
 import 'workspace_state_provider.dart';
-import 'my_groups_provider.dart';
 
 /// 현재 선택된 그룹 Provider
 ///
-/// workspaceStateProvider의 selectedGroupId를 기반으로
-/// myGroupsProvider에서 해당 그룹을 찾아 반환합니다.
+/// workspaceStateProvider의 selectedGroup을 직접 반환합니다.
+///
+/// **세션 기반 상태 유지:**
+/// - WorkspaceState에 selectedGroup이 직접 저장되므로 myGroupsProvider
+///   rebuild 시에도 안정적으로 유지됩니다.
+/// - 글로벌 네비게이션으로 탭 전환 시 그룹 선택 상태가 메모리에 유지됩니다.
+/// - 그룹 정보 변경 시 자동으로 동기화됩니다 (WorkspaceStateNotifier의 ref.listen).
+///
+/// **이전 구현과의 차이:**
+/// - 이전: selectedGroupId → myGroupsProvider에서 검색 (불안정)
+/// - 현재: selectedGroup 직접 읽기 (안정적)
 final currentGroupProvider = Provider<GroupMembership?>((ref) {
-  // 워크스페이스 상태에서 선택된 그룹 ID 가져오기
-  final selectedGroupId = ref.watch(currentGroupIdProvider);
-
-  if (selectedGroupId == null) {
-    return null;
-  }
-
-  // 내 그룹 목록에서 선택된 그룹 찾기
-  final groupsAsync = ref.watch(myGroupsProvider);
-
-  return groupsAsync.maybeWhen(
-    data: (groups) {
-      try {
-        return groups.firstWhere((g) => g.id.toString() == selectedGroupId);
-      } catch (e) {
-        // 그룹을 찾지 못한 경우 null 반환
-        return null;
-      }
-    },
-    orElse: () => null,
+  return ref.watch(
+    workspaceStateProvider.select((state) => state.selectedGroup),
   );
 });
 

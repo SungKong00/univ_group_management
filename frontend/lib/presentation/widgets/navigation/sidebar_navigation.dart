@@ -289,6 +289,7 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation>
         ref.read(workspaceStateProvider.notifier).setLoadingState(true);
 
         final workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+
         final targetGroupId = _resolveLastWorkspaceGroupId(
           navigationState,
           workspaceNotifier.lastGroupId,
@@ -359,7 +360,14 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation>
     NavigationState navigationState,
     String? cachedGroupId,
   ) {
+    // ✅ FIX: cachedGroupId를 최우선으로 사용 (가장 최신 상태)
+    // 히스토리는 오래된 값을 가질 수 있으므로 캐시를 먼저 체크
+    if (cachedGroupId != null) {
+      return cachedGroupId;
+    }
+
     final history = navigationState.tabHistories[NavigationTab.workspace] ?? [];
+
     if (history.isNotEmpty) {
       final groupId = _parseGroupId(history.last.route);
       if (groupId != null) {
@@ -374,7 +382,7 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation>
       }
     }
 
-    return cachedGroupId;
+    return null;
   }
 
   String? _parseGroupId(String route) {

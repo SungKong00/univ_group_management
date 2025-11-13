@@ -5,7 +5,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/my_groups_provider.dart';
 import '../../providers/workspace_state_provider.dart';
-import '../../providers/navigation_state_provider.dart';
 
 /// 그룹 선택 드롭다운
 ///
@@ -230,15 +229,13 @@ class _GroupDropdownState extends ConsumerState<GroupDropdown> {
                 });
 
                 try {
-                  // Use new declarative navigation with context-aware switching
+                  // ✅ 통합된 그룹 전환 메서드 사용 (navigation + workspace state update)
                   await ref
-                      .read(navigationStateProvider.notifier)
-                      .switchGroup(group.id);
-
-                  // Update workspace state for compatibility with existing code
-                  ref
                       .read(workspaceStateProvider.notifier)
-                      .enterWorkspace(group.id.toString(), membership: group);
+                      .switchGroupWithNavigation(
+                        groupId: group.id,
+                        membership: group,
+                      );
 
                   _toggleDropdown();
                 } catch (e) {

@@ -135,6 +135,10 @@ class BottomNavigation extends ConsumerWidget {
     String? cachedGroupId,
   ) {
     final history = navigationState.tabHistories[NavigationTab.workspace] ?? [];
+    if (cachedGroupId != null) {
+      return cachedGroupId;
+    }
+
     if (history.isNotEmpty) {
       final groupId = _parseGroupId(history.last.route);
       if (groupId != null) {
@@ -149,7 +153,7 @@ class BottomNavigation extends ConsumerWidget {
       }
     }
 
-    return cachedGroupId;
+    return null;
   }
 
   String? _parseGroupId(String route) {

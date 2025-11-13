@@ -165,6 +165,7 @@ class _PostListState extends ConsumerState<PostList> {
       attempt < _PostListConstants.readPositionMaxRetries;
       attempt++
     ) {
+      if (!mounted) return; // ✅ dispose 후 실행 방지
       final workspaceState = ref.read(workspaceStateProvider);
 
       if (workspaceState.lastReadPostIdMap.containsKey(channelId)) {
@@ -226,6 +227,7 @@ class _PostListState extends ConsumerState<PostList> {
     if (channelIdInt != null) {
       await _waitForReadPositionData(channelIdInt);
 
+      if (!mounted) return; // ✅ 비동기 작업 후 dispose 체크
       final workspaceState = ref.read(workspaceStateProvider);
       final lastReadPostId = ReadPositionHelper.getLastReadPostId(
         workspaceState.lastReadPostIdMap,

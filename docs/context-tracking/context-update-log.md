@@ -1,4 +1,104 @@
-### 2025-11-12 - 글로벌 네비게이션 시 읽음 위치 저장 누락 버그 수정
+### 2025-11-13 - 워크스페이스 그룹 선택 상태 유지 버그 수정 (I) + Provider 리팩터링 (J)
+
+**유형**: 버그 수정 + 아키텍처 개선
+**우선순위**: High
+**영향 범위**: 프론트엔드 (9개 파일)
+
+**작업 개요**:
+워크스페이스에서 그룹을 선택한 후 다른 탭으로 이동하고 돌아오면 선택한 그룹이 "한신대학교"로 초기화되는 버그를 수정하고, Provider 구조를 세션 기반 상태 유지로 리팩터링했습니다.
+
+**버그 상세**:
+- **증상**: 워크스페이스에서 그룹 15 선택 → 캘린더 탭 → 워크스페이스 탭 복귀 → 그룹 1("한신대학교")로 초기화
+- **원인 1**: `exitWorkspace()`에서 `isAtGlobalHome=true`일 때 `_lastGroupId`를 null로 초기화
+- **원인 2**: `_resolveLastWorkspaceGroupId()`에서 히스토리를 캐시보다 우선 체크
+- **영향**: 사용자가 글로벌 네비게이션으로 탭 전환 시 그룹 선택 상태 손실
+
+**구현한 내용**:
+
+**Phase I: 버그 수정 (커밋 a1afa6e)**:
+1. **workspace_state_provider.dart**:
+   - Line 1499: `_lastGroupId` 초기화 제거 (탭 전환 시 유지)
+   - 글로벌 네비게이션 시에도 마지막 그룹 ID 메모리에 유지
+
+2. **sidebar_navigation.dart**:
+   - Lines 363-367: `cachedGroupId`를 최우선으로 체크하도록 우선순위 변경
+   - 히스토리보다 캐시 우선 사용으로 그룹 선택 상태 안정화
+
+**Phase J: Provider 리팅 (unstaged)**:
+3. **GroupMembership Equatable 구현** (group_models.dart):
+   - Equatable 상속 추가: Provider 상태 비교 최적화
+   - props 정의: 8개 필드 (id, name, type, level, parentId, role, permissions, profileImageUrl)
+   - const 생성자로 변경: 메모리 효율성 향상
+
+4. **currentGroupProvider 리팩터링** (current_group_provider.dart):
+   - **이전**: selectedGroupId → myGroupsProvider 검색 (불안정)
+   - **현재**: selectedGroup 직접 읽기 (안정적)
+   - myGroupsProvider rebuild 시에도 그룹 선택 상태 안정적 유지
+   - WorkspaceStateNotifier의 ref.listen으로 자동 동기화
+
+5. **myGroupsProvider keepAlive 추가** (my_groups_provider.dart):
+   - autoDispose 제거 → keepAlive 사용
+   - 글로벌 네비게이션으로 탭 전환 시 provider dispose 방지
+   - 세션 스코프 유지로 그룹 선택 상태 메모리 보존
+
+6. **workspace_page.dart 세션 기반 초기화**:
+   - `_initializeWorkspace()`: groupId=null일 때도 호출 (세션 상태 보존)
+   - Case 1: URL에 groupId 있고 현재 상태와 다르면 → enterWorkspace
+   - Case 2: URL에 groupId 없지만 메모리에 currentGroupId 있으면 → 상태 유지
+   - Case 3: URL/메모리 모두 없으면 → 앱 첫 진입 (처리 안 함)
+
+7. **group_dropdown.dart 통합 메서드 사용**:
+   - `navigationStateProvider.switchGroup()` + `workspaceStateProvider.enterWorkspace()` 분리 호출 제거
+   - `workspaceStateProvider.notifier.switchGroupWithNavigation()` 통합 메서드 사용
+   - 그룹 전환 시 navigation + workspace state 동시 업데이트
+
+8. **bottom_navigation.dart 우선순위 변경**:
+   - `_resolveLastWorkspaceGroupId()`: cachedGroupId 최우선 체크
+   - 히스토리 검색 → 폴백 로직 순서 변경
+
+9. **생명주기 안전성 강화**:
+   - **group_calendar_provider.dart**: 3개 지점 mounted 체크 추가
+   - **post_list.dart**: 2개 지점 mounted 체크 추가
+   - dispose 후 비동기 작업 완료 시 상태 업데이트 방지
+
+10. **permission_context_provider.dart API 경로 수정**:
+    - `/api/groups/$groupId/...` → `/groups/$groupId/...`
+    - baseUrl에 이미 `/api` 포함되어 있어 중복 제거
+
+**커밋 내역**:
+- `a1afa6e`: fix - 워크스페이스 그룹 선택 상태 유지 버그 수정 (Phase I, 2개 파일)
+- unstaged: Provider 리팩터링 및 생명주기 안전성 강화 (Phase J, 9개 파일)
+
+**변경된 파일** (Phase I: 2개, Phase J: 9개, 총 9개 - 중복 제외):
+- ✅ frontend/lib/core/models/group_models.dart (Equatable 구현)
+- ✅ frontend/lib/presentation/pages/workspace/workspace_page.dart (세션 기반 초기화)
+- ✅ frontend/lib/presentation/providers/current_group_provider.dart (리팩터링)
+- ✅ frontend/lib/presentation/providers/group_calendar_provider.dart (mounted 체크)
+- ✅ frontend/lib/presentation/providers/my_groups_provider.dart (keepAlive)
+- ✅ frontend/lib/presentation/providers/permission_context_provider.dart (API 경로)
+- ✅ frontend/lib/presentation/providers/workspace_state_provider.dart (버그 수정)
+- ✅ frontend/lib/presentation/widgets/navigation/bottom_navigation.dart (우선순위)
+- ✅ frontend/lib/presentation/widgets/navigation/sidebar_navigation.dart (우선순위)
+- ✅ frontend/lib/presentation/widgets/post/post_list.dart (mounted 체크)
+- ✅ frontend/lib/presentation/widgets/workspace/group_dropdown.dart (통합 메서드)
+
+**문서 업데이트 필요** (2개):
+- ⏳ docs/implementation/frontend/state-management.md (myGroupsProvider keepAlive 설명 추가)
+- ⏳ docs/implementation/workspace-state-management.md (currentGroupProvider 리팩터링 설명 추가)
+
+**기대 효과**:
+- 글로벌 네비게이션 시 그룹 선택 상태 100% 유지
+- Provider 상태 비교 최적화 (Equatable)
+- 메모리 효율성 향상 (const 생성자)
+- 생명주기 안전성 강화 (dispose 후 상태 업데이트 방지)
+- API 경로 중복 제거
+
+**관련 이슈**:
+- fix/workspace-group-selection-state 브랜치
+
+---
+
+### 2025-11-12 - 글로벌 네비게이션 시 읽음 위치 저장 누락 버그 수정 (H)
 
 **유형**: 버그 수정
 **우선순위**: High
