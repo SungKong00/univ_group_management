@@ -37,10 +37,6 @@ class CalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log(
-          'Fetched ${apiResponse.data!.length} personal schedules',
-          name: 'CalendarService',
-        );
         return apiResponse.data!;
       }
 
@@ -82,10 +78,6 @@ class CalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log(
-          'Created personal schedule ${apiResponse.data!.id}',
-          name: 'CalendarService',
-        );
         return apiResponse.data!;
       }
 
@@ -123,7 +115,6 @@ class CalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log('Updated personal schedule $id', name: 'CalendarService');
         return apiResponse.data!;
       }
 
@@ -145,7 +136,6 @@ class CalendarService {
   Future<void> deletePersonalSchedule(int id) async {
     try {
       await _dioClient.delete<void>('/timetable/$id');
-      developer.log('Deleted personal schedule $id', name: 'CalendarService');
     } on DioException catch (e) {
       developer.log(
         'Failed to delete schedule $id: $e',
@@ -186,10 +176,6 @@ class CalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log(
-          'Fetched ${apiResponse.data!.length} personal events',
-          name: 'CalendarService',
-        );
         return apiResponse.data!;
       }
 
@@ -225,10 +211,6 @@ class CalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log(
-          'Created personal event ${apiResponse.data!.id}',
-          name: 'CalendarService',
-        );
         return apiResponse.data!;
       }
 
@@ -265,7 +247,6 @@ class CalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log('Updated personal event $id', name: 'CalendarService');
         return apiResponse.data!;
       }
 
@@ -286,7 +267,6 @@ class CalendarService {
   Future<void> deletePersonalEvent(int id) async {
     try {
       await _dioClient.delete<void>('/calendar/$id');
-      developer.log('Deleted personal event $id', name: 'CalendarService');
     } on DioException catch (e) {
       developer.log(
         'Failed to delete event $id: $e',

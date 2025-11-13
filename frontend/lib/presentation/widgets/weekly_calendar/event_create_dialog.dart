@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../core/utils/snack_bar_helper.dart';
 import 'package:flutter/material.dart';
@@ -370,7 +372,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
           spacing: AppSpacing.xs,
           runSpacing: AppSpacing.xs,
           children: kPersonalScheduleColors.map((color) {
-            final isSelected = color.value == _selectedColor.value;
+            final isSelected = color.toARGB32() == _selectedColor.toARGB32();
             return GestureDetector(
               onTap: () {
                 setState(() {

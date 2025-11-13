@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:flutter/material.dart';
 import '../../../core/models/place/place.dart';
 import '../../../core/services/place_service.dart';
@@ -206,16 +204,6 @@ class _PlaceSelectorBottomSheetState extends State<PlaceSelectorBottomSheet> {
                       final selectedPlaces = _places
                           .where((p) => _selectedPlaceIds.contains(p.id))
                           .toList();
-                      developer.log(
-                        '✅ PlaceSelectorBottomSheet: 확인 버튼 클릭 - ${selectedPlaces.length}개 장소 선택됨',
-                        name: 'PlaceSelectorBottomSheet',
-                      );
-                      for (final place in selectedPlaces) {
-                        developer.log(
-                          '  - ${place.displayName}',
-                          name: 'PlaceSelectorBottomSheet',
-                        );
-                      }
                       Navigator.pop(context, selectedPlaces);
                     },
                     child: const Text('확인'),

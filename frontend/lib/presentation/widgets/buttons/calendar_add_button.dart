@@ -61,7 +61,7 @@ class CalendarAddButton extends StatelessWidget {
             backgroundColor: Theme.of(context).colorScheme.primary,
             disabledBackgroundColor: Theme.of(
               context,
-            ).colorScheme.primary.withOpacity(0.5),
+            ).colorScheme.primary.withValues(alpha: 0.5),
           ),
         ),
       ),

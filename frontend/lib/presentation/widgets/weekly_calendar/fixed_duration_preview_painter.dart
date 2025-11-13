@@ -16,12 +16,12 @@ class FixedDurationPreviewPainter extends CustomPainter {
     // Purple preview color (matching the existing system's selection color)
     final fillPaint = Paint()
       ..color = Colors.deepPurple
-          .withOpacity(0.3) // Semi-transparent purple
+          .withValues(alpha: 0.3) // Semi-transparent purple
       ..style = PaintingStyle.fill;
 
     final borderPaint = Paint()
       ..color = Colors.deepPurple
-          .withOpacity(0.6) // Slightly more opaque border
+          .withValues(alpha: 0.6) // Slightly more opaque border
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 

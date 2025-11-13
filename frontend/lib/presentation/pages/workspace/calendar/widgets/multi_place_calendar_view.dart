@@ -258,6 +258,7 @@ class MultiPlaceCalendarView extends ConsumerWidget {
       }
     }
 
+    if (!context.mounted) return false;
     return _showReservationForm(
       context: context,
       placeId: chosenPlace!.id,
@@ -309,13 +310,10 @@ class MultiPlaceCalendarView extends ConsumerWidget {
       return false;
     }
 
-    // Step 2: Find original reservation
+    // Step 2: Verify reservation exists
     final state = ref.read(placeCalendarProvider);
-    PlaceReservation? originalReservation;
     try {
-      originalReservation = state.reservations.firstWhere(
-        (r) => r.id == reservationId,
-      );
+      state.reservations.firstWhere((r) => r.id == reservationId);
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -399,11 +397,14 @@ class MultiPlaceCalendarView extends ConsumerWidget {
       await ref
           .read(placeCalendarProvider.notifier)
           .cancelReservation(reservationId);
+
+      if (!context.mounted) return true;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('예약이 취소되었습니다')));
       return true;
     } catch (e) {
+      if (!context.mounted) return false;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('예약 취소 실패: ${e.toString()}')));

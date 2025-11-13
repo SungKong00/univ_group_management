@@ -66,8 +66,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Set initial selected date if provided
       if (widget.initialSelectedDate != null) {
-        ref.read(focusedDateProvider.notifier).state =
-            widget.initialSelectedDate!;
+        ref
+            .read(focusedDateProvider.notifier)
+            .setDate(widget.initialSelectedDate!);
       }
       _loadEvents();
     });
@@ -202,10 +203,10 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
           weekStart: weekStart,
           initialEvents: events,
           onEventCreate: (event) =>
-              _handleEventCreate(context, event, weekStart),
+              _handleEventCreate(event, weekStart),
           onEventUpdate: (event) =>
-              _handleEventUpdate(context, event, weekStart),
-          onEventDelete: (event) => _handleEventDelete(context, event),
+              _handleEventUpdate(event, weekStart),
+          onEventDelete: (event) => _handleEventDelete(event),
         ),
       );
     }
@@ -461,7 +462,8 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
             ],
           );
 
-      if (selectedFormality == null || !mounted) return;
+      if (selectedFormality == null) return;
+      if (!mounted) return;
 
       // Step 2: Show event form with selected formality
       final isOfficial = selectedFormality == EventFormalityCategory.official;
@@ -498,6 +500,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
       if (selected == null) return; // 취소
       if (!mounted) return;
+
       selectedType = selected;
     }
 
@@ -511,7 +514,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       eventType: selectedType,
     );
 
-    if (result != null && mounted) {
+    if (result != null) {
+      if (!mounted) return;
+
       try {
         // Determine location parameters for API
         final locationText = result.locationText ?? '';
@@ -533,13 +538,11 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
               recurrence: result.recurrence,
             );
 
-        if (mounted) {
-          AppSnackBar.info(context, '일정이 추가되었습니다');
-        }
+        if (!mounted) return;
+        AppSnackBar.info(context, '일정이 추가되었습니다');
       } catch (e) {
-        if (mounted) {
-          AppSnackBar.info(context, '일정 추가 실패: ${e.toString()}');
-        }
+        if (!mounted) return;
+        AppSnackBar.info(context, '일정 추가 실패: ${e.toString()}');
       }
     }
   }
@@ -777,7 +780,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       canCreateOfficial: event.isOfficial, // Keep the same official status
     );
 
-    if (result != null && mounted) {
+    if (result != null) {
+      if (!mounted) return;
+
       try {
         // Determine location parameters for API
         final locationText = result.locationText ?? '';
@@ -799,13 +804,11 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
               updateScope: updateScope ?? UpdateScope.thisEvent,
             );
 
-        if (mounted) {
-          AppSnackBar.info(context, '일정이 수정되었습니다');
-        }
+        if (!mounted) return;
+        AppSnackBar.info(context, '일정이 수정되었습니다');
       } catch (e) {
-        if (mounted) {
-          AppSnackBar.info(context, '일정 수정 실패: ${e.toString()}');
-        }
+        if (!mounted) return;
+        AppSnackBar.info(context, '일정 수정 실패: ${e.toString()}');
       }
     }
   }
@@ -843,7 +846,9 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       ),
     );
 
-    if (confirmed == true && mounted) {
+    if (confirmed == true) {
+      if (!mounted) return;
+
       try {
         await ref
             .read(groupCalendarProvider(widget.groupId).notifier)
@@ -853,13 +858,11 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
               deleteScope: deleteScope ?? UpdateScope.thisEvent,
             );
 
-        if (mounted) {
-          AppSnackBar.info(context, '일정이 삭제되었습니다');
-        }
+        if (!mounted) return;
+        AppSnackBar.info(context, '일정이 삭제되었습니다');
       } catch (e) {
-        if (mounted) {
-          AppSnackBar.info(context, '일정 삭제 실패: ${e.toString()}');
-        }
+        if (!mounted) return;
+        AppSnackBar.info(context, '일정 삭제 실패: ${e.toString()}');
       }
     }
   }
@@ -902,7 +905,6 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
   /// Handle event creation from drag gesture
   Future<bool> _handleEventCreate(
-    BuildContext context,
     Event event,
     DateTime weekStart,
   ) async {
@@ -915,6 +917,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     // Step 2: Official/Unofficial selection (only for users with permission)
     bool isOfficial = false;
     if (canCreateOfficial) {
+      if (!mounted) return false;
       final selectedFormality =
           await showSingleStepSelector<EventFormalityCategory>(
             context: context,
@@ -945,6 +948,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     // Step 2.5: Event type selection for official events
     EventType selectedType = EventType.general;
     if (isOfficial) {
+      if (!mounted) return false;
       final selected = await showSingleStepSelector<EventType>(
         context: context,
         title: '공식 일정 유형 선택',
@@ -967,6 +971,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     }
 
     // Step 3: Show event form dialog with pre-filled time
+    if (!mounted) return false;
     final result = await showGroupEventFormDialog(
       context,
       groupId: widget.groupId,
@@ -979,7 +984,8 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       initialEndTime: event.endTime,
     );
 
-    if (result == null || !mounted) return false;
+    if (result == null) return false;
+    if (!mounted) return false;
 
     // Step 4: API call
     try {
@@ -999,21 +1005,18 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
             recurrence: result.recurrence,
           );
 
-      if (mounted) {
-        AppSnackBar.info(context, '일정이 추가되었습니다');
-      }
+      if (!mounted) return false;
+      AppSnackBar.info(context, '일정이 추가되었습니다');
       return true;
     } catch (e) {
-      if (mounted) {
-        AppSnackBar.error(context, '일정 추가 실패: ${e.toString()}');
-      }
+      if (!mounted) return false;
+      AppSnackBar.error(context, '일정 추가 실패: ${e.toString()}');
       return false;
     }
   }
 
   /// Handle event update from drag gesture or click
   Future<bool> _handleEventUpdate(
-    BuildContext context,
     Event event,
     DateTime weekStart,
   ) async {
@@ -1044,6 +1047,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
     }
 
     // Step 3: Show event form dialog with updated time
+    if (!mounted) return false;
     final result = await showGroupEventFormDialog(
       context,
       groupId: widget.groupId,
@@ -1054,7 +1058,8 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
       initialEndTime: event.endTime,
     );
 
-    if (result == null || !mounted) return false;
+    if (result == null) return false;
+    if (!mounted) return false;
 
     // Step 4: API call
     try {
@@ -1074,20 +1079,18 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
             updateScope: updateScope ?? UpdateScope.thisEvent,
           );
 
-      if (mounted) {
-        AppSnackBar.info(context, '일정이 수정되었습니다');
-      }
+      if (!mounted) return false;
+      AppSnackBar.info(context, '일정이 수정되었습니다');
       return true;
     } catch (e) {
-      if (mounted) {
-        AppSnackBar.error(context, '일정 수정 실패: ${e.toString()}');
-      }
+      if (!mounted) return false;
+      AppSnackBar.error(context, '일정 수정 실패: ${e.toString()}');
       return false;
     }
   }
 
   /// Handle event deletion
-  Future<bool> _handleEventDelete(BuildContext context, Event event) async {
+  Future<bool> _handleEventDelete(Event event) async {
     // Step 1: Find original GroupEvent
     final eventId = GroupEventAdapter.extractEventId(event.id);
     if (eventId == null) {
@@ -1147,14 +1150,12 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
             deleteScope: deleteScope ?? UpdateScope.thisEvent,
           );
 
-      if (mounted) {
-        AppSnackBar.info(context, '일정이 삭제되었습니다');
-      }
+      if (!mounted) return false;
+      AppSnackBar.info(context, '일정이 삭제되었습니다');
       return true;
     } catch (e) {
-      if (mounted) {
-        AppSnackBar.error(context, '일정 삭제 실패: ${e.toString()}');
-      }
+      if (!mounted) return false;
+      AppSnackBar.error(context, '일정 삭제 실패: ${e.toString()}');
       return false;
     }
   }

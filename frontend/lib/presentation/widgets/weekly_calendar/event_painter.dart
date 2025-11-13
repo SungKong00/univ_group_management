@@ -72,12 +72,12 @@ class EventPainter extends CustomPainter {
 
       // Apply opacity for better readability
       final paint = Paint()
-        ..color = baseColor.withOpacity(0.85)
+        ..color = baseColor.withValues(alpha: 0.85)
         ..style = PaintingStyle.fill;
 
       // Add subtle shadow for depth
       final shadowPaint = Paint()
-        ..color = Colors.black.withOpacity(0.1)
+        ..color = Colors.black.withValues(alpha: 0.1)
         ..style = PaintingStyle.fill
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
@@ -110,7 +110,7 @@ class EventPainter extends CustomPainter {
           text: TextSpan(
             text: timeText,
             style: TextStyle(
-              color: textColor.withOpacity(0.9),
+              color: textColor.withValues(alpha: 0.9),
               fontSize: 10,
               fontWeight: FontWeight.w500,
             ),
@@ -148,7 +148,10 @@ class EventPainter extends CustomPainter {
         final locationPainter = TextPainter(
           text: TextSpan(
             text: '📍 ${event.location}',
-            style: TextStyle(color: textColor.withOpacity(0.85), fontSize: 10),
+            style: TextStyle(
+              color: textColor.withValues(alpha: 0.85),
+              fontSize: 10,
+            ),
           ),
           maxLines: 1,
           ellipsis: '...',

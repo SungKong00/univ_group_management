@@ -52,9 +52,9 @@ class ColorGenerator {
   static Color getContrastTextColor(Color backgroundColor) {
     // 색상의 밝기 계산 (W3C 권장 공식)
     final brightness =
-        (backgroundColor.red * 299 +
-            backgroundColor.green * 587 +
-            backgroundColor.blue * 114) /
+        (((backgroundColor.r * 255.0).round() & 0xff) * 299 +
+            ((backgroundColor.g * 255.0).round() & 0xff) * 587 +
+            ((backgroundColor.b * 255.0).round() & 0xff) * 114) /
         1000;
 
     // 밝기가 128 이상이면 검정색, 이하면 흰색 텍스트 사용

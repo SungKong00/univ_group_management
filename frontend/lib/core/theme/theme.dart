@@ -469,61 +469,6 @@ class AppTheme {
     );
   }
 
-  // ========== Deprecated (하위 호환성 유지) ==========
-  @Deprecated('Use AppColors.brand instead')
-  static const Color brandPrimary = Color(0xFF5C068C);
-
-  @Deprecated('Use AppColors.brand instead')
-  static const Color brandStrong = Color(0xFF5C068C);
-
-  @Deprecated('Use AppColors.brand instead')
-  static const Color brandLight = Color(0xFF9C27B0);
-
-  @Deprecated('Use Theme.of(context).colorScheme.onPrimary instead')
-  static const Color onPrimary = Colors.white;
-
-  @Deprecated('Use Theme.of(context).colorScheme.primaryContainer instead')
-  static const Color primaryContainer = Color(0xFFF3E5F5);
-
-  @Deprecated('Use Theme.of(context).colorScheme.surface instead')
-  static const Color surface = Colors.white;
-
-  @Deprecated('Use AppColors.lightBackground instead')
-  static const Color background = Color(0xFFF8FAFC);
-
-  @Deprecated('Use AppColors.lightOnSurface instead')
-  static const Color gray900 = Color(0xFF121212);
-
-  @Deprecated('Use AppColors.lightSecondary instead')
-  static const Color gray700 = Color(0xFF6C757D);
-
-  @Deprecated('Use AppColors.lightSecondary instead')
-  static const Color gray600 = Color(0xFF6C757D);
-
-  @Deprecated('Use AppColors.disabledTextLight instead')
-  static const Color gray500 = Color(0xFFADB5BD);
-
-  @Deprecated('Use AppColors.disabledBgLight instead')
-  static const Color gray300 = Color(0xFFE9ECEF);
-
-  @Deprecated('Use AppColors.lightOutline instead')
-  static const Color gray200 = Color(0xFFF1F5F9);
-
-  @Deprecated('Use AppColors.lightBackground instead')
-  static const Color gray100 = Color(0xFFF8FAFC);
-
-  @Deprecated('Use Theme.of(context).colorScheme.outline instead')
-  static const Color outline = Color(0xFFE5E7EB);
-
-  @Deprecated('Use AppColors.success instead')
-  static const Color success = Color(0xFF00D9B2);
-
-  @Deprecated('Use AppColors.error instead')
-  static const Color error = Color(0xFFE63946);
-
-  @Deprecated('Use AppColors.focusRing instead')
-  static const Color focusRing = Color.fromRGBO(92, 6, 140, 0.45);
-
   // ========== Legacy Theme Helpers (유지) ==========
   static const double spacing8 = AppSpacing.xxs;
   static const double spacing12 = AppSpacing.xs;

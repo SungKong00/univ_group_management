@@ -1,6 +1,3 @@
-import 'dart:developer' as developer;
-import '../../../core/utils/snack_bar_helper.dart';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +9,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/models/auth_models.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import '../../widgets/buttons/outlined_link_button.dart';
 import '../../widgets/buttons/primary_button.dart';
 import '../../providers/auth_provider.dart';
@@ -59,37 +57,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       // 이전 로그인 세션이 남아 있으면 초기화
       await googleSignIn.signOut();
 
-      if (kDebugMode) {
-        developer.log('🚀 Google Sign-In 시작...', name: 'GoogleSignIn');
-      }
       final account = await googleSignIn.signIn();
       if (account == null) {
-        if (kDebugMode) {
-          developer.log('❌ Google Sign-In 취소됨', name: 'GoogleSignIn');
-        }
         return;
       }
 
-      if (kDebugMode) {
-        developer.log(
-          '✅ Google 계정 로그인 성공: ${account.email}',
-          name: 'GoogleSignIn',
-        );
-      }
       final auth = await account.authentication;
       final idToken = auth.idToken;
       final accessToken = auth.accessToken;
-
-      if (kDebugMode) {
-        developer.log(
-          '🔑 ID Token 길이: ${idToken?.length ?? 0}',
-          name: 'GoogleSignIn',
-        );
-        developer.log(
-          '🔑 Access Token 길이: ${accessToken?.length ?? 0}',
-          name: 'GoogleSignIn',
-        );
-      }
 
       if ((idToken == null || idToken.isEmpty) &&
           (accessToken == null || accessToken.isEmpty)) {
@@ -155,19 +130,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   GoogleSignIn _createGoogleSignIn() {
     final platformClientId = _clientIdForPlatform();
-
-    // 디버깅을 위한 로그
-    if (kDebugMode) {
-      developer.log(
-        '🔧 Platform Client ID: $platformClientId',
-        name: 'GoogleSignIn',
-      );
-      developer.log(
-        '🔧 Google Web Client ID from env: ${AppConstants.googleWebClientId}',
-        name: 'GoogleSignIn',
-      );
-      developer.log('🔧 Is Web Platform: $kIsWeb', name: 'GoogleSignIn');
-    }
 
     if (kIsWeb) {
       // 웹에서는 serverClientId 제외 (지원되지 않음)

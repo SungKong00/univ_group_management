@@ -394,13 +394,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
           shouldUseChannelView = !kIsWeb;
         }
 
-        if (kDebugMode) {
-          developer.log(
-            'Restoring workspace state: group=$lastGroupId, channel=$lastChannelId, view=$lastViewType, shouldUseChannelView=$shouldUseChannelView, kIsWeb=$kIsWeb',
-            name: 'WorkspaceStateNotifier',
-          );
-        }
-
         // 뷰 타입에 따라 적절한 방식으로 워크스페이스 진입
         if (shouldUseChannelView) {
           // 채널 뷰: channelId 전달 (있으면) 또는 첫 번째 채널 자동 선택
@@ -1071,32 +1064,13 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     // 안전장치: 로그아웃 중에는 저장하지 않음
     final isLoggingOut = _ref.read(authProvider).isLoggingOut;
     if (isLoggingOut) {
-      if (kDebugMode) {
-        developer.log(
-          '읽음 위치 저장 스킵 (로그아웃 중) - 채널: $channelId',
-          name: 'WorkspaceState',
-        );
-      }
       return;
     }
 
     // API call (Best-Effort, error ignored)
     try {
       await _channelService.updateReadPosition(channelId, postId);
-
-      if (kDebugMode) {
-        developer.log(
-          '✅ 읽음 위치 저장 완료 - 채널: $channelId, 게시글: $postId',
-          name: 'WorkspaceState',
-        );
-      }
     } catch (e) {
-      if (kDebugMode) {
-        developer.log(
-          '⚠️ 읽음 위치 저장 실패 (무시) - 채널: $channelId, 에러: $e',
-          name: 'WorkspaceState',
-        );
-      }
       // Best-Effort: 에러 무시
     }
 
@@ -1129,12 +1103,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     try {
       final channelId = state.selectedChannelId;
       if (channelId == null) {
-        if (kDebugMode) {
-          developer.log(
-            '⚠️ JS 캐시 업데이트 스킵 - channelId null',
-            name: 'WorkspaceState',
-          );
-        }
         return;
       }
 
@@ -1147,13 +1115,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         postId: postId,
         apiBaseUrl: apiBaseUrl,
       );
-
-      if (kDebugMode) {
-        developer.log(
-          '🔄 JS 캐시 동기 업데이트 - 채널: $channelId, 게시글: $postId',
-          name: 'WorkspaceState',
-        );
-      }
     } catch (e) {
       if (kDebugMode) {
         developer.log('⚠️ JS 캐시 동기 업데이트 실패 - $e', name: 'WorkspaceState');
@@ -1432,13 +1393,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         try {
           await saveReadPosition(channelIdInt, state.currentVisiblePostId!);
           await loadUnreadCount(channelIdInt);
-
-          if (kDebugMode) {
-            developer.log(
-              'Read position saved (state preserved)',
-              name: 'WorkspaceStateNotifier',
-            );
-          }
         } catch (e) {
           if (kDebugMode) {
             developer.log(

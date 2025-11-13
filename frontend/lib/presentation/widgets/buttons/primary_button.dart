@@ -62,10 +62,8 @@ class PrimaryButton extends StatelessWidget {
         onPrimaryColor = Colors.white;
         break;
       case PrimaryButtonVariant.action:
-      default:
         buttonStyle = AppButtonStyles.primary(colorScheme);
         onPrimaryColor = colorScheme.onPrimary;
-        break;
     }
 
     final button = Semantics(

@@ -26,11 +26,6 @@ class ApiMemberRepository implements MemberRepository {
     Map<String, String>? queryParameters,
   }) async {
     try {
-      developer.log(
-        'Fetching members for group $groupId with filters: $queryParameters',
-        name: 'ApiMemberRepository',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/members',
         queryParameters: queryParameters,
@@ -59,10 +54,6 @@ class ApiMemberRepository implements MemberRepository {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} members',
-            name: 'ApiMemberRepository',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -92,11 +83,6 @@ class ApiMemberRepository implements MemberRepository {
     int roleId,
   ) async {
     try {
-      developer.log(
-        'Updating role for user $userId in group $groupId to role $roleId',
-        name: 'ApiMemberRepository',
-      );
-
       final response = await _dioClient.put<Map<String, dynamic>>(
         '/groups/$groupId/members/$userId/role',
         data: {'roleId': roleId},
@@ -109,10 +95,6 @@ class ApiMemberRepository implements MemberRepository {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully updated member role',
-            name: 'ApiMemberRepository',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -140,11 +122,6 @@ class ApiMemberRepository implements MemberRepository {
   @override
   Future<void> removeMember(int groupId, String userId) async {
     try {
-      developer.log(
-        'Removing user $userId from group $groupId',
-        name: 'ApiMemberRepository',
-      );
-
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/groups/$groupId/members/$userId',
       );
@@ -155,12 +132,7 @@ class ApiMemberRepository implements MemberRepository {
           (json) => null,
         );
 
-        if (apiResponse.success) {
-          developer.log(
-            'Successfully removed member',
-            name: 'ApiMemberRepository',
-          );
-        } else {
+        if (!apiResponse.success) {
           developer.log(
             'Failed to remove member: ${apiResponse.message}',
             name: 'ApiMemberRepository',

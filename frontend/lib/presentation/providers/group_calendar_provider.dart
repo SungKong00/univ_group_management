@@ -65,11 +65,6 @@ class GroupCalendarNotifier extends StateNotifier<GroupCalendarState> {
 
       if (!mounted) return; // ✅ 비동기 작업 완료 후 dispose 체크
       state = state.copyWith(isLoading: false, events: events);
-
-      developer.log(
-        'Loaded ${events.length} group events for group $groupId',
-        name: 'GroupCalendarNotifier',
-      );
     } catch (e, stack) {
       developer.log(
         'Failed to load group events for group $groupId: $e',
@@ -118,11 +113,6 @@ class GroupCalendarNotifier extends StateNotifier<GroupCalendarState> {
       state = state.copyWith(
         events: [...state.events, ...newEvents],
         clearError: true,
-      );
-
-      developer.log(
-        'Created ${newEvents.length} group event(s) for group $groupId',
-        name: 'GroupCalendarNotifier',
       );
     } catch (e, stack) {
       developer.log(
@@ -187,11 +177,6 @@ class GroupCalendarNotifier extends StateNotifier<GroupCalendarState> {
       newEvents.addAll(updatedEvents);
 
       state = state.copyWith(events: newEvents, clearError: true);
-
-      developer.log(
-        'Updated ${updatedEvents.length} group event(s) for group $groupId',
-        name: 'GroupCalendarNotifier',
-      );
     } catch (e, stack) {
       developer.log(
         'Failed to update group event $eventId for group $groupId: $e',
@@ -237,11 +222,6 @@ class GroupCalendarNotifier extends StateNotifier<GroupCalendarState> {
       }
 
       state = state.copyWith(events: newEvents, clearError: true);
-
-      developer.log(
-        'Deleted group event $eventId for group $groupId',
-        name: 'GroupCalendarNotifier',
-      );
     } catch (e, stack) {
       developer.log(
         'Failed to delete group event $eventId for group $groupId: $e',

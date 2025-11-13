@@ -727,7 +727,7 @@ class _UpcomingEventsWidget extends ConsumerWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: event.color.withOpacity(0.1),
+              color: event.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppRadius.input),
             ),
             child: Column(

@@ -23,11 +23,6 @@ class PostService {
     int size = 20,
   }) async {
     try {
-      developer.log(
-        'Fetching posts for channel: $channelId (page: $page, size: $size)',
-        name: 'PostService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/channels/$channelId/posts',
         queryParameters: {'page': page, 'size': size},
@@ -54,10 +49,6 @@ class PostService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.posts.length} posts',
-            name: 'PostService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -86,11 +77,6 @@ class PostService {
   /// Requires POST_WRITE permission
   Future<Post> createPost(String channelId, String content) async {
     try {
-      developer.log(
-        'Creating post in channel: $channelId',
-        name: 'PostService',
-      );
-
       final request = CreatePostRequest(content: content);
 
       final response = await _dioClient.post<Map<String, dynamic>>(
@@ -105,10 +91,6 @@ class PostService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully created post: ${apiResponse.data!.id}',
-            name: 'PostService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -133,8 +115,6 @@ class PostService {
   /// Requires POST_READ permission
   Future<Post> getPost(int postId) async {
     try {
-      developer.log('Fetching post: $postId', name: 'PostService');
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/posts/$postId',
       );
@@ -146,10 +126,6 @@ class PostService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched post: $postId',
-            name: 'PostService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -174,8 +150,6 @@ class PostService {
   /// Requires being the author or having admin permission
   Future<Post> updatePost(int postId, String content) async {
     try {
-      developer.log('Updating post: $postId', name: 'PostService');
-
       final request = CreatePostRequest(content: content);
 
       final response = await _dioClient.put<Map<String, dynamic>>(
@@ -190,10 +164,6 @@ class PostService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully updated post: $postId',
-            name: 'PostService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -218,8 +188,6 @@ class PostService {
   /// Requires being the author or having admin permission
   Future<void> deletePost(int postId) async {
     try {
-      developer.log('Deleting post: $postId', name: 'PostService');
-
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/posts/$postId',
       );
@@ -231,10 +199,6 @@ class PostService {
         );
 
         if (apiResponse.success) {
-          developer.log(
-            'Successfully deleted post: $postId',
-            name: 'PostService',
-          );
           return;
         } else {
           developer.log(

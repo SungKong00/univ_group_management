@@ -229,7 +229,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   late int _visibleStartHour;
   late int _visibleEndHour;
   bool _hasAppliedInitialScroll = false;
-  double _currentDayColumnWidth = 0;
   double _currentContentHeight = 0;
   double _currentViewportHeight = 0; // 실제 화면에 보이는 뷰포트 높이
 
@@ -1207,7 +1206,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
     final titleController = TextEditingController(text: event.title);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('일정 수정'),
         content: TextField(
           controller: titleController,
@@ -1228,17 +1227,19 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               }
 
               // Update local state (for demo calendars or after successful server delete)
+              if (!mounted) return;
               setState(() {
                 _events.removeWhere((e) => e.id == event.id);
                 _updateVisibleRangeForCurrentState();
               });
-              if (!mounted) return;
-              Navigator.of(context).pop();
+
+              if (!mounted || !dialogContext.mounted) return;
+              Navigator.of(dialogContext).pop();
             },
           ),
           NeutralOutlinedButton(
             text: '취소',
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
           ),
           PrimaryButton(
             text: '저장',
@@ -1264,6 +1265,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
               }
 
               // Update local state (for demo calendars or after successful server update)
+              if (!mounted) return;
               setState(() {
                 final index = _events.indexWhere((e) => e.id == event.id);
                 if (index != -1) {
@@ -1271,8 +1273,9 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                   _updateVisibleRangeForCurrentState();
                 }
               });
-              if (!mounted) return;
-              Navigator.of(context).pop();
+
+              if (!mounted || !dialogContext.mounted) return;
+              Navigator.of(dialogContext).pop();
             },
             variant: PrimaryButtonVariant.brand,
           ),
@@ -1614,7 +1617,7 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               child: Row(
                 children: [
                   Icon(
@@ -1674,7 +1677,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                           4 *
                           _minSlotHeight;
 
-                      _currentDayColumnWidth = dayColumnWidth;
                       _currentContentHeight = contentHeight;
                       _currentViewportHeight =
                           constraints.maxHeight; // 실제 뷰포트 높이 저장

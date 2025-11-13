@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -49,8 +51,9 @@ Future<Place?> showPlacePickerDialog({
     return null;
   }
 
+  if (!navigator.mounted) return null;
   return showDialog<Place>(
-    context: context,
+    context: navigator.context,
     builder: (dialogContext) {
       int selectedIndex = 0;
       final textTheme = Theme.of(dialogContext).textTheme;
@@ -164,7 +167,11 @@ Future<Place?> showPlacePickerDialog({
           ),
           actions: [
             TextButton(
-              onPressed: () => navigator.pop(),
+              onPressed: () {
+                if (navigator.mounted) {
+                  navigator.pop();
+                }
+              },
               child: const Text('취소'),
             ),
             FilledButton(

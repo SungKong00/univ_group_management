@@ -122,20 +122,11 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
   Future<void> loadAvailabilities() async {
     // Don't load if no places are selected
     if (state.selectedPlaceIds.isEmpty) {
-      developer.log(
-        'No places selected, skipping availability load',
-        name: 'PlaceCalendarProvider',
-      );
       return;
     }
 
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      developer.log(
-        'Loading availabilities for places ${state.selectedPlaceIds.toList()}',
-        name: 'PlaceCalendarProvider',
-      );
-
       final availabilitiesMap = <int, List<PlaceAvailability>>{};
 
       // Fetch availability for each selected place
@@ -158,17 +149,9 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
                 .toList();
 
             availabilitiesMap[placeId] = availabilities;
-            developer.log(
-              'Loaded ${availabilities.length} operating hours for place $placeId',
-              name: 'PlaceCalendarProvider',
-            );
           } else {
             // No operating hours → place operates 24/7 or not configured
             availabilitiesMap[placeId] = [];
-            developer.log(
-              'No operating hours found for place $placeId (24/7 or not configured)',
-              name: 'PlaceCalendarProvider',
-            );
           }
         } catch (e) {
           developer.log(
@@ -180,11 +163,6 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
           availabilitiesMap[placeId] = [];
         }
       }
-
-      developer.log(
-        'Successfully loaded availabilities for ${availabilitiesMap.length} places',
-        name: 'PlaceCalendarProvider',
-      );
 
       state = state.copyWith(
         availabilitiesMap: availabilitiesMap,
@@ -213,20 +191,11 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
   }) async {
     // Don't load if no places are selected
     if (state.selectedPlaceIds.isEmpty) {
-      developer.log(
-        'No places selected, skipping reservation load',
-        name: 'PlaceCalendarProvider',
-      );
       return;
     }
 
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      developer.log(
-        'Loading reservations for places ${state.selectedPlaceIds.toList()} from $startDate to $endDate',
-        name: 'PlaceCalendarProvider',
-      );
-
       // Fetch reservations for all selected places
       final calendarData = await _placeService.getPlaceCalendar(
         placeIds: state.selectedPlaceIds.toList(),
@@ -247,11 +216,6 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
         }
       }
 
-      developer.log(
-        'Successfully loaded ${reservations.length} reservations',
-        name: 'PlaceCalendarProvider',
-      );
-
       state = state.copyWith(reservations: reservations, isLoading: false);
     } catch (e) {
       developer.log(
@@ -271,10 +235,6 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
   /// This should be called when places are loaded from another source
   /// (e.g., group settings or place management screen)
   void setPlaces(List<Place> places) {
-    developer.log(
-      'Setting ${places.length} places',
-      name: 'PlaceCalendarProvider',
-    );
     state = state.copyWith(places: places);
   }
 
@@ -285,20 +245,12 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
     } else {
       selectPlace(placeId);
     }
-
-    final nowSelected = state.selectedPlaceIds.contains(placeId);
-    developer.log(
-      'Toggled place $placeId, now selected: $nowSelected',
-      name: 'PlaceCalendarProvider',
-    );
   }
 
   /// Select a place
   void selectPlace(int placeId) {
     final newSelection = Set<int>.from(state.selectedPlaceIds)..add(placeId);
     state = state.copyWith(selectedPlaceIds: newSelection);
-
-    developer.log('Selected place $placeId', name: 'PlaceCalendarProvider');
   }
 
   /// Deselect a place
@@ -308,8 +260,6 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
       selectedPlaceIds: newSelection,
       clearDuration: newSelection.length <= 1,
     );
-
-    developer.log('Deselected place $placeId', name: 'PlaceCalendarProvider');
   }
 
   /// Select multiple places
@@ -317,39 +267,22 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
     final newSelection = Set<int>.from(state.selectedPlaceIds)
       ..addAll(placeIds);
     state = state.copyWith(selectedPlaceIds: newSelection);
-
-    developer.log(
-      'Selected ${placeIds.length} places',
-      name: 'PlaceCalendarProvider',
-    );
   }
 
   /// Clear all place selections
   void clearSelection() {
     state = state.copyWith(selectedPlaceIds: {}, clearDuration: true);
-
-    developer.log(
-      'Cleared all place selections',
-      name: 'PlaceCalendarProvider',
-    );
   }
 
   /// Set required duration for multi-place reservations
   void setRequiredDuration(Duration duration) {
     state = state.copyWith(requiredDuration: duration);
-
-    developer.log(
-      'Set required duration to ${duration.inMinutes} minutes',
-      name: 'PlaceCalendarProvider',
-    );
   }
 
   /// Clear required duration (e.g., when returning to single place mode)
   void clearRequiredDuration() {
     if (state.requiredDuration == null) return;
     state = state.copyWith(clearDuration: true);
-
-    developer.log('Cleared required duration', name: 'PlaceCalendarProvider');
   }
 
   /// Create a new place reservation
@@ -359,11 +292,6 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      developer.log(
-        'Creating reservation for place $placeId',
-        name: 'PlaceCalendarProvider',
-      );
-
       // Call API to create reservation
       final reservation = await _placeService.createReservation(
         placeId: placeId,
@@ -378,11 +306,6 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
       state = state.copyWith(
         reservations: [...state.reservations, coloredReservation],
         isLoading: false,
-      );
-
-      developer.log(
-        'Successfully created reservation ${reservation.id}',
-        name: 'PlaceCalendarProvider',
       );
 
       return coloredReservation;
@@ -404,11 +327,6 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      developer.log(
-        'Updating reservation $reservationId',
-        name: 'PlaceCalendarProvider',
-      );
-
       // Call API to update reservation
       final reservation = await _placeService.updateReservation(
         reservationId: reservationId,
@@ -432,11 +350,6 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
         isLoading: false,
       );
 
-      developer.log(
-        'Successfully updated reservation $reservationId',
-        name: 'PlaceCalendarProvider',
-      );
-
       return coloredReservation;
     } catch (e) {
       developer.log(
@@ -453,11 +366,6 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
   Future<void> cancelReservation(int reservationId) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      developer.log(
-        'Canceling reservation $reservationId',
-        name: 'PlaceCalendarProvider',
-      );
-
       // Call API to cancel reservation
       await _placeService.cancelReservation(reservationId);
 
@@ -467,11 +375,6 @@ class PlaceCalendarNotifier extends StateNotifier<PlaceCalendarState> {
             .where((r) => r.id != reservationId)
             .toList(),
         isLoading: false,
-      );
-
-      developer.log(
-        'Successfully canceled reservation $reservationId',
-        name: 'PlaceCalendarProvider',
       );
     } catch (e) {
       developer.log(
