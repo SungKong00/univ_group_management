@@ -46,30 +46,16 @@ class RecruitingGroupsNotifier extends StateNotifier<RecruitingGroupsState> {
   /// Load recruiting groups from API
   Future<void> loadRecruitingGroups() async {
     if (state.isLoading) {
-      developer.log(
-        'Already loading recruiting groups, skipping...',
-        name: 'RecruitingGroupsNotifier',
-      );
       return;
     }
 
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      developer.log(
-        'Loading recruiting groups...',
-        name: 'RecruitingGroupsNotifier',
-      );
-
       // Fetch public recruitments with OPEN status
       final recruitments = await _recruitmentService.searchPublicRecruitments(
         page: 0,
         size: 20, // Fetch up to 20 recruiting groups
-      );
-
-      developer.log(
-        'Successfully loaded ${recruitments.length} recruiting groups',
-        name: 'RecruitingGroupsNotifier',
       );
 
       state = state.copyWith(
@@ -92,10 +78,6 @@ class RecruitingGroupsNotifier extends StateNotifier<RecruitingGroupsState> {
 
   /// Refresh recruiting groups
   Future<void> refresh() async {
-    developer.log(
-      'Refreshing recruiting groups...',
-      name: 'RecruitingGroupsNotifier',
-    );
     await loadRecruitingGroups();
   }
 }

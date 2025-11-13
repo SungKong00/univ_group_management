@@ -181,13 +181,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
           await _ref
               .read(workspaceStateProvider.notifier)
               .saveReadPosition(channelIdInt, postId);
-
-          if (kDebugMode) {
-            developer.log(
-              '✅ 로그아웃 전 읽음 위치 저장 - 채널: $channelIdInt, 게시글: $postId',
-              name: 'AuthProvider',
-            );
-          }
         }
       }
     } catch (e) {

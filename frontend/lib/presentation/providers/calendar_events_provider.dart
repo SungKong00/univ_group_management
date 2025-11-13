@@ -153,12 +153,6 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
     try {
       // 1. 메모리 스냅샷 확인 (최우선)
       if (_cachedSnapshot != null) {
-        if (kDebugMode) {
-          developer.log(
-            'Restoring calendar state from memory snapshot: ${_cachedSnapshot!.view.name}',
-            name: 'CalendarEventsNotifier',
-          );
-        }
         _loadSnapshot();
         await loadEvents();
         state = state.copyWith(hasInitialized: true);
@@ -171,13 +165,6 @@ class CalendarEventsNotifier extends StateNotifier<CalendarEventsState> {
       final lastDate = await localStorage.getLastCalendarDate();
 
       if (lastViewType != null || lastDate != null) {
-        if (kDebugMode) {
-          developer.log(
-            'Restoring calendar state from LocalStorage: view=$lastViewType, date=$lastDate',
-            name: 'CalendarEventsNotifier',
-          );
-        }
-
         // 뷰 타입 복원
         CalendarViewType? restoredView;
         if (lastViewType != null) {
