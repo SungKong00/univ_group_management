@@ -14,25 +14,24 @@ import 'package:frontend/presentation/widgets/navigation/responsive_navigation_w
 void main() {
   group('Keyboard Navigation', () {
     testWidgets('Tab key moves focus to next navigation item', (tester) async {
-      int selectedIndex = -1;
       final items = [
         NavigationItem(
           label: 'Home',
           icon: Icons.home,
           isSelected: false,
-          onTap: () => selectedIndex = 0,
+          onTap: () {},
         ),
         NavigationItem(
           label: 'Calendar',
           icon: Icons.calendar_today,
           isSelected: false,
-          onTap: () => selectedIndex = 1,
+          onTap: () {},
         ),
         NavigationItem(
           label: 'Settings',
           icon: Icons.settings,
           isSelected: false,
-          onTap: () => selectedIndex = 2,
+          onTap: () {},
         ),
       ];
 

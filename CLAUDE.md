@@ -265,6 +265,8 @@ flutter run -d chrome --web-hostname localhost --web-port 5173  # .env가 이미
 - In-memory navigation state (session-scoped)
 - Dart 3.x (Flutter SDK 3.x) + Riverpod (state management), go_router (navigation), scroll_to_index (scroll control), visibility_detector (scroll tracking) (002-workspace-bugs-fix)
 - In-memory session state (Navigator 2.0), API-persisted read positions (002-workspace-bugs-fix)
+- Dart 3.x (Flutter SDK 3.x stable) (003-flutter-analysis-fixes)
+- N/A (코드 품질 수정, 데이터 모델 변경 없음) (003-flutter-analysis-fixes)
 
 ## Recent Changes
 - 2025-11-10: Navigator 2.0 리팩터링 완료, develop 브랜치 병합

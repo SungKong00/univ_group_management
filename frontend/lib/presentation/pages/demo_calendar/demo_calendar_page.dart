@@ -266,18 +266,22 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
       }
       // Multiple places: show duration input dialog
       else if (selectedPlaces.length >= 2) {
+        if (!mounted) return;
         final duration = await showDialog<Duration>(
           context: context,
           builder: (context) => const DurationInputDialog(),
         );
 
-        if (duration != null && mounted) {
+        if (duration != null) {
+          if (!mounted) return;
+
           setState(() {
             _selectedPlaces = selectedPlaces;
             _requiredDuration = duration;
           });
 
           // Display selected places and duration
+          if (!mounted) return;
           AppSnackBar.info(
             context,
             '${selectedPlaces.length}개의 장소 선택 완료 (소요시간: ${_formatDuration(duration)})',

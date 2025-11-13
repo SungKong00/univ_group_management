@@ -168,15 +168,6 @@ class GroupEventAdapter {
     return time.hour * 4 + (time.minute ~/ 15);
   }
 
-  /// Convert slot index to TimeOfDay (inverse of _timeToSlot)
-  ///
-  /// **Note**: Currently unused but provided for completeness
-  static TimeOfDay _slotToTime(int slot) {
-    final hour = slot ~/ 4;
-    final minute = (slot % 4) * 15;
-    return TimeOfDay(hour: hour, minute: minute);
-  }
-
   /// Convert Color to hex string
   static String _colorToHex(Color color) =>
       '#'

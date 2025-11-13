@@ -206,9 +206,9 @@ class _PlaceClosureCalendarWidgetState
 
     Color? bgColor;
     if (hasFullDay) {
-      bgColor = AppColors.error.withOpacity(0.1);
+      bgColor = AppColors.error.withValues(alpha: 0.1);
     } else if (hasPartial) {
-      bgColor = Colors.orange.withOpacity(0.1);
+      bgColor = Colors.orange.withValues(alpha: 0.1);
     }
 
     final isToday =
@@ -280,7 +280,7 @@ class _PlaceClosureCalendarWidgetState
           width: 16,
           height: 16,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             border: Border.all(color: color),
             borderRadius: BorderRadius.circular(2),
           ),

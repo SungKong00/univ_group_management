@@ -370,7 +370,7 @@ class _EventCreateDialogState extends State<EventCreateDialog> {
           spacing: AppSpacing.xs,
           runSpacing: AppSpacing.xs,
           children: kPersonalScheduleColors.map((color) {
-            final isSelected = color.value == _selectedColor.value;
+            final isSelected = color.toARGB32() == _selectedColor.toARGB32();
             return GestureDetector(
               onTap: () {
                 setState(() {

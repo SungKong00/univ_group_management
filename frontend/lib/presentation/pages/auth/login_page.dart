@@ -9,6 +9,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/models/auth_models.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/snack_bar_helper.dart';
 import '../../widgets/buttons/outlined_link_button.dart';
 import '../../widgets/buttons/primary_button.dart';
 import '../../providers/auth_provider.dart';

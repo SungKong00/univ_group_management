@@ -185,10 +185,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e) {
       if (kDebugMode) {
-        developer.log(
-          '⚠️ 로그아웃 전 저장 실패 (무시) - $e',
-          name: 'AuthProvider',
-        );
+        developer.log('⚠️ 로그아웃 전 저장 실패 (무시) - $e', name: 'AuthProvider');
       }
     }
   }

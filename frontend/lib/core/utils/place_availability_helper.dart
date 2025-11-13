@@ -285,8 +285,8 @@ class PlaceAvailabilityHelper {
   /// Calculate disabled slots for multiple places with required duration
   ///
   /// **Parameters**:
-  /// - [availabilitiesMap]: Map of placeId → List<PlaceAvailability>
-  /// - [reservationsMap]: Map of placeId → List<PlaceReservation>
+  /// - [availabilitiesMap]: `Map<int, List<PlaceAvailability>>` of placeId to availability list
+  /// - [reservationsMap]: `Map<int, List<PlaceReservation>>` of placeId to reservation list
   /// - [requiredDuration]: Required continuous duration for reservation
   /// - [weekStart]: Monday of the current week (00:00:00)
   ///

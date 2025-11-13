@@ -18,7 +18,7 @@ class UnreadMessageDivider extends StatelessWidget {
             Expanded(
               child: Container(
                 height: 1,
-                color: AppColors.brand.withOpacity(0.3),
+                color: AppColors.brand.withValues(alpha: 0.3),
               ),
             ),
             Padding(
@@ -36,7 +36,7 @@ class UnreadMessageDivider extends StatelessWidget {
             Expanded(
               child: Container(
                 height: 1,
-                color: AppColors.brand.withOpacity(0.3),
+                color: AppColors.brand.withValues(alpha: 0.3),
               ),
             ),
           ],

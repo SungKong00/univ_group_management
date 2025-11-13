@@ -260,7 +260,7 @@ class _PostListState extends ConsumerState<PostList> {
     if (lastReadPostId == null || lastReadPostId == -1) {
       // 읽음 이력 없으면 첫 번째 게시글의 index (-1은 신규 채널)
       for (int i = 0; i < _flatItems.length; i++) {
-        if (_flatItems[i] case PostWrapper(:final post)) {
+        if (_flatItems[i] case PostWrapper()) {
           return i; // sequential index 반환
         }
       }

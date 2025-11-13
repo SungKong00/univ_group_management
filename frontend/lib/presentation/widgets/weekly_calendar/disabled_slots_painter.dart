@@ -38,7 +38,7 @@ class DisabledSlotsPainter extends CustomPainter {
     }
 
     final paint = Paint()
-      ..color = AppColors.neutral400.withOpacity(0.55)
+      ..color = AppColors.neutral400.withValues(alpha: 0.55)
       ..style = PaintingStyle.fill;
 
     // Iterate through each disabled slot
