@@ -34,47 +34,18 @@ class DisabledSlotsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (disabledSlots == null || disabledSlots!.isEmpty) {
-      developer.log(
-        '⚠️ DisabledSlotsPainter: No disabled slots to paint',
-        name: 'DisabledSlotsPainter',
-      );
       return;
     }
-
-    developer.log(
-      '🎨 DisabledSlotsPainter: Painting ${disabledSlots!.length} disabled slots',
-      name: 'DisabledSlotsPainter',
-    );
-    developer.log(
-      '📅 WeekStart: ${weekStart.year}-${weekStart.month}-${weekStart.day} '
-      '${weekStart.hour}:${weekStart.minute}:${weekStart.second}',
-      name: 'DisabledSlotsPainter',
-    );
 
     final paint = Paint()
       ..color = AppColors.neutral400.withOpacity(0.55)
       ..style = PaintingStyle.fill;
-
-    int paintedCount = 0;
-    int mondayMorningCount = 0; // Count Monday morning slots (hour < 9)
-    int filteredByWeekRange = 0; // Count slots filtered by week range
 
     // Iterate through each disabled slot
     for (final slot in disabledSlots!) {
       // Check if slot is within current week
       if (slot.isBefore(weekStart) ||
           slot.isAfter(weekStart.add(const Duration(days: 7)))) {
-        filteredByWeekRange++;
-        // Log first few filtered Monday slots for debugging
-        if (filteredByWeekRange <= 3 && slot.weekday == 1) {
-          developer.log(
-            '🚫 Filtered by week range: ${slot.year}-${slot.month}-${slot.day} '
-            '${slot.hour}:${slot.minute.toString().padLeft(2, '0')} '
-            '(isBefore: ${slot.isBefore(weekStart)}, '
-            'isAfter: ${slot.isAfter(weekStart.add(const Duration(days: 7)))})',
-            name: 'DisabledSlotsPainter',
-          );
-        }
         continue;
       }
 
@@ -88,16 +59,6 @@ class DisabledSlotsPainter extends CustomPainter {
         weekStart.day,
       );
       final dayIndex = slotDateOnly.difference(weekStartDateOnly).inDays;
-
-      // Log first few Monday slots for debugging
-      if (slot.weekday == 1 && mondayMorningCount < 3) {
-        developer.log(
-          '🔍 Monday slot: ${slot.year}-${slot.month}-${slot.day} ${slot.hour}:${slot.minute.toString().padLeft(2, '0')} '
-          '→ dayIndex=$dayIndex (slotDateOnly=${slotDateOnly.month}/${slotDateOnly.day}, '
-          'weekStartDateOnly=${weekStartDateOnly.month}/${weekStartDateOnly.day})',
-          name: 'DisabledSlotsPainter',
-        );
-      }
 
       // Debug: Log if we find slots outside the current week
       if (dayIndex < 0 || dayIndex >= 7) {
@@ -133,21 +94,9 @@ class DisabledSlotsPainter extends CustomPainter {
       final blocksToePaint = 1;
       final bottom = top + slotHeight * blocksToePaint;
 
-      // Track Monday morning slots
-      if (dayIndex == 0 && slotHour < 9) {
-        mondayMorningCount++;
-      }
-
       // Draw gray rectangle
       canvas.drawRect(Rect.fromLTRB(left, top, right, bottom), paint);
-      paintedCount++;
     }
-
-    developer.log(
-      '✅ DisabledSlotsPainter: Painted $paintedCount slots '
-      '(Monday morning: $mondayMorningCount, filtered by week range: $filteredByWeekRange)',
-      name: 'DisabledSlotsPainter',
-    );
   }
 
   @override
