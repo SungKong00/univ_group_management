@@ -56,12 +56,6 @@ class GroupCalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        if (enableLogging) {
-          developer.log(
-            'Fetched ${apiResponse.data!.length} group events for group $groupId',
-            name: 'GroupCalendarService',
-          );
-        }
         return apiResponse.data!;
       }
 
@@ -146,10 +140,6 @@ class GroupCalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log(
-          'Created ${apiResponse.data!.length} group event(s) for group $groupId',
-          name: 'GroupCalendarService',
-        );
         return apiResponse.data!;
       }
 
@@ -224,10 +214,6 @@ class GroupCalendarService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log(
-          'Updated ${apiResponse.data!.length} group event(s) for group $groupId',
-          name: 'GroupCalendarService',
-        );
         return apiResponse.data!;
       }
 
@@ -255,10 +241,6 @@ class GroupCalendarService {
       await _dioClient.delete<void>(
         '/groups/$groupId/events/$eventId',
         queryParameters: {'scope': deleteScope.apiValue},
-      );
-      developer.log(
-        'Deleted group event $eventId for group $groupId',
-        name: 'GroupCalendarService',
       );
     } on DioException catch (e) {
       developer.log(

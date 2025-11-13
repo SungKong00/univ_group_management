@@ -25,11 +25,6 @@ class GroupExploreService {
     Map<String, dynamic>? queryParams,
   }) async {
     try {
-      developer.log(
-        'Fetching groups (page: $page, size: $size)',
-        name: 'GroupExploreService',
-      );
-
       final params = <String, dynamic>{
         'page': page,
         'size': size,
@@ -45,11 +40,6 @@ class GroupExploreService {
         final pagedResponse = PagedApiResponse.fromJson(
           response.data!,
           (json) => GroupSummaryResponse.fromJson(json),
-        );
-
-        developer.log(
-          'Successfully fetched ${pagedResponse.data.content.length} groups (page ${pagedResponse.data.pagination.page})',
-          name: 'GroupExploreService',
         );
 
         return pagedResponse;
@@ -91,11 +81,6 @@ class GroupExploreService {
   /// 초기 로딩 시에만 호출되며, 이후는 로컬 필터링으로만 처리합니다.
   Future<List<GroupSummaryResponse>> getAllGroups() async {
     try {
-      developer.log(
-        'Fetching all groups (no pagination)',
-        name: 'GroupExploreService',
-      );
-
       final response = await _dioClient.get<dynamic>('/groups/all');
 
       if (response.data != null) {
@@ -134,10 +119,6 @@ class GroupExploreService {
             )
             .toList();
 
-        developer.log(
-          'Successfully fetched ${groups.length} groups',
-          name: 'GroupExploreService',
-        );
         return groups;
       }
 
@@ -169,11 +150,6 @@ class GroupExploreService {
     int size = 20,
   }) async {
     try {
-      developer.log(
-        'Exploring groups - query: $query, filters: $filters, page: $page',
-        name: 'GroupExploreService',
-      );
-
       final queryParams = <String, dynamic>{'page': page, 'size': size};
 
       // Add search query
@@ -197,11 +173,6 @@ class GroupExploreService {
           queryParams['tags'] = (filters['tags'] as List).join(',');
         }
       }
-
-      developer.log(
-        'API Request - Query Params: $queryParams',
-        name: 'GroupExploreService',
-      );
 
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/explore',
@@ -237,10 +208,6 @@ class GroupExploreService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} groups',
-            name: 'GroupExploreService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(

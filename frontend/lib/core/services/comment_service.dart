@@ -18,11 +18,6 @@ class CommentService {
   /// GET /posts/{postId}/comments
   Future<List<Comment>> fetchComments(int postId) async {
     try {
-      developer.log(
-        'Fetching comments for post: $postId',
-        name: 'CommentService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/posts/$postId/comments',
       );
@@ -38,10 +33,6 @@ class CommentService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} comments',
-            name: 'CommentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -74,11 +65,6 @@ class CommentService {
     int? parentCommentId,
   }) async {
     try {
-      developer.log(
-        'Creating comment for post: $postId',
-        name: 'CommentService',
-      );
-
       final request = CreateCommentRequest(
         content: content,
         parentCommentId: parentCommentId,
@@ -96,10 +82,6 @@ class CommentService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully created comment: ${apiResponse.data!.id}',
-            name: 'CommentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -128,8 +110,6 @@ class CommentService {
   /// Requires being the author or having admin permission
   Future<Comment> updateComment(int commentId, String content) async {
     try {
-      developer.log('Updating comment: $commentId', name: 'CommentService');
-
       final request = CreateCommentRequest(content: content);
 
       final response = await _dioClient.put<Map<String, dynamic>>(
@@ -144,10 +124,6 @@ class CommentService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully updated comment: $commentId',
-            name: 'CommentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -176,8 +152,6 @@ class CommentService {
   /// Requires being the author or having admin permission
   Future<void> deleteComment(int commentId) async {
     try {
-      developer.log('Deleting comment: $commentId', name: 'CommentService');
-
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/comments/$commentId',
       );
@@ -189,10 +163,6 @@ class CommentService {
         );
 
         if (apiResponse.success) {
-          developer.log(
-            'Successfully deleted comment: $commentId',
-            name: 'CommentService',
-          );
           return;
         } else {
           developer.log(

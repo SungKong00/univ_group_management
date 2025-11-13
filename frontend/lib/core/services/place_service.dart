@@ -28,11 +28,6 @@ class PlaceService {
     required CreatePlaceReservationRequest request,
   }) async {
     try {
-      developer.log(
-        'Creating reservation for place $placeId',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/places/$placeId/reservations',
         data: request.toJson(),
@@ -45,10 +40,6 @@ class PlaceService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully created reservation ${apiResponse.data!.id}',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -83,11 +74,6 @@ class PlaceService {
     required DateTime endDate,
   }) async {
     try {
-      developer.log(
-        'Fetching reservations for place $placeId from $startDate to $endDate',
-        name: 'PlaceService',
-      );
-
       // Format dates as yyyy-MM-dd
       final startDateStr = _formatDate(startDate);
       final endDateStr = _formatDate(endDate);
@@ -111,10 +97,6 @@ class PlaceService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} reservations',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -146,11 +128,6 @@ class PlaceService {
     required UpdatePlaceReservationRequest request,
   }) async {
     try {
-      developer.log(
-        'Updating reservation $reservationId',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/reservations/$reservationId',
         data: request.toJson(),
@@ -163,10 +140,6 @@ class PlaceService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully updated reservation $reservationId',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -196,11 +169,6 @@ class PlaceService {
   /// DELETE /api/reservations/{reservationId}
   Future<void> cancelReservation(int reservationId) async {
     try {
-      developer.log(
-        'Canceling reservation $reservationId',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/reservations/$reservationId',
       );
@@ -209,10 +177,6 @@ class PlaceService {
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        developer.log(
-          'Successfully canceled reservation $reservationId (status: ${response.statusCode})',
-          name: 'PlaceService',
-        );
         return;
       }
 
@@ -245,11 +209,6 @@ class PlaceService {
     required DateTime endDate,
   }) async {
     try {
-      developer.log(
-        'Fetching calendar for places $placeIds from $startDate to $endDate',
-        name: 'PlaceService',
-      );
-
       // Format dates as yyyy-MM-dd
       final startDateStr = _formatDate(startDate);
       final endDateStr = _formatDate(endDate);
@@ -284,10 +243,6 @@ class PlaceService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched calendar for ${apiResponse.data!.length} places',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -318,8 +273,6 @@ class PlaceService {
   /// Returns list of all places
   Future<List<Place>> getAllPlaces() async {
     try {
-      developer.log('Fetching all places', name: 'PlaceService');
-
       final response = await _dioClient.get<Map<String, dynamic>>('/places');
 
       if (response.data != null) {
@@ -333,10 +286,6 @@ class PlaceService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} places',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -374,11 +323,6 @@ class PlaceService {
   /// Returns list of places the group is approved to use
   Future<List<Place>> getReservablePlaces(int groupId) async {
     try {
-      developer.log(
-        'Fetching reservable places for group $groupId',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/reservable-places',
       );
@@ -394,10 +338,6 @@ class PlaceService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} reservable places for group $groupId',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -433,11 +373,6 @@ class PlaceService {
   /// Returns place detail including availability schedules
   Future<PlaceDetailResponse?> getPlaceDetail(int id) async {
     try {
-      developer.log(
-        'Fetching place detail for place $id',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/places/$id',
       );
@@ -449,10 +384,6 @@ class PlaceService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched place detail for place $id',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -489,11 +420,6 @@ class PlaceService {
   /// Returns the created place
   Future<Place> createPlace(CreatePlaceRequest request) async {
     try {
-      developer.log(
-        'Creating place: ${request.building} ${request.roomNumber}',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/places',
         data: request.toJson(),
@@ -506,10 +432,6 @@ class PlaceService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully created place ${apiResponse.data!.id}',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -538,8 +460,6 @@ class PlaceService {
   /// Returns the updated place
   Future<Place> updatePlace(int id, UpdatePlaceRequest request) async {
     try {
-      developer.log('Updating place $id', name: 'PlaceService');
-
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/places/$id',
         data: request.toJson(),
@@ -552,7 +472,6 @@ class PlaceService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log('Successfully updated place $id', name: 'PlaceService');
           return apiResponse.data!;
         } else {
           developer.log(
@@ -580,18 +499,12 @@ class PlaceService {
   /// DELETE /api/places/{id}
   Future<void> deletePlace(int id) async {
     try {
-      developer.log('Deleting place $id', name: 'PlaceService');
-
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/places/$id',
       );
 
       // Handle 204 No Content response (successful deletion)
       if (response.statusCode == 204) {
-        developer.log(
-          'Successfully deleted place $id (204 No Content)',
-          name: 'PlaceService',
-        );
         return;
       }
 
@@ -602,7 +515,7 @@ class PlaceService {
         );
 
         if (apiResponse.success) {
-          developer.log('Successfully deleted place $id', name: 'PlaceService');
+          return;
         } else {
           developer.log(
             'Failed to delete place: ${apiResponse.message}',
@@ -616,10 +529,6 @@ class PlaceService {
         if (response.statusCode != null &&
             response.statusCode! >= 200 &&
             response.statusCode! < 300) {
-          developer.log(
-            'Successfully deleted place $id (empty response but 2xx status)',
-            name: 'PlaceService',
-          );
           return;
         }
         throw Exception('Empty response from server');
@@ -653,11 +562,6 @@ class PlaceService {
     List<AvailabilityRequest> availabilities,
   ) async {
     try {
-      developer.log(
-        'Setting ${availabilities.length} availabilities for place $placeId',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/places/$placeId/availabilities',
         data: availabilities.map((a) => a.toJson()).toList(),
@@ -670,10 +574,7 @@ class PlaceService {
         );
 
         if (apiResponse.success) {
-          developer.log(
-            'Successfully set availabilities for place $placeId',
-            name: 'PlaceService',
-          );
+          return;
         } else {
           developer.log(
             'Failed to set availabilities: ${apiResponse.message}',
@@ -708,11 +609,6 @@ class PlaceService {
     String? reason,
   }) async {
     try {
-      developer.log(
-        'Creating usage request for place $placeId',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/places/$placeId/usage-requests',
         data: CreateUsageRequestRequest(reason: reason).toJson(),
@@ -725,10 +621,6 @@ class PlaceService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully created usage request for place $placeId',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -764,11 +656,6 @@ class PlaceService {
     String? rejectionReason,
   }) async {
     try {
-      developer.log(
-        'Updating usage status for place $placeId, group $groupId to $status',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/places/$placeId/usage-groups/$groupId',
         data: UpdateUsageStatusRequest(
@@ -784,10 +671,6 @@ class PlaceService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully updated usage status',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -821,11 +704,6 @@ class PlaceService {
     required int groupId,
   }) async {
     try {
-      developer.log(
-        'Revoking usage permission for place $placeId, group $groupId',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/places/$placeId/usage-groups/$groupId',
       );
@@ -837,10 +715,6 @@ class PlaceService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully revoked usage permission',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -871,11 +745,6 @@ class PlaceService {
   /// Returns list of pending usage requests
   Future<List<PlaceUsageGroup>> getPendingRequests(int placeId) async {
     try {
-      developer.log(
-        'Fetching pending requests for place $placeId',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/places/$placeId/usage-requests/pending',
       );
@@ -894,10 +763,6 @@ class PlaceService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} pending requests',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -926,11 +791,6 @@ class PlaceService {
   /// Returns list of approved groups
   Future<List<PlaceUsageGroup>> getApprovedGroups(int placeId) async {
     try {
-      developer.log(
-        'Fetching approved groups for place $placeId',
-        name: 'PlaceService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/places/$placeId/usage-groups',
       );
@@ -949,10 +809,6 @@ class PlaceService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} approved groups',
-            name: 'PlaceService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(

@@ -21,14 +21,7 @@ class GroupService {
   /// Throws exception on error for proper error handling upstream
   Future<List<GroupMembership>> getMyGroups() async {
     try {
-      developer.log('Fetching my groups from /me/groups', name: 'GroupService');
-
       final response = await _dioClient.get<Map<String, dynamic>>('/me/groups');
-
-      developer.log(
-        'Received response: statusCode=${response.statusCode}, hasData=${response.data != null}',
-        name: 'GroupService',
-      );
 
       if (response.data == null) {
         throw Exception('Empty response from server');
@@ -65,10 +58,6 @@ class GroupService {
         throw Exception('No data in response');
       }
 
-      developer.log(
-        'Successfully fetched ${apiResponse.data!.length} groups',
-        name: 'GroupService',
-      );
       return apiResponse.data!;
     } catch (e) {
       developer.log(
@@ -116,8 +105,6 @@ class GroupService {
   /// Returns all groups with parent-child relationships
   Future<List<GroupHierarchyNode>> getHierarchy() async {
     try {
-      developer.log('Fetching group hierarchy', name: 'GroupService');
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/hierarchy',
       );
@@ -136,10 +123,6 @@ class GroupService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} hierarchy nodes',
-            name: 'GroupService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -168,11 +151,6 @@ class GroupService {
   /// Requires GROUP_MANAGE permission
   Future<void> updateGroup(int groupId, UpdateGroupRequest request) async {
     try {
-      developer.log(
-        'Updating group $groupId with request: ${request.toJson()}',
-        name: 'GroupService',
-      );
-
       final response = await _dioClient.put<Map<String, dynamic>>(
         '/groups/$groupId',
         data: request.toJson(),
@@ -185,10 +163,7 @@ class GroupService {
         );
 
         if (apiResponse.success) {
-          developer.log(
-            'Successfully updated group $groupId',
-            name: 'GroupService',
-          );
+          // Success
         } else {
           developer.log(
             'Failed to update group: ${apiResponse.message}',
@@ -220,11 +195,6 @@ class GroupService {
     CreateSubgroupRequest request,
   ) async {
     try {
-      developer.log(
-        'Creating subgroup request under parent $parentId with request: ${request.toJson()}',
-        name: 'GroupService',
-      );
-
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/groups/$parentId/sub-groups/requests',
         data: request.toJson(),
@@ -237,10 +207,7 @@ class GroupService {
         );
 
         if (apiResponse.success) {
-          developer.log(
-            'Successfully created subgroup request',
-            name: 'GroupService',
-          );
+          // Success
         } else {
           developer.log(
             'Failed to create subgroup request: ${apiResponse.message}',
@@ -271,11 +238,6 @@ class GroupService {
   /// Returns list of pending subgroup requests
   Future<List<SubGroupRequestResponse>> getSubGroupRequests(int groupId) async {
     try {
-      developer.log(
-        'Fetching subgroup requests for group $groupId',
-        name: 'GroupService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/sub-groups/requests',
       );
@@ -295,10 +257,6 @@ class GroupService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} subgroup requests',
-            name: 'GroupService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -334,11 +292,6 @@ class GroupService {
     ReviewSubGroupRequestRequest request,
   ) async {
     try {
-      developer.log(
-        'Reviewing subgroup request $requestId for group $groupId with action: ${request.action}',
-        name: 'GroupService',
-      );
-
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/groups/$groupId/sub-groups/requests/$requestId',
         data: request.toJson(),
@@ -351,10 +304,7 @@ class GroupService {
         );
 
         if (apiResponse.success) {
-          developer.log(
-            'Successfully reviewed subgroup request',
-            name: 'GroupService',
-          );
+          // Success
         } else {
           developer.log(
             'Failed to review subgroup request: ${apiResponse.message}',
@@ -384,11 +334,6 @@ class GroupService {
   /// Returns list of places that the group has permission to reserve
   Future<List<Place>> getAvailablePlaces(int groupId) async {
     try {
-      developer.log(
-        'Fetching available places for group $groupId',
-        name: 'GroupService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/available-places',
       );
@@ -404,10 +349,6 @@ class GroupService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} available places',
-            name: 'GroupService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -438,11 +379,6 @@ class GroupService {
   /// Returns list of groups that are direct children of the specified group
   Future<List<GroupSummaryResponse>> getSubGroups(int groupId) async {
     try {
-      developer.log(
-        'Fetching sub-groups for group $groupId',
-        name: 'GroupService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/sub-groups',
       );
@@ -462,10 +398,6 @@ class GroupService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} sub-groups',
-            name: 'GroupService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
