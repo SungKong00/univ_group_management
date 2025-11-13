@@ -552,24 +552,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     return true; // All slots in the duration are available
   }
 
-  /// Calculate disabled slots for a single place
-  ///
-  /// Returns a set of DateTime objects representing 15-minute time slots
-  /// that are unavailable (outside operating hours or reserved).
-  ///
-  /// DEPRECATED: Use _calculateDisabledSlotsForSinglePlace instead
-  Set<DateTime> _calculateDisabledSlotsForPlace({
-    required List<OperatingHoursResponse> operatingHours,
-    required List<PlaceReservation> reservations,
-    required DateTime weekStart,
-  }) {
-    return _calculateDisabledSlotsForSinglePlace(
-      operatingHours: operatingHours,
-      reservations: reservations,
-      weekStart: weekStart,
-    );
-  }
-
   /// Convert weekday int (1-7) to DayOfWeek enum
   dynamic _getDayOfWeekEnum(int weekday) {
     // Import statement for DayOfWeek enum is already present via place_availability.dart

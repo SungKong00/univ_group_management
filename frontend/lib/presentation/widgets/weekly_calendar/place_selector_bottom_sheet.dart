@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:flutter/material.dart';
 import '../../../core/models/place/place.dart';
 import '../../../core/services/place_service.dart';

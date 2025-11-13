@@ -229,7 +229,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
   late int _visibleStartHour;
   late int _visibleEndHour;
   bool _hasAppliedInitialScroll = false;
-  double _currentDayColumnWidth = 0;
   double _currentContentHeight = 0;
   double _currentViewportHeight = 0; // 실제 화면에 보이는 뷰포트 높이
 
@@ -1674,7 +1673,6 @@ class _WeeklyScheduleEditorState extends State<WeeklyScheduleEditor> {
                           4 *
                           _minSlotHeight;
 
-                      _currentDayColumnWidth = dayColumnWidth;
                       _currentContentHeight = contentHeight;
                       _currentViewportHeight =
                           constraints.maxHeight; // 실제 뷰포트 높이 저장

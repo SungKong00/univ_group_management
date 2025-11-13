@@ -95,7 +95,6 @@ class _PostListState extends ConsumerState<PostList> {
 
   // 가시성 추적 (Visibility Detector)
   final Set<int> _visiblePostIds = {};
-  int? _currentMaxVisibleId; // 현재 화면에 보이는 최댓값
   int? _highestEverVisibleId; // 지금까지 본 것 중 최댓값 (절대 감소하지 않음)
   Timer? _debounceTimer;
   bool _hasScrolledToUnread = false;
@@ -114,7 +113,6 @@ class _PostListState extends ConsumerState<PostList> {
     if (oldWidget.channelId != widget.channelId) {
       _hasScrolledToUnread = false;
       _firstUnreadPostIndex = null;
-      _currentMaxVisibleId = null;
       _highestEverVisibleId = null;
       _resetAndLoad();
     }
@@ -142,7 +140,6 @@ class _PostListState extends ConsumerState<PostList> {
       _visiblePostIds.clear();
       _firstUnreadPostIndex = null;
       _hasScrolledToUnread = false;
-      _currentMaxVisibleId = null;
       _highestEverVisibleId = null;
     });
     _loadPostsAndScrollToUnread();
@@ -467,9 +464,6 @@ class _PostListState extends ConsumerState<PostList> {
     if (_visiblePostIds.isEmpty) return;
 
     final maxId = _visiblePostIds.reduce((a, b) => a > b ? a : b);
-
-    // 현재 화면 최댓값 업데이트 (항상 갱신)
-    _currentMaxVisibleId = maxId;
 
     // 지금까지 본 것 중 최댓값 업데이트 (절대 감소하지 않음)
     if (_highestEverVisibleId == null || maxId > _highestEverVisibleId!) {
