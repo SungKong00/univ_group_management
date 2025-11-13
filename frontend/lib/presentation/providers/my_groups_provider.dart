@@ -9,11 +9,14 @@ import '../../core/services/group_service.dart';
 ///
 /// 자동 정렬: level 오름차순 → id 오름차순
 ///
-/// autoDispose를 사용하여 사용하지 않을 때 자동으로 메모리에서 해제됩니다.
-/// 로그아웃 시에는 core/providers/provider_reset.dart에서 명시적으로 invalidate됩니다.
-final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((
-  ref,
-) async {
+/// **세션 스코프 캐싱 (keepAlive):**
+/// - 글로벌 네비게이션으로 탭 전환 시 provider가 dispose되지 않도록 keepAlive 사용
+/// - 워크스페이스 그룹 선택 상태가 탭 전환 후에도 메모리에 유지됨
+/// - 로그아웃 시에는 core/providers/provider_reset.dart에서 명시적으로 invalidate됩니다.
+final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
+  // ✅ keepAlive: 탭 전환 시 provider dispose 방지 (세션 스코프 유지)
+  ref.keepAlive();
+
   final groupService = GroupService();
   return await groupService.getMyGroups();
 });

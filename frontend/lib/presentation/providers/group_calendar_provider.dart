@@ -53,6 +53,7 @@ class GroupCalendarNotifier extends StateNotifier<GroupCalendarState> {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
+    if (!mounted) return; // ✅ dispose 후 실행 방지
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
@@ -62,6 +63,7 @@ class GroupCalendarNotifier extends StateNotifier<GroupCalendarState> {
         endDate: endDate,
       );
 
+      if (!mounted) return; // ✅ 비동기 작업 완료 후 dispose 체크
       state = state.copyWith(isLoading: false, events: events);
 
       developer.log(
@@ -76,6 +78,7 @@ class GroupCalendarNotifier extends StateNotifier<GroupCalendarState> {
         stackTrace: stack,
       );
 
+      if (!mounted) return; // ✅ 에러 처리 전 dispose 체크
       state = state.copyWith(
         isLoading: false,
         errorMessage: e.toString().replaceFirst('Exception: ', ''),

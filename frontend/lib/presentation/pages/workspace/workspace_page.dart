@@ -57,13 +57,12 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     WidgetsBinding.instance.addObserver(this);
 
     // 워크스페이스 진입 시 상태 초기화
+    // ✅ groupId가 null이어도 _initializeWorkspace() 호출 (세션 상태 보존)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }
-      if (widget.groupId != null) {
-        _initializeWorkspace();
-      }
+      _initializeWorkspace();
     });
   }
 
@@ -91,15 +90,20 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
   void _initializeWorkspace() {
     // GroupDropdown이나 다른 곳에서 이미 enterWorkspace()를 호출했는지 확인
     final currentGroupId = ref.read(currentGroupIdProvider);
-    final isAlreadyInitialized = currentGroupId == widget.groupId;
+    final targetGroupId = widget.groupId;
 
-    if (!isAlreadyInitialized) {
-      // 워크스페이스 상태 설정 (URL 직접 접근 시에만)
+    // ✅ 세션 기반 상태 보존: 글로벌 네비게이션 복귀 시 처리
+    // Case 1: URL에 groupId가 있고, 현재 상태와 다르면 → enterWorkspace 호출
+    // Case 2: URL에 groupId가 없지만, 메모리에 currentGroupId가 있으면 → 상태 유지 (아무것도 안 함)
+    // Case 3: URL에 groupId가 없고, 메모리에도 없으면 → 앱 첫 진입 (처리 안 함)
+    if (targetGroupId != null && currentGroupId != targetGroupId) {
+      // 워크스페이스 상태 설정 (URL 직접 접근 시 또는 그룹 전환 시)
       _workspaceNotifier.enterWorkspace(
-        widget.groupId!,
+        targetGroupId,
         channelId: widget.channelId,
       );
     }
+    // else: targetGroupId == null이면 currentGroupId가 메모리에 유지됨 (세션 보존)
 
     // 워크스페이스 진입 시 사이드바를 즉시 축소
     _navigationController.enterWorkspace();
