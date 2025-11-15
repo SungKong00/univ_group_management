@@ -109,10 +109,6 @@ class AuthService {
       final userDataJson = await _storage.getUserData();
 
       if (accessToken == null || userDataJson == null) {
-        developer.log(
-          'No stored token or user data found',
-          name: 'AuthService',
-        );
         return false;
       }
 
@@ -120,11 +116,6 @@ class AuthService {
       if (_dioClient == null) {
         initialize();
       }
-
-      developer.log(
-        'Attempting auto login with stored token',
-        name: 'AuthService',
-      );
 
       // 토큰 유효성 검증 API 호출
       try {
@@ -143,11 +134,6 @@ class AuthService {
             _currentUser = apiResponse.data!;
             // 최신 사용자 정보로 로컬 스토리지 업데이트
             await _saveUserInfo(_currentUser!);
-
-            developer.log(
-              'Auto login successful: ${_currentUser!.email}',
-              name: 'AuthService',
-            );
 
             // GoRouter에 인증 상태 변경 알림 (자동 로그인 성공)
             authChangeNotifier.notifyAuthChanged();

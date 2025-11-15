@@ -246,7 +246,7 @@ class _AvailableTimesWidgetState extends ConsumerState<AvailableTimesWidget> {
                   '${slot.startTime} - ${slot.endTime}',
                   style: AppTheme.bodySmall,
                 ),
-                backgroundColor: AppColors.success.withOpacity(0.1),
+                backgroundColor: AppColors.success.withValues(alpha: 0.1),
                 side: BorderSide(color: AppColors.success),
               );
             }).toList(),

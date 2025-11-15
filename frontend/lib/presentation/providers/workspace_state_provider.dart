@@ -12,6 +12,7 @@ import 'my_groups_provider.dart';
 import 'place_calendar_provider.dart';
 import 'auth_provider.dart';
 import 'workspace_navigation_helper.dart';
+import 'navigation_state_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // 웹 플랫폼에서만 JS interop 및 HTML API 사용 (조건부 import)
@@ -65,6 +66,7 @@ enum MobileWorkspaceView {
 class WorkspaceState extends Equatable {
   const WorkspaceState({
     this.selectedGroupId,
+    this.selectedGroup,
     this.selectedChannelId,
     this.isCommentsVisible = false,
     this.selectedPostId,
@@ -94,6 +96,7 @@ class WorkspaceState extends Equatable {
   });
 
   final String? selectedGroupId;
+  final GroupMembership? selectedGroup;
   final String? selectedChannelId;
   final bool isCommentsVisible;
   final String? selectedPostId;
@@ -129,6 +132,7 @@ class WorkspaceState extends Equatable {
 
   WorkspaceState copyWith({
     String? selectedGroupId,
+    GroupMembership? selectedGroup,
     String? selectedChannelId,
     bool? isCommentsVisible,
     String? selectedPostId,
@@ -158,6 +162,7 @@ class WorkspaceState extends Equatable {
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
+      selectedGroup: selectedGroup ?? this.selectedGroup,
       selectedChannelId: selectedChannelId ?? this.selectedChannelId,
       isCommentsVisible: isCommentsVisible ?? this.isCommentsVisible,
       selectedPostId: selectedPostId ?? this.selectedPostId,
@@ -199,6 +204,7 @@ class WorkspaceState extends Equatable {
   @override
   List<Object?> get props => [
     selectedGroupId,
+    selectedGroup,
     selectedChannelId,
     isCommentsVisible,
     selectedPostId,
@@ -274,7 +280,32 @@ class _PermissionInfo {
 }
 
 class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
-  WorkspaceStateNotifier(this._ref) : super(const WorkspaceState());
+  WorkspaceStateNotifier(this._ref) : super(const WorkspaceState()) {
+    // myGroupsProvider 변경 감지 리스너 추가
+    // 그룹 정보가 업데이트되면 (예: 그룹 이름 변경) selectedGroup도 자동 동기화
+    _ref.listen<AsyncValue<List<GroupMembership>>>(myGroupsProvider, (
+      prev,
+      next,
+    ) {
+      // 그룹 리스트가 업데이트되고, 현재 선택된 그룹이 있으면
+      if (next.hasValue && state.selectedGroupId != null) {
+        try {
+          final updatedGroup = next.value!.firstWhere(
+            (g) => g.id.toString() == state.selectedGroupId,
+          );
+          // 변경된 그룹 정보로 state 업데이트
+          if (mounted) {
+            state = state.copyWith(selectedGroup: updatedGroup);
+          }
+        } catch (_) {
+          // 그룹을 찾을 수 없으면 null로 설정 (예: 그룹에서 제명됨)
+          if (mounted) {
+            state = state.copyWith(selectedGroup: null);
+          }
+        }
+      }
+    });
+  }
 
   final Ref _ref;
   final ChannelService _channelService = ChannelService();
@@ -361,13 +392,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
           // 웹: groupHome으로 진입 (UX 명세 준수)
           // 모바일: 채널 뷰로 진입 (모바일 UX: 채널 리스트가 홈)
           shouldUseChannelView = !kIsWeb;
-        }
-
-        if (kDebugMode) {
-          developer.log(
-            'Restoring workspace state: group=$lastGroupId, channel=$lastChannelId, view=$lastViewType, shouldUseChannelView=$shouldUseChannelView, kIsWeb=$kIsWeb',
-            name: 'WorkspaceStateNotifier',
-          );
         }
 
         // 뷰 타입에 따라 적절한 방식으로 워크스페이스 진입
@@ -611,6 +635,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     // Step 5: Update state with navigation target
     _updateStateForNavigation(
       groupId: groupId,
+      membership: resolvedMembership,
       navigationTarget: navigationTarget,
       snapshot: snapshot,
       isSameGroup: isSameGroup,
@@ -640,6 +665,34 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     } catch (e) {
       _handleWorkspaceLoadFailure();
     }
+  }
+
+  /// Switch group with integrated navigation and workspace state update
+  ///
+  /// Combines navigationStateProvider.switchGroup() and workspaceStateProvider.enterWorkspace()
+  /// into a single operation for group switching from UI components like GroupDropdown.
+  ///
+  /// **Usage:**
+  /// ```dart
+  /// await ref.read(workspaceStateProvider.notifier).switchGroupWithNavigation(
+  ///   groupId: group.id,
+  ///   membership: group,
+  /// );
+  /// ```
+  ///
+  /// **Benefits:**
+  /// - Ensures consistent state across navigation and workspace
+  /// - Simplifies group switching logic in UI components
+  /// - Provides single point of failure handling
+  Future<void> switchGroupWithNavigation({
+    required int groupId,
+    required GroupMembership membership,
+  }) async {
+    // 1. Update navigation state (declarative routing with context-aware switching)
+    await _ref.read(navigationStateProvider.notifier).switchGroup(groupId);
+
+    // 2. Update workspace state (compatibility with existing workspace logic)
+    await enterWorkspace(groupId.toString(), membership: membership);
   }
 
   /// Handle membership resolution failure
@@ -736,6 +789,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// Update state with determined navigation target
   void _updateStateForNavigation({
     required String groupId,
+    required GroupMembership membership,
     required _NavigationTarget navigationTarget,
     required WorkspaceSnapshot? snapshot,
     required bool isSameGroup,
@@ -744,6 +798,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
     state = state.copyWith(
       selectedGroupId: groupId,
+      selectedGroup: membership,
       selectedChannelId: hasMobileState
           ? state.selectedChannelId
           : snapshot?.selectedChannelId,
@@ -1009,32 +1064,13 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     // 안전장치: 로그아웃 중에는 저장하지 않음
     final isLoggingOut = _ref.read(authProvider).isLoggingOut;
     if (isLoggingOut) {
-      if (kDebugMode) {
-        developer.log(
-          '읽음 위치 저장 스킵 (로그아웃 중) - 채널: $channelId',
-          name: 'WorkspaceState',
-        );
-      }
       return;
     }
 
     // API call (Best-Effort, error ignored)
     try {
       await _channelService.updateReadPosition(channelId, postId);
-
-      if (kDebugMode) {
-        developer.log(
-          '✅ 읽음 위치 저장 완료 - 채널: $channelId, 게시글: $postId',
-          name: 'WorkspaceState',
-        );
-      }
     } catch (e) {
-      if (kDebugMode) {
-        developer.log(
-          '⚠️ 읽음 위치 저장 실패 (무시) - 채널: $channelId, 에러: $e',
-          name: 'WorkspaceState',
-        );
-      }
       // Best-Effort: 에러 무시
     }
 
@@ -1067,12 +1103,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     try {
       final channelId = state.selectedChannelId;
       if (channelId == null) {
-        if (kDebugMode) {
-          developer.log(
-            '⚠️ JS 캐시 업데이트 스킵 - channelId null',
-            name: 'WorkspaceState',
-          );
-        }
         return;
       }
 
@@ -1085,13 +1115,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         postId: postId,
         apiBaseUrl: apiBaseUrl,
       );
-
-      if (kDebugMode) {
-        developer.log(
-          '🔄 JS 캐시 동기 업데이트 - 채널: $channelId, 게시글: $postId',
-          name: 'WorkspaceState',
-        );
-      }
     } catch (e) {
       if (kDebugMode) {
         developer.log('⚠️ JS 캐시 동기 업데이트 실패 - $e', name: 'WorkspaceState');
@@ -1370,13 +1393,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         try {
           await saveReadPosition(channelIdInt, state.currentVisiblePostId!);
           await loadUnreadCount(channelIdInt);
-
-          if (kDebugMode) {
-            developer.log(
-              'Read position saved (state preserved)',
-              name: 'WorkspaceStateNotifier',
-            );
-          }
         } catch (e) {
           if (kDebugMode) {
             developer.log(
@@ -1429,11 +1445,16 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     if (isReturnToGlobalHome) {
       // Clear all workspace snapshots - user wants fresh start
       _workspaceSnapshots.clear();
-      _lastGroupId = null;
+
+      // ✅ FIX: Keep _lastGroupId for tab restoration
+      // _lastGroupId is used by sidebar/bottom navigation to restore the last visited group
+      // when switching tabs (e.g., Home → Workspace). Only forceClearForLogout() should
+      // clear it completely.
+      // _lastGroupId = null;  // ← Removed: caused "한신대학교" reset bug on tab switch
 
       if (kDebugMode) {
         developer.log(
-          'Cleared all workspace snapshots (returned to global home)',
+          'Cleared workspace snapshots (returned to global home), but kept _lastGroupId for tab restoration',
           name: 'WorkspaceStateNotifier',
         );
       }

@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'user_models.dart';
 
 enum GroupNodeType {
@@ -67,7 +68,7 @@ class GroupHierarchyNode {
 }
 
 /// GroupMembership model for /api/me/groups response
-class GroupMembership {
+class GroupMembership extends Equatable {
   final int id;
   final String name;
   final String type;
@@ -77,7 +78,7 @@ class GroupMembership {
   final List<String> permissions;
   final String? profileImageUrl;
 
-  GroupMembership({
+  const GroupMembership({
     required this.id,
     required this.name,
     required this.type,
@@ -102,6 +103,18 @@ class GroupMembership {
       profileImageUrl: json['profileImageUrl'] as String?,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    name,
+    type,
+    level,
+    parentId,
+    role,
+    permissions,
+    profileImageUrl,
+  ];
 }
 
 /// UpdateGroupRequest model for PUT /api/groups/{id}

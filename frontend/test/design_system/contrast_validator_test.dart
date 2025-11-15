@@ -15,9 +15,9 @@ void main() {
   /// Calculate relative luminance according to WCAG 2.1
   /// https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
   double relativeLuminance(Color color) {
-    final r = color.red / 255.0;
-    final g = color.green / 255.0;
-    final b = color.blue / 255.0;
+    final r = ((color.r * 255.0).round() & 0xff) / 255.0;
+    final g = ((color.g * 255.0).round() & 0xff) / 255.0;
+    final b = ((color.b * 255.0).round() & 0xff) / 255.0;
 
     final rsRGB = r <= 0.03928
         ? r / 12.92
@@ -46,7 +46,7 @@ void main() {
 
   /// Convert Color to hex string for debugging
   String colorToHex(Color color) {
-    return '#${color.value.toRadixString(16).padLeft(8, '0').substring(2)}';
+    return '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
   }
 
   group('WCAG 2.1 AA Contrast Ratio Validation', () {

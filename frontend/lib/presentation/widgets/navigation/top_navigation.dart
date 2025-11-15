@@ -143,6 +143,7 @@ class TopNavigation extends ConsumerWidget {
     );
     final previousRoute = navigationController.goBack();
 
+    if (!context.mounted) return;
     if (previousRoute != null) {
       context.go(previousRoute);
     }

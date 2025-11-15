@@ -102,12 +102,6 @@ class HomeStateNotifier extends StateNotifier<HomeState> {
     try {
       // 1. 메모리 스냅샷 확인 (최우선)
       if (_cachedSnapshot != null) {
-        if (kDebugMode) {
-          developer.log(
-            'Restoring home state from memory snapshot: ${_cachedSnapshot!.view.name}',
-            name: 'HomeStateNotifier',
-          );
-        }
         loadSnapshot();
         _hasInitialized = true;
         return;
@@ -119,13 +113,6 @@ class HomeStateNotifier extends StateNotifier<HomeState> {
       final lastTab = await localStorage.getLastGroupExploreTab();
 
       if (lastView != null || lastTab != null) {
-        if (kDebugMode) {
-          developer.log(
-            'Restoring home state from LocalStorage: view=$lastView, tab=$lastTab',
-            name: 'HomeStateNotifier',
-          );
-        }
-
         // 뷰 복원
         HomeView? restoredView;
         if (lastView != null) {
@@ -243,13 +230,6 @@ class HomeStateNotifier extends StateNotifier<HomeState> {
   /// 그룹 탐색 탭 변경 (사용자가 탭을 전환할 때 호출)
   void setGroupExploreTab(int tabIndex) {
     if (state.groupExploreInitialTab == tabIndex) return; // 중복 방지
-
-    if (kDebugMode) {
-      developer.log(
-        'Setting group explore tab: $tabIndex',
-        name: 'HomeStateNotifier',
-      );
-    }
 
     state = state.copyWith(groupExploreInitialTab: tabIndex);
 

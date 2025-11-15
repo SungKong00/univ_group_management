@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/models/calendar_models.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/utils/date_formatter.dart';
@@ -13,7 +12,6 @@ import '../../../widgets/calendar/calendar_error_banner.dart';
 import '../../../widgets/calendar/calendar_navigator.dart';
 import '../../../widgets/dialogs/confirm_dialog.dart';
 import '../../../widgets/weekly_calendar/weekly_schedule_editor.dart';
-import '../widgets/schedule_detail_sheet.dart';
 import '../widgets/schedule_form_dialog.dart';
 
 /// 시간표 탭 (개인 일정 주간 뷰)
@@ -183,46 +181,6 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
     await notifier.createSchedule(request);
   }
 
-  static Future<void> _handleScheduleTap(
-    BuildContext context,
-    TimetableStateNotifier notifier,
-    PersonalSchedule schedule,
-  ) async {
-    final action = await showScheduleDetailSheet(context, schedule: schedule);
-    if (!context.mounted) return;
-    if (action == null) return;
-
-    if (action == ScheduleDetailAction.edit) {
-      final request = await showScheduleFormDialog(context, initial: schedule);
-      if (!context.mounted) return;
-      if (request == null) return;
-      final hasOverlap = notifier.hasOverlap(request, excludeId: schedule.id);
-      if (hasOverlap) {
-        final confirmed = await showConfirmDialog(
-          context,
-          title: '시간 겹침 확인',
-          message: '⚠️ 해당 시간대에 다른 일정이 있습니다. 계속 진행하시겠습니까?',
-          confirmLabel: '계속 진행',
-          cancelLabel: '아니요',
-        );
-        if (!context.mounted) return;
-        if (!confirmed) return;
-      }
-      await notifier.updateSchedule(schedule.id, request);
-    } else if (action == ScheduleDetailAction.delete) {
-      final confirmed = await showConfirmDialog(
-        context,
-        title: '일정 삭제',
-        message: '정말 "${schedule.title}" 일정을 삭제하시겠습니까?',
-        confirmLabel: '삭제',
-        isDestructive: true,
-      );
-      if (!context.mounted) return;
-      if (!confirmed) return;
-      await notifier.deleteSchedule(schedule.id);
-    }
-  }
-
   /// Handle event creation from WeeklyScheduleEditor
   static Future<bool> _handleEventCreate(
     BuildContext context,
@@ -347,7 +305,6 @@ class _TimetableToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final weekRange = DateFormatter.weekRange(state.weekStart);
     final weekLabel = DateFormatter.formatWeekHeader(state.weekStart);
     final weekRangeLabel = DateFormatter.formatWeekRangeDetailed(

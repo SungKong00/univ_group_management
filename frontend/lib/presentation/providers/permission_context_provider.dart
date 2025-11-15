@@ -92,7 +92,7 @@ class PermissionContextNotifier extends StateNotifier<PermissionContext> {
 
     try {
       final response = await _dioClient.get(
-        '/api/groups/$groupId/members/me/permissions',
+        '/groups/$groupId/members/me/permissions', // ✅ /api 제거 (baseUrl에 이미 포함)
       );
 
       // Parse response - expected format: { "permissions": ["PERM1", "PERM2"], "isAdmin": bool }

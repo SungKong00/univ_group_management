@@ -20,11 +20,6 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
   @override
   Future<List<JoinRequest>> getPendingRequests(int groupId) async {
     try {
-      developer.log(
-        'Fetching pending join requests for group $groupId',
-        name: 'ApiJoinRequestRepository',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/join-requests',
       );
@@ -40,10 +35,6 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} join requests',
-            name: 'ApiJoinRequestRepository',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -71,11 +62,6 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
   @override
   Future<void> approveRequest(int groupId, int requestId) async {
     try {
-      developer.log(
-        'Approving join request $requestId for group $groupId',
-        name: 'ApiJoinRequestRepository',
-      );
-
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/groups/$groupId/join-requests/$requestId',
         data: {'action': 'APPROVE'},
@@ -87,12 +73,7 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
           (json) => null,
         );
 
-        if (apiResponse.success) {
-          developer.log(
-            'Successfully approved join request',
-            name: 'ApiJoinRequestRepository',
-          );
-        } else {
+        if (!apiResponse.success) {
           developer.log(
             'Failed to approve join request: ${apiResponse.message}',
             name: 'ApiJoinRequestRepository',
@@ -116,11 +97,6 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
   @override
   Future<void> rejectRequest(int groupId, int requestId) async {
     try {
-      developer.log(
-        'Rejecting join request $requestId for group $groupId',
-        name: 'ApiJoinRequestRepository',
-      );
-
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/groups/$groupId/join-requests/$requestId',
         data: {'action': 'REJECT'},
@@ -132,12 +108,7 @@ class ApiJoinRequestRepository implements JoinRequestRepository {
           (json) => null,
         );
 
-        if (apiResponse.success) {
-          developer.log(
-            'Successfully rejected join request',
-            name: 'ApiJoinRequestRepository',
-          );
-        } else {
+        if (!apiResponse.success) {
           developer.log(
             'Failed to reject join request: ${apiResponse.message}',
             name: 'ApiJoinRequestRepository',

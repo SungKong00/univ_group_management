@@ -4,10 +4,10 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-11-12 (H) (글로벌 네비게이션 읽음 위치 저장 버그 수정)
+**마지막 업데이트**: 2025-11-13 (I+J) (워크스페이스 그룹 선택 상태 유지 버그 수정 + Provider 리팩터링)
 **총 문서 수**: 103개
-**동기화 완료**: 103개 (100%)
-**업데이트 필요**: 0개 (0%)
+**동기화 완료**: 101개 (98%)
+**업데이트 필요**: 2개 (2%)
 
 ---
 
@@ -51,7 +51,7 @@
 | `README.md` | ✅ 최신 | 2025-10-24 | 프론트엔드 구현 가이드 인덱스 |
 | `architecture.md` | ✅ 최신 | 2025-11-02 | 어댑터 패턴 추가 (PersonalEventAdapter) |
 | `authentication.md` | ✅ 최신 | 2025-10-24 | Google OAuth, 자동 로그인, 토큰 관리 |
-| `state-management.md` | ✅ 최신 | 2025-10-24 | Riverpod, Provider 초기화, 액션 패턴 (111줄) |
+| `state-management.md` | ❌ 업데이트 필요 | 2025-10-24 | myGroupsProvider keepAlive 설명 추가 필요 |
 | `advanced-state-patterns.md` | ✅ 최신 | 2025-10-24 | Unified Provider, LocalFilterNotifier (신규, 92줄) |
 | `filter-model-guide.md` | ✅ 최신 | 2025-10-24 | FilterModel, Sentinel Value Pattern |
 | `design-system.md` | ✅ 최신 | 2025-10-24 | Toss 기반 토큰, 버튼 스타일, 재사용성 |
@@ -70,7 +70,7 @@
 | `row-column-layout-checklist.md` | ✅ 최신 | 2025-11-01 | 버튼 위젯 특별 규칙 추가 (366줄) |
 | `workspace-page-implementation-guide.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 페이지 구현 가이드 |
 | `workspace-page-checklist.md` | ✅ 최신 | 2025-10-24 | 워크스페이스 체크리스트 |
-| `workspace-state-management.md` | ✅ 최신 | 2025-11-12 | 읽음 위치 저장 메커니즘 섹션 추가 (262줄) |
+| `workspace-state-management.md` | ❌ 업데이트 필요 | 2025-11-12 | currentGroupProvider 리팩터링 설명 추가 필요 |
 | `workspace-troubleshooting.md` | ✅ 최신 | 2025-11-03 | 읽지 않은 글 스크롤 버그 추가 |
 
 ### `/docs/concepts/` - 도메인 개념 문서 (14개)
@@ -172,6 +172,23 @@
 
 ### ✅ 최신 상태 (98개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
+
+**주요 업데이트 (2025-11-13)**:
+- **(I+J) 워크스페이스 그룹 선택 상태 유지 버그 수정 + Provider 리팩터링**
+  - **Phase I (커밋 a1afa6e)**: 그룹 선택 상태 유지 버그 수정
+    - workspace_state_provider.dart: _lastGroupId 초기화 제거 (탭 전환 시 유지)
+    - sidebar_navigation.dart: cachedGroupId 우선순위를 최우선으로 변경
+  - **Phase J (unstaged)**: Provider 리팩터링 및 생명주기 안전성 강화
+    - group_models.dart: GroupMembership Equatable 구현 (상태 비교 최적화)
+    - current_group_provider.dart: selectedGroup 직접 읽기로 리팩터링 (안정적)
+    - my_groups_provider.dart: keepAlive 추가 (세션 스코프 유지)
+    - workspace_page.dart: 세션 기반 초기화 로직 구현
+    - group_dropdown.dart: switchGroupWithNavigation() 통합 메서드 사용
+    - bottom_navigation.dart: cachedGroupId 우선순위 변경
+    - group_calendar_provider.dart, post_list.dart: mounted 체크 추가 (생명주기 안전성)
+    - permission_context_provider.dart: API 경로 중복 제거
+  - 9개 파일 변경, 2개 문서 업데이트 필요 (state-management.md, workspace-state-management.md)
+  - context-update-log.md: 2025-11-13 (I+J) 로그 추가
 
 **주요 업데이트 (2025-11-12)**:
 - **(H) 글로벌 네비게이션 시 읽음 위치 저장 누락 버그 수정**
@@ -332,8 +349,18 @@
 ### 🔄 업데이트 진행 중 (0개)
 없음
 
-### ❌ 업데이트 필요 (0개)
-없음
+### ❌ 업데이트 필요 (2개)
+
+**2025-11-13 - Provider 리팩터링 반영 필요**:
+1. **state-management.md**:
+   - myGroupsProvider keepAlive 설명 추가
+   - autoDispose 제거 → keepAlive 사용 이유 설명
+   - 세션 스코프 유지 패턴 추가
+
+2. **workspace-state-management.md**:
+   - currentGroupProvider 리팩터링 설명 추가
+   - selectedGroupId 검색 → selectedGroup 직접 읽기 변경사항 반영
+   - GroupMembership Equatable 구현 효과 설명
 
 ### ❓ 확인 필요 (0개)
 없음

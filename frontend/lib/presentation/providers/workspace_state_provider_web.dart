@@ -1,10 +1,16 @@
 /// Web implementation for JS interop
-/// This file is only imported on web platforms where dart:html is available
+/// This file is only imported on web platforms where package:web is available
+library;
 
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:js' as js;
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
+
+@JS('globalThis')
+external JSObject get _globalThis;
+
+extension on JSObject {
+  external set _readPositionCache(JSAny? value);
+}
 
 void updateReadPositionCache({
   required String channelId,
@@ -14,16 +20,18 @@ void updateReadPositionCache({
   // ✅ 동기적으로 localStorage에서 토큰 가져오기
   // SharedPreferences는 웹에서 'flutter.' prefix 자동 추가
   // 'access_token' (언더스코어) 형태로 저장됨
-  final token = html.window.localStorage['flutter.access_token'];
+  final token = web.window.localStorage.getItem('flutter.access_token');
   if (token == null || token.isEmpty) {
     return;
   }
 
   // ✅ 동기적으로 즉시 JS 전역 변수 업데이트
-  js.context['_readPositionCache'] = js.JsObject.jsify({
+  final cache = {
     'channelId': channelId,
     'postId': postId,
     'token': token,
     'apiBaseUrl': apiBaseUrl,
-  });
+  }.jsify();
+
+  _globalThis._readPositionCache = cache;
 }

@@ -35,10 +35,6 @@ class GroupPermissionService {
       });
 
       if (apiResponse.success && apiResponse.data != null) {
-        developer.log(
-          'Fetched ${apiResponse.data!.length} permissions for group $groupId',
-          name: 'GroupPermissionService',
-        );
         return apiResponse.data!;
       }
 

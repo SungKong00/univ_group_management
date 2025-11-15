@@ -94,12 +94,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     });
 
     try {
-      developer.log('Loading available groups...', name: 'DemoCalendarPage');
       final groups = await _groupService.getMyGroups();
-      developer.log(
-        'Loaded ${groups.length} groups successfully',
-        name: 'DemoCalendarPage',
-      );
 
       if (!mounted) return;
 
@@ -254,11 +249,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
       // Single place: update immediately and show message
       if (selectedPlaces.length == 1) {
-        developer.log(
-          '🏢 Single place selected: ${selectedPlaces[0].displayName}',
-          name: 'DemoCalendarPage',
-        );
-
         setState(() {
           _selectedPlaces = selectedPlaces;
           _requiredDuration = null; // Reset duration for single place
@@ -270,32 +260,20 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
             '${selectedPlaces[0].building} ${selectedPlaces[0].roomNumber}가 선택되었습니다',
           );
 
-          developer.log(
-            '🔄 Calling _calculateDisabledSlots() for single place',
-            name: 'DemoCalendarPage',
-          );
-
           // Calculate disabled slots for single place
           _calculateDisabledSlots();
         }
       }
       // Multiple places: show duration input dialog
       else if (selectedPlaces.length >= 2) {
-        developer.log(
-          '🏢 Multiple places selected: ${selectedPlaces.length} places',
-          name: 'DemoCalendarPage',
-        );
-
+        if (!mounted) return;
         final duration = await showDialog<Duration>(
           context: context,
           builder: (context) => const DurationInputDialog(),
         );
 
-        if (duration != null && mounted) {
-          developer.log(
-            '⏱️ Duration selected: ${_formatDuration(duration)}',
-            name: 'DemoCalendarPage',
-          );
+        if (duration != null) {
+          if (!mounted) return;
 
           setState(() {
             _selectedPlaces = selectedPlaces;
@@ -303,23 +281,14 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
           });
 
           // Display selected places and duration
+          if (!mounted) return;
           AppSnackBar.info(
             context,
             '${selectedPlaces.length}개의 장소 선택 완료 (소요시간: ${_formatDuration(duration)})',
           );
 
-          developer.log(
-            '🔄 Calling _calculateDisabledSlots() for multiple places',
-            name: 'DemoCalendarPage',
-          );
-
           // Calculate disabled slots for multiple places
           _calculateDisabledSlots();
-        } else {
-          developer.log(
-            '⚠️ Duration dialog cancelled or widget unmounted',
-            name: 'DemoCalendarPage',
-          );
         }
       }
     });
@@ -347,27 +316,7 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
   /// For single place: No duration required, show all unavailable slots as gray
   /// For multiple places: Requires duration, only show slots where NO place can start a reservation
   Future<void> _calculateDisabledSlots() async {
-    developer.log(
-      '🔍 === _calculateDisabledSlots() CALLED ===',
-      name: 'DemoCalendarPage',
-    );
-
-    developer.log(
-      '📋 Selected places: ${_selectedPlaces.length}',
-      name: 'DemoCalendarPage',
-    );
-    for (final place in _selectedPlaces) {
-      developer.log(
-        '  - Place ID: ${place.id}, Name: ${place.displayName}',
-        name: 'DemoCalendarPage',
-      );
-    }
-
     if (_selectedPlaces.isEmpty) {
-      developer.log(
-        '⚠️ No places selected, clearing disabled slots',
-        name: 'DemoCalendarPage',
-      );
       setState(() {
         _disabledSlots = {};
         _disabledSlotsByPlace = {};
@@ -376,11 +325,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     }
 
     try {
-      developer.log(
-        '🔍 Calculating disabled slots for ${_selectedPlaces.length} places',
-        name: 'DemoCalendarPage',
-      );
-
       // Week end: Sunday (6 days from week start)
       final weekEnd = _weekStart.add(const Duration(days: 6));
 
@@ -391,11 +335,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
       // Fetch data for all places
       for (final place in _selectedPlaces) {
-        developer.log(
-          '📡 Fetching place detail for place ${place.id} (${place.displayName})',
-          name: 'DemoCalendarPage',
-        );
-
         // 1. Get place detail (includes availability)
         final placeDetail = await _placeService.getPlaceDetail(place.id);
         if (placeDetail == null) {
@@ -406,11 +345,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
           );
           continue;
         }
-
-        developer.log(
-          '✅ Successfully fetched place detail for place ${place.id}',
-          name: 'DemoCalendarPage',
-        );
 
         // 2. Get reservations for the week
         final reservations = await _placeService.getReservations(
@@ -462,12 +396,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
         _disabledSlots = allDisabledSlots;
         _disabledSlotsByPlace = disabledSlotsByPlace;
       });
-
-      developer.log(
-        '✅ Calculated ${allDisabledSlots.length} total disabled slots '
-        'across ${disabledSlotsByPlace.length} places',
-        name: 'DemoCalendarPage',
-      );
     } catch (e) {
       developer.log(
         'Error calculating disabled slots: $e',
@@ -548,11 +476,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     final Set<DateTime> disabledSlots = {};
     final int durationMinutes = requiredDuration.inMinutes;
 
-    developer.log(
-      '⏱️ Required duration: $durationMinutes minutes (${durationMinutes ~/ 60}h ${durationMinutes % 60}m)',
-      name: 'DemoCalendarPage',
-    );
-
     // Iterate through 7 days of the week
     for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
       final currentDate = weekStart.add(Duration(days: dayIndex));
@@ -594,11 +517,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
       }
     }
 
-    developer.log(
-      '📊 Calculated ${disabledSlots.length} disabled slots for ${places.length} places with ${durationMinutes}min duration',
-      name: 'DemoCalendarPage',
-    );
-
     return disabledSlots;
   }
 
@@ -636,24 +554,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
     }
 
     return true; // All slots in the duration are available
-  }
-
-  /// Calculate disabled slots for a single place
-  ///
-  /// Returns a set of DateTime objects representing 15-minute time slots
-  /// that are unavailable (outside operating hours or reserved).
-  ///
-  /// DEPRECATED: Use _calculateDisabledSlotsForSinglePlace instead
-  Set<DateTime> _calculateDisabledSlotsForPlace({
-    required List<OperatingHoursResponse> operatingHours,
-    required List<PlaceReservation> reservations,
-    required DateTime weekStart,
-  }) {
-    return _calculateDisabledSlotsForSinglePlace(
-      operatingHours: operatingHours,
-      reservations: reservations,
-      weekStart: weekStart,
-    );
   }
 
   /// Convert weekday int (1-7) to DayOfWeek enum
@@ -762,15 +662,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
             child: WeeklyNavigationHeader(
               initialWeekStart: _weekStart,
               onWeekChanged: (newWeekStart) {
-                developer.log(
-                  '📅 Week changed: ${newWeekStart.toString().substring(0, 10)}',
-                  name: 'DemoCalendarPage',
-                );
-                developer.log(
-                  '📍 Currently selected places: ${_selectedPlaces.length}',
-                  name: 'DemoCalendarPage',
-                );
-
                 setState(() {
                   _weekStart = newWeekStart;
                 });
@@ -782,10 +673,6 @@ class _DemoCalendarPageState extends State<DemoCalendarPage> {
 
                 // Reload place data for new week if places are selected
                 if (_selectedPlaces.isNotEmpty) {
-                  developer.log(
-                    '🔄 Recalculating disabled slots for new week',
-                    name: 'DemoCalendarPage',
-                  );
                   _calculateDisabledSlots();
                 }
               },

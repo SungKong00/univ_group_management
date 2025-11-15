@@ -24,11 +24,6 @@ class RecruitmentService {
     CreateRecruitmentRequest request,
   ) async {
     try {
-      developer.log(
-        'Creating recruitment for group: $groupId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/groups/$groupId/recruitments',
         data: request.toJson(),
@@ -41,10 +36,6 @@ class RecruitmentService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully created recruitment: ${apiResponse.data!.id}',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -75,11 +66,6 @@ class RecruitmentService {
   /// Returns detailed recruitment information
   Future<RecruitmentResponse> getRecruitment(int recruitmentId) async {
     try {
-      developer.log(
-        'Fetching recruitment: $recruitmentId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/recruitments/$recruitmentId',
       );
@@ -91,10 +77,6 @@ class RecruitmentService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched recruitment: $recruitmentId',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -123,11 +105,6 @@ class RecruitmentService {
   /// Returns null if no active recruitment exists
   Future<RecruitmentResponse?> getActiveRecruitment(int groupId) async {
     try {
-      developer.log(
-        'Fetching active recruitment for group: $groupId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/recruitments',
       );
@@ -140,12 +117,6 @@ class RecruitmentService {
         });
 
         if (apiResponse.success) {
-          developer.log(
-            apiResponse.data != null
-                ? 'Successfully fetched active recruitment'
-                : 'No active recruitment found',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data;
         } else {
           developer.log(
@@ -179,11 +150,6 @@ class RecruitmentService {
     UpdateRecruitmentRequest request,
   ) async {
     try {
-      developer.log(
-        'Updating recruitment: $recruitmentId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.put<Map<String, dynamic>>(
         '/recruitments/$recruitmentId',
         data: request.toJson(),
@@ -196,10 +162,6 @@ class RecruitmentService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully updated recruitment: $recruitmentId',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -230,11 +192,6 @@ class RecruitmentService {
   /// Requires RECRUITMENT_MANAGE permission
   Future<RecruitmentResponse> closeRecruitment(int recruitmentId) async {
     try {
-      developer.log(
-        'Closing recruitment: $recruitmentId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/recruitments/$recruitmentId/close',
       );
@@ -246,10 +203,6 @@ class RecruitmentService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully closed recruitment: $recruitmentId',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -278,11 +231,6 @@ class RecruitmentService {
   /// Requires RECRUITMENT_MANAGE permission
   Future<void> deleteRecruitment(int recruitmentId) async {
     try {
-      developer.log(
-        'Deleting recruitment: $recruitmentId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/recruitments/$recruitmentId',
       );
@@ -294,10 +242,6 @@ class RecruitmentService {
         );
 
         if (apiResponse.success) {
-          developer.log(
-            'Successfully deleted recruitment: $recruitmentId',
-            name: 'RecruitmentService',
-          );
           return;
         } else {
           developer.log(
@@ -331,11 +275,6 @@ class RecruitmentService {
     int groupId,
   ) async {
     try {
-      developer.log(
-        'Fetching archived recruitments for group: $groupId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/groups/$groupId/recruitments/archive',
       );
@@ -367,10 +306,6 @@ class RecruitmentService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} archived recruitments',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -410,11 +345,6 @@ class RecruitmentService {
         queryParams['keyword'] = keyword;
       }
 
-      developer.log(
-        'Searching public recruitments with keyword: $keyword, page: $page, size: $size',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/recruitments/public',
         queryParameters: queryParams,
@@ -447,10 +377,6 @@ class RecruitmentService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} public recruitments',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -486,11 +412,6 @@ class RecruitmentService {
     CreateApplicationRequest request,
   ) async {
     try {
-      developer.log(
-        'Submitting application to recruitment: $recruitmentId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/recruitments/$recruitmentId/applications',
         data: request.toJson(),
@@ -503,10 +424,6 @@ class RecruitmentService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully submitted application: ${apiResponse.data!.id}',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -540,11 +457,6 @@ class RecruitmentService {
     int recruitmentId,
   ) async {
     try {
-      developer.log(
-        'Fetching applications for recruitment: $recruitmentId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/recruitments/$recruitmentId/applications',
       );
@@ -576,10 +488,6 @@ class RecruitmentService {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} applications',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -610,11 +518,6 @@ class RecruitmentService {
   /// Requires RECRUITMENT_MANAGE permission or being the applicant
   Future<ApplicationResponse> getApplication(int applicationId) async {
     try {
-      developer.log(
-        'Fetching application: $applicationId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/applications/$applicationId',
       );
@@ -626,10 +529,6 @@ class RecruitmentService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched application: $applicationId',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -661,11 +560,6 @@ class RecruitmentService {
     ReviewApplicationRequest request,
   ) async {
     try {
-      developer.log(
-        'Reviewing application: $applicationId (action: ${request.action})',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/applications/$applicationId/review',
         data: request.toJson(),
@@ -678,10 +572,6 @@ class RecruitmentService {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully reviewed application: $applicationId',
-            name: 'RecruitmentService',
-          );
           return apiResponse.data!;
         } else {
           developer.log(
@@ -712,11 +602,6 @@ class RecruitmentService {
   /// Requires being the applicant
   Future<void> withdrawApplication(int applicationId) async {
     try {
-      developer.log(
-        'Withdrawing application: $applicationId',
-        name: 'RecruitmentService',
-      );
-
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/applications/$applicationId',
       );
@@ -728,10 +613,6 @@ class RecruitmentService {
         );
 
         if (apiResponse.success) {
-          developer.log(
-            'Successfully withdrawn application: $applicationId',
-            name: 'RecruitmentService',
-          );
           return;
         } else {
           developer.log(

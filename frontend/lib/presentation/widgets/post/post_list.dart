@@ -95,7 +95,6 @@ class _PostListState extends ConsumerState<PostList> {
 
   // 가시성 추적 (Visibility Detector)
   final Set<int> _visiblePostIds = {};
-  int? _currentMaxVisibleId; // 현재 화면에 보이는 최댓값
   int? _highestEverVisibleId; // 지금까지 본 것 중 최댓값 (절대 감소하지 않음)
   Timer? _debounceTimer;
   bool _hasScrolledToUnread = false;
@@ -114,7 +113,6 @@ class _PostListState extends ConsumerState<PostList> {
     if (oldWidget.channelId != widget.channelId) {
       _hasScrolledToUnread = false;
       _firstUnreadPostIndex = null;
-      _currentMaxVisibleId = null;
       _highestEverVisibleId = null;
       _resetAndLoad();
     }
@@ -142,7 +140,6 @@ class _PostListState extends ConsumerState<PostList> {
       _visiblePostIds.clear();
       _firstUnreadPostIndex = null;
       _hasScrolledToUnread = false;
-      _currentMaxVisibleId = null;
       _highestEverVisibleId = null;
     });
     _loadPostsAndScrollToUnread();
@@ -165,6 +162,7 @@ class _PostListState extends ConsumerState<PostList> {
       attempt < _PostListConstants.readPositionMaxRetries;
       attempt++
     ) {
+      if (!mounted) return; // ✅ dispose 후 실행 방지
       final workspaceState = ref.read(workspaceStateProvider);
 
       if (workspaceState.lastReadPostIdMap.containsKey(channelId)) {
@@ -210,31 +208,17 @@ class _PostListState extends ConsumerState<PostList> {
 
   /// 게시글 로드 및 읽지 않은 게시글로 스크롤
   Future<void> _loadPostsAndScrollToUnread() async {
-    developer.log(
-      '🔵 [1] _loadPostsAndScrollToUnread() 시작 - 채널: ${widget.channelId}',
-      name: 'PostList.ScrollDebug',
-    );
-
     await _loadPosts();
-
-    developer.log(
-      '🔵 [2] _loadPosts() 완료 - 게시글 수: ${_posts.length}, flatItems 수: ${_flatItems.length}',
-      name: 'PostList.ScrollDebug',
-    );
 
     final channelIdInt = int.tryParse(widget.channelId);
     if (channelIdInt != null) {
       await _waitForReadPositionData(channelIdInt);
 
+      if (!mounted) return; // ✅ 비동기 작업 후 dispose 체크
       final workspaceState = ref.read(workspaceStateProvider);
       final lastReadPostId = ReadPositionHelper.getLastReadPostId(
         workspaceState.lastReadPostIdMap,
         channelIdInt,
-      );
-
-      developer.log(
-        '🔵 [3] lastReadPostId 조회 완료 - lastReadPostId: $lastReadPostId',
-        name: 'PostList.ScrollDebug',
       );
 
       // Phase 2: Flat list에서 찾기 (sequential index 반환)
@@ -242,32 +226,13 @@ class _PostListState extends ConsumerState<PostList> {
         lastReadPostId,
       );
 
-      developer.log(
-        '🔵 [4] _firstUnreadPostIndex 계산 완료 - _firstUnreadPostIndex: $_firstUnreadPostIndex',
-        name: 'PostList.ScrollDebug',
-      );
-
-      developer.log(
-        '🔵 [5] 분기 조건 확인 - _firstUnreadPostIndex != null: ${_firstUnreadPostIndex != null}, '
-        '!_hasScrolledToUnread: ${!_hasScrolledToUnread}',
-        name: 'PostList.ScrollDebug',
-      );
-
       if (_firstUnreadPostIndex != null && !_hasScrolledToUnread) {
-        developer.log(
-          '✅ [6] 읽지 않은 글 있음 → _scrollToUnreadPost() 호출 예약',
-          name: 'PostList.ScrollDebug',
-        );
         // 읽지 않은 글이 있으면 해당 위치로 스크롤
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           await _scrollToUnreadPost();
           // 읽음 처리는 VisibilityDetector가 자동으로 처리
         });
       } else {
-        developer.log(
-          '⚠️ [6] 읽지 않은 글 없음 또는 이미 스크롤됨 → 최하단으로 스크롤',
-          name: 'PostList.ScrollDebug',
-        );
         // 읽지 않은 글이 없으면 최하단으로 스크롤
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
@@ -281,10 +246,6 @@ class _PostListState extends ConsumerState<PostList> {
         });
       }
     } else {
-      developer.log(
-        '⚠️ channelIdInt가 null → 최하단으로 스크롤',
-        name: 'PostList.ScrollDebug',
-      );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
           _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -298,71 +259,28 @@ class _PostListState extends ConsumerState<PostList> {
 
   /// Phase 2: Flat list에서 첫 번째 읽지 않은 게시글의 sequential index 찾기
   int? _findFirstUnreadPostIndexInFlatList(int? lastReadPostId) {
-    developer.log(
-      '🟡 [4-1] _findFirstUnreadPostIndexInFlatList() 시작 - lastReadPostId: $lastReadPostId, '
-      'flatItems 수: ${_flatItems.length}',
-      name: 'PostList.ScrollDebug',
-    );
-
-    // flatItems의 모든 Post ID 로깅
-    final postIds = _flatItems
-        .whereType<PostWrapper>()
-        .map((wrapper) => wrapper.post.id)
-        .toList();
-    developer.log(
-      '🟡 [4-2] flatItems의 Post ID 목록: $postIds',
-      name: 'PostList.ScrollDebug',
-    );
-
     if (lastReadPostId == null || lastReadPostId == -1) {
-      developer.log(
-        '🟡 [4-3] 읽음 이력 없음 (lastReadPostId: $lastReadPostId) → 첫 번째 게시글 index 반환',
-        name: 'PostList.ScrollDebug',
-      );
       // 읽음 이력 없으면 첫 번째 게시글의 index (-1은 신규 채널)
       for (int i = 0; i < _flatItems.length; i++) {
-        if (_flatItems[i] case PostWrapper(:final post)) {
-          developer.log(
-            '🟡 [4-4] 첫 번째 게시글 찾음 - index: $i, post.id: ${post.id}',
-            name: 'PostList.ScrollDebug',
-          );
+        if (_flatItems[i] case PostWrapper()) {
           return i; // sequential index 반환
         }
       }
-      developer.log('🟡 [4-5] 게시글이 없음 → null 반환', name: 'PostList.ScrollDebug');
       return null;
     }
-
-    developer.log(
-      '🟡 [4-6] lastReadPostId 다음 게시글 찾기 시작',
-      name: 'PostList.ScrollDebug',
-    );
 
     // lastReadPostId 다음 게시글 찾기
     bool foundLastRead = false;
     for (int i = 0; i < _flatItems.length; i++) {
       if (_flatItems[i] case PostWrapper(:final post)) {
         if (foundLastRead) {
-          developer.log(
-            '🟡 [4-7] lastReadPostId 다음 게시글 찾음 - index: $i, post.id: ${post.id}',
-            name: 'PostList.ScrollDebug',
-          );
           return i; // sequential index 반환
         }
         if (post.id == lastReadPostId) {
-          developer.log(
-            '🟡 [4-8] lastReadPostId와 일치하는 게시글 찾음 - index: $i, post.id: ${post.id}',
-            name: 'PostList.ScrollDebug',
-          );
           foundLastRead = true;
         }
       }
     }
-
-    developer.log(
-      '🟡 [4-9] lastReadPostId 다음 게시글 없음 (모두 읽음) → null 반환',
-      name: 'PostList.ScrollDebug',
-    );
 
     // 모두 읽음
     return null;
@@ -370,62 +288,29 @@ class _PostListState extends ConsumerState<PostList> {
 
   /// 읽지 않은 게시글로 스크롤
   Future<void> _scrollToUnreadPost() async {
-    developer.log(
-      '🟢 [7] _scrollToUnreadPost() 시작 - _firstUnreadPostIndex: $_firstUnreadPostIndex, '
-      '_hasScrolledToUnread: $_hasScrolledToUnread',
-      name: 'PostList.ScrollDebug',
-    );
-
     if (_firstUnreadPostIndex == null || _hasScrolledToUnread) {
-      developer.log(
-        '🔴 [7-1] early return - _firstUnreadPostIndex == null 또는 이미 스크롤됨',
-        name: 'PostList.ScrollDebug',
-      );
       return;
     }
 
     try {
-      developer.log(
-        '🟢 [7-2] ScrollController 준비 확인 - hasClients: ${_scrollController.hasClients}',
-        name: 'PostList.ScrollDebug',
-      );
-
       // ScrollController가 준비될 때까지 대기
       if (!_scrollController.hasClients) {
-        developer.log(
-          '🟡 [7-3] ScrollController 준비 안 됨 - 300ms 대기',
-          name: 'PostList.ScrollDebug',
-        );
         await Future.delayed(_PostListConstants.scrollControllerWaitTime);
       }
 
       // 여전히 준비되지 않았으면 최하단으로 스크롤
       if (!_scrollController.hasClients) {
-        developer.log(
-          '🔴 [7-4] ScrollController 여전히 준비 안 됨 → 스크롤 중단',
-          name: 'PostList.ScrollDebug',
-        );
         setState(() {
           _isInitialLoading = false;
         });
         return;
       }
 
-      developer.log(
-        '🟢 [7-5] scrollToIndex() 호출 - index: $_firstUnreadPostIndex',
-        name: 'PostList.ScrollDebug',
-      );
-
       // AutoScrollController를 사용한 sequential index 기반 스크롤
       await _scrollController.scrollToIndex(
         _firstUnreadPostIndex!,
         preferPosition: AutoScrollPosition.begin,
         duration: const Duration(milliseconds: 1), // Duration.zero는 허용 안 됨
-      );
-
-      developer.log(
-        '🟢 [7-6] scrollToIndex() 완료',
-        name: 'PostList.ScrollDebug',
       );
 
       // Sticky header 높이 보정 (DateDivider 기본 높이)
@@ -436,20 +321,10 @@ class _PostListState extends ConsumerState<PostList> {
               _scrollController.position.minScrollExtent,
               _scrollController.position.maxScrollExtent,
             );
-        developer.log(
-          '🟢 [7-7] 높이 보정 - 이전: $currentOffset, 보정 후: $adjustedOffset',
-          name: 'PostList.ScrollDebug',
-        );
         _scrollController.jumpTo(adjustedOffset);
       }
 
       _hasScrolledToUnread = true;
-
-      // 스크롤 성공 로깅
-      developer.log(
-        '✅ [7-8] 읽지 않은 글로 스크롤 성공 - 채널: ${widget.channelId}, 대상 index: $_firstUnreadPostIndex',
-        name: 'PostList.ScrollDebug',
-      );
 
       if (mounted) {
         setState(() {
@@ -458,17 +333,14 @@ class _PostListState extends ConsumerState<PostList> {
       }
     } catch (e, stackTrace) {
       developer.log(
-        '❌ [7-9] 스크롤 실패 - 예외 발생: $e',
+        '❌ 스크롤 실패 - 예외 발생: $e',
         name: 'PostList.ScrollDebug',
         error: e,
+        level: 900,
       );
 
       // 스크롤 실패 시 최하단으로 스크롤
       if (mounted && _scrollController.hasClients) {
-        developer.log(
-          '⚠️ [7-10] 예외 처리: 최하단으로 스크롤',
-          name: 'PostList.ScrollDebug',
-        );
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
       if (mounted) {
@@ -594,9 +466,6 @@ class _PostListState extends ConsumerState<PostList> {
     if (_visiblePostIds.isEmpty) return;
 
     final maxId = _visiblePostIds.reduce((a, b) => a > b ? a : b);
-
-    // 현재 화면 최댓값 업데이트 (항상 갱신)
-    _currentMaxVisibleId = maxId;
 
     // 지금까지 본 것 중 최댓값 업데이트 (절대 감소하지 않음)
     if (_highestEverVisibleId == null || maxId > _highestEverVisibleId!) {

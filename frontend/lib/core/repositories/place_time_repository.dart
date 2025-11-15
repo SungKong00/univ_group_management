@@ -56,11 +56,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
   @override
   Future<List<OperatingHoursResponse>> getOperatingHours(int placeId) async {
     try {
-      developer.log(
-        'Fetching operating hours for place $placeId',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/places/$placeId/operating-hours',
       );
@@ -80,10 +75,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} operating hours',
-            name: 'ApiPlaceTimeRepository',
-          );
           return apiResponse.data!;
         } else {
           throw Exception(
@@ -109,11 +100,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
     SetOperatingHoursRequest request,
   ) async {
     try {
-      developer.log(
-        'Setting operating hours for place $placeId',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.put<Map<String, dynamic>>(
         '/places/$placeId/operating-hours',
         data: request.toJson(),
@@ -134,10 +120,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully set operating hours',
-            name: 'ApiPlaceTimeRepository',
-          );
           return apiResponse.data!;
         } else {
           throw Exception(
@@ -164,11 +146,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
   @override
   Future<List<RestrictedTimeResponse>> getRestrictedTimes(int placeId) async {
     try {
-      developer.log(
-        'Fetching restricted times for place $placeId',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/places/$placeId/restricted-times',
       );
@@ -188,10 +165,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} restricted times',
-            name: 'ApiPlaceTimeRepository',
-          );
           return apiResponse.data!;
         } else {
           throw Exception(
@@ -217,11 +190,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
     AddRestrictedTimeRequest request,
   ) async {
     try {
-      developer.log(
-        'Adding restricted time for place $placeId',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/places/$placeId/restricted-times',
         data: request.toJson(),
@@ -235,10 +203,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully added restricted time',
-            name: 'ApiPlaceTimeRepository',
-          );
           return apiResponse.data!;
         } else {
           throw Exception(
@@ -265,11 +229,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
     AddRestrictedTimeRequest request,
   ) async {
     try {
-      developer.log(
-        'Updating restricted time $restrictedTimeId for place $placeId',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.patch<Map<String, dynamic>>(
         '/places/$placeId/restricted-times/$restrictedTimeId',
         data: request.toJson(),
@@ -283,10 +242,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully updated restricted time',
-            name: 'ApiPlaceTimeRepository',
-          );
           return apiResponse.data!;
         } else {
           throw Exception(
@@ -309,11 +264,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
   @override
   Future<void> deleteRestrictedTime(int placeId, int restrictedTimeId) async {
     try {
-      developer.log(
-        'Deleting restricted time $restrictedTimeId for place $placeId',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/places/$placeId/restricted-times/$restrictedTimeId',
       );
@@ -324,12 +274,7 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
           (json) => null,
         );
 
-        if (apiResponse.success) {
-          developer.log(
-            'Successfully deleted restricted time',
-            name: 'ApiPlaceTimeRepository',
-          );
-        } else {
+        if (!apiResponse.success) {
           throw Exception(
             apiResponse.message ?? 'Failed to delete restricted time',
           );
@@ -356,11 +301,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
     String to,
   ) async {
     try {
-      developer.log(
-        'Fetching closures for place $placeId from $from to $to',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/places/$placeId/closures',
         queryParameters: {'from': from, 'to': to},
@@ -381,10 +321,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         });
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched ${apiResponse.data!.length} closures',
-            name: 'ApiPlaceTimeRepository',
-          );
           return apiResponse.data!;
         } else {
           throw Exception(apiResponse.message ?? 'Failed to fetch closures');
@@ -408,11 +344,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
     AddFullDayClosureRequest request,
   ) async {
     try {
-      developer.log(
-        'Adding full day closure for place $placeId',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/places/$placeId/closures/full-day',
         data: request.toJson(),
@@ -425,10 +356,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully added full day closure',
-            name: 'ApiPlaceTimeRepository',
-          );
           return apiResponse.data!;
         } else {
           throw Exception(
@@ -454,11 +381,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
     AddPartialClosureRequest request,
   ) async {
     try {
-      developer.log(
-        'Adding partial closure for place $placeId',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/places/$placeId/closures/partial',
         data: request.toJson(),
@@ -471,10 +393,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully added partial closure',
-            name: 'ApiPlaceTimeRepository',
-          );
           return apiResponse.data!;
         } else {
           throw Exception(
@@ -497,11 +415,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
   @override
   Future<void> deleteClosure(int placeId, int closureId) async {
     try {
-      developer.log(
-        'Deleting closure $closureId for place $placeId',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.delete<Map<String, dynamic>>(
         '/places/$placeId/closures/$closureId',
       );
@@ -512,12 +425,7 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
           (json) => null,
         );
 
-        if (apiResponse.success) {
-          developer.log(
-            'Successfully deleted closure',
-            name: 'ApiPlaceTimeRepository',
-          );
-        } else {
+        if (!apiResponse.success) {
           throw Exception(apiResponse.message ?? 'Failed to delete closure');
         }
       }
@@ -541,11 +449,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
     String date,
   ) async {
     try {
-      developer.log(
-        'Fetching available times for place $placeId on $date',
-        name: 'ApiPlaceTimeRepository',
-      );
-
       final response = await _dioClient.get<Map<String, dynamic>>(
         '/places/$placeId/available-times',
         queryParameters: {'date': date},
@@ -559,10 +462,6 @@ class ApiPlaceTimeRepository implements PlaceTimeRepository {
         );
 
         if (apiResponse.success && apiResponse.data != null) {
-          developer.log(
-            'Successfully fetched available times',
-            name: 'ApiPlaceTimeRepository',
-          );
           return apiResponse.data!;
         } else {
           throw Exception(

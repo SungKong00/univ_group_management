@@ -10,7 +10,7 @@ class HighlightPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (highlightRect != null) {
       final paint = Paint()
-        ..color = AppColors.brand.withOpacity(0.12)
+        ..color = AppColors.brand.withValues(alpha: 0.12)
         ..style = PaintingStyle.fill;
       canvas.drawRect(highlightRect!, paint);
     }

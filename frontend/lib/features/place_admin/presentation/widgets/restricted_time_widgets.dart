@@ -16,16 +16,6 @@ class RestrictedTimeListWidget extends ConsumerWidget {
 
   const RestrictedTimeListWidget({super.key, required this.placeId});
 
-  static const Map<String, String> _dayLabels = {
-    'MONDAY': '월요일',
-    'TUESDAY': '화요일',
-    'WEDNESDAY': '수요일',
-    'THURSDAY': '목요일',
-    'FRIDAY': '금요일',
-    'SATURDAY': '토요일',
-    'SUNDAY': '일요일',
-  };
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final restrictedTimesAsync = ref.watch(restrictedTimesProvider(placeId));

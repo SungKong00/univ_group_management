@@ -311,6 +311,7 @@ class _PlaceListPageState extends ConsumerState<PlaceListPage> {
       existingHours = null;
     }
 
+    if (!mounted) return;
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => PlaceOperatingHoursDialog(

@@ -49,13 +49,13 @@ class AppEmptyState extends StatelessWidget {
               Icon(
                 icon,
                 size: iconSize,
-                color: colorScheme.onSurface.withOpacity(0.38),
+                color: colorScheme.onSurface.withValues(alpha: 0.38),
               ),
             if (icon != null) const SizedBox(height: 16),
             Text(
               message,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),
@@ -64,7 +64,7 @@ class AppEmptyState extends StatelessWidget {
               Text(
                 subtitle!,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.38),
+                  color: colorScheme.onSurface.withValues(alpha: 0.38),
                 ),
                 textAlign: TextAlign.center,
               ),
