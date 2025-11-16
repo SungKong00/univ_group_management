@@ -35,13 +35,11 @@ final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
 
   // 에러 시에도 그룹 호출을 시도하지 않고 빈 리스트 반환 (상위 UI에서 에러 표시 가능)
   if (currentUserAsync.hasError) {
-    if (kDebugMode) {
-      developer.log(
-        '[MyGroupsProvider] Skipping API call (user load error)',
-        name: 'MyGroupsProvider',
-        level: 500, // INFO 수준으로 완화
-      );
-    }
+    developer.log(
+      '[MyGroupsProvider] Skipping API call (user load error)',
+      name: 'MyGroupsProvider',
+      level: 500, // INFO 수준으로 완화
+    );
     return [];
   }
 
