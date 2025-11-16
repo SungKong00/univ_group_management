@@ -148,12 +148,12 @@ class DioClient {
 
       if (response.statusCode == 200) {
         final newAccessToken = response.data['accessToken'];
-        final newRefreshToken = response.data['refreshToken'];
+        if (newAccessToken is! String || newAccessToken.isEmpty) {
+          throw Exception('Invalid access token in refresh response');
+        }
 
-        await _storage.saveTokens(
-          accessToken: newAccessToken,
-          refreshToken: newRefreshToken,
-        );
+        // ✅ 리프레시 응답은 accessToken만 반환. 기존 refreshToken은 보존한다.
+        await _storage.saveAccessToken(newAccessToken);
 
         developer.log('Token refresh successful', name: 'Dio');
       } else {

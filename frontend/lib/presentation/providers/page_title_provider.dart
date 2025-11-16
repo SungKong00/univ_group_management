@@ -94,11 +94,12 @@ final pageBreadcrumbFromPathProvider = Provider.autoDispose
         final groupName = groupsAsync.maybeWhen(
           data: (groups) {
             if (selectedGroupId == null) return null;
-            final currentGroup = groups.firstWhere(
+            if (groups.isEmpty) return null; // ✅ 안전 가드: 빈 리스트
+            final idx = groups.indexWhere(
               (g) => g.id.toString() == selectedGroupId,
-              orElse: () => groups.first,
             );
-            return currentGroup.name;
+            if (idx == -1) return null; // ✅ 안전 가드: 매칭 없음
+            return groups[idx].name;
           },
           orElse: () => null,
         );

@@ -72,27 +72,17 @@ final _providersToInvalidateOnLogout = <ProviderOrFamily>[
   unifiedGroupProvider,
   workspaceStateProvider,
   groupCalendarProvider,
-  // activeRecruitmentProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
-  // archivedRecruitmentsProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
-  // applicationListProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
-  // recruitmentDetailProvider, ✅ Phase 4-1: currentUser 의존성 추가 → 자동 무효화
-  // applicationProvider, ✅ Phase 4-1: currentUser 의존성 추가 → 자동 무효화
   createRecruitmentProvider,
   updateRecruitmentProvider,
   closeRecruitmentProvider,
   deleteRecruitmentProvider,
   reviewApplicationProvider,
-  // subGroupRequestListProvider, ✅ Phase 4-1: currentUser 의존성 추가 → 자동 무효화
   approveSubGroupRequestProvider,
   rejectSubGroupRequestProvider,
-  // joinRequestListProvider, ✅ Phase 4-1: currentUser 의존성 추가 → 자동 무효화
   approveJoinRequestProvider,
   rejectJoinRequestProvider,
-  // filteredGroupMembersProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
-  // allGroupMembersProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
   updateMemberRoleProvider,
   removeMemberProvider,
-  // roleListProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
   createRoleProvider,
   updateRoleProvider,
   deleteRoleProvider,
@@ -137,24 +127,13 @@ Future<void> resetAllUserDataProviders(Ref ref) async {
     callback(ref);
   }
 
-  // 2. ⭐ currentUserProvider 완료 대기 (순환 참조 방지)
-  //    - currentUserProvider.state = AsyncData(null) 완료까지 대기
-  //    - 이후 myGroupsProvider.invalidate 시 ref.read(currentUserProvider.future) 안전
-  try {
-    await ref.read(currentUserProvider.future);
-  } catch (_) {
-    // 로그아웃 중 에러는 무시 (currentUser = null로 설정됨)
+  // 2. currentUserProvider 완료 대기는 제거 (자기참조 순환 방지)
+  //    - CurrentUserNotifier.logout()에서 이미 state = AsyncData(null) 처리 후 호출됨
+
+  // 3. Provider 일괄 invalidate
+  for (final provider in _providersToInvalidateOnLogout) {
+    ref.invalidate(provider);
   }
 
-  // 3. FutureProvider 및 일반 Provider 일괄 invalidate
-  //    - currentUserProvider 완료 후 invalidate → 순환 참조 없음
-  //    - myGroupsProvider는 ref.read(currentUserProvider.future)로 null 체크
-  //    - ⭐ myGroupsProvider만 refresh로 즉시 재실행 (keepAlive 때문에 invalidate로는 재실행 안 됨)
-  for (final provider in _providersToInvalidateOnLogout) {
-    if (provider == myGroupsProvider) {
-      ref.refresh(provider);  // keepAlive Provider는 refresh 필요
-    } else {
-      ref.invalidate(provider);
-    }
-  }
+  // 4. keepAlive Provider도 invalidate로 즉시 재평가됨. 별도 refresh 호출 불필요
 }

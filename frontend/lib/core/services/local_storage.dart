@@ -132,6 +132,35 @@ class LocalStorage {
     _cachedRefreshToken = refreshToken;
   }
 
+  Future<void> saveAccessToken(String accessToken) async {
+    developer.log(
+      '[LocalStorage] saveAccessToken() started (${DateTime.now()})',
+      name: 'LocalStorage',
+    );
+
+    final prefs = await _preferences;
+    await prefs.setString(AppConstants.accessTokenKey, accessToken);
+
+    await prefs.reload();
+
+    final savedAccessToken = prefs.getString(AppConstants.accessTokenKey);
+    if (savedAccessToken != accessToken) {
+      developer.log(
+        'Access token persistence verification failed (${DateTime.now()})',
+        name: 'LocalStorage',
+        level: 1000,
+      );
+      throw Exception('액세스 토큰 저장 실패: 디스크 쓰기 검증 실패');
+    }
+
+    _cachedAccessToken = accessToken;
+
+    developer.log(
+      '[LocalStorage] Access token updated (${DateTime.now()})',
+      name: 'LocalStorage',
+    );
+  }
+
   Future<void> saveUserData(String json) async {
     final prefs = await _preferences;
     await prefs.setString(AppConstants.userDataKey, json);

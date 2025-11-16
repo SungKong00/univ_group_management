@@ -171,7 +171,7 @@ class ApiAuthRepository implements AuthRepository {
     // ✅ Repository에서만 저장
     await _localStorage.saveTokens(
       accessToken: loginResponse.accessToken,
-      refreshToken: loginResponse.tokenType,
+      refreshToken: loginResponse.refreshToken ?? '', // ✅ 수정: tokenType → refreshToken
     );
 
     developer.log(

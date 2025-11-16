@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:developer' as developer;
 import '../../core/models/group_models.dart';
@@ -20,10 +21,33 @@ final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
   // ✅ keepAlive: 탭 전환 시 provider dispose 방지 (세션 스코프 유지)
   ref.keepAlive();
 
-  // ✅ 로그아웃 가드: currentUser가 null이면 빈 리스트 반환 (API 호출 차단)
-  // ref.read 사용: 순환 참조 방지 (로그아웃 시 currentUserProvider.state = AsyncLoading)
-  // 재로그인 시 타이밍 이슈는 provider_reset.dart에서 순차적 invalidate로 해결
-  final currentUser = await ref.read(currentUserProvider.future);
+  // ✅ 변경 사항: currentUserProvider를 watch하여 로그인/로그아웃 변화를 반응형으로 감지
+  final currentUserAsync = ref.watch(currentUserProvider);
+
+  // 로딩 중이면 아직 사용자 결정 안 됨 → 빈 리스트 (워크스페이스 진입 대기)
+  if (currentUserAsync.isLoading) {
+    developer.log(
+      '[MyGroupsProvider] Waiting for user to resolve (loading)',
+      name: 'MyGroupsProvider',
+    );
+    return [];
+  }
+
+  // 에러 시에도 그룹 호출을 시도하지 않고 빈 리스트 반환 (상위 UI에서 에러 표시 가능)
+  if (currentUserAsync.hasError) {
+    if (kDebugMode) {
+      developer.log(
+        '[MyGroupsProvider] Skipping API call (user load error)',
+        name: 'MyGroupsProvider',
+        level: 500, // INFO 수준으로 완화
+      );
+    }
+    return [];
+  }
+
+  final currentUser = currentUserAsync.value; // UserInfo? (null = 로그아웃 상태)
+
+  // ✅ 로그인되지 않은 상태면 API 호출 차단 → 빈 리스트 반환
   if (currentUser == null) {
     developer.log(
       '[MyGroupsProvider] Skipping API call (user not logged in)',
