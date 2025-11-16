@@ -2,28 +2,28 @@ import 'dart:async';
 import '../../../core/utils/snack_bar_helper.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/auth_models.dart';
 import '../../../core/models/group_models.dart';
 import '../../../core/models/user_models.dart';
-import '../../../core/services/auth_service.dart';
 import '../../../core/services/onboarding_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/buttons/primary_button.dart';
 import '../../widgets/buttons/outlined_link_button.dart';
+import '../../providers/auth_provider.dart';
 
-class ProfileSetupPage extends StatefulWidget {
+class ProfileSetupPage extends ConsumerStatefulWidget {
   const ProfileSetupPage({super.key});
 
   @override
-  State<ProfileSetupPage> createState() => _ProfileSetupPageState();
+  ConsumerState<ProfileSetupPage> createState() => _ProfileSetupPageState();
 }
 
-class _ProfileSetupPageState extends State<ProfileSetupPage> {
-  final AuthService _authService = AuthService();
+class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   final OnboardingService _onboardingService = OnboardingService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -88,7 +88,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       });
     }
 
-    final user = _authService.currentUser;
+    final userAsync = ref.read(currentUserProvider);
+    final user = userAsync.valueOrNull;
     if (user != null) {
       _prefillFromUser(user);
     }
@@ -426,7 +427,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
 
     try {
       final updatedUser = await _onboardingService.submitSignupProfile(request);
-      await _authService.updateCurrentUser(updatedUser);
+      await ref.read(currentUserProvider.notifier).updateUser(updatedUser);
       if (!mounted) {
         return;
       }

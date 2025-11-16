@@ -21,6 +21,16 @@ import 'workspace_state_provider_stub.dart'
     if (dart.library.html) 'workspace_state_provider_web.dart'
     as web_utils;
 
+/// 로그아웃 진행 중 워크스페이스 진입 시도 시 발생하는 예외
+/// Race Condition 차단: 로그아웃 중 myGroupsProvider가 무효화되면서
+/// _resolveGroupMembership이 의도적으로 이 예외를 던집니다.
+class LogoutInProgressException implements Exception {
+  const LogoutInProgressException();
+
+  @override
+  String toString() => 'LogoutInProgressException: 사용자 로그아웃이 진행 중입니다.';
+}
+
 /// Workspace View Type
 enum WorkspaceView {
   channel, // Channel content view
@@ -319,7 +329,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   void _saveCurrentWorkspaceSnapshot() {
     // Logout Race Condition Fix:
     // Check if logout is in progress. If so, do not save the snapshot.
-    final isLoggingOut = _ref.read(authProvider).isLoggingOut;
+    final isLoggingOut = _ref.read(isLoggingOutProvider);
     if (isLoggingOut) return;
 
     if (!mounted) return; // Prevent access after dispose
@@ -582,12 +592,35 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     GroupMembership? membership,
     WorkspaceView? targetView,
   }) async {
+    developer.log(
+      '[WorkspaceState] enterWorkspace() started (groupId: $groupId) (${DateTime.now()})',
+      name: 'WorkspaceStateNotifier',
+    );
+
     final isSameGroup = state.selectedGroupId == groupId;
     _lastGroupId = groupId;
 
     // Step 1: Resolve membership (needed for permission check)
-    final resolvedMembership =
-        membership ?? await _resolveGroupMembership(groupId);
+    GroupMembership? resolvedMembership;
+    try {
+      developer.log(
+        '[WorkspaceState] Calling _resolveGroupMembership() (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+      );
+      resolvedMembership = membership ?? await _resolveGroupMembership(groupId);
+      developer.log(
+        '[WorkspaceState] _resolveGroupMembership() completed (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+      );
+    } on LogoutInProgressException {
+      developer.log(
+        '[WorkspaceState] ⚠️ Logout in progress - aborting enterWorkspace (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+        level: 900,
+      );
+      // ⭐ 로그아웃 중 워크스페이스 진입 시도 → 조용히 반환 (로그아웃 진행)
+      return;
+    }
 
     if (resolvedMembership == null) {
       _handleMembershipResolutionFailure();
@@ -925,16 +958,48 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   Future<GroupMembership?> _resolveGroupMembership(String groupId) async {
+    // ⭐ 로그아웃 중 워크스페이스 로딩 Race Condition 차단
+    // (로그아웃 시 isLoggingOut=true, 진행 중인 loadChannels에서 SecurityException 발생)
+    if (_ref.read(isLoggingOutProvider)) {
+      developer.log(
+        '[WorkspaceState] _resolveGroupMembership() - Logout in progress, throwing exception (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+        level: 900,
+      );
+      throw LogoutInProgressException();
+    }
+
+    developer.log(
+      '[WorkspaceState] _resolveGroupMembership() - Calling myGroupsProvider (${DateTime.now()})',
+      name: 'WorkspaceStateNotifier',
+    );
+
     try {
       final memberships = await _ref.read(myGroupsProvider.future);
+      developer.log(
+        '[WorkspaceState] _resolveGroupMembership() - myGroupsProvider returned ${memberships.length} groups (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+      );
       try {
         return memberships.firstWhere(
           (group) => group.id.toString() == groupId,
         );
       } catch (_) {
+        developer.log(
+          '[WorkspaceState] _resolveGroupMembership() - Group not found (${DateTime.now()})',
+          name: 'WorkspaceStateNotifier',
+          level: 900,
+        );
         return null;
       }
-    } catch (_) {
+    } catch (e) {
+      // 로그아웃 중 발생한 예외 재발생
+      if (e is LogoutInProgressException) rethrow;
+      developer.log(
+        '[WorkspaceState] _resolveGroupMembership() - Error: $e (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+        level: 900,
+      );
       return null;
     }
   }
@@ -1062,7 +1127,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// It should be manually called when leaving the channel (selectChannel, exitWorkspace)
   Future<void> saveReadPosition(int channelId, int postId) async {
     // 안전장치: 로그아웃 중에는 저장하지 않음
-    final isLoggingOut = _ref.read(authProvider).isLoggingOut;
+    final isLoggingOut = _ref.read(isLoggingOutProvider);
     if (isLoggingOut) {
       return;
     }

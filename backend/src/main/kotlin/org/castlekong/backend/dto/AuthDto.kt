@@ -17,6 +17,7 @@ data class LoginResponse(
     val expiresIn: Long,
     val user: UserResponse,
     val firstLogin: Boolean = false,
+    val refreshToken: String = "" // ✅ 추가: 클라이언트에 리프레시 토큰 전달
 )
 
 data class UserResponse(

@@ -2,10 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/member_models.dart';
 import '../../../../core/repositories/repository_providers.dart';
 import '../../../../core/providers/member/member_list_provider.dart';
+import '../../../providers/auth_provider.dart';
 
 /// 가입 신청 목록 Provider
 final joinRequestListProvider = FutureProvider.autoDispose
     .family<List<JoinRequest>, int>((ref, groupId) async {
+      // currentUserProvider 의존성 추가 (로그아웃 시 자동 무효화)
+      final user = ref.watch(currentUserProvider).valueOrNull;
+      if (user == null) return [];
+
       final repository = ref.watch(joinRequestRepositoryProvider);
       return await repository.getPendingRequests(groupId);
     });

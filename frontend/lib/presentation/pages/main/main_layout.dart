@@ -64,7 +64,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     // 화면 크기로부터 레이아웃 모드 계산
     final layoutMode = LayoutModeExtension.fromContext(context);
     final navigationState = ref.watch(navigationControllerProvider);
-    final currentUser = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(currentUserProvider).valueOrNull;
 
     // 라우트 리스너 활성화
     ref.watch(routeListenerProvider);

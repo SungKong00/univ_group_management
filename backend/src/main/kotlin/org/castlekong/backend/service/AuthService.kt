@@ -43,6 +43,7 @@ class AuthService(
             expiresIn = 86400000L,
             user = userService.convertToUserResponse(user),
             firstLogin = !user.profileCompleted,
+            refreshToken = refreshToken // ✅ 추가
         )
     }
 
@@ -69,6 +70,7 @@ class AuthService(
             expiresIn = 86400000L,
             user = userService.convertToUserResponse(user),
             firstLogin = !user.profileCompleted,
+            refreshToken = refreshJwt // ✅ 추가
         )
     }
 
@@ -190,6 +192,7 @@ class AuthService(
             expiresIn = 86400000L,
             user = userService.convertToUserResponse(user),
             firstLogin = !user.profileCompleted,
+            refreshToken = refreshToken // ✅ 추가
         )
     }
 }
