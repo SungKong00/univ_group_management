@@ -25,6 +25,10 @@ class WorkspaceRoute with _$WorkspaceRoute {
   const factory WorkspaceRoute.memberManagement({required int groupId}) =
       MemberManagementRoute;
 
+  /// Announcement management view route
+  const factory WorkspaceRoute.announcementManagement({required int groupId}) =
+      AnnouncementManagementRoute;
+
   factory WorkspaceRoute.fromJson(Map<String, dynamic> json) =>
       _$WorkspaceRouteFromJson(json);
 }

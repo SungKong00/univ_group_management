@@ -69,3 +69,17 @@ Map<String, dynamic> _$$MemberManagementRouteImplToJson(
   'groupId': instance.groupId,
   'runtimeType': instance.$type,
 };
+
+_$AnnouncementManagementRouteImpl _$$AnnouncementManagementRouteImplFromJson(
+  Map<String, dynamic> json,
+) => _$AnnouncementManagementRouteImpl(
+  groupId: (json['groupId'] as num).toInt(),
+  $type: json['runtimeType'] as String?,
+);
+
+Map<String, dynamic> _$$AnnouncementManagementRouteImplToJson(
+  _$AnnouncementManagementRouteImpl instance,
+) => <String, dynamic>{
+  'groupId': instance.groupId,
+  'runtimeType': instance.$type,
+};

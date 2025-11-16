@@ -186,6 +186,10 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
     return Consumer(
       builder: (context, ref, child) {
         final currentView = ref.watch(workspaceCurrentViewProvider);
+        // Watch announcement permission
+        final canWriteAnnouncementAsync = ref.watch(
+          canWriteAnnouncementProvider,
+        );
 
         return Padding(
           padding: const EdgeInsets.all(AppSpacing.sm),
@@ -222,6 +226,34 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
                   ref.read(workspaceStateProvider.notifier).showCalendar();
                 },
                 isSelected: currentView == WorkspaceView.calendar,
+              ),
+              // 공지 관리 탭: 공지 채널이 있고 POST_WRITE 권한이 있는 경우에만 표시
+              canWriteAnnouncementAsync.when(
+                data: (canWrite) {
+                  if (!canWrite) {
+                    // 권한 없음: 숨김
+                    return const SizedBox.shrink();
+                  }
+                  // 권한 있음: 표시
+                  return Column(
+                    children: [
+                      const SizedBox(height: AppSpacing.xxs),
+                      _buildTopButton(
+                        icon: Icons.campaign_outlined,
+                        label: '공지 관리',
+                        onTap: () {
+                          ref
+                              .read(workspaceStateProvider.notifier)
+                              .showAnnouncementManagement();
+                        },
+                        isSelected:
+                            currentView == WorkspaceView.announcementManagement,
+                      ),
+                    ],
+                  );
+                },
+                loading: () => const SizedBox.shrink(), // 로딩 중: 숨김
+                error: (_, __) => const SizedBox.shrink(), // 에러: 숨김
               ),
             ],
           ),

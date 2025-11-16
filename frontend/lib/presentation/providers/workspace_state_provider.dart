@@ -36,6 +36,7 @@ enum WorkspaceView {
   channel, // Channel content view
   groupHome, // Group home view
   calendar, // Calendar view
+  announcementManagement, // Announcement management page view
   groupAdmin, // Group admin/management page view
   memberManagement, // Member management page view
   channelManagement, // Channel management page view
@@ -1338,6 +1339,18 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     },
   );
 
+  /// Show announcement management view
+  Future<void> showAnnouncementManagement() => _transitionToView(
+    targetView: WorkspaceView.announcementManagement,
+    stateUpdates: {
+      'selectedChannelId': null,
+      'isCommentsVisible': false,
+      'selectedPostId': null,
+      'isNarrowDesktopCommentsFullscreen': false,
+      'selectedCalendarDate': null,
+    },
+  );
+
   /// Show group admin/management page view
   Future<void> showGroupAdminPage() => _transitionToView(
     targetView: WorkspaceView.groupAdmin,
@@ -1862,3 +1875,43 @@ final workspaceNavigationHistoryProvider =
         workspaceStateProvider.select((state) => state.navigationHistory),
       );
     });
+
+/// Provider that returns the announcement channel ID (if exists)
+/// Returns null if no announcement channel exists in current group
+final workspaceAnnouncementChannelProvider = Provider<int?>((ref) {
+  final channels = ref.watch(workspaceChannelsProvider);
+  final announcementChannel = channels
+      .where((channel) => channel.type == 'ANNOUNCEMENT')
+      .firstOrNull;
+  return announcementChannel?.id;
+});
+
+/// Provider that checks if user can write posts in announcement channel
+/// Returns AsyncValue with bool (true if user has POST_WRITE permission)
+final canWriteAnnouncementProvider = FutureProvider<bool>((ref) async {
+  final announcementChannelId = ref.watch(workspaceAnnouncementChannelProvider);
+
+  // No announcement channel exists
+  if (announcementChannelId == null) {
+    return false;
+  }
+
+  try {
+    // Fetch permissions for announcement channel
+    final channelService = ChannelService();
+    final permissions = await channelService.getMyPermissions(
+      announcementChannelId,
+    );
+
+    // Check POST_WRITE permission
+    return permissions?.canWritePost ?? false;
+  } catch (e) {
+    // On error, deny access (safe default)
+    developer.log(
+      '공지 채널 권한 조회 실패: $e',
+      name: 'workspace_state_provider',
+      error: e,
+    );
+    return false;
+  }
+});

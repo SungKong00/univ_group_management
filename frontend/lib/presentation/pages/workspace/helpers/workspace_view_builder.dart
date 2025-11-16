@@ -10,6 +10,7 @@ import '../../recruitment_management/application_management_page.dart';
 import '../calendar/group_calendar_page.dart';
 import '../place/place_time_management_page.dart';
 import '../widgets/group_home_view.dart';
+import '../widgets/announcement_view.dart';
 import '../widgets/workspace_state_view.dart';
 
 /// 워크스페이스의 특수 뷰(groupAdmin, memberManagement 등)를 빌드하는 Helper 클래스
@@ -36,6 +37,9 @@ class WorkspaceViewBuilder {
           groupId: int.parse(currentGroupId),
           initialSelectedDate: selectedCalendarDate,
         );
+
+      case WorkspaceView.announcementManagement:
+        return const AnnouncementView();
 
       case WorkspaceView.groupAdmin:
         return const GroupAdminPage();

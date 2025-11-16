@@ -186,6 +186,8 @@ PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceBreadcrumbContext context) {
       return const PageBreadcrumb(title: '장소 시간 관리');
     case WorkspaceView.calendar:
       return const PageBreadcrumb(title: '캘린더');
+    case WorkspaceView.announcementManagement:
+      return const PageBreadcrumb(title: '공지 관리');
     case WorkspaceView.groupHome:
       return const PageBreadcrumb(title: '그룹 홈');
     case WorkspaceView.channel:

@@ -34,6 +34,12 @@ class PermissionChangeListener {
         return true; // Assume accessible for now
       },
       calendar: (_) => true, // Calendar is accessible to all members
+      announcementManagement: (groupId) {
+        // Announcement management requires specific permission
+        final permissions = ref.read(permissionContextProvider);
+        return permissions.hasPermission('ANNOUNCEMENT_MANAGE') ||
+            permissions.isAdmin;
+      },
       admin: (groupId) {
         final permissions = ref.read(permissionContextProvider);
         return permissions.canAccessAdmin();

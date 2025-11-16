@@ -40,6 +40,7 @@ void main() {
           home: (groupId) => expect(groupId, 2),
           channel: (_, __) => fail('Expected home route'),
           calendar: (_) => fail('Expected home route'),
+          announcementManagement: (_) => fail('Expected home route'),
           admin: (_) => fail('Expected home route'),
           memberManagement: (_) => fail('Expected home route'),
         );
@@ -64,6 +65,7 @@ void main() {
           home: (_) => fail('Expected calendar route'),
           channel: (_, __) => fail('Expected calendar route'),
           calendar: (groupId) => expect(groupId, 2),
+          announcementManagement: (_) => fail('Expected calendar route'),
           admin: (_) => fail('Expected calendar route'),
           memberManagement: (_) => fail('Expected calendar route'),
         );
@@ -88,6 +90,7 @@ void main() {
           home: (_) => fail('Expected admin route'),
           channel: (_, __) => fail('Expected admin route'),
           calendar: (_) => fail('Expected admin route'),
+          announcementManagement: (_) => fail('Expected admin route'),
           admin: (groupId) => expect(groupId, 2),
           memberManagement: (_) => fail('Expected admin route'),
         );
@@ -114,6 +117,7 @@ void main() {
             home: (groupId) => expect(groupId, 2),
             channel: (_, __) => fail('Expected home fallback'),
             calendar: (_) => fail('Expected home fallback'),
+            announcementManagement: (_) => fail('Expected home fallback'),
             admin: (_) => fail('Expected home fallback'),
             memberManagement: (_) => fail('Expected home fallback'),
           );
@@ -139,6 +143,7 @@ void main() {
           home: (_) => fail('Expected admin route'),
           channel: (_, __) => fail('Expected admin route'),
           calendar: (_) => fail('Expected admin route'),
+          announcementManagement: (_) => fail('Expected admin route'),
           admin: (groupId) => expect(groupId, 2),
           memberManagement: (_) => fail('Expected admin route'),
         );
@@ -165,6 +170,7 @@ void main() {
             home: (_) => fail('Expected memberManagement route'),
             channel: (_, __) => fail('Expected memberManagement route'),
             calendar: (_) => fail('Expected memberManagement route'),
+            announcementManagement: (_) => fail('Expected memberManagement route'),
             admin: (_) => fail('Expected memberManagement route'),
             memberManagement: (groupId) => expect(groupId, 2),
           );
@@ -192,6 +198,7 @@ void main() {
             home: (groupId) => expect(groupId, 2),
             channel: (_, __) => fail('Expected home fallback'),
             calendar: (_) => fail('Expected home fallback'),
+            announcementManagement: (_) => fail('Expected home fallback'),
             admin: (_) => fail('Expected home fallback'),
             memberManagement: (_) => fail('Expected home fallback'),
           );

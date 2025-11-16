@@ -43,6 +43,9 @@ class ViewContextResolver {
       case ViewType.calendar:
         return _resolveCalendarRoute(targetGroupId);
 
+      case ViewType.announcementManagement:
+        return _resolveAnnouncementManagementRoute(targetGroupId);
+
       case ViewType.admin:
         final adminRoute = await _resolveAdminRoute(targetGroupId, permissions);
         return adminRoute ?? _resolveHomeRoute(targetGroupId);
@@ -104,6 +107,11 @@ class ViewContextResolver {
   /// Resolve calendar route (always accessible to group members)
   WorkspaceRoute _resolveCalendarRoute(int groupId) {
     return WorkspaceRoute.calendar(groupId: groupId);
+  }
+
+  /// Resolve announcement management route (always accessible to group members)
+  WorkspaceRoute _resolveAnnouncementManagementRoute(int groupId) {
+    return WorkspaceRoute.announcementManagement(groupId: groupId);
   }
 
   /// Resolve admin route with permission check
