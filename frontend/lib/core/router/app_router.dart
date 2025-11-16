@@ -175,10 +175,13 @@ String? _redirect(Ref ref, GoRouterState state) {
   final isLoginRoute = currentPath == AppConstants.loginRoute;
   final isOnboardingRoute = currentPath == AppConstants.onboardingRoute;
 
-  // 로딩 중일 때는 스플래시 페이지로
-  if (userAsync.isLoading && !isSplashRoute) {
-    return '/splash';
-  }
+  // ✅ UX 개선: 로딩 중에도 스플래시로 리다이렉트하지 않음
+  // 각 페이지에서 자체적으로 로딩 상태를 처리하도록 변경
+  // 기존: 깜빡임 발생 (Login → Splash → Login/Home)
+  // 개선: 현재 페이지에서 로딩 인디케이터 표시
+  // if (userAsync.isLoading && !isSplashRoute) {
+  //   return '/splash';
+  // }
 
   final user = userAsync.valueOrNull;
   final isLoggedIn = user != null;

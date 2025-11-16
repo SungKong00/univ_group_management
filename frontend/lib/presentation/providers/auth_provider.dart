@@ -128,10 +128,7 @@ class CurrentUserNotifier extends AsyncNotifier<UserInfo?> {
       }
     } catch (e) {
       if (kDebugMode) {
-        developer.log(
-          '⚠️ 로그아웃 전 저장 실패 (무시) - $e',
-          name: 'CurrentUserNotifier',
-        );
+        developer.log('⚠️ 로그아웃 전 저장 실패 (무시) - $e', name: 'CurrentUserNotifier');
       }
       // 에러 무시 (로그아웃은 계속 진행)
     }
@@ -154,17 +151,15 @@ class CurrentUserNotifier extends AsyncNotifier<UserInfo?> {
 /// 현재 로그인한 유저 정보 Provider
 ///
 /// AsyncValue를 사용하여 로딩/에러 상태를 자동으로 관리합니다.
-final currentUserProvider = AsyncNotifierProvider<CurrentUserNotifier, UserInfo?>(
-  CurrentUserNotifier.new,
-);
+final currentUserProvider =
+    AsyncNotifierProvider<CurrentUserNotifier, UserInfo?>(
+      CurrentUserNotifier.new,
+    );
 
 /// 편의 Provider: 로그인 여부
 final isLoggedInProvider = Provider<bool>((ref) {
   final userAsync = ref.watch(currentUserProvider);
-  return userAsync.maybeWhen(
-    data: (user) => user != null,
-    orElse: () => false,
-  );
+  return userAsync.maybeWhen(data: (user) => user != null, orElse: () => false);
 });
 
 /// 편의 Provider: 로딩 여부

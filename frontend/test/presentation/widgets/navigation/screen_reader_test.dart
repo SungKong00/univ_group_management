@@ -45,16 +45,18 @@ void main() {
 
       // Verify semantic labels exist by finding widgets with specific label predicates
       final homeFinder = find.byWidgetPredicate(
-        (widget) => widget is Semantics &&
-                     widget.properties.label != null &&
-                     widget.properties.label!.contains('Home'),
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.label != null &&
+            widget.properties.label!.contains('Home'),
       );
       expect(homeFinder, findsOneWidget);
 
       final calendarFinder = find.byWidgetPredicate(
-        (widget) => widget is Semantics &&
-                     widget.properties.label != null &&
-                     widget.properties.label!.contains('Calendar'),
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.label != null &&
+            widget.properties.label!.contains('Calendar'),
       );
       expect(calendarFinder, findsOneWidget);
     });
@@ -84,10 +86,11 @@ void main() {
 
       // Selected item should have "현재 선택됨" in its label (may also include focus state)
       final selectedFinder = find.byWidgetPredicate(
-        (widget) => widget is Semantics &&
-                     widget.properties.label != null &&
-                     widget.properties.label!.contains('Home') &&
-                     widget.properties.label!.contains('현재 선택됨'),
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.label != null &&
+            widget.properties.label!.contains('Home') &&
+            widget.properties.label!.contains('현재 선택됨'),
       );
       expect(selectedFinder, findsOneWidget);
     });
@@ -114,9 +117,10 @@ void main() {
 
       // Verify Semantics wrapping exists (look for our custom Semantics with button: true)
       final semanticsFinder = find.byWidgetPredicate(
-        (widget) => widget is Semantics &&
-                     widget.properties.button == true &&
-                     widget.properties.label?.contains('Home') == true,
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.button == true &&
+            widget.properties.label?.contains('Home') == true,
       );
       expect(semanticsFinder, findsOneWidget);
     });

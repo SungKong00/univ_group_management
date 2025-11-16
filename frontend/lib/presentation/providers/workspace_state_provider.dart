@@ -592,14 +592,32 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     GroupMembership? membership,
     WorkspaceView? targetView,
   }) async {
+    developer.log(
+      '[WorkspaceState] enterWorkspace() started (groupId: $groupId) (${DateTime.now()})',
+      name: 'WorkspaceStateNotifier',
+    );
+
     final isSameGroup = state.selectedGroupId == groupId;
     _lastGroupId = groupId;
 
     // Step 1: Resolve membership (needed for permission check)
     GroupMembership? resolvedMembership;
     try {
+      developer.log(
+        '[WorkspaceState] Calling _resolveGroupMembership() (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+      );
       resolvedMembership = membership ?? await _resolveGroupMembership(groupId);
+      developer.log(
+        '[WorkspaceState] _resolveGroupMembership() completed (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+      );
     } on LogoutInProgressException {
+      developer.log(
+        '[WorkspaceState] ⚠️ Logout in progress - aborting enterWorkspace (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+        level: 900,
+      );
       // ⭐ 로그아웃 중 워크스페이스 진입 시도 → 조용히 반환 (로그아웃 진행)
       return;
     }
@@ -943,21 +961,45 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     // ⭐ 로그아웃 중 워크스페이스 로딩 Race Condition 차단
     // (로그아웃 시 isLoggingOut=true, 진행 중인 loadChannels에서 SecurityException 발생)
     if (_ref.read(isLoggingOutProvider)) {
+      developer.log(
+        '[WorkspaceState] _resolveGroupMembership() - Logout in progress, throwing exception (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+        level: 900,
+      );
       throw LogoutInProgressException();
     }
 
+    developer.log(
+      '[WorkspaceState] _resolveGroupMembership() - Calling myGroupsProvider (${DateTime.now()})',
+      name: 'WorkspaceStateNotifier',
+    );
+
     try {
       final memberships = await _ref.read(myGroupsProvider.future);
+      developer.log(
+        '[WorkspaceState] _resolveGroupMembership() - myGroupsProvider returned ${memberships.length} groups (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+      );
       try {
         return memberships.firstWhere(
           (group) => group.id.toString() == groupId,
         );
       } catch (_) {
+        developer.log(
+          '[WorkspaceState] _resolveGroupMembership() - Group not found (${DateTime.now()})',
+          name: 'WorkspaceStateNotifier',
+          level: 900,
+        );
         return null;
       }
     } catch (e) {
       // 로그아웃 중 발생한 예외 재발생
       if (e is LogoutInProgressException) rethrow;
+      developer.log(
+        '[WorkspaceState] _resolveGroupMembership() - Error: $e (${DateTime.now()})',
+        name: 'WorkspaceStateNotifier',
+        level: 900,
+      );
       return null;
     }
   }

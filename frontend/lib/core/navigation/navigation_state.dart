@@ -9,7 +9,8 @@ part 'navigation_state.g.dart';
 class NavigationState with _$NavigationState {
   const factory NavigationState({
     @JsonKey(toJson: _stackToJson, fromJson: _stackFromJson)
-    @Default([]) List<WorkspaceRoute> stack,
+    @Default([])
+    List<WorkspaceRoute> stack,
     @Default(-1) int currentIndex,
 
     /// T105: Loading indicator for slow navigation operations (>2s)
@@ -58,5 +59,7 @@ List<Map<String, dynamic>> _stackToJson(List<WorkspaceRoute> stack) {
 
 /// Helper function to deserialize WorkspaceRoute list
 List<WorkspaceRoute> _stackFromJson(List<dynamic> json) {
-  return json.map((e) => WorkspaceRoute.fromJson(e as Map<String, dynamic>)).toList();
+  return json
+      .map((e) => WorkspaceRoute.fromJson(e as Map<String, dynamic>))
+      .toList();
 }

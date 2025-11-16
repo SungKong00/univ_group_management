@@ -224,7 +224,11 @@ void main() {
     testWidgets('Focus ring has correct visual properties', (tester) async {
       final items = [
         NavigationItem(label: 'Home', icon: Icons.home, onTap: () {}),
-        NavigationItem(label: 'Calendar', icon: Icons.calendar_today, onTap: () {}),
+        NavigationItem(
+          label: 'Calendar',
+          icon: Icons.calendar_today,
+          onTap: () {},
+        ),
       ];
 
       await tester.pumpWidget(
@@ -255,9 +259,10 @@ void main() {
 
       // Find the one with border decoration (focus ring)
       final decoratedContainer = containers.firstWhere(
-        (c) => c.decoration != null &&
-               c.decoration is BoxDecoration &&
-               (c.decoration as BoxDecoration).border != null,
+        (c) =>
+            c.decoration != null &&
+            c.decoration is BoxDecoration &&
+            (c.decoration as BoxDecoration).border != null,
         orElse: () => throw StateError('No focused container found'),
       );
 

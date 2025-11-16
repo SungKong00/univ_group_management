@@ -92,7 +92,8 @@ class TopNavigation extends ConsumerWidget {
             ),
           ),
           // 모바일 전용: 우측 사용자 아바타
-          if (layoutMode == LayoutMode.compact && currentUser.valueOrNull != null)
+          if (layoutMode == LayoutMode.compact &&
+              currentUser.valueOrNull != null)
             Padding(
               padding: const EdgeInsets.only(right: 12.0),
               child: _UserAvatarButton(user: currentUser.valueOrNull),

@@ -28,9 +28,7 @@ void main() {
           container: container,
           child: MaterialApp(
             scaffoldMessengerKey: scaffoldKey,
-            home: const Scaffold(
-              body: Center(child: Text('Test')),
-            ),
+            home: const Scaffold(body: Center(child: Text('Test'))),
           ),
         ),
       );

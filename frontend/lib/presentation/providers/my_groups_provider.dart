@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:developer' as developer;
 import '../../core/models/group_models.dart';
 import '../../core/services/group_service.dart';
 
@@ -18,6 +19,18 @@ final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
   // ✅ keepAlive: 탭 전환 시 provider dispose 방지 (세션 스코프 유지)
   ref.keepAlive();
 
+  developer.log(
+    '[MyGroupsProvider] API call started (${DateTime.now()})',
+    name: 'MyGroupsProvider',
+  );
+
   final groupService = GroupService();
-  return await groupService.getMyGroups();
+  final groups = await groupService.getMyGroups();
+
+  developer.log(
+    '[MyGroupsProvider] API call completed, ${groups.length} groups (${DateTime.now()})',
+    name: 'MyGroupsProvider',
+  );
+
+  return groups;
 });

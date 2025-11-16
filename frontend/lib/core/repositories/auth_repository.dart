@@ -61,8 +61,8 @@ class ApiAuthRepository implements AuthRepository {
   ApiAuthRepository({
     required LocalStorage localStorage,
     required DioClient dioClient,
-  })  : _localStorage = localStorage,
-        _dioClient = dioClient;
+  }) : _localStorage = localStorage,
+       _dioClient = dioClient;
 
   @override
   Future<UserInfo?> tryAutoLogin() async {
@@ -125,6 +125,11 @@ class ApiAuthRepository implements AuthRepository {
 
   @override
   Future<UserInfo> login({String? idToken, String? accessToken}) async {
+    developer.log(
+      '[Login] Starting login (${DateTime.now()})',
+      name: 'AuthRepository',
+    );
+
     if ((idToken == null || idToken.isEmpty) &&
         (accessToken == null || accessToken.isEmpty)) {
       throw Exception('ID 토큰 또는 Access 토큰이 필요합니다.');
@@ -158,13 +163,27 @@ class ApiAuthRepository implements AuthRepository {
 
     final loginResponse = apiResponse.data!;
 
+    developer.log(
+      '[Login] API call completed, saving tokens (${DateTime.now()})',
+      name: 'AuthRepository',
+    );
+
     // ✅ Repository에서만 저장
     await _localStorage.saveTokens(
       accessToken: loginResponse.accessToken,
       refreshToken: loginResponse.tokenType,
     );
-    await _localStorage.saveUserData(
-      json.encode(loginResponse.user.toJson()),
+
+    developer.log(
+      '[Login] Tokens saved (${DateTime.now()})',
+      name: 'AuthRepository',
+    );
+
+    await _localStorage.saveUserData(json.encode(loginResponse.user.toJson()));
+
+    developer.log(
+      '[Login] Login completed (${DateTime.now()})',
+      name: 'AuthRepository',
     );
 
     return loginResponse.user;
@@ -172,6 +191,11 @@ class ApiAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout() async {
+    developer.log(
+      '[Logout] Starting logout (${DateTime.now()})',
+      name: 'AuthRepository',
+    );
+
     try {
       // 서버에 로그아웃 요청
       await _dioClient.post('/auth/logout');
@@ -184,9 +208,19 @@ class ApiAuthRepository implements AuthRepository {
       // 서버 로그아웃 실패해도 로컬 토큰은 삭제
     }
 
+    developer.log(
+      '[Logout] Clearing auth data (${DateTime.now()})',
+      name: 'AuthRepository',
+    );
+
     // ✅ Repository에서만 삭제
     await _localStorage.clearAuthData();
     await _localStorage.clearNavigationState();
+
+    developer.log(
+      '[Logout] Logout completed (${DateTime.now()})',
+      name: 'AuthRepository',
+    );
   }
 
   @override
@@ -209,8 +243,6 @@ class ApiAuthRepository implements AuthRepository {
 
   @override
   Future<void> updateUser(UserInfo updatedUser) async {
-    await _localStorage.saveUserData(
-      json.encode(updatedUser.toJson()),
-    );
+    await _localStorage.saveUserData(json.encode(updatedUser.toJson()));
   }
 }
