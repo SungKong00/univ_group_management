@@ -21,7 +21,8 @@ final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
   ref.keepAlive();
 
   // ✅ 로그아웃 가드: currentUser가 null이면 빈 리스트 반환 (API 호출 차단)
-  final currentUser = await ref.watch(currentUserProvider.future);
+  // ref.read 사용: 일회성 읽기 (순환 참조 방지)
+  final currentUser = await ref.read(currentUserProvider.future);
   if (currentUser == null) {
     developer.log(
       '[MyGroupsProvider] Skipping API call (user not logged in)',
