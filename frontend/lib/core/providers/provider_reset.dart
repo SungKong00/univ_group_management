@@ -149,7 +149,12 @@ Future<void> resetAllUserDataProviders(Ref ref) async {
   // 3. FutureProvider 및 일반 Provider 일괄 invalidate
   //    - currentUserProvider 완료 후 invalidate → 순환 참조 없음
   //    - myGroupsProvider는 ref.read(currentUserProvider.future)로 null 체크
+  //    - ⭐ myGroupsProvider만 refresh로 즉시 재실행 (keepAlive 때문에 invalidate로는 재실행 안 됨)
   for (final provider in _providersToInvalidateOnLogout) {
-    ref.invalidate(provider);
+    if (provider == myGroupsProvider) {
+      ref.refresh(provider);  // keepAlive Provider는 refresh 필요
+    } else {
+      ref.invalidate(provider);
+    }
   }
 }
