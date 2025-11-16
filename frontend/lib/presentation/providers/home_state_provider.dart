@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:developer' as developer;
 import '../../core/services/local_storage.dart';
 import '../../core/providers/group_explore/group_explore_filter_provider.dart';
+import 'auth_provider.dart';
 
 /// Home View Types
 enum HomeView {
@@ -98,6 +99,17 @@ class HomeStateNotifier extends StateNotifier<HomeState> {
   /// 홈 페이지 초기화 (앱 시작 시 또는 홈 탭 진입 시 호출)
   Future<void> initialize() async {
     if (_hasInitialized) return;
+
+    // ✅ 로그아웃 가드: 로그인 안 되어 있으면 초기화 건너뛰기
+    final currentUser = await _ref.read(currentUserProvider.future);
+    if (currentUser == null) {
+      developer.log(
+        '[HomeStateProvider] Skipping initialize (not logged in)',
+        name: 'HomeStateNotifier',
+      );
+      _hasInitialized = true;
+      return;
+    }
 
     try {
       // 1. 메모리 스냅샷 확인 (최우선)

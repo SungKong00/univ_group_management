@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:developer' as developer;
 import '../../core/models/group_models.dart';
 import '../../core/services/group_service.dart';
+import 'auth_provider.dart';
 
 /// 현재 사용자가 속한 모든 그룹 목록 Provider
 ///
@@ -18,6 +19,16 @@ import '../../core/services/group_service.dart';
 final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
   // ✅ keepAlive: 탭 전환 시 provider dispose 방지 (세션 스코프 유지)
   ref.keepAlive();
+
+  // ✅ 로그아웃 가드: currentUser가 null이면 빈 리스트 반환 (API 호출 차단)
+  final currentUser = await ref.watch(currentUserProvider.future);
+  if (currentUser == null) {
+    developer.log(
+      '[MyGroupsProvider] Skipping API call (user not logged in)',
+      name: 'MyGroupsProvider',
+    );
+    return [];
+  }
 
   developer.log(
     '[MyGroupsProvider] API call started (${DateTime.now()})',
