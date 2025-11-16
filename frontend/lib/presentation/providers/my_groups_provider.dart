@@ -21,9 +21,9 @@ final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
   ref.keepAlive();
 
   // ✅ 로그아웃 가드: currentUser가 null이면 빈 리스트 반환 (API 호출 차단)
-  // ref.watch 사용: currentUserProvider 변경 감지 → 자동 재로드
-  // 재로그인 시 타이밍 이슈 방지 (currentUser 로드 완료 보장)
-  final currentUser = await ref.watch(currentUserProvider.future);
+  // ref.read 사용: 순환 참조 방지 (로그아웃 시 currentUserProvider.state = AsyncLoading)
+  // 재로그인 시 타이밍 이슈는 provider_reset.dart에서 순차적 invalidate로 해결
+  final currentUser = await ref.read(currentUserProvider.future);
   if (currentUser == null) {
     developer.log(
       '[MyGroupsProvider] Skipping API call (user not logged in)',

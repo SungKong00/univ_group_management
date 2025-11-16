@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../presentation/providers/auth_provider.dart';
 import '../../presentation/providers/calendar_events_provider.dart';
 import '../../presentation/providers/calendar_view_provider.dart';
 import '../../presentation/providers/focused_date_provider.dart';
@@ -110,31 +111,44 @@ final _customLogoutCallbacks = <LogoutResetCallback>[
 /// 모든 사용자 데이터 관련 Provider를 초기화합니다.
 ///
 /// 이 함수는 로그아웃 시 호출되어야 하며, 다음 작업을 수행합니다:
-/// 1. [_providersToInvalidateOnLogout]에 등록된 모든 Provider의 캐시 invalidate
-/// 2. [_customLogoutCallbacks]에 등록된 in-memory 정리 실행
+/// 1. [_customLogoutCallbacks]에 등록된 in-memory 정리 실행
+/// 2. currentUserProvider 완료 대기 (순환 참조 방지)
+/// 3. [_providersToInvalidateOnLogout]에 등록된 모든 Provider의 캐시 invalidate
 ///
 /// ### 사용 예시
 /// ```dart
 /// Future<void> logout() async {
 ///   await _authService.logout();
-///   resetAllUserDataProviders(ref);  // ← 로그아웃 로직에서 호출
+///   await resetAllUserDataProviders(ref);  // ← 비동기로 변경 (await 필수)
 ///   // ... 나머지 로그아웃 처리
 /// }
 /// ```
 ///
 /// ### 매개변수
 /// - [ref]: Riverpod ProviderRef 객체 (Provider 내부에서 사용 가능)
-void resetAllUserDataProviders(Ref ref) {
-  // In-memory snapshot 및 사용자 정의 정리 로직 먼저 수행
+///
+/// ### 순환 참조 방지
+/// - currentUserProvider가 AsyncLoading 상태에서 myGroupsProvider를 invalidate하면
+///   myGroupsProvider가 ref.read(currentUserProvider.future)를 호출하여 순환 참조 발생
+/// - 따라서 invalidate 전에 currentUserProvider 완료를 명시적으로 대기
+Future<void> resetAllUserDataProviders(Ref ref) async {
+  // 1. In-memory snapshot 및 사용자 정의 정리 로직 먼저 수행
   for (final callback in _customLogoutCallbacks) {
     callback(ref);
   }
 
-  // FutureProvider 및 일반 Provider 일괄 invalidate
-  // ⭐ myGroupsProvider의 keepAlive는 workspace_state_provider의 로그아웃 가드와 함께 동작
-  //    - invalidate: 로그아웃 시 캐시 표시
-  //    - workspace_state_provider의 isLoggingOut 가드: 로그아웃 중 myGroupsProvider 접근 차단
-  //    - 새 로그인 시: 다음 read에서 새 API 호출로 새 데이터 로드
+  // 2. ⭐ currentUserProvider 완료 대기 (순환 참조 방지)
+  //    - currentUserProvider.state = AsyncData(null) 완료까지 대기
+  //    - 이후 myGroupsProvider.invalidate 시 ref.read(currentUserProvider.future) 안전
+  try {
+    await ref.read(currentUserProvider.future);
+  } catch (_) {
+    // 로그아웃 중 에러는 무시 (currentUser = null로 설정됨)
+  }
+
+  // 3. FutureProvider 및 일반 Provider 일괄 invalidate
+  //    - currentUserProvider 완료 후 invalidate → 순환 참조 없음
+  //    - myGroupsProvider는 ref.read(currentUserProvider.future)로 null 체크
   for (final provider in _providersToInvalidateOnLogout) {
     ref.invalidate(provider);
   }

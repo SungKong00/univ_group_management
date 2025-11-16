@@ -79,17 +79,20 @@ class CurrentUserNotifier extends AsyncNotifier<UserInfo?> {
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.logout();
 
-      // ✅ Provider 초기화 (한 번만 호출)
-      resetAllUserDataProviders(ref);
+      // ✅ 상태를 null로 먼저 설정 (로그아웃 완료)
+      // resetAllUserDataProviders에서 currentUserProvider.future를 기다리므로
+      // 먼저 null로 설정해야 무한 대기 방지
+      state = const AsyncData(null);
+
+      // ✅ Provider 초기화 (상태 설정 후 실행)
+      // 순환 참조 방지: currentUserProvider 완료 후 다른 Provider들 invalidate
+      await resetAllUserDataProviders(ref);
 
       // ✅ 네비게이션 리셋
       final navigationController = ref.read(
         navigationControllerProvider.notifier,
       );
       navigationController.resetToHome();
-
-      // ✅ 상태를 null로 설정 (로그아웃 완료)
-      state = const AsyncData(null);
     } catch (e, stack) {
       // ✅ 에러 발생 시 AsyncError로 자동 설정
       state = AsyncError(e, stack);
