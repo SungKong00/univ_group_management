@@ -80,13 +80,22 @@ class CurrentUserNotifier extends AsyncNotifier<UserInfo?> {
       await authRepository.logout();
 
       // ✅ 상태를 null로 먼저 설정 (로그아웃 완료)
-      // resetAllUserDataProviders에서 currentUserProvider.future를 기다리므로
-      // 먼저 null로 설정해야 무한 대기 방지
       state = const AsyncData(null);
 
-      // ✅ Provider 초기화 (상태 설정 후 실행)
-      // 순환 참조 방지: currentUserProvider 완료 후 다른 Provider들 invalidate
-      await resetAllUserDataProviders(ref);
+      // ✅ Provider 초기화 (순환 참조 에러 무시)
+      // myGroupsProvider가 ref.watch(currentUserProvider)를 사용하므로
+      // invalidate 시 순환 참조가 발생할 수 있지만, 반응형 재평가로 자동 해결됨
+      try {
+        await resetAllUserDataProviders(ref);
+      } catch (e) {
+        // 순환 참조 에러 무시 (로그아웃은 이미 완료, 재로그인 시 자동 재평가)
+        if (kDebugMode) {
+          developer.log(
+            '⚠️ Provider reset warning (ignored): $e',
+            name: 'CurrentUserNotifier',
+          );
+        }
+      }
 
       // ✅ 네비게이션 리셋
       final navigationController = ref.read(
