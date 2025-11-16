@@ -261,9 +261,9 @@ class _UserInfoCardState extends ConsumerState<UserInfoCard>
     setState(() => _isLoggingOut = true);
 
     try {
-      await ref.read(authProvider.notifier).logout();
+      await ref.read(currentUserProvider.notifier).logout();
       widget.onLogoutRequested?.call();
-      // provider 가 currentUser null 로 만들면 부모 AnimatedSwitcher 가 제거 애니메이션 수행
+      // currentUserProvider가 null로 변경되면 부모 AnimatedSwitcher가 제거 애니메이션 수행
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoggingOut = false);

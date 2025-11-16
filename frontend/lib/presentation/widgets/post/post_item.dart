@@ -62,7 +62,7 @@ class _PostItemState extends ConsumerState<PostItem> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth <= 600;
-    final currentUser = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(currentUserProvider).valueOrNull;
     final isAuthor = currentUser?.id == widget.post.authorId;
 
     return InkWell(

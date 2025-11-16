@@ -74,7 +74,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
 
       final loginResponse = await ref
-          .read(authProvider.notifier)
+          .read(currentUserProvider.notifier)
           .loginWithGoogle(
             idToken: (idToken != null && idToken.isNotEmpty) ? idToken : null,
             accessToken: (accessToken != null && accessToken.isNotEmpty)
@@ -109,7 +109,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     try {
       final loginResponse = await ref
-          .read(authProvider.notifier)
+          .read(currentUserProvider.notifier)
           .loginWithTestAccount();
 
       if (!mounted) {
@@ -303,7 +303,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
     try {
       final loginResponse = await ref
-          .read(authProvider.notifier)
+          .read(currentUserProvider.notifier)
           .loginWithMockToken(mockToken);
       if (!mounted) return;
       await _handlePostLogin(loginResponse);

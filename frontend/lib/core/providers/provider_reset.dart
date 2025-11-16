@@ -13,7 +13,6 @@ import '../providers/unified_group_provider.dart';
 import '../../presentation/pages/member_management/providers/join_request_provider.dart';
 import '../../presentation/pages/member_management/providers/member_actions_provider.dart';
 import '../../presentation/pages/member_management/providers/role_management_provider.dart';
-import '../providers/member/member_list_provider.dart';
 import '../../presentation/providers/recruitment_providers.dart';
 import '../../presentation/providers/recruiting_groups_provider.dart';
 
@@ -45,6 +44,23 @@ typedef LogoutResetCallback = void Function(Ref ref);
 ///
 /// 이 리스트에 포함된 Provider는 logout 시 `ref.invalidate` 되어
 /// 다음 로그인에서 새 상태를 로드합니다.
+///
+/// ⚠️ Phase 4-1 변경사항:
+/// currentUserProvider 의존성이 추가된 Provider는 자동으로 무효화되므로
+/// 이 리스트에서 제거되었습니다:
+/// - recruitmentDetailProvider (자동 무효화)
+/// - applicationProvider (자동 무효화)
+/// - joinRequestListProvider (자동 무효화)
+/// - subGroupRequestListProvider (자동 무효화)
+///
+/// ⚠️ Phase 4-2 변경사항:
+/// 추가로 currentUser 의존성이 추가된 Provider:
+/// - activeRecruitmentProvider (자동 무효화)
+/// - archivedRecruitmentsProvider (자동 무효화)
+/// - applicationListProvider (자동 무효화)
+/// - filteredGroupMembersProvider (자동 무효화)
+/// - allGroupMembersProvider (자동 무효화)
+/// - roleListProvider (자동 무효화)
 final _providersToInvalidateOnLogout = <ProviderOrFamily>[
   myGroupsProvider,
   homeStateProvider,
@@ -55,27 +71,27 @@ final _providersToInvalidateOnLogout = <ProviderOrFamily>[
   unifiedGroupProvider,
   workspaceStateProvider,
   groupCalendarProvider,
-  activeRecruitmentProvider,
-  archivedRecruitmentsProvider,
-  applicationListProvider,
-  recruitmentDetailProvider,
-  applicationProvider,
+  // activeRecruitmentProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
+  // archivedRecruitmentsProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
+  // applicationListProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
+  // recruitmentDetailProvider, ✅ Phase 4-1: currentUser 의존성 추가 → 자동 무효화
+  // applicationProvider, ✅ Phase 4-1: currentUser 의존성 추가 → 자동 무효화
   createRecruitmentProvider,
   updateRecruitmentProvider,
   closeRecruitmentProvider,
   deleteRecruitmentProvider,
   reviewApplicationProvider,
-  subGroupRequestListProvider,
+  // subGroupRequestListProvider, ✅ Phase 4-1: currentUser 의존성 추가 → 자동 무효화
   approveSubGroupRequestProvider,
   rejectSubGroupRequestProvider,
-  joinRequestListProvider,
+  // joinRequestListProvider, ✅ Phase 4-1: currentUser 의존성 추가 → 자동 무효화
   approveJoinRequestProvider,
   rejectJoinRequestProvider,
-  filteredGroupMembersProvider,
-  allGroupMembersProvider,
+  // filteredGroupMembersProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
+  // allGroupMembersProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
   updateMemberRoleProvider,
   removeMemberProvider,
-  roleListProvider,
+  // roleListProvider, ✅ Phase 4-2: currentUser 의존성 추가 → 자동 무효화
   createRoleProvider,
   updateRoleProvider,
   deleteRoleProvider,

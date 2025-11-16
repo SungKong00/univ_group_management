@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/recruitment_models.dart';
 import '../../core/services/recruitment_service.dart';
+import '../providers/auth_provider.dart';
 
 // ========== Params Classes ==========
 
@@ -69,6 +70,10 @@ class ReviewApplicationParams {
 /// Returns null if no active recruitment exists.
 final activeRecruitmentProvider = FutureProvider.autoDispose
     .family<RecruitmentResponse?, int>((ref, groupId) async {
+      // currentUserProvider 의존성 추가 (로그아웃 시 자동 무효화)
+      final user = ref.watch(currentUserProvider).valueOrNull;
+      if (user == null) return null;
+
       final service = RecruitmentService();
       return await service.getActiveRecruitment(groupId);
     });
@@ -78,6 +83,10 @@ final activeRecruitmentProvider = FutureProvider.autoDispose
 /// Fetches the list of past/closed recruitments for a specific group.
 final archivedRecruitmentsProvider = FutureProvider.autoDispose
     .family<List<ArchivedRecruitmentResponse>, int>((ref, groupId) async {
+      // currentUserProvider 의존성 추가 (로그아웃 시 자동 무효화)
+      final user = ref.watch(currentUserProvider).valueOrNull;
+      if (user == null) return [];
+
       final service = RecruitmentService();
       return await service.getArchivedRecruitments(groupId);
     });
@@ -87,6 +96,10 @@ final archivedRecruitmentsProvider = FutureProvider.autoDispose
 /// Fetches all applications for a specific recruitment.
 final applicationListProvider = FutureProvider.autoDispose
     .family<List<ApplicationSummaryResponse>, int>((ref, recruitmentId) async {
+      // currentUserProvider 의존성 추가 (로그아웃 시 자동 무효화)
+      final user = ref.watch(currentUserProvider).valueOrNull;
+      if (user == null) return [];
+
       final service = RecruitmentService();
       return await service.getApplications(recruitmentId);
     });
@@ -96,6 +109,12 @@ final applicationListProvider = FutureProvider.autoDispose
 /// Fetches detailed information about a specific recruitment.
 final recruitmentDetailProvider = FutureProvider.autoDispose
     .family<RecruitmentResponse, int>((ref, recruitmentId) async {
+      // currentUserProvider 의존성 추가 (로그아웃 시 자동 무효화)
+      final user = ref.watch(currentUserProvider).valueOrNull;
+      if (user == null) {
+        throw Exception('로그인이 필요합니다');
+      }
+
       final service = RecruitmentService();
       return await service.getRecruitment(recruitmentId);
     });
@@ -105,6 +124,12 @@ final recruitmentDetailProvider = FutureProvider.autoDispose
 /// Fetches detailed information about a specific application.
 final applicationProvider = FutureProvider.autoDispose
     .family<ApplicationResponse, int>((ref, applicationId) async {
+      // currentUserProvider 의존성 추가 (로그아웃 시 자동 무효화)
+      final user = ref.watch(currentUserProvider).valueOrNull;
+      if (user == null) {
+        throw Exception('로그인이 필요합니다');
+      }
+
       final service = RecruitmentService();
       return await service.getApplication(applicationId);
     });

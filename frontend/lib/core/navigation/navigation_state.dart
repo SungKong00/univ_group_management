@@ -8,6 +8,7 @@ part 'navigation_state.g.dart';
 @freezed
 class NavigationState with _$NavigationState {
   const factory NavigationState({
+    @JsonKey(toJson: _stackToJson, fromJson: _stackFromJson)
     @Default([]) List<WorkspaceRoute> stack,
     @Default(-1) int currentIndex,
 
@@ -48,4 +49,14 @@ class NavigationState with _$NavigationState {
 
   factory NavigationState.fromJson(Map<String, dynamic> json) =>
       _$NavigationStateFromJson(json);
+}
+
+/// Helper function to serialize WorkspaceRoute list
+List<Map<String, dynamic>> _stackToJson(List<WorkspaceRoute> stack) {
+  return stack.map((e) => e.toJson()).toList();
+}
+
+/// Helper function to deserialize WorkspaceRoute list
+List<WorkspaceRoute> _stackFromJson(List<dynamic> json) {
+  return json.map((e) => WorkspaceRoute.fromJson(e as Map<String, dynamic>)).toList();
 }

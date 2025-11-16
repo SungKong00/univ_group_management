@@ -329,7 +329,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   void _saveCurrentWorkspaceSnapshot() {
     // Logout Race Condition Fix:
     // Check if logout is in progress. If so, do not save the snapshot.
-    final isLoggingOut = _ref.read(authProvider).isLoggingOut;
+    final isLoggingOut = _ref.read(isLoggingOutProvider);
     if (isLoggingOut) return;
 
     if (!mounted) return; // Prevent access after dispose
@@ -942,7 +942,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   Future<GroupMembership?> _resolveGroupMembership(String groupId) async {
     // ⭐ 로그아웃 중 워크스페이스 로딩 Race Condition 차단
     // (로그아웃 시 isLoggingOut=true, 진행 중인 loadChannels에서 SecurityException 발생)
-    if (_ref.read(authProvider).isLoggingOut) {
+    if (_ref.read(isLoggingOutProvider)) {
       throw LogoutInProgressException();
     }
 
@@ -1085,7 +1085,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// It should be manually called when leaving the channel (selectChannel, exitWorkspace)
   Future<void> saveReadPosition(int channelId, int postId) async {
     // 안전장치: 로그아웃 중에는 저장하지 않음
-    final isLoggingOut = _ref.read(authProvider).isLoggingOut;
+    final isLoggingOut = _ref.read(isLoggingOutProvider);
     if (isLoggingOut) {
       return;
     }

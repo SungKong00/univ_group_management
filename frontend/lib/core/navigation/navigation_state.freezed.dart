@@ -21,6 +21,7 @@ NavigationState _$NavigationStateFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$NavigationState {
+  @JsonKey(toJson: _stackToJson, fromJson: _stackFromJson)
   List<WorkspaceRoute> get stack => throw _privateConstructorUsedError;
   int get currentIndex => throw _privateConstructorUsedError;
 
@@ -63,6 +64,7 @@ abstract class $NavigationStateCopyWith<$Res> {
   ) = _$NavigationStateCopyWithImpl<$Res, NavigationState>;
   @useResult
   $Res call({
+    @JsonKey(toJson: _stackToJson, fromJson: _stackFromJson)
     List<WorkspaceRoute> stack,
     int currentIndex,
     bool isLoading,
@@ -148,6 +150,7 @@ abstract class _$$NavigationStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
+    @JsonKey(toJson: _stackToJson, fromJson: _stackFromJson)
     List<WorkspaceRoute> stack,
     int currentIndex,
     bool isLoading,
@@ -222,10 +225,10 @@ class __$$NavigationStateImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable()
 class _$NavigationStateImpl extends _NavigationState {
   const _$NavigationStateImpl({
+    @JsonKey(toJson: _stackToJson, fromJson: _stackFromJson)
     final List<WorkspaceRoute> stack = const [],
     this.currentIndex = -1,
     this.isLoading = false,
@@ -244,7 +247,7 @@ class _$NavigationStateImpl extends _NavigationState {
 
   final List<WorkspaceRoute> _stack;
   @override
-  @JsonKey()
+  @JsonKey(toJson: _stackToJson, fromJson: _stackFromJson)
   List<WorkspaceRoute> get stack {
     if (_stack is EqualUnmodifiableListView) return _stack;
     // ignore: implicit_dynamic_type
@@ -362,6 +365,7 @@ class _$NavigationStateImpl extends _NavigationState {
 
 abstract class _NavigationState extends NavigationState {
   const factory _NavigationState({
+    @JsonKey(toJson: _stackToJson, fromJson: _stackFromJson)
     final List<WorkspaceRoute> stack,
     final int currentIndex,
     final bool isLoading,
@@ -377,6 +381,7 @@ abstract class _NavigationState extends NavigationState {
       _$NavigationStateImpl.fromJson;
 
   @override
+  @JsonKey(toJson: _stackToJson, fromJson: _stackFromJson)
   List<WorkspaceRoute> get stack;
   @override
   int get currentIndex;

@@ -549,7 +549,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
   /// Check if the current user can modify the given event.
   bool _canModifyEvent(GroupEvent event) {
-    final currentUser = ref.read(currentUserProvider);
+    final currentUser = ref.read(currentUserProvider).valueOrNull;
     if (currentUser == null) return false;
 
     // Check if user has CALENDAR_MANAGE permission

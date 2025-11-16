@@ -26,8 +26,8 @@ class GroupAdminPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-    final user = authState.user;
+    final userAsync = ref.watch(currentUserProvider);
+    final user = userAsync.valueOrNull;
 
     // 권한 확인
     if (user == null) {

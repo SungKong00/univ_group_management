@@ -92,10 +92,10 @@ class TopNavigation extends ConsumerWidget {
             ),
           ),
           // 모바일 전용: 우측 사용자 아바타
-          if (layoutMode == LayoutMode.compact && currentUser != null)
+          if (layoutMode == LayoutMode.compact && currentUser.valueOrNull != null)
             Padding(
               padding: const EdgeInsets.only(right: 12.0),
-              child: _UserAvatarButton(user: currentUser),
+              child: _UserAvatarButton(user: currentUser.valueOrNull),
             )
           else
             const SizedBox(width: 16),
@@ -221,8 +221,8 @@ class _UserAvatarButtonState extends ConsumerState<_UserAvatarButton> {
     if (!confirmed) return;
 
     try {
-      await ref.read(authProvider.notifier).logout();
-      // 로그아웃 성공 시 AuthProvider가 자동으로 로그인 페이지로 리디렉션
+      await ref.read(currentUserProvider.notifier).logout();
+      // 로그아웃 성공 시 CurrentUserNotifier가 자동으로 로그인 페이지로 리디렉션
     } catch (e) {
       if (!mounted) return;
       AppSnackBar.error(context, '로그아웃 실패: $e');

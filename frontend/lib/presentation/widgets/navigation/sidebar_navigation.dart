@@ -50,7 +50,7 @@ class _SidebarNavigationState extends ConsumerState<SidebarNavigation>
   Widget build(BuildContext context) {
     final navigationState = ref.watch(navigationControllerProvider);
     final isCollapsed = navigationState.shouldCollapseSidebar;
-    final currentUser = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(currentUserProvider).valueOrNull;
 
     // 최초 동기화 (애니메이션 없이 상태 맞춤)
     if (!_firstSyncDone) {
