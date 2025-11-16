@@ -359,18 +359,51 @@ Future<void> logout() async {
 }
 ```
 
-3. **autoDispose 패턴 적용** (계정 전환 시 자동 해제)
+3. **keepAlive + 로그아웃 가드 패턴 적용** (세션 캐시 유지 + Race Condition 차단)
 ```dart
-// ❌ 기존: 메모리에 계속 유지되어 캐시 문제 발생
+// ✅ 권장: keepAlive로 세션 캐시 유지
 final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
-  return await groupService.getMyGroups();
-});
-
-// ✅ 개선: autoDispose로 자동 메모리 관리
-final myGroupsProvider = FutureProvider.autoDispose<List<GroupMembership>>((ref) async {
+  ref.keepAlive();  // 탭 전환 시 캐시 유지
   return await groupService.getMyGroups();
 });
 ```
+
+**로그아웃 시 처리** (`core/providers/provider_reset.dart`):
+```dart
+void resetAllUserDataProviders(Ref ref) {
+  // 모든 Provider 일괄 invalidate (myGroupsProvider 포함)
+  for (final provider in _providersToInvalidateOnLogout) {
+    ref.invalidate(provider);
+  }
+}
+```
+
+**Race Condition 차단** (`presentation/providers/workspace_state_provider.dart`):
+```dart
+Future<GroupMembership?> _resolveGroupMembership(String groupId) async {
+  // ⭐ 로그아웃 중 접근 시도 차단
+  if (_ref.read(authProvider).isLoggingOut) {
+    throw LogoutInProgressException();  // 로그아웃 중 → 즉시 에러
+  }
+
+  // 일반 그룹 조회
+  try {
+    final memberships = await _ref.read(myGroupsProvider.future);
+    return memberships.firstWhere(
+      (group) => group.id.toString() == groupId,
+    );
+  } catch (e) {
+    if (e is LogoutInProgressException) rethrow;
+    return null;
+  }
+}
+```
+
+**keepAlive + 로그아웃 가드 사용 이유**:
+- **탭 전환 시**: keepAlive로 캐시 유지 (사용자 UX 개선)
+- **로그아웃 중**: isLoggingOut 가드로 진행 중인 로드 차단
+- **새 로그인 시**: 다음 read에서 새 API 호출로 새 데이터 로드
+- **캐시 일관성**: 로그아웃 후 새 계정의 데이터 정상 표시
 
 **검증 방법:**
 1. 계정 A로 로그인하여 워크스페이스 생성

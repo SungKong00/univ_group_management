@@ -115,6 +115,10 @@ void resetAllUserDataProviders(Ref ref) {
   }
 
   // FutureProvider 및 일반 Provider 일괄 invalidate
+  // ⭐ myGroupsProvider의 keepAlive는 workspace_state_provider의 로그아웃 가드와 함께 동작
+  //    - invalidate: 로그아웃 시 캐시 표시
+  //    - workspace_state_provider의 isLoggingOut 가드: 로그아웃 중 myGroupsProvider 접근 차단
+  //    - 새 로그인 시: 다음 read에서 새 API 호출로 새 데이터 로드
   for (final provider in _providersToInvalidateOnLogout) {
     ref.invalidate(provider);
   }

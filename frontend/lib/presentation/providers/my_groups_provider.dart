@@ -9,10 +9,11 @@ import '../../core/services/group_service.dart';
 ///
 /// 자동 정렬: level 오름차순 → id 오름차순
 ///
-/// **세션 스코프 캐싱 (keepAlive):**
-/// - 글로벌 네비게이션으로 탭 전환 시 provider가 dispose되지 않도록 keepAlive 사용
-/// - 워크스페이스 그룹 선택 상태가 탭 전환 후에도 메모리에 유지됨
-/// - 로그아웃 시에는 core/providers/provider_reset.dart에서 명시적으로 invalidate됩니다.
+/// **세션 스코프 캐싱 (keepAlive + refresh):**
+/// - keepAlive(): 글로벌 네비게이션으로 탭 전환 시 provider dispose 방지 (세션 스코프 유지)
+/// - 로그아웃 시: provider_reset.dart에서 ref.refresh(myGroupsProvider) 호출로 즉시 재로드
+/// - 로그아웃 후 즉시 새 계정 로그인 시 새로운 그룹 목록을 즉시 로드
+/// 자세한 설명: docs/troubleshooting/common-errors.md#로그아웃--데이터-캐시-문제
 final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
   // ✅ keepAlive: 탭 전환 시 provider dispose 방지 (세션 스코프 유지)
   ref.keepAlive();

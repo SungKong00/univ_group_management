@@ -21,6 +21,16 @@ import 'workspace_state_provider_stub.dart'
     if (dart.library.html) 'workspace_state_provider_web.dart'
     as web_utils;
 
+/// 로그아웃 진행 중 워크스페이스 진입 시도 시 발생하는 예외
+/// Race Condition 차단: 로그아웃 중 myGroupsProvider가 무효화되면서
+/// _resolveGroupMembership이 의도적으로 이 예외를 던집니다.
+class LogoutInProgressException implements Exception {
+  const LogoutInProgressException();
+
+  @override
+  String toString() => 'LogoutInProgressException: 사용자 로그아웃이 진행 중입니다.';
+}
+
 /// Workspace View Type
 enum WorkspaceView {
   channel, // Channel content view
@@ -586,8 +596,13 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     _lastGroupId = groupId;
 
     // Step 1: Resolve membership (needed for permission check)
-    final resolvedMembership =
-        membership ?? await _resolveGroupMembership(groupId);
+    GroupMembership? resolvedMembership;
+    try {
+      resolvedMembership = membership ?? await _resolveGroupMembership(groupId);
+    } on LogoutInProgressException {
+      // ⭐ 로그아웃 중 워크스페이스 진입 시도 → 조용히 반환 (로그아웃 진행)
+      return;
+    }
 
     if (resolvedMembership == null) {
       _handleMembershipResolutionFailure();
@@ -925,6 +940,12 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   Future<GroupMembership?> _resolveGroupMembership(String groupId) async {
+    // ⭐ 로그아웃 중 워크스페이스 로딩 Race Condition 차단
+    // (로그아웃 시 isLoggingOut=true, 진행 중인 loadChannels에서 SecurityException 발생)
+    if (_ref.read(authProvider).isLoggingOut) {
+      throw LogoutInProgressException();
+    }
+
     try {
       final memberships = await _ref.read(myGroupsProvider.future);
       try {
@@ -934,7 +955,9 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       } catch (_) {
         return null;
       }
-    } catch (_) {
+    } catch (e) {
+      // 로그아웃 중 발생한 예외 재발생
+      if (e is LogoutInProgressException) rethrow;
       return null;
     }
   }
