@@ -224,56 +224,74 @@ class GroupHomeView extends ConsumerWidget {
     WidgetRef ref,
     int? announcementChannelId,
   ) {
-    return _buildCreateSubgroupButton(context, ref);
+    return _buildCreateSubgroupSection(context, ref);
   }
 
-  /// 하위 그룹 만들기 버튼
-  Widget _buildCreateSubgroupButton(BuildContext context, WidgetRef ref) {
-    return SizedBox(
-      width: 130,
-      height: 44,
-      child: FilledButton.icon(
-        onPressed: () async {
-          final workspaceState = ref.read(workspaceStateProvider);
-          final selectedGroupId = workspaceState.selectedGroupId;
+  /// 하위 그룹 만들기 버튼 + 설명 (Title + Description 패턴)
+  Widget _buildCreateSubgroupSection(BuildContext context, WidgetRef ref) {
+    return IntrinsicWidth(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Button (Title)
+          OutlinedButton.icon(
+            onPressed: () async {
+              final workspaceState = ref.read(workspaceStateProvider);
+              final selectedGroupId = workspaceState.selectedGroupId;
 
-          if (selectedGroupId == null) {
-            AppSnackBar.info(context, '그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
-            return;
-          }
+              if (selectedGroupId == null) {
+                AppSnackBar.info(
+                  context,
+                  '그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.',
+                );
+                return;
+              }
 
-          // Get group details from myGroupsProvider
-          final myGroupsAsync = ref.read(myGroupsProvider);
-          final myGroups = myGroupsAsync.value;
+              // Get group details from myGroupsProvider
+              final myGroupsAsync = ref.read(myGroupsProvider);
+              final myGroups = myGroupsAsync.value;
 
-          if (myGroups == null) {
-            AppSnackBar.info(context, '그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
-            return;
-          }
+              if (myGroups == null) {
+                AppSnackBar.info(
+                  context,
+                  '그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.',
+                );
+                return;
+              }
 
-          final selectedGroup = myGroups.firstWhere(
-            (group) => group.id.toString() == selectedGroupId,
-            orElse: () => throw Exception('선택된 그룹을 찾을 수 없습니다.'),
-          );
+              final selectedGroup = myGroups.firstWhere(
+                (group) => group.id.toString() == selectedGroupId,
+                orElse: () => throw Exception('선택된 그룹을 찾을 수 없습니다.'),
+              );
 
-          showCreateSubgroupDialog(
-            context,
-            groupId: selectedGroup.id,
-            parentGroupName: selectedGroup.name,
-          );
-        },
-        icon: Icon(Icons.add_circle_outline, size: 16),
-        label: Text(
-          '하위 그룹 만들기',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
+              showCreateSubgroupDialog(
+                context,
+                groupId: selectedGroup.id,
+                parentGroupName: selectedGroup.name,
+              );
+            },
+            icon: const Icon(Icons.add_circle_outline),
+            label: const Text('하위 그룹 만들기'),
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+            ),
           ),
-        ),
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-        ),
+          SizedBox(height: 4),
+          // Description
+          Padding(
+            padding: EdgeInsets.only(left: AppSpacing.xxs),
+            child: Text(
+              '이 그룹의 하위 조직을 만들어 보세요',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppColors.neutral600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
