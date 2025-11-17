@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
+import '../../../core/config/feature_flags.dart';
 import '../../../core/models/date_marker.dart';
 import '../../../core/models/post_list_item.dart';
 import '../../../core/theme/app_colors.dart';
@@ -13,6 +14,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/read_position_helper.dart';
 import '../../../features/post/domain/entities/post.dart';
 import '../../../features/post/presentation/providers/post_list_notifier.dart';
+import '../../../features/post/presentation/providers/post_list_state.dart';
 import '../common/app_empty_state.dart';
 import 'post_item.dart';
 import 'date_divider.dart';
@@ -113,7 +115,55 @@ class _PostListState extends ConsumerState<PostList> {
     super.initState();
     _scrollController = AutoScrollController();
     _scrollController.addListener(_onScroll);
-    _loadPostsAndScrollToUnread();
+
+    // Feature Flag: AsyncNotifier 패턴에서는 Provider가 자동 로딩
+    if (!FeatureFlags.useAsyncNotifierPattern) {
+      // ✅ 구 방식: 이벤트 루프 완료 후 데이터 로드 (Provider 초기화 대기)
+      Future.microtask(() {
+        if (mounted) {
+          _loadPostsAndScrollToUnread();
+        }
+      });
+    } else {
+      // ✅ 신 방식: 스크롤 위치만 복원 (Provider가 데이터 로딩)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _restoreScrollPosition();
+        }
+      });
+    }
+  }
+
+  /// 스크롤 위치 복원 (AsyncNotifier 패턴용)
+  Future<void> _restoreScrollPosition() async {
+    final channelIdInt = int.tryParse(widget.channelId);
+    if (channelIdInt == null) return;
+
+    // 데이터 로딩 대기 (AsyncNotifier의 build() 완료 대기)
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
+
+    // 읽음 위치 데이터 대기
+    await _waitForReadPositionData(channelIdInt);
+    if (!mounted) return;
+
+    // 게시글 목록 가져오기
+    final postListAsync =
+        ref.read(postListAsyncNotifierProvider(widget.channelId));
+    final postListState = postListAsync.valueOrNull;
+    if (postListState == null || postListState.posts.isEmpty) return;
+
+    // Flat List 생성
+    final flatItems = _buildFlatList(postListState.posts);
+    if (!mounted) return;
+
+    setState(() {
+      _flatItems = flatItems;
+      _isInitialLoading = false;
+    });
+
+    // 읽음 위치 계산 및 스크롤
+    _scrollToUnreadPost();
   }
 
   @override
@@ -233,7 +283,7 @@ class _PostListState extends ConsumerState<PostList> {
 
   /// 게시글 로드 및 읽지 않은 게시글로 스크롤
   Future<void> _loadPostsAndScrollToUnread() async {
-    await _loadPosts();
+    await _loadPosts(refresh: true);
 
     final channelIdInt = int.tryParse(widget.channelId);
     if (channelIdInt != null) {
@@ -392,21 +442,23 @@ class _PostListState extends ConsumerState<PostList> {
     }
   }
 
-  Future<void> _loadPosts() async {
-    final notifier = ref.read(postListNotifierProvider(widget.channelId).notifier);
+  Future<void> _loadPosts({bool refresh = false}) async {
+    final notifier = ref.read(
+      postListNotifierProvider(widget.channelId).notifier,
+    );
     final state = ref.read(postListNotifierProvider(widget.channelId));
 
-    if (state.isLoading || !state.hasMore) return;
+    if (!refresh && (state.isLoading || !state.hasMore)) return;
 
     double? savedScrollOffset;
     double? savedMaxScrollExtent;
-    if (state.currentPage > 0 && _scrollController.hasClients) {
+    if (!refresh && state.currentPage > 0 && _scrollController.hasClients) {
       savedScrollOffset = _scrollController.offset;
       savedMaxScrollExtent = _scrollController.position.maxScrollExtent;
     }
 
     try {
-      await notifier.loadPosts(widget.channelId);
+      await notifier.loadPosts(widget.channelId, refresh: refresh);
 
       final newState = ref.read(postListNotifierProvider(widget.channelId));
       final bool isFirstPageLoad = newState.currentPage == 1;
@@ -634,6 +686,36 @@ class _PostListState extends ConsumerState<PostList> {
 
   @override
   Widget build(BuildContext context) {
+    // Feature Flag: AsyncNotifier 패턴 사용 여부
+    if (FeatureFlags.useAsyncNotifierPattern) {
+      return _buildWithAsyncNotifier(context);
+    } else {
+      return _buildWithStateNotifier(context);
+    }
+  }
+
+  /// 신 방식: AsyncNotifier 패턴 (Provider가 데이터 로딩 제어)
+  Widget _buildWithAsyncNotifier(BuildContext context) {
+    final postListAsync =
+        ref.watch(postListAsyncNotifierProvider(widget.channelId));
+
+    return postListAsync.when(
+      loading: () => const PostListSkeleton(),
+      error: (error, stack) => _buildErrorState(error.toString()),
+      data: (postListState) {
+        // 빈 상태 처리
+        if (postListState.posts.isEmpty) {
+          return _buildEmptyState();
+        }
+
+        // 데이터가 있으면 스크롤뷰 렌더링
+        return _buildScrollView(postListState);
+      },
+    );
+  }
+
+  /// 구 방식: StateNotifier 패턴 (Widget이 데이터 로딩 제어)
+  Widget _buildWithStateNotifier(BuildContext context) {
     final postListState = ref.watch(postListNotifierProvider(widget.channelId));
 
     if (postListState.posts.isEmpty && postListState.isLoading) {
@@ -647,6 +729,12 @@ class _PostListState extends ConsumerState<PostList> {
     if (postListState.posts.isEmpty) {
       return _buildEmptyState();
     }
+
+    return _buildScrollView(postListState);
+  }
+
+  /// 공통: ScrollView 렌더링 로직
+  Widget _buildScrollView(PostListState postListState) {
 
     // Phase 2: Flat list로 단일 SliverList 사용
     final scrollView = LayoutBuilder(

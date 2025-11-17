@@ -3,7 +3,11 @@ import '../../domain/usecases/get_posts_usecase.dart';
 import 'post_list_state.dart';
 import 'post_usecase_providers.dart';
 
-/// 게시글 목록 상태 관리 Notifier
+// ============================================================
+// Old Implementation (StateNotifier)
+// ============================================================
+
+/// 게시글 목록 상태 관리 Notifier (구 방식)
 ///
 /// 무한 스크롤, 새로고침, 에러 처리를 담당합니다.
 class PostListNotifier extends StateNotifier<PostListState> {
@@ -79,7 +83,116 @@ class PostListNotifier extends StateNotifier<PostListState> {
   }
 }
 
-/// PostListNotifier Provider
+// ============================================================
+// New Implementation (AsyncNotifier)
+// ============================================================
+
+/// 게시글 목록 상태 관리 AsyncNotifier (신 방식)
+///
+/// Provider 생성 시 자동으로 데이터 로딩 (build 메서드)
+/// Clean Architecture 준수: ViewModel이 데이터 로딩 제어
+class PostListAsyncNotifier
+    extends AutoDisposeFamilyAsyncNotifier<PostListState, String> {
+  @override
+  Future<PostListState> build(String channelId) async {
+    // ✅ Provider 생성 시 자동 실행 (Widget initState 불필요)
+    return await _loadInitialPosts(channelId);
+  }
+
+  /// 초기 데이터 로딩
+  Future<PostListState> _loadInitialPosts(String channelId) async {
+    final useCase = ref.watch(getPostsUseCaseProvider);
+
+    try {
+      final (posts, pagination) = await useCase(channelId, page: 0);
+
+      return PostListState(
+        posts: posts,
+        isLoading: false,
+        hasMore: pagination.hasMore,
+        currentPage: pagination.currentPage + 1,
+      );
+    } catch (e) {
+      throw Exception('게시글을 불러오는데 실패했습니다 ($e)');
+    }
+  }
+
+  /// 무한 스크롤: 다음 페이지 로드
+  Future<void> loadMore() async {
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+    if (currentState.isLoading || !currentState.hasMore) return;
+
+    // 낙관적 업데이트 (로딩 상태)
+    state = AsyncValue.data(currentState.copyWith(isLoading: true));
+
+    try {
+      final useCase = ref.watch(getPostsUseCaseProvider);
+      final channelId = arg; // family parameter
+      final (posts, pagination) = await useCase(
+        channelId,
+        page: currentState.currentPage,
+      );
+
+      state = AsyncValue.data(
+        currentState.copyWith(
+          posts: [...currentState.posts, ...posts],
+          isLoading: false,
+          hasMore: pagination.hasMore,
+          currentPage: pagination.currentPage + 1,
+        ),
+      );
+    } catch (e) {
+      // 에러 시 로딩 상태만 되돌림 (기존 posts 유지)
+      state = AsyncValue.data(currentState.copyWith(isLoading: false));
+    }
+  }
+
+  /// 게시글 추가 (로컬 상태만)
+  void addPost(dynamic newPost) {
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+
+    state = AsyncValue.data(
+      currentState.copyWith(posts: [newPost, ...currentState.posts]),
+    );
+  }
+
+  /// 게시글 업데이트 (로컬 상태만)
+  void updatePost(int postId, String newContent) {
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+
+    final updatedPosts = currentState.posts.map((post) {
+      if (post.id == postId) {
+        return post.copyWith(
+          content: newContent,
+          updatedAt: DateTime.now(),
+        );
+      }
+      return post;
+    }).toList();
+
+    state = AsyncValue.data(currentState.copyWith(posts: updatedPosts));
+  }
+
+  /// 게시글 삭제 (로컬 상태만)
+  void removePost(int postId) {
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+
+    final updatedPosts =
+        currentState.posts.where((post) => post.id != postId).toList();
+
+    state = AsyncValue.data(currentState.copyWith(posts: updatedPosts));
+  }
+}
+
+// ============================================================
+// Provider Definitions (Feature Flag 기반)
+// ============================================================
+
+/// PostListNotifier Provider (구 방식)
 ///
 /// channelId별로 독립적인 Notifier 인스턴스 생성
 final postListNotifierProvider = StateNotifierProvider.autoDispose
@@ -87,3 +200,12 @@ final postListNotifierProvider = StateNotifierProvider.autoDispose
   final useCase = ref.watch(getPostsUseCaseProvider);
   return PostListNotifier(useCase);
 });
+
+/// PostListAsyncNotifier Provider (신 방식)
+///
+/// channelId별로 독립적인 AsyncNotifier 인스턴스 생성
+/// build() 메서드가 자동으로 데이터 로딩
+final postListAsyncNotifierProvider = AsyncNotifierProvider.autoDispose
+    .family<PostListAsyncNotifier, PostListState, String>(
+  PostListAsyncNotifier.new,
+);

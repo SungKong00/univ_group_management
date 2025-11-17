@@ -1050,11 +1050,15 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         loadChannelPermissions(channelId),
         loadReadPosition(channelIdInt),
       ]);
+
+      // ✅ Ensure state updates are reflected before proceeding
+      // This prevents race condition where widget rebuilds before state is updated
+      await Future.delayed(Duration.zero);
     } else {
       await loadChannelPermissions(channelId);
     }
 
-    // 3. NOW update state (after data is loaded)
+    // 3. NOW update state (after data is loaded and reflected)
     // Find channel name from channels list
     final selectedChannel = state.channels.firstWhere(
       (channel) => channel.id.toString() == channelId,

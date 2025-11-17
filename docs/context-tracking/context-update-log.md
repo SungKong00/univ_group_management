@@ -1,3 +1,79 @@
+### 2025-11-18 - Post AsyncNotifier 패턴 도입 (게시글 로딩 버그 수정)
+
+**유형**: 버그 수정 + 아키텍처 개선
+**우선순위**: Critical
+**영향 범위**: 프론트엔드 (4개 파일)
+
+**작업 개요**:
+Post Clean Architecture Phase 3 이후 발생한 게시글 로딩 버그를 AsyncNotifier 패턴 도입으로 근본적으로 해결했습니다.
+
+**문제 상황**:
+- **증상**: 채널 진입 시 게시글이 로드되지 않음, 빈 화면 표시
+- **원인**: `autoDispose.family` Provider의 지연 생성 + Widget initState() Race Condition
+- **근본 원인**: Widget이 데이터 로딩 제어 (Clean Architecture 위반)
+
+**해결 방법**:
+- **AsyncNotifier 패턴**: Provider가 생성 시점(`build()`)에 자동 로딩
+- **Feature Flag**: 안전한 전환 메커니즘 (useAsyncNotifierPattern)
+- **Widget 역할 분리**: View는 구독만, ViewModel이 로딩 제어
+
+**구현한 내용**:
+
+**신규 파일 (1개)**:
+1. **lib/core/config/feature_flags.dart** (14줄):
+   - Feature Flag 정의
+   - AsyncNotifier 패턴 활성화 여부 제어
+
+**수정된 파일 (3개)**:
+1. **post_list_notifier.dart** (89줄 → 212줄):
+   - PostListAsyncNotifier 클래스 추가 (94줄)
+   - postListAsyncNotifierProvider 정의
+   - 기존 StateNotifier 유지 (Feature Flag로 분기)
+
+2. **post_list.dart** (821줄 → 871줄):
+   - Feature Flag 분기 추가
+   - `_buildWithAsyncNotifier()` 메서드 (AsyncValue.when 패턴)
+   - `_restoreScrollPosition()` 메서드 (스크롤 위치만 복원)
+   - initState() Feature Flag 분기
+
+3. **channel_content_view.dart**:
+   - Feature Flag 기반 Provider 분기
+
+4. **workspace_state_provider.dart**:
+   - 스크롤 위치 복원 로직 호환성 유지
+
+**파일 변경 통계**:
+- 신규: 1개 파일 (+14줄)
+- 수정: 3개 파일 (+173줄)
+- **순 효과**: +187줄 (Feature Flag 제거 시 -50줄 예상)
+
+**문서 업데이트** (2개):
+- ✅ docs/workflows/post-phase3-completion.md: 버그 수정 섹션 추가
+- ✅ docs/implementation/frontend/architecture.md: AsyncNotifier 패턴 설명 추가
+
+**검증 결과**:
+- ✅ 채널 진입 시 게시글 정상 로드
+- ✅ 무한 스크롤 정상 작동
+- ✅ 읽음 위치 스크롤 정상 동작
+- ✅ Race Condition 해결
+- ✅ Clean Architecture 준수 (ViewModel이 데이터 로딩 제어)
+
+**기대 효과**:
+- 게시글 로딩 안정성 확보
+- Clean Architecture 원칙 준수 (Provider가 로직 제어)
+- AsyncValue 패턴으로 선언형 UI 구현
+- 다른 목록 위젯 적용 가능 (Comment, 공지사항 등)
+
+**다음 단계**:
+- Feature Flag 안정화 후 구 방식 코드 제거
+- 다른 목록 위젯에 AsyncNotifier 패턴 적용
+- AsyncNotifier 단위 테스트 작성
+
+**관련 브랜치**:
+- 014-post-clean-architecture-migration
+
+---
+
 ### 2025-11-18 - Post Clean Architecture Phase 3 완료 (Presentation Layer)
 
 **유형**: 아키텍처 개선

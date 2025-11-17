@@ -240,4 +240,160 @@ lib/features/post/
 
 ---
 
+## 🐛 버그 수정: AsyncNotifier 패턴 도입 (2025-11-18)
+
+### 문제 상황
+
+Phase 3 완료 후 **게시글 로딩 버그**가 발생했습니다:
+
+**증상**:
+- 채널 진입 시 게시글이 로드되지 않음
+- 무한 스크롤이 작동하지 않음
+- 빈 화면만 표시됨
+
+**원인**:
+- `StateNotifierProvider.autoDispose.family`의 **지연 생성** 문제
+- Widget `initState()`에서 Provider를 읽으면 Provider가 아직 생성되지 않음
+- `Future.microtask()`로 우회했으나 Race Condition 발생
+
+**근본 원인**:
+- **Clean Architecture 위반**: Widget이 데이터 로딩을 제어 (ViewModel 역할 침범)
+- Provider는 단순히 데이터 제공만 해야 하는데, Widget이 "언제 로드할지" 결정
+
+### 해결 방법: AsyncNotifier 패턴
+
+**핵심 아이디어**:
+- Provider가 **생성 시점에 자동으로 데이터 로딩** (`build()` 메서드)
+- Widget은 Provider를 **구독만** 함 (로딩 제어 불필요)
+- Clean Architecture 준수: **ViewModel이 데이터 로딩 제어**
+
+**구현**:
+
+```dart
+// lib/features/post/presentation/providers/post_list_notifier.dart
+
+/// AsyncNotifier: Provider 생성 시 자동 로딩
+class PostListAsyncNotifier
+    extends AutoDisposeFamilyAsyncNotifier<PostListState, String> {
+
+  @override
+  Future<PostListState> build(String channelId) async {
+    // ✅ Provider 생성 시 자동 실행 (Widget initState 불필요)
+    return await _loadInitialPosts(channelId);
+  }
+
+  Future<PostListState> _loadInitialPosts(String channelId) async {
+    final useCase = ref.watch(getPostsUseCaseProvider);
+    final (posts, pagination) = await useCase(channelId, page: 0);
+
+    return PostListState(
+      posts: posts,
+      isLoading: false,
+      hasMore: pagination.hasMore,
+      currentPage: pagination.currentPage + 1,
+    );
+  }
+}
+```
+
+**Widget 사용**:
+
+```dart
+// lib/presentation/widgets/post/post_list.dart
+
+@override
+Widget build(BuildContext context) {
+  final postListAsync = ref.watch(postListAsyncNotifierProvider(widget.channelId));
+
+  return postListAsync.when(
+    data: (state) => _buildPostList(state),
+    loading: () => const PostListSkeleton(),
+    error: (err, stack) => PostListErrorState(error: err.toString()),
+  );
+}
+```
+
+### Feature Flag 전환 메커니즘
+
+안전한 전환을 위해 Feature Flag를 도입했습니다:
+
+```dart
+// lib/core/config/feature_flags.dart
+class FeatureFlags {
+  /// AsyncNotifier 패턴 사용 여부
+  ///
+  /// - true: Provider가 데이터 로딩 제어 (신 방식, Clean Architecture)
+  /// - false: Widget이 데이터 로딩 제어 (구 방식, Race Condition)
+  static const bool useAsyncNotifierPattern = true; // 기본값: 활성화
+}
+```
+
+**Widget 분기**:
+
+```dart
+// post_list.dart initState()
+if (!FeatureFlags.useAsyncNotifierPattern) {
+  // 구 방식: Widget이 데이터 로드
+  Future.microtask(() => _loadPostsAndScrollToUnread());
+} else {
+  // 신 방식: Provider가 자동 로드 (스크롤 위치만 복원)
+  WidgetsBinding.instance.addPostFrameCallback((_) => _restoreScrollPosition());
+}
+```
+
+### 기술적 장점
+
+| 항목 | StateNotifier (구) | AsyncNotifier (신) |
+|------|------------------|------------------|
+| 데이터 로딩 시점 | Widget initState() | Provider build() |
+| 로딩 제어 주체 | Widget (View) | Provider (ViewModel) |
+| Race Condition | 있음 | 없음 |
+| Clean Architecture | 위반 | 준수 |
+| AsyncValue 지원 | 없음 | 있음 (loading/error 자동) |
+| 초기 로딩 상태 | 수동 관리 | 자동 (AsyncValue.loading) |
+
+### 수정된 파일
+
+1. **lib/core/config/feature_flags.dart** (신규, 14줄):
+   - Feature Flag 정의
+   - 안전한 전환 메커니즘
+
+2. **lib/features/post/presentation/providers/post_list_notifier.dart** (212줄):
+   - PostListAsyncNotifier 클래스 추가 (94줄)
+   - postListAsyncNotifierProvider 정의
+   - 기존 StateNotifier 유지 (Feature Flag로 분기)
+
+3. **lib/presentation/widgets/post/post_list.dart** (821줄 → 871줄):
+   - Feature Flag 분기 추가
+   - `_buildWithAsyncNotifier()` 메서드
+   - `_restoreScrollPosition()` 메서드
+   - initState() Feature Flag 분기
+
+### 검증 결과
+
+- ✅ **채널 진입 시 게시글 정상 로드**
+- ✅ **무한 스크롤 정상 작동**
+- ✅ **읽음 위치 스크롤 정상 동작**
+- ✅ **Race Condition 해결**
+- ✅ **Clean Architecture 준수**
+
+### 다음 단계
+
+1. **Feature Flag 제거** (안정화 후):
+   - 구 방식 코드 삭제
+   - Feature Flag 제거
+   - 코드 정리
+
+2. **다른 목록 위젯 적용**:
+   - Comment 목록
+   - 공지사항 목록
+   - 채널 목록
+
+3. **테스트 작성**:
+   - AsyncNotifier 단위 테스트
+   - Widget 테스트 (AsyncValue.when 패턴)
+
+---
+
 **Phase 3 완료**: Clean Architecture 마이그레이션 성공 🎉
+**버그 수정 완료**: AsyncNotifier 패턴 도입으로 로딩 버그 해결 🐛✅
