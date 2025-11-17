@@ -7,12 +7,12 @@ import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../../core/models/date_marker.dart';
-import '../../../core/models/post_models.dart';
 import '../../../core/models/post_list_item.dart';
-import '../../../core/services/post_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/read_position_helper.dart';
+import '../../../features/post/domain/entities/post.dart';
+import '../../../features/post/presentation/providers/post_list_notifier.dart';
 import '../common/app_empty_state.dart';
 import 'post_item.dart';
 import 'date_divider.dart';
@@ -84,17 +84,12 @@ class PostList extends ConsumerStatefulWidget {
 }
 
 class _PostListState extends ConsumerState<PostList> {
-  final PostService _postService = PostService();
   late final AutoScrollController _scrollController;
 
   // Phase 2: GlobalKey 제거 (더 이상 RenderBox 측정 불필요)
+  // Phase 3: PostListNotifier를 통해 데이터 관리
 
-  List<Post> _posts = [];
   List<PostListItem> _flatItems = []; // Phase 2: Flat list - 타입 안전성 개선
-  bool _isLoading = false;
-  bool _hasMore = true;
-  int _currentPage = 0;
-  String? _errorMessage;
 
   // Phase 2: 초기 정렬 로직 단순화
   bool _isInitialLoading = true;
@@ -145,11 +140,7 @@ class _PostListState extends ConsumerState<PostList> {
 
   void _resetAndLoad() {
     setState(() {
-      _posts = [];
       _flatItems = [];
-      _currentPage = 0;
-      _hasMore = true;
-      _errorMessage = null;
       _isInitialLoading = true;
       _visiblePostIds.clear();
       _firstUnreadPostIndex = null;
@@ -402,38 +393,28 @@ class _PostListState extends ConsumerState<PostList> {
   }
 
   Future<void> _loadPosts() async {
-    if (_isLoading || !_hasMore) return;
+    final notifier = ref.read(postListNotifierProvider(widget.channelId).notifier);
+    final state = ref.read(postListNotifierProvider(widget.channelId));
+
+    if (state.isLoading || !state.hasMore) return;
 
     double? savedScrollOffset;
     double? savedMaxScrollExtent;
-    if (_currentPage > 0 && _scrollController.hasClients) {
+    if (state.currentPage > 0 && _scrollController.hasClients) {
       savedScrollOffset = _scrollController.offset;
       savedMaxScrollExtent = _scrollController.position.maxScrollExtent;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
     try {
-      final response = await _postService.fetchPosts(
-        widget.channelId,
-        page: _currentPage,
-      );
+      await notifier.loadPosts(widget.channelId);
 
-      response.posts.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-      final bool isFirstPageLoad = _currentPage == 0;
+      final newState = ref.read(postListNotifierProvider(widget.channelId));
+      final bool isFirstPageLoad = newState.currentPage == 1;
 
       if (!mounted) return;
       setState(() {
-        _posts.insertAll(0, response.posts);
         // Phase 2: Flat list 생성
-        _flatItems = _buildFlatList(_posts);
-        _currentPage++;
-        _hasMore = response.hasMore;
-        _isLoading = false;
+        _flatItems = _buildFlatList(newState.posts);
 
         if (isFirstPageLoad) {
           _isInitialLoading = true;
@@ -460,15 +441,12 @@ class _PostListState extends ConsumerState<PostList> {
       final errorMessage = e.toString().replaceAll('Exception: ', '');
 
       setState(() {
-        _isLoading = false;
-        _errorMessage = errorMessage;
         _isInitialLoading = false;
       });
 
       // 상세한 에러 로깅
       debugPrint('[PostList] 게시글 로드 실패');
       debugPrint('  채널 ID: ${widget.channelId}');
-      debugPrint('  페이지: $_currentPage');
       debugPrint('  에러 메시지: $errorMessage');
       debugPrint('  원본 에러: $e');
       if (e is! FormatException && e is! TypeError) {
@@ -656,15 +634,17 @@ class _PostListState extends ConsumerState<PostList> {
 
   @override
   Widget build(BuildContext context) {
-    if (_posts.isEmpty && _isLoading) {
+    final postListState = ref.watch(postListNotifierProvider(widget.channelId));
+
+    if (postListState.posts.isEmpty && postListState.isLoading) {
       return const PostListSkeleton();
     }
 
-    if (_posts.isEmpty && _errorMessage != null) {
-      return _buildErrorState();
+    if (postListState.posts.isEmpty && postListState.errorMessage != null) {
+      return _buildErrorState(postListState.errorMessage!);
     }
 
-    if (_posts.isEmpty) {
+    if (postListState.posts.isEmpty) {
       return _buildEmptyState();
     }
 
@@ -674,7 +654,7 @@ class _PostListState extends ConsumerState<PostList> {
         return CustomScrollView(
           controller: _scrollController,
           slivers: [
-            if (_isLoading)
+            if (postListState.isLoading)
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
@@ -775,7 +755,7 @@ class _PostListState extends ConsumerState<PostList> {
     return AppEmptyState.noPosts();
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(String errorMessage) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -792,7 +772,7 @@ class _PostListState extends ConsumerState<PostList> {
             ),
             const SizedBox(height: 8),
             Text(
-              _errorMessage ?? '알 수 없는 오류가 발생했습니다',
+              errorMessage,
               style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
               textAlign: TextAlign.center,
             ),

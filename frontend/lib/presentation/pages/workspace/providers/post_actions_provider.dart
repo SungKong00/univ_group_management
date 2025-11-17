@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/models/post_models.dart';
-import 'post_preview_notifier.dart';
+import '../../../../features/post/domain/entities/post.dart';
+import '../../../../features/post/presentation/providers/post_usecase_providers.dart';
 
 /// 게시글 작성 요청 파라미터
 class CreatePostParams {
@@ -26,8 +26,8 @@ class UpdatePostParams {
 /// ```
 final createPostProvider = FutureProvider.autoDispose
     .family<Post, CreatePostParams>((ref, params) async {
-      final postService = ref.read(postServiceProvider);
-      return await postService.createPost(params.channelId, params.content);
+      final useCase = ref.read(createPostUseCaseProvider);
+      return await useCase(params.channelId, params.content);
     });
 
 /// 게시글 수정 Provider
@@ -38,8 +38,8 @@ final createPostProvider = FutureProvider.autoDispose
 /// ```
 final updatePostProvider = FutureProvider.autoDispose
     .family<Post, UpdatePostParams>((ref, params) async {
-      final postService = ref.read(postServiceProvider);
-      return await postService.updatePost(params.postId, params.content);
+      final useCase = ref.read(updatePostUseCaseProvider);
+      return await useCase(params.postId, params.content);
     });
 
 /// 게시글 삭제 Provider
@@ -52,8 +52,8 @@ final deletePostProvider = FutureProvider.autoDispose.family<void, int>((
   ref,
   postId,
 ) async {
-  final postService = ref.read(postServiceProvider);
-  await postService.deletePost(postId);
+  final useCase = ref.read(deletePostUseCaseProvider);
+  await useCase(postId);
 });
 
 /// 게시글 단일 조회 Provider
@@ -71,6 +71,6 @@ final fetchSinglePostProvider = FutureProvider.autoDispose.family<Post, int>((
   ref,
   postId,
 ) async {
-  final postService = ref.read(postServiceProvider);
-  return await postService.getPost(postId);
+  final useCase = ref.read(getPostUseCaseProvider);
+  return await useCase(postId);
 });

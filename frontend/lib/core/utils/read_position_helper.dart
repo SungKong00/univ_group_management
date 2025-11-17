@@ -1,4 +1,4 @@
-import '../models/post_models.dart';
+import '../../features/post/domain/entities/post.dart';
 
 /// Helper utilities for managing read positions in channels
 class ReadPositionHelper {

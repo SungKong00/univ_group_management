@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/models/post_models.dart';
+import '../../../features/post/domain/entities/post.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/snack_bar_helper.dart';
@@ -63,7 +63,7 @@ class _PostItemState extends ConsumerState<PostItem> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth <= 600;
     final currentUser = ref.watch(currentUserProvider).valueOrNull;
-    final isAuthor = currentUser?.id == widget.post.authorId;
+    final isAuthor = currentUser?.id == widget.post.author.id;
 
     return InkWell(
       onTap: widget.onTapPost,
@@ -103,20 +103,20 @@ class _PostItemState extends ConsumerState<PostItem> {
 
   Widget _buildProfileImage() {
     final hasImage =
-        widget.post.authorProfileUrl != null &&
-        widget.post.authorProfileUrl!.isNotEmpty;
+        widget.post.author.profileImageUrl != null &&
+        widget.post.author.profileImageUrl!.isNotEmpty;
 
     if (hasImage) {
       return CircleAvatar(
         radius: 20,
-        backgroundImage: NetworkImage(widget.post.authorProfileUrl!),
+        backgroundImage: NetworkImage(widget.post.author.profileImageUrl!),
         backgroundColor: AppColors.neutral200,
       );
     }
 
     // 기본 아바타 (이니셜)
-    final initial = widget.post.authorName.isNotEmpty
-        ? widget.post.authorName[0].toUpperCase()
+    final initial = widget.post.author.name.isNotEmpty
+        ? widget.post.author.name[0].toUpperCase()
         : '?';
 
     return CircleAvatar(
@@ -142,7 +142,7 @@ class _PostItemState extends ConsumerState<PostItem> {
     return Row(
       children: [
         Text(
-          widget.post.authorName,
+          widget.post.author.name,
           style: AppTheme.titleMedium.copyWith(
             color: AppColors.neutral900,
             fontWeight: FontWeight.w600,

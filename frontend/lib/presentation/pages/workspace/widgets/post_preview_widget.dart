@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/models/post_models.dart';
+import '../../../../features/post/domain/entities/post.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/date_formatter.dart';
@@ -137,7 +137,7 @@ class PostPreviewWidget extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                post.authorName,
+                post.author.name,
                 style: AppTheme.titleMedium.copyWith(
                   color: AppColors.neutral900,
                   fontWeight: FontWeight.w600,
@@ -157,19 +157,19 @@ class PostPreviewWidget extends ConsumerWidget {
 
   Widget _buildPostProfileImage(Post post) {
     final hasImage =
-        post.authorProfileUrl != null && post.authorProfileUrl!.isNotEmpty;
+        post.author.profileImageUrl != null && post.author.profileImageUrl!.isNotEmpty;
 
     if (hasImage) {
       return CircleAvatar(
         radius: 20,
-        backgroundImage: NetworkImage(post.authorProfileUrl!),
+        backgroundImage: NetworkImage(post.author.profileImageUrl!),
         backgroundColor: AppColors.neutral200,
       );
     }
 
     // 기본 아바타 (이니셜)
-    final initial = post.authorName.isNotEmpty
-        ? post.authorName[0].toUpperCase()
+    final initial = post.author.name.isNotEmpty
+        ? post.author.name[0].toUpperCase()
         : '?';
 
     return CircleAvatar(

@@ -7,7 +7,7 @@ import '../../../core/models/channel_models.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../post/post_list.dart';
 import '../post/post_composer.dart';
-import '../../../core/services/post_service.dart';
+import '../../pages/workspace/providers/post_actions_provider.dart';
 
 /// 모바일 게시글 목록 뷰 (Step 2: 채널 선택 후 게시글 목록)
 class MobileChannelPostsView extends ConsumerStatefulWidget {
@@ -31,7 +31,6 @@ class _MobileChannelPostsViewState
     extends ConsumerState<MobileChannelPostsView> {
   int _postListKey = 0;
   int _composerKey = 0;
-  final PostService _postService = PostService();
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +79,11 @@ class _MobileChannelPostsViewState
     }
 
     try {
-      final newPost = await _postService.createPost(widget.channelId, content);
+      final params = CreatePostParams(
+        channelId: widget.channelId,
+        content: content,
+      );
+      final newPost = await ref.read(createPostProvider(params).future);
 
       // ✅ 새 글 작성 후 읽음 위치 자동 업데이트 (자신의 글은 읽지 않은 글 표시 안 함)
       final channelIdInt = int.tryParse(widget.channelId);
