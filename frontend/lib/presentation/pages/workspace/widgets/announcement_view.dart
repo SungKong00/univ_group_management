@@ -16,51 +16,37 @@ class AnnouncementView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 900;
-
-          return Container(
-            color: AppColors.lightBackground,
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(AppSpacing.md),
-              child: isWide
-                  ? _buildWideLayout(context)
-                  : _buildNarrowLayout(context),
+      body: Column(
+        children: [
+          // 고정 헤더 (흰색 배경, 그림자)
+          Container(
+            color: Colors.white,
+            padding: EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          );
-        },
+            child: _buildHeader(context),
+          ),
+
+          // 스크롤 가능한 컨텐츠
+          Expanded(
+            child: Container(
+              color: AppColors.lightBackground,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(AppSpacing.md),
+                child: _buildMainContent(context),
+              ),
+            ),
+          ),
+        ],
       ),
-    );
-  }
-
-  /// Wide Layout (Desktop): 2-column layout
-  Widget _buildWideLayout(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        _buildHeader(context),
-        SizedBox(height: AppSpacing.lg),
-
-        // Main content
-        _buildMainContent(context),
-      ],
-    );
-  }
-
-  /// Narrow Layout (Mobile/Tablet): Single column layout
-  Widget _buildNarrowLayout(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        _buildHeader(context),
-        SizedBox(height: AppSpacing.lg),
-
-        // Main content
-        _buildMainContent(context),
-      ],
     );
   }
 
