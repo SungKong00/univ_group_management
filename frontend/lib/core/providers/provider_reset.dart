@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../presentation/providers/auth_provider.dart';
 import '../../presentation/providers/calendar_events_provider.dart';
 import '../../presentation/providers/calendar_view_provider.dart';
 import '../../presentation/providers/focused_date_provider.dart';

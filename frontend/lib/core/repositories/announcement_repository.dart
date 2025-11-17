@@ -54,10 +54,7 @@ class ApiAnnouncementRepository implements AnnouncementRepository {
     int size = 20,
   }) async {
     try {
-      final queryParameters = <String, dynamic>{
-        'page': page,
-        'size': size,
-      };
+      final queryParameters = <String, dynamic>{'page': page, 'size': size};
 
       if (groupId != null) {
         queryParameters['groupId'] = groupId;
@@ -87,14 +84,19 @@ class ApiAnnouncementRepository implements AnnouncementRepository {
             final content = json['content'];
             if (content is List) {
               return content
-                  .map((item) => Announcement.fromJson(item as Map<String, dynamic>))
+                  .map(
+                    (item) =>
+                        Announcement.fromJson(item as Map<String, dynamic>),
+                  )
                   .toList();
             }
           }
           // 일반 리스트 구조 처리
           if (json is List) {
             return json
-                .map((item) => Announcement.fromJson(item as Map<String, dynamic>))
+                .map(
+                  (item) => Announcement.fromJson(item as Map<String, dynamic>),
+                )
                 .toList();
           }
           return <Announcement>[];
@@ -152,13 +154,18 @@ class ApiAnnouncementRepository implements AnnouncementRepository {
             final content = json['content'];
             if (content is List) {
               return content
-                  .map((item) => Announcement.fromJson(item as Map<String, dynamic>))
+                  .map(
+                    (item) =>
+                        Announcement.fromJson(item as Map<String, dynamic>),
+                  )
                   .toList();
             }
           }
           if (json is List) {
             return json
-                .map((item) => Announcement.fromJson(item as Map<String, dynamic>))
+                .map(
+                  (item) => Announcement.fromJson(item as Map<String, dynamic>),
+                )
                 .toList();
           }
           return <Announcement>[];
@@ -192,11 +199,7 @@ class ApiAnnouncementRepository implements AnnouncementRepository {
     try {
       final response = await _dioClient.post<Map<String, dynamic>>(
         '/channels/$channelId/posts',
-        data: {
-          'title': title,
-          'content': content,
-          'isPinned': isPinned,
-        },
+        data: {'title': title, 'content': content, 'isPinned': isPinned},
       );
 
       if (response.data != null) {
@@ -294,17 +297,11 @@ class ApiAnnouncementRepository implements AnnouncementRepository {
 
   @override
   Future<Announcement> pinAnnouncement(int announcementId) async {
-    return updateAnnouncement(
-      announcementId: announcementId,
-      isPinned: true,
-    );
+    return updateAnnouncement(announcementId: announcementId, isPinned: true);
   }
 
   @override
   Future<Announcement> unpinAnnouncement(int announcementId) async {
-    return updateAnnouncement(
-      announcementId: announcementId,
-      isPinned: false,
-    );
+    return updateAnnouncement(announcementId: announcementId, isPinned: false);
   }
 }

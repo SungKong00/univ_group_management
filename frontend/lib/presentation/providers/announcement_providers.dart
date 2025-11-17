@@ -10,8 +10,9 @@ final announcementRepositoryProvider = Provider<AnnouncementRepository>((ref) {
 /// Announcement Filter State Provider
 ///
 /// 공지사항 필터링 상태 관리
-final announcementFilterProvider =
-    StateProvider<AnnouncementFilter>((ref) => const AnnouncementFilter());
+final announcementFilterProvider = StateProvider<AnnouncementFilter>(
+  (ref) => const AnnouncementFilter(),
+);
 
 /// Announcement Search Query Provider
 ///
@@ -22,41 +23,45 @@ final announcementSearchQueryProvider = StateProvider<String>((ref) => '');
 ///
 /// 공지사항 목록을 가져오는 Provider
 /// groupId와 filter에 따라 자동으로 캐싱됩니다.
-final announcementListProvider = FutureProvider.family.autoDispose<
-    List<Announcement>,
-    ({int? groupId, AnnouncementFilter? filter})>((ref, params) async {
-  final repository = ref.watch(announcementRepositoryProvider);
+final announcementListProvider = FutureProvider.family
+    .autoDispose<
+      List<Announcement>,
+      ({int? groupId, AnnouncementFilter? filter})
+    >((ref, params) async {
+      final repository = ref.watch(announcementRepositoryProvider);
 
-  return await repository.getAnnouncements(
-    groupId: params.groupId,
-    filter: params.filter,
-  );
-});
+      return await repository.getAnnouncements(
+        groupId: params.groupId,
+        filter: params.filter,
+      );
+    });
 
 /// Search Announcements Provider
 ///
 /// 검색어로 공지사항을 검색하는 Provider
-final searchAnnouncementsProvider = FutureProvider.family.autoDispose<
-    List<Announcement>,
-    ({String query, int? groupId})>((ref, params) async {
-  if (params.query.trim().isEmpty) {
-    return [];
-  }
+final searchAnnouncementsProvider = FutureProvider.family
+    .autoDispose<List<Announcement>, ({String query, int? groupId})>((
+      ref,
+      params,
+    ) async {
+      if (params.query.trim().isEmpty) {
+        return [];
+      }
 
-  final repository = ref.watch(announcementRepositoryProvider);
+      final repository = ref.watch(announcementRepositoryProvider);
 
-  return await repository.searchAnnouncements(
-    query: params.query,
-    groupId: params.groupId,
-  );
-});
+      return await repository.searchAnnouncements(
+        query: params.query,
+        groupId: params.groupId,
+      );
+    });
 
 /// Announcement Management Notifier
 ///
 /// 공지사항 CRUD 작업을 처리하는 Notifier
 class AnnouncementManagementNotifier extends StateNotifier<AsyncValue<void>> {
   AnnouncementManagementNotifier(this.repository)
-      : super(const AsyncValue.data(null));
+    : super(const AsyncValue.data(null));
 
   final AnnouncementRepository repository;
 
@@ -154,8 +159,9 @@ class AnnouncementManagementNotifier extends StateNotifier<AsyncValue<void>> {
 
 /// Announcement Management Provider
 final announcementManagementProvider =
-    StateNotifierProvider<AnnouncementManagementNotifier, AsyncValue<void>>(
-        (ref) {
-  final repository = ref.watch(announcementRepositoryProvider);
-  return AnnouncementManagementNotifier(repository);
-});
+    StateNotifierProvider<AnnouncementManagementNotifier, AsyncValue<void>>((
+      ref,
+    ) {
+      final repository = ref.watch(announcementRepositoryProvider);
+      return AnnouncementManagementNotifier(repository);
+    });

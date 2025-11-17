@@ -170,7 +170,8 @@ void main() {
             home: (_) => fail('Expected memberManagement route'),
             channel: (_, __) => fail('Expected memberManagement route'),
             calendar: (_) => fail('Expected memberManagement route'),
-            announcementManagement: (_) => fail('Expected memberManagement route'),
+            announcementManagement: (_) =>
+                fail('Expected memberManagement route'),
             admin: (_) => fail('Expected memberManagement route'),
             memberManagement: (groupId) => expect(groupId, 2),
           );

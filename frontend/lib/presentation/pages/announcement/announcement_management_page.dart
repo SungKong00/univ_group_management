@@ -13,10 +13,7 @@ import '../../widgets/common/app_empty_state.dart';
 class AnnouncementManagementPage extends ConsumerStatefulWidget {
   final int groupId;
 
-  const AnnouncementManagementPage({
-    super.key,
-    required this.groupId,
-  });
+  const AnnouncementManagementPage({super.key, required this.groupId});
 
   @override
   ConsumerState<AnnouncementManagementPage> createState() =>
@@ -96,9 +93,7 @@ class _AnnouncementManagementPageState
         SizedBox(height: AppSpacing.xxs),
         Text(
           '그룹의 공지사항을 작성하고 관리하세요',
-          style: AppTheme.bodyMedium.copyWith(
-            color: AppColors.neutral600,
-          ),
+          style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
         ),
       ],
     );
@@ -109,9 +104,9 @@ class _AnnouncementManagementPageState
     return ElevatedButton.icon(
       onPressed: () {
         // TODO: 공지사항 작성 다이얼로그 표시
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('공지 작성 기능은 곧 추가될 예정입니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('공지 작성 기능은 곧 추가될 예정입니다')));
       },
       icon: const Icon(Icons.add),
       label: const Text('공지 작성'),
@@ -133,9 +128,7 @@ class _AnnouncementManagementPageState
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: AppSpacing.lg * 2),
-        child: AppEmptyState.noData(
-          message: '아직 작성된 공지사항이 없습니다',
-        ),
+        child: AppEmptyState.noData(message: '아직 작성된 공지사항이 없습니다'),
       ),
     );
   }

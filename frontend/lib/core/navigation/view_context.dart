@@ -5,7 +5,14 @@ part 'view_context.freezed.dart';
 part 'view_context.g.dart';
 
 /// Types of views available in the workspace
-enum ViewType { home, channel, calendar, announcementManagement, admin, memberManagement }
+enum ViewType {
+  home,
+  channel,
+  calendar,
+  announcementManagement,
+  admin,
+  memberManagement,
+}
 
 /// Captures the type and metadata of the current view for context-aware switching
 @freezed

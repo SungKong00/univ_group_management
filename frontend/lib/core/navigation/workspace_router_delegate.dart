@@ -425,7 +425,9 @@ class WorkspaceRouterDelegate extends RouterDelegate<WorkspaceRoute>
         title: Text('Announcement Management - Group $groupId'),
         automaticallyImplyLeading: false,
       ),
-      body: Center(child: Text('Announcement Management View for Group $groupId')),
+      body: Center(
+        child: Text('Announcement Management View for Group $groupId'),
+      ),
     );
 
     if (isTestMode) return content;
