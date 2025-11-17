@@ -65,34 +65,30 @@ class AnnouncementView extends ConsumerWidget {
   }
 
   /// 헤더 영역
+  /// 900px 브레이크포인트를 기준으로 제목과 버튼 배치 결정
+  /// - narrow (< 900px): Column으로 세로 배치
+  /// - wide (≥ 900px): Row로 가로 배치
   Widget _buildHeader(BuildContext context, {required bool isWide}) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 600px를 기준으로 레이아웃 결정 (GroupHomeView와 동일)
-        final isNarrow = constraints.maxWidth < 600;
-
-        if (isNarrow) {
-          // 모바일: 세로 배치
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderTitle(),
-              SizedBox(height: AppSpacing.sm),
-              _buildHeaderActions(context),
-            ],
-          );
-        } else {
-          // 데스크톱: 가로 배치
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _buildHeaderTitle()),
-              _buildHeaderActions(context),
-            ],
-          );
-        }
-      },
-    );
+    if (!isWide) {
+      // 모바일/태블릿: 세로 배치
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeaderTitle(),
+          SizedBox(height: AppSpacing.sm),
+          _buildHeaderActions(context),
+        ],
+      );
+    } else {
+      // 데스크톱: 가로 배치
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: _buildHeaderTitle()),
+          _buildHeaderActions(context),
+        ],
+      );
+    }
   }
 
   /// 헤더 제목

@@ -241,10 +241,7 @@ class GroupHomeView extends ConsumerWidget {
               final selectedGroupId = workspaceState.selectedGroupId;
 
               if (selectedGroupId == null) {
-                AppSnackBar.info(
-                  context,
-                  '그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.',
-                );
+                AppSnackBar.info(context, '그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
                 return;
               }
 
@@ -253,10 +250,7 @@ class GroupHomeView extends ConsumerWidget {
               final myGroups = myGroupsAsync.value;
 
               if (myGroups == null) {
-                AppSnackBar.info(
-                  context,
-                  '그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.',
-                );
+                AppSnackBar.info(context, '그룹 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
                 return;
               }
 
@@ -286,9 +280,7 @@ class GroupHomeView extends ConsumerWidget {
             padding: EdgeInsets.only(left: AppSpacing.xxs),
             child: Text(
               '이 그룹의 하위 조직을 만들어 보세요',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodySmall.copyWith(color: AppColors.neutral600),
             ),
           ),
         ],
