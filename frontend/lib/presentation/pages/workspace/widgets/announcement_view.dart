@@ -40,7 +40,7 @@ class AnnouncementView extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
-        _buildHeader(context, isWide: true),
+        _buildHeader(context),
         SizedBox(height: AppSpacing.lg),
 
         // Main content
@@ -55,7 +55,7 @@ class AnnouncementView extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
-        _buildHeader(context, isWide: false),
+        _buildHeader(context),
         SizedBox(height: AppSpacing.lg),
 
         // Main content
@@ -65,30 +65,18 @@ class AnnouncementView extends ConsumerWidget {
   }
 
   /// 헤더 영역
-  /// 900px 브레이크포인트를 기준으로 제목과 버튼 배치 결정
-  /// - narrow (< 900px): Column으로 세로 배치
-  /// - wide (≥ 900px): Row로 가로 배치
-  Widget _buildHeader(BuildContext context, {required bool isWide}) {
-    if (!isWide) {
-      // 모바일/태블릿: 세로 배치
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeaderTitle(),
-          SizedBox(height: AppSpacing.sm),
-          _buildHeaderActions(context),
-        ],
-      );
-    } else {
-      // 데스크톱: 가로 배치
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: _buildHeaderTitle()),
-          _buildHeaderActions(context),
-        ],
-      );
-    }
+  /// 제목과 버튼을 항상 가로로 배치
+  /// - 제목은 Expanded로 남은 공간을 차지
+  /// - 버튼은 고정 너비(110px)로 오른쪽에 배치
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: _buildHeaderTitle()),
+        SizedBox(width: AppSpacing.md),
+        _buildHeaderActions(context),
+      ],
+    );
   }
 
   /// 헤더 제목
