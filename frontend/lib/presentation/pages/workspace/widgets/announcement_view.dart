@@ -2,25 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme.dart';
-import '../../../widgets/common/app_empty_state.dart';
 
 /// 공지 관리 뷰
 ///
 /// 그룹의 공지사항을 관리하는 뷰 (그룹홈, 캘린더와 동일한 레벨)
-/// - 공지사항 목록 조회
+/// - 그룹별 공지사항 목록 조회 (ExpansionTile)
 /// - 공지사항 작성, 수정, 삭제
-/// - 공지사항 검색 및 필터링
 class AnnouncementView extends ConsumerWidget {
   const AnnouncementView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      backgroundColor: AppColors.lightBackground,
       body: Column(
         children: [
           // 고정 헤더 (흰색 배경, 그림자)
           Container(
-            color: Colors.white,
             padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -35,16 +33,8 @@ class AnnouncementView extends ConsumerWidget {
             child: _buildHeader(context),
           ),
 
-          // 스크롤 가능한 컨텐츠
-          Expanded(
-            child: Container(
-              color: AppColors.lightBackground,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.md),
-                child: _buildMainContent(context),
-              ),
-            ),
-          ),
+          // 그룹별 공지 목록 (전체 너비)
+          Expanded(child: Container(color: AppColors.lightBackground)),
         ],
       ),
     );
@@ -109,18 +99,6 @@ class AnnouncementView extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           backgroundColor: AppColors.brand,
         ),
-      ),
-    );
-  }
-
-  /// 메인 콘텐츠 영역
-  Widget _buildMainContent(BuildContext context) {
-    // TODO: 공지사항 목록 표시
-    // 현재는 빈 상태 표시
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.lg * 2),
-        child: AppEmptyState.noData(message: '아직 작성된 공지사항이 없습니다'),
       ),
     );
   }

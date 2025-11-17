@@ -39,7 +39,7 @@ class WorkspaceViewBuilder {
         );
 
       case WorkspaceView.announcementManagement:
-        return const AnnouncementView();
+        return AnnouncementView();
 
       case WorkspaceView.groupAdmin:
         return const GroupAdminPage();
