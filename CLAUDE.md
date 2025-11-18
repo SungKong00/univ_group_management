@@ -248,6 +248,19 @@ flutter run -d chrome --web-hostname localhost --web-port 5173  # .env가 이미
 
 ## 🚀 현재 구현 상태
 
+### 2025-11-18 Clean Architecture 마이그레이션 진행 중
+- ✅ **Comment Feature Phase 2 완료** (Domain/Data/Presentation Layer 전체 구현)
+  - 29/29 테스트 통과 (dart-flutter MCP)
+  - 3-Layer Architecture 완벽 준수
+  - AsyncNotifier 패턴 + Optimistic UI Updates
+  - Legacy 호환성 유지 (CommentConverter)
+- 🚧 **Channel Feature Phase 1.10-1.11 완료** (Widget 구현)
+  - 86/86 테스트 통과
+  - ChannelView + ChannelErrorState 위젯
+- 🚧 **Post Feature Phase 3 진행 중** (Presentation Layer)
+  - AsyncNotifier 패턴 적용
+  - Sticky Header 타이밍 이슈 해결
+
 ### 2025-11-10 Navigator 2.0 리팩터링 완료
 - ✅ **001-workspace-navigation-refactor 브랜치 develop 병합**
 - ✅ **98/98 테스트 통과** (Unit 30 + Widget/Integration 58 + Performance/A11y 10)

@@ -1,3 +1,100 @@
+### 2025-11-18 - Comment Clean Architecture Phase 2 완료 (Domain/Data/Presentation Layer)
+
+**유형**: 아키텍처 개선 (Clean Architecture 마이그레이션)
+**우선순위**: High
+**영향 범위**: 프론트엔드 - Comment Feature (전체 3-Layer 완전 구현)
+
+**작업 개요**:
+Comment 기능의 Clean Architecture 마이그레이션을 완료하여 Domain, Data, Presentation Layer 전체를 구현하고 테스트했습니다.
+
+**구현 계층**:
+
+**Domain Layer (5개 파일)**:
+1. **comment.dart** (42줄):
+   - Freezed + Equatable 불변 엔티티
+   - 핵심 비즈니스 데이터 구조
+
+2. **comment_repository.dart** (34줄):
+   - Repository 인터페이스 정의
+   - 3개 메서드: getComments, createComment, deleteComment
+
+3. **get_comments_usecase.dart** (26줄):
+   - 댓글 목록 조회 UseCase
+
+4. **create_comment_usecase.dart** (47줄):
+   - 댓글 생성 UseCase (content, parentCommentId)
+
+5. **delete_comment_usecase.dart** (25줄):
+   - 댓글 삭제 UseCase
+
+**Data Layer (3개 파일)**:
+1. **comment_dto.dart** (58줄):
+   - Freezed + JsonSerializable DTO
+   - toEntity() 변환 메서드
+
+2. **comment_remote_data_source.dart** (90줄):
+   - HTTP API 통신 구현
+   - 3개 엔드포인트: GET, POST, DELETE
+
+3. **comment_repository_impl.dart** (39줄):
+   - Domain Repository 구현
+   - DTO ↔ Entity 변환 처리
+
+**Presentation Layer (5개 파일)**:
+1. **comment_list_notifier.dart** (118줄):
+   - AsyncNotifier 패턴 구현
+   - Optimistic UI Updates (즉시 반영)
+   - 자동 로딩 + 에러 핸들링
+
+2. **comment_providers.dart** (55줄):
+   - UseCase/Notifier Provider 정의
+   - 의존성 주입 설정
+
+3. **comment_converter.dart** (33줄):
+   - Legacy 호환성 유틸리티
+   - Entity → Map 변환 (기존 코드 호환)
+
+4. **comment_input.dart** (99줄):
+   - 댓글 작성 UI 위젯
+   - 텍스트 입력 + 제출 버튼
+
+5. **comment_list_view.dart** (94줄):
+   - 댓글 목록 UI 위젯
+   - 재귀적 대댓글 표시
+
+**테스트 (6개 파일)**:
+1. **comment_test.dart** (Entity 테스트)
+2. **create_comment_usecase_test.dart** (생성 UseCase)
+3. **delete_comment_usecase_test.dart** (삭제 UseCase)
+4. **get_comments_usecase_test.dart** (조회 UseCase)
+5. **comment_input_test.dart** (입력 위젯)
+6. **comment_list_view_test.dart** (목록 위젯)
+
+**파일 변경 통계**:
+- 신규 프로덕션: 13개 파일 (+1,500줄 추정)
+- 신규 테스트: 6개 파일 (+1,257줄 추정)
+- **순 효과**: +2,757줄 (28개 파일, 코드 생성 포함)
+
+**테스트 결과**:
+- ✅ **29/29 테스트 통과** (dart-flutter MCP)
+  - Domain Layer: 1 Entity + 3 UseCases (10개 테스트)
+  - Presentation Layer: 2 Widgets (19개 테스트)
+- ✅ MCP 도구 사용: `mcp__dart-flutter__run_tests` (헌법 준수)
+- ✅ 정적 분석 통과: 0개 에러 (`mcp__dart-flutter__analyze_files`)
+- ✅ 100-line 원칙 준수: 최대 118줄 (comment_list_notifier.dart - 문서화 포함)
+
+**아키텍처 특징**:
+- AsyncNotifier 패턴: 자동 로딩, 에러 핸들링
+- Optimistic UI Updates: 댓글 즉시 반영
+- Legacy 호환성: CommentConverter (기존 코드 유지)
+- Freezed + Equatable: 불변성 + 성능 최적화
+
+**문서 업데이트**:
+- ✅ context-update-log.md: 2025-11-18 Comment Phase 2 완료 로그 추가
+- ⏳ CLAUDE.md: Clean Architecture 진행 상황 업데이트 필요
+
+---
+
 ### 2025-11-18 - Channel Clean Architecture Phase 1.10-1.11 완료 (Widget 구현)
 
 **유형**: 아키텍처 개선 (Clean Architecture 마이그레이션)
