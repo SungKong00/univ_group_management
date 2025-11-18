@@ -524,6 +524,9 @@ class _PostListState extends ConsumerState<PostList> {
                     final child = VisibilityDetector(
                       key: Key('post_visibility_${post.id}'),
                       onVisibilityChanged: (info) {
+                        // Widget dispose 후 콜백 실행 방지
+                        if (!mounted) return;
+
                         // 50% 이상 보이면 읽음 처리 (ChannelReadPositionNotifier에 위임)
                         if (info.visibleFraction >
                             PostListConstants.readVisibilityThreshold) {
