@@ -7,6 +7,7 @@ import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../../core/config/feature_flags.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/models/date_marker.dart';
 import '../../../core/models/post_list_item.dart';
 import '../../../core/theme/app_colors.dart';
@@ -48,14 +49,36 @@ class _PostListConstants {
   /// Sticky header 높이 (날짜 구분선)
   static const double stickyHeaderHeight = 24.0;
 
-  /// ✨ Sticky header viewport 감지 범위 (정확도 개선)
-  /// 화면 상단 기준 -stickyHeaderHeight ~ stickyHeaderHeight*2 범위에서 감지
-  /// (DateDivider가 화면 상단 근처에 있을 때 감지)
-  static const double viewportTopMin = -stickyHeaderHeight;
-  static const double viewportTopMax = stickyHeaderHeight * 2;
+  /// 채널 헤더 높이 (화면 전체 좌표계 기준)
+  /// - Container padding top: 13px
+  /// - Text(channelName) 높이: 26px (headlineMedium: fontSize 20px × height 1.3)
+  /// - SizedBox: 0px
+  /// - 총합: 39px
+  ///
+  /// 📍 용도:
+  /// - _updateSticky(): localToGlobal() 좌표 보정 (화면 전체 기준 y좌표)
+  /// - Positioned(top): ❌ 사용 금지! PostList Stack은 상대 좌표이므로 top: 0 사용
+  ///
+  /// 📍 참조: channel_content_view.dart, theme.dart headlineMedium
+  static const double channelHeaderHeight = 39.0;
 
-  /// 평균 아이템 높이 (가시 범위 계산용 추정값)
-  static const double estimatedItemHeight = 80.0;
+  /// Sticky Header 표시 임계값 (화면 전체 좌표계 기준)
+  ///
+  /// 📍 계산 근거:
+  /// - TopNavigation: 48px (AppConstants.topNavigationHeight)
+  /// - ChannelHeader: 39px (channelHeaderHeight)
+  /// - 총합: 87px
+  ///
+  /// 📍 좌표 시스템:
+  /// - localToGlobal()은 viewport 최상단(0,0)부터 측정
+  /// - pos.dy = 0: TopNavigation 최상단
+  /// - pos.dy = 48: ChannelHeader 시작점
+  /// - pos.dy = 87: PostList 시작점 (Sticky Header 고정 위치)
+  ///
+  /// 📍 용도:
+  /// - _updateSticky(): "TopNavigation + ChannelHeader 아래에서 조금이라도 보이는" 항목 탐지
+  static const double stickyThreshold =
+      AppConstants.topNavigationHeight + channelHeaderHeight; // 48 + 39 = 87
 }
 
 /// 게시글 목록 위젯
@@ -105,10 +128,10 @@ class _PostListState extends ConsumerState<PostList> {
   Timer? _debounceTimer;
   bool _hasScrolledToUnread = false;
 
-  // ✨ Sticky Date Header 추적 (Phase: Sticky Header)
-  DateTime? _currentStickyDate; // 현재 상단에 고정된 날짜
-  final Map<int, DateTime> _indexToDateMap = {}; // index → 날짜 매핑
-  final Map<int, GlobalKey> _itemKeys = {}; // index → GlobalKey 매핑 (정밀 추적)
+  // Sticky Date Header
+  DateTime? _stickyDate;
+  final Map<int, GlobalKey> _keys = {};
+  final Map<int, DateTime> _dates = {};
 
   @override
   void initState() {
@@ -148,8 +171,9 @@ class _PostListState extends ConsumerState<PostList> {
     if (!mounted) return;
 
     // 게시글 목록 가져오기
-    final postListAsync =
-        ref.read(postListAsyncNotifierProvider(widget.channelId));
+    final postListAsync = ref.read(
+      postListAsyncNotifierProvider(widget.channelId),
+    );
     final postListState = postListAsync.valueOrNull;
     if (postListState == null || postListState.posts.isEmpty) return;
 
@@ -164,6 +188,11 @@ class _PostListState extends ConsumerState<PostList> {
 
     // 읽음 위치 계산 및 스크롤
     _scrollToUnreadPost();
+
+    // Sticky header 초기화
+    if (_firstUnreadPostIndex == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _updateSticky());
+    }
   }
 
   @override
@@ -235,21 +264,18 @@ class _PostListState extends ConsumerState<PostList> {
   /// **구조**: [DateMarkerWrapper, PostWrapper, PostWrapper, DateMarkerWrapper, PostWrapper, ...]
   ///
   /// **정렬**: oldest → newest (최신글이 리스트 마지막)
-  ///
-  /// ✨ Sticky Header Phase: index → 날짜 매핑 생성
   List<PostListItem> _buildFlatList(List<Post> posts) {
     if (posts.isEmpty) {
-      _indexToDateMap.clear();
-      _itemKeys.clear();
+      _keys.clear();
+      _dates.clear();
       return [];
     }
 
     final List<PostListItem> flatItems = [];
     DateTime? currentDate;
 
-    // ✨ 매핑 초기화
-    _indexToDateMap.clear();
-    _itemKeys.clear();
+    _keys.clear();
+    _dates.clear();
 
     // 게시글이 oldest → newest로 정렬되어 있다고 가정
     for (final post in posts) {
@@ -263,19 +289,15 @@ class _PostListState extends ConsumerState<PostList> {
       if (currentDate != postDate) {
         final dateMarkerIndex = flatItems.length;
         flatItems.add(DateMarkerWrapper(DateMarker(date: postDate)));
-
-        // ✨ DateMarker의 index와 날짜 매핑
-        _indexToDateMap[dateMarkerIndex] = postDate;
-        _itemKeys[dateMarkerIndex] = GlobalKey();
-
+        _keys[dateMarkerIndex] = GlobalKey();
+        _dates[dateMarkerIndex] = postDate;
         currentDate = postDate;
       }
 
-      // ✨ Post의 index도 현재 날짜로 매핑
       final postIndex = flatItems.length;
       flatItems.add(PostWrapper(post));
-      _indexToDateMap[postIndex] = currentDate!;
-      _itemKeys[postIndex] = GlobalKey();
+      _keys[postIndex] = GlobalKey();
+      _dates[postIndex] = currentDate!;
     }
 
     return flatItems;
@@ -305,9 +327,7 @@ class _PostListState extends ConsumerState<PostList> {
         // 읽지 않은 글이 있으면 해당 위치로 스크롤
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           await _scrollToUnreadPost();
-          // 읽음 처리는 VisibilityDetector가 자동으로 처리
-          // ✨ Phase 2: sticky header 초기 상태 설정
-          _updateStickyDate();
+          _updateSticky();
         });
       } else {
         // 읽지 않은 글이 없으면 최하단으로 스크롤
@@ -320,8 +340,7 @@ class _PostListState extends ConsumerState<PostList> {
           setState(() {
             _isInitialLoading = false;
           });
-          // ✨ Phase 2: sticky header 초기 상태 설정
-          _updateStickyDate();
+          _updateSticky();
         });
       }
     } else {
@@ -332,8 +351,7 @@ class _PostListState extends ConsumerState<PostList> {
         setState(() {
           _isInitialLoading = false;
         });
-        // ✨ Phase 2: sticky header 초기 상태 설정
-        _updateStickyDate();
+        _updateSticky();
       });
     }
   }
@@ -411,6 +429,7 @@ class _PostListState extends ConsumerState<PostList> {
         setState(() {
           _isInitialLoading = false;
         });
+        WidgetsBinding.instance.addPostFrameCallback((_) => _updateSticky());
       }
     } catch (e, stackTrace) {
       developer.log(
@@ -484,6 +503,12 @@ class _PostListState extends ConsumerState<PostList> {
                 (savedMaxScrollExtent ?? 0);
             _scrollController.jumpTo(savedScrollOffset! + delta);
           }
+
+          // ✨ Sticky header 업데이트 (새 render boxes 측정)
+          // _loadPosts()로 _flatItems가 재구성된 후 렌더링 완료를 보장
+          if (mounted) {
+            _updateSticky();
+          }
         });
       }
     } catch (e, stackTrace) {
@@ -514,88 +539,45 @@ class _PostListState extends ConsumerState<PostList> {
       _loadPosts();
     }
 
-    // ✨ Sticky date 업데이트
-    _updateStickyDate();
-  }
-
-  /// ✨ Sticky Header: 가시 범위 내 DateMarker index 계산 (성능 최적화)
-  ///
-  /// **개선 사항**:
-  /// - 모든 GlobalKey 순회 대신 스크롤 offset 기반으로 가시 범위만 탐색
-  /// - O(n) → O(1) 성능 향상
-  List<int> _calculateVisibleDateMarkerIndices() {
-    if (!_scrollController.hasClients || _flatItems.isEmpty) return [];
-
-    final scrollOffset = _scrollController.offset;
-    final viewportHeight = _scrollController.position.viewportDimension;
-
-    // 스크롤 offset 기반으로 가시 범위의 대략적인 index 추정
-    final estimatedStartIndex =
-        (scrollOffset / _PostListConstants.estimatedItemHeight).floor().clamp(
-          0,
-          _flatItems.length - 1,
-        );
-    final estimatedEndIndex =
-        ((scrollOffset + viewportHeight) /
-                _PostListConstants.estimatedItemHeight)
-            .ceil()
-            .clamp(0, _flatItems.length - 1);
-
-    // 가시 범위 내 DateMarker만 필터링
-    final List<int> dateMarkerIndices = [];
-    for (int i = estimatedStartIndex; i <= estimatedEndIndex; i++) {
-      // ✨ DateMarkerWrapper만 필터링 (Post는 제외)
-      if (_flatItems[i] case DateMarkerWrapper()) {
-        dateMarkerIndices.add(i);
+    // ✨ PostFrameCallback: 렌더링 완료 후 sticky header 업데이트
+    // 마우스 휠 스크롤 시 RenderBox가 아직 렌더링되지 않은 문제 해결
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updateSticky();
       }
-    }
-
-    return dateMarkerIndices;
+    });
   }
 
-  /// ✨ Sticky Header: 최상단에 보이는 날짜 추적 (정확도 + 성능 개선)
-  ///
-  /// **개선 사항**:
-  /// 1. DateMarkerWrapper만 감지 (Post 제외)
-  /// 2. 정확한 viewport 범위 (0 ~ -stickyHeaderHeight)
-  /// 3. 가시 범위 내 아이템만 탐색 (성능 최적화)
-  void _updateStickyDate() {
+  void _updateSticky() {
     if (!_scrollController.hasClients || _flatItems.isEmpty) return;
 
-    // ✨ Phase 2: 가시 범위 내 DateMarker index만 가져오기
-    final visibleDateMarkerIndices = _calculateVisibleDateMarkerIndices();
-    if (visibleDateMarkerIndices.isEmpty) return;
+    int? firstVisibleIndex;
 
-    DateTime? newStickyDate;
+    for (final entry in _keys.entries) {
+      final index = entry.key;
+      final key = entry.value;
 
-    // ✨ Phase 1 + Phase 2: DateMarker만 정확하게 감지
-    for (final index in visibleDateMarkerIndices) {
-      final key = _itemKeys[index];
-      if (key == null) continue;
+      final box = key.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) continue;
 
-      final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
-      if (renderBox != null && renderBox.hasSize) {
-        try {
-          final position = renderBox.localToGlobal(Offset.zero);
+      try {
+        final pos = box.localToGlobal(Offset.zero);
 
-          // ✨ Phase 1: 정확한 viewport 상단 범위 (-stickyHeaderHeight ~ 0)
-          if (position.dy >= _PostListConstants.viewportTopMin &&
-              position.dy <= _PostListConstants.viewportTopMax) {
-            newStickyDate = _indexToDateMap[index];
-            break; // 첫 번째 DateMarker 사용
-          }
-        } catch (e) {
-          // RenderBox가 dispose되었을 경우 무시
-          continue;
+        // TopNavigation + ChannelHeader 아래에서 조금이라도 보이는 항목
+        if (pos.dy + box.size.height > _PostListConstants.stickyThreshold) {
+          firstVisibleIndex = index;
+          break; // 첫 번째 발견 시 중단
         }
+      } catch (e) {
+        continue;
       }
     }
 
-    // ✨ Phase 3: 날짜가 변경되었을 때만 setState 호출
-    if (newStickyDate != null && newStickyDate != _currentStickyDate) {
-      setState(() {
-        _currentStickyDate = newStickyDate;
-      });
+    if (firstVisibleIndex != null) {
+      final newDate = _dates[firstVisibleIndex];
+      if (newDate != _stickyDate) {
+        setState(() => _stickyDate = newDate);
+      }
     }
   }
 
@@ -636,51 +618,17 @@ class _PostListState extends ConsumerState<PostList> {
     }
   }
 
-  /// ✨ Sticky Header: 고급 애니메이션 sticky header 위젯
-  ///
-  /// **애니메이션 효과**:
-  /// - 이전 헤더: 위로 SlideOut (fadeOut 포함)
-  /// - 새 헤더: 아래에서 SlideIn (fadeIn 포함)
-  /// - Duration: 250ms (부드러운 전환)
-  ///
-  /// **Material elevation**: 헤더가 컨텐츠 위에 떠있는 느낌
-  Widget _buildStickyHeader() {
-    if (_currentStickyDate == null) {
-      return const SizedBox.shrink(); // 날짜가 없으면 빈 위젯
-    }
+  Widget _buildSticky() {
+    if (_stickyDate == null) return const SizedBox.shrink();
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        // ✨ 고급 애니메이션: 이전 헤더는 위로, 새 헤더는 아래에서
-        final offsetAnimation =
-            Tween<Offset>(
-              begin: const Offset(0, 1), // 아래에서 시작
-              end: Offset.zero, // 제자리
-            ).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOutCubic, // 부드러운 곡선
-              ),
-            );
+    final bgColor = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.darkElevated
+        : AppColors.lightBackground;
 
-        final fadeAnimation = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeIn,
-        );
-
-        return SlideTransition(
-          position: offsetAnimation,
-          child: FadeTransition(opacity: fadeAnimation, child: child),
-        );
-      },
-      // ✨ ValueKey로 날짜 변경 감지 → 애니메이션 트리거
-      child: Material(
-        key: ValueKey(_currentStickyDate),
-        elevation: 4, // 살짝 그림자 추가 (depth 표현)
-        color: Colors.white,
-        child: DateDivider(date: _currentStickyDate!),
-      ),
+    return Material(
+      elevation: 0,
+      color: bgColor,
+      child: DateDivider(date: _stickyDate!),
     );
   }
 
@@ -696,8 +644,9 @@ class _PostListState extends ConsumerState<PostList> {
 
   /// 신 방식: AsyncNotifier 패턴 (Provider가 데이터 로딩 제어)
   Widget _buildWithAsyncNotifier(BuildContext context) {
-    final postListAsync =
-        ref.watch(postListAsyncNotifierProvider(widget.channelId));
+    final postListAsync = ref.watch(
+      postListAsyncNotifierProvider(widget.channelId),
+    );
 
     return postListAsync.when(
       loading: () => const PostListSkeleton(),
@@ -735,7 +684,6 @@ class _PostListState extends ConsumerState<PostList> {
 
   /// 공통: ScrollView 렌더링 로직
   Widget _buildScrollView(PostListState postListState) {
-
     // Phase 2: Flat list로 단일 SliverList 사용
     final scrollView = LayoutBuilder(
       builder: (context, constraints) {
@@ -750,17 +698,15 @@ class _PostListState extends ConsumerState<PostList> {
                 ),
               ),
             // Phase 2: 단일 SliverList로 통합 - 타입 안전성 개선
-            // ✨ Sticky Header Phase: GlobalKey를 각 아이템에 추가
             SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 final item = _flatItems[index];
-                final itemKey = _itemKeys[index]; // ✨ GlobalKey 가져오기
 
                 // Pattern matching으로 타입 안전하게 처리
                 switch (item) {
                   case DateMarkerWrapper(:final marker):
                     // DateMarker: 날짜 구분선
-                    // ✨ Container로 감싸서 GlobalKey 부착
+                    final itemKey = _keys[index];
                     return Container(
                       key: itemKey,
                       child: DateDivider(date: marker.date),
@@ -799,14 +745,13 @@ class _PostListState extends ConsumerState<PostList> {
                       ),
                     );
 
-                    // ✨ Container로 감싸서 GlobalKey 부착
+                    final itemKey = _keys[index];
                     return Container(
-                      key: itemKey, // GlobalKey 부착
+                      key: itemKey,
                       child: AutoScrollTag(
                         key: ValueKey('post_${post.id}'),
                         controller: _scrollController,
-                        index:
-                            index, // SliverChildBuilderDelegate의 sequential index 사용
+                        index: index,
                         child: child,
                       ),
                     );
@@ -823,18 +768,20 @@ class _PostListState extends ConsumerState<PostList> {
     );
 
     // Phase 2: 단순화 - 초기 로딩 시에만 스피너 표시
-    // ✨ Sticky Header Phase: sticky header 추가
     return Stack(
       children: [
         Opacity(opacity: _isInitialLoading ? 0.0 : 1.0, child: scrollView),
         if (_isInitialLoading)
-          Positioned.fill(
-            child: const Center(child: CircularProgressIndicator()),
+          const Positioned.fill(
+            child: Center(child: CircularProgressIndicator()),
           ),
-
-        // ✨ Sticky Header: 상단에 고정
-        if (!_isInitialLoading && _currentStickyDate != null)
-          Positioned(top: 0, left: 0, right: 0, child: _buildStickyHeader()),
+        if (!_isInitialLoading && _stickyDate != null)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _buildSticky(),
+          ),
       ],
     );
   }
