@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/models/channel_models.dart';
+import '../../../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 import '../../../providers/workspace_state_provider.dart';
 import '../../../widgets/post/post_list.dart';
 import '../../../widgets/post/post_composer.dart';
@@ -106,12 +107,12 @@ class _ChannelContentViewState extends ConsumerState<ChannelContentView> {
                 final isNarrowDesktop = responsive.isNarrowDesktop;
 
                 // ✅ 읽은 위치 데이터 로딩 상태 확인 (Race Condition 방지)
-                final workspaceState = ref.watch(workspaceStateProvider);
+                final readPositionState = ref.watch(channelReadPositionProvider);
                 final channelIdInt = int.tryParse(widget.selectedChannelId);
 
                 // 데이터가 로딩 중이면 스피너 표시 (3초 timeout)
                 if (channelIdInt != null &&
-                    !workspaceState.lastReadPostIdMap.containsKey(
+                    !readPositionState.lastReadPostIdMap.containsKey(
                       channelIdInt,
                     )) {
                   return FutureBuilder(

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
@@ -9,10 +8,10 @@ import 'package:visibility_detector/visibility_detector.dart';
 import '../../../core/models/date_marker.dart';
 import '../../../core/models/post_list_item.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 import '../../../features/post/domain/entities/post.dart';
 import '../../../features/post/presentation/providers/post_list_notifier.dart';
 import '../../../features/post/presentation/providers/post_list_state.dart';
-import '../../providers/workspace_state_provider.dart';
 import 'date_divider.dart';
 import 'post_item.dart';
 import 'post_list_constants.dart';
@@ -61,10 +60,7 @@ class _PostListState extends ConsumerState<PostList> {
   // 읽지 않은 게시글 관리 (sequential index 사용)
   int? _firstUnreadPostIndex; // _flatItems의 index (0, 1, 2, ...)
 
-  // 가시성 추적 (Visibility Detector)
-  final Set<int> _visiblePostIds = {};
-  int? _highestEverVisibleId; // 지금까지 본 것 중 최댓값 (절대 감소하지 않음)
-  Timer? _debounceTimer;
+  // 가시성 추적은 ChannelReadPositionNotifier에 위임됨
   bool _hasScrolledToUnread = false;
 
   // Sticky Date Header
@@ -103,13 +99,21 @@ class _PostListState extends ConsumerState<PostList> {
 
       // 데이터가 로드되었는지 확인
       if (postListAsync.hasValue && postListAsync.valueOrNull != null) {
-        print('[PostList] AsyncNotifier data loaded after ${dataWaitAttempts * 100}ms');
+        developer.log(
+          '[PostList] AsyncNotifier data loaded after ${dataWaitAttempts * 100}ms',
+          name: 'PostList',
+        );
         break;
       }
 
       // 에러가 발생한 경우 중단
       if (postListAsync.hasError) {
-        print('[PostList] AsyncNotifier loading failed with error: ${postListAsync.error}');
+        developer.log(
+          '[PostList] AsyncNotifier loading failed with error: ${postListAsync.error}',
+          name: 'PostList',
+          error: postListAsync.error,
+          level: 900,
+        );
         return;
       }
 
@@ -118,7 +122,11 @@ class _PostListState extends ConsumerState<PostList> {
     }
 
     if (dataWaitAttempts >= maxDataWaitAttempts) {
-      print('[PostList] AsyncNotifier data loading timeout after 5 seconds');
+      developer.log(
+        '[PostList] AsyncNotifier data loading timeout after 5 seconds',
+        name: 'PostList',
+        level: 900,
+      );
       return;
     }
 
@@ -132,7 +140,11 @@ class _PostListState extends ConsumerState<PostList> {
     );
     final postListState = postListAsync.valueOrNull;
     if (postListState == null || postListState.posts.isEmpty) {
-      print('[PostList] No posts available even after waiting');
+      developer.log(
+        '[PostList] No posts available even after waiting',
+        name: 'PostList',
+        level: 900,
+      );
       return;
     }
 
@@ -142,11 +154,14 @@ class _PostListState extends ConsumerState<PostList> {
 
     // 🔴 버그 수정: _firstUnreadPostIndex 계산 로직 추가
     // lastReadPostId를 기반으로 첫 번째 읽지 않은 글의 인덱스 찾기
-    final workspaceState = ref.read(workspaceStateProvider);
-    final lastReadPostId = workspaceState.lastReadPostIdMap[channelIdInt];
+    final readPositionState = ref.read(channelReadPositionProvider);
+    final lastReadPostId = readPositionState.lastReadPostIdMap[channelIdInt];
 
     // 디버깅 로그
-    print('[PostList] lastReadPostId for channel $channelIdInt: $lastReadPostId');
+    developer.log(
+      '[PostList] lastReadPostId for channel $channelIdInt: $lastReadPostId',
+      name: 'PostList',
+    );
 
     int? firstUnreadIdx;
     if (lastReadPostId != null && lastReadPostId != -1) {
@@ -155,7 +170,10 @@ class _PostListState extends ConsumerState<PostList> {
         final item = flatItems[i];
         if (item is PostWrapper && item.post.id > lastReadPostId) {
           firstUnreadIdx = i;
-          print('[PostList] Found first unread post at index $i (postId: ${item.post.id})');
+          developer.log(
+            '[PostList] Found first unread post at index $i (postId: ${item.post.id})',
+            name: 'PostList',
+          );
           break;
         }
       }
@@ -165,7 +183,10 @@ class _PostListState extends ConsumerState<PostList> {
         final item = flatItems[i];
         if (item is PostWrapper) {
           firstUnreadIdx = i;
-          print('[PostList] No read history, setting first post at index $i as unread');
+          developer.log(
+            '[PostList] No read history, setting first post at index $i as unread',
+            name: 'PostList',
+          );
           break;
         }
       }
@@ -177,7 +198,10 @@ class _PostListState extends ConsumerState<PostList> {
       _isInitialLoading = false;
     });
 
-    print('[PostList] _firstUnreadPostIndex set to: $_firstUnreadPostIndex');
+    developer.log(
+      '[PostList] _firstUnreadPostIndex set to: $_firstUnreadPostIndex',
+      name: 'PostList',
+    );
 
     // 읽음 위치 계산 및 스크롤
     _scrollToUnreadPost();
@@ -194,18 +218,15 @@ class _PostListState extends ConsumerState<PostList> {
     if (oldWidget.channelId != widget.channelId) {
       _hasScrolledToUnread = false;
       _firstUnreadPostIndex = null;
-      _highestEverVisibleId = null;
       _resetAndLoad();
     }
   }
 
   @override
   void dispose() {
-    // ✅ WorkspaceStateProvider가 스크롤 시 실시간으로 JS 캐시를 동기 업데이트하므로
-    // dispose에서 별도로 JS 캐시를 업데이트할 필요가 없습니다.
-    // beforeunload 이벤트는 항상 최신 JS 캐시를 사용하여 서버에 전송합니다.
+    // ✅ ChannelReadPositionNotifier가 읽음 위치를 관리하므로
+    // dispose에서 별도로 처리할 필요가 없습니다.
 
-    _debounceTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
@@ -214,10 +235,8 @@ class _PostListState extends ConsumerState<PostList> {
     setState(() {
       _flatItems = [];
       _isInitialLoading = true;
-      _visiblePostIds.clear();
       _firstUnreadPostIndex = null;
       _hasScrolledToUnread = false;
-      _highestEverVisibleId = null;
     });
     _restoreScrollPosition();
   }
@@ -240,9 +259,9 @@ class _PostListState extends ConsumerState<PostList> {
       attempt++
     ) {
       if (!mounted) return; // ✅ dispose 후 실행 방지
-      final workspaceState = ref.read(workspaceStateProvider);
+      final readPositionState = ref.read(channelReadPositionProvider);
 
-      if (workspaceState.lastReadPostIdMap.containsKey(channelId)) {
+      if (readPositionState.lastReadPostIdMap.containsKey(channelId)) {
         return;
       }
 
@@ -299,30 +318,45 @@ class _PostListState extends ConsumerState<PostList> {
 
   /// 읽지 않은 게시글로 스크롤
   Future<void> _scrollToUnreadPost() async {
-    print('[PostList] _scrollToUnreadPost called - index: $_firstUnreadPostIndex, hasScrolled: $_hasScrolledToUnread');
+    developer.log(
+      '[PostList] _scrollToUnreadPost called - index: $_firstUnreadPostIndex, hasScrolled: $_hasScrolledToUnread',
+      name: 'PostList',
+    );
 
     if (_firstUnreadPostIndex == null || _hasScrolledToUnread) {
-      print('[PostList] Skipping scroll - index is null or already scrolled');
+      developer.log(
+        '[PostList] Skipping scroll - index is null or already scrolled',
+        name: 'PostList',
+      );
       return;
     }
 
     try {
       // ScrollController가 준비될 때까지 대기
       if (!_scrollController.hasClients) {
-        print('[PostList] ScrollController not ready, waiting...');
+        developer.log(
+          '[PostList] ScrollController not ready, waiting...',
+          name: 'PostList',
+        );
         await Future.delayed(PostListConstants.scrollControllerWaitTime);
       }
 
       // 여전히 준비되지 않았으면 최하단으로 스크롤
       if (!_scrollController.hasClients) {
-        print('[PostList] ScrollController still not ready, aborting scroll');
+        developer.log(
+          '[PostList] ScrollController still not ready, aborting scroll',
+          name: 'PostList',
+        );
         setState(() {
           _isInitialLoading = false;
         });
         return;
       }
 
-      print('[PostList] Scrolling to index $_firstUnreadPostIndex');
+      developer.log(
+        '[PostList] Scrolling to index $_firstUnreadPostIndex',
+        name: 'PostList',
+      );
       // AutoScrollController를 사용한 sequential index 기반 스크롤
       await _scrollController.scrollToIndex(
         _firstUnreadPostIndex!,
@@ -338,12 +372,18 @@ class _PostListState extends ConsumerState<PostList> {
               _scrollController.position.minScrollExtent,
               _scrollController.position.maxScrollExtent,
             );
-        print('[PostList] Adjusting scroll offset from $currentOffset to $adjustedOffset');
+        developer.log(
+          '[PostList] Adjusting scroll offset from $currentOffset to $adjustedOffset',
+          name: 'PostList',
+        );
         _scrollController.jumpTo(adjustedOffset);
       }
 
       _hasScrolledToUnread = true;
-      print('[PostList] Scroll to unread completed successfully');
+      developer.log(
+        '[PostList] Scroll to unread completed successfully',
+        name: 'PostList',
+      );
 
       if (mounted) {
         setState(() {
@@ -370,13 +410,19 @@ class _PostListState extends ConsumerState<PostList> {
       }
 
       // 에러 로깅 개선 - 더 상세한 정보 포함
-      debugPrint('[PostList] 읽지 않은 글 스크롤 실패');
-      debugPrint('  채널 ID: ${widget.channelId}');
-      debugPrint('  대상 index: $_firstUnreadPostIndex');
-      debugPrint('  에러: $e');
+      developer.log(
+        '[PostList] 읽지 않은 글 스크롤 실패 - 채널 ID: ${widget.channelId}, 대상 index: $_firstUnreadPostIndex',
+        name: 'PostList',
+        error: e,
+        level: 900,
+      );
       if (e is! StateError) {
         // StateError(Bad state)가 아닌 경우에만 스택 추적 출력
-        debugPrint('  스택 추적:\n$stackTrace');
+        developer.log(
+          '스택 추적: $stackTrace',
+          name: 'PostList',
+          level: 900,
+        );
       }
     }
   }
@@ -426,42 +472,8 @@ class _PostListState extends ConsumerState<PostList> {
     }
   }
 
-  void _onPostVisible(int postId) {
-    _visiblePostIds.add(postId);
-    _scheduleUpdateMaxVisibleId();
-  }
-
-  void _onPostInvisible(int postId) {
-    _visiblePostIds.remove(postId);
-    _scheduleUpdateMaxVisibleId();
-  }
-
-  void _scheduleUpdateMaxVisibleId() {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(PostListConstants.debounceDelay, () {
-      _updateMaxVisibleId();
-    });
-  }
-
-  void _updateMaxVisibleId() {
-    if (_visiblePostIds.isEmpty) return;
-
-    final maxId = _visiblePostIds.reduce((a, b) => a > b ? a : b);
-
-    // 지금까지 본 것 중 최댓값 업데이트 (절대 감소하지 않음)
-    if (_highestEverVisibleId == null || maxId > _highestEverVisibleId!) {
-      _highestEverVisibleId = maxId;
-
-      // 워크스페이스 상태 업데이트 (저장할 값)
-      ref.read(workspaceStateProvider.notifier).updateCurrentVisiblePost(maxId);
-
-      // 읽음 위치 업데이트 로깅
-      developer.log(
-        '읽음 위치 업데이트 - 채널: ${widget.channelId}, 게시글: $maxId (highest: $_highestEverVisibleId), 보이는 게시글 수: ${_visiblePostIds.length}',
-        name: 'PostList',
-      );
-    }
-  }
+  // 가시성 추적은 ChannelReadPositionNotifier에 위임됨
+  // 더 이상 로컬 상태를 관리하지 않습니다.
 
   @override
   Widget build(BuildContext context) {
@@ -512,12 +524,14 @@ class _PostListState extends ConsumerState<PostList> {
                     final child = VisibilityDetector(
                       key: Key('post_visibility_${post.id}'),
                       onVisibilityChanged: (info) {
-                        // 50% 이상 보이면 읽음 처리
+                        // 50% 이상 보이면 읽음 처리 (ChannelReadPositionNotifier에 위임)
                         if (info.visibleFraction >
                             PostListConstants.readVisibilityThreshold) {
-                          _onPostVisible(post.id);
+                          ref.read(channelReadPositionProvider.notifier)
+                              .updateVisibility(post.id, true);
                         } else {
-                          _onPostInvisible(post.id);
+                          ref.read(channelReadPositionProvider.notifier)
+                              .updateVisibility(post.id, false);
                         }
                       },
                       child: Column(

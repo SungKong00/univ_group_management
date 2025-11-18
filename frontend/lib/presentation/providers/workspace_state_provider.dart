@@ -8,6 +8,7 @@ import '../../core/services/channel_service.dart';
 import '../../core/services/local_storage.dart';
 import '../../core/utils/permission_utils.dart';
 import '../../core/navigation/navigation_controller.dart';
+import '../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 import 'my_groups_provider.dart';
 import 'place_calendar_provider.dart';
 import 'auth_provider.dart';
@@ -101,9 +102,6 @@ class WorkspaceState extends Equatable {
     this.selectedPlaceName, // Selected place name for place time management
     this.navigationHistory = const [], // Unified navigation history
     this.selectedCalendarDate, // Selected date for calendar view
-    this.lastReadPostIdMap = const {}, // Read position management
-    this.unreadCountMap = const {}, // Unread count management
-    this.currentVisiblePostId, // Currently visible post ID
   });
 
   final String? selectedGroupId;
@@ -136,10 +134,6 @@ class WorkspaceState extends Equatable {
   final List<NavigationHistoryEntry>
   navigationHistory; // Unified navigation history (channels, views, groups)
   final DateTime? selectedCalendarDate; // Selected date for calendar view
-  final Map<int, int> lastReadPostIdMap; // {channelId: lastReadPostId}
-  final Map<int, int> unreadCountMap; // {channelId: unreadCount}
-  final int?
-  currentVisiblePostId; // Currently visible post ID for tracking read position
 
   WorkspaceState copyWith({
     String? selectedGroupId,
@@ -166,10 +160,6 @@ class WorkspaceState extends Equatable {
     String? selectedPlaceName,
     List<NavigationHistoryEntry>? navigationHistory,
     DateTime? selectedCalendarDate,
-    Map<int, int>? lastReadPostIdMap,
-    Map<int, int>? unreadCountMap,
-    int? currentVisiblePostId,
-    bool clearCurrentVisiblePostId = false,
   }) {
     return WorkspaceState(
       selectedGroupId: selectedGroupId ?? this.selectedGroupId,
@@ -200,11 +190,6 @@ class WorkspaceState extends Equatable {
       selectedPlaceName: selectedPlaceName ?? this.selectedPlaceName,
       navigationHistory: navigationHistory ?? this.navigationHistory,
       selectedCalendarDate: selectedCalendarDate ?? this.selectedCalendarDate,
-      lastReadPostIdMap: lastReadPostIdMap ?? this.lastReadPostIdMap,
-      unreadCountMap: unreadCountMap ?? this.unreadCountMap,
-      currentVisiblePostId: clearCurrentVisiblePostId
-          ? null
-          : (currentVisiblePostId ?? this.currentVisiblePostId),
     );
   }
 
@@ -238,9 +223,6 @@ class WorkspaceState extends Equatable {
     selectedPlaceName,
     navigationHistory,
     selectedCalendarDate,
-    lastReadPostIdMap,
-    unreadCountMap,
-    currentVisiblePostId,
   ];
 }
 
@@ -691,11 +673,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
       state = state.copyWith(isLoadingWorkspace: false);
 
-      // Step 8: Load unread counts for all channels (background, no await)
-      final channelIds = state.channels.map((c) => c.id).toList();
-      if (channelIds.isNotEmpty) {
-        loadUnreadCounts(channelIds); // Fire and forget
-      }
+      // Step 8: Load unread counts for all channels (delegated to ChannelReadPositionNotifier)
+      // Note: This is now handled by ChannelReadPositionNotifier when needed
     } catch (e) {
       _handleWorkspaceLoadFailure();
     }
@@ -1006,17 +985,15 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   void selectChannel(String channelId) async {
-    // 1. Save read position for previous channel if we have a visible post
+    // 1. Save read position for previous channel (delegated to ChannelReadPositionNotifier)
     final prevChannelId = state.selectedChannelId;
-    if (prevChannelId != null && state.currentVisiblePostId != null) {
+    if (prevChannelId != null) {
       final prevChannelIdInt = int.tryParse(prevChannelId);
       if (prevChannelIdInt != null) {
         // Best-Effort: ignore errors
         try {
-          await saveReadPosition(prevChannelIdInt, state.currentVisiblePostId!);
-
-          // ✅ 이탈 시 뱃지 업데이트 (읽지 않은 글 개수 재계산)
-          await loadUnreadCount(prevChannelIdInt);
+          await _ref.read(channelReadPositionProvider.notifier)
+              .saveReadPosition(prevChannelIdInt);
         } catch (e) {
           // Silently ignore read position save errors
           if (kDebugMode) {
@@ -1048,7 +1025,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     if (channelIdInt != null) {
       await Future.wait([
         loadChannelPermissions(channelId),
-        loadReadPosition(channelIdInt),
+        _ref.read(channelReadPositionProvider.notifier)
+            .loadReadPosition(channelIdInt),
       ]);
 
       // ✅ Ensure state updates are reflected before proceeding
@@ -1072,8 +1050,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       currentView: WorkspaceView.channel,
       // Reset previousView when entering channel view
       previousView: null,
-      clearCurrentVisiblePostId:
-          true, // Clear visible post when switching channels
+      // ❌ clearCurrentVisiblePostId 제거됨! (버그 #3 해결)
       workspaceContext: Map.from(state.workspaceContext)
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
@@ -1106,142 +1083,16 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   // ============================================================
-  // Read Position Management
+  // Read Position Management (Delegated to ChannelReadPositionNotifier)
   // ============================================================
-
-  /// Load read position for a channel (called when entering channel)
-  Future<void> loadReadPosition(int channelId) async {
-    final position = await _channelService.getReadPosition(channelId);
-
-    // ✅ Always update state, even if position is null (marks channel as "loaded")
-    // This prevents PostList from waiting with timeout when entering a new channel
-    state = state.copyWith(
-      lastReadPostIdMap: {
-        ...state.lastReadPostIdMap,
-        channelId:
-            position?.lastReadPostId ??
-            -1, // -1 = new channel or no read history
-      },
-    );
-  }
-
-  /// Save read position for a channel
-  /// Best-effort operation - errors are ignored
-  ///
-  /// Note: Badge update (unread count) is NOT performed here.
-  /// It should be manually called when leaving the channel (selectChannel, exitWorkspace)
-  Future<void> saveReadPosition(int channelId, int postId) async {
-    // 안전장치: 로그아웃 중에는 저장하지 않음
-    final isLoggingOut = _ref.read(isLoggingOutProvider);
-    if (isLoggingOut) {
-      return;
-    }
-
-    // API call (Best-Effort, error ignored)
-    try {
-      await _channelService.updateReadPosition(channelId, postId);
-    } catch (e) {
-      // Best-Effort: 에러 무시
-    }
-
-    // Update local state
-    state = state.copyWith(
-      lastReadPostIdMap: {...state.lastReadPostIdMap, channelId: postId},
-    );
-
-    // Badge update is NOT performed here - it should be done when leaving channel
-  }
-
-  /// Update currently visible post ID (called during scrolling)
-  void updateCurrentVisiblePost(int postId) {
-    state = state.copyWith(currentVisiblePostId: postId);
-
-    // ✅ 웹 환경에서 즉시 동기 업데이트 (beforeunload 타이밍 보장)
-    if (kIsWeb) {
-      _updateJsReadPositionCacheSync(postId);
-    }
-  }
-
-  /// 웹 전용: JS 캐시를 동기적으로 업데이트 (beforeunload 타이밍 보장)
-  ///
-  /// 스크롤 시 즉시 호출되어 JS 전역 변수를 업데이트합니다.
-  /// 브라우저 닫기/새로고침 시 beforeunload 이벤트가 이 캐시를 읽어
-  /// sendBeacon으로 서버에 전송합니다.
-  void _updateJsReadPositionCacheSync(int postId) {
-    if (!kIsWeb) return;
-
-    try {
-      final channelId = state.selectedChannelId;
-      if (channelId == null) {
-        return;
-      }
-
-      // API base URL
-      final apiBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:8080';
-
-      // ✅ 웹 유틸리티를 통해 JS 캐시 업데이트 (조건부 import)
-      web_utils.updateReadPositionCache(
-        channelId: channelId,
-        postId: postId,
-        apiBaseUrl: apiBaseUrl,
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        developer.log('⚠️ JS 캐시 동기 업데이트 실패 - $e', name: 'WorkspaceState');
-      }
-    }
-  }
-
-  /// Load unread count for a single channel
-  Future<void> loadUnreadCount(int channelId) async {
-    final count = await _channelService.getUnreadCount(channelId);
-
-    state = state.copyWith(
-      unreadCountMap: {...state.unreadCountMap, channelId: count},
-    );
-  }
-
-  /// Load unread counts for multiple channels (batch query)
-  Future<void> loadUnreadCounts(List<int> channelIds) async {
-    final counts = await _channelService.getUnreadCounts(channelIds);
-
-    state = state.copyWith(
-      unreadCountMap: {...state.unreadCountMap, ...counts},
-    );
-  }
-
-  /// Helper: Save read position for current channel before leaving
-  ///
-  /// 채널 이탈 시 읽음 위치 저장 + 배지 업데이트를 수행합니다.
-  /// Best-Effort 방식으로 에러는 무시됩니다.
-  Future<void> _saveReadPositionForCurrentChannel() async {
-    final currentChannelId = state.selectedChannelId;
-    if (currentChannelId != null && state.currentVisiblePostId != null) {
-      final channelIdInt = int.tryParse(currentChannelId);
-      if (channelIdInt != null) {
-        try {
-          await saveReadPosition(channelIdInt, state.currentVisiblePostId!);
-
-          // ✅ 이탈 시 배지 업데이트 (읽지 않은 글 개수 재계산)
-          await loadUnreadCount(channelIdInt);
-        } catch (e) {
-          // Best-Effort: ignore errors
-          if (kDebugMode) {
-            developer.log(
-              'Failed to save read position when leaving channel: $e',
-              name: 'WorkspaceStateNotifier',
-              level: 300,
-            );
-          }
-        }
-      }
-    }
-  }
+  // All read position management methods have been removed and delegated to
+  // ChannelReadPositionNotifier for better separation of concerns.
+  // See: features/channel/presentation/providers/channel_read_position_notifier.dart
 
   /// Universal view transition handler (Template Method Pattern)
   ///
   /// Automatically handles:
-  /// - Read position save (best-effort)
+  /// - Read position save (best-effort, delegated to ChannelReadPositionNotifier)
   /// - Navigation history update
   /// - State synchronization
   ///
@@ -1256,9 +1107,27 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     required WorkspaceView targetView,
     Map<String, dynamic>? stateUpdates,
   }) async {
-    // Step 1: Save read position (Best-Effort)
+    // Step 1: Save read position (Best-Effort, delegated to ChannelReadPositionNotifier)
     // MUST complete before state update to ensure data consistency
-    await _saveReadPositionForCurrentChannel();
+    final currentChannelId = state.selectedChannelId;
+    if (currentChannelId != null) {
+      final channelIdInt = int.tryParse(currentChannelId);
+      if (channelIdInt != null) {
+        try {
+          await _ref.read(channelReadPositionProvider.notifier)
+              .saveReadPosition(channelIdInt);
+        } catch (e) {
+          // Best-Effort: ignore errors
+          if (kDebugMode) {
+            developer.log(
+              'Failed to save read position when transitioning view: $e',
+              name: 'WorkspaceStateNotifier',
+              level: 300,
+            );
+          }
+        }
+      }
+    }
 
     // Step 2: Add to navigation history
     if (state.selectedGroupId != null) {
@@ -1295,28 +1164,21 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     );
   }
 
-  /// Load workspace with unread counts (called when entering workspace)
+  /// Load workspace (unread counts now managed by ChannelReadPositionNotifier)
   Future<void> loadWorkspaceWithUnreadCounts(
     String groupId, {
     String? channelId,
     GroupMembership? membership,
     WorkspaceView? targetView,
   }) async {
-    // Load workspace first
+    // Load workspace
+    // Unread counts are now managed by ChannelReadPositionNotifier
     await enterWorkspace(
       groupId,
       channelId: channelId,
       membership: membership,
       targetView: targetView,
     );
-
-    // Collect all channel IDs
-    final channelIds = state.channels.map((c) => c.id).toList();
-
-    // Batch load unread counts
-    if (channelIds.isNotEmpty) {
-      await loadUnreadCounts(channelIds);
-    }
   }
 
   /// Show group home view
@@ -1467,14 +1329,15 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   ///
   /// 앱이 일시적으로 백그라운드로 가거나 웹 탭이 숨겨질 때 사용.
   /// 현재 보고 있던 채널 정보는 유지하면서 읽은 위치만 서버에 저장.
+  /// Delegated to ChannelReadPositionNotifier.
   Future<void> saveReadPositionOnly() async {
     final currentChannelId = state.selectedChannelId;
-    if (currentChannelId != null && state.currentVisiblePostId != null) {
+    if (currentChannelId != null) {
       final channelIdInt = int.tryParse(currentChannelId);
       if (channelIdInt != null) {
         try {
-          await saveReadPosition(channelIdInt, state.currentVisiblePostId!);
-          await loadUnreadCount(channelIdInt);
+          await _ref.read(channelReadPositionProvider.notifier)
+              .saveReadPosition(channelIdInt);
         } catch (e) {
           if (kDebugMode) {
             developer.log(
@@ -1493,17 +1356,15 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// 앱이 완전히 종료되거나 사용자가 명시적으로 워크스페이스를 나갈 때 사용.
   /// 읽은 위치 저장 + 상태 초기화를 수행.
   void exitWorkspace() async {
-    // 1. Save read position for current channel if we have a visible post
+    // 1. Save read position for current channel (delegated to ChannelReadPositionNotifier)
     final currentChannelId = state.selectedChannelId;
-    if (currentChannelId != null && state.currentVisiblePostId != null) {
+    if (currentChannelId != null) {
       final channelIdInt = int.tryParse(currentChannelId);
       if (channelIdInt != null) {
         // Best-Effort: ignore errors
         try {
-          await saveReadPosition(channelIdInt, state.currentVisiblePostId!);
-
-          // ✅ 이탈 시 뱃지 업데이트 (읽지 않은 글 개수 재계산)
-          await loadUnreadCount(channelIdInt);
+          await _ref.read(channelReadPositionProvider.notifier)
+              .saveReadPosition(channelIdInt);
         } catch (e) {
           // Silently ignore read position save errors
           if (kDebugMode) {
@@ -1613,17 +1474,15 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   // 모바일에서 채널 선택 시 (Step 1 → Step 2)
   void selectChannelForMobile(String channelId) async {
-    // 1. Save read position for previous channel if we have a visible post
+    // 1. Save read position for previous channel (delegated to ChannelReadPositionNotifier)
     final prevChannelId = state.selectedChannelId;
-    if (prevChannelId != null && state.currentVisiblePostId != null) {
+    if (prevChannelId != null) {
       final prevChannelIdInt = int.tryParse(prevChannelId);
       if (prevChannelIdInt != null) {
         // Best-Effort: ignore errors
         try {
-          await saveReadPosition(prevChannelIdInt, state.currentVisiblePostId!);
-
-          // ✅ 이탈 시 뱃지 업데이트 (읽지 않은 글 개수 재계산)
-          await loadUnreadCount(prevChannelIdInt);
+          await _ref.read(channelReadPositionProvider.notifier)
+              .saveReadPosition(prevChannelIdInt);
         } catch (e) {
           // Silently ignore read position save errors
           if (kDebugMode) {
@@ -1643,7 +1502,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     if (channelIdInt != null) {
       await Future.wait([
         loadChannelPermissions(channelId),
-        loadReadPosition(channelIdInt),
+        _ref.read(channelReadPositionProvider.notifier)
+            .loadReadPosition(channelIdInt),
       ]);
     } else {
       await loadChannelPermissions(channelId);
@@ -1674,8 +1534,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       mobileView: MobileWorkspaceView.channelPosts,
       isCommentsVisible: false,
       selectedPostId: null,
-      clearCurrentVisiblePostId:
-          true, // Clear visible post when switching channels
       workspaceContext: Map.from(state.workspaceContext)
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,

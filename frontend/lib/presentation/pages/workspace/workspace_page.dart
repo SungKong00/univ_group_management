@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 
 import '../../providers/workspace_state_provider.dart' hide MobileWorkspaceView;
 import '../../../core/navigation/navigation_controller.dart';
@@ -141,17 +142,16 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
 
     final workspaceState = ref.read(workspaceStateProvider);
     final channelId = workspaceState.selectedChannelId;
-    final postId = workspaceState.currentVisiblePostId;
 
-    if (channelId != null && postId != null) {
+    if (channelId != null) {
       final channelIdInt = int.tryParse(channelId);
       if (channelIdInt != null) {
         if (!mounted) return; // 안전장치 2: await 전 체크
 
         try {
           await ref
-              .read(workspaceStateProvider.notifier)
-              .saveReadPosition(channelIdInt, postId);
+              .read(channelReadPositionProvider.notifier)
+              .saveReadPosition(channelIdInt);
         } catch (e) {
           // Silently ignore errors (Best-Effort)
           if (!mounted) return; // 안전장치 3: await 후 체크

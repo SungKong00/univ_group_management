@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/models/channel_models.dart';
+import '../../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../post/post_list.dart';
 import '../post/post_composer.dart';
@@ -88,13 +89,13 @@ class _MobileChannelPostsViewState
       // ✅ 새 글 작성 후 읽음 위치 자동 업데이트 (자신의 글은 읽지 않은 글 표시 안 함)
       final channelIdInt = int.tryParse(widget.channelId);
       if (channelIdInt != null) {
+        // Update currentVisiblePostId to mark this new post as read
+        ref.read(channelReadPositionProvider.notifier)
+            .updateVisibility(newPost.id, true);
+        // Save read position (includes badge update)
         await ref
-            .read(workspaceStateProvider.notifier)
-            .saveReadPosition(channelIdInt, newPost.id);
-        // 뱃지 업데이트 (읽지 않은 글 개수 재계산)
-        await ref
-            .read(workspaceStateProvider.notifier)
-            .loadUnreadCount(channelIdInt);
+            .read(channelReadPositionProvider.notifier)
+            .saveReadPosition(channelIdInt);
       }
 
       // 게시글 목록 및 작성기 새로고침

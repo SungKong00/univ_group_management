@@ -4,6 +4,7 @@ import '../../../core/models/channel_models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
+import '../../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 import '../../providers/workspace_state_provider.dart';
 import 'channel_item.dart';
 import 'group_dropdown.dart';
@@ -145,9 +146,9 @@ class MobileChannelList extends ConsumerWidget {
   }
 
   Widget _buildChannelList(WidgetRef ref) {
-    // Read unread count map from workspace state (real API data)
+    // Read unread count map from ChannelReadPositionNotifier (real API data)
     final unreadCountMap = ref.watch(
-      workspaceStateProvider.select((state) => state.unreadCountMap),
+      channelReadPositionProvider.select((state) => state.unreadCountMap),
     );
 
     return Expanded(

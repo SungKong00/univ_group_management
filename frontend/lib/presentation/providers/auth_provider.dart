@@ -5,6 +5,7 @@ import '../../core/models/auth_models.dart';
 import '../../core/repositories/repository_providers.dart';
 import '../../core/navigation/navigation_controller.dart';
 import '../../core/providers/provider_reset.dart';
+import '../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 import 'workspace_state_provider.dart';
 
 /// 현재 로그인한 유저 정보 관리
@@ -128,14 +129,13 @@ class CurrentUserNotifier extends AsyncNotifier<UserInfo?> {
     try {
       final workspaceState = ref.read(workspaceStateProvider);
       final channelId = workspaceState.selectedChannelId;
-      final postId = workspaceState.currentVisiblePostId;
 
-      if (channelId != null && postId != null) {
+      if (channelId != null) {
         final channelIdInt = int.tryParse(channelId);
         if (channelIdInt != null) {
           await ref
-              .read(workspaceStateProvider.notifier)
-              .saveReadPosition(channelIdInt, postId);
+              .read(channelReadPositionProvider.notifier)
+              .saveReadPosition(channelIdInt);
         }
       }
     } catch (e) {
