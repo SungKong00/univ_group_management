@@ -7,10 +7,7 @@ import 'package:mockito/mockito.dart';
 
 import 'read_position_repository_impl_test.mocks.dart';
 
-@GenerateMocks([
-  ReadPositionLocalDataSource,
-  ReadPositionRemoteDataSource,
-])
+@GenerateMocks([ReadPositionLocalDataSource, ReadPositionRemoteDataSource])
 void main() {
   group('ReadPositionRepositoryImpl Tests', () {
     late ReadPositionRepositoryImpl repository;
@@ -52,12 +49,17 @@ void main() {
           mockLocalDataSource.getReadPosition(channelId),
         ).thenAnswer((_) async => null);
 
+        when(
+          mockRemoteDataSource.getReadPosition(channelId),
+        ).thenAnswer((_) async => null);
+
         // When
         final result = await repository.getReadPosition(channelId);
 
         // Then
         expect(result, isNull);
         verify(mockLocalDataSource.getReadPosition(channelId)).called(1);
+        verify(mockRemoteDataSource.getReadPosition(channelId)).called(1);
       });
     });
 

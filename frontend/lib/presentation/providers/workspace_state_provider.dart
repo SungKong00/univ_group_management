@@ -992,7 +992,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       if (prevChannelIdInt != null) {
         // Best-Effort: ignore errors
         try {
-          await _ref.read(channelReadPositionProvider.notifier)
+          await _ref
+              .read(channelReadPositionProvider.notifier)
               .saveReadPosition(prevChannelIdInt);
         } catch (e) {
           // Silently ignore read position save errors
@@ -1025,7 +1026,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     if (channelIdInt != null) {
       await Future.wait([
         loadChannelPermissions(channelId),
-        _ref.read(channelReadPositionProvider.notifier)
+        _ref
+            .read(channelReadPositionProvider.notifier)
             .loadReadPosition(channelIdInt),
       ]);
 
@@ -1055,6 +1057,15 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
     );
+
+    // 4. Batch refresh all channel badges (백그라운드)
+    final allChannelIds = state.channels.map((c) => c.id).toList();
+    if (allChannelIds.isNotEmpty) {
+      _ref
+          .read(channelReadPositionProvider.notifier)
+          .refreshAllBadges(allChannelIds)
+          .catchError((_) {});
+    }
 
     // LocalStorage에 저장
     _saveToLocalStorage();
@@ -1114,7 +1125,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       final channelIdInt = int.tryParse(currentChannelId);
       if (channelIdInt != null) {
         try {
-          await _ref.read(channelReadPositionProvider.notifier)
+          await _ref
+              .read(channelReadPositionProvider.notifier)
               .saveReadPosition(channelIdInt);
         } catch (e) {
           // Best-Effort: ignore errors
@@ -1336,7 +1348,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       final channelIdInt = int.tryParse(currentChannelId);
       if (channelIdInt != null) {
         try {
-          await _ref.read(channelReadPositionProvider.notifier)
+          await _ref
+              .read(channelReadPositionProvider.notifier)
               .saveReadPosition(channelIdInt);
         } catch (e) {
           if (kDebugMode) {
@@ -1363,7 +1376,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       if (channelIdInt != null) {
         // Best-Effort: ignore errors
         try {
-          await _ref.read(channelReadPositionProvider.notifier)
+          await _ref
+              .read(channelReadPositionProvider.notifier)
               .saveReadPosition(channelIdInt);
         } catch (e) {
           // Silently ignore read position save errors
@@ -1481,7 +1495,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       if (prevChannelIdInt != null) {
         // Best-Effort: ignore errors
         try {
-          await _ref.read(channelReadPositionProvider.notifier)
+          await _ref
+              .read(channelReadPositionProvider.notifier)
               .saveReadPosition(prevChannelIdInt);
         } catch (e) {
           // Silently ignore read position save errors
@@ -1502,7 +1517,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     if (channelIdInt != null) {
       await Future.wait([
         loadChannelPermissions(channelId),
-        _ref.read(channelReadPositionProvider.notifier)
+        _ref
+            .read(channelReadPositionProvider.notifier)
             .loadReadPosition(channelIdInt),
       ]);
     } else {

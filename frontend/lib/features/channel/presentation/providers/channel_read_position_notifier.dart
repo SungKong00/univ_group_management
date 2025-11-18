@@ -31,14 +31,15 @@ class ChannelReadPositionState with _$ChannelReadPositionState {
 class ChannelReadPositionNotifier
     extends StateNotifier<ChannelReadPositionState> {
   final ReadPositionRepository _repository;
+  final Ref _ref;
 
   // 가시성 추적
   final Set<int> _visiblePostIds = {};
   int? _highestEverVisibleId;
   Timer? _debounceTimer;
 
-  ChannelReadPositionNotifier(this._repository)
-      : super(const ChannelReadPositionState());
+  ChannelReadPositionNotifier(this._repository, this._ref)
+    : super(const ChannelReadPositionState());
 
   @override
   void dispose() {
@@ -57,10 +58,7 @@ class ChannelReadPositionNotifier
         ...state.lastReadPostIdMap,
         channelId: position ?? -1, // -1 = 읽음 이력 없음
       },
-      unreadCountMap: {
-        ...state.unreadCountMap,
-        channelId: unreadCount,
-      },
+      unreadCountMap: {...state.unreadCountMap, channelId: unreadCount},
       currentVisiblePostId: null, // 새 채널 진입 시 초기화
     );
 
@@ -79,10 +77,7 @@ class ChannelReadPositionNotifier
     // 뱃지 카운트 갱신
     final unreadCount = await _repository.getUnreadCount(channelId);
     state = state.copyWith(
-      unreadCountMap: {
-        ...state.unreadCountMap,
-        channelId: unreadCount,
-      },
+      unreadCountMap: {...state.unreadCountMap, channelId: unreadCount},
     );
   }
 
@@ -110,11 +105,35 @@ class ChannelReadPositionNotifier
       state = state.copyWith(currentVisiblePostId: maxId);
     }
   }
+
+  /// 모든 채널의 뱃지 카운트 일괄 갱신
+  ///
+  /// 채널 전환 시 호출하여 모든 채널의 뱃지를 동시 갱신합니다.
+  /// 백그라운드로 실행되며 에러 시에도 무시합니다.
+  Future<void> refreshAllBadges(List<int> channelIds) async {
+    if (channelIds.isEmpty) return;
+
+    try {
+      // Batch UseCase 사용
+      final useCase = _ref.read(getBatchUnreadCountsUseCaseProvider);
+      final counts = await useCase(channelIds);
+
+      // 상태 갱신
+      state = state.copyWith(
+        unreadCountMap: {...state.unreadCountMap, ...counts},
+      );
+    } catch (e) {
+      // 백그라운드 작업이므로 에러 무시
+    }
+  }
 }
 
 /// ChannelReadPositionNotifier Provider
-final channelReadPositionProvider = StateNotifierProvider<
-    ChannelReadPositionNotifier, ChannelReadPositionState>((ref) {
-  final repository = ref.watch(readPositionRepositoryProvider);
-  return ChannelReadPositionNotifier(repository);
-});
+final channelReadPositionProvider =
+    StateNotifierProvider<
+      ChannelReadPositionNotifier,
+      ChannelReadPositionState
+    >((ref) {
+      final repository = ref.watch(readPositionRepositoryProvider);
+      return ChannelReadPositionNotifier(repository, ref);
+    });

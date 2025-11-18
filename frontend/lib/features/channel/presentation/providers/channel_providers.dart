@@ -13,6 +13,7 @@ import '../../domain/repositories/read_position_repository.dart';
 import '../../domain/usecases/get_channel_list_usecase.dart';
 import '../../domain/usecases/enter_channel_usecase.dart';
 import '../../domain/usecases/calculate_unread_position_usecase.dart';
+import '../../domain/usecases/get_batch_unread_counts_usecase.dart';
 
 /// Channel Remote DataSource Provider
 ///
@@ -98,4 +99,14 @@ final enterChannelUseCaseProvider = Provider<EnterChannelUseCase>((ref) {
 final calculateUnreadPositionUseCaseProvider =
     Provider<CalculateUnreadPositionUseCase>((ref) {
       return CalculateUnreadPositionUseCase();
+    });
+
+/// Get Batch Unread Counts UseCase Provider
+///
+/// Provides business logic for batch unread count retrieval.
+/// Depends on ReadPositionRepository.
+final getBatchUnreadCountsUseCaseProvider =
+    Provider<GetBatchUnreadCountsUseCase>((ref) {
+      final repository = ref.watch(readPositionRepositoryProvider);
+      return GetBatchUnreadCountsUseCase(repository);
     });
