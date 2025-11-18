@@ -17,8 +17,14 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$PostListState {
-  /// 게시글 목록
+  /// 게시글 목록 (원본 데이터)
   List<Post> get posts => throw _privateConstructorUsedError;
+
+  /// 평탄화된 목록 (DateMarker + Post)
+  ///
+  /// UI 렌더링용 플랫 리스트
+  /// [DateMarker, Post, Post, DateMarker, Post, ...]
+  List<Object> get flatItems => throw _privateConstructorUsedError;
 
   /// 로딩 중 여부
   bool get isLoading => throw _privateConstructorUsedError;
@@ -48,6 +54,7 @@ abstract class $PostListStateCopyWith<$Res> {
   @useResult
   $Res call({
     List<Post> posts,
+    List<Object> flatItems,
     bool isLoading,
     bool hasMore,
     int currentPage,
@@ -71,6 +78,7 @@ class _$PostListStateCopyWithImpl<$Res, $Val extends PostListState>
   @override
   $Res call({
     Object? posts = null,
+    Object? flatItems = null,
     Object? isLoading = null,
     Object? hasMore = null,
     Object? currentPage = null,
@@ -82,6 +90,10 @@ class _$PostListStateCopyWithImpl<$Res, $Val extends PostListState>
                 ? _value.posts
                 : posts // ignore: cast_nullable_to_non_nullable
                       as List<Post>,
+            flatItems: null == flatItems
+                ? _value.flatItems
+                : flatItems // ignore: cast_nullable_to_non_nullable
+                      as List<Object>,
             isLoading: null == isLoading
                 ? _value.isLoading
                 : isLoading // ignore: cast_nullable_to_non_nullable
@@ -115,6 +127,7 @@ abstract class _$$PostListStateImplCopyWith<$Res>
   @useResult
   $Res call({
     List<Post> posts,
+    List<Object> flatItems,
     bool isLoading,
     bool hasMore,
     int currentPage,
@@ -137,6 +150,7 @@ class __$$PostListStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? posts = null,
+    Object? flatItems = null,
     Object? isLoading = null,
     Object? hasMore = null,
     Object? currentPage = null,
@@ -148,6 +162,10 @@ class __$$PostListStateImplCopyWithImpl<$Res>
             ? _value._posts
             : posts // ignore: cast_nullable_to_non_nullable
                   as List<Post>,
+        flatItems: null == flatItems
+            ? _value._flatItems
+            : flatItems // ignore: cast_nullable_to_non_nullable
+                  as List<Object>,
         isLoading: null == isLoading
             ? _value.isLoading
             : isLoading // ignore: cast_nullable_to_non_nullable
@@ -174,22 +192,42 @@ class __$$PostListStateImplCopyWithImpl<$Res>
 class _$PostListStateImpl implements _PostListState {
   const _$PostListStateImpl({
     final List<Post> posts = const [],
+    final List<Object> flatItems = const [],
     this.isLoading = false,
     this.hasMore = false,
     this.currentPage = 0,
     this.errorMessage,
-  }) : _posts = posts;
+  }) : _posts = posts,
+       _flatItems = flatItems;
 
-  /// 게시글 목록
+  /// 게시글 목록 (원본 데이터)
   final List<Post> _posts;
 
-  /// 게시글 목록
+  /// 게시글 목록 (원본 데이터)
   @override
   @JsonKey()
   List<Post> get posts {
     if (_posts is EqualUnmodifiableListView) return _posts;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_posts);
+  }
+
+  /// 평탄화된 목록 (DateMarker + Post)
+  ///
+  /// UI 렌더링용 플랫 리스트
+  /// [DateMarker, Post, Post, DateMarker, Post, ...]
+  final List<Object> _flatItems;
+
+  /// 평탄화된 목록 (DateMarker + Post)
+  ///
+  /// UI 렌더링용 플랫 리스트
+  /// [DateMarker, Post, Post, DateMarker, Post, ...]
+  @override
+  @JsonKey()
+  List<Object> get flatItems {
+    if (_flatItems is EqualUnmodifiableListView) return _flatItems;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_flatItems);
   }
 
   /// 로딩 중 여부
@@ -213,7 +251,7 @@ class _$PostListStateImpl implements _PostListState {
 
   @override
   String toString() {
-    return 'PostListState(posts: $posts, isLoading: $isLoading, hasMore: $hasMore, currentPage: $currentPage, errorMessage: $errorMessage)';
+    return 'PostListState(posts: $posts, flatItems: $flatItems, isLoading: $isLoading, hasMore: $hasMore, currentPage: $currentPage, errorMessage: $errorMessage)';
   }
 
   @override
@@ -222,6 +260,10 @@ class _$PostListStateImpl implements _PostListState {
         (other.runtimeType == runtimeType &&
             other is _$PostListStateImpl &&
             const DeepCollectionEquality().equals(other._posts, _posts) &&
+            const DeepCollectionEquality().equals(
+              other._flatItems,
+              _flatItems,
+            ) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
             (identical(other.hasMore, hasMore) || other.hasMore == hasMore) &&
@@ -235,6 +277,7 @@ class _$PostListStateImpl implements _PostListState {
   int get hashCode => Object.hash(
     runtimeType,
     const DeepCollectionEquality().hash(_posts),
+    const DeepCollectionEquality().hash(_flatItems),
     isLoading,
     hasMore,
     currentPage,
@@ -253,15 +296,23 @@ class _$PostListStateImpl implements _PostListState {
 abstract class _PostListState implements PostListState {
   const factory _PostListState({
     final List<Post> posts,
+    final List<Object> flatItems,
     final bool isLoading,
     final bool hasMore,
     final int currentPage,
     final String? errorMessage,
   }) = _$PostListStateImpl;
 
-  /// 게시글 목록
+  /// 게시글 목록 (원본 데이터)
   @override
   List<Post> get posts;
+
+  /// 평탄화된 목록 (DateMarker + Post)
+  ///
+  /// UI 렌더링용 플랫 리스트
+  /// [DateMarker, Post, Post, DateMarker, Post, ...]
+  @override
+  List<Object> get flatItems;
 
   /// 로딩 중 여부
   @override

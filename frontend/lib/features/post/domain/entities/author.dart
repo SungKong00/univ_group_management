@@ -20,6 +20,5 @@ class Author with _$Author {
   }) = _Author;
 
   /// JSON에서 Author 객체 생성
-  factory Author.fromJson(Map<String, dynamic> json) =>
-      _$AuthorFromJson(json);
+  factory Author.fromJson(Map<String, dynamic> json) => _$AuthorFromJson(json);
 }

@@ -29,8 +29,8 @@ final channelRemoteDataSourceProvider = Provider<ChannelRemoteDataSource>((
 /// Session-scoped, will be reset on app restart.
 final readPositionLocalDataSourceProvider =
     Provider<ReadPositionLocalDataSource>((ref) {
-  return ReadPositionLocalDataSourceImpl();
-});
+      return ReadPositionLocalDataSourceImpl();
+    });
 
 /// Channel Repository Provider
 ///

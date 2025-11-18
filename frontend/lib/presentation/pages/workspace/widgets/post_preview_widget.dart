@@ -157,7 +157,8 @@ class PostPreviewWidget extends ConsumerWidget {
 
   Widget _buildPostProfileImage(Post post) {
     final hasImage =
-        post.author.profileImageUrl != null && post.author.profileImageUrl!.isNotEmpty;
+        post.author.profileImageUrl != null &&
+        post.author.profileImageUrl!.isNotEmpty;
 
     if (hasImage) {
       return CircleAvatar(

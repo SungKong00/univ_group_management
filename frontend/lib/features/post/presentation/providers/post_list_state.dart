@@ -9,8 +9,14 @@ part 'post_list_state.freezed.dart';
 @freezed
 class PostListState with _$PostListState {
   const factory PostListState({
-    /// 게시글 목록
+    /// 게시글 목록 (원본 데이터)
     @Default([]) List<Post> posts,
+
+    /// 평탄화된 목록 (DateMarker + Post)
+    ///
+    /// UI 렌더링용 플랫 리스트
+    /// [DateMarker, Post, Post, DateMarker, Post, ...]
+    @Default([]) List<Object> flatItems,
 
     /// 로딩 중 여부
     @Default(false) bool isLoading,

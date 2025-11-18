@@ -27,8 +27,9 @@ class PostRemoteDataSource {
 
   /// GET /posts/{postId}
   Future<PostDto> fetchPost(int postId) async {
-    final response =
-        await _dioClient.get<Map<String, dynamic>>('/posts/$postId');
+    final response = await _dioClient.get<Map<String, dynamic>>(
+      '/posts/$postId',
+    );
     return _unwrap(
       response,
       (json) => PostDto.fromJson(json as Map<String, dynamic>),
@@ -61,16 +62,14 @@ class PostRemoteDataSource {
 
   /// DELETE /posts/{postId}
   Future<void> deletePost(int postId) async {
-    final response =
-        await _dioClient.delete<Map<String, dynamic>>('/posts/$postId');
+    final response = await _dioClient.delete<Map<String, dynamic>>(
+      '/posts/$postId',
+    );
     _unwrap(response, (json) => null);
   }
 
   /// ApiResponse 래핑 해제 및 에러 처리
-  T _unwrap<T>(
-    dynamic response,
-    T Function(Object? json) fromJson,
-  ) {
+  T _unwrap<T>(dynamic response, T Function(Object? json) fromJson) {
     if (response.data == null) throw Exception('Empty response');
 
     final apiResponse = ApiResponse.fromJson(response.data!, fromJson);

@@ -26,8 +26,9 @@ void main() {
         ChannelDto(id: 1, name: '공지사항', type: 'ANNOUNCEMENT'),
         ChannelDto(id: 2, name: '자유게시판', type: 'TEXT'),
       ];
-      when(mockRemoteDataSource.getChannels('ws-1'))
-          .thenAnswer((_) async => dtos);
+      when(
+        mockRemoteDataSource.getChannels('ws-1'),
+      ).thenAnswer((_) async => dtos);
 
       final result = await repository.getChannels('ws-1');
 
@@ -37,8 +38,9 @@ void main() {
     });
 
     test('getChannels - DataSource 에러 전파', () async {
-      when(mockRemoteDataSource.getChannels('ws-1'))
-          .thenThrow(Exception('네트워크 에러'));
+      when(
+        mockRemoteDataSource.getChannels('ws-1'),
+      ).thenThrow(Exception('네트워크 에러'));
 
       expect(() => repository.getChannels('ws-1'), throwsA(isA<Exception>()));
     });
@@ -47,8 +49,9 @@ void main() {
       final dto = ChannelPermissionsDto(
         permissions: ['READ', 'WRITE', 'DELETE'],
       );
-      when(mockRemoteDataSource.getMyPermissions(1))
-          .thenAnswer((_) async => dto);
+      when(
+        mockRemoteDataSource.getMyPermissions(1),
+      ).thenAnswer((_) async => dto);
 
       final result = await repository.getMyPermissions(1);
 
@@ -63,12 +66,14 @@ void main() {
         type: 'TEXT',
         description: '설명',
       );
-      when(mockRemoteDataSource.createChannel(
-        workspaceId: 'ws-1',
-        name: '새 채널',
-        type: 'TEXT',
-        description: '설명',
-      )).thenAnswer((_) async => dto);
+      when(
+        mockRemoteDataSource.createChannel(
+          workspaceId: 'ws-1',
+          name: '새 채널',
+          type: 'TEXT',
+          description: '설명',
+        ),
+      ).thenAnswer((_) async => dto);
 
       final result = await repository.createChannel(
         workspaceId: 'ws-1',

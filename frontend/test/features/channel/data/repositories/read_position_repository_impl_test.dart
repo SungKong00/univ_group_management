@@ -23,8 +23,9 @@ void main() {
         final channelId = 1;
         final position = 100;
 
-        when(mockLocalDataSource.getReadPosition(channelId))
-            .thenAnswer((_) async => position);
+        when(
+          mockLocalDataSource.getReadPosition(channelId),
+        ).thenAnswer((_) async => position);
 
         // When
         final result = await repository.getReadPosition(channelId);
@@ -38,8 +39,9 @@ void main() {
         // Given
         final channelId = 999;
 
-        when(mockLocalDataSource.getReadPosition(channelId))
-            .thenAnswer((_) async => null);
+        when(
+          mockLocalDataSource.getReadPosition(channelId),
+        ).thenAnswer((_) async => null);
 
         // When
         final result = await repository.getReadPosition(channelId);
@@ -56,15 +58,17 @@ void main() {
         final channelId = 1;
         final position = 150;
 
-        when(mockLocalDataSource.updateReadPosition(channelId, position))
-            .thenAnswer((_) async => {});
+        when(
+          mockLocalDataSource.updateReadPosition(channelId, position),
+        ).thenAnswer((_) async => {});
 
         // When
         await repository.updateReadPosition(channelId, position);
 
         // Then
-        verify(mockLocalDataSource.updateReadPosition(channelId, position))
-            .called(1);
+        verify(
+          mockLocalDataSource.updateReadPosition(channelId, position),
+        ).called(1);
       });
 
       test('정상 케이스 - 0으로 업데이트', () async {
@@ -72,15 +76,17 @@ void main() {
         final channelId = 1;
         final position = 0;
 
-        when(mockLocalDataSource.updateReadPosition(channelId, position))
-            .thenAnswer((_) async => {});
+        when(
+          mockLocalDataSource.updateReadPosition(channelId, position),
+        ).thenAnswer((_) async => {});
 
         // When
         await repository.updateReadPosition(channelId, position);
 
         // Then
-        verify(mockLocalDataSource.updateReadPosition(channelId, position))
-            .called(1);
+        verify(
+          mockLocalDataSource.updateReadPosition(channelId, position),
+        ).called(1);
       });
     });
   });

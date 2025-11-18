@@ -83,7 +83,8 @@ void main() {
                     slivers: [
                       SliverList(
                         delegate: SliverChildBuilderDelegate(
-                          (context, index) => ListTile(title: Text('Item $index')),
+                          (context, index) =>
+                              ListTile(title: Text('Item $index')),
                           childCount: 10,
                         ),
                       ),

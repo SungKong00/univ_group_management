@@ -6,80 +6,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
-import '../../../core/config/feature_flags.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../core/models/date_marker.dart';
 import '../../../core/models/post_list_item.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/read_position_helper.dart';
 import '../../../features/post/domain/entities/post.dart';
 import '../../../features/post/presentation/providers/post_list_notifier.dart';
 import '../../../features/post/presentation/providers/post_list_state.dart';
-import '../common/app_empty_state.dart';
-import 'post_item.dart';
-import 'date_divider.dart';
-import 'post_skeleton.dart';
-import 'unread_message_divider.dart';
 import '../../providers/workspace_state_provider.dart';
-
-// ✅ WorkspaceStateProvider가 JS 캐시를 관리하므로
-// PostList에서는 더 이상 dart:js, dart:html 불필요
-
-// 상수 정의 - 설정 변경이 쉽도록 중앙화
-class _PostListConstants {
-  /// 무한 스크롤 트리거 임계값 (상단으로부터의 거리)
-  static const double infiniteScrollThreshold = 200.0;
-
-  /// 읽음 처리를 위한 가시성 임계값 (50% 이상 보여야 읽음 처리)
-  static const double readVisibilityThreshold = 0.5;
-
-  /// 읽은 위치 업데이트 디바운스 지연 시간
-  static const Duration debounceDelay = Duration(milliseconds: 200);
-
-  /// ScrollController 준비 대기 시간
-  static const Duration scrollControllerWaitTime = Duration(milliseconds: 300);
-
-  /// 읽은 위치 데이터 재시도 대기 시간
-  static const Duration readPositionRetryDelay = Duration(milliseconds: 100);
-
-  /// 읽은 위치 데이터 최대 재시도 횟수
-  static const int readPositionMaxRetries = 3;
-
-  /// Sticky header 높이 (날짜 구분선)
-  static const double stickyHeaderHeight = 24.0;
-
-  /// 채널 헤더 높이 (화면 전체 좌표계 기준)
-  /// - Container padding top: 13px
-  /// - Text(channelName) 높이: 26px (headlineMedium: fontSize 20px × height 1.3)
-  /// - SizedBox: 0px
-  /// - 총합: 39px
-  ///
-  /// 📍 용도:
-  /// - _updateSticky(): localToGlobal() 좌표 보정 (화면 전체 기준 y좌표)
-  /// - Positioned(top): ❌ 사용 금지! PostList Stack은 상대 좌표이므로 top: 0 사용
-  ///
-  /// 📍 참조: channel_content_view.dart, theme.dart headlineMedium
-  static const double channelHeaderHeight = 39.0;
-
-  /// Sticky Header 표시 임계값 (화면 전체 좌표계 기준)
-  ///
-  /// 📍 계산 근거:
-  /// - TopNavigation: 48px (AppConstants.topNavigationHeight)
-  /// - ChannelHeader: 39px (channelHeaderHeight)
-  /// - 총합: 87px
-  ///
-  /// 📍 좌표 시스템:
-  /// - localToGlobal()은 viewport 최상단(0,0)부터 측정
-  /// - pos.dy = 0: TopNavigation 최상단
-  /// - pos.dy = 48: ChannelHeader 시작점
-  /// - pos.dy = 87: PostList 시작점 (Sticky Header 고정 위치)
-  ///
-  /// 📍 용도:
-  /// - _updateSticky(): "TopNavigation + ChannelHeader 아래에서 조금이라도 보이는" 항목 탐지
-  static const double stickyThreshold =
-      AppConstants.topNavigationHeight + channelHeaderHeight; // 48 + 39 = 87
-}
+import 'date_divider.dart';
+import 'post_item.dart';
+import 'post_list_constants.dart';
+import 'post_list_view.dart';
+import 'post_sticky_header.dart';
+import 'unread_message_divider.dart';
 
 /// 게시글 목록 위젯
 ///
@@ -139,22 +78,12 @@ class _PostListState extends ConsumerState<PostList> {
     _scrollController = AutoScrollController();
     _scrollController.addListener(_onScroll);
 
-    // Feature Flag: AsyncNotifier 패턴에서는 Provider가 자동 로딩
-    if (!FeatureFlags.useAsyncNotifierPattern) {
-      // ✅ 구 방식: 이벤트 루프 완료 후 데이터 로드 (Provider 초기화 대기)
-      Future.microtask(() {
-        if (mounted) {
-          _loadPostsAndScrollToUnread();
-        }
-      });
-    } else {
-      // ✅ 신 방식: 스크롤 위치만 복원 (Provider가 데이터 로딩)
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _restoreScrollPosition();
-        }
-      });
-    }
+    // AsyncNotifier 패턴: 스크롤 위치만 복원 (Provider가 데이터 로딩)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _restoreScrollPosition();
+      }
+    });
   }
 
   /// 스크롤 위치 복원 (AsyncNotifier 패턴용)
@@ -162,29 +91,93 @@ class _PostListState extends ConsumerState<PostList> {
     final channelIdInt = int.tryParse(widget.channelId);
     if (channelIdInt == null) return;
 
-    // 데이터 로딩 대기 (AsyncNotifier의 build() 완료 대기)
-    await Future.delayed(const Duration(milliseconds: 100));
-    if (!mounted) return;
+    // 🔴 개선: AsyncNotifier 데이터 로딩 완료 대기 (최대 5초)
+    int dataWaitAttempts = 0;
+    const maxDataWaitAttempts = 50; // 100ms * 50 = 5초
+    while (dataWaitAttempts < maxDataWaitAttempts) {
+      if (!mounted) return;
+
+      final postListAsync = ref.read(
+        postListAsyncNotifierProvider(widget.channelId),
+      );
+
+      // 데이터가 로드되었는지 확인
+      if (postListAsync.hasValue && postListAsync.valueOrNull != null) {
+        print('[PostList] AsyncNotifier data loaded after ${dataWaitAttempts * 100}ms');
+        break;
+      }
+
+      // 에러가 발생한 경우 중단
+      if (postListAsync.hasError) {
+        print('[PostList] AsyncNotifier loading failed with error: ${postListAsync.error}');
+        return;
+      }
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      dataWaitAttempts++;
+    }
+
+    if (dataWaitAttempts >= maxDataWaitAttempts) {
+      print('[PostList] AsyncNotifier data loading timeout after 5 seconds');
+      return;
+    }
 
     // 읽음 위치 데이터 대기
     await _waitForReadPositionData(channelIdInt);
     if (!mounted) return;
 
-    // 게시글 목록 가져오기
+    // 게시글 목록 가져오기 (이제 확실히 데이터가 있음)
     final postListAsync = ref.read(
       postListAsyncNotifierProvider(widget.channelId),
     );
     final postListState = postListAsync.valueOrNull;
-    if (postListState == null || postListState.posts.isEmpty) return;
+    if (postListState == null || postListState.posts.isEmpty) {
+      print('[PostList] No posts available even after waiting');
+      return;
+    }
 
     // Flat List 생성
     final flatItems = _buildFlatList(postListState.posts);
     if (!mounted) return;
 
+    // 🔴 버그 수정: _firstUnreadPostIndex 계산 로직 추가
+    // lastReadPostId를 기반으로 첫 번째 읽지 않은 글의 인덱스 찾기
+    final workspaceState = ref.read(workspaceStateProvider);
+    final lastReadPostId = workspaceState.lastReadPostIdMap[channelIdInt];
+
+    // 디버깅 로그
+    print('[PostList] lastReadPostId for channel $channelIdInt: $lastReadPostId');
+
+    int? firstUnreadIdx;
+    if (lastReadPostId != null && lastReadPostId != -1) {
+      // FlatList에서 첫 번째 읽지 않은 Post 찾기
+      for (int i = 0; i < flatItems.length; i++) {
+        final item = flatItems[i];
+        if (item is PostWrapper && item.post.id > lastReadPostId) {
+          firstUnreadIdx = i;
+          print('[PostList] Found first unread post at index $i (postId: ${item.post.id})');
+          break;
+        }
+      }
+    } else if (lastReadPostId == -1 || lastReadPostId == null) {
+      // 읽은 이력이 없는 경우, 첫 번째 Post를 찾기
+      for (int i = 0; i < flatItems.length; i++) {
+        final item = flatItems[i];
+        if (item is PostWrapper) {
+          firstUnreadIdx = i;
+          print('[PostList] No read history, setting first post at index $i as unread');
+          break;
+        }
+      }
+    }
+
     setState(() {
       _flatItems = flatItems;
+      _firstUnreadPostIndex = firstUnreadIdx;  // 🔴 이제 올바르게 설정됨!
       _isInitialLoading = false;
     });
+
+    print('[PostList] _firstUnreadPostIndex set to: $_firstUnreadPostIndex');
 
     // 읽음 위치 계산 및 스크롤
     _scrollToUnreadPost();
@@ -226,7 +219,7 @@ class _PostListState extends ConsumerState<PostList> {
       _hasScrolledToUnread = false;
       _highestEverVisibleId = null;
     });
-    _loadPostsAndScrollToUnread();
+    _restoreScrollPosition();
   }
 
   void _handlePostUpdated() {
@@ -239,11 +232,11 @@ class _PostListState extends ConsumerState<PostList> {
 
   /// 읽음 위치 데이터가 준비될 때까지 대기
   Future<void> _waitForReadPositionData(int channelId) async {
-    await Future.delayed(_PostListConstants.readPositionRetryDelay);
+    await Future.delayed(PostListConstants.readPositionRetryDelay);
 
     for (
       int attempt = 0;
-      attempt < _PostListConstants.readPositionMaxRetries;
+      attempt < PostListConstants.readPositionMaxRetries;
       attempt++
     ) {
       if (!mounted) return; // ✅ dispose 후 실행 방지
@@ -253,8 +246,8 @@ class _PostListState extends ConsumerState<PostList> {
         return;
       }
 
-      if (attempt < _PostListConstants.readPositionMaxRetries - 1) {
-        await Future.delayed(_PostListConstants.readPositionRetryDelay);
+      if (attempt < PostListConstants.readPositionMaxRetries - 1) {
+        await Future.delayed(PostListConstants.readPositionRetryDelay);
       }
     }
   }
@@ -303,108 +296,33 @@ class _PostListState extends ConsumerState<PostList> {
     return flatItems;
   }
 
-  /// 게시글 로드 및 읽지 않은 게시글로 스크롤
-  Future<void> _loadPostsAndScrollToUnread() async {
-    await _loadPosts(refresh: true);
-
-    final channelIdInt = int.tryParse(widget.channelId);
-    if (channelIdInt != null) {
-      await _waitForReadPositionData(channelIdInt);
-
-      if (!mounted) return; // ✅ 비동기 작업 후 dispose 체크
-      final workspaceState = ref.read(workspaceStateProvider);
-      final lastReadPostId = ReadPositionHelper.getLastReadPostId(
-        workspaceState.lastReadPostIdMap,
-        channelIdInt,
-      );
-
-      // Phase 2: Flat list에서 찾기 (sequential index 반환)
-      _firstUnreadPostIndex = _findFirstUnreadPostIndexInFlatList(
-        lastReadPostId,
-      );
-
-      if (_firstUnreadPostIndex != null && !_hasScrolledToUnread) {
-        // 읽지 않은 글이 있으면 해당 위치로 스크롤
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          await _scrollToUnreadPost();
-          _updateSticky();
-        });
-      } else {
-        // 읽지 않은 글이 없으면 최하단으로 스크롤
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients) {
-            _scrollController.jumpTo(
-              _scrollController.position.maxScrollExtent,
-            );
-          }
-          setState(() {
-            _isInitialLoading = false;
-          });
-          _updateSticky();
-        });
-      }
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-        }
-        setState(() {
-          _isInitialLoading = false;
-        });
-        _updateSticky();
-      });
-    }
-  }
-
-  /// Phase 2: Flat list에서 첫 번째 읽지 않은 게시글의 sequential index 찾기
-  int? _findFirstUnreadPostIndexInFlatList(int? lastReadPostId) {
-    if (lastReadPostId == null || lastReadPostId == -1) {
-      // 읽음 이력 없으면 첫 번째 게시글의 index (-1은 신규 채널)
-      for (int i = 0; i < _flatItems.length; i++) {
-        if (_flatItems[i] case PostWrapper()) {
-          return i; // sequential index 반환
-        }
-      }
-      return null;
-    }
-
-    // lastReadPostId 다음 게시글 찾기
-    bool foundLastRead = false;
-    for (int i = 0; i < _flatItems.length; i++) {
-      if (_flatItems[i] case PostWrapper(:final post)) {
-        if (foundLastRead) {
-          return i; // sequential index 반환
-        }
-        if (post.id == lastReadPostId) {
-          foundLastRead = true;
-        }
-      }
-    }
-
-    // 모두 읽음
-    return null;
-  }
 
   /// 읽지 않은 게시글로 스크롤
   Future<void> _scrollToUnreadPost() async {
+    print('[PostList] _scrollToUnreadPost called - index: $_firstUnreadPostIndex, hasScrolled: $_hasScrolledToUnread');
+
     if (_firstUnreadPostIndex == null || _hasScrolledToUnread) {
+      print('[PostList] Skipping scroll - index is null or already scrolled');
       return;
     }
 
     try {
       // ScrollController가 준비될 때까지 대기
       if (!_scrollController.hasClients) {
-        await Future.delayed(_PostListConstants.scrollControllerWaitTime);
+        print('[PostList] ScrollController not ready, waiting...');
+        await Future.delayed(PostListConstants.scrollControllerWaitTime);
       }
 
       // 여전히 준비되지 않았으면 최하단으로 스크롤
       if (!_scrollController.hasClients) {
+        print('[PostList] ScrollController still not ready, aborting scroll');
         setState(() {
           _isInitialLoading = false;
         });
         return;
       }
 
+      print('[PostList] Scrolling to index $_firstUnreadPostIndex');
       // AutoScrollController를 사용한 sequential index 기반 스크롤
       await _scrollController.scrollToIndex(
         _firstUnreadPostIndex!,
@@ -416,14 +334,16 @@ class _PostListState extends ConsumerState<PostList> {
       if (_scrollController.hasClients) {
         final currentOffset = _scrollController.offset;
         final adjustedOffset =
-            (currentOffset - _PostListConstants.stickyHeaderHeight).clamp(
+            (currentOffset - PostListConstants.stickyHeaderHeight).clamp(
               _scrollController.position.minScrollExtent,
               _scrollController.position.maxScrollExtent,
             );
+        print('[PostList] Adjusting scroll offset from $currentOffset to $adjustedOffset');
         _scrollController.jumpTo(adjustedOffset);
       }
 
       _hasScrolledToUnread = true;
+      print('[PostList] Scroll to unread completed successfully');
 
       if (mounted) {
         setState(() {
@@ -461,83 +381,8 @@ class _PostListState extends ConsumerState<PostList> {
     }
   }
 
-  Future<void> _loadPosts({bool refresh = false}) async {
-    final notifier = ref.read(
-      postListNotifierProvider(widget.channelId).notifier,
-    );
-    final state = ref.read(postListNotifierProvider(widget.channelId));
-
-    if (!refresh && (state.isLoading || !state.hasMore)) return;
-
-    double? savedScrollOffset;
-    double? savedMaxScrollExtent;
-    if (!refresh && state.currentPage > 0 && _scrollController.hasClients) {
-      savedScrollOffset = _scrollController.offset;
-      savedMaxScrollExtent = _scrollController.position.maxScrollExtent;
-    }
-
-    try {
-      await notifier.loadPosts(widget.channelId, refresh: refresh);
-
-      final newState = ref.read(postListNotifierProvider(widget.channelId));
-      final bool isFirstPageLoad = newState.currentPage == 1;
-
-      if (!mounted) return;
-      setState(() {
-        // Phase 2: Flat list 생성
-        _flatItems = _buildFlatList(newState.posts);
-
-        if (isFirstPageLoad) {
-          _isInitialLoading = true;
-        }
-
-        // 무한 스크롤 시 읽지 않은 글 위치는 재계산하지 않음
-        // 이미 설정된 _firstUnreadPostId를 유지하여 UI 깜빡임 방지
-      });
-
-      if (savedScrollOffset != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients) {
-            final delta =
-                _scrollController.position.maxScrollExtent -
-                (savedMaxScrollExtent ?? 0);
-            _scrollController.jumpTo(savedScrollOffset! + delta);
-          }
-
-          // ✨ Sticky header 업데이트 (새 render boxes 측정)
-          // _loadPosts()로 _flatItems가 재구성된 후 렌더링 완료를 보장
-          if (mounted) {
-            _updateSticky();
-          }
-        });
-      }
-    } catch (e, stackTrace) {
-      if (!mounted) return;
-
-      // 에러 메시지 정제 및 로깅
-      final errorMessage = e.toString().replaceAll('Exception: ', '');
-
-      setState(() {
-        _isInitialLoading = false;
-      });
-
-      // 상세한 에러 로깅
-      debugPrint('[PostList] 게시글 로드 실패');
-      debugPrint('  채널 ID: ${widget.channelId}');
-      debugPrint('  에러 메시지: $errorMessage');
-      debugPrint('  원본 에러: $e');
-      if (e is! FormatException && e is! TypeError) {
-        debugPrint('  스택 추적:\n$stackTrace');
-      }
-    }
-  }
-
   void _onScroll() {
     if (_isInitialLoading) return;
-    if (_scrollController.position.pixels <=
-        _PostListConstants.infiniteScrollThreshold) {
-      _loadPosts();
-    }
 
     // ✨ PostFrameCallback: 렌더링 완료 후 sticky header 업데이트
     // 마우스 휠 스크롤 시 RenderBox가 아직 렌더링되지 않은 문제 해결
@@ -564,7 +409,7 @@ class _PostListState extends ConsumerState<PostList> {
         final pos = box.localToGlobal(Offset.zero);
 
         // TopNavigation + ChannelHeader 아래에서 조금이라도 보이는 항목
-        if (pos.dy + box.size.height > _PostListConstants.stickyThreshold) {
+        if (pos.dy + box.size.height > PostListConstants.stickyThreshold) {
           firstVisibleIndex = index;
           break; // 첫 번째 발견 시 중단
         }
@@ -593,7 +438,7 @@ class _PostListState extends ConsumerState<PostList> {
 
   void _scheduleUpdateMaxVisibleId() {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(_PostListConstants.debounceDelay, () {
+    _debounceTimer = Timer(PostListConstants.debounceDelay, () {
       _updateMaxVisibleId();
     });
   }
@@ -618,72 +463,18 @@ class _PostListState extends ConsumerState<PostList> {
     }
   }
 
-  Widget _buildSticky() {
-    if (_stickyDate == null) return const SizedBox.shrink();
-
-    final bgColor = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.darkElevated
-        : AppColors.lightBackground;
-
-    return Material(
-      elevation: 0,
-      color: bgColor,
-      child: DateDivider(date: _stickyDate!),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Feature Flag: AsyncNotifier 패턴 사용 여부
-    if (FeatureFlags.useAsyncNotifierPattern) {
-      return _buildWithAsyncNotifier(context);
-    } else {
-      return _buildWithStateNotifier(context);
-    }
-  }
-
-  /// 신 방식: AsyncNotifier 패턴 (Provider가 데이터 로딩 제어)
-  Widget _buildWithAsyncNotifier(BuildContext context) {
-    final postListAsync = ref.watch(
-      postListAsyncNotifierProvider(widget.channelId),
+    // AsyncNotifier 패턴 사용 (Feature Flag 통해 제어)
+    return PostListView(
+      channelId: widget.channelId,
+      buildScrollView: _buildScrollView,
     );
-
-    return postListAsync.when(
-      loading: () => const PostListSkeleton(),
-      error: (error, stack) => _buildErrorState(error.toString()),
-      data: (postListState) {
-        // 빈 상태 처리
-        if (postListState.posts.isEmpty) {
-          return _buildEmptyState();
-        }
-
-        // 데이터가 있으면 스크롤뷰 렌더링
-        return _buildScrollView(postListState);
-      },
-    );
-  }
-
-  /// 구 방식: StateNotifier 패턴 (Widget이 데이터 로딩 제어)
-  Widget _buildWithStateNotifier(BuildContext context) {
-    final postListState = ref.watch(postListNotifierProvider(widget.channelId));
-
-    if (postListState.posts.isEmpty && postListState.isLoading) {
-      return const PostListSkeleton();
-    }
-
-    if (postListState.posts.isEmpty && postListState.errorMessage != null) {
-      return _buildErrorState(postListState.errorMessage!);
-    }
-
-    if (postListState.posts.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return _buildScrollView(postListState);
   }
 
   /// 공통: ScrollView 렌더링 로직
-  Widget _buildScrollView(PostListState postListState) {
+  Widget _buildScrollView(dynamic data) {
+    final postListState = data as PostListState;
     // Phase 2: Flat list로 단일 SliverList 사용
     final scrollView = LayoutBuilder(
       builder: (context, constraints) {
@@ -723,7 +514,7 @@ class _PostListState extends ConsumerState<PostList> {
                       onVisibilityChanged: (info) {
                         // 50% 이상 보이면 읽음 처리
                         if (info.visibleFraction >
-                            _PostListConstants.readVisibilityThreshold) {
+                            PostListConstants.readVisibilityThreshold) {
                           _onPostVisible(post.id);
                         } else {
                           _onPostInvisible(post.id);
@@ -775,61 +566,14 @@ class _PostListState extends ConsumerState<PostList> {
           const Positioned.fill(
             child: Center(child: CircularProgressIndicator()),
           ),
-        if (!_isInitialLoading && _stickyDate != null)
+        if (!_isInitialLoading)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: _buildSticky(),
+            child: PostStickyHeader(stickyDate: _stickyDate),
           ),
       ],
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return AppEmptyState.noPosts();
-  }
-
-  Widget _buildErrorState(String errorMessage) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text(
-              '게시글을 불러올 수 없습니다',
-              style: AppTheme.headlineMedium.copyWith(
-                color: AppColors.neutral900,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              errorMessage,
-              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _resetAndLoad,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.action,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-              child: Text(
-                '다시 시도',
-                style: AppTheme.titleMedium.copyWith(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

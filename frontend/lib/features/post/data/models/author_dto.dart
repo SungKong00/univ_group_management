@@ -28,10 +28,6 @@ class AuthorDto with _$AuthorDto {
 
   /// DTO를 Domain Entity로 변환
   Author toEntity() {
-    return Author(
-      id: id,
-      name: name,
-      profileImageUrl: profileImageUrl,
-    );
+    return Author(id: id, name: name, profileImageUrl: profileImageUrl);
   }
 }

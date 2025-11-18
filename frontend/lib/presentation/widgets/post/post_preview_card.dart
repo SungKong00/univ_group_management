@@ -97,7 +97,8 @@ class PostPreviewCard extends StatelessWidget {
 
   Widget _buildProfileImage() {
     final hasImage =
-        post.author.profileImageUrl != null && post.author.profileImageUrl!.isNotEmpty;
+        post.author.profileImageUrl != null &&
+        post.author.profileImageUrl!.isNotEmpty;
 
     if (hasImage) {
       return CircleAvatar(

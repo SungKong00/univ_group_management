@@ -27,12 +27,15 @@ void main() {
           {'id': 2, 'name': '자유게시판', 'type': 'TEXT'},
         ],
       };
-      when(mockDioClient.get<Map<String, dynamic>>('/workspaces/ws-1/channels'))
-          .thenAnswer((_) async => Response(
-                data: apiResponse,
-                statusCode: 200,
-                requestOptions: RequestOptions(path: ''),
-              ));
+      when(
+        mockDioClient.get<Map<String, dynamic>>('/workspaces/ws-1/channels'),
+      ).thenAnswer(
+        (_) async => Response(
+          data: apiResponse,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: ''),
+        ),
+      );
 
       final result = await dataSource.getChannels('ws-1');
 
@@ -42,19 +45,26 @@ void main() {
     });
 
     test('에러 케이스 - Empty response', () async {
-      when(mockDioClient.get<Map<String, dynamic>>('/workspaces/ws-1/channels'))
-          .thenAnswer((_) async => Response(
-                data: null,
-                statusCode: 200,
-                requestOptions: RequestOptions(path: ''),
-              ));
+      when(
+        mockDioClient.get<Map<String, dynamic>>('/workspaces/ws-1/channels'),
+      ).thenAnswer(
+        (_) async => Response(
+          data: null,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: ''),
+        ),
+      );
 
-      expect(() => dataSource.getChannels('ws-1'),
-          throwsA(isA<Exception>().having(
+      expect(
+        () => dataSource.getChannels('ws-1'),
+        throwsA(
+          isA<Exception>().having(
             (e) => e.toString(),
             'message',
             contains('Empty response'),
-          )));
+          ),
+        ),
+      );
     });
 
     test('에러 케이스 - API failure', () async {
@@ -63,19 +73,26 @@ void main() {
         'message': 'Unauthorized',
         'data': null,
       };
-      when(mockDioClient.get<Map<String, dynamic>>('/workspaces/ws-1/channels'))
-          .thenAnswer((_) async => Response(
-                data: apiResponse,
-                statusCode: 200,
-                requestOptions: RequestOptions(path: ''),
-              ));
+      when(
+        mockDioClient.get<Map<String, dynamic>>('/workspaces/ws-1/channels'),
+      ).thenAnswer(
+        (_) async => Response(
+          data: apiResponse,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: ''),
+        ),
+      );
 
-      expect(() => dataSource.getChannels('ws-1'),
-          throwsA(isA<Exception>().having(
+      expect(
+        () => dataSource.getChannels('ws-1'),
+        throwsA(
+          isA<Exception>().having(
             (e) => e.toString(),
             'message',
             contains('Unauthorized'),
-          )));
+          ),
+        ),
+      );
     });
   });
 }

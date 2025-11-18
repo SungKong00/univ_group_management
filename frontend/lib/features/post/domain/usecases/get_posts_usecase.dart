@@ -43,10 +43,6 @@ class GetPostsUseCase {
     }
 
     // Repository 호출
-    return await _repository.getPosts(
-      channelId,
-      page: page,
-      size: size,
-    );
+    return await _repository.getPosts(channelId, page: page, size: size);
   }
 }

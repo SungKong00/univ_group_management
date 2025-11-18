@@ -27,12 +27,15 @@ void main() {
           'permissions': ['READ', 'WRITE', 'DELETE'],
         },
       };
-      when(mockDioClient.get<Map<String, dynamic>>('/channels/1/permissions/me'))
-          .thenAnswer((_) async => Response(
-                data: apiResponse,
-                statusCode: 200,
-                requestOptions: RequestOptions(path: ''),
-              ));
+      when(
+        mockDioClient.get<Map<String, dynamic>>('/channels/1/permissions/me'),
+      ).thenAnswer(
+        (_) async => Response(
+          data: apiResponse,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: ''),
+        ),
+      );
 
       final result = await dataSource.getMyPermissions(1);
 
@@ -43,21 +46,20 @@ void main() {
     test('createChannel - 채널 생성 성공 (description 포함)', () async {
       final apiResponse = {
         'success': true,
-        'data': {
-          'id': 3,
-          'name': '새 채널',
-          'type': 'TEXT',
-          'description': '설명',
-        },
+        'data': {'id': 3, 'name': '새 채널', 'type': 'TEXT', 'description': '설명'},
       };
-      when(mockDioClient.post<Map<String, dynamic>>(
-        '/workspaces/ws-1/channels',
-        data: {'name': '새 채널', 'type': 'TEXT', 'description': '설명'},
-      )).thenAnswer((_) async => Response(
-            data: apiResponse,
-            statusCode: 201,
-            requestOptions: RequestOptions(path: ''),
-          ));
+      when(
+        mockDioClient.post<Map<String, dynamic>>(
+          '/workspaces/ws-1/channels',
+          data: {'name': '새 채널', 'type': 'TEXT', 'description': '설명'},
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: apiResponse,
+          statusCode: 201,
+          requestOptions: RequestOptions(path: ''),
+        ),
+      );
 
       final result = await dataSource.createChannel(
         workspaceId: 'ws-1',
@@ -73,20 +75,20 @@ void main() {
     test('createChannel - description 없이 생성', () async {
       final apiResponse = {
         'success': true,
-        'data': {
-          'id': 4,
-          'name': '새 채널',
-          'type': 'TEXT',
-        },
+        'data': {'id': 4, 'name': '새 채널', 'type': 'TEXT'},
       };
-      when(mockDioClient.post<Map<String, dynamic>>(
-        '/workspaces/ws-1/channels',
-        data: {'name': '새 채널', 'type': 'TEXT'},
-      )).thenAnswer((_) async => Response(
-            data: apiResponse,
-            statusCode: 201,
-            requestOptions: RequestOptions(path: ''),
-          ));
+      when(
+        mockDioClient.post<Map<String, dynamic>>(
+          '/workspaces/ws-1/channels',
+          data: {'name': '새 채널', 'type': 'TEXT'},
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: apiResponse,
+          statusCode: 201,
+          requestOptions: RequestOptions(path: ''),
+        ),
+      );
 
       final result = await dataSource.createChannel(
         workspaceId: 'ws-1',
