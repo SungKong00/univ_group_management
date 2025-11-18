@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/repository_providers.dart';
+import '../../../../core/services/channel_service.dart';
 import '../../../../features/post/presentation/providers/post_repository_provider.dart'
     hide dioClientProvider;
 import '../../data/datasources/channel_remote_data_source.dart';
 import '../../data/datasources/read_position_local_data_source.dart';
+import '../../data/datasources/read_position_remote_datasource.dart';
 import '../../data/repositories/channel_repository_impl.dart';
 import '../../data/repositories/read_position_repository_impl.dart';
 import '../../domain/repositories/channel_repository.dart';
@@ -32,6 +34,23 @@ final readPositionLocalDataSourceProvider =
       return ReadPositionLocalDataSourceImpl();
     });
 
+/// Channel Service Provider (Singleton)
+///
+/// Provides ChannelService singleton instance.
+final channelServiceProvider = Provider<ChannelService>((ref) {
+  return ChannelService();
+});
+
+/// Read Position Remote DataSource Provider
+///
+/// Provides API client for read position and unread count operations.
+/// Depends on ChannelService from core layer.
+final readPositionRemoteDataSourceProvider =
+    Provider<ReadPositionRemoteDataSource>((ref) {
+      final channelService = ref.watch(channelServiceProvider);
+      return ReadPositionRemoteDataSourceImpl(channelService);
+    });
+
 /// Channel Repository Provider
 ///
 /// Provides channel data access implementation.
@@ -43,11 +62,12 @@ final channelRepositoryProvider = Provider<ChannelRepository>((ref) {
 
 /// Read Position Repository Provider
 ///
-/// Provides read position storage implementation.
-/// Uses in-memory data source for session state.
+/// Provides read position storage with local + remote sync.
+/// Uses local cache for reads, remote API for unread counts.
 final readPositionRepositoryProvider = Provider<ReadPositionRepository>((ref) {
-  final dataSource = ref.watch(readPositionLocalDataSourceProvider);
-  return ReadPositionRepositoryImpl(dataSource);
+  final localDataSource = ref.watch(readPositionLocalDataSourceProvider);
+  final remoteDataSource = ref.watch(readPositionRemoteDataSourceProvider);
+  return ReadPositionRepositoryImpl(localDataSource, remoteDataSource);
 });
 
 /// Get Channel List UseCase Provider

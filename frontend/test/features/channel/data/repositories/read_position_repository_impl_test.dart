@@ -1,20 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/channel/data/datasources/read_position_local_data_source.dart';
+import 'package:frontend/features/channel/data/datasources/read_position_remote_datasource.dart';
 import 'package:frontend/features/channel/data/repositories/read_position_repository_impl.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'read_position_repository_impl_test.mocks.dart';
 
-@GenerateMocks([ReadPositionLocalDataSource])
+@GenerateMocks([
+  ReadPositionLocalDataSource,
+  ReadPositionRemoteDataSource,
+])
 void main() {
   group('ReadPositionRepositoryImpl Tests', () {
     late ReadPositionRepositoryImpl repository;
     late MockReadPositionLocalDataSource mockLocalDataSource;
+    late MockReadPositionRemoteDataSource mockRemoteDataSource;
 
     setUp(() {
       mockLocalDataSource = MockReadPositionLocalDataSource();
-      repository = ReadPositionRepositoryImpl(mockLocalDataSource);
+      mockRemoteDataSource = MockReadPositionRemoteDataSource();
+      repository = ReadPositionRepositoryImpl(
+        mockLocalDataSource,
+        mockRemoteDataSource,
+      );
     });
 
     group('getReadPosition', () {

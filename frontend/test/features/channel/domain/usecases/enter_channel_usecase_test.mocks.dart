@@ -136,6 +136,34 @@ class MockReadPositionRepository extends _i1.Mock
             returnValueForMissingStub: _i7.Future<void>.value(),
           )
           as _i7.Future<void>);
+
+  @override
+  _i7.Future<int> getUnreadCount(int? channelId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getUnreadCount, [channelId]),
+            returnValue: _i7.Future<int>.value(0),
+          )
+          as _i7.Future<int>);
+
+  @override
+  _i7.Future<Map<int, int>> getAllReadPositions(List<int>? channelIds) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAllReadPositions, [channelIds]),
+            returnValue: _i7.Future<Map<int, int>>.value(<int, int>{}),
+          )
+          as _i7.Future<Map<int, int>>);
+
+  @override
+  _i7.Future<void> saveAndRefreshUnreadCount(int? channelId, int? position) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveAndRefreshUnreadCount, [
+              channelId,
+              position,
+            ]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
 }
 
 /// A class which mocks [PostRepository].

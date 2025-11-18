@@ -7,6 +7,8 @@ import 'dart:async' as _i3;
 
 import 'package:frontend/features/channel/data/datasources/read_position_local_data_source.dart'
     as _i2;
+import 'package:frontend/features/channel/data/datasources/read_position_remote_datasource.dart'
+    as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -48,4 +50,47 @@ class MockReadPositionLocalDataSource extends _i1.Mock
             returnValueForMissingStub: _i3.Future<void>.value(),
           )
           as _i3.Future<void>);
+}
+
+/// A class which mocks [ReadPositionRemoteDataSource].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockReadPositionRemoteDataSource extends _i1.Mock
+    implements _i4.ReadPositionRemoteDataSource {
+  MockReadPositionRemoteDataSource() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i3.Future<int?> getReadPosition(int? channelId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getReadPosition, [channelId]),
+            returnValue: _i3.Future<int?>.value(),
+          )
+          as _i3.Future<int?>);
+
+  @override
+  _i3.Future<void> updateReadPosition(int? channelId, int? position) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateReadPosition, [channelId, position]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<int> getUnreadCount(int? channelId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getUnreadCount, [channelId]),
+            returnValue: _i3.Future<int>.value(0),
+          )
+          as _i3.Future<int>);
+
+  @override
+  _i3.Future<Map<int, int>> getUnreadCounts(List<int>? channelIds) =>
+      (super.noSuchMethod(
+            Invocation.method(#getUnreadCounts, [channelIds]),
+            returnValue: _i3.Future<Map<int, int>>.value(<int, int>{}),
+          )
+          as _i3.Future<Map<int, int>>);
 }
