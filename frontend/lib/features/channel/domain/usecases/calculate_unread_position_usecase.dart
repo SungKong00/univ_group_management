@@ -38,8 +38,19 @@ class CalculateUnreadPositionUseCase {
     // Case 2: 읽은 위치 있음 → 다음 읽지 않은 게시글 찾기
     final lastReadIndex = _findPostIndex(posts, lastReadPostId);
 
-    // 읽은 게시글이 목록에 없음 → 첫 게시글로 이동
+    // 읽은 게시글이 목록에 없음
     if (lastReadIndex == -1) {
+      // 2-1. 읽은 글이 리스트의 가장 최신 글보다 더 최신인 경우 (이미 다 읽음)
+      // 리스트가 oldest -> newest 정렬이므로 last가 최신
+      if (posts.isNotEmpty && lastReadPostId > posts.last.id) {
+         return const UnreadPositionResult(
+          unreadIndex: null,
+          totalUnread: 0,
+          hasUnread: false,
+        );
+      }
+
+      // 2-2. 읽은 글이 리스트보다 과거인 경우 (모두 안 읽음)
       return UnreadPositionResult(
         unreadIndex: 0,
         totalUnread: posts.length,

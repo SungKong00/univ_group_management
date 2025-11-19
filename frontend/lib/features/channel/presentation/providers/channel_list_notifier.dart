@@ -25,7 +25,15 @@ class ChannelListNotifier extends AutoDisposeAsyncNotifier<List<Channel>> {
     }
 
     // Automatically load channels for the current group
-    return await _loadChannels(groupId);
+    final channels = await _loadChannels(groupId);
+    
+    // Load unread counts for all channels
+    if (channels.isNotEmpty) {
+      final channelIds = channels.map((c) => c.id).toList();
+      ref.read(channelReadPositionProvider.notifier).refreshAllBadges(channelIds);
+    }
+
+    return channels;
   }
 
   /// Loads channels for the specified group
