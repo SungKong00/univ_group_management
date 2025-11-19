@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/presentation/widgets/post/post_sticky_header.dart';
 import 'package:frontend/presentation/widgets/post/date_divider.dart';
 

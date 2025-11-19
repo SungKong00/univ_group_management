@@ -10,7 +10,6 @@ import 'package:frontend/features/post/presentation/providers/post_list_state.da
 import 'package:frontend/presentation/widgets/post/post_list_view.dart';
 import 'package:frontend/presentation/widgets/post/post_empty_state.dart';
 import 'package:frontend/presentation/widgets/post/post_error_state.dart';
-import 'package:frontend/presentation/widgets/post/post_skeleton.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 

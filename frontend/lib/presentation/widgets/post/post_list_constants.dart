@@ -1,27 +1,7 @@
 import '../../../core/constants/app_constants.dart';
 
 /// PostList 위젯 전용 상수 정의
-///
-/// 설정 변경이 쉽도록 중앙화된 상수 관리
 class PostListConstants {
-  /// 무한 스크롤 트리거 임계값 (상단으로부터의 거리)
-  static const double infiniteScrollThreshold = 200.0;
-
-  /// 읽음 처리를 위한 가시성 임계값 (30% 이상 보여야 읽음 처리)
-  static const double readVisibilityThreshold = 0.3;
-
-  /// 읽은 위치 업데이트 디바운스 지연 시간
-  static const Duration debounceDelay = Duration(milliseconds: 200);
-
-  /// ScrollController 준비 대기 시간
-  static const Duration scrollControllerWaitTime = Duration(milliseconds: 300);
-
-  /// 읽은 위치 데이터 재시도 대기 시간
-  static const Duration readPositionRetryDelay = Duration(milliseconds: 100);
-
-  /// 읽은 위치 데이터 최대 재시도 횟수
-  static const int readPositionMaxRetries = 3;
-
   /// Sticky header 높이 (날짜 구분선)
   static const double stickyHeaderHeight = 24.0;
 

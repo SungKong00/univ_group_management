@@ -122,7 +122,7 @@ void main() {
             body: ListView.builder(
               controller: controller,
               itemCount: 50,
-              itemBuilder: (context, index) => Container(
+              itemBuilder: (context, index) => SizedBox(
                 key: ValueKey(index),
                 height: 100,
                 child: Text('Item $index'),
