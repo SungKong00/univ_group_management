@@ -190,6 +190,20 @@ class _PostListState extends ConsumerState<PostList> {
   /// 공통: ScrollView 렌더링 로직
   Widget _buildScrollView(dynamic data) {
     final postListState = data as PostListState;
+
+    // ✅ 첫 로드 시 flat list 생성 및 초기 로딩 종료
+    if (_flatItems.isEmpty && postListState.posts.isNotEmpty) {
+      // PostFrameCallback: 빌드 중 setState 방지
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _flatItems = _buildFlatList(postListState.posts);
+            _isInitialLoading = false;
+          });
+        }
+      });
+    }
+
     // Phase 2: Flat list로 단일 SliverList 사용
     final scrollView = LayoutBuilder(
       builder: (context, constraints) {
