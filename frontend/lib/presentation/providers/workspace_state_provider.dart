@@ -8,19 +8,11 @@ import '../../core/services/channel_service.dart';
 import '../../core/services/local_storage.dart';
 import '../../core/utils/permission_utils.dart';
 import '../../core/navigation/navigation_controller.dart';
-import '../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 import 'my_groups_provider.dart';
 import 'place_calendar_provider.dart';
 import 'auth_provider.dart';
 import 'workspace_navigation_helper.dart';
 import 'navigation_state_provider.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-// 웹 플랫폼에서만 JS interop 및 HTML API 사용 (조건부 import)
-// ignore: uri_does_not_exist
-import 'workspace_state_provider_stub.dart'
-    if (dart.library.html) 'workspace_state_provider_web.dart'
-    as web_utils;
 
 /// 로그아웃 진행 중 워크스페이스 진입 시도 시 발생하는 예외
 /// Race Condition 차단: 로그아웃 중 myGroupsProvider가 무효화되면서
@@ -985,28 +977,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   }
 
   void selectChannel(String channelId) async {
-    // 1. Save read position for previous channel (delegated to ChannelReadPositionNotifier)
+    // 1. Save previous channel to navigation history
     final prevChannelId = state.selectedChannelId;
-    if (prevChannelId != null) {
-      final prevChannelIdInt = int.tryParse(prevChannelId);
-      if (prevChannelIdInt != null) {
-        // Best-Effort: ignore errors
-        try {
-          await _ref
-              .read(channelReadPositionProvider.notifier)
-              .saveReadPosition(prevChannelIdInt);
-        } catch (e) {
-          // Silently ignore read position save errors
-          if (kDebugMode) {
-            developer.log(
-              'Failed to save read position for channel $prevChannelIdInt: $e',
-              name: 'WorkspaceStateNotifier',
-              level: 300,
-            );
-          }
-        }
-      }
-    }
 
     // Add current state to navigation history before changing channel
     if (state.selectedGroupId != null && prevChannelId != null) {
@@ -1020,23 +992,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       );
     }
 
-    // 2. Load permissions and read position BEFORE updating state
-    // This ensures PostList has read position data when it initializes
-    final channelIdInt = int.tryParse(channelId);
-    if (channelIdInt != null) {
-      await Future.wait([
-        loadChannelPermissions(channelId),
-        _ref
-            .read(channelReadPositionProvider.notifier)
-            .loadReadPosition(channelIdInt),
-      ]);
-
-      // ✅ Ensure state updates are reflected before proceeding
-      // This prevents race condition where widget rebuilds before state is updated
-      await Future.delayed(Duration.zero);
-    } else {
-      await loadChannelPermissions(channelId);
-    }
+    // 2. Load permissions BEFORE updating state
+    await loadChannelPermissions(channelId);
 
     // 3. NOW update state (after data is loaded and reflected)
     // Find channel name from channels list
@@ -1057,15 +1014,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
     );
-
-    // 4. Batch refresh all channel badges (백그라운드)
-    final allChannelIds = state.channels.map((c) => c.id).toList();
-    if (allChannelIds.isNotEmpty) {
-      _ref
-          .read(channelReadPositionProvider.notifier)
-          .refreshAllBadges(allChannelIds)
-          .catchError((_) {});
-    }
 
     // LocalStorage에 저장
     _saveToLocalStorage();
@@ -1093,13 +1041,6 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     }
   }
 
-  // ============================================================
-  // Read Position Management (Delegated to ChannelReadPositionNotifier)
-  // ============================================================
-  // All read position management methods have been removed and delegated to
-  // ChannelReadPositionNotifier for better separation of concerns.
-  // See: features/channel/presentation/providers/channel_read_position_notifier.dart
-
   /// Universal view transition handler (Template Method Pattern)
   ///
   /// Automatically handles:
@@ -1118,30 +1059,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
     required WorkspaceView targetView,
     Map<String, dynamic>? stateUpdates,
   }) async {
-    // Step 1: Save read position (Best-Effort, delegated to ChannelReadPositionNotifier)
-    // MUST complete before state update to ensure data consistency
-    final currentChannelId = state.selectedChannelId;
-    if (currentChannelId != null) {
-      final channelIdInt = int.tryParse(currentChannelId);
-      if (channelIdInt != null) {
-        try {
-          await _ref
-              .read(channelReadPositionProvider.notifier)
-              .saveReadPosition(channelIdInt);
-        } catch (e) {
-          // Best-Effort: ignore errors
-          if (kDebugMode) {
-            developer.log(
-              'Failed to save read position when transitioning view: $e',
-              name: 'WorkspaceStateNotifier',
-              level: 300,
-            );
-          }
-        }
-      }
-    }
-
-    // Step 2: Add to navigation history
+    // Step 1: Add to navigation history
     if (state.selectedGroupId != null) {
       _addToNavigationHistory(
         groupId: state.selectedGroupId!,
@@ -1153,7 +1071,7 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       );
     }
 
-    // Step 3: Update state
+    // Step 2: Update state
     state = _applyStateUpdates(targetView, stateUpdates);
   }
 
@@ -1342,57 +1260,13 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
   /// 앱이 일시적으로 백그라운드로 가거나 웹 탭이 숨겨질 때 사용.
   /// 현재 보고 있던 채널 정보는 유지하면서 읽은 위치만 서버에 저장.
   /// Delegated to ChannelReadPositionNotifier.
-  Future<void> saveReadPositionOnly() async {
-    final currentChannelId = state.selectedChannelId;
-    if (currentChannelId != null) {
-      final channelIdInt = int.tryParse(currentChannelId);
-      if (channelIdInt != null) {
-        try {
-          await _ref
-              .read(channelReadPositionProvider.notifier)
-              .saveReadPosition(channelIdInt);
-        } catch (e) {
-          if (kDebugMode) {
-            developer.log(
-              'Failed to save read position: $e',
-              name: 'WorkspaceStateNotifier',
-              level: 300,
-            );
-          }
-        }
-      }
-    }
-  }
+  // saveReadPositionOnly removed - 읽음 위치 기능 제거됨
 
   /// 워크스페이스 완전 종료 (상태 초기화)
   ///
   /// 앱이 완전히 종료되거나 사용자가 명시적으로 워크스페이스를 나갈 때 사용.
-  /// 읽은 위치 저장 + 상태 초기화를 수행.
   void exitWorkspace() async {
-    // 1. Save read position for current channel (delegated to ChannelReadPositionNotifier)
-    final currentChannelId = state.selectedChannelId;
-    if (currentChannelId != null) {
-      final channelIdInt = int.tryParse(currentChannelId);
-      if (channelIdInt != null) {
-        // Best-Effort: ignore errors
-        try {
-          await _ref
-              .read(channelReadPositionProvider.notifier)
-              .saveReadPosition(channelIdInt);
-        } catch (e) {
-          // Silently ignore read position save errors
-          if (kDebugMode) {
-            developer.log(
-              'Failed to save read position when exiting workspace: $e',
-              name: 'WorkspaceStateNotifier',
-              level: 300,
-            );
-          }
-        }
-      }
-    }
-
-    // 2. Check if user returned to global home via back navigation
+    // 1. Check if user returned to global home via back navigation
     // If so, clear all workspace snapshots (next workspace entry will be "first-time")
     final navigationController = _ref.read(
       navigationControllerProvider.notifier,
@@ -1488,42 +1362,8 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
   // 모바일에서 채널 선택 시 (Step 1 → Step 2)
   void selectChannelForMobile(String channelId) async {
-    // 1. Save read position for previous channel (delegated to ChannelReadPositionNotifier)
-    final prevChannelId = state.selectedChannelId;
-    if (prevChannelId != null) {
-      final prevChannelIdInt = int.tryParse(prevChannelId);
-      if (prevChannelIdInt != null) {
-        // Best-Effort: ignore errors
-        try {
-          await _ref
-              .read(channelReadPositionProvider.notifier)
-              .saveReadPosition(prevChannelIdInt);
-        } catch (e) {
-          // Silently ignore read position save errors
-          if (kDebugMode) {
-            developer.log(
-              'Failed to save read position for channel $prevChannelIdInt: $e',
-              name: 'WorkspaceStateNotifier',
-              level: 300,
-            );
-          }
-        }
-      }
-    }
-
-    // 2. Load permissions and read position BEFORE updating state
-    // This ensures PostList has read position data when it initializes
-    final channelIdInt = int.tryParse(channelId);
-    if (channelIdInt != null) {
-      await Future.wait([
-        loadChannelPermissions(channelId),
-        _ref
-            .read(channelReadPositionProvider.notifier)
-            .loadReadPosition(channelIdInt),
-      ]);
-    } else {
-      await loadChannelPermissions(channelId);
-    }
+    // 1. Load permissions BEFORE updating state
+    await loadChannelPermissions(channelId);
 
     // ✅ 2.5. Save current state (channelList) to navigation history BEFORE changing mobileView
     // This ensures back button will restore channelList step

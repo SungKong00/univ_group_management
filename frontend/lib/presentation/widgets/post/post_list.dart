@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/date_marker.dart';
 import '../../../core/models/post_list_item.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../features/post/domain/entities/post.dart';
 import '../../../features/post/presentation/providers/post_list_state.dart';
 import 'date_divider.dart';
 import 'post_item.dart';

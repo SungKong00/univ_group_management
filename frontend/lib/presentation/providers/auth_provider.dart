@@ -5,8 +5,6 @@ import '../../core/models/auth_models.dart';
 import '../../core/repositories/repository_providers.dart';
 import '../../core/navigation/navigation_controller.dart';
 import '../../core/providers/provider_reset.dart';
-import '../../features/channel/presentation/providers/channel_read_position_notifier.dart';
-import 'workspace_state_provider.dart';
 
 /// 현재 로그인한 유저 정보 관리
 ///
@@ -71,9 +69,6 @@ class CurrentUserNotifier extends AsyncNotifier<UserInfo?> {
 
   /// 로그아웃
   Future<void> logout() async {
-    // ✅ 로그아웃 전 읽음 위치 저장 (선택적, 에러 무시)
-    await _saveReadPositionBeforeLogoutIfNeeded();
-
     state = const AsyncLoading();
 
     try {
@@ -121,28 +116,6 @@ class CurrentUserNotifier extends AsyncNotifier<UserInfo?> {
     } catch (e, stack) {
       state = AsyncError(e, stack);
       rethrow;
-    }
-  }
-
-  /// 로그아웃 전 읽음 위치 저장 (선택적, 에러 무시)
-  Future<void> _saveReadPositionBeforeLogoutIfNeeded() async {
-    try {
-      final workspaceState = ref.read(workspaceStateProvider);
-      final channelId = workspaceState.selectedChannelId;
-
-      if (channelId != null) {
-        final channelIdInt = int.tryParse(channelId);
-        if (channelIdInt != null) {
-          await ref
-              .read(channelReadPositionProvider.notifier)
-              .saveReadPosition(channelIdInt);
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        developer.log('⚠️ 로그아웃 전 저장 실패 (무시) - $e', name: 'CurrentUserNotifier');
-      }
-      // 에러 무시 (로그아웃은 계속 진행)
     }
   }
 

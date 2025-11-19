@@ -9,7 +9,6 @@ import '../../../core/network/dio_client.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
-import '../../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 import '../../providers/workspace_state_provider.dart';
 import '../../providers/my_groups_provider.dart';
 import '../dialogs/create_channel_dialog.dart';
@@ -309,10 +308,8 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
       builder: (context, ref, child) {
         final currentView = ref.watch(workspaceCurrentViewProvider);
         final selectedChannelId = ref.watch(currentChannelIdProvider);
-        // Read unread count map from ChannelReadPositionNotifier (real API data)
-        final unreadCountMap = ref.watch(
-          channelReadPositionProvider.select((state) => state.unreadCountMap),
-        );
+        // Unread count 기능 제거됨
+        final unreadCountMap = <int, int>{}; // 빈 맵으로 대체
 
         return Expanded(
           child: Column(

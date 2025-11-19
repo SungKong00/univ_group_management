@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/models/channel_models.dart';
-import '../../../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 import '../../../providers/workspace_state_provider.dart';
 import '../../../widgets/post/post_list.dart';
 import '../../../widgets/post/post_composer.dart';
@@ -106,41 +105,7 @@ class _ChannelContentViewState extends ConsumerState<ChannelContentView> {
                 );
                 final isNarrowDesktop = responsive.isNarrowDesktop;
 
-                // ✅ 읽은 위치 데이터 로딩 상태 확인 (Race Condition 방지)
-                final readPositionState = ref.watch(channelReadPositionProvider);
-                final channelIdInt = int.tryParse(widget.selectedChannelId);
-
-                // 데이터가 로딩 중이면 스피너 표시 (3초 timeout)
-                if (channelIdInt != null &&
-                    !readPositionState.lastReadPostIdMap.containsKey(
-                      channelIdInt,
-                    )) {
-                  return FutureBuilder(
-                    future: Future.delayed(const Duration(seconds: 3)),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        // Timeout 후 강제 진행 (fallback)
-                        return PostList(
-                          key: ValueKey(
-                            'post_list_${widget.selectedChannelId}_fallback',
-                          ),
-                          channelId: widget.selectedChannelId,
-                          canWrite: canWritePost,
-                          onTapComment: (postId) {
-                            ref
-                                .read(workspaceStateProvider.notifier)
-                                .showComments(
-                                  postId.toString(),
-                                  isNarrowDesktop: isNarrowDesktop,
-                                );
-                          },
-                        );
-                      }
-                      return const Center(child: CircularProgressIndicator());
-                    },
-                  );
-                }
-
+                // 읽음 위치 기능 제거됨 - 바로 PostList 렌더링
                 return PostList(
                   key: ValueKey(
                     'post_list_${widget.selectedChannelId}_${widget.postReloadTick}_$_postListKey',
