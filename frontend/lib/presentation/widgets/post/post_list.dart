@@ -60,6 +60,7 @@ class _PostListState extends ConsumerState<PostList> {
 
   // 읽지 않은 게시글 관리 (sequential index 사용)
   int? _firstUnreadPostIndex; // _flatItems의 index (0, 1, 2, ...)
+  int _unreadCount = 0;
 
   // 가시성 추적은 ChannelReadPositionNotifier에 위임됨
   bool _hasScrolledToUnread = false;
@@ -187,6 +188,7 @@ class _PostListState extends ConsumerState<PostList> {
     setState(() {
       _flatItems = flatItems;
       _firstUnreadPostIndex = firstUnreadIdx;
+      _unreadCount = result.totalUnread;
       _isInitialLoading = false;
     });
 
@@ -210,6 +212,7 @@ class _PostListState extends ConsumerState<PostList> {
     if (oldWidget.channelId != widget.channelId) {
       _hasScrolledToUnread = false;
       _firstUnreadPostIndex = null;
+      _unreadCount = 0;
       _resetAndLoad();
     }
   }
@@ -316,11 +319,22 @@ class _PostListState extends ConsumerState<PostList> {
       name: 'PostList',
     );
 
-    if (_firstUnreadPostIndex == null || _hasScrolledToUnread) {
+    if (_firstUnreadPostIndex == null) {
       developer.log(
-        '[PostList] Skipping scroll - index is null or already scrolled',
+        '[PostList] Skipping scroll - index is null',
         name: 'PostList',
       );
+      // 읽지 않은 글이 없으면 최하단으로 스크롤
+      if (!_hasScrolledToUnread) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+             _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+          }
+          setState(() {
+            _isInitialLoading = false;
+          });
+        });
+      }
       return;
     }
 

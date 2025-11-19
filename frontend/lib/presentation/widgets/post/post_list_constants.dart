@@ -7,8 +7,8 @@ class PostListConstants {
   /// 무한 스크롤 트리거 임계값 (상단으로부터의 거리)
   static const double infiniteScrollThreshold = 200.0;
 
-  /// 읽음 처리를 위한 가시성 임계값 (50% 이상 보여야 읽음 처리)
-  static const double readVisibilityThreshold = 0.5;
+  /// 읽음 처리를 위한 가시성 임계값 (30% 이상 보여야 읽음 처리)
+  static const double readVisibilityThreshold = 0.3;
 
   /// 읽은 위치 업데이트 디바운스 지연 시간
   static const Duration debounceDelay = Duration(milliseconds: 200);
