@@ -8,6 +8,7 @@ import 'package:visibility_detector/visibility_detector.dart';
 import '../../../core/models/date_marker.dart';
 import '../../../core/models/post_list_item.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../features/channel/domain/usecases/calculate_unread_position_usecase.dart';
 import '../../../features/channel/presentation/providers/channel_read_position_notifier.dart';
 import '../../../features/post/domain/entities/post.dart';
 import '../../../features/post/presentation/providers/post_list_notifier.dart';
@@ -87,11 +88,15 @@ class _PostListState extends ConsumerState<PostList> {
     final channelIdInt = int.tryParse(widget.channelId);
     if (channelIdInt == null) return;
 
+    // ✅ Phase 3.3: Race Condition 방지 - 시작 시점의 channelId 저장
+    final originalChannelId = widget.channelId;
+
     // 🔴 개선: AsyncNotifier 데이터 로딩 완료 대기 (최대 5초)
     int dataWaitAttempts = 0;
     const maxDataWaitAttempts = 50; // 100ms * 50 = 5초
     while (dataWaitAttempts < maxDataWaitAttempts) {
-      if (!mounted) return;
+      // ✅ Phase 3.3: 채널 변경 감지
+      if (!mounted || widget.channelId != originalChannelId) return;
 
       final postListAsync = ref.read(
         postListAsyncNotifierProvider(widget.channelId),
@@ -132,7 +137,8 @@ class _PostListState extends ConsumerState<PostList> {
 
     // 읽음 위치 데이터 대기
     await _waitForReadPositionData(channelIdInt);
-    if (!mounted) return;
+    // ✅ Phase 3.3: 채널 변경 감지
+    if (!mounted || widget.channelId != originalChannelId) return;
 
     // 게시글 목록 가져오기 (이제 확실히 데이터가 있음)
     final postListAsync = ref.read(
@@ -150,41 +156,27 @@ class _PostListState extends ConsumerState<PostList> {
 
     // Flat List 생성
     final flatItems = _buildFlatList(postListState.posts);
-    if (!mounted) return;
+    // ✅ Phase 3.3: 채널 변경 감지
+    if (!mounted || widget.channelId != originalChannelId) return;
 
-    // 🔴 버그 수정: _firstUnreadPostIndex 계산 로직 추가
-    // lastReadPostId를 기반으로 첫 번째 읽지 않은 글의 인덱스 찾기
+    // ✅ Phase 3.1: CalculateUnreadPositionUseCase 사용
     final readPositionState = ref.read(channelReadPositionProvider);
     final lastReadPostId = readPositionState.lastReadPostIdMap[channelIdInt];
 
-    // 디버깅 로그
-    developer.log(
-      '[PostList] lastReadPostId for channel $channelIdInt: $lastReadPostId',
-      name: 'PostList',
-    );
+    // UseCase로 읽지 않은 위치 계산
+    final calculateUnreadUseCase = CalculateUnreadPositionUseCase();
+    final result = calculateUnreadUseCase(postListState.posts, lastReadPostId);
 
+    // FlatList에서 해당 게시글의 인덱스 찾기
     int? firstUnreadIdx;
-    if (lastReadPostId != null && lastReadPostId != -1) {
-      // FlatList에서 첫 번째 읽지 않은 Post 찾기
+    if (result.hasUnread && result.unreadIndex != null) {
+      final unreadPost = postListState.posts[result.unreadIndex!];
       for (int i = 0; i < flatItems.length; i++) {
         final item = flatItems[i];
-        if (item is PostWrapper && item.post.id > lastReadPostId) {
+        if (item is PostWrapper && item.post.id == unreadPost.id) {
           firstUnreadIdx = i;
           developer.log(
-            '[PostList] Found first unread post at index $i (postId: ${item.post.id})',
-            name: 'PostList',
-          );
-          break;
-        }
-      }
-    } else if (lastReadPostId == -1 || lastReadPostId == null) {
-      // 읽은 이력이 없는 경우, 첫 번째 Post를 찾기
-      for (int i = 0; i < flatItems.length; i++) {
-        final item = flatItems[i];
-        if (item is PostWrapper) {
-          firstUnreadIdx = i;
-          developer.log(
-            '[PostList] No read history, setting first post at index $i as unread',
+            '[PostList] Found first unread post at flatList index $i (postId: ${unreadPost.id}, totalUnread: ${result.totalUnread})',
             name: 'PostList',
           );
           break;
@@ -194,12 +186,12 @@ class _PostListState extends ConsumerState<PostList> {
 
     setState(() {
       _flatItems = flatItems;
-      _firstUnreadPostIndex = firstUnreadIdx;  // 🔴 이제 올바르게 설정됨!
+      _firstUnreadPostIndex = firstUnreadIdx;
       _isInitialLoading = false;
     });
 
     developer.log(
-      '[PostList] _firstUnreadPostIndex set to: $_firstUnreadPostIndex',
+      '[PostList] _firstUnreadPostIndex set to: $_firstUnreadPostIndex (lastReadPostId: $lastReadPostId)',
       name: 'PostList',
     );
 
@@ -245,7 +237,9 @@ class _PostListState extends ConsumerState<PostList> {
     _resetAndLoad();
   }
 
+  /// ✅ Phase 3.2: Optimistic UI - 게시글 삭제 후 UnreadMessageDivider 재계산
   void _handlePostDeleted() {
+    // 전체 리로드 대신 AsyncNotifier 상태만 다시 읽어서 재계산
     _resetAndLoad();
   }
 
@@ -314,7 +308,6 @@ class _PostListState extends ConsumerState<PostList> {
 
     return flatItems;
   }
-
 
   /// 읽지 않은 게시글로 스크롤
   Future<void> _scrollToUnreadPost() async {
@@ -418,11 +411,7 @@ class _PostListState extends ConsumerState<PostList> {
       );
       if (e is! StateError) {
         // StateError(Bad state)가 아닌 경우에만 스택 추적 출력
-        developer.log(
-          '스택 추적: $stackTrace',
-          name: 'PostList',
-          level: 900,
-        );
+        developer.log('스택 추적: $stackTrace', name: 'PostList', level: 900);
       }
     }
   }
@@ -530,10 +519,12 @@ class _PostListState extends ConsumerState<PostList> {
                         // 50% 이상 보이면 읽음 처리 (ChannelReadPositionNotifier에 위임)
                         if (info.visibleFraction >
                             PostListConstants.readVisibilityThreshold) {
-                          ref.read(channelReadPositionProvider.notifier)
+                          ref
+                              .read(channelReadPositionProvider.notifier)
                               .updateVisibility(post.id, true);
                         } else {
-                          ref.read(channelReadPositionProvider.notifier)
+                          ref
+                              .read(channelReadPositionProvider.notifier)
                               .updateVisibility(post.id, false);
                         }
                       },
