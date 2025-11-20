@@ -48,9 +48,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            getPostsUseCaseProvider.overrideWithValue(mockUseCase),
-          ],
+          overrides: [getPostsUseCaseProvider.overrideWithValue(mockUseCase)],
           child: const MaterialApp(
             home: Scaffold(
               body: PostListView(
@@ -69,7 +67,9 @@ void main() {
       expect(find.text('아직 게시글이 없습니다'), findsOneWidget);
     });
 
-    testWidgets('AsyncValue.data (게시글 있음) - buildScrollView 호출', (tester) async {
+    testWidgets('AsyncValue.data (게시글 있음) - buildScrollView 호출', (
+      tester,
+    ) async {
       // Arrange: 게시글 목록 반환
       final mockPosts = [
         Post(
@@ -100,9 +100,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            getPostsUseCaseProvider.overrideWithValue(mockUseCase),
-          ],
+          overrides: [getPostsUseCaseProvider.overrideWithValue(mockUseCase)],
           child: MaterialApp(
             home: Scaffold(
               body: PostListView(
@@ -125,15 +123,13 @@ void main() {
 
     testWidgets('AsyncValue.error - PostErrorState 표시', (tester) async {
       // Arrange: 에러 발생
-      when(mockUseCase(testChannelId, page: 0)).thenThrow(
-        Exception('Network failure'),
-      );
+      when(
+        mockUseCase(testChannelId, page: 0),
+      ).thenThrow(Exception('Network failure'));
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            getPostsUseCaseProvider.overrideWithValue(mockUseCase),
-          ],
+          overrides: [getPostsUseCaseProvider.overrideWithValue(mockUseCase)],
           child: const MaterialApp(
             home: Scaffold(
               body: PostListView(
@@ -180,9 +176,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            getPostsUseCaseProvider.overrideWithValue(mockUseCase),
-          ],
+          overrides: [getPostsUseCaseProvider.overrideWithValue(mockUseCase)],
           child: MaterialApp(
             home: Scaffold(
               body: PostListView(

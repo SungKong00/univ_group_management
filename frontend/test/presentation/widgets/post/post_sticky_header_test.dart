@@ -16,11 +16,7 @@ void main() {
       const widget = PostStickyHeader(stickyDate: null);
 
       // Act
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
@@ -35,11 +31,7 @@ void main() {
       final widget = PostStickyHeader(stickyDate: testDate);
 
       // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
@@ -47,24 +39,20 @@ void main() {
       expect(find.byType(DateDivider), findsOneWidget);
     });
 
-
-
     testWidgets('DateDivider에 날짜 전달 확인', (tester) async {
       // Arrange
       final testDate = DateTime(2025, 11, 19, 14, 30);
       final widget = PostStickyHeader(stickyDate: testDate);
 
       // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
       // Assert: DateDivider가 올바른 날짜를 받았는지 확인
-      final dateDividerWidget = tester.widget<DateDivider>(find.byType(DateDivider));
+      final dateDividerWidget = tester.widget<DateDivider>(
+        find.byType(DateDivider),
+      );
       expect(dateDividerWidget.date, testDate);
     });
   });

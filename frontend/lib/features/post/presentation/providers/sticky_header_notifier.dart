@@ -22,8 +22,7 @@ class StickyHeaderState {
 /// - RenderBox 위치 계산으로 현재 화면 상단의 날짜 감지
 /// - 스크롤 이벤트 연동
 /// - 날짜 변경 시에만 상태 업데이트 (불필요한 rebuild 방지)
-class StickyHeaderNotifier
-    extends AutoDisposeNotifier<StickyHeaderState> {
+class StickyHeaderNotifier extends AutoDisposeNotifier<StickyHeaderState> {
   final Map<int, GlobalKey> _keys = {};
   final Map<int, DateTime> _dates = {};
 
@@ -90,4 +89,5 @@ class StickyHeaderNotifier
 /// Sticky Header 상태를 제공합니다.
 final stickyHeaderProvider =
     NotifierProvider.autoDispose<StickyHeaderNotifier, StickyHeaderState>(
-        StickyHeaderNotifier.new);
+      StickyHeaderNotifier.new,
+    );

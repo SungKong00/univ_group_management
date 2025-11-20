@@ -9,6 +9,8 @@ import 'package:frontend/features/channel/data/datasources/read_position_local_d
     as _i2;
 import 'package:frontend/features/channel/data/datasources/read_position_remote_datasource.dart'
     as _i4;
+import 'package:frontend/features/channel/data/models/read_position_dto.dart'
+    as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -62,17 +64,17 @@ class MockReadPositionRemoteDataSource extends _i1.Mock
   }
 
   @override
-  _i3.Future<int?> getReadPosition(int? channelId) =>
+  _i3.Future<_i5.ReadPositionDto?> getReadPosition(int? channelId) =>
       (super.noSuchMethod(
             Invocation.method(#getReadPosition, [channelId]),
-            returnValue: _i3.Future<int?>.value(),
+            returnValue: _i3.Future<_i5.ReadPositionDto?>.value(),
           )
-          as _i3.Future<int?>);
+          as _i3.Future<_i5.ReadPositionDto?>);
 
   @override
-  _i3.Future<void> updateReadPosition(int? channelId, int? position) =>
+  _i3.Future<void> updateReadPosition(int? channelId, int? postId) =>
       (super.noSuchMethod(
-            Invocation.method(#updateReadPosition, [channelId, position]),
+            Invocation.method(#updateReadPosition, [channelId, postId]),
             returnValue: _i3.Future<void>.value(),
             returnValueForMissingStub: _i3.Future<void>.value(),
           )
@@ -87,9 +89,9 @@ class MockReadPositionRemoteDataSource extends _i1.Mock
           as _i3.Future<int>);
 
   @override
-  _i3.Future<Map<int, int>> getUnreadCounts(List<int>? channelIds) =>
+  _i3.Future<Map<int, int>> getBatchUnreadCounts(List<int>? channelIds) =>
       (super.noSuchMethod(
-            Invocation.method(#getUnreadCounts, [channelIds]),
+            Invocation.method(#getBatchUnreadCounts, [channelIds]),
             returnValue: _i3.Future<Map<int, int>>.value(<int, int>{}),
           )
           as _i3.Future<Map<int, int>>);

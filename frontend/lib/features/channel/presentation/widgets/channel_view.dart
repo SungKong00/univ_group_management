@@ -71,12 +71,13 @@ class ChannelView extends ConsumerWidget {
       return ChannelErrorState.noPermission();
     }
 
-    // 게시글 목록 표시
+    // 게시글 목록 표시 (읽지 않은 글 위치 포함)
     return PostList(
       key: ValueKey('post_list_${channel.id}_$postReloadTick'),
       channelId: channel.id.toString(),
       canWrite: permissions.canWritePosts,
       onTapComment: onTapComment,
+      unreadPosition: result.unreadPosition,
     );
   }
 

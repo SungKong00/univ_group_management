@@ -25,9 +25,7 @@ class PostListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final postListAsync = ref.watch(
-      postListAsyncNotifierProvider(channelId),
-    );
+    final postListAsync = ref.watch(postListAsyncNotifierProvider(channelId));
 
     return postListAsync.when(
       loading: () => const PostListSkeleton(),

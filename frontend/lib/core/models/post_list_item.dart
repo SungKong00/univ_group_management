@@ -1,12 +1,13 @@
 import 'date_marker.dart';
 import '../../features/post/domain/entities/post.dart';
+import '../../features/channel/domain/entities/unread_position_result.dart';
 
 /// PostListItem - 게시글 목록 아이템 타입 정의
 ///
 /// PostList 위젯의 Flat List에서 사용되는 아이템들의 공통 타입
 /// Type Safety를 위한 sealed class 패턴 적용
 ///
-/// Phase 3: Post Entity (Clean Architecture) 사용
+/// Phase 3: Post Entity + UnreadDivider 추가
 ///
 /// 사용 예시:
 /// ```dart
@@ -18,6 +19,8 @@ import '../../features/post/domain/entities/post.dart';
 ///     // DateMarker 처리
 ///   case PostWrapper(:final post):
 ///     // Post 처리
+///   case UnreadDividerWrapper(:final unreadPosition):
+///     // UnreadDivider 처리
 /// }
 /// ```
 sealed class PostListItem {
@@ -36,4 +39,11 @@ final class PostWrapper extends PostListItem {
   final Post post;
 
   const PostWrapper(this.post);
+}
+
+/// UnreadDivider 래퍼 - 읽지 않은 글 구분선을 위한 타입
+final class UnreadDividerWrapper extends PostListItem {
+  final UnreadPositionResult unreadPosition;
+
+  const UnreadDividerWrapper(this.unreadPosition);
 }

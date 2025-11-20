@@ -45,11 +45,11 @@ final channelServiceProvider = Provider<ChannelService>((ref) {
 /// Read Position Remote DataSource Provider
 ///
 /// Provides API client for read position and unread count operations.
-/// Depends on ChannelService from core layer.
+/// Depends on DioClient from core layer.
 final readPositionRemoteDataSourceProvider =
     Provider<ReadPositionRemoteDataSource>((ref) {
-      final channelService = ref.watch(channelServiceProvider);
-      return ReadPositionRemoteDataSourceImpl(channelService);
+      final dioClient = ref.watch(dioClientProvider);
+      return ReadPositionRemoteDataSourceImpl(dioClient);
     });
 
 /// Channel Repository Provider
@@ -84,12 +84,21 @@ final getChannelListUseCaseProvider = Provider<GetChannelListUseCase>((ref) {
 ///
 /// Provides business logic for entering a channel.
 /// Loads permissions and posts in parallel to avoid Race Condition.
-/// Depends on ChannelRepository, ReadPositionRepository, and PostRepository.
+/// Depends on ChannelRepository, ReadPositionRepository, PostRepository,
+/// and CalculateUnreadPositionUseCase.
 final enterChannelUseCaseProvider = Provider<EnterChannelUseCase>((ref) {
   final channelRepo = ref.watch(channelRepositoryProvider);
   final readPosRepo = ref.watch(readPositionRepositoryProvider);
   final postRepo = ref.watch(postRepositoryProvider);
-  return EnterChannelUseCase(channelRepo, readPosRepo, postRepo);
+  final calculateUnreadUseCase = ref.watch(
+    calculateUnreadPositionUseCaseProvider,
+  );
+  return EnterChannelUseCase(
+    channelRepo,
+    readPosRepo,
+    postRepo,
+    calculateUnreadUseCase,
+  );
 });
 
 /// Calculate Unread Position UseCase Provider

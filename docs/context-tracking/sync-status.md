@@ -4,9 +4,9 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-11-18 (K) (Post Clean Architecture Phase 1-4 완료 및 문서화)
-**총 문서 수**: 106개
-**동기화 완료**: 106개 (100%)
+**마지막 업데이트**: 2025-11-20 (L) (읽지 않은 글 기능 구현 가이드 및 체크리스트 작성)
+**총 문서 수**: 108개
+**동기화 완료**: 108개 (100%)
 **업데이트 필요**: 0개 (0%)
 
 ---
@@ -45,10 +45,10 @@
 | `exception-handling.md` | ✅ 최신 | 2025-10-24 | 예외 처리 전략 |
 | `testing.md` | ✅ 최신 | 2025-10-24 | 통합 테스트, 보안 테스트 |
 
-### `/docs/implementation/frontend/` - 프론트엔드 구현 가이드 (13개)
+### `/docs/implementation/frontend/` - 프론트엔드 구현 가이드 (14개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
-| `README.md` | ✅ 최신 | 2025-10-24 | 프론트엔드 구현 가이드 인덱스 |
+| `README.md` | ✅ 최신 | 2025-11-20 | 읽지 않은 글 기능 링크 추가 |
 | `architecture.md` | ✅ 최신 | 2025-11-02 | 어댑터 패턴 추가 (PersonalEventAdapter) |
 | `authentication.md` | ✅ 최신 | 2025-10-24 | Google OAuth, 자동 로그인, 토큰 관리 |
 | `state-management.md` | ❌ 업데이트 필요 | 2025-10-24 | myGroupsProvider keepAlive 설명 추가 필요 |
@@ -59,6 +59,7 @@
 | `chip-components.md` | ✅ 최신 | 2025-10-25 | CompactChip 섹션 추가 완료 (103줄) |
 | `member-list-implementation.md` | ✅ 최신 | 2025-10-24 | 멤버 필터 Phase 1 (100줄로 리팩토링) |
 | `member-filter-advanced-features.md` | ✅ 최신 | 2025-10-24 | 멤버 필터 Phase 2-3 (신규, 97줄) |
+| `unread-posts-implementation.md` | ✅ 최신 | 2025-11-20 | 읽지 않은 글 기능 구현 가이드 (신규, 100줄 이하) |
 | `responsive-design.md` | ✅ 최신 | 2025-10-24 | 브레이크포인트, 적응형 레이아웃 |
 | `performance.md` | ✅ 최신 | 2025-10-24 | 앱 시작 성능, 개선 계획 |
 
@@ -129,7 +130,7 @@
 | `calendar-integration-roadmap.md` | ✅ 최신 | 2025-10-24 | 캘린더 통합 로드맵 (6-8주) |
 | `group-explore-hybrid-strategy.md` | ✅ 최신 | 2025-10-24 | 그룹 탐색 하이브리드 전략 (신규, 95줄) |
 
-### `/docs/workflows/` - 개발 프로세스 (10개)
+### `/docs/workflows/` - 개발 프로세스 (11개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
 | `development-flow.md` | ✅ 최신 | 2024-09-29 | 개발 워크플로우 |
@@ -143,6 +144,7 @@
 | `post-phase2-completion.md` | ✅ 최신 | 2025-11-18 | Phase 2 완료 보고서 |
 | `post-phase3-completion.md` | ✅ 최신 | 2025-11-18 | Phase 3 완료 보고서 |
 | `post-refactoring-future-work.md` | ✅ 최신 | 2025-11-18 | Post 리팩터링 추후 작업 (신규) |
+| `unread-posts-checklist.md` | ✅ 최신 | 2025-11-20 | 읽지 않은 글 기능 체크리스트 (신규) |
 
 ### `/docs/testing/` - 테스트 관리 (1개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
@@ -181,8 +183,23 @@
 
 ## 🎯 상태별 분류
 
-### ✅ 최신 상태 (106개)
+### ✅ 최신 상태 (108개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
+
+**주요 업데이트 (2025-11-20)**:
+- **(L) 읽지 않은 글 기능 구현 가이드 및 체크리스트 작성**
+  - unread-posts-implementation.md 신규 작성 (100줄 이하)
+    - Clean Architecture 3-Layer 기반 구현 가이드
+    - 이전 실패 원인 분석 및 회피 전략
+    - Domain/Data/Presentation 계층별 아키텍처 설계
+    - 5단계 구현 로드맵 (Phase 1-5, 총 15일)
+  - unread-posts-checklist.md 신규 작성 (체크리스트 예외)
+    - Phase별 상세 태스크 목록 (체크박스 형태)
+    - 각 Phase별 체크포인트 및 검증 기준
+    - 정량적/정성적 성공 지표
+  - frontend/README.md 업데이트 (읽지 않은 글 기능 링크 추가)
+  - sync-status.md 업데이트 (총 문서 수 106→108개)
+  - 기능 목표: 채널 배지, 자동 스크롤, 구분선, 읽음 처리, 배치 업데이트
 
 **주요 업데이트 (2025-11-18)**:
 - **(K) Post Clean Architecture Phase 1-4 완료 및 문서화**
@@ -384,23 +401,23 @@
 
 ## 📈 문서 추적 통계
 
-- **전체 문서 수**: 106개
+- **전체 문서 수**: 108개
 - **백엔드 관련**: 15개 (백엔드 설계 6개 + 구현 가이드 9개)
-- **프론트엔드 관련**: 15개 (구현 가이드 8개 + 워크스페이스 7개)
+- **프론트엔드 관련**: 16개 (구현 가이드 9개 + 워크스페이스 7개)
 - **개념 문서**: 14개 (캘린더 4개 포함)
 - **UI/UX 문서**: 18개 (개념 5개 + 페이지 13개)
 - **기능 계획**: 5개 (캘린더 관련)
 - **프로세스/컨벤션**: 7개 (워크플로우 2개 + 컨벤션 4개 + 유지보수 1개)
 - **참조 문서**: 2개 (API + 데이터베이스, 100줄 예외)
-- **추적 시스템**: 5개 (context-tracking - 2개 신규 추가)
-- **개발 워크플로우**: 10개 (workflows - Post 리팩터링 문서 8개)
+- **추적 시스템**: 5개 (context-tracking)
+- **개발 워크플로우**: 11개 (workflows - Post 리팩터링 문서 8개 + 읽지 않은 글 체크리스트)
 - **서브 에이전트**: 5개 (agents - pre-task-protocol.md, test-patterns.md 포함)
 - **기타**: 1개 (테스트 데이터)
 - **.claude/agents 폴더**: 6개 (에이전트 설정 파일)
 
-**신규 추가 (2025-11-18)**: Post 리팩터링 문서 2개
-- post-refactoring-phase1-4-completion.md (통합 완료 보고서)
-- post-refactoring-future-work.md (추후 작업 목록)
+**신규 추가 (2025-11-20)**: 읽지 않은 글 기능 문서 2개
+- unread-posts-implementation.md (구현 가이드)
+- unread-posts-checklist.md (체크리스트)
 
 ---
 

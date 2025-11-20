@@ -14,6 +14,7 @@ import '../../providers/my_groups_provider.dart';
 import '../dialogs/create_channel_dialog.dart';
 import 'channel_item.dart';
 import 'workspace_header.dart';
+import '../../../features/channel/presentation/providers/unread_badge_notifier.dart';
 
 /// Channel Navigation Widget
 ///
@@ -308,8 +309,6 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
       builder: (context, ref, child) {
         final currentView = ref.watch(workspaceCurrentViewProvider);
         final selectedChannelId = ref.watch(currentChannelIdProvider);
-        // Unread count 기능 제거됨
-        final unreadCountMap = <int, int>{}; // 빈 맵으로 대체
 
         return Expanded(
           child: Column(
@@ -348,8 +347,12 @@ class _ChannelNavigationState extends ConsumerState<ChannelNavigation>
                     final isChannelView = currentView == WorkspaceView.channel;
                     final isSelected =
                         isChannelView && selectedChannelId == channelId;
-                    // Use real unread count from API (Phase 5)
-                    final unreadCount = unreadCountMap[channel.id] ?? 0;
+
+                    // Phase 4: 실제 unreadBadgeProvider 연결
+                    final unreadCountAsync = ref.watch(
+                      unreadBadgeProvider(channel.id),
+                    );
+                    final unreadCount = unreadCountAsync.valueOrNull ?? 0;
 
                     return ChannelItem(
                       channel: channel,

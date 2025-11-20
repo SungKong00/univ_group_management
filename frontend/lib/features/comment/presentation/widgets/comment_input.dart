@@ -17,11 +17,7 @@ class CommentInput extends ConsumerStatefulWidget {
   final int postId;
   final int? parentCommentId;
 
-  const CommentInput({
-    super.key,
-    required this.postId,
-    this.parentCommentId,
-  });
+  const CommentInput({super.key, required this.postId, this.parentCommentId});
 
   @override
   ConsumerState<CommentInput> createState() => _CommentInputState();

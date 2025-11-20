@@ -69,20 +69,18 @@ void main() {
         id: 999,
         postId: 1,
         content: 'Test comment',
-        author: const Author(
-          id: 100,
-          name: 'Test User',
-          profileImageUrl: null,
-        ),
+        author: const Author(id: 100, name: 'Test User', profileImageUrl: null),
         createdAt: DateTime.now(),
         depth: 0,
       );
 
-      when(mockCreateUseCase(
-        postId: anyNamed('postId'),
-        content: anyNamed('content'),
-        parentCommentId: anyNamed('parentCommentId'),
-      )).thenAnswer((_) async => createdComment);
+      when(
+        mockCreateUseCase(
+          postId: anyNamed('postId'),
+          content: anyNamed('content'),
+          parentCommentId: anyNamed('parentCommentId'),
+        ),
+      ).thenAnswer((_) async => createdComment);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -104,11 +102,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Then: createComment 호출 확인
-      verify(mockCreateUseCase(
-        postId: 1,
-        content: 'Test comment',
-        parentCommentId: null,
-      )).called(1);
+      verify(
+        mockCreateUseCase(
+          postId: 1,
+          content: 'Test comment',
+          parentCommentId: null,
+        ),
+      ).called(1);
     });
   });
 }

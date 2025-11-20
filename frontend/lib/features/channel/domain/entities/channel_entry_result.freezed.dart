@@ -29,6 +29,10 @@ mixin _$ChannelEntryResult {
   /// 마지막으로 읽은 게시글 ID (없으면 null)
   int? get readPosition => throw _privateConstructorUsedError;
 
+  /// 읽지 않은 글 계산 결과 (없으면 null)
+  UnreadPositionResult? get unreadPosition =>
+      throw _privateConstructorUsedError;
+
   /// Create a copy of ChannelEntryResult
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,10 +52,12 @@ abstract class $ChannelEntryResultCopyWith<$Res> {
     ChannelPermissions permissions,
     List<Post> posts,
     int? readPosition,
+    UnreadPositionResult? unreadPosition,
   });
 
   $ChannelCopyWith<$Res> get channel;
   $ChannelPermissionsCopyWith<$Res> get permissions;
+  $UnreadPositionResultCopyWith<$Res>? get unreadPosition;
 }
 
 /// @nodoc
@@ -73,6 +79,7 @@ class _$ChannelEntryResultCopyWithImpl<$Res, $Val extends ChannelEntryResult>
     Object? permissions = null,
     Object? posts = null,
     Object? readPosition = freezed,
+    Object? unreadPosition = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -92,6 +99,10 @@ class _$ChannelEntryResultCopyWithImpl<$Res, $Val extends ChannelEntryResult>
                 ? _value.readPosition
                 : readPosition // ignore: cast_nullable_to_non_nullable
                       as int?,
+            unreadPosition: freezed == unreadPosition
+                ? _value.unreadPosition
+                : unreadPosition // ignore: cast_nullable_to_non_nullable
+                      as UnreadPositionResult?,
           )
           as $Val,
     );
@@ -116,6 +127,20 @@ class _$ChannelEntryResultCopyWithImpl<$Res, $Val extends ChannelEntryResult>
       return _then(_value.copyWith(permissions: value) as $Val);
     });
   }
+
+  /// Create a copy of ChannelEntryResult
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $UnreadPositionResultCopyWith<$Res>? get unreadPosition {
+    if (_value.unreadPosition == null) {
+      return null;
+    }
+
+    return $UnreadPositionResultCopyWith<$Res>(_value.unreadPosition!, (value) {
+      return _then(_value.copyWith(unreadPosition: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -132,12 +157,15 @@ abstract class _$$ChannelEntryResultImplCopyWith<$Res>
     ChannelPermissions permissions,
     List<Post> posts,
     int? readPosition,
+    UnreadPositionResult? unreadPosition,
   });
 
   @override
   $ChannelCopyWith<$Res> get channel;
   @override
   $ChannelPermissionsCopyWith<$Res> get permissions;
+  @override
+  $UnreadPositionResultCopyWith<$Res>? get unreadPosition;
 }
 
 /// @nodoc
@@ -158,6 +186,7 @@ class __$$ChannelEntryResultImplCopyWithImpl<$Res>
     Object? permissions = null,
     Object? posts = null,
     Object? readPosition = freezed,
+    Object? unreadPosition = freezed,
   }) {
     return _then(
       _$ChannelEntryResultImpl(
@@ -177,6 +206,10 @@ class __$$ChannelEntryResultImplCopyWithImpl<$Res>
             ? _value.readPosition
             : readPosition // ignore: cast_nullable_to_non_nullable
                   as int?,
+        unreadPosition: freezed == unreadPosition
+            ? _value.unreadPosition
+            : unreadPosition // ignore: cast_nullable_to_non_nullable
+                  as UnreadPositionResult?,
       ),
     );
   }
@@ -190,6 +223,7 @@ class _$ChannelEntryResultImpl implements _ChannelEntryResult {
     required this.permissions,
     required final List<Post> posts,
     this.readPosition,
+    this.unreadPosition,
   }) : _posts = posts;
 
   /// 채널 정보
@@ -215,9 +249,13 @@ class _$ChannelEntryResultImpl implements _ChannelEntryResult {
   @override
   final int? readPosition;
 
+  /// 읽지 않은 글 계산 결과 (없으면 null)
+  @override
+  final UnreadPositionResult? unreadPosition;
+
   @override
   String toString() {
-    return 'ChannelEntryResult(channel: $channel, permissions: $permissions, posts: $posts, readPosition: $readPosition)';
+    return 'ChannelEntryResult(channel: $channel, permissions: $permissions, posts: $posts, readPosition: $readPosition, unreadPosition: $unreadPosition)';
   }
 
   @override
@@ -230,7 +268,9 @@ class _$ChannelEntryResultImpl implements _ChannelEntryResult {
                 other.permissions == permissions) &&
             const DeepCollectionEquality().equals(other._posts, _posts) &&
             (identical(other.readPosition, readPosition) ||
-                other.readPosition == readPosition));
+                other.readPosition == readPosition) &&
+            (identical(other.unreadPosition, unreadPosition) ||
+                other.unreadPosition == unreadPosition));
   }
 
   @override
@@ -240,6 +280,7 @@ class _$ChannelEntryResultImpl implements _ChannelEntryResult {
     permissions,
     const DeepCollectionEquality().hash(_posts),
     readPosition,
+    unreadPosition,
   );
 
   /// Create a copy of ChannelEntryResult
@@ -260,6 +301,7 @@ abstract class _ChannelEntryResult implements ChannelEntryResult {
     required final ChannelPermissions permissions,
     required final List<Post> posts,
     final int? readPosition,
+    final UnreadPositionResult? unreadPosition,
   }) = _$ChannelEntryResultImpl;
 
   /// 채널 정보
@@ -277,6 +319,10 @@ abstract class _ChannelEntryResult implements ChannelEntryResult {
   /// 마지막으로 읽은 게시글 ID (없으면 null)
   @override
   int? get readPosition;
+
+  /// 읽지 않은 글 계산 결과 (없으면 null)
+  @override
+  UnreadPositionResult? get unreadPosition;
 
   /// Create a copy of ChannelEntryResult
   /// with the given fields replaced by the non-null parameter values.

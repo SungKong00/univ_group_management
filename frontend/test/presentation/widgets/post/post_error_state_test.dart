@@ -23,11 +23,7 @@ void main() {
       );
 
       // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
@@ -55,11 +51,7 @@ void main() {
       );
 
       // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
@@ -79,11 +71,7 @@ void main() {
       );
 
       // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
@@ -96,17 +84,10 @@ void main() {
 
     testWidgets('에러 아이콘 스타일 확인 (크기, 색상)', (tester) async {
       // Arrange
-      final widget = PostErrorState(
-        errorMessage: 'Test error',
-        onRetry: () {},
-      );
+      final widget = PostErrorState(errorMessage: 'Test error', onRetry: () {});
 
       // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
@@ -118,17 +99,10 @@ void main() {
 
     testWidgets('재시도 버튼 스타일 확인 (배경색, 텍스트 색상)', (tester) async {
       // Arrange
-      final widget = PostErrorState(
-        errorMessage: 'Test error',
-        onRetry: () {},
-      );
+      final widget = PostErrorState(errorMessage: 'Test error', onRetry: () {});
 
       // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
@@ -141,17 +115,10 @@ void main() {
 
     testWidgets('Column 중앙 정렬 확인', (tester) async {
       // Arrange
-      final widget = PostErrorState(
-        errorMessage: 'Test error',
-        onRetry: () {},
-      );
+      final widget = PostErrorState(errorMessage: 'Test error', onRetry: () {});
 
       // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 

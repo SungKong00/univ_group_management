@@ -17,7 +17,8 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$UnreadPositionResult {
-  /// 읽지 않은 첫 게시글의 인덱스 (모두 읽었으면 null)
+  /// 첫 번째 읽지 않은 게시글의 인덱스
+  /// null이면 모든 게시글을 읽은 상태
   int? get unreadIndex => throw _privateConstructorUsedError;
 
   /// 읽지 않은 게시글 총 개수
@@ -138,12 +139,13 @@ class __$$UnreadPositionResultImplCopyWithImpl<$Res>
 
 class _$UnreadPositionResultImpl implements _UnreadPositionResult {
   const _$UnreadPositionResultImpl({
-    this.unreadIndex,
+    required this.unreadIndex,
     this.totalUnread = 0,
     this.hasUnread = false,
   });
 
-  /// 읽지 않은 첫 게시글의 인덱스 (모두 읽었으면 null)
+  /// 첫 번째 읽지 않은 게시글의 인덱스
+  /// null이면 모든 게시글을 읽은 상태
   @override
   final int? unreadIndex;
 
@@ -194,12 +196,13 @@ class _$UnreadPositionResultImpl implements _UnreadPositionResult {
 
 abstract class _UnreadPositionResult implements UnreadPositionResult {
   const factory _UnreadPositionResult({
-    final int? unreadIndex,
+    required final int? unreadIndex,
     final int totalUnread,
     final bool hasUnread,
   }) = _$UnreadPositionResultImpl;
 
-  /// 읽지 않은 첫 게시글의 인덱스 (모두 읽었으면 null)
+  /// 첫 번째 읽지 않은 게시글의 인덱스
+  /// null이면 모든 게시글을 읽은 상태
   @override
   int? get unreadIndex;
 

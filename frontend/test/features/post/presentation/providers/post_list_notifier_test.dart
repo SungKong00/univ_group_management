@@ -27,9 +27,7 @@ void main() {
 
     ProviderContainer createContainer(String channelId) {
       return ProviderContainer(
-        overrides: [
-          getPostsUseCaseProvider.overrideWithValue(mockUseCase),
-        ],
+        overrides: [getPostsUseCaseProvider.overrideWithValue(mockUseCase)],
       );
     }
 
@@ -43,10 +41,7 @@ void main() {
         content: content,
         createdAt: createdAt ?? DateTime.now(),
         updatedAt: createdAt ?? DateTime.now(),
-        author: const Author(
-          id: 1,
-          name: 'Test User',
-        ),
+        author: const Author(id: 1, name: 'Test User'),
       );
     }
 
@@ -63,14 +58,16 @@ void main() {
         totalElements: 100,
       );
 
-      when(mockUseCase('channel-1', page: 0))
-          .thenAnswer((_) async => (posts, pagination));
+      when(
+        mockUseCase('channel-1', page: 0),
+      ).thenAnswer((_) async => (posts, pagination));
 
       container = createContainer('channel-1');
 
       // When
-      final state = await container
-          .read(postListAsyncNotifierProvider('channel-1').future);
+      final state = await container.read(
+        postListAsyncNotifierProvider('channel-1').future,
+      );
 
       // Then
       expect(state.posts, equals(posts));
@@ -82,14 +79,16 @@ void main() {
 
     test('초기 로딩 실패 - Exception 발생', () async {
       // Given
-      when(mockUseCase('channel-1', page: 0))
-          .thenThrow(Exception('Network error'));
+      when(
+        mockUseCase('channel-1', page: 0),
+      ).thenThrow(Exception('Network error'));
 
       container = createContainer('channel-1');
 
       // When
-      final stateFuture =
-          container.read(postListAsyncNotifierProvider('channel-1').future);
+      final stateFuture = container.read(
+        postListAsyncNotifierProvider('channel-1').future,
+      );
 
       // Then
       await expectLater(stateFuture, throwsA(isA<Exception>()));
@@ -97,9 +96,7 @@ void main() {
 
     test('loadMore() - 추가 페이지 로드', () async {
       // Given
-      final initialPosts = [
-        createTestPost(id: 1, content: 'Post 1'),
-      ];
+      final initialPosts = [createTestPost(id: 1, content: 'Post 1')];
       const initialPagination = Pagination(
         hasMore: true,
         currentPage: 0,
@@ -107,9 +104,7 @@ void main() {
         totalElements: 2,
       );
 
-      final morePosts = [
-        createTestPost(id: 2, content: 'Post 2'),
-      ];
+      final morePosts = [createTestPost(id: 2, content: 'Post 2')];
       const morePagination = Pagination(
         hasMore: false,
         currentPage: 1,
@@ -117,15 +112,17 @@ void main() {
         totalElements: 2,
       );
 
-      when(mockUseCase('channel-1', page: 0))
-          .thenAnswer((_) async => (initialPosts, initialPagination));
+      when(
+        mockUseCase('channel-1', page: 0),
+      ).thenAnswer((_) async => (initialPosts, initialPagination));
 
       container = createContainer('channel-1');
 
       await container.read(postListAsyncNotifierProvider('channel-1').future);
 
-      when(mockUseCase('channel-1', page: 1))
-          .thenAnswer((_) async => (morePosts, morePagination));
+      when(
+        mockUseCase('channel-1', page: 1),
+      ).thenAnswer((_) async => (morePosts, morePagination));
 
       // When
       await container
@@ -149,24 +146,24 @@ void main() {
         totalElements: 10,
       );
 
-      when(mockUseCase('channel-1', page: 0))
-          .thenAnswer((_) async => (posts, pagination));
+      when(
+        mockUseCase('channel-1', page: 0),
+      ).thenAnswer((_) async => (posts, pagination));
 
       container = createContainer('channel-1');
 
       await container.read(postListAsyncNotifierProvider('channel-1').future);
 
       // When - 동시에 loadMore 2번 호출
-      final notifier =
-          container.read(postListAsyncNotifierProvider('channel-1').notifier);
+      final notifier = container.read(
+        postListAsyncNotifierProvider('channel-1').notifier,
+      );
 
       // 첫 호출은 느리게 응답
-      when(mockUseCase('channel-1', page: 1)).thenAnswer(
-        (_) async {
-          await Future.delayed(const Duration(milliseconds: 100));
-          return ([createTestPost(id: 2, content: 'Post 2')], pagination);
-        },
-      );
+      when(mockUseCase('channel-1', page: 1)).thenAnswer((_) async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        return ([createTestPost(id: 2, content: 'Post 2')], pagination);
+      });
 
       final future1 = notifier.loadMore();
       final future2 = notifier.loadMore();
@@ -187,8 +184,9 @@ void main() {
         totalElements: 1,
       );
 
-      when(mockUseCase('channel-1', page: 0))
-          .thenAnswer((_) async => (posts, pagination));
+      when(
+        mockUseCase('channel-1', page: 0),
+      ).thenAnswer((_) async => (posts, pagination));
 
       container = createContainer('channel-1');
 
@@ -213,15 +211,17 @@ void main() {
         totalElements: 10,
       );
 
-      when(mockUseCase('channel-1', page: 0))
-          .thenAnswer((_) async => (posts, pagination));
+      when(
+        mockUseCase('channel-1', page: 0),
+      ).thenAnswer((_) async => (posts, pagination));
 
       container = createContainer('channel-1');
 
       await container.read(postListAsyncNotifierProvider('channel-1').future);
 
-      when(mockUseCase('channel-1', page: 1))
-          .thenThrow(Exception('Network error'));
+      when(
+        mockUseCase('channel-1', page: 1),
+      ).thenThrow(Exception('Network error'));
 
       // When
       await container
@@ -235,9 +235,7 @@ void main() {
 
     test('addPost() - 낙관적 업데이트', () async {
       // Given
-      final initialPosts = [
-        createTestPost(id: 1, content: 'Post 1'),
-      ];
+      final initialPosts = [createTestPost(id: 1, content: 'Post 1')];
       const pagination = Pagination(
         hasMore: false,
         currentPage: 0,
@@ -245,8 +243,9 @@ void main() {
         totalElements: 1,
       );
 
-      when(mockUseCase('channel-1', page: 0))
-          .thenAnswer((_) async => (initialPosts, pagination));
+      when(
+        mockUseCase('channel-1', page: 0),
+      ).thenAnswer((_) async => (initialPosts, pagination));
 
       container = createContainer('channel-1');
 
@@ -277,8 +276,9 @@ void main() {
         totalElements: 2,
       );
 
-      when(mockUseCase('channel-1', page: 0))
-          .thenAnswer((_) async => (posts, pagination));
+      when(
+        mockUseCase('channel-1', page: 0),
+      ).thenAnswer((_) async => (posts, pagination));
 
       container = createContainer('channel-1');
 
@@ -308,8 +308,9 @@ void main() {
         totalElements: 2,
       );
 
-      when(mockUseCase('channel-1', page: 0))
-          .thenAnswer((_) async => (posts, pagination));
+      when(
+        mockUseCase('channel-1', page: 0),
+      ).thenAnswer((_) async => (posts, pagination));
 
       container = createContainer('channel-1');
 

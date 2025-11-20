@@ -17,11 +17,7 @@ void main() {
       const widget = PostEmptyState();
 
       // Act
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
@@ -40,16 +36,14 @@ void main() {
       const widget = PostEmptyState();
 
       // Act
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
       // Assert: 아이콘 속성
-      final iconWidget = tester.widget<Icon>(find.byIcon(Icons.article_outlined));
+      final iconWidget = tester.widget<Icon>(
+        find.byIcon(Icons.article_outlined),
+      );
       expect(iconWidget.size, 64);
       expect(iconWidget.color, AppColors.neutral400);
     });
@@ -59,11 +53,7 @@ void main() {
       const widget = PostEmptyState();
 
       // Act
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 
@@ -81,11 +71,7 @@ void main() {
       const widget = PostEmptyState();
 
       // Act
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(body: widget),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: widget)));
 
       await tester.pumpAndSettle();
 

@@ -10,10 +10,7 @@ import 'date_divider.dart';
 class PostStickyHeader extends StatelessWidget {
   final DateTime? stickyDate;
 
-  const PostStickyHeader({
-    super.key,
-    required this.stickyDate,
-  });
+  const PostStickyHeader({super.key, required this.stickyDate});
 
   @override
   Widget build(BuildContext context) {

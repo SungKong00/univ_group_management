@@ -6,29 +6,37 @@ import '../../../core/models/post_list_item.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../features/post/domain/entities/post.dart';
 import '../../../features/post/presentation/providers/post_list_state.dart';
+import '../../../features/channel/domain/entities/unread_position_result.dart';
 import 'date_divider.dart';
 import 'post_item.dart';
+import 'post_item_with_tracking.dart';
+import 'unread_divider.dart';
 import 'post_list_constants.dart';
 import 'post_list_view.dart';
 import 'post_sticky_header.dart';
 
-/// 게시글 목록 위젯 (기본 조회 기능만)
+/// 게시글 목록 위젯 (읽지 않은 글 기능 포함)
 ///
 /// 기능:
 /// - 게시글 목록 렌더링 (최신 → 오래된 순)
 /// - Flat List 구조 (날짜 마커 + 게시글)
 /// - Sticky Header (현재 보이는 날짜)
 /// - 무한 스크롤
+/// - 읽지 않은 글 자동 스크롤
+/// - 읽지 않은 글 구분선 표시
+/// - 가시성 추적 (자동 읽음 처리)
 class PostList extends ConsumerStatefulWidget {
   final String channelId;
   final bool canWrite;
   final Function(int postId)? onTapComment;
+  final UnreadPositionResult? unreadPosition;
 
   const PostList({
     super.key,
     required this.channelId,
     this.canWrite = false,
     this.onTapComment,
+    this.unreadPosition,
   });
 
   @override
@@ -40,6 +48,7 @@ class _PostListState extends ConsumerState<PostList> {
 
   List<PostListItem> _flatItems = [];
   bool _isInitialLoading = true;
+  bool _hasScrolledToUnread = false;
 
   // Sticky Date Header
   DateTime? _stickyDate;
@@ -54,7 +63,6 @@ class _PostListState extends ConsumerState<PostList> {
 
     // 초기화는 _buildScrollView에서 자동으로 진행
   }
-
 
   @override
   void didUpdateWidget(PostList oldWidget) {
@@ -74,6 +82,7 @@ class _PostListState extends ConsumerState<PostList> {
     setState(() {
       _flatItems = [];
       _isInitialLoading = true;
+      _hasScrolledToUnread = false;
     });
   }
 
@@ -85,9 +94,9 @@ class _PostListState extends ConsumerState<PostList> {
     _resetAndLoad();
   }
 
-  /// Phase 2: Flat List 생성 (날짜 마커와 게시글을 번갈아 배치)
+  /// Phase 3: Flat List 생성 (날짜 마커, 읽지 않은 글 구분선, 게시글 배치)
   ///
-  /// **구조**: [DateMarkerWrapper, PostWrapper, PostWrapper, DateMarkerWrapper, PostWrapper, ...]
+  /// **구조**: [DateMarker, Post, UnreadDivider, Post, DateMarker, Post, ...]
   ///
   /// **정렬**: oldest → newest (최신글이 리스트 마지막)
   List<PostListItem> _buildFlatList(List<Post> posts) {
@@ -99,12 +108,15 @@ class _PostListState extends ConsumerState<PostList> {
 
     final List<PostListItem> flatItems = [];
     DateTime? currentDate;
+    final unreadIndex = widget.unreadPosition?.unreadIndex;
+    bool unreadDividerInserted = false;
 
     _keys.clear();
     _dates.clear();
 
     // 게시글이 oldest → newest로 정렬되어 있다고 가정
-    for (final post in posts) {
+    for (int i = 0; i < posts.length; i++) {
+      final post = posts[i];
       final postDate = DateTime(
         post.createdAt.year,
         post.createdAt.month,
@@ -120,6 +132,18 @@ class _PostListState extends ConsumerState<PostList> {
         currentDate = postDate;
       }
 
+      // 읽지 않은 글 구분선 추가 (첫 번째 읽지 않은 글 앞에)
+      if (!unreadDividerInserted &&
+          unreadIndex != null &&
+          i == unreadIndex &&
+          widget.unreadPosition != null) {
+        final dividerIndex = flatItems.length;
+        flatItems.add(UnreadDividerWrapper(widget.unreadPosition!));
+        _keys[dividerIndex] = GlobalKey();
+        _dates[dividerIndex] = currentDate!;
+        unreadDividerInserted = true;
+      }
+
       final postIndex = flatItems.length;
       flatItems.add(PostWrapper(post));
       _keys[postIndex] = GlobalKey();
@@ -128,7 +152,6 @@ class _PostListState extends ConsumerState<PostList> {
 
     return flatItems;
   }
-
 
   void _onScroll() {
     if (_isInitialLoading) return;
@@ -175,8 +198,50 @@ class _PostListState extends ConsumerState<PostList> {
     }
   }
 
-  // 가시성 추적은 ChannelReadPositionNotifier에 위임됨
-  // 더 이상 로컬 상태를 관리하지 않습니다.
+  /// 읽지 않은 글 위치로 자동 스크롤
+  void _scrollToUnreadPosition() {
+    if (!mounted || !_scrollController.hasClients) return;
+
+    final unreadIndex = widget.unreadPosition?.unreadIndex;
+    if (unreadIndex == null) return;
+
+    // UnreadDivider가 삽입된 위치 찾기
+    int? targetFlatIndex;
+    for (int i = 0; i < _flatItems.length; i++) {
+      final item = _flatItems[i];
+      if (item is UnreadDividerWrapper) {
+        targetFlatIndex = i;
+        break;
+      }
+    }
+
+    if (targetFlatIndex != null && targetFlatIndex < _keys.length) {
+      final key = _keys[targetFlatIndex];
+      if (key?.currentContext != null) {
+        final box = key!.currentContext!.findRenderObject() as RenderBox?;
+        if (box != null) {
+          try {
+            final position = box.localToGlobal(Offset.zero).dy;
+            final scrollOffset =
+                _scrollController.offset +
+                position -
+                PostListConstants.stickyThreshold -
+                10;
+
+            _scrollController.animateTo(
+              scrollOffset,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+
+            _hasScrolledToUnread = true;
+          } catch (e) {
+            // 스크롤 실패 무시
+          }
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -200,6 +265,12 @@ class _PostListState extends ConsumerState<PostList> {
             _flatItems = _buildFlatList(postListState.posts);
             _isInitialLoading = false;
           });
+
+          // 자동 스크롤 (읽지 않은 글이 있으면)
+          if (!_hasScrolledToUnread &&
+              widget.unreadPosition?.hasUnread == true) {
+            _scrollToUnreadPosition();
+          }
         }
       });
     }
@@ -217,7 +288,7 @@ class _PostListState extends ConsumerState<PostList> {
                   child: Center(child: CircularProgressIndicator()),
                 ),
               ),
-            // Phase 2: 단일 SliverList로 통합 - 타입 안전성 개선
+            // Phase 3: UnreadDivider + PostItemWithTracking 지원
             SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 final item = _flatItems[index];
@@ -232,14 +303,25 @@ class _PostListState extends ConsumerState<PostList> {
                       child: DateDivider(date: marker.date),
                     );
 
+                  case UnreadDividerWrapper(:final unreadPosition):
+                    // UnreadDivider: 읽지 않은 글 구분선
+                    final itemKey = _keys[index];
+                    return Container(
+                      key: itemKey,
+                      child: UnreadDivider(
+                        unreadCount: unreadPosition.totalUnread,
+                      ),
+                    );
+
                   case PostWrapper(:final post):
                     final itemKey = _keys[index];
                     return Container(
                       key: itemKey,
                       child: Column(
                         children: [
-                          PostItem(
+                          PostItemWithTracking(
                             post: post,
+                            channelId: int.parse(widget.channelId),
                             onTapComment: () =>
                                 widget.onTapComment?.call(post.id),
                             onTapPost: () {},

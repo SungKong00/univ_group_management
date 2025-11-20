@@ -3,6 +3,7 @@ import 'package:frontend/features/channel/domain/entities/channel.dart';
 import 'package:frontend/features/channel/domain/entities/channel_permissions.dart';
 import 'package:frontend/features/channel/domain/repositories/channel_repository.dart';
 import 'package:frontend/features/channel/domain/repositories/read_position_repository.dart';
+import 'package:frontend/features/channel/domain/usecases/calculate_unread_position_usecase.dart';
 import 'package:frontend/features/channel/domain/usecases/enter_channel_usecase.dart';
 import 'package:frontend/features/post/domain/entities/author.dart';
 import 'package:frontend/features/post/domain/entities/pagination.dart';
@@ -20,15 +21,18 @@ void main() {
     late MockChannelRepository mockChannelRepository;
     late MockReadPositionRepository mockReadPositionRepository;
     late MockPostRepository mockPostRepository;
+    late CalculateUnreadPositionUseCase calculateUnreadPositionUseCase;
 
     setUp(() {
       mockChannelRepository = MockChannelRepository();
       mockReadPositionRepository = MockReadPositionRepository();
       mockPostRepository = MockPostRepository();
+      calculateUnreadPositionUseCase = CalculateUnreadPositionUseCase();
       useCase = EnterChannelUseCase(
         mockChannelRepository,
         mockReadPositionRepository,
         mockPostRepository,
+        calculateUnreadPositionUseCase,
       );
     });
 

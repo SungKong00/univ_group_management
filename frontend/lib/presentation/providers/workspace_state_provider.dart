@@ -13,6 +13,7 @@ import 'place_calendar_provider.dart';
 import 'auth_provider.dart';
 import 'workspace_navigation_helper.dart';
 import 'navigation_state_provider.dart';
+import '../../features/channel/presentation/providers/unread_badge_notifier.dart';
 
 /// 로그아웃 진행 중 워크스페이스 진입 시도 시 발생하는 예외
 /// Race Condition 차단: 로그아웃 중 myGroupsProvider가 무효화되면서
@@ -891,6 +892,13 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
       if (selectedChannelId != null) {
         await loadChannelPermissions(selectedChannelId);
       }
+
+      // Step 8: Phase 4 - 배지 갱신 (그룹 전환 시)
+      // Note: refreshAll은 비동기이지만 await 불필요 (백그라운드 실행)
+      final channelIds = channels.map((c) => c.id).toList();
+      if (channelIds.isNotEmpty) {
+        _refreshBadges(channelIds);
+      }
     } catch (e) {
       state = state.copyWith(
         isLoadingChannels: false,
@@ -1017,6 +1025,22 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
 
     // LocalStorage에 저장
     _saveToLocalStorage();
+
+    // Phase 4: 배지 갱신 (채널 전환 시)
+    final channelIds = state.channels.map((c) => c.id).toList();
+    if (channelIds.isNotEmpty) {
+      _refreshBadges(channelIds);
+    }
+  }
+
+  /// Phase 4: 배지 갱신 헬퍼 메서드
+  void _refreshBadges(List<int> channelIds) {
+    // UnreadBadgeNotifier는 WidgetRef를 요구하지만,
+    // StateNotifier는 Ref만 가지고 있음.
+    // 따라서 각 채널의 provider를 개별적으로 무효화하여 갱신
+    for (final channelId in channelIds) {
+      _ref.invalidate(unreadBadgeProvider(channelId));
+    }
   }
 
   /// Load channel permissions for the currently selected channel
@@ -1394,6 +1418,12 @@ class WorkspaceStateNotifier extends StateNotifier<WorkspaceState> {
         ..['channelId'] = channelId
         ..['channelName'] = selectedChannel.name,
     );
+
+    // Phase 4: 배지 갱신 (모바일 채널 전환 시)
+    final channelIds = state.channels.map((c) => c.id).toList();
+    if (channelIds.isNotEmpty) {
+      _refreshBadges(channelIds);
+    }
   }
 
   // 모바일에서 댓글 보기 시 (Step 2 → Step 3)

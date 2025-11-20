@@ -18,11 +18,7 @@ class PostEmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.article_outlined,
-              size: 64,
-              color: AppColors.neutral400,
-            ),
+            Icon(Icons.article_outlined, size: 64, color: AppColors.neutral400),
             const SizedBox(height: 16),
             Text(
               '아직 게시글이 없습니다',
@@ -33,9 +29,7 @@ class PostEmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '첫 번째 게시글을 작성해보세요',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.neutral600,
-              ),
+              style: AppTheme.bodyMedium.copyWith(color: AppColors.neutral600),
               textAlign: TextAlign.center,
             ),
           ],

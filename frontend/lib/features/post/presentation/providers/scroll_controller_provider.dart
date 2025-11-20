@@ -55,4 +55,5 @@ class ScrollControllerNotifier
 /// ```
 final scrollControllerProvider = NotifierProvider.autoDispose
     .family<ScrollControllerNotifier, AutoScrollController, String>(
-        ScrollControllerNotifier.new);
+      ScrollControllerNotifier.new,
+    );

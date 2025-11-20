@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../post/domain/entities/post.dart';
 import 'channel.dart';
 import 'channel_permissions.dart';
+import 'unread_position_result.dart';
 
 part 'channel_entry_result.freezed.dart';
 
@@ -23,5 +24,8 @@ class ChannelEntryResult with _$ChannelEntryResult {
 
     /// 마지막으로 읽은 게시글 ID (없으면 null)
     int? readPosition,
+
+    /// 읽지 않은 글 계산 결과 (없으면 null)
+    UnreadPositionResult? unreadPosition,
   }) = _ChannelEntryResult;
 }

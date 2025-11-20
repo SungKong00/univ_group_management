@@ -70,4 +70,5 @@ class ReadPositionNotifier extends AutoDisposeNotifier<int?> {
 
 final readPositionProvider =
     NotifierProvider.autoDispose<ReadPositionNotifier, int?>(
-        ReadPositionNotifier.new);
+      ReadPositionNotifier.new,
+    );

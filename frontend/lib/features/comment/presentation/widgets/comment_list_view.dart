@@ -22,11 +22,7 @@ class CommentListView extends ConsumerWidget {
   final int postId;
   final VoidCallback? onTapReply;
 
-  const CommentListView({
-    super.key,
-    required this.postId,
-    this.onTapReply,
-  });
+  const CommentListView({super.key, required this.postId, this.onTapReply});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
