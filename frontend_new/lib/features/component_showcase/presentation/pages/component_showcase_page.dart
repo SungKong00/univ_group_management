@@ -102,15 +102,25 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildColorPaletteSection(width),
-                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width) * 0.3),
+                SizedBox(
+                  height: ResponsiveTokens.sectionVerticalGap(width) * 0.3,
+                ),
                 _buildTypographySection(),
-                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width) * 0.3),
+                SizedBox(
+                  height: ResponsiveTokens.sectionVerticalGap(width) * 0.3,
+                ),
                 _buildButtonsSection(width),
-                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width) * 0.3),
+                SizedBox(
+                  height: ResponsiveTokens.sectionVerticalGap(width) * 0.3,
+                ),
                 _buildInputFieldsSection(width),
-                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width) * 0.3),
+                SizedBox(
+                  height: ResponsiveTokens.sectionVerticalGap(width) * 0.3,
+                ),
                 _buildCardElevationSection(),
-                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width) * 0.3),
+                SizedBox(
+                  height: ResponsiveTokens.sectionVerticalGap(width) * 0.3,
+                ),
                 _buildCardDisabledOpacitySection(),
               ],
             ),
@@ -172,45 +182,21 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '제목 1',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('제목 1', style: Theme.of(context).textTheme.titleLarge),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
-          Text(
-            '제목 2',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          Text('제목 2', style: Theme.of(context).textTheme.headlineSmall),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
-          Text(
-            '제목 3',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          Text('제목 3', style: Theme.of(context).textTheme.headlineMedium),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
-          Text(
-            '제목 4',
-            style: Theme.of(context).textTheme.headlineLarge,
-          ),
+          Text('제목 4', style: Theme.of(context).textTheme.headlineLarge),
           SizedBox(height: ResponsiveTokens.sectionContentGap),
-          Text(
-            '큰 텍스트',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          Text('큰 텍스트', style: Theme.of(context).textTheme.bodyLarge),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
-          Text(
-            '일반 텍스트',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text('일반 텍스트', style: Theme.of(context).textTheme.bodyMedium),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
-          Text(
-            '작은 텍스트',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text('작은 텍스트', style: Theme.of(context).textTheme.bodySmall),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
-          Text(
-            '미니 텍스트',
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
+          Text('미니 텍스트', style: Theme.of(context).textTheme.labelSmall),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
           Text('마이크로 텍스트', style: context.appTypography.textMicro),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
@@ -483,17 +469,9 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
             errorText: '필수 입력 항목입니다',
           ),
           SizedBox(height: ResponsiveTokens.sectionContentGap),
-          const AppInput(
-            label: '비활성화됨',
-            placeholder: '편집 불가',
-            enabled: false,
-          ),
+          const AppInput(label: '비활성화됨', placeholder: '편집 불가', enabled: false),
           SizedBox(height: ResponsiveTokens.sectionContentGap),
-          const AppInput(
-            label: '여러 줄',
-            placeholder: '설명 입력',
-            maxLines: 4,
-          ),
+          const AppInput(label: '여러 줄', placeholder: '설명 입력', maxLines: 4),
         ],
       ),
     );
@@ -511,9 +489,9 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
           AppCard(
             elevation: AppCardElevation.none,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('none 카드 클릭')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('none 카드 클릭')));
             },
             child: Row(
               children: [
@@ -532,18 +510,18 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     children: [
                       Text(
                         'elevation: none (기본값)',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall!
-                            .copyWith(fontWeight: FontWeight.w500),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      SizedBox(height: ResponsiveTokens.sectionContentGap * 0.25),
+                      SizedBox(
+                        height: ResponsiveTokens.sectionContentGap * 0.25,
+                      ),
                       Text(
                         '그림자 없음 → hover: low',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall!
-                            .copyWith(color: context.appColors.textTertiary),
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          color: context.appColors.textTertiary,
+                        ),
                       ),
                     ],
                   ),
@@ -555,9 +533,9 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
           AppCard(
             elevation: AppCardElevation.low,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('low 카드 클릭')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('low 카드 클릭')));
             },
             child: Row(
               children: [
@@ -576,30 +554,25 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     children: [
                       Text(
                         'elevation: low',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall!
-                            .copyWith(fontWeight: FontWeight.w500),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      SizedBox(height: ResponsiveTokens.sectionContentGap * 0.25),
+                      SizedBox(
+                        height: ResponsiveTokens.sectionContentGap * 0.25,
+                      ),
                       Text(
                         'rgba(255,255,255,0.05) 0px 2px 4px',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall!
-                            .copyWith(
-                              color: context.appColors.textTertiary,
-                              fontFamily: 'monospace',
-                            ),
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          color: context.appColors.textTertiary,
+                          fontFamily: 'monospace',
+                        ),
                       ),
                       Text(
                         '미묘한 그림자 → hover: medium',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall!
-                            .copyWith(
-                              color: context.appColors.textQuaternary,
-                            ),
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          color: context.appColors.textQuaternary,
+                        ),
                       ),
                     ],
                   ),
@@ -641,17 +614,15 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     children: [
                       Text(
                         'disabledOpacity: 0.65',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall!
-                            .copyWith(fontWeight: FontWeight.w500),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Text(
                         '가장 선명 (투명도 낮음)',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall!
-                            .copyWith(color: context.appColors.textTertiary),
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          color: context.appColors.textTertiary,
+                        ),
                       ),
                     ],
                   ),
@@ -680,17 +651,15 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     children: [
                       Text(
                         'disabledOpacity: 0.75',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall!
-                            .copyWith(fontWeight: FontWeight.w500),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Text(
                         '표준 (권장)',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall!
-                            .copyWith(color: context.appColors.textTertiary),
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          color: context.appColors.textTertiary,
+                        ),
                       ),
                     ],
                   ),
@@ -719,17 +688,15 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     children: [
                       Text(
                         'disabledOpacity: 0.85',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall!
-                            .copyWith(fontWeight: FontWeight.w500),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Text(
                         '덜 선명 (투명도 높음)',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall!
-                            .copyWith(color: context.appColors.textTertiary),
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          color: context.appColors.textTertiary,
+                        ),
                       ),
                     ],
                   ),

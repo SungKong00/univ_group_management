@@ -111,8 +111,9 @@ class ActivitySection extends StatelessWidget {
                   ActivityType.statusChanged => ActivityItemColors.statusChange(
                     colorExt,
                   ),
-                  ActivityType.assigned =>
-                    ActivityItemColors.assigneeChange(colorExt),
+                  ActivityType.assigned => ActivityItemColors.assigneeChange(
+                    colorExt,
+                  ),
                   ActivityType.priorityChanged =>
                     ActivityItemColors.priorityChange(colorExt),
                   _ => ActivityItemColors.comment(colorExt),
