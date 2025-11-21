@@ -3,6 +3,7 @@ import 'extensions/app_color_extension.dart';
 import 'extensions/app_typography_extension.dart';
 import 'extensions/app_spacing_extension.dart';
 import 'extensions/app_responsive_extension.dart';
+import 'border_tokens.dart';
 
 /// Linear.app 스타일 Material 3 테마
 ///
@@ -63,7 +64,7 @@ class AppTheme {
         outlineVariant: colorExt.borderSecondary,
 
         // Shadow & Scrim
-        shadow: Colors.black.withValues(alpha: 0.3),
+        shadow: colorExt.shadow,
         scrim: colorExt.overlayScrim,
 
         // Inverse
@@ -89,7 +90,7 @@ class AppTheme {
         color: colorExt.surfaceSecondary,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderTokens.largeRadius(),
           side: BorderSide(color: colorExt.borderPrimary, width: 1),
         ),
       ),
@@ -119,23 +120,23 @@ class AppTheme {
         filled: true,
         fillColor: colorExt.surfaceSecondary,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderTokens.mediumRadius(),
           borderSide: BorderSide(color: colorExt.borderPrimary, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderTokens.mediumRadius(),
           borderSide: BorderSide(color: colorExt.borderPrimary, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderTokens.mediumRadius(),
           borderSide: BorderSide(color: colorExt.borderFocus, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderTokens.mediumRadius(),
           borderSide: BorderSide(color: colorExt.stateErrorBg, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderTokens.mediumRadius(),
           borderSide: BorderSide(color: colorExt.stateErrorBg, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(
@@ -164,7 +165,9 @@ class AppTheme {
             horizontal: spacingExt.large,
             vertical: spacingExt.small,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderTokens.mediumRadius(),
+          ),
           textStyle: TextStyle(
             fontSize: 15.0,
             height: 1.6,
@@ -185,7 +188,9 @@ class AppTheme {
             vertical: spacingExt.small,
           ),
           side: BorderSide(color: colorExt.borderSecondary, width: 1),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderTokens.mediumRadius(),
+          ),
           textStyle: TextStyle(
             fontSize: 15.0,
             height: 1.6,

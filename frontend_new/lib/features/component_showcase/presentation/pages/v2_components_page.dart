@@ -11,6 +11,11 @@ import '../../../../core/widgets/customer_card.dart';
 import '../../../../core/widgets/customer_filter_tabs.dart';
 import '../../../../core/widgets/customer_logo_grid.dart';
 import '../../../../core/widgets/adaptive_card_grid.dart';
+import '../../../../core/widgets/vertical_card.dart';
+import '../../../../core/widgets/horizontal_card.dart';
+import '../../../../core/widgets/compact_card.dart';
+import '../../../../core/widgets/selectable_card.dart';
+import '../../../../core/widgets/wide_card.dart';
 import '../../data/models/pricing_plan_model.dart';
 import '../../data/models/billing_cycle_model.dart';
 import '../../data/models/customer_model.dart';
@@ -34,11 +39,12 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
   late TabController _tabController;
   bool _isYearly = false;
   String _selectedCustomerFilter = 'all';
+  List<bool> _selectedCards = List.filled(3, false);
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -71,7 +77,11 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [_buildPricingTab(), _buildCustomersTab()],
+              children: [
+                _buildPricingTab(),
+                _buildCustomersTab(),
+                _buildCardsTab(),
+              ],
             ),
           ),
         ],
@@ -130,6 +140,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
         tabs: const [
           Tab(text: 'Pricing'),
           Tab(text: 'Customers'),
+          Tab(text: 'Design Cards'),
         ],
       ),
     );
@@ -301,6 +312,225 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
           ),
         );
       },
+    );
+  }
+
+  /// Design Cards Tab
+  Widget _buildCardsTab() {
+    return ResponsiveBuilder(
+      builder: (context, screenSize, width) {
+        final colorExt = context.appColors;
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(ResponsiveTokens.pagePadding(width)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Text(
+                'Design System Cards',
+                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                  color: colorExt.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '5가지 카드 유형 및 변형 스타일 (standard, featured, highlighted)',
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                  color: colorExt.textSecondary,
+                ),
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width)),
+
+              // 1. Vertical Card Section
+              _buildSectionHeader('1. Vertical Card', 'Image(top) → Title → Description'),
+              SizedBox(height: ResponsiveTokens.cardGap(width)),
+              AdaptiveCardGrid(
+                itemCount: 3,
+                itemBuilder: (context, index) {
+                  final variants = ['standard', 'featured', 'highlighted'];
+                  return VerticalCard(
+                    title: 'Vertical Card ${variants[index]}',
+                    subtitle: 'Subtitle text here',
+                    description: 'This is a vertical card with image on top and text below.',
+                    meta: 'Meta info',
+                    image: Container(
+                      color: colorExt.surfaceTertiary,
+                      child: Center(
+                        child: Icon(Icons.image, color: colorExt.textTertiary, size: 48),
+                      ),
+                    ),
+                    variant: variants[index],
+                  );
+                },
+                minItemWidth: 240,
+                maxItemWidth: 320,
+                maxColumns: 3,
+                preferredItemWidth: 280,
+                aspectRatio: const ResponsiveValue<double>(
+                  mobile: 3 / 4,
+                  tablet: 3 / 4,
+                  desktop: 3 / 4,
+                ),
+                maxContentWidth: ResponsiveTokens.maxContentWidth,
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
+
+              // 2. Horizontal Card Section
+              _buildSectionHeader('2. Horizontal Card', 'Image(left) → Text(right)'),
+              SizedBox(height: ResponsiveTokens.cardGap(width)),
+              AdaptiveCardGrid(
+                itemCount: 3,
+                itemBuilder: (context, index) {
+                  final variants = ['standard', 'featured', 'highlighted'];
+                  return HorizontalCard(
+                    title: 'Horizontal ${variants[index]}',
+                    subtitle: 'Subtitle',
+                    description: 'A horizontal layout with image on the left.',
+                    meta: 'Info',
+                    image: Container(
+                      color: colorExt.surfaceTertiary,
+                      child: Center(
+                        child: Icon(Icons.image, color: colorExt.textTertiary, size: 48),
+                      ),
+                    ),
+                    variant: variants[index],
+                  );
+                },
+                minItemWidth: 320,
+                maxItemWidth: 500,
+                maxColumns: 2,
+                preferredItemWidth: 400,
+                aspectRatio: const ResponsiveValue<double>(
+                  mobile: 4 / 3,
+                  tablet: 4 / 3,
+                  desktop: 4 / 3,
+                ),
+                maxContentWidth: ResponsiveTokens.maxContentWidth,
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
+
+              // 3. Compact Card Section
+              _buildSectionHeader('3. Compact Card', 'Icon + Title (자동 높이)'),
+              SizedBox(height: ResponsiveTokens.cardGap(width)),
+              AdaptiveCardGrid(
+                itemCount: 6,
+                itemBuilder: (context, index) {
+                  final variants = ['standard', 'featured', 'highlighted'];
+                  final variant = variants[index % 3];
+                  return CompactCard(
+                    title: variant == 'standard'
+                        ? '항목 ${index ~/ 3 + 1}'
+                        : '${variant.substring(0, 1).toUpperCase()}${variant.substring(1)}',
+                    meta: 'Meta',
+                    icon: Icons.category,
+                    variant: variant,
+                    isSelected: _selectedCards[index % 3],
+                    onTap: () {
+                      setState(() {
+                        _selectedCards[index % 3] = !_selectedCards[index % 3];
+                      });
+                    },
+                  );
+                },
+                minItemWidth: 100,
+                maxItemWidth: 160,
+                maxColumns: 6,
+                preferredItemWidth: 120,
+                enforceAspectRatio: false,
+                maxContentWidth: ResponsiveTokens.maxContentWidth,
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
+
+              // 4. Selectable Card Section
+              _buildSectionHeader('4. Selectable Card', 'Checkbox + Content (다중선택)'),
+              SizedBox(height: ResponsiveTokens.cardGap(width)),
+              Column(
+                children: List.generate(3, (index) {
+                  final variants = ['standard', 'featured', 'highlighted'];
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: ResponsiveTokens.cardGap(width)),
+                    child: SelectableCard(
+                      title: 'Option ${index + 1} (${variants[index]})',
+                      subtitle: 'Select to enable this feature',
+                      isSelected: _selectedCards[index],
+                      onSelected: (value) {
+                        setState(() {
+                          _selectedCards[index] = value;
+                        });
+                      },
+                      variant: variants[index],
+                    ),
+                  );
+                }),
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
+
+              // 5. Wide Card Section
+              _buildSectionHeader('5. Wide Card', 'Full-width Banner (배너/프로모션)'),
+              SizedBox(height: ResponsiveTokens.cardGap(width)),
+              Column(
+                children: [
+                  WideCard(
+                    title: 'Standard Wide Card',
+                    subtitle: 'Full-width banner layout',
+                    description: 'This is a promotional banner with CTA button',
+                    ctaText: 'Learn More',
+                    variant: 'standard',
+                    onCtaPressed: () {},
+                    backgroundContent: Container(
+                      color: context.appColors.surfaceTertiary,
+                      child: Center(
+                        child: Icon(Icons.image, color: colorExt.textTertiary, size: 64),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: ResponsiveTokens.cardGap(width)),
+                  WideCard(
+                    title: 'Featured Promotion',
+                    subtitle: 'Special offer',
+                    description: 'Get started with our premium features today',
+                    ctaText: 'Get Started',
+                    variant: 'featured',
+                    onCtaPressed: () {},
+                    backgroundContent: Container(
+                      color: context.appColors.brandSecondary.withValues(alpha: 0.2),
+                      child: Center(
+                        child: Icon(Icons.star, color: colorExt.brandPrimary, size: 64),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Helper: Section Header
+  Widget _buildSectionHeader(String title, String description) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+            color: context.appColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          description,
+          style: Theme.of(context).textTheme.labelSmall!.copyWith(
+            color: context.appColors.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 

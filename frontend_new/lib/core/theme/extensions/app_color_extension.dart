@@ -161,6 +161,13 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
   /// 미묘한 구분선
   final Color dividerTertiary;
 
+  // ============================================================
+  // Shadow Colors (1개)
+  // ============================================================
+
+  /// 기본 그림자 색상 (0px 2px 4px rgba(0,0,0,0.3))
+  final Color shadow;
+
   const AppColorExtension({
     // Brand
     required this.brandPrimary,
@@ -211,6 +218,8 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
     required this.dividerPrimary,
     required this.dividerSecondary,
     required this.dividerTertiary,
+    // Shadow
+    required this.shadow,
   });
 
   /// Dark theme 기본 색상 (Updated Brand Colors)
@@ -265,6 +274,8 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
       dividerPrimary: Color(0xFF1E1E21), // #1e1e21 (bg-lvl-2)
       dividerSecondary: Color(0xFF141416), // #141416 (bg-lvl-1)
       dividerTertiary: Color(0xFF0A0A0B), // #0a0a0b (bg-lvl-0)
+      // Shadow
+      shadow: Color(0x4D000000), // rgba(0,0,0,0.3)
     );
   }
 
@@ -319,6 +330,8 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
     Color? dividerPrimary,
     Color? dividerSecondary,
     Color? dividerTertiary,
+    // Shadow
+    Color? shadow,
   }) {
     return AppColorExtension(
       // Brand
@@ -370,6 +383,8 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
       dividerPrimary: dividerPrimary ?? this.dividerPrimary,
       dividerSecondary: dividerSecondary ?? this.dividerSecondary,
       dividerTertiary: dividerTertiary ?? this.dividerTertiary,
+      // Shadow
+      shadow: shadow ?? this.shadow,
     );
   }
 
@@ -454,6 +469,8 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
         t,
       )!,
       dividerTertiary: Color.lerp(dividerTertiary, other.dividerTertiary, t)!,
+      // Shadow
+      shadow: Color.lerp(shadow, other.shadow, t)!,
     );
   }
 }

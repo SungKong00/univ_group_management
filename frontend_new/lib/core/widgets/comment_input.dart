@@ -3,7 +3,6 @@ import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/editor_colors.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
-import '../theme/component_size_tokens.dart';
 
 /// 댓글 입력 컴포넌트
 ///

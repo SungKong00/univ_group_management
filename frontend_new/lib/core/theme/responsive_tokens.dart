@@ -80,11 +80,10 @@ class ResponsiveTokens {
     return 44.0;
   }
 
-  /// 카드 패딩
+  /// 카드 패딩 (Material Design 16dp 기준)
   static double cardPadding(double width) {
     if (width < mobile) return 12.0;
-    if (width < tablet) return 16.0;
-    return 20.0;
+    return 16.0; // Material Design 권장: 16dp
   }
 
   /// 카드 사이 간격
