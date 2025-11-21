@@ -72,91 +72,100 @@ class _SelectableCardState extends State<SelectableCard> {
             }
           : null,
       child: MouseRegion(
-        onEnter: widget.isEnabled ? (_) => setState(() => _isHovered = true) : null,
-        onExit: widget.isEnabled ? (_) => setState(() => _isHovered = false) : null,
+        onEnter: widget.isEnabled
+            ? (_) => setState(() => _isHovered = true)
+            : null,
+        onExit: widget.isEnabled
+            ? (_) => setState(() => _isHovered = false)
+            : null,
         child: Opacity(
           opacity: widget.isEnabled ? 1.0 : CardDesignTokens.disabledOpacity,
           child: AnimatedContainer(
             duration: CardDesignTokens.hoverAnimationDuration,
             decoration: BoxDecoration(
-            color: widget.isSelected
-                ? colors.backgroundSelected
-                : _isHovered
-                    ? colors.backgroundHover
-                    : colors.background,
-            border: Border.all(
-              color: widget.isSelected ? colors.borderSelected : colors.border,
-              width: widget.isSelected ? CardDesignTokens.selectedBorderWidth : CardDesignTokens.normalBorderWidth,
+              color: widget.isSelected
+                  ? colors.backgroundSelected
+                  : _isHovered
+                  ? colors.backgroundHover
+                  : colors.background,
+              border: Border.all(
+                color: widget.isSelected
+                    ? colors.borderSelected
+                    : colors.border,
+                width: widget.isSelected
+                    ? CardDesignTokens.selectedBorderWidth
+                    : CardDesignTokens.normalBorderWidth,
+              ),
+              borderRadius: BorderTokens.largeRadius(),
             ),
-            borderRadius: BorderTokens.largeRadius(),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Padding(
-            padding: EdgeInsets.all(padding),
-            child: Row(
-              children: [
-                // Checkbox
-                Transform.scale(
-                  scale: 1.2,
-                  child: Checkbox(
-                    value: widget.isSelected,
-                    onChanged: widget.isEnabled
-                        ? (value) {
-                            widget.onSelected?.call(value ?? false);
-                          }
-                        : null,
-                    fillColor: WidgetStateProperty.all(
-                      widget.isSelected
-                          ? colorExt.brandPrimary
-                          : colors.checkboxBg,
-                    ),
-                    side: WidgetStateBorderSide.resolveWith(
-                      (states) => BorderSide(
-                        color: colors.checkboxBorder,
-                        width: 1.5,
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: EdgeInsets.all(padding),
+              child: Row(
+                children: [
+                  // Checkbox
+                  Transform.scale(
+                    scale: 1.2,
+                    child: Checkbox(
+                      value: widget.isSelected,
+                      onChanged: widget.isEnabled
+                          ? (value) {
+                              widget.onSelected?.call(value ?? false);
+                            }
+                          : null,
+                      fillColor: WidgetStateProperty.all(
+                        widget.isSelected
+                            ? colorExt.brandPrimary
+                            : colors.checkboxBg,
+                      ),
+                      side: WidgetStateBorderSide.resolveWith(
+                        (states) => BorderSide(
+                          color: colors.checkboxBorder,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(width: gap),
+                  SizedBox(width: gap),
 
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        widget.title,
-                        style: CardDesignTokens.getSubtitleStyle(context).copyWith(
-                          color: colors.title,
-                        ),
-                        maxLines: lineNumbers['title'],
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (widget.subtitle != null) SizedBox(height: gap * 0.5),
-                      if (widget.subtitle != null)
+                  // Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
                         Text(
-                          widget.subtitle!,
-                          style: CardDesignTokens.getDescriptionStyle(context).copyWith(
-                            color: colors.subtitle,
-                          ),
-                          maxLines: lineNumbers['subtitle'],
+                          widget.title,
+                          style: CardDesignTokens.getSubtitleStyle(
+                            context,
+                          ).copyWith(color: colors.title),
+                          maxLines: lineNumbers['title'],
                           overflow: TextOverflow.ellipsis,
                         ),
-                    ],
+                        if (widget.subtitle != null)
+                          SizedBox(height: gap * 0.5),
+                        if (widget.subtitle != null)
+                          Text(
+                            widget.subtitle!,
+                            style: CardDesignTokens.getDescriptionStyle(
+                              context,
+                            ).copyWith(color: colors.subtitle),
+                            maxLines: lineNumbers['subtitle'],
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
                   ),
-                ),
 
-                // Trailing (optional)
-                if (widget.trailing != null) ...[
-                  SizedBox(width: gap),
-                  widget.trailing!,
+                  // Trailing (optional)
+                  if (widget.trailing != null) ...[
+                    SizedBox(width: gap),
+                    widget.trailing!,
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-            ),
         ),
       ),
     );

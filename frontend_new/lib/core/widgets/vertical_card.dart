@@ -111,18 +111,18 @@ class _VerticalCardState extends State<VerticalCard> {
                       if (widget.meta != null)
                         Text(
                           widget.meta!,
-                          style: CardDesignTokens.getMetaStyle(context).copyWith(
-                            color: colors.meta,
-                          ),
+                          style: CardDesignTokens.getMetaStyle(
+                            context,
+                          ).copyWith(color: colors.meta),
                         ),
                       if (widget.meta != null) SizedBox(height: gap * 0.5),
 
                       // Title
                       Text(
                         widget.title,
-                        style: CardDesignTokens.getTitleStyle(context).copyWith(
-                          color: colors.title,
-                        ),
+                        style: CardDesignTokens.getTitleStyle(
+                          context,
+                        ).copyWith(color: colors.title),
                         maxLines: lineNumbers['title'],
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -132,9 +132,9 @@ class _VerticalCardState extends State<VerticalCard> {
                       if (widget.subtitle != null)
                         Text(
                           widget.subtitle!,
-                          style: CardDesignTokens.getSubtitleStyle(context).copyWith(
-                            color: colors.subtitle,
-                          ),
+                          style: CardDesignTokens.getSubtitleStyle(
+                            context,
+                          ).copyWith(color: colors.subtitle),
                           maxLines: lineNumbers['subtitle'],
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -145,9 +145,9 @@ class _VerticalCardState extends State<VerticalCard> {
                         Expanded(
                           child: Text(
                             widget.description!,
-                            style: CardDesignTokens.getDescriptionStyle(context).copyWith(
-                              color: colors.description,
-                            ),
+                            style: CardDesignTokens.getDescriptionStyle(
+                              context,
+                            ).copyWith(color: colors.description),
                             maxLines: lineNumbers['description'],
                             overflow: TextOverflow.ellipsis,
                           ),

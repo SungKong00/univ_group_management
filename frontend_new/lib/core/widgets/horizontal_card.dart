@@ -74,7 +74,8 @@ class _HorizontalCardState extends State<HorizontalCard> {
     final lineNumbers = CardDesignTokens.textLineNumbersByCard['horizontal']!;
 
     // 디자인 시스템 기반 이미지 너비 계산
-    final cardPreferredWidth = CardDesignTokens.cardWidths['horizontal']!['preferred']!;
+    final cardPreferredWidth =
+        CardDesignTokens.cardWidths['horizontal']!['preferred']!;
     final imageWidth = cardPreferredWidth * widget.imageWidthRatio;
 
     return GestureDetector(
@@ -100,7 +101,8 @@ class _HorizontalCardState extends State<HorizontalCard> {
                   SizedBox(
                     width: imageWidth,
                     child: AspectRatio(
-                      aspectRatio: CardDesignTokens.imageAspectRatios['horizontal']!,
+                      aspectRatio:
+                          CardDesignTokens.imageAspectRatios['horizontal']!,
                       child: widget.image!,
                     ),
                   ),
@@ -116,67 +118,69 @@ class _HorizontalCardState extends State<HorizontalCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                      // Meta
-                      if (widget.meta != null)
-                        Text(
-                          widget.meta!,
-                          style: CardDesignTokens.getMetaStyle(context).copyWith(
-                            color: colors.meta,
+                        // Meta
+                        if (widget.meta != null)
+                          Text(
+                            widget.meta!,
+                            style: CardDesignTokens.getMetaStyle(
+                              context,
+                            ).copyWith(color: colors.meta),
                           ),
-                        ),
-                      if (widget.meta != null) SizedBox(height: gap * 0.5),
+                        if (widget.meta != null) SizedBox(height: gap * 0.5),
 
-                      // Title
-                      Text(
-                        widget.title,
-                        style: CardDesignTokens.getTitleStyle(context).copyWith(
-                          color: colors.title,
-                        ),
-                        maxLines: lineNumbers['title'],
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: gap * 0.5),
-
-                      // Subtitle
-                      if (widget.subtitle != null)
+                        // Title
                         Text(
-                          widget.subtitle!,
-                          style: CardDesignTokens.getSubtitleStyle(context).copyWith(
-                            color: colors.subtitle,
-                          ),
-                          maxLines: lineNumbers['subtitle'],
+                          widget.title,
+                          style: CardDesignTokens.getTitleStyle(
+                            context,
+                          ).copyWith(color: colors.title),
+                          maxLines: lineNumbers['title'],
                           overflow: TextOverflow.ellipsis,
                         ),
-                      if (widget.subtitle != null) SizedBox(height: gap * 0.5),
+                        SizedBox(height: gap * 0.5),
 
-                      // Description
-                      if (widget.description != null)
-                        Text(
-                          widget.description!,
-                          style: CardDesignTokens.getDescriptionStyle(context).copyWith(
-                            color: colors.description,
+                        // Subtitle
+                        if (widget.subtitle != null)
+                          Text(
+                            widget.subtitle!,
+                            style: CardDesignTokens.getSubtitleStyle(
+                              context,
+                            ).copyWith(color: colors.subtitle),
+                            maxLines: lineNumbers['subtitle'],
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: lineNumbers['description'],
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      if (widget.description != null) SizedBox(height: gap),
+                        if (widget.subtitle != null)
+                          SizedBox(height: gap * 0.5),
 
-                      // Actions
-                      if (widget.actions != null && widget.actions!.isNotEmpty)
-                        Wrap(
-                          spacing: gap * 0.5,
-                          runSpacing: gap * 0.5,
-                          children: widget.actions!,
-                        ),
-                    ],
+                        // Description
+                        if (widget.description != null)
+                          Text(
+                            widget.description!,
+                            style: CardDesignTokens.getDescriptionStyle(
+                              context,
+                            ).copyWith(color: colors.description),
+                            maxLines: lineNumbers['description'],
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        if (widget.description != null) SizedBox(height: gap),
+
+                        // Actions
+                        if (widget.actions != null &&
+                            widget.actions!.isNotEmpty)
+                          Wrap(
+                            spacing: gap * 0.5,
+                            runSpacing: gap * 0.5,
+                            children: widget.actions!,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }

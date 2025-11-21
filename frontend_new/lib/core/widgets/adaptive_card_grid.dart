@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/grid_layout_tokens.dart';
 import 'responsive_builder.dart';
 
 /// Adaptive card grid/wrap for reusable v2 components.
@@ -68,6 +69,66 @@ class AdaptiveCardGrid extends StatelessWidget {
     this.maxContentWidth,
     this.alignment = Alignment.center,
   });
+
+  /// 그리드 레이아웃 프리셋으로부터 생성합니다.
+  ///
+  /// [GridLayoutConfig]를 사용하여 그리드 파라미터를 자동으로 설정합니다.
+  /// 이를 통해 반복적인 픽셀 계산을 제거하고 일관된 레이아웃을 보장합니다.
+  ///
+  /// 사용 예시:
+  /// ```dart
+  /// // Named preset 사용
+  /// AdaptiveCardGrid.fromPreset(
+  ///   config: GridLayoutTokens.pricingCards,
+  ///   itemCount: pricingPlans.length,
+  ///   itemBuilder: (context, index) => PricingCard(pricingPlans[index]),
+  ///   maxContentWidth: ResponsiveTokens.maxContentWidth,
+  /// );
+  ///
+  /// // 커스텀 프리셋
+  /// final config = GridLayoutTokens.forCardType(
+  ///   CardVariant.vertical,
+  ///   columns: GridPresetColumns.three,
+  /// );
+  /// AdaptiveCardGrid.fromPreset(
+  ///   config: config,
+  ///   itemCount: items.length,
+  ///   itemBuilder: (context, index) => MyCard(items[index]),
+  /// );
+  /// ```
+  factory AdaptiveCardGrid.fromPreset({
+    Key? key,
+    required GridLayoutConfig config,
+    required int itemCount,
+    required IndexedWidgetBuilder itemBuilder,
+    AdaptiveLayoutMode mode = AdaptiveLayoutMode.grid,
+    bool scrollOnOverflow = true,
+    EdgeInsetsGeometry? padding,
+    double? maxContentWidth,
+    AlignmentGeometry alignment = Alignment.center,
+    // Optional overrides for preset configuration
+    ResponsiveValue<double>? aspectRatioOverride,
+    bool? enforceAspectRatioOverride,
+  }) {
+    return AdaptiveCardGrid(
+      key: key,
+      itemCount: itemCount,
+      itemBuilder: itemBuilder,
+      minItemWidth: config.minItemWidth,
+      maxItemWidth: config.maxItemWidth,
+      maxColumns: config.maxColumns,
+      preferredItemWidth: config.preferredItemWidth,
+      spacing: null, // ResponsiveTokens.cardGap 자동 사용
+      aspectRatio: aspectRatioOverride ?? config.aspectRatio,
+      enforceAspectRatio:
+          enforceAspectRatioOverride ?? config.enforceAspectRatio,
+      mode: mode,
+      scrollOnOverflow: scrollOnOverflow,
+      padding: padding,
+      maxContentWidth: maxContentWidth,
+      alignment: alignment,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

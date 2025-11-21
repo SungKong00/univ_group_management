@@ -77,7 +77,9 @@ class _WideCardState extends State<WideCard> {
     final padding = ResponsiveTokens.cardPadding(width);
     final gap = ResponsiveTokens.cardGap(width);
     final lineNumbers = CardDesignTokens.textLineNumbersByCard['wide']!;
-    final minCardHeight = widget.height > 0 ? widget.height : CardDesignTokens.wideCardHeight;
+    final minCardHeight = widget.height > 0
+        ? widget.height
+        : CardDesignTokens.wideCardHeight;
     final textTheme = Theme.of(context).textTheme;
 
     return GestureDetector(
@@ -87,9 +89,7 @@ class _WideCardState extends State<WideCard> {
         onExit: (_) => setState(() => _isHovered = false),
         child: AnimatedContainer(
           duration: CardDesignTokens.hoverAnimationDuration,
-          constraints: BoxConstraints(
-            minHeight: minCardHeight,
-          ),
+          constraints: BoxConstraints(minHeight: minCardHeight),
           decoration: BoxDecoration(
             color: _isHovered ? colors.backgroundHover : colors.background,
             border: Border.all(color: colors.border),
@@ -100,9 +100,7 @@ class _WideCardState extends State<WideCard> {
             children: [
               // Background Content
               if (widget.backgroundContent != null)
-                Positioned.fill(
-                  child: widget.backgroundContent!,
-                ),
+                Positioned.fill(child: widget.backgroundContent!),
 
               // Overlay (Dark/Light)
               Positioned.fill(
@@ -136,9 +134,9 @@ class _WideCardState extends State<WideCard> {
                     if (widget.subtitle != null)
                       Text(
                         widget.subtitle!,
-                        style: CardDesignTokens.getSubtitleStyle(context).copyWith(
-                          color: colors.subtitle,
-                        ),
+                        style: CardDesignTokens.getSubtitleStyle(
+                          context,
+                        ).copyWith(color: colors.subtitle),
                         maxLines: lineNumbers['subtitle'],
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -148,9 +146,9 @@ class _WideCardState extends State<WideCard> {
                     if (widget.description != null)
                       Text(
                         widget.description!,
-                        style: CardDesignTokens.getDescriptionStyle(context).copyWith(
-                          color: colors.description,
-                        ),
+                        style: CardDesignTokens.getDescriptionStyle(
+                          context,
+                        ).copyWith(color: colors.description),
                         maxLines: lineNumbers['description'],
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -167,7 +165,10 @@ class _WideCardState extends State<WideCard> {
                             onTap: widget.onCtaPressed,
                             child: Padding(
                               padding: EdgeInsets.symmetric(
-                                horizontal: ResponsiveTokens.buttonMediumPaddingH(width),
+                                horizontal:
+                                    ResponsiveTokens.buttonMediumPaddingH(
+                                      width,
+                                    ),
                               ),
                               child: Center(
                                 child: Text(

@@ -9,6 +9,46 @@ library;
 // ========================================================
 enum ScreenSize { mobile, tablet, desktop }
 
+/// 그리드 레이아웃 열 수 프리셋
+///
+/// 반응형 그리드의 표준 열 구성을 정의합니다.
+/// 실제 렌더링되는 열 수는 화면이 좁을 때 자동으로 줄어들 수 있습니다.
+/// (minItemWidth 제약에 의해)
+///
+/// 사용 예시:
+/// ```dart
+/// // 가격 카드를 3열로 배치
+/// final config = GridLayoutTokens.forCardType(
+///   CardVariant.vertical,
+///   columns: GridPresetColumns.three,
+/// );
+///
+/// AdaptiveCardGrid.fromPreset(
+///   config: config,
+///   itemCount: pricingPlans.length,
+///   itemBuilder: (context, index) => PricingCard(pricingPlans[index]),
+/// );
+/// ```
+enum GridPresetColumns {
+  /// 1열 레이아웃 (모바일, 리스트 전용)
+  one,
+
+  /// 2열 레이아웃 (추천사, 2단 카드)
+  two,
+
+  /// 3열 레이아웃 (가격, 기능, 세로 카드)
+  three,
+
+  /// 4열 레이아웃 (고객 로고, 소형 항목)
+  four,
+
+  /// 5열 레이아웃 (아이콘 그리드, 콤팩트 항목)
+  five,
+
+  /// 6열 레이아웃 (태그, 배지, 미니 카드)
+  six,
+}
+
 // ========================================================
 // 버튼 컴포넌트
 // ========================================================

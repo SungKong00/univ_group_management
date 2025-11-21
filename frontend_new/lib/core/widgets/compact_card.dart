@@ -73,7 +73,9 @@ class _CompactCardState extends State<CompactCard> {
     final padding = ResponsiveTokens.cardPadding(width);
     final gap = ResponsiveTokens.cardGap(width);
     final lineNumbers = CardDesignTokens.textLineNumbersByCard['compact']!;
-    final compactSize = widget.contentSize > 0 ? widget.contentSize : CardDesignTokens.iconSizes['compact']!;
+    final compactSize = widget.contentSize > 0
+        ? widget.contentSize
+        : CardDesignTokens.iconSizes['compact']!;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -90,8 +92,8 @@ class _CompactCardState extends State<CompactCard> {
             color: widget.isSelected
                 ? colorExt.brandPrimary.withValues(alpha: 0.1)
                 : _isHovered
-                    ? colors.backgroundHover
-                    : colors.background,
+                ? colors.backgroundHover
+                : colors.background,
             border: Border.all(
               color: widget.isSelected ? colors.border : colors.border,
               width: widget.isSelected ? 2 : 1,
@@ -137,9 +139,9 @@ class _CompactCardState extends State<CompactCard> {
                 if (widget.meta != null)
                   Text(
                     widget.meta!,
-                    style: CardDesignTokens.getMetaStyle(context).copyWith(
-                      color: colors.meta,
-                    ),
+                    style: CardDesignTokens.getMetaStyle(
+                      context,
+                    ).copyWith(color: colors.meta),
                     textAlign: TextAlign.center,
                     maxLines: lineNumbers['meta'],
                     overflow: TextOverflow.ellipsis,
@@ -149,9 +151,9 @@ class _CompactCardState extends State<CompactCard> {
                 // Title
                 Text(
                   widget.title,
-                  style: CardDesignTokens.getSubtitleStyle(context).copyWith(
-                    color: colors.title,
-                  ),
+                  style: CardDesignTokens.getSubtitleStyle(
+                    context,
+                  ).copyWith(color: colors.title),
                   textAlign: TextAlign.center,
                   maxLines: lineNumbers['title'],
                   overflow: TextOverflow.ellipsis,

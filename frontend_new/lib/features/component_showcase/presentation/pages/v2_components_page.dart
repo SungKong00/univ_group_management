@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
 import '../../../../core/theme/responsive_tokens.dart';
+import '../../../../core/theme/grid_layout_tokens.dart';
+import '../../../../core/theme/card_design_tokens.dart';
+import '../../../../core/theme/enums.dart';
 import '../../../../core/widgets/responsive_builder.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/pricing_card.dart';
@@ -16,6 +19,7 @@ import '../../../../core/widgets/horizontal_card.dart';
 import '../../../../core/widgets/compact_card.dart';
 import '../../../../core/widgets/selectable_card.dart';
 import '../../../../core/widgets/wide_card.dart';
+import '../../../../core/widgets/app_tabs.dart';
 import '../../data/models/pricing_plan_model.dart';
 import '../../data/models/billing_cycle_model.dart';
 import '../../data/models/customer_model.dart';
@@ -34,24 +38,12 @@ class V2ComponentsPage extends StatefulWidget {
   State<V2ComponentsPage> createState() => _V2ComponentsPageState();
 }
 
-class _V2ComponentsPageState extends State<V2ComponentsPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _V2ComponentsPageState extends State<V2ComponentsPage> {
+  int _selectedTabIndex = 0;
   bool _isYearly = false;
   String _selectedCustomerFilter = 'all';
   List<bool> _selectedCards = List.filled(3, false);
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+  GridPresetColumns _selectedPreset = GridPresetColumns.three;
 
   @override
   Widget build(BuildContext context) {
@@ -75,12 +67,13 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
 
           // Content
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
+            child: IndexedStack(
+              index: _selectedTabIndex,
               children: [
                 _buildPricingTab(),
                 _buildCustomersTab(),
                 _buildCardsTab(),
+                _buildGridPresetsTab(),
               ],
             ),
           ),
@@ -129,19 +122,25 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
         color: colorExt.surfaceSecondary,
         border: Border(bottom: BorderSide(color: colorExt.borderPrimary)),
       ),
-      child: TabBar(
-        controller: _tabController,
-        labelColor: colorExt.textPrimary,
-        unselectedLabelColor: colorExt.textTertiary,
-        indicatorColor: colorExt.brandSecondary,
-        labelStyle: Theme.of(
-          context,
-        ).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveTokens.pagePadding(
+          MediaQuery.sizeOf(context).width,
+        ),
+      ),
+      child: AppTabs(
         tabs: const [
-          Tab(text: 'Pricing'),
-          Tab(text: 'Customers'),
-          Tab(text: 'Design Cards'),
+          AppTabItem(label: 'Pricing'),
+          AppTabItem(label: 'Customers'),
+          AppTabItem(label: 'Design Cards'),
+          AppTabItem(label: 'Grid Presets'),
         ],
+        initialIndex: _selectedTabIndex,
+        indicatorHeight: 2.0,
+        animationCurve: Curves.easeInOutQuart,
+        animationDuration: const Duration(milliseconds: 350),
+        onTabChanged: (index) {
+          setState(() => _selectedTabIndex = index);
+        },
       ),
     );
   }
@@ -234,21 +233,12 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width)),
 
-              // Pricing Cards - Responsive Grid
-              // Material Design 3: maxItemWidth 기준으로 자동 열 계산
-              AdaptiveCardGrid(
+              // Pricing Cards - 3열 프리셋 사용
+              AdaptiveCardGrid.fromPreset(
+                config: GridLayoutTokens.pricingCards,
                 itemCount: pricingPlans.length,
                 itemBuilder: (context, index) =>
                     PricingCard(plan: pricingPlans[index]),
-                minItemWidth: 280,
-                maxItemWidth: 420,
-                maxColumns: 3,
-                preferredItemWidth: 320,
-                aspectRatio: const ResponsiveValue<double>(
-                  mobile: 3 / 4,
-                  tablet: 4 / 5,
-                  desktop: 4 / 5,
-                ),
                 maxContentWidth: ResponsiveTokens.maxContentWidth,
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 2),
@@ -337,50 +327,57 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               const SizedBox(height: 12),
               Text(
                 '5가지 카드 유형 및 변형 스타일 (standard, featured, highlighted)',
-                style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                  color: colorExt.textSecondary,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall!.copyWith(color: colorExt.textSecondary),
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width)),
 
               // 1. Vertical Card Section
-              _buildSectionHeader('1. Vertical Card', 'Image(top) → Title → Description'),
+              _buildSectionHeader(
+                '1. Vertical Card',
+                'Image(top) → Title → Description',
+              ),
               SizedBox(height: ResponsiveTokens.cardGap(width)),
-              AdaptiveCardGrid(
+              AdaptiveCardGrid.fromPreset(
+                config: GridLayoutTokens.forCardType(
+                  CardVariant.vertical,
+                  GridPresetColumns.three,
+                ),
                 itemCount: 3,
                 itemBuilder: (context, index) {
                   final variants = ['standard', 'featured', 'highlighted'];
                   return VerticalCard(
                     title: 'Vertical Card ${variants[index]}',
                     subtitle: 'Subtitle text here',
-                    description: 'This is a vertical card with image on top and text below.',
+                    description:
+                        'This is a vertical card with image on top and text below.',
                     meta: 'Meta info',
                     image: Container(
                       color: colorExt.surfaceTertiary,
                       child: Center(
-                        child: Icon(Icons.image, color: colorExt.textTertiary, size: 48),
+                        child: Icon(
+                          Icons.image,
+                          color: colorExt.textTertiary,
+                          size: 48,
+                        ),
                       ),
                     ),
                     variant: variants[index],
                   );
                 },
-                minItemWidth: 240,
-                maxItemWidth: 320,
-                maxColumns: 3,
-                preferredItemWidth: 280,
-                aspectRatio: const ResponsiveValue<double>(
-                  mobile: 3 / 4,
-                  tablet: 3 / 4,
-                  desktop: 3 / 4,
-                ),
                 maxContentWidth: ResponsiveTokens.maxContentWidth,
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
 
               // 2. Horizontal Card Section
-              _buildSectionHeader('2. Horizontal Card', 'Image(left) → Text(right)'),
+              _buildSectionHeader(
+                '2. Horizontal Card',
+                'Image(left) → Text(right)',
+              ),
               SizedBox(height: ResponsiveTokens.cardGap(width)),
-              AdaptiveCardGrid(
+              AdaptiveCardGrid.fromPreset(
+                config: GridLayoutTokens.customerTestimonials,
                 itemCount: 3,
                 itemBuilder: (context, index) {
                   final variants = ['standard', 'featured', 'highlighted'];
@@ -392,21 +389,16 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                     image: Container(
                       color: colorExt.surfaceTertiary,
                       child: Center(
-                        child: Icon(Icons.image, color: colorExt.textTertiary, size: 48),
+                        child: Icon(
+                          Icons.image,
+                          color: colorExt.textTertiary,
+                          size: 48,
+                        ),
                       ),
                     ),
                     variant: variants[index],
                   );
                 },
-                minItemWidth: 320,
-                maxItemWidth: 500,
-                maxColumns: 2,
-                preferredItemWidth: 400,
-                aspectRatio: const ResponsiveValue<double>(
-                  mobile: 4 / 3,
-                  tablet: 4 / 3,
-                  desktop: 4 / 3,
-                ),
                 maxContentWidth: ResponsiveTokens.maxContentWidth,
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
@@ -414,7 +406,8 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               // 3. Compact Card Section
               _buildSectionHeader('3. Compact Card', 'Icon + Title (자동 높이)'),
               SizedBox(height: ResponsiveTokens.cardGap(width)),
-              AdaptiveCardGrid(
+              AdaptiveCardGrid.fromPreset(
+                config: GridLayoutTokens.tagGrid,
                 itemCount: 6,
                 itemBuilder: (context, index) {
                   final variants = ['standard', 'featured', 'highlighted'];
@@ -434,23 +427,23 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                     },
                   );
                 },
-                minItemWidth: 100,
-                maxItemWidth: 160,
-                maxColumns: 6,
-                preferredItemWidth: 120,
-                enforceAspectRatio: false,
                 maxContentWidth: ResponsiveTokens.maxContentWidth,
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
 
               // 4. Selectable Card Section
-              _buildSectionHeader('4. Selectable Card', 'Checkbox + Content (다중선택)'),
+              _buildSectionHeader(
+                '4. Selectable Card',
+                'Checkbox + Content (다중선택)',
+              ),
               SizedBox(height: ResponsiveTokens.cardGap(width)),
               Column(
                 children: List.generate(3, (index) {
                   final variants = ['standard', 'featured', 'highlighted'];
                   return Padding(
-                    padding: EdgeInsets.only(bottom: ResponsiveTokens.cardGap(width)),
+                    padding: EdgeInsets.only(
+                      bottom: ResponsiveTokens.cardGap(width),
+                    ),
                     child: SelectableCard(
                       title: 'Option ${index + 1} (${variants[index]})',
                       subtitle: 'Select to enable this feature',
@@ -468,7 +461,10 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
 
               // 5. Wide Card Section
-              _buildSectionHeader('5. Wide Card', 'Full-width Banner (배너/프로모션)'),
+              _buildSectionHeader(
+                '5. Wide Card',
+                'Full-width Banner (배너/프로모션)',
+              ),
               SizedBox(height: ResponsiveTokens.cardGap(width)),
               Column(
                 children: [
@@ -482,7 +478,11 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                     backgroundContent: Container(
                       color: context.appColors.surfaceTertiary,
                       child: Center(
-                        child: Icon(Icons.image, color: colorExt.textTertiary, size: 64),
+                        child: Icon(
+                          Icons.image,
+                          color: colorExt.textTertiary,
+                          size: 64,
+                        ),
                       ),
                     ),
                   ),
@@ -495,9 +495,15 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                     variant: 'featured',
                     onCtaPressed: () {},
                     backgroundContent: Container(
-                      color: context.appColors.brandSecondary.withValues(alpha: 0.2),
+                      color: context.appColors.brandSecondary.withValues(
+                        alpha: 0.2,
+                      ),
                       child: Center(
-                        child: Icon(Icons.star, color: colorExt.brandPrimary, size: 64),
+                        child: Icon(
+                          Icons.star,
+                          color: colorExt.brandPrimary,
+                          size: 64,
+                        ),
                       ),
                     ),
                   ),
@@ -649,21 +655,12 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                 ],
               ),
               SizedBox(height: ResponsiveTokens.cardGap(width)),
-              // Featured Customers - Responsive Grid
-              // Material Design 3: maxItemWidth 기준으로 자동 열 계산
-              AdaptiveCardGrid(
+              // Featured Customers - 4열 프리셋 사용
+              AdaptiveCardGrid.fromPreset(
+                config: GridLayoutTokens.customerCards,
                 itemCount: customers.length,
                 itemBuilder: (context, index) =>
                     CustomerCard(customer: customers[index]),
-                minItemWidth: 240,
-                maxItemWidth: 380,
-                maxColumns: 4,
-                preferredItemWidth: 225,
-                aspectRatio: const ResponsiveValue<double>(
-                  mobile: 3 / 4,
-                  tablet: 4 / 5,
-                  desktop: 4 / 5,
-                ),
                 maxContentWidth: ResponsiveTokens.maxContentWidth,
                 scrollOnOverflow: true,
               ),
@@ -695,6 +692,237 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
           ),
         );
       },
+    );
+  }
+
+  /// Grid Presets Showcase Tab
+  Widget _buildGridPresetsTab() {
+    return ResponsiveBuilder(
+      builder: (context, screenSize, width) {
+        final colorExt = context.appColors;
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(ResponsiveTokens.pagePadding(width)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Text(
+                'Grid Layout Presets',
+                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                  color: colorExt.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '프리셋 선택으로 2~6열 레이아웃을 간편하게 테스트하세요',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall!.copyWith(color: colorExt.textSecondary),
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width)),
+
+              // Preset Selector
+              Container(
+                decoration: BoxDecoration(
+                  color: colorExt.surfaceSecondary,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colorExt.borderPrimary),
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveTokens.space16,
+                  vertical: ResponsiveTokens.space12,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '프리셋 선택',
+                      style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                        color: colorExt.textSecondary,
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveTokens.space12),
+                    Wrap(
+                      spacing: ResponsiveTokens.space8,
+                      children: GridPresetColumns.values.map((preset) {
+                        final isSelected = _selectedPreset == preset;
+                        return FilterChip(
+                          label: Text(
+                            preset.name.toUpperCase(),
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() => _selectedPreset = preset);
+                          },
+                          backgroundColor: colorExt.surfacePrimary,
+                          selectedColor: colorExt.brandPrimary.withValues(
+                            alpha: 0.2,
+                          ),
+                          side: BorderSide(
+                            color: isSelected
+                                ? colorExt.brandPrimary
+                                : colorExt.borderPrimary,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width)),
+
+              // Preset Info
+              Container(
+                decoration: BoxDecoration(
+                  color: colorExt.surfaceSecondary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: EdgeInsets.all(ResponsiveTokens.space16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '선택된 프리셋: ${_selectedPreset.name}',
+                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                        color: colorExt.brandPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveTokens.space12),
+                    _buildPresetInfo(context, colorExt),
+                  ],
+                ),
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width)),
+
+              // Demo Grid
+              Text(
+                '데모: Vertical Cards 그리드',
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  color: colorExt.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '선택한 프리셋으로 렌더링된 그리드 레이아웃',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall!.copyWith(color: colorExt.textSecondary),
+              ),
+              SizedBox(height: ResponsiveTokens.cardGap(width)),
+
+              // Grid Demo
+              AdaptiveCardGrid.fromPreset(
+                config: GridLayoutTokens.forCardType(
+                  CardVariant.vertical,
+                  _selectedPreset,
+                ),
+                itemCount: _selectedPreset.index + 3,
+                itemBuilder: (context, index) {
+                  return VerticalCard(
+                    title: '카드 ${index + 1}',
+                    subtitle: 'Demo Card',
+                    description: '프리셋으로 생성된 그리드 예제입니다',
+                    meta: '#${_selectedPreset.name}',
+                    image: Container(
+                      color: colorExt.surfaceTertiary,
+                      child: Center(
+                        child: Icon(
+                          Icons.image,
+                          color: colorExt.textTertiary,
+                          size: 48,
+                        ),
+                      ),
+                    ),
+                    variant: 'standard',
+                  );
+                },
+                maxContentWidth: ResponsiveTokens.maxContentWidth,
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Helper: Display preset info
+  Widget _buildPresetInfo(BuildContext context, dynamic colorExt) {
+    final presetName = _selectedPreset.name;
+    final columnCount = _selectedPreset.index + 1;
+
+    final descriptions = {
+      'one': '1열 레이아웃 (모바일, 리스트 전용)',
+      'two': '2열 레이아웃 (추천사, 2단 카드)',
+      'three': '3열 레이아웃 (가격, 기능, 세로 카드)',
+      'four': '4열 레이아웃 (고객 로고, 소형 항목)',
+      'five': '5열 레이아웃 (아이콘 그리드, 콤팩트 항목)',
+      'six': '6열 레이아웃 (태그, 배지, 미니 카드)',
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          descriptions[presetName] ?? '',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall!.copyWith(color: colorExt.textPrimary),
+        ),
+        SizedBox(height: ResponsiveTokens.space12),
+        Container(
+          decoration: BoxDecoration(
+            color: colorExt.surfacePrimary,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: colorExt.borderPrimary),
+          ),
+          padding: EdgeInsets.all(ResponsiveTokens.space12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoRow(context, colorExt, '최대 열 수:', '$columnCount'),
+              _buildInfoRow(
+                context,
+                colorExt,
+                '아이템 카운트:',
+                '${_selectedPreset.index + 3}',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Helper: Info row
+  Widget _buildInfoRow(
+    BuildContext context,
+    dynamic colorExt,
+    String label,
+    String value,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall!.copyWith(color: colorExt.textSecondary),
+        ),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.labelSmall!.copyWith(
+            color: colorExt.brandPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
