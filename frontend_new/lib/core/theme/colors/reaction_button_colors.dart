@@ -75,6 +75,3 @@ class ReactionButtonColors {
     );
   }
 }
-
-/// Reaction Button 상태 열거형
-enum ReactionState { inactive, active, add }

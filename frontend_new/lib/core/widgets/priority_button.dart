@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/priority_button_colors.dart';
+import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/component_size_tokens.dart';
 
 // Export priority for convenience
-export '../theme/colors/priority_button_colors.dart' show IssuePriority;
+export '../theme/enums.dart' show IssuePriority;
 
 /// 우선순위 설정 버튼 (High/Medium/Low/None)
 ///

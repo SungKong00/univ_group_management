@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/card_colors.dart';
+import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
 import '../theme/animation_tokens.dart';
-
-enum AppCardElevation { none, low }
 
 /// App 스타일 카드 (Border + Shadow + Hover 효과)
 ///

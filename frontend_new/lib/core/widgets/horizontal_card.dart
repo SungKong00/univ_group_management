@@ -78,6 +78,10 @@ class _HorizontalCardState extends State<HorizontalCard> {
         CardDesignTokens.cardWidths['horizontal']!['preferred']!;
     final imageWidth = cardPreferredWidth * widget.imageWidthRatio;
 
+    // 이미지 비율 기반 최소 높이 자동 계산
+    final imageAspectRatio = CardDesignTokens.imageAspectRatios['horizontal']!;
+    final minHeight = imageWidth / imageAspectRatio;
+
     return GestureDetector(
       onTap: widget.onTap,
       child: MouseRegion(
@@ -91,10 +95,11 @@ class _HorizontalCardState extends State<HorizontalCard> {
             borderRadius: BorderTokens.largeRadius(),
           ),
           clipBehavior: Clip.antiAlias,
-          // IntrinsicHeight: Row의 높이를 content 기반으로 제한
-          child: IntrinsicHeight(
+          // ConstrainedBox: 이미지 비율 기반 최소 높이 자동 계산
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Image Section (Left)
                 if (widget.image != null)
@@ -110,13 +115,11 @@ class _HorizontalCardState extends State<HorizontalCard> {
                 // Content Section (Right)
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: padding,
-                      vertical: ResponsiveTokens.space8,
-                    ),
+                    padding: EdgeInsets.all(padding),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.max,
                       children: [
                         // Meta
                         if (widget.meta != null)

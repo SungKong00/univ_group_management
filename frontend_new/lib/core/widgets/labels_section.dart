@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/labels_section_colors.dart';
+import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
 import '../theme/component_size_tokens.dart';
 
 // Export style for convenience
-export '../theme/colors/labels_section_colors.dart' show LabelsSectionStyle;
+export '../theme/enums.dart' show LabelsSectionStyle;
 
 /// 레이블 아이템 모델
 class LabelItem {

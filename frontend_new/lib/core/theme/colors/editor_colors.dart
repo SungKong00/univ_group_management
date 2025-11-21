@@ -110,6 +110,3 @@ class EditorColors {
     );
   }
 }
-
-/// Editor 타입 열거형
-enum EditorType { default_, title, comment }

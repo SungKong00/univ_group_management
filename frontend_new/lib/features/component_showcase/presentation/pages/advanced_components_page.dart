@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/responsive_tokens.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
+import '../../../../core/theme/enums.dart';
 import '../../../../core/widgets/app_carousel.dart';
 import '../../../../core/widgets/app_tabs.dart';
 import '../../../../core/widgets/app_definition_list.dart';
@@ -10,6 +11,7 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_feature_card.dart';
 import '../../../../core/widgets/responsive_builder.dart';
 import '../../../../core/widgets/app_back_button.dart';
+import '../../../../core/widgets/app_section.dart';
 
 /// 고급 컴포넌트 쇼케이스 (Carousel, Tabs, Lists 등)
 class AdvancedComponentsPage extends StatefulWidget {
@@ -41,12 +43,19 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Carousel 섹션
-                _buildSection(
+                AppSection(
                   title: 'Carousel (수평 스크롤)',
-                  subtitle: '아이템 개수별 샘플',
+                  variant: SectionVariant.standard,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        '아이템 개수별 샘플',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.appColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       _buildSubtitle('3개 아이템 (네비게이션 없음)'),
                       const SizedBox(height: 12),
                       AppCarousel(
@@ -77,12 +86,19 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                 const SizedBox(height: 48),
 
                 // Tabs 섹션
-                _buildSection(
+                AppSection(
                   title: 'Content Tabs',
-                  subtitle: '애니메이션 커브별 비교 - 여러 탭을 건너뛰어서 확인해보세요',
+                  variant: SectionVariant.standard,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        '애니메이션 커브별 비교 - 여러 탭을 건너뛰어서 확인해보세요',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.appColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       _buildSubtitle('2개 탭 (기본 - easeInOut)'),
                       const SizedBox(height: 12),
                       AppTabs(
@@ -202,12 +218,19 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                 const SizedBox(height: 48),
 
                 // Definition List 섹션
-                _buildSection(
+                AppSection(
                   title: 'Definition List (용어 정의)',
-                  subtitle: 'gap 크기별 샘플',
+                  variant: SectionVariant.standard,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        'gap 크기별 샘플',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.appColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       _buildSubtitle('gap: 16px (촘촘)'),
                       const SizedBox(height: 12),
                       AppDefinitionList(
@@ -285,12 +308,19 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                 const SizedBox(height: 48),
 
                 // Agent Selector 섹션
-                _buildSection(
+                AppSection(
                   title: 'AI Agent Selector',
-                  subtitle: '아바타 크기 + 배지 스타일',
+                  variant: SectionVariant.standard,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        '아바타 크기 + 배지 스타일',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.appColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       _buildSubtitle('아바타 16px + subtle 배지'),
                       const SizedBox(height: 12),
                       AppAgentSelector(
@@ -373,12 +403,19 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                 const SizedBox(height: 48),
 
                 // Gradient Overlay 섹션
-                _buildSection(
+                AppSection(
                   title: 'Gradient Overlay',
-                  subtitle: 'opacity 강도별 비교',
+                  variant: SectionVariant.standard,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        'opacity 강도별 비교',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.appColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       _buildSubtitle('Extra Light (0.03 opacity)'),
                       const SizedBox(height: 12),
                       AppGradientOverlay(
@@ -474,12 +511,19 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                 const SizedBox(height: 48),
 
                 // Feature Card 섹션
-                _buildSection(
+                AppSection(
                   title: 'Feature Cards (대형 클릭 가능 카드)',
-                  subtitle: '크기별 샘플 + hover 효과',
+                  variant: SectionVariant.standard,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        '크기별 샘플 + hover 효과',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.appColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       _buildSubtitle('기본 크기 (아이콘 사용)'),
                       const SizedBox(height: 12),
                       Wrap(
@@ -618,37 +662,6 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildSection({
-    required String title,
-    String? subtitle,
-    required Widget child,
-  }) {
-    final colorExt = context.appColors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-            color: colorExt.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        if (subtitle != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall!.copyWith(color: colorExt.textTertiary),
-          ),
-        ],
-        const SizedBox(height: 16),
-        child,
-      ],
     );
   }
 

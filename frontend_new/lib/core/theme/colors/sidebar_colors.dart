@@ -89,6 +89,3 @@ class SidebarColors {
     );
   }
 }
-
-/// Sidebar 스타일 열거형
-enum SidebarStyle { default_, dark, compact }

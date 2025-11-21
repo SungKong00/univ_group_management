@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
 import '../../../../core/theme/extensions/app_typography_extension.dart';
-import '../../../../core/theme/responsive_tokens.dart';
+import '../../../../core/theme/enums.dart';
 import '../../../../core/widgets/page_breadcrumb.dart';
 import '../../../../core/widgets/issue_navigation_counter.dart';
 import '../../../../core/widgets/issue_navigation_buttons.dart';
@@ -17,6 +17,7 @@ import '../../../../core/widgets/labels_section.dart';
 import '../../../../core/widgets/settings_sidebar.dart';
 import '../../../../core/widgets/responsive_builder.dart';
 import '../../../../core/widgets/app_back_button.dart';
+import '../../../../core/widgets/app_section.dart';
 
 /// V3 컴포넌트 쇼케이스 페이지
 ///
@@ -103,32 +104,25 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildSection(
-          'Phase 4: Navigation Components',
-          colorExt,
-          typographyExt,
-          _buildNavigationSection(colorExt, typographyExt),
+        AppSection(
+          title: 'Phase 4: Navigation Components',
+          variant: SectionVariant.standard,
+          child: _buildNavigationSection(colorExt, typographyExt),
         ),
-        const SizedBox(height: 32),
-        _buildSection(
-          'Phase 5: State/Action Buttons',
-          colorExt,
-          typographyExt,
-          _buildButtonsSection(colorExt, typographyExt),
+        AppSection(
+          title: 'Phase 5: State/Action Buttons',
+          variant: SectionVariant.standard,
+          child: _buildButtonsSection(colorExt, typographyExt),
         ),
-        const SizedBox(height: 32),
-        _buildSection(
-          'Phase 6: Editor Components',
-          colorExt,
-          typographyExt,
-          _buildEditorsSection(colorExt, typographyExt),
+        AppSection(
+          title: 'Phase 6: Editor Components',
+          variant: SectionVariant.standard,
+          child: _buildEditorsSection(colorExt, typographyExt),
         ),
-        const SizedBox(height: 32),
-        _buildSection(
-          'Phase 7: Sidebar/Section Components',
-          colorExt,
-          typographyExt,
-          _buildSidebarsSection(colorExt, typographyExt),
+        AppSection(
+          title: 'Phase 7: Sidebar/Section Components',
+          variant: SectionVariant.standard,
+          child: _buildSidebarsSection(colorExt, typographyExt),
         ),
       ],
     );
@@ -144,41 +138,35 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildSection(
-          'Phase 4: Navigation Components',
-          colorExt,
-          typographyExt,
-          _buildNavigationSection(colorExt, typographyExt),
+        AppSection(
+          title: 'Phase 4: Navigation Components',
+          variant: SectionVariant.standard,
+          child: _buildNavigationSection(colorExt, typographyExt),
         ),
-        const SizedBox(height: 32),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _buildSection(
-                'Phase 5: State/Action Buttons',
-                colorExt,
-                typographyExt,
-                _buildButtonsSection(colorExt, typographyExt),
+              child: AppSection(
+                title: 'Phase 5: State/Action Buttons',
+                variant: SectionVariant.standard,
+                child: _buildButtonsSection(colorExt, typographyExt),
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: _buildSection(
-                'Phase 6: Editor Components',
-                colorExt,
-                typographyExt,
-                _buildEditorsSection(colorExt, typographyExt),
+              child: AppSection(
+                title: 'Phase 6: Editor Components',
+                variant: SectionVariant.standard,
+                child: _buildEditorsSection(colorExt, typographyExt),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 32),
-        _buildSection(
-          'Phase 7: Sidebar/Section Components',
-          colorExt,
-          typographyExt,
-          _buildSidebarsSection(colorExt, typographyExt),
+        AppSection(
+          title: 'Phase 7: Sidebar/Section Components',
+          variant: SectionVariant.standard,
+          child: _buildSidebarsSection(colorExt, typographyExt),
         ),
       ],
     );
@@ -194,13 +182,11 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildSection(
-          'Phase 4: Navigation Components',
-          colorExt,
-          typographyExt,
-          _buildNavigationSection(colorExt, typographyExt),
+        AppSection(
+          title: 'Phase 4: Navigation Components',
+          variant: SectionVariant.standard,
+          child: _buildNavigationSection(colorExt, typographyExt),
         ),
-        const SizedBox(height: 32),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -208,68 +194,30 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
               flex: 2,
               child: Column(
                 children: [
-                  _buildSection(
-                    'Phase 5: State/Action Buttons',
-                    colorExt,
-                    typographyExt,
-                    _buildButtonsSection(colorExt, typographyExt),
+                  AppSection(
+                    title: 'Phase 5: State/Action Buttons',
+                    variant: SectionVariant.standard,
+                    child: _buildButtonsSection(colorExt, typographyExt),
                   ),
-                  const SizedBox(height: 32),
-                  _buildSection(
-                    'Phase 6: Editor Components',
-                    colorExt,
-                    typographyExt,
-                    _buildEditorsSection(colorExt, typographyExt),
+                  AppSection(
+                    title: 'Phase 6: Editor Components',
+                    variant: SectionVariant.standard,
+                    child: _buildEditorsSection(colorExt, typographyExt),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 32),
             Expanded(
-              child: _buildSection(
-                'Phase 7: Sidebar/Section Components',
-                colorExt,
-                typographyExt,
-                _buildSidebarsSection(colorExt, typographyExt),
+              child: AppSection(
+                title: 'Phase 7: Sidebar/Section Components',
+                variant: SectionVariant.standard,
+                child: _buildSidebarsSection(colorExt, typographyExt),
               ),
             ),
           ],
         ),
       ],
-    );
-  }
-
-  // ========================================================
-  // Section Helper
-  // ========================================================
-  Widget _buildSection(
-    String title,
-    AppColorExtension colorExt,
-    AppTypographyExtension typographyExt,
-    Widget content,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorExt.surfaceSecondary,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorExt.borderSecondary, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            title,
-            style:
-                Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colorExt.textPrimary,
-                ) ??
-                TextStyle(color: colorExt.textPrimary),
-          ),
-          const SizedBox(height: 16),
-          content,
-        ],
-      ),
     );
   }
 
@@ -449,7 +397,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
               icon: Icons.comment,
             ),
             ActivityItem(
-              type: ActivityType.statusChange,
+              type: ActivityType.statusChanged,
               title: 'Status changed to In Progress',
               description: 'Changed from Pending',
               time: '4 hours ago',

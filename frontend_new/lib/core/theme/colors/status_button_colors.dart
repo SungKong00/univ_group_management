@@ -72,6 +72,3 @@ class StatusButtonColors {
     );
   }
 }
-
-/// Status 열거형
-enum IssueStatus { done, inProgress, pending, cancelled }

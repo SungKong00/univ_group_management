@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/sidebar_colors.dart';
+import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
 import '../theme/component_size_tokens.dart';
 
 // Export sidebar style for convenience
-export '../theme/colors/sidebar_colors.dart' show SidebarStyle;
+export '../theme/enums.dart' show SidebarStyle;
 
 /// 설정 사이드바 아이템 모델
 class SettingItem {

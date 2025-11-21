@@ -5,6 +5,8 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/theme/responsive_tokens.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
 import '../../../../core/widgets/app_back_button.dart';
+import '../../../../core/widgets/app_section.dart';
+import '../../../../core/theme/enums.dart';
 
 /// 반응형 디자인 테스트 페이지
 ///
@@ -34,16 +36,36 @@ class ResponsiveTestPage extends StatelessWidget {
                 _buildHeader(context, screenSize, width),
                 const SizedBox(height: 32.0), // sectionSpacingMedium
                 // 화면 크기 정보
-                _buildScreenSizeInfo(context, screenSize, width),
+                AppSection(
+                  title: '현재 화면 크기',
+                  variant: SectionVariant.standard,
+                  child: _buildScreenSizeInfo(context, screenSize, width),
+                ),
                 const SizedBox(height: 32.0), // sectionSpacingMedium
                 // 반응형 레이아웃 예시
-                _buildResponsiveLayoutExample(context, screenSize, width),
+                AppSection(
+                  title: '반응형 레이아웃',
+                  variant: SectionVariant.standard,
+                  child: _buildResponsiveLayoutExample(
+                    context,
+                    screenSize,
+                    width,
+                  ),
+                ),
                 const SizedBox(height: 32.0), // sectionSpacingMedium
                 // 그리드 시스템 예시
-                _buildGridExample(context, screenSize, width),
+                AppSection(
+                  title: '그리드 시스템',
+                  variant: SectionVariant.standard,
+                  child: _buildGridExample(context, screenSize, width),
+                ),
                 const SizedBox(height: 32.0), // sectionSpacingMedium
                 // 버튼 크기 예시
-                _buildButtonExample(context, screenSize, width),
+                AppSection(
+                  title: '버튼 크기',
+                  variant: SectionVariant.standard,
+                  child: _buildButtonExample(context, screenSize, width),
+                ),
               ],
             );
           },
@@ -82,13 +104,6 @@ class ResponsiveTestPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '현재 화면 크기',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
           Text(
             sizeLabel,
             style: Theme.of(
@@ -161,13 +176,6 @@ class ResponsiveTestPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '반응형 레이아웃',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 16),
         // ✅ 조건부 레이아웃 (기존 프로젝트 패턴)
         screenSize == ScreenSize.mobile
             ? Column(
@@ -224,13 +232,6 @@ class ResponsiveTestPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '그리드 시스템',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 16),
         // ✅ LayoutBuilder로 실제 사용 가능한 너비 계산
         LayoutBuilder(
           builder: (context, constraints) {
@@ -285,13 +286,6 @@ class ResponsiveTestPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '버튼 크기',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 16),
         Wrap(
           spacing: 12,
           runSpacing: 12,

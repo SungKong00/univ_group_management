@@ -75,6 +75,3 @@ class AssigneeButtonColors {
     );
   }
 }
-
-/// Assignee 상태 열거형
-enum AssigneeState { assigned, unassigned, multiple }

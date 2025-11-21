@@ -72,6 +72,8 @@ enum SidebarStyle { default_, dark, compact }
 
 enum LabelsSectionStyle { default_, dark, colorful }
 
+enum SectionVariant { standard, compact }
+
 // ========================================================
 // 상태 & 액션
 // ========================================================
@@ -102,7 +104,15 @@ enum ActivityType {
 
 enum EditorType { default_, title, comment }
 
-enum GradientType { topToBottom, leftToRight, diagonalTL, diagonalTR, radial }
+enum GradientType {
+  subtleTopFade,
+  lightTopFade,
+  extraLightTopFade,
+  subtleBottomFade,
+  subtleLeftFade,
+  subtleRightFade,
+  radialFade,
+}
 
 // ========================================================
 // UI 패턴

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/enums.dart';
 
 /// Linear 스타일 Gradient Overlay
 ///
@@ -96,14 +97,4 @@ class AppGradientOverlay extends StatelessWidget {
       ),
     };
   }
-}
-
-enum GradientType {
-  subtleTopFade,
-  lightTopFade,
-  extraLightTopFade,
-  subtleBottomFade,
-  subtleLeftFade,
-  subtleRightFade,
-  radialFade,
 }

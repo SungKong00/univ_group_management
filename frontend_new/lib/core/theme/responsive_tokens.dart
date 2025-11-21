@@ -1,3 +1,5 @@
+import 'enums.dart';
+
 /// Responsive Design Tokens
 ///
 /// Material Design 3 breakpoints(600/1440px) 및 1440px 기준 그리드 시스템을 따르는 반응형 디자인 토큰의 정적 유틸리티 클래스
@@ -199,12 +201,39 @@ class ResponsiveTokens {
   /// 최소 터치 영역 크기 (iOS/Android 접근성 가이드라인)
   static const double minTapSize = 44.0;
 
-  /// 최대 컨텐츠 너비 (가독성을 위한 제한, 1440px 기준)
-  static const double maxContentWidth = 1200.0;
+  /// 최대 컨텐츠 너비 (1440px 기준, 그리드 레이아웃 기준선)
+  static const double maxContentWidth = 1440.0;
 
   /// 최대 텍스트 컬럼 너비 (prose)
   static const double maxProseWidth = 624.0;
-}
 
-/// 화면 크기 타입
-enum ScreenSize { mobile, tablet, desktop }
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Section Layout Tokens
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// 섹션 간 세로 간격 (섹션 구분)
+  ///
+  /// 반응형:
+  /// - Mobile (< 600px): 24px
+  /// - Tablet (600-1440px): 48px
+  /// - Desktop (>= 1440px): 48px
+  static double sectionVerticalGap(double width) {
+    if (width < mobile) return 24.0;
+    return 48.0;
+  }
+
+  /// 섹션 내부 콘텐츠 간격 (제목과 콘텐츠 사이)
+  ///
+  /// 고정값: 24px
+  static const double sectionContentGap = 24.0;
+
+  /// 섹션 최대 너비
+  ///
+  /// 반응형:
+  /// - Mobile/Tablet: 제약 없음 (full-width)
+  /// - Desktop (>= 1440px): 1200px
+  static double sectionMaxWidth(double width) {
+    if (width < tablet) return double.infinity;
+    return 1200.0;
+  }
+}

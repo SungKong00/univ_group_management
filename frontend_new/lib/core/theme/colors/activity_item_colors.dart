@@ -110,12 +110,3 @@ class ActivityItemColors {
     );
   }
 }
-
-/// Activity 타입 열거형
-enum ActivityType {
-  comment,
-  statusChange,
-  assigneeChange,
-  priorityChange,
-  system,
-}

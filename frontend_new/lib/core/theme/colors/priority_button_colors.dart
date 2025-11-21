@@ -72,6 +72,3 @@ class PriorityButtonColors {
     );
   }
 }
-
-/// Priority 열거형
-enum IssuePriority { high, medium, low, none }

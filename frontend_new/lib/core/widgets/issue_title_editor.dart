@@ -6,7 +6,7 @@ import '../theme/border_tokens.dart';
 import '../theme/component_size_tokens.dart';
 
 // Export editor style for convenience
-export '../theme/colors/editor_colors.dart' show EditorType;
+export '../theme/enums.dart' show EditorType;
 
 /// 이슈 제목 편집 컴포넌트
 ///

@@ -3,10 +3,12 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
 import '../../../../core/theme/extensions/app_typography_extension.dart';
 import '../../../../core/theme/responsive_tokens.dart';
+import '../../../../core/theme/enums.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_input.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/responsive_builder.dart';
+import '../../../../core/widgets/app_section.dart';
 import 'advanced_components_page.dart';
 import 'responsive_test_page.dart';
 import 'v3_components_page.dart';
@@ -99,611 +101,17 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 색상 팔레트
-                _buildSection(
-                  title: '색상 팔레트',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildColorRow('브랜드 색상', [
-                        ('브랜드', colorExt.brandPrimary),
-                        ('강조', colorExt.brandSecondary),
-                        ('강조 호버', colorExt.accentHover),
-                      ]),
-                      const SizedBox(height: 12),
-                      _buildColorRow('상태 색상', [
-                        ('초록', colorExt.stateSuccessBg),
-                        ('빨강', colorExt.stateErrorBg),
-                        ('노랑', colorExt.stateWarningBg),
-                        ('주황', colorExt.stateBuildBg),
-                        ('파랑', colorExt.stateInfoBg),
-                      ]),
-                      const SizedBox(height: 12),
-                      _buildColorRow('텍스트 색상', [
-                        ('기본', colorExt.textPrimary),
-                        ('보조', colorExt.textSecondary),
-                        ('3순위', colorExt.textTertiary),
-                        ('4순위', colorExt.textQuaternary),
-                      ]),
-                      const SizedBox(height: 12),
-                      _buildColorRow('배경 색상', [
-                        ('레벨 0', colorExt.surfacePrimary),
-                        ('레벨 1', colorExt.surfaceSecondary),
-                        ('레벨 2', colorExt.surfaceTertiary),
-                        ('레벨 3', colorExt.surfaceQuaternary),
-                      ]),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // 타이포그래피
-                _buildSection(
-                  title: '타이포그래피',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '제목 1',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '제목 2',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '제목 3',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '제목 4',
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '큰 텍스트',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '일반 텍스트',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '작은 텍스트',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '미니 텍스트',
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text('마이크로 텍스트', style: context.appTypography.textMicro),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Monospace Code',
-                        style: TextStyle(fontFamily: 'monospace', fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // 버튼 - 유형별 (좌→우: 큰 크기 순)
-                _buildSection(
-                  title: '버튼 - 유형별',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ========== Primary 버튼 ==========
-                      Text(
-                        'Primary (기본 버튼)',
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: colorExt.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          // Row 1: 기본 (Large → Medium → Small)
-                          AppButton(
-                            text: 'Primary Large',
-                            size: AppButtonSize.large,
-                            variant: AppButtonVariant.primary,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Primary Medium',
-                            size: AppButtonSize.medium,
-                            variant: AppButtonVariant.primary,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Primary Small',
-                            size: AppButtonSize.small,
-                            variant: AppButtonVariant.primary,
-                            onPressed: () {},
-                          ),
-                          // Row 2: 아이콘 포함 (Large → Medium → Small)
-                          AppButton(
-                            text: 'Add Large',
-                            icon: Icons.add,
-                            size: AppButtonSize.large,
-                            variant: AppButtonVariant.primary,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Add Medium',
-                            icon: Icons.add,
-                            size: AppButtonSize.medium,
-                            variant: AppButtonVariant.primary,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Add Small',
-                            icon: Icons.add,
-                            size: AppButtonSize.small,
-                            variant: AppButtonVariant.primary,
-                            onPressed: () {},
-                          ),
-                          // Row 3: 상태 (로딩, 비활성화)
-                          AppButton(
-                            text: '로딩 중',
-                            isLoading: _isLoading,
-                            variant: AppButtonVariant.primary,
-                            onPressed: () {
-                              setState(() {
-                                _isLoading = !_isLoading;
-                              });
-                            },
-                          ),
-                          const AppButton(
-                            text: '비활성화',
-                            variant: AppButtonVariant.primary,
-                            onPressed: null,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-
-                      // ========== Secondary 버튼 ==========
-                      Text(
-                        'Secondary (보조 버튼)',
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: colorExt.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          // Row 1: 기본 (Large → Medium → Small)
-                          AppButton(
-                            text: 'Secondary Large',
-                            size: AppButtonSize.large,
-                            variant: AppButtonVariant.secondary,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Secondary Medium',
-                            size: AppButtonSize.medium,
-                            variant: AppButtonVariant.secondary,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Secondary Small',
-                            size: AppButtonSize.small,
-                            variant: AppButtonVariant.secondary,
-                            onPressed: () {},
-                          ),
-                          // Row 2: 아이콘 포함 (Large → Medium → Small)
-                          AppButton(
-                            text: 'Delete Large',
-                            icon: Icons.delete,
-                            size: AppButtonSize.large,
-                            variant: AppButtonVariant.secondary,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Delete Medium',
-                            icon: Icons.delete,
-                            size: AppButtonSize.medium,
-                            variant: AppButtonVariant.secondary,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Delete Small',
-                            icon: Icons.delete,
-                            size: AppButtonSize.small,
-                            variant: AppButtonVariant.secondary,
-                            onPressed: () {},
-                          ),
-                          // Row 3: 상태 (로딩, 비활성화)
-                          AppButton(
-                            text: '로딩 중',
-                            isLoading: _isLoading,
-                            variant: AppButtonVariant.secondary,
-                            onPressed: () {
-                              setState(() {
-                                _isLoading = !_isLoading;
-                              });
-                            },
-                          ),
-                          const AppButton(
-                            text: '비활성화',
-                            variant: AppButtonVariant.secondary,
-                            onPressed: null,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-
-                      // ========== Ghost 버튼 ==========
-                      Text(
-                        'Ghost (유령 버튼)',
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: colorExt.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          // Row 1: 기본 (Large → Medium → Small)
-                          AppButton(
-                            text: 'Ghost Large',
-                            size: AppButtonSize.large,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Ghost Medium',
-                            size: AppButtonSize.medium,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Ghost Small',
-                            size: AppButtonSize.small,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: () {},
-                          ),
-                          // Row 2: 아이콘 포함 (Large → Medium → Small)
-                          AppButton(
-                            text: 'Edit Large',
-                            icon: Icons.edit,
-                            size: AppButtonSize.large,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Edit Medium',
-                            icon: Icons.edit,
-                            size: AppButtonSize.medium,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: () {},
-                          ),
-                          AppButton(
-                            text: 'Edit Small',
-                            icon: Icons.edit,
-                            size: AppButtonSize.small,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: () {},
-                          ),
-                          // Row 3: 상태 (로딩, 비활성화만 - Ghost는 특수 용도)
-                          AppButton(
-                            text: '로딩',
-                            isLoading: _isLoading,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: () {
-                              setState(() {
-                                _isLoading = !_isLoading;
-                              });
-                            },
-                          ),
-                          const AppButton(
-                            text: '비활성화',
-                            variant: AppButtonVariant.ghost,
-                            onPressed: null,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // 입력 필드 - 기본
-                _buildSection(
-                  title: '입력 필드',
-                  child: Column(
-                    children: [
-                      AppInput(
-                        label: '이메일',
-                        placeholder: 'your.email@example.com',
-                        controller: _textController,
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      const SizedBox(height: 16),
-                      const AppInput(
-                        label: '비밀번호',
-                        placeholder: '비밀번호 입력',
-                        obscureText: true,
-                      ),
-                      const SizedBox(height: 16),
-                      const AppInput(
-                        label: '도움말 텍스트 포함',
-                        placeholder: '무언가 입력',
-                        helperText: '이것은 도움말 텍스트입니다',
-                      ),
-                      const SizedBox(height: 16),
-                      const AppInput(
-                        label: '오류 포함',
-                        placeholder: '무언가 입력',
-                        errorText: '필수 입력 항목입니다',
-                      ),
-                      const SizedBox(height: 16),
-                      const AppInput(
-                        label: '비활성화됨',
-                        placeholder: '편집 불가',
-                        enabled: false,
-                      ),
-                      const SizedBox(height: 16),
-                      const AppInput(
-                        label: '여러 줄',
-                        placeholder: '설명 입력',
-                        maxLines: 4,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // 카드 - 높이 샘플
-                _buildSection(
-                  title: '카드 - 높이 샘플',
-                  child: Column(
-                    children: [
-                      AppCard(
-                        elevation: AppCardElevation.none,
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('none 카드 클릭')),
-                          );
-                        },
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: colorExt.stateInfoBg,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'elevation: none (기본값)',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall!
-                                        .copyWith(fontWeight: FontWeight.w500),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '그림자 없음 → hover: low',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall!
-                                        .copyWith(color: colorExt.textTertiary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      AppCard(
-                        elevation: AppCardElevation.low,
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('low 카드 클릭')),
-                          );
-                        },
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: colorExt.stateSuccessBg,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'elevation: low',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall!
-                                        .copyWith(fontWeight: FontWeight.w500),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'rgba(255,255,255,0.05) 0px 2px 4px',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall!
-                                        .copyWith(
-                                          color: colorExt.textTertiary,
-                                          fontFamily: 'monospace',
-                                        ),
-                                  ),
-                                  Text(
-                                    '미묘한 그림자 → hover: medium',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall!
-                                        .copyWith(
-                                          color: colorExt.textQuaternary,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // 카드 - 비활성화 투명도 샘플
-                _buildSection(
-                  title: '카드 - 비활성화 투명도 (그림자 포함)',
-                  child: Column(
-                    children: [
-                      AppCard(
-                        elevation: AppCardElevation.low,
-                        disabledOpacity: 0.65,
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: colorExt.stateWarningBg,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'disabledOpacity: 0.65',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall!
-                                        .copyWith(fontWeight: FontWeight.w500),
-                                  ),
-                                  Text(
-                                    '가장 선명 (투명도 낮음)',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall!
-                                        .copyWith(color: colorExt.textTertiary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      AppCard(
-                        elevation: AppCardElevation.low,
-                        disabledOpacity: 0.75,
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: colorExt.stateErrorBg,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'disabledOpacity: 0.75',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall!
-                                        .copyWith(fontWeight: FontWeight.w500),
-                                  ),
-                                  Text(
-                                    '표준 (권장)',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall!
-                                        .copyWith(color: colorExt.textTertiary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      AppCard(
-                        elevation: AppCardElevation.low,
-                        disabledOpacity: 0.85,
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: colorExt.brandSecondary,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'disabledOpacity: 0.85',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall!
-                                        .copyWith(fontWeight: FontWeight.w500),
-                                  ),
-                                  Text(
-                                    '덜 선명 (투명도 높음)',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall!
-                                        .copyWith(color: colorExt.textTertiary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildColorPaletteSection(width),
+                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width) * 0.3),
+                _buildTypographySection(),
+                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width) * 0.3),
+                _buildButtonsSection(width),
+                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width) * 0.3),
+                _buildInputFieldsSection(width),
+                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width) * 0.3),
+                _buildCardElevationSection(),
+                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width) * 0.3),
+                _buildCardDisabledOpacitySection(),
               ],
             ),
           );
@@ -712,20 +120,625 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
     );
   }
 
-  Widget _buildSection({required String title, required Widget child}) {
-    final colorExt = context.appColors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall!.copyWith(color: colorExt.textPrimary),
-        ),
-        const SizedBox(height: 16),
-        child,
-      ],
+  // ========================================================
+  // Section 1: 색상 팔레트
+  // ========================================================
+  Widget _buildColorPaletteSection(double width) {
+    return AppSection(
+      title: '색상 팔레트',
+      variant: SectionVariant.compact,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildColorRow('브랜드 색상', [
+            ('브랜드', context.appColors.brandPrimary),
+            ('강조', context.appColors.brandSecondary),
+            ('강조 호버', context.appColors.accentHover),
+          ]),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          _buildColorRow('상태 색상', [
+            ('초록', context.appColors.stateSuccessBg),
+            ('빨강', context.appColors.stateErrorBg),
+            ('노랑', context.appColors.stateWarningBg),
+            ('주황', context.appColors.stateBuildBg),
+            ('파랑', context.appColors.stateInfoBg),
+          ]),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          _buildColorRow('텍스트 색상', [
+            ('기본', context.appColors.textPrimary),
+            ('보조', context.appColors.textSecondary),
+            ('3순위', context.appColors.textTertiary),
+            ('4순위', context.appColors.textQuaternary),
+          ]),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          _buildColorRow('배경 색상', [
+            ('레벨 0', context.appColors.surfacePrimary),
+            ('레벨 1', context.appColors.surfaceSecondary),
+            ('레벨 2', context.appColors.surfaceTertiary),
+            ('레벨 3', context.appColors.surfaceQuaternary),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  // ========================================================
+  // Section 2: 타이포그래피
+  // ========================================================
+  Widget _buildTypographySection() {
+    return AppSection(
+      title: '타이포그래피',
+      variant: SectionVariant.compact,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '제목 1',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Text(
+            '제목 2',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Text(
+            '제목 3',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Text(
+            '제목 4',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          Text(
+            '큰 텍스트',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Text(
+            '일반 텍스트',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Text(
+            '작은 텍스트',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Text(
+            '미니 텍스트',
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Text('마이크로 텍스트', style: context.appTypography.textMicro),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Text(
+            'Monospace Code',
+            style: TextStyle(fontFamily: 'monospace', fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========================================================
+  // Section 3: 버튼
+  // ========================================================
+  Widget _buildButtonsSection(double width) {
+    return AppSection(
+      title: '버튼 - 유형별',
+      variant: SectionVariant.compact,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ========== Primary 버튼 ==========
+          Text(
+            'Primary (기본 버튼)',
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+              color: context.appColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              AppButton(
+                text: 'Primary Large',
+                size: AppButtonSize.large,
+                variant: AppButtonVariant.primary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Primary Medium',
+                size: AppButtonSize.medium,
+                variant: AppButtonVariant.primary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Primary Small',
+                size: AppButtonSize.small,
+                variant: AppButtonVariant.primary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Add Large',
+                icon: Icons.add,
+                size: AppButtonSize.large,
+                variant: AppButtonVariant.primary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Add Medium',
+                icon: Icons.add,
+                size: AppButtonSize.medium,
+                variant: AppButtonVariant.primary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Add Small',
+                icon: Icons.add,
+                size: AppButtonSize.small,
+                variant: AppButtonVariant.primary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: '로딩 중',
+                isLoading: _isLoading,
+                variant: AppButtonVariant.primary,
+                onPressed: () {
+                  setState(() {
+                    _isLoading = !_isLoading;
+                  });
+                },
+              ),
+              const AppButton(
+                text: '비활성화',
+                variant: AppButtonVariant.primary,
+                onPressed: null,
+              ),
+            ],
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+
+          // ========== Secondary 버튼 ==========
+          Text(
+            'Secondary (보조 버튼)',
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+              color: context.appColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              AppButton(
+                text: 'Secondary Large',
+                size: AppButtonSize.large,
+                variant: AppButtonVariant.secondary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Secondary Medium',
+                size: AppButtonSize.medium,
+                variant: AppButtonVariant.secondary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Secondary Small',
+                size: AppButtonSize.small,
+                variant: AppButtonVariant.secondary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Delete Large',
+                icon: Icons.delete,
+                size: AppButtonSize.large,
+                variant: AppButtonVariant.secondary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Delete Medium',
+                icon: Icons.delete,
+                size: AppButtonSize.medium,
+                variant: AppButtonVariant.secondary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Delete Small',
+                icon: Icons.delete,
+                size: AppButtonSize.small,
+                variant: AppButtonVariant.secondary,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: '로딩 중',
+                isLoading: _isLoading,
+                variant: AppButtonVariant.secondary,
+                onPressed: () {
+                  setState(() {
+                    _isLoading = !_isLoading;
+                  });
+                },
+              ),
+              const AppButton(
+                text: '비활성화',
+                variant: AppButtonVariant.secondary,
+                onPressed: null,
+              ),
+            ],
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+
+          // ========== Ghost 버튼 ==========
+          Text(
+            'Ghost (유령 버튼)',
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+              color: context.appColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              AppButton(
+                text: 'Ghost Large',
+                size: AppButtonSize.large,
+                variant: AppButtonVariant.ghost,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Ghost Medium',
+                size: AppButtonSize.medium,
+                variant: AppButtonVariant.ghost,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Ghost Small',
+                size: AppButtonSize.small,
+                variant: AppButtonVariant.ghost,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Edit Large',
+                icon: Icons.edit,
+                size: AppButtonSize.large,
+                variant: AppButtonVariant.ghost,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Edit Medium',
+                icon: Icons.edit,
+                size: AppButtonSize.medium,
+                variant: AppButtonVariant.ghost,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: 'Edit Small',
+                icon: Icons.edit,
+                size: AppButtonSize.small,
+                variant: AppButtonVariant.ghost,
+                onPressed: () {},
+              ),
+              AppButton(
+                text: '로딩',
+                isLoading: _isLoading,
+                variant: AppButtonVariant.ghost,
+                onPressed: () {
+                  setState(() {
+                    _isLoading = !_isLoading;
+                  });
+                },
+              ),
+              const AppButton(
+                text: '비활성화',
+                variant: AppButtonVariant.ghost,
+                onPressed: null,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========================================================
+  // Section 4: 입력 필드
+  // ========================================================
+  Widget _buildInputFieldsSection(double width) {
+    return AppSection(
+      title: '입력 필드',
+      variant: SectionVariant.compact,
+      child: Column(
+        children: [
+          AppInput(
+            label: '이메일',
+            placeholder: 'your.email@example.com',
+            controller: _textController,
+            keyboardType: TextInputType.emailAddress,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          const AppInput(
+            label: '비밀번호',
+            placeholder: '비밀번호 입력',
+            obscureText: true,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          const AppInput(
+            label: '도움말 텍스트 포함',
+            placeholder: '무언가 입력',
+            helperText: '이것은 도움말 텍스트입니다',
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          const AppInput(
+            label: '오류 포함',
+            placeholder: '무언가 입력',
+            errorText: '필수 입력 항목입니다',
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          const AppInput(
+            label: '비활성화됨',
+            placeholder: '편집 불가',
+            enabled: false,
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          const AppInput(
+            label: '여러 줄',
+            placeholder: '설명 입력',
+            maxLines: 4,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========================================================
+  // Section 5: 카드 - 높이 샘플
+  // ========================================================
+  Widget _buildCardElevationSection() {
+    return AppSection(
+      title: '카드 - 높이 샘플',
+      variant: SectionVariant.compact,
+      child: Column(
+        children: [
+          AppCard(
+            elevation: AppCardElevation.none,
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('none 카드 클릭')),
+              );
+            },
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: context.appColors.stateInfoBg,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'elevation: none (기본값)',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall!
+                            .copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      SizedBox(height: ResponsiveTokens.sectionContentGap * 0.25),
+                      Text(
+                        '그림자 없음 → hover: low',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall!
+                            .copyWith(color: context.appColors.textTertiary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          AppCard(
+            elevation: AppCardElevation.low,
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('low 카드 클릭')),
+              );
+            },
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: context.appColors.stateSuccessBg,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'elevation: low',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall!
+                            .copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      SizedBox(height: ResponsiveTokens.sectionContentGap * 0.25),
+                      Text(
+                        'rgba(255,255,255,0.05) 0px 2px 4px',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall!
+                            .copyWith(
+                              color: context.appColors.textTertiary,
+                              fontFamily: 'monospace',
+                            ),
+                      ),
+                      Text(
+                        '미묘한 그림자 → hover: medium',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall!
+                            .copyWith(
+                              color: context.appColors.textQuaternary,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========================================================
+  // Section 6: 카드 - 비활성화 투명도 샘플
+  // ========================================================
+  Widget _buildCardDisabledOpacitySection() {
+    return AppSection(
+      title: '카드 - 비활성화 투명도 (그림자 포함)',
+      variant: SectionVariant.compact,
+      child: Column(
+        children: [
+          AppCard(
+            elevation: AppCardElevation.low,
+            disabledOpacity: 0.65,
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: context.appColors.stateWarningBg,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'disabledOpacity: 0.65',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall!
+                            .copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        '가장 선명 (투명도 낮음)',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall!
+                            .copyWith(color: context.appColors.textTertiary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          AppCard(
+            elevation: AppCardElevation.low,
+            disabledOpacity: 0.75,
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: context.appColors.stateErrorBg,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'disabledOpacity: 0.75',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall!
+                            .copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        '표준 (권장)',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall!
+                            .copyWith(color: context.appColors.textTertiary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: ResponsiveTokens.sectionContentGap),
+          AppCard(
+            elevation: AppCardElevation.low,
+            disabledOpacity: 0.85,
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: context.appColors.brandSecondary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'disabledOpacity: 0.85',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall!
+                            .copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        '덜 선명 (투명도 높음)',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall!
+                            .copyWith(color: context.appColors.textTertiary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -3,6 +3,7 @@ import '../theme/extensions/app_color_extension.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
 import '../theme/animation_tokens.dart';
+import '../theme/enums.dart';
 
 /// Linear 스타일 AI Agent Selector
 ///
@@ -222,5 +223,3 @@ class AppAgent {
 
   const AppAgent({required this.name, this.badge, this.icon, this.description});
 }
-
-enum AppBadgeStyle { subtle, prominent }

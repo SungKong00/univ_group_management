@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/status_button_colors.dart';
+import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/component_size_tokens.dart';
 
 // Export status for convenience
-export '../theme/colors/status_button_colors.dart' show IssueStatus;
+export '../theme/enums.dart' show IssueStatus;
 
 /// 이슈 상태 변경 버튼 (Done/In Progress/Pending/Cancelled)
 ///

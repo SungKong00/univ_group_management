@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/breadcrumb_colors.dart';
+import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
 
 // Export breadcrumb style for convenience
-export '../theme/colors/breadcrumb_colors.dart' show BreadcrumbStyle;
+export '../theme/enums.dart' show BreadcrumbStyle;
 
 /// 페이지 경로 표시 컴포넌트 (Issues > Project-001 > Details)
 ///

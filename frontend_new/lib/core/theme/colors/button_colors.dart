@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../extensions/app_color_extension.dart';
+import '../enums.dart';
 
 /// Button 컴포넌트 전용 색상 구조
 ///
@@ -144,9 +145,3 @@ class ButtonColors {
     };
   }
 }
-
-/// Button 컴포넌트용 Variant 열거형
-enum AppButtonVariant { primary, secondary, ghost }
-
-/// Button 컴포넌트용 Size 열거형
-enum AppButtonSize { small, medium, large }

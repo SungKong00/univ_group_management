@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/assignee_button_colors.dart';
+import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
 import '../theme/component_size_tokens.dart';
 
 // Export assignee state for convenience
-export '../theme/colors/assignee_button_colors.dart' show AssigneeState;
+export '../theme/enums.dart' show AssigneeState;
 
 /// 담당자 선택 버튼
 ///

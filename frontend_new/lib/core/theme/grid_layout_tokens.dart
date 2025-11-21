@@ -65,24 +65,24 @@ class GridLayoutTokens {
   GridLayoutTokens._();
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 열 수별 선호 너비 (1440px 기반 계산)
+  // 열 수별 선호 너비 (1200px maxContentWidth 기반 계산)
   // ═══════════════════════════════════════════════════════════════════════════
   //
-  // 계산식: (1440px - gaps) / columns
+  // 계산식: (1200px - gaps) / columns
   // - 1열: Full width (무한대)
-  // - 2열: 640px (1440px - 16px gap) / 2 = 712px → 640으로 조정
-  // - 3열: 480px (1440px - 32px gap) / 3 = 469px → 480으로 조정
-  // - 4열: 360px (1440px - 48px gap) / 4 = 348px → 360으로 조정
-  // - 5열: 280px (1440px - 64px gap) / 5 = 275px → 280으로 조정
-  // - 6열: 224px (1440px - 80px gap) / 6 = 227px → 224로 조정
+  // - 2열: 592px (1200px - 16px gap) / 2 = 592px
+  // - 3열: 390px (1200px - 32px gap) / 3 = 389.33px → 390으로 조정
+  // - 4열: 288px (1200px - 48px gap) / 4 = 288px
+  // - 5열: 226px (1200px - 64px gap) / 5 = 227.2px → 226으로 조정
+  // - 6열: 186px (1200px - 80px gap) / 6 = 186.67px → 186으로 조정
 
   static const Map<GridPresetColumns, double> _preferredWidths = {
     GridPresetColumns.one: double.infinity,
-    GridPresetColumns.two: 640,
-    GridPresetColumns.three: 480,
-    GridPresetColumns.four: 360,
-    GridPresetColumns.five: 280,
-    GridPresetColumns.six: 224,
+    GridPresetColumns.two: 592,
+    GridPresetColumns.three: 390,
+    GridPresetColumns.four: 288,
+    GridPresetColumns.five: 226,
+    GridPresetColumns.six: 186,
   };
 
   // ═══════════════════════════════════════════════════════════════════════════

@@ -21,6 +21,7 @@ import '../../../../core/widgets/selectable_card.dart';
 import '../../../../core/widgets/wide_card.dart';
 import '../../../../core/widgets/app_tabs.dart';
 import '../../../../core/widgets/controlled_app_tabs.dart';
+import '../../../../core/widgets/app_section.dart';
 import '../../data/models/pricing_plan_model.dart';
 import '../../data/models/billing_cycle_model.dart';
 import '../../data/models/customer_model.dart';
@@ -119,7 +120,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: ResponsiveTokens.space8),
           Text(
             'Pricing & Customers 페이지 컴포넌트 (JSON 기반)',
             style: Theme.of(
@@ -214,103 +215,74 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Section Header
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pricing Plans',
-                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                      color: context.appColors.textPrimary,
-                      fontWeight: FontWeight.w600,
+              AppSection(
+                title: 'Pricing Plans',
+                variant: SectionVariant.standard,
+                child: Column(
+                  children: [
+                    // Billing Toggle
+                    Center(
+                      child: BillingToggle(
+                        cycle: billingCycle,
+                        isYearly: _isYearly,
+                        onChanged: (isYearly) {
+                          setState(() => _isYearly = isYearly);
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Choose a plan that fits your needs',
-                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      color: context.appColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: ResponsiveTokens.cardGap(width) * 1.5),
+                    SizedBox(height: ResponsiveTokens.pagePadding(width)),
 
-              // Billing Toggle
-              Center(
-                child: BillingToggle(
-                  cycle: billingCycle,
-                  isYearly: _isYearly,
-                  onChanged: (isYearly) {
-                    setState(() => _isYearly = isYearly);
-                  },
+                    // Pricing Cards - 3열 프리셋 사용
+                    AdaptiveCardGrid.fromPreset(
+                      config: GridLayoutTokens.pricingCards,
+                      itemCount: pricingPlans.length,
+                      itemBuilder: (context, index) =>
+                          PricingCard(plan: pricingPlans[index]),
+                      maxContentWidth: ResponsiveTokens.maxContentWidth,
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(height: ResponsiveTokens.pagePadding(width)),
-
-              // Pricing Cards - 3열 프리셋 사용
-              AdaptiveCardGrid.fromPreset(
-                config: GridLayoutTokens.pricingCards,
-                itemCount: pricingPlans.length,
-                itemBuilder: (context, index) =>
-                    PricingCard(plan: pricingPlans[index]),
-                maxContentWidth: ResponsiveTokens.maxContentWidth,
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 2),
 
               // Comparison Table Section
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Feature Comparison',
-                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                      color: context.appColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Compare features across all plans',
-                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      color: context.appColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: ResponsiveTokens.cardGap(width)),
-              PricingComparisonTable(
-                data: {
-                  'columns': 3,
-                  'columnHeaders': [
-                    {'text': 'Starter'},
-                    {'text': 'Professional'},
-                    {'text': 'Enterprise'},
-                  ],
-                  'sections': [
-                    {
-                      'name': 'Resources',
-                      'rows': [
-                        {
-                          'feature': 'Projects',
-                          'cells': ['✓', '✓', '✓'],
-                        },
-                        {
-                          'feature': 'Storage',
-                          'cells': ['5GB', '100GB', '1TB'],
-                        },
-                      ],
-                    },
-                    {
-                      'name': 'Support',
-                      'rows': [
-                        {
-                          'feature': 'Support',
-                          'cells': ['Basic', 'Priority', '24/7'],
-                        },
-                      ],
-                    },
-                  ],
-                },
+              AppSection(
+                title: 'Feature Comparison',
+                variant: SectionVariant.standard,
+                child: PricingComparisonTable(
+                  data: {
+                    'columns': 3,
+                    'columnHeaders': [
+                      {'text': 'Starter'},
+                      {'text': 'Professional'},
+                      {'text': 'Enterprise'},
+                    ],
+                    'sections': [
+                      {
+                        'name': 'Resources',
+                        'rows': [
+                          {
+                            'feature': 'Projects',
+                            'cells': ['✓', '✓', '✓'],
+                          },
+                          {
+                            'feature': 'Storage',
+                            'cells': ['5GB', '100GB', '1TB'],
+                          },
+                        ],
+                      },
+                      {
+                        'name': 'Support',
+                        'rows': [
+                          {
+                            'feature': 'Support',
+                            'cells': ['Basic', 'Priority', '24/7'],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ),
               ),
             ],
           ),
@@ -331,226 +303,196 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Text(
-                'Design System Cards',
-                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                  color: colorExt.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '5가지 카드 유형 및 변형 스타일 (standard, featured, highlighted)',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall!.copyWith(color: colorExt.textSecondary),
+              AppSection(
+                title: 'Design System Cards',
+                variant: SectionVariant.standard,
+                child: const SizedBox.shrink(),
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width)),
 
               // 1. Vertical Card Section
-              _buildSectionHeader(
-                '1. Vertical Card',
-                'Image(top) → Title → Description',
-              ),
-              SizedBox(height: ResponsiveTokens.cardGap(width)),
-              AdaptiveCardGrid.fromPreset(
-                config: GridLayoutTokens.forCardType(
-                  CardVariant.vertical,
-                  GridPresetColumns.three,
-                ),
-                itemCount: 3,
-                itemBuilder: (context, index) {
-                  final variants = ['standard', 'featured', 'highlighted'];
-                  return VerticalCard(
-                    title: 'Vertical Card ${variants[index]}',
-                    subtitle: 'Subtitle text here',
-                    description:
-                        'This is a vertical card with image on top and text below.',
-                    meta: 'Meta info',
-                    image: Container(
-                      color: colorExt.surfaceTertiary,
-                      child: Center(
-                        child: Icon(
-                          Icons.image,
-                          color: colorExt.textTertiary,
-                          size: 48,
+              AppSection(
+                title: '1. Vertical Card',
+                variant: SectionVariant.standard,
+                child: AdaptiveCardGrid.fromPreset(
+                  config: GridLayoutTokens.forCardType(
+                    CardVariant.vertical,
+                    GridPresetColumns.three,
+                  ),
+                  itemCount: 3,
+                  itemBuilder: (context, index) {
+                    final variants = ['standard', 'featured', 'highlighted'];
+                    return VerticalCard(
+                      title: 'Vertical Card ${variants[index]}',
+                      subtitle: 'Subtitle text here',
+                      description:
+                          'This is a vertical card with image on top and text below.',
+                      meta: 'Meta info',
+                      image: Container(
+                        color: colorExt.surfaceTertiary,
+                        child: Center(
+                          child: Icon(
+                            Icons.image,
+                            color: colorExt.textTertiary,
+                            size: 48,
+                          ),
                         ),
                       ),
-                    ),
-                    variant: variants[index],
-                  );
-                },
-                maxContentWidth: ResponsiveTokens.maxContentWidth,
+                      variant: variants[index],
+                    );
+                  },
+                  maxContentWidth: ResponsiveTokens.maxContentWidth,
+                ),
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
 
               // 2. Horizontal Card Section
-              _buildSectionHeader(
-                '2. Horizontal Card',
-                'Image(left) → Text(right)',
-              ),
-              SizedBox(height: ResponsiveTokens.cardGap(width)),
-              AdaptiveCardGrid.fromPreset(
-                config: GridLayoutTokens.customerTestimonials,
-                itemCount: 3,
-                itemBuilder: (context, index) {
-                  final variants = ['standard', 'featured', 'highlighted'];
-                  return HorizontalCard(
-                    title: 'Horizontal ${variants[index]}',
-                    subtitle: 'Subtitle',
-                    description: 'A horizontal layout with image on the left.',
-                    meta: 'Info',
-                    image: Container(
-                      color: colorExt.surfaceTertiary,
-                      child: Center(
-                        child: Icon(
-                          Icons.image,
-                          color: colorExt.textTertiary,
-                          size: 48,
+              AppSection(
+                title: '2. Horizontal Card',
+                variant: SectionVariant.standard,
+                child: AdaptiveCardGrid.fromPreset(
+                  config: GridLayoutTokens.customerTestimonials,
+                  itemCount: 3,
+                  itemBuilder: (context, index) {
+                    final variants = ['standard', 'featured', 'highlighted'];
+                    return HorizontalCard(
+                      title: 'Horizontal ${variants[index]}',
+                      subtitle: 'Subtitle',
+                      description:
+                          'A horizontal layout with image on the left.',
+                      meta: 'Info',
+                      image: Container(
+                        color: colorExt.surfaceTertiary,
+                        child: Center(
+                          child: Icon(
+                            Icons.image,
+                            color: colorExt.textTertiary,
+                            size: 48,
+                          ),
                         ),
                       ),
-                    ),
-                    variant: variants[index],
-                  );
-                },
-                maxContentWidth: ResponsiveTokens.maxContentWidth,
+                      variant: variants[index],
+                    );
+                  },
+                  maxContentWidth: ResponsiveTokens.maxContentWidth,
+                ),
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
 
               // 3. Compact Card Section
-              _buildSectionHeader('3. Compact Card', 'Icon + Title (자동 높이)'),
-              SizedBox(height: ResponsiveTokens.cardGap(width)),
-              AdaptiveCardGrid.fromPreset(
-                config: GridLayoutTokens.tagGrid,
-                itemCount: 6,
-                itemBuilder: (context, index) {
-                  final variants = ['standard', 'featured', 'highlighted'];
-                  final variant = variants[index % 3];
-                  return CompactCard(
-                    title: variant == 'standard'
-                        ? '항목 ${index ~/ 3 + 1}'
-                        : '${variant.substring(0, 1).toUpperCase()}${variant.substring(1)}',
-                    meta: 'Meta',
-                    icon: Icons.category,
-                    variant: variant,
-                    isSelected: _selectedCards[index % 3],
-                    onTap: () {
-                      setState(() {
-                        _selectedCards[index % 3] = !_selectedCards[index % 3];
-                      });
-                    },
-                  );
-                },
-                maxContentWidth: ResponsiveTokens.maxContentWidth,
+              AppSection(
+                title: '3. Compact Card',
+                variant: SectionVariant.standard,
+                child: AdaptiveCardGrid.fromPreset(
+                  config: GridLayoutTokens.tagGrid,
+                  itemCount: 6,
+                  itemBuilder: (context, index) {
+                    final variants = ['standard', 'featured', 'highlighted'];
+                    final variant = variants[index % 3];
+                    return CompactCard(
+                      title: variant == 'standard'
+                          ? '항목 ${index ~/ 3 + 1}'
+                          : '${variant.substring(0, 1).toUpperCase()}${variant.substring(1)}',
+                      meta: 'Meta',
+                      icon: Icons.category,
+                      variant: variant,
+                      isSelected: _selectedCards[index % 3],
+                      onTap: () {
+                        setState(() {
+                          _selectedCards[index % 3] =
+                              !_selectedCards[index % 3];
+                        });
+                      },
+                    );
+                  },
+                  maxContentWidth: ResponsiveTokens.maxContentWidth,
+                ),
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
 
               // 4. Selectable Card Section
-              _buildSectionHeader(
-                '4. Selectable Card',
-                'Checkbox + Content (다중선택)',
-              ),
-              SizedBox(height: ResponsiveTokens.cardGap(width)),
-              Column(
-                children: List.generate(3, (index) {
-                  final variants = ['standard', 'featured', 'highlighted'];
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      bottom: ResponsiveTokens.cardGap(width),
-                    ),
-                    child: SelectableCard(
-                      title: 'Option ${index + 1} (${variants[index]})',
-                      subtitle: 'Select to enable this feature',
-                      isSelected: _selectedCards[index],
-                      onSelected: (value) {
-                        setState(() {
-                          _selectedCards[index] = value;
-                        });
-                      },
-                      variant: variants[index],
-                    ),
-                  );
-                }),
+              AppSection(
+                title: '4. Selectable Card',
+                variant: SectionVariant.standard,
+                child: Column(
+                  children: List.generate(3, (index) {
+                    final variants = ['standard', 'featured', 'highlighted'];
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: ResponsiveTokens.cardGap(width),
+                      ),
+                      child: SelectableCard(
+                        title: 'Option ${index + 1} (${variants[index]})',
+                        subtitle: 'Select to enable this feature',
+                        isSelected: _selectedCards[index],
+                        onSelected: (value) {
+                          setState(() {
+                            _selectedCards[index] = value;
+                          });
+                        },
+                        variant: variants[index],
+                      ),
+                    );
+                  }),
+                ),
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
 
               // 5. Wide Card Section
-              _buildSectionHeader(
-                '5. Wide Card',
-                'Full-width Banner (배너/프로모션)',
-              ),
-              SizedBox(height: ResponsiveTokens.cardGap(width)),
-              Column(
-                children: [
-                  WideCard(
-                    title: 'Standard Wide Card',
-                    subtitle: 'Full-width banner layout',
-                    description: 'This is a promotional banner with CTA button',
-                    ctaText: 'Learn More',
-                    variant: 'standard',
-                    onCtaPressed: () {},
-                    backgroundContent: Container(
-                      color: context.appColors.surfaceTertiary,
-                      child: Center(
-                        child: Icon(
-                          Icons.image,
-                          color: colorExt.textTertiary,
-                          size: 64,
+              AppSection(
+                title: '5. Wide Card',
+                variant: SectionVariant.standard,
+                child: Column(
+                  children: [
+                    WideCard(
+                      title: 'Standard Wide Card',
+                      subtitle: 'Full-width banner layout',
+                      description:
+                          'This is a promotional banner with CTA button',
+                      ctaText: 'Learn More',
+                      variant: 'standard',
+                      onCtaPressed: () {},
+                      backgroundContent: Container(
+                        color: context.appColors.surfaceTertiary,
+                        child: Center(
+                          child: Icon(
+                            Icons.image,
+                            color: colorExt.textTertiary,
+                            size: 64,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: ResponsiveTokens.cardGap(width)),
-                  WideCard(
-                    title: 'Featured Promotion',
-                    subtitle: 'Special offer',
-                    description: 'Get started with our premium features today',
-                    ctaText: 'Get Started',
-                    variant: 'featured',
-                    onCtaPressed: () {},
-                    backgroundContent: Container(
-                      color: context.appColors.brandSecondary.withValues(
-                        alpha: 0.2,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.star,
-                          color: colorExt.brandPrimary,
-                          size: 64,
+                    SizedBox(height: ResponsiveTokens.cardGap(width)),
+                    WideCard(
+                      title: 'Featured Promotion',
+                      subtitle: 'Special offer',
+                      description:
+                          'Get started with our premium features today',
+                      ctaText: 'Get Started',
+                      variant: 'featured',
+                      onCtaPressed: () {},
+                      backgroundContent: Container(
+                        color: context.appColors.brandSecondary.withValues(
+                          alpha: 0.2,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.star,
+                            color: colorExt.brandPrimary,
+                            size: 64,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width)),
             ],
           ),
         );
       },
-    );
-  }
-
-  /// Helper: Section Header
-  Widget _buildSectionHeader(String title, String description) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            color: context.appColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          description,
-          style: Theme.of(context).textTheme.labelSmall!.copyWith(
-            color: context.appColors.textSecondary,
-          ),
-        ),
-      ],
     );
   }
 
@@ -649,59 +591,26 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 2),
 
               // Customer Cards - Horizontal Scroll (Carousel Pattern)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Featured Customers',
-                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                      color: context.appColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Trusted by companies worldwide',
-                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      color: context.appColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: ResponsiveTokens.cardGap(width)),
-              // Featured Customers - 4열 프리셋 사용
-              AdaptiveCardGrid.fromPreset(
-                config: GridLayoutTokens.customerCards,
-                itemCount: customers.length,
-                itemBuilder: (context, index) =>
-                    CustomerCard(customer: customers[index]),
-                maxContentWidth: ResponsiveTokens.maxContentWidth,
-                scrollOnOverflow: true,
+              AppSection(
+                title: 'Featured Customers',
+                variant: SectionVariant.standard,
+                child: AdaptiveCardGrid.fromPreset(
+                  config: GridLayoutTokens.customerCards,
+                  itemCount: customers.length,
+                  itemBuilder: (context, index) =>
+                      CustomerCard(customer: customers[index]),
+                  maxContentWidth: ResponsiveTokens.maxContentWidth,
+                  scrollOnOverflow: true,
+                ),
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 2),
 
               // Logo Grid Section
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Partner Companies',
-                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                      color: context.appColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Our trusted technology partners',
-                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      color: context.appColors.textSecondary,
-                    ),
-                  ),
-                ],
+              AppSection(
+                title: 'Partner Companies',
+                variant: SectionVariant.standard,
+                child: CustomerLogoGrid(companies: logoCompanies),
               ),
-              SizedBox(height: ResponsiveTokens.cardGap(width)),
-              CustomerLogoGrid(companies: logoCompanies),
             ],
           ),
         );
@@ -728,7 +637,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: ResponsiveTokens.space12),
               Text(
                 '프리셋 선택으로 2~6열 레이아웃을 간편하게 테스트하세요',
                 style: Theme.of(
@@ -812,50 +721,96 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width)),
 
-              // Demo Grid
-              Text(
-                '데모: Vertical Cards 그리드',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  color: colorExt.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '선택한 프리셋으로 렌더링된 그리드 레이아웃',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall!.copyWith(color: colorExt.textSecondary),
-              ),
-              SizedBox(height: ResponsiveTokens.cardGap(width)),
-
-              // Grid Demo
-              AdaptiveCardGrid.fromPreset(
-                config: GridLayoutTokens.forCardType(
-                  CardVariant.vertical,
-                  _selectedPreset,
-                ),
-                itemCount: _selectedPreset.index + 3,
-                itemBuilder: (context, index) {
-                  return VerticalCard(
-                    title: '카드 ${index + 1}',
-                    subtitle: 'Demo Card',
-                    description: '프리셋으로 생성된 그리드 예제입니다',
-                    meta: '#${_selectedPreset.name}',
-                    image: Container(
-                      color: colorExt.surfaceTertiary,
-                      child: Center(
-                        child: Icon(
-                          Icons.image,
-                          color: colorExt.textTertiary,
-                          size: 48,
+              // Demo Grid - Vertical Cards
+              AppSection(
+                title: '1. Vertical Cards',
+                variant: SectionVariant.standard,
+                child: AdaptiveCardGrid.fromPreset(
+                  config: GridLayoutTokens.forCardType(
+                    CardVariant.vertical,
+                    _selectedPreset,
+                  ),
+                  itemCount: _selectedPreset.index + 3,
+                  itemBuilder: (context, index) {
+                    return VerticalCard(
+                      title: '카드 ${index + 1}',
+                      subtitle: 'Demo Card',
+                      description: '프리셋으로 생성된 그리드 예제입니다',
+                      meta: '#${_selectedPreset.name}',
+                      image: Container(
+                        color: colorExt.surfaceTertiary,
+                        child: Center(
+                          child: Icon(
+                            Icons.image,
+                            color: colorExt.textTertiary,
+                            size: 48,
+                          ),
                         ),
                       ),
-                    ),
-                    variant: 'standard',
-                  );
-                },
-                maxContentWidth: ResponsiveTokens.maxContentWidth,
+                      variant: 'standard',
+                    );
+                  },
+                  maxContentWidth: ResponsiveTokens.maxContentWidth,
+                ),
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
+
+              // Demo Grid - Horizontal Cards
+              AppSection(
+                title: '2. Horizontal Cards',
+                variant: SectionVariant.standard,
+                child: AdaptiveCardGrid.fromPreset(
+                  config: GridLayoutTokens.forCardType(
+                    CardVariant.horizontal,
+                    _selectedPreset,
+                  ),
+                  itemCount: _selectedPreset.index + 2,
+                  itemBuilder: (context, index) {
+                    return HorizontalCard(
+                      title: '카드 ${index + 1}',
+                      subtitle: 'Demo Card',
+                      description: '프리셋으로 생성된 가로 카드 예제입니다',
+                      meta: '#${_selectedPreset.name}',
+                      image: Container(
+                        color: colorExt.surfaceTertiary,
+                        child: Center(
+                          child: Icon(
+                            Icons.image,
+                            color: colorExt.textTertiary,
+                            size: 48,
+                          ),
+                        ),
+                      ),
+                      variant: 'standard',
+                    );
+                  },
+                  maxContentWidth: ResponsiveTokens.maxContentWidth,
+                ),
+              ),
+              SizedBox(height: ResponsiveTokens.pagePadding(width) * 1.5),
+
+              // Demo Grid - Compact Cards
+              AppSection(
+                title: '3. Compact Cards',
+                variant: SectionVariant.standard,
+                child: AdaptiveCardGrid.fromPreset(
+                  config: GridLayoutTokens.forCardType(
+                    CardVariant.compact,
+                    _selectedPreset,
+                  ),
+                  itemCount: _selectedPreset.index + 4,
+                  itemBuilder: (context, index) {
+                    return CompactCard(
+                      title: '항목 ${index + 1}',
+                      meta: 'Meta',
+                      icon: Icons.category,
+                      variant: 'standard',
+                      isSelected: false,
+                      onTap: () {},
+                    );
+                  },
+                  maxContentWidth: ResponsiveTokens.maxContentWidth,
+                ),
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width)),
             ],

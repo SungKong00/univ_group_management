@@ -3,13 +3,14 @@ import '../theme/extensions/app_color_extension.dart';
 import '../theme/extensions/app_typography_extension.dart';
 import '../theme/extensions/app_spacing_extension.dart';
 import '../theme/colors/button_colors.dart';
+import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
 import '../theme/animation_tokens.dart';
 import '../theme/component_size_tokens.dart';
 
 // Export enums for convenience
-export '../theme/colors/button_colors.dart'
+export '../theme/enums.dart'
     show AppButtonVariant, AppButtonSize;
 
 /// App 스타일 버튼 (기본 / 보조 / 유령 변형, 색상 + 높이 피드백)

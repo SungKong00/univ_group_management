@@ -75,6 +75,3 @@ class BreadcrumbColors {
     );
   }
 }
-
-/// Breadcrumb 스타일 열거형
-enum BreadcrumbStyle { default_, dark, compact }

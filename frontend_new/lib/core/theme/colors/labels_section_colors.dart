@@ -96,6 +96,3 @@ class LabelsSectionColors {
     );
   }
 }
-
-/// Labels Section 스타일 열거형
-enum LabelsSectionStyle { default_, dark, colorful }

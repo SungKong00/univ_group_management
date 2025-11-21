@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/enums.dart';
 
 /// Responsive Builder Widget
 ///

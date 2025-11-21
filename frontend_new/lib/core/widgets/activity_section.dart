@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/activity_item_colors.dart';
+import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
 import '../theme/component_size_tokens.dart';
 
 // Export activity type for convenience
-export '../theme/colors/activity_item_colors.dart' show ActivityType;
+export '../theme/enums.dart' show ActivityType;
 
 /// 활동 아이템 모델
 class ActivityItem {
@@ -107,14 +108,14 @@ class ActivitySection extends StatelessWidget {
                 // 활동 타입에 따른 색상
                 final activityColors = switch (activity.type) {
                   ActivityType.comment => ActivityItemColors.comment(colorExt),
-                  ActivityType.statusChange => ActivityItemColors.statusChange(
+                  ActivityType.statusChanged => ActivityItemColors.statusChange(
                     colorExt,
                   ),
-                  ActivityType.assigneeChange =>
+                  ActivityType.assigned =>
                     ActivityItemColors.assigneeChange(colorExt),
-                  ActivityType.priorityChange =>
+                  ActivityType.priorityChanged =>
                     ActivityItemColors.priorityChange(colorExt),
-                  ActivityType.system => ActivityItemColors.system(colorExt),
+                  _ => ActivityItemColors.comment(colorExt),
                 };
 
                 return Container(

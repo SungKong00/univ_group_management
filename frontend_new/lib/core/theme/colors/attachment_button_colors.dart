@@ -110,6 +110,3 @@ class AttachmentButtonColors {
     );
   }
 }
-
-/// Attachment Button 상태 열거형
-enum AttachmentState { default_, uploading, error, add, delete }
