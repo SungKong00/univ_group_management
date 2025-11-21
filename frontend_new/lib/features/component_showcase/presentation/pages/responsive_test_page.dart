@@ -33,19 +33,15 @@ class ResponsiveTestPage extends StatelessWidget {
                 // 헤더
                 _buildHeader(context, screenSize, width),
                 const SizedBox(height: 32.0), // sectionSpacingMedium
-
                 // 화면 크기 정보
                 _buildScreenSizeInfo(context, screenSize, width),
                 const SizedBox(height: 32.0), // sectionSpacingMedium
-
                 // 반응형 레이아웃 예시
                 _buildResponsiveLayoutExample(context, screenSize, width),
                 const SizedBox(height: 32.0), // sectionSpacingMedium
-
                 // 그리드 시스템 예시
                 _buildGridExample(context, screenSize, width),
                 const SizedBox(height: 32.0), // sectionSpacingMedium
-
                 // 버튼 크기 예시
                 _buildButtonExample(context, screenSize, width),
               ],

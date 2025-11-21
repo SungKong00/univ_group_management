@@ -44,10 +44,9 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
   // Phase 6: 에디터 변수
   late String _title;
   late String _description;
-  late String _comment;
 
   // Phase 7: 레이블 변수
-  List<LabelItem> _labels = [
+  final List<LabelItem> _labels = [
     const LabelItem(name: 'bug'),
     const LabelItem(name: 'high-priority'),
   ];
@@ -60,7 +59,6 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
     _assigneeState = AssigneeState.assigned;
     _title = 'Login page not responding';
     _description = 'The login form freezes after 3 seconds...';
-    _comment = '';
   }
 
   @override
@@ -400,7 +398,6 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
         CommentInput(
           onSubmit: (text) {
             debugPrint('Comment: $text');
-            setState(() => _comment = '');
           },
         ),
       ],
