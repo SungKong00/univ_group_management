@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/priority_button_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 // Export priority for convenience
 export '../theme/colors/priority_button_colors.dart' show IssuePriority;
@@ -133,9 +134,9 @@ class _PriorityButtonState extends State<PriorityButton> {
             Icon(
               _priorityIcon(_selectedPriority),
               color: priorityColors.icon,
-              size: 16,
+              size: ComponentSizeTokens.iconXSmall,
             ),
-            const SizedBox(width: 8.0),
+            SizedBox(width: ComponentSizeTokens.iconTextGap),
             Text(
               _priorityLabel(_selectedPriority),
               style:

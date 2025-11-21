@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/extensions/app_color_extension.dart';
-import '../theme/extensions/app_typography_extension.dart';
 import '../theme/responsive_tokens.dart';
 import 'app_button.dart';
 
@@ -43,7 +41,6 @@ class IssueNavigationButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorExt = context.appColors;
     final width = MediaQuery.sizeOf(context).width;
     final spacing = ResponsiveTokens.cardGap(width);
 

@@ -1,6 +1,6 @@
 /// Responsive Design Tokens
 ///
-/// Material Design 3 breakpoints와 Flutter best practices를 따르는 반응형 디자인 토큰
+/// Material Design 3 breakpoints(600/1024/1440px)와 Flutter best practices를 따르는 반응형 디자인 토큰의 정적 유틸리티 클래스
 ///
 /// 핵심 원칙:
 /// - MediaQuery.sizeOf() 사용 (성능 최적화)

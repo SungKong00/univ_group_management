@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/animation_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 /// Linear 스타일 Feature Card (대형 클릭 가능 카드)
 ///
@@ -67,14 +70,14 @@ class _AppFeatureCardState extends State<AppFeatureCard> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
+          duration: AnimationTokens.durationSmooth,
+          curve: AnimationTokens.curveDefault,
           width: widget.width,
           height: widget.height,
           padding: EdgeInsets.all(ResponsiveTokens.cardPadding(width)),
           decoration: BoxDecoration(
             color: colorExt.surfaceSecondary,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderTokens.xxlRadius(),
             boxShadow: shadow,
           ),
           child: Column(
@@ -84,25 +87,25 @@ class _AppFeatureCardState extends State<AppFeatureCard> {
               // 이미지 또는 아이콘
               if (widget.image != null)
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderTokens.largeRadius(),
                   child: widget.image!,
                 )
               else if (widget.icon != null)
                 Container(
-                  width: 64,
-                  height: 64,
+                  width: ComponentSizeTokens.boxXLarge,
+                  height: ComponentSizeTokens.boxXLarge,
                   decoration: BoxDecoration(
                     color: colorExt.surfaceTertiary,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderTokens.xlRadius(),
                   ),
                   child: Icon(
                     widget.icon,
-                    size: 32,
+                    size: ComponentSizeTokens.iconLarge,
                     color: colorExt.brandPrimary,
                   ),
                 ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: ComponentSizeTokens.iconXSmall),
 
               // 제목
               Text(

@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/pricing_card_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/component_size_tokens.dart';
 import 'app_button.dart';
+import '../../features/component_showcase/data/models/pricing_plan_model.dart';
+import '../../features/component_showcase/data/models/feature_model.dart';
 
-/// Pricing Plan Card - JSON 기반 가격 책정 카드
+/// Pricing Plan Card - 가격 책정 카드
 class PricingCard extends StatelessWidget {
-  final Map<String, dynamic> data;
+  final PricingPlan plan;
   final bool isHighlighted;
   final VoidCallback? onCtaPressed;
 
   const PricingCard({
     super.key,
-    required this.data,
+    required this.plan,
     this.isHighlighted = false,
     this.onCtaPressed,
   });
@@ -22,23 +26,9 @@ class PricingCard extends StatelessWidget {
     final colorExt = context.appColors;
     final textTheme = Theme.of(context).textTheme;
     final width = MediaQuery.sizeOf(context).width;
-    final tier = data['tier'] as String? ?? 'unknown';
-    final price = data['price'] as String? ?? 'N/A';
-    final priceFormat = data['priceFormat'] as String? ?? '';
-    final features =
-        (data['features'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    final ctas = _parseCtas();
-
-    // Styling 정보
-    final styling = data['styling'] as Map<String, dynamic>? ?? {};
-    final borderRadius =
-        double.tryParse(
-          styling['borderRadius']?.toString().replaceAll('px', '') ?? '16',
-        ) ??
-        16.0;
 
     // Tier에 따른 색상 팔레트 선택
-    final pricingColors = switch (tier) {
+    final pricingColors = switch (plan.tier) {
       'enterprise' => PricingCardColors.enterprise(colorExt),
       'premium' => PricingCardColors.premium(colorExt),
       _ => PricingCardColors.standard(colorExt),
@@ -54,19 +44,19 @@ class PricingCard extends StatelessWidget {
               : pricingColors.border,
           width: isHighlighted ? 2 : 1,
         ),
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: BorderTokens.xxlRadius(),
       ),
       padding: EdgeInsets.all(ResponsiveTokens.cardPadding(width)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Tier Badge (Enterprise만 표시)
-          if (tier == 'enterprise') ...[
+          if (plan.tier == 'enterprise') ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: pricingColors.tagBg,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderTokens.xlRadius(),
               ),
               child: Text(
                 'PREMIUM',
@@ -82,16 +72,16 @@ class PricingCard extends StatelessWidget {
 
           // Price
           Text(
-            price,
+            plan.price,
             style: textTheme.headlineLarge!.copyWith(
               color: pricingColors.price,
               fontWeight: FontWeight.bold,
             ),
           ),
-          if (priceFormat.isNotEmpty) ...[
+          if (plan.priceFormat.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              priceFormat,
+              plan.priceFormat,
               style: textTheme.bodySmall!.copyWith(
                 color: pricingColors.priceUnit,
               ),
@@ -101,17 +91,17 @@ class PricingCard extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Features
-          ...features.map(
+          ...plan.features.map(
             (feature) => _buildFeatureItem(pricingColors, textTheme, feature),
           ),
 
           const SizedBox(height: 24),
 
           // CTA Button(s)
-          ...ctas.asMap().entries.map((entry) {
+          ...plan.ctas.asMap().entries.map((entry) {
             final index = entry.key;
             final cta = entry.value;
-            final variant = (cta['variant'] as String?) == 'secondary'
+            final variant = cta.variant == 'secondary'
                 ? AppButtonVariant.secondary
                 : AppButtonVariant.primary;
 
@@ -120,7 +110,7 @@ class PricingCard extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: AppButton(
-                  text: cta['text'] as String? ?? 'Get started',
+                  text: cta.text,
                   variant: variant,
                   onPressed: onCtaPressed,
                 ),
@@ -136,11 +126,9 @@ class PricingCard extends StatelessWidget {
   Widget _buildFeatureItem(
     PricingCardColors pricingColors,
     TextTheme textTheme,
-    Map<String, dynamic> feature,
+    Feature feature,
   ) {
-    final text = feature['text'] as String? ?? '';
-    final enabled = feature['enabled'] as bool? ?? true;
-    final hasLink = feature['link'] != null;
+    final hasLink = feature.link != null;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -149,19 +137,19 @@ class PricingCard extends StatelessWidget {
         children: [
           // Checkmark Icon
           Container(
-            width: 20,
-            height: 20,
+            width: ComponentSizeTokens.iconSmall,
+            height: ComponentSizeTokens.iconSmall,
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              color: enabled
+              color: feature.enabled
                   ? pricingColors.featureIconEnabled.withValues(alpha: 0.15)
                   : Colors.transparent,
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.check,
-              size: 14,
-              color: enabled
+              size: ComponentSizeTokens.badgeMedium,
+              color: feature.enabled
                   ? pricingColors.featureIconEnabled
                   : pricingColors.featureIconDisabled,
             ),
@@ -170,7 +158,7 @@ class PricingCard extends StatelessWidget {
           // Text
           Expanded(
             child: Text(
-              text,
+              feature.text,
               style: textTheme.bodyMedium!.copyWith(
                 color: pricingColors.featureText,
                 decoration: hasLink ? TextDecoration.underline : null,
@@ -180,18 +168,5 @@ class PricingCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  /// CTA 파싱
-  List<Map<String, dynamic>> _parseCtas() {
-    final cta = data['cta'];
-    final ctas = data['ctas'];
-
-    if (ctas is List) {
-      return ctas.cast<Map<String, dynamic>>();
-    } else if (cta is Map) {
-      return [cta.cast<String, dynamic>()];
-    }
-    return [];
   }
 }

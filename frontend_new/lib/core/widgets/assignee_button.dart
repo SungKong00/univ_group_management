@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/assignee_button_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 // Export assignee state for convenience
 export '../theme/colors/assignee_button_colors.dart' show AssigneeState;
@@ -179,7 +181,10 @@ class _AssigneeButtonState extends State<AssigneeButton> {
       return Container(
         decoration: BoxDecoration(
           color: assigneeColors.background,
-          border: Border.all(color: assigneeColors.border, width: 1),
+          border: Border.all(
+            color: assigneeColors.border,
+            width: BorderTokens.widthThin,
+          ),
           borderRadius: BorderRadius.circular(borderRadius),
         ),
         padding: padding,
@@ -190,11 +195,11 @@ class _AssigneeButtonState extends State<AssigneeButton> {
             // 아바타
             if (_state == AssigneeState.assigned && _assignees.isNotEmpty)
               Container(
-                width: 24,
-                height: 24,
+                width: ComponentSizeTokens.avatarXSmall,
+                height: ComponentSizeTokens.avatarXSmall,
                 decoration: BoxDecoration(
                   color: _getAvatarColor(_assignees.first, colorExt),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderTokens.xlRadius(),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -211,8 +216,12 @@ class _AssigneeButtonState extends State<AssigneeButton> {
                 ),
               )
             else
-              Icon(_stateIcon(_state), color: assigneeColors.icon, size: 16),
-            const SizedBox(width: 8.0),
+              Icon(
+                _stateIcon(_state),
+                color: assigneeColors.icon,
+                size: ComponentSizeTokens.iconXSmall,
+              ),
+            SizedBox(width: ComponentSizeTokens.iconTextGap),
             Text(
               _stateLabel(_state, _assignees),
               style:
@@ -234,7 +243,10 @@ class _AssigneeButtonState extends State<AssigneeButton> {
       child: Container(
         decoration: BoxDecoration(
           color: assigneeColors.background,
-          border: Border.all(color: assigneeColors.border, width: 1),
+          border: Border.all(
+            color: assigneeColors.border,
+            width: BorderTokens.widthThin,
+          ),
           borderRadius: BorderRadius.circular(borderRadius),
         ),
         padding: padding,
@@ -245,12 +257,15 @@ class _AssigneeButtonState extends State<AssigneeButton> {
             // 아바타들
             if (_state == AssigneeState.assigned && _assignees.isNotEmpty)
               Container(
-                width: 24,
-                height: 24,
+                width: ComponentSizeTokens.avatarXSmall,
+                height: ComponentSizeTokens.avatarXSmall,
                 decoration: BoxDecoration(
                   color: _getAvatarColor(_assignees.first, colorExt),
-                  border: Border.all(color: assigneeColors.avatarBg, width: 2),
-                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: assigneeColors.avatarBg,
+                    width: BorderTokens.widthFocus,
+                  ),
+                  borderRadius: BorderTokens.xlRadius(),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -268,8 +283,8 @@ class _AssigneeButtonState extends State<AssigneeButton> {
               )
             else if (_state == AssigneeState.multiple && _assignees.isNotEmpty)
               SizedBox(
-                width: 40,
-                height: 24,
+                width: ComponentSizeTokens.boxSmall,
+                height: ComponentSizeTokens.avatarXSmall,
                 child: Stack(
                   children: [
                     for (
@@ -280,15 +295,15 @@ class _AssigneeButtonState extends State<AssigneeButton> {
                       Positioned(
                         left: i * 12.0,
                         child: Container(
-                          width: 24,
-                          height: 24,
+                          width: ComponentSizeTokens.avatarXSmall,
+                          height: ComponentSizeTokens.avatarXSmall,
                           decoration: BoxDecoration(
                             color: _getAvatarColor(_assignees[i], colorExt),
                             border: Border.all(
                               color: assigneeColors.avatarBg,
-                              width: 2,
+                              width: BorderTokens.widthFocus,
                             ),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderTokens.xlRadius(),
                           ),
                           alignment: Alignment.center,
                           child: Text(
@@ -313,8 +328,12 @@ class _AssigneeButtonState extends State<AssigneeButton> {
                 ),
               )
             else
-              Icon(_stateIcon(_state), color: assigneeColors.icon, size: 16),
-            const SizedBox(width: 8.0),
+              Icon(
+                _stateIcon(_state),
+                color: assigneeColors.icon,
+                size: ComponentSizeTokens.iconXSmall,
+              ),
+            SizedBox(width: ComponentSizeTokens.iconTextGap),
             Text(
               _stateLabel(_state, _assignees),
               style:
@@ -324,7 +343,11 @@ class _AssigneeButtonState extends State<AssigneeButton> {
                   TextStyle(color: assigneeColors.text),
             ),
             const SizedBox(width: 4.0),
-            Icon(Icons.arrow_drop_down, color: assigneeColors.icon, size: 16),
+            Icon(
+              Icons.arrow_drop_down,
+              color: assigneeColors.icon,
+              size: ComponentSizeTokens.iconXSmall,
+            ),
           ],
         ),
       ),

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// 반응형 디자인 토큰
 ///
-/// Breakpoint, 페이지 여백, 레이아웃 제약 등 반응형 디자인에 필요한 값들을 제공합니다.
-/// JSON의 responsive 섹션을 기반으로 구성되었습니다.
+/// Breakpoint(600/1024/1440px), 페이지 여백, 그리드 시스템, 컴포넌트 크기 등 반응형 디자인에 필요한 값들을 const로 정의합니다.
+/// 각 화면 크기에 맞는 유틸리티 메서드(pagePadding, gridColumns, buttonHeight 등)를 제공합니다.
 class AppResponsiveExtension extends ThemeExtension<AppResponsiveExtension> {
   // ============================================================
   // Breakpoints

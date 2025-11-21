@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// 역할 기반(semantic) 색상 토큰 시스템
 ///
-/// JSON의 102개 색상을 40개 semantic 토큰으로 재구성하여 관리합니다.
-/// 다크/라이트 테마 전환 시 이 Extension만 수정하면 모든 컴포넌트가 자동으로 업데이트됩니다.
+/// 40개 semantic 색상 토큰을 const로 정의하여 일관된 색상 시스템을 제공합니다.
+/// 다크 테마 기준으로 설계되었으며, 새로운 테마 추가 시 dark() 팩토리와 copyWith() 메서드만 수정하면 모든 컴포넌트가 자동으로 업데이트됩니다.
 class AppColorExtension extends ThemeExtension<AppColorExtension> {
   // ============================================================
   // Brand Colors (3개)
@@ -213,58 +213,58 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
     required this.dividerTertiary,
   });
 
-  /// Dark theme 기본 색상 (Linear.app 기준)
+  /// Dark theme 기본 색상 (Updated Brand Colors)
   factory AppColorExtension.dark() {
     return const AppColorExtension(
       // Brand
-      brandPrimary: Color(0xFFC48BFD), // #c48bfd
-      brandSecondary: Color(0xFF5C068C), // #5c068c (accent)
+      brandPrimary: Color(0xFF5C068C), // #5c068c (color-brand)
+      brandSecondary: Color(0xFF7A0BB8), // #7a0bb8 (color-accent)
       brandText: Color(0xFFFFFFFF), // #fff
       // Surface
-      surfacePrimary: Color(0xFF08090A), // #08090a (level_0)
-      surfaceSecondary: Color(0xFF0F1011), // #0f1011 (level_1)
-      surfaceTertiary: Color(0xFF141516), // #141516 (level_2)
-      surfaceQuaternary: Color(0xFF191A1B), // #191a1b (level_3)
-      surfaceHover: Color(0xFF141516), // #141516 (tint)
+      surfacePrimary: Color(0xFF0A0A0B), // #0a0a0b (bg-lvl-0)
+      surfaceSecondary: Color(0xFF141416), // #141416 (bg-lvl-1)
+      surfaceTertiary: Color(0xFF1E1E21), // #1e1e21 (bg-lvl-2)
+      surfaceQuaternary: Color(0xFF28282C), // #28282c (bg-lvl-3)
+      surfaceHover: Color(0xFF9010E0), // #9010e0 (color-hover)
       // Text
-      textPrimary: Color(0xFFF7F8F8), // #f7f8f8
-      textSecondary: Color(0xFFD0D6E0), // #d0d6e0
-      textTertiary: Color(0xFF8A8F98), // #8a8f98
-      textQuaternary: Color(0xFF62666D), // #62666d
+      textPrimary: Color(0xFFFFFFFF), // #ffffff (text-primary)
+      textSecondary: Color(0xFFA1A1AA), // #a1a1aa (text-secondary)
+      textTertiary: Color(0xFF71717A), // #71717a (text-tertiary)
+      textQuaternary: Color(0xFF52525B), // #52525b (text-quaternary)
       textOnBrand: Color(0xFFFFFFFF), // #fff
       // Border
-      borderPrimary: Color(0xFF23252A), // #23252a
-      borderSecondary: Color(0xFF34343A), // #34343a
-      borderTertiary: Color(0xFF3E3E44), // #3e3e44
-      borderFocus: Color(0xFFC48BFD), // #c48bfd (focus_ring)
+      borderPrimary: Color(0xFF52525B), // #52525b (text-quaternary)
+      borderSecondary: Color(0xFF28282C), // #28282c (bg-lvl-3)
+      borderTertiary: Color(0xFF1E1E21), // #1e1e21 (bg-lvl-2)
+      borderFocus: Color(0xFF9010E0), // #9010e0 (color-hover)
       // State
-      stateSuccessBg: Color(0xFF4CB782), // #4cb782 (green)
-      stateSuccessText: Color(0xFF4CB782), // #4cb782
-      stateWarningBg: Color(0xFFF2C94C), // #f2c94c (yellow)
-      stateWarningText: Color(0xFFFC7840), // #fc7840 (orange)
-      stateErrorBg: Color(0xFFEB5757), // #eb5757 (red)
-      stateErrorText: Color(0xFFEB5757), // #eb5757
-      stateInfoBg: Color(0xFF4EA7FC), // #4ea7fc (blue)
-      stateInfoText: Color(0xFF4EA7FC), // #4ea7fc
-      statePlanBg: Color(0xFF68CC58), // #68cc58 (plan)
-      stateBuildBg: Color(0xFFD4B144), // #d4b144 (build)
+      stateSuccessBg: Color(0xFF10B981), // #10b981 (color-success)
+      stateSuccessText: Color(0xFF10B981), // #10b981
+      stateWarningBg: Color(0xFFF59E0B), // #f59e0b (color-warning)
+      stateWarningText: Color(0xFFF97316), // #f97316 (color-orange)
+      stateErrorBg: Color(0xFFEF4444), // #ef4444 (color-error)
+      stateErrorText: Color(0xFFEF4444), // #ef4444
+      stateInfoBg: Color(0xFF3B82F6), // #3b82f6 (color-info)
+      stateInfoText: Color(0xFF3B82F6), // #3b82f6
+      statePlanBg: Color(0xFF10B981), // #10b981 (success)
+      stateBuildBg: Color(0xFFF59E0B), // #f59e0b (warning)
       // Overlay
       overlayScrim: Color(0xE6000000), // rgba(0,0,0,0.9)
       overlayLight: Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
       overlayMedium: Color(0x14FFFFFF), // rgba(255,255,255,0.08)
       // Interactive
-      linkDefault: Color(0xFF828FFF), // #828fff
-      linkHover: Color(0xFFFFFFFF), // #fff
-      selectionBg: Color(0xFF5C068C), // #5c068c (근사값)
-      accentHover: Color(0xFF828FFF), // #828fff (accent_hover)
+      linkDefault: Color(0xFF7A0BB8), // #7a0bb8 (color-accent)
+      linkHover: Color(0xFF9010E0), // #9010e0 (color-hover)
+      selectionBg: Color(0xFF5C068C), // #5c068c (color-brand)
+      accentHover: Color(0xFF9010E0), // #9010e0 (color-hover)
       // Scrollbar
       scrollbarDefault: Color(0x1AFFFFFF), // rgba(255,255,255,0.1)
       scrollbarHover: Color(0x33FFFFFF), // rgba(255,255,255,0.2)
       scrollbarActive: Color(0x66FFFFFF), // rgba(255,255,255,0.4)
       // Divider
-      dividerPrimary: Color(0xFF37393A), // #37393a (line.primary)
-      dividerSecondary: Color(0xFF202122), // #202122 (line.secondary)
-      dividerTertiary: Color(0xFF18191A), // #18191a (line.tertiary)
+      dividerPrimary: Color(0xFF1E1E21), // #1e1e21 (bg-lvl-2)
+      dividerSecondary: Color(0xFF141416), // #141416 (bg-lvl-1)
+      dividerTertiary: Color(0xFF0A0A0B), // #0a0a0b (bg-lvl-0)
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/tab_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/animation_tokens.dart';
 
 /// Linear 스타일 Content Tabs (Radio Button Group)
 ///
@@ -24,8 +25,8 @@ class AppTabs extends StatefulWidget {
     this.initialIndex = 0,
     this.onTabChanged,
     this.indicatorHeight = 2.0,
-    this.animationDuration = const Duration(milliseconds: 250),
-    this.animationCurve = Curves.easeInOut,
+    this.animationDuration = AnimationTokens.durationSmooth,
+    this.animationCurve = AnimationTokens.curveSlide,
   });
 
   @override
@@ -106,8 +107,9 @@ class _AppTabsState extends State<AppTabs> {
               duration: widget.animationDuration,
               curve: widget.animationCurve,
               builder: (context, Rect? rect, child) {
-                if (rect == null || rect == Rect.zero)
+                if (rect == null || rect == Rect.zero) {
                   return const SizedBox.shrink();
+                }
                 return Transform.translate(
                   offset: Offset(rect.left, 0),
                   child: Container(
@@ -170,7 +172,7 @@ class _TabButtonState extends State<_TabButton> {
             vertical: ResponsiveTokens.cardGap(width) * 0.75,
           ),
           child: AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 150),
+            duration: AnimationTokens.durationQuick,
             style: textTheme.bodyLarge!.copyWith(
               color: textColor,
               fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.normal,

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
-import '../theme/extensions/app_typography_extension.dart';
 import '../theme/colors/activity_item_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 // Export activity type for convenience
 export '../theme/colors/activity_item_colors.dart' show ActivityType;
@@ -69,7 +70,6 @@ class ActivitySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final typographyExt = context.appTypography;
     final width = MediaQuery.sizeOf(context).width;
 
     final itemSpacing = ResponsiveTokens.cardPadding(width);
@@ -102,7 +102,6 @@ class ActivitySection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: activities.asMap().entries.map((entry) {
-                final index = entry.key;
                 final activity = entry.value;
 
                 // 활동 타입에 따른 색상
@@ -118,8 +117,6 @@ class ActivitySection extends StatelessWidget {
                   ActivityType.system => ActivityItemColors.system(colorExt),
                 };
 
-                final isLast = index == activities.length - 1;
-
                 return Container(
                   margin: EdgeInsets.only(bottom: itemSpacing),
                   child: Row(
@@ -127,25 +124,25 @@ class ActivitySection extends StatelessWidget {
                     children: [
                       // 타임라인 원형 표시
                       Container(
-                        width: 32,
-                        height: 32,
+                        width: ComponentSizeTokens.avatarSmall,
+                        height: ComponentSizeTokens.avatarSmall,
                         decoration: BoxDecoration(
                           color: activityColors.iconBg,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: activityColors.timelineColor,
-                            width: 2,
+                            width: BorderTokens.widthFocus,
                           ),
                         ),
                         alignment: Alignment.center,
                         child: Icon(
                           activity.icon,
-                          size: 16,
+                          size: ComponentSizeTokens.iconXSmall,
                           color: activityColors.timelineColor,
                         ),
                       ),
 
-                      const SizedBox(width: 12.0),
+                      SizedBox(width: ComponentSizeTokens.avatarInfoGap),
 
                       // 활동 내용
                       Expanded(
@@ -234,7 +231,10 @@ class ActivitySection extends StatelessWidget {
         constraints: BoxConstraints(maxHeight: maxHeight!),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
-          border: Border.all(color: colorExt.borderSecondary, width: 1),
+          border: Border.all(
+            color: colorExt.borderSecondary,
+            width: BorderTokens.widthThin,
+          ),
         ),
         child: content,
       );

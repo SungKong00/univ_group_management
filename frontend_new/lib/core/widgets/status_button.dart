@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/status_button_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 // Export status for convenience
 export '../theme/colors/status_button_colors.dart' show IssueStatus;
@@ -119,8 +120,12 @@ class _StatusButtonState extends State<StatusButton> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle, color: statusColors.icon, size: 16),
-            const SizedBox(width: 8.0),
+            Icon(
+              Icons.check_circle,
+              color: statusColors.icon,
+              size: ComponentSizeTokens.iconXSmall,
+            ),
+            SizedBox(width: ComponentSizeTokens.iconTextGap),
             Text(
               _statusLabel(_selectedStatus),
               style:

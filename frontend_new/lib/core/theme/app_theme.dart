@@ -6,7 +6,7 @@ import 'extensions/app_responsive_extension.dart';
 
 /// Linear.app 스타일 Material 3 테마
 ///
-/// JSON 기반 시스템에서 Dart const 클래스 + ThemeExtension으로 마이그레이션되었습니다.
+/// 4개의 ThemeExtension(색상, 타이포그래피, 간격, 반응형)과 Material 3 표준을 결합하여 일관된 디자인 시스템을 제공합니다.
 ///
 /// 구조:
 /// - Material 3 ColorScheme: 기본 13개 색상

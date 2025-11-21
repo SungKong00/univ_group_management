@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
-import '../theme/extensions/app_typography_extension.dart';
 import '../theme/colors/labels_section_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 // Export style for convenience
 export '../theme/colors/labels_section_colors.dart' show LabelsSectionStyle;
@@ -84,7 +85,6 @@ class _LabelsSectionState extends State<LabelsSection> {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final typographyExt = context.appTypography;
     final width = MediaQuery.sizeOf(context).width;
 
     // ========================================================
@@ -106,7 +106,10 @@ class _LabelsSectionState extends State<LabelsSection> {
       decoration: BoxDecoration(
         color: labelsColors.sectionBg,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: labelsColors.labelBorder, width: 1),
+        border: Border.all(
+          color: labelsColors.labelBorder,
+          width: BorderTokens.widthThin,
+        ),
       ),
       padding: EdgeInsets.all(itemSpacing),
       child: Column(
@@ -137,7 +140,7 @@ class _LabelsSectionState extends State<LabelsSection> {
                     color: labelsColors.labelBg,
                     border: Border.all(
                       color: labelsColors.labelBorder,
-                      width: 1,
+                      width: BorderTokens.widthThin,
                     ),
                     borderRadius: BorderRadius.circular(borderRadius / 2),
                   ),
@@ -151,8 +154,8 @@ class _LabelsSectionState extends State<LabelsSection> {
                       // 레이블 색상 (옵션)
                       if (label.customColor != null)
                         Container(
-                          width: 8,
-                          height: 8,
+                          width: ComponentSizeTokens.badgeSmall,
+                          height: ComponentSizeTokens.badgeSmall,
                           decoration: BoxDecoration(
                             color: label.customColor,
                             shape: BoxShape.circle,
@@ -178,7 +181,7 @@ class _LabelsSectionState extends State<LabelsSection> {
                             onTap: label.onRemove,
                             child: Icon(
                               Icons.close,
-                              size: 14,
+                              size: ComponentSizeTokens.badgeMedium,
                               color: labelsColors.removeIcon,
                             ),
                           ),
@@ -195,7 +198,10 @@ class _LabelsSectionState extends State<LabelsSection> {
             Container(
               decoration: BoxDecoration(
                 color: labelsColors.addButtonBg,
-                border: Border.all(color: labelsColors.labelBorder, width: 1),
+                border: Border.all(
+                  color: labelsColors.labelBorder,
+                  width: BorderTokens.widthThin,
+                ),
                 borderRadius: BorderRadius.circular(borderRadius / 2),
               ),
               child: Material(
@@ -213,7 +219,7 @@ class _LabelsSectionState extends State<LabelsSection> {
                       children: [
                         Icon(
                           Icons.add,
-                          size: 14,
+                          size: ComponentSizeTokens.badgeMedium,
                           color: labelsColors.addButtonText,
                         ),
                         const SizedBox(width: 4.0),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
-import '../theme/extensions/app_typography_extension.dart';
 import '../theme/colors/editor_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
 
 /// 이슈 설명 편집 컴포넌트
 ///
@@ -96,7 +96,6 @@ class _IssueDescriptionEditorState extends State<IssueDescriptionEditor> {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final typographyExt = context.appTypography;
     final width = MediaQuery.sizeOf(context).width;
 
     // ========================================================
@@ -129,7 +128,10 @@ class _IssueDescriptionEditorState extends State<IssueDescriptionEditor> {
                 topRight: Radius.circular(borderRadius),
               ),
               border: Border(
-                bottom: BorderSide(color: editorColors.border, width: 1),
+                bottom: BorderSide(
+                  color: editorColors.border,
+                  width: BorderTokens.widthThin,
+                ),
               ),
             ),
             padding: EdgeInsets.symmetric(
@@ -228,7 +230,10 @@ class _IssueDescriptionEditorState extends State<IssueDescriptionEditor> {
                     ? Radius.zero
                     : Radius.circular(borderRadius),
               ),
-              borderSide: BorderSide(color: borderColor, width: 1),
+              borderSide: BorderSide(
+                color: borderColor,
+                width: BorderTokens.widthThin,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.only(
@@ -241,7 +246,10 @@ class _IssueDescriptionEditorState extends State<IssueDescriptionEditor> {
                     ? Radius.zero
                     : Radius.circular(borderRadius),
               ),
-              borderSide: BorderSide(color: editorColors.border, width: 1),
+              borderSide: BorderSide(
+                color: editorColors.border,
+                width: BorderTokens.widthThin,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.only(
@@ -254,7 +262,10 @@ class _IssueDescriptionEditorState extends State<IssueDescriptionEditor> {
                     ? Radius.zero
                     : Radius.circular(borderRadius),
               ),
-              borderSide: BorderSide(color: editorColors.borderFocus, width: 2),
+              borderSide: BorderSide(
+                color: editorColors.borderFocus,
+                width: BorderTokens.widthFocus,
+              ),
             ),
             contentPadding: padding,
             counterText: '',

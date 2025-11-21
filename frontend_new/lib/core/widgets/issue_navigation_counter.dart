@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
-import '../theme/extensions/app_typography_extension.dart';
 
 /// 이슈 네비게이션 카운터 컴포넌트 (5/12)
 ///
@@ -34,7 +33,6 @@ class IssueNavigationCounter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final typographyExt = context.appTypography;
 
     return Row(
       mainAxisSize: MainAxisSize.min,

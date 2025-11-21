@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/card_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/animation_tokens.dart';
 
 enum AppCardElevation { none, low }
 
@@ -48,15 +50,14 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(
-        milliseconds: 250,
-      ), // Linear speed_regular_transition
+      duration:
+          AnimationTokens.durationSmooth, // Linear speed_regular_transition
       vsync: this,
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.01).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Curves.easeOutCubic, // Linear ease_out_cubic
+        curve: AnimationTokens.curveDefault, // Linear ease_out_cubic
       ),
     );
   }
@@ -92,20 +93,20 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
   List<BoxShadow> _getBaseShadow() {
     return switch (widget.elevation) {
       AppCardElevation.none => const [
-          BoxShadow(
-            color: Colors.transparent,
-            blurRadius: 0,
-            offset: Offset(0, 0),
-          ),
-        ],
+        BoxShadow(
+          color: Colors.transparent,
+          blurRadius: 0,
+          offset: Offset(0, 0),
+        ),
+      ],
       AppCardElevation.low => [
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.05),
-            blurRadius: 4.0,
-            spreadRadius: 0.0,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        BoxShadow(
+          color: Colors.white.withValues(alpha: 0.05),
+          blurRadius: 4.0,
+          spreadRadius: 0.0,
+          offset: const Offset(0, 2),
+        ),
+      ],
     };
   }
 
@@ -113,22 +114,22 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
     // hover 시 약간 더 진한 shadow 사용
     return switch (widget.elevation) {
       AppCardElevation.none => [
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.05),
-            blurRadius: 4.0,
-            spreadRadius: 0.0,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        BoxShadow(
+          color: Colors.white.withValues(alpha: 0.05),
+          blurRadius: 4.0,
+          spreadRadius: 0.0,
+          offset: const Offset(0, 2),
+        ),
+      ],
       AppCardElevation.low => [
-          // medium shadow
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.08),
-            blurRadius: 24.0,
-            spreadRadius: 0.0,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        // medium shadow
+        BoxShadow(
+          color: Colors.white.withValues(alpha: 0.08),
+          blurRadius: 24.0,
+          spreadRadius: 0.0,
+          offset: const Offset(0, 4),
+        ),
+      ],
     };
   }
 
@@ -167,8 +168,8 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOutCubic,
+              duration: AnimationTokens.durationSmooth,
+              curve: AnimationTokens.curveDefault,
               padding: widget.padding ?? defaultPadding,
               decoration: BoxDecoration(
                 color: effectiveColor,
@@ -176,7 +177,7 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
                 border: widget.hasBorder
                     ? Border.all(
                         color: cardColors.border.withValues(alpha: opacity),
-                        width: 1,
+                        width: BorderTokens.widthThin,
                       )
                     : null,
                 boxShadow: _getShadow(_isHovered),

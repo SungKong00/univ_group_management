@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 /// Pricing Comparison Table - 40+ 행의 비교 테이블
 class PricingComparisonTable extends StatelessWidget {
@@ -21,7 +23,7 @@ class PricingComparisonTable extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorExt.surfacePrimary,
         border: Border.all(color: colorExt.borderPrimary),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderTokens.xlRadius(),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -112,10 +114,7 @@ class PricingComparisonTable extends StatelessWidget {
         ),
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 12.0,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: Text(
               sectionName,
               style: textTheme.bodySmall!.copyWith(
@@ -156,10 +155,7 @@ class PricingComparisonTable extends StatelessWidget {
       children: [
         // Feature name
         Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: 16.0,
-            vertical: 16.0,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
           child: Text(
             feature,
             style: textTheme.bodyMedium!.copyWith(color: colorExt.textPrimary),
@@ -180,7 +176,11 @@ class PricingComparisonTable extends StatelessWidget {
     // Checkmark for "✓"
     if (value == '✓') {
       return Center(
-        child: Icon(Icons.check, size: 20, color: colorExt.stateSuccessText),
+        child: Icon(
+          Icons.check,
+          size: ComponentSizeTokens.iconSmall,
+          color: colorExt.stateSuccessText,
+        ),
       );
     }
 
@@ -191,10 +191,7 @@ class PricingComparisonTable extends StatelessWidget {
 
     // Regular text
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: 12.0,
-        vertical: 16.0,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
       child: Text(
         value,
         textAlign: TextAlign.center,

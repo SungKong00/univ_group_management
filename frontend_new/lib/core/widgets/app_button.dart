@@ -4,6 +4,9 @@ import '../theme/extensions/app_typography_extension.dart';
 import '../theme/extensions/app_spacing_extension.dart';
 import '../theme/colors/button_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/animation_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 // Export enums for convenience
 export '../theme/colors/button_colors.dart'
@@ -45,17 +48,15 @@ class _AppButtonState extends State<AppButton>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 150),
+      duration: AnimationTokens.durationQuick,
       vsync: this,
     );
-    _elevationAnimation = Tween<double>(
-      begin: 0,
-      end: 8,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.98,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _elevationAnimation = Tween<double>(begin: 0, end: 8).animate(
+      CurvedAnimation(parent: _controller, curve: AnimationTokens.curveSmooth),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
+      CurvedAnimation(parent: _controller, curve: AnimationTokens.curveSmooth),
+    );
   }
 
   @override
@@ -130,7 +131,10 @@ class _AppButtonState extends State<AppButton>
         backgroundColor: buttonColors.background,
         alignment: Alignment.center,
         padding: padding,
-        side: BorderSide(color: buttonColors.border, width: 1),
+        side: BorderSide(
+          color: buttonColors.border,
+          width: BorderTokens.widthThin,
+        ),
         textStyle: baseTextStyle,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),
@@ -156,14 +160,17 @@ class _AppButtonState extends State<AppButton>
       children: [
         if (widget.isLoading)
           SizedBox.square(
-            dimension: 16,
+            dimension: ComponentSizeTokens.iconXSmall,
             child: CircularProgressIndicator(
               strokeWidth: 2,
               color: buttonColors.text,
             ),
           )
         else if (widget.icon != null)
-          SizedBox.square(dimension: 16, child: Icon(widget.icon, size: 16)),
+          SizedBox.square(
+            dimension: ComponentSizeTokens.iconXSmall,
+            child: Icon(widget.icon, size: ComponentSizeTokens.iconXSmall),
+          ),
         if (widget.isLoading || widget.icon != null)
           SizedBox(width: spacingExt.small),
         Text(widget.text, style: baseTextStyle),

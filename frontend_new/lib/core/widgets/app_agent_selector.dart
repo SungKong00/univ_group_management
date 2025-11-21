@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/animation_tokens.dart';
 
 /// Linear 스타일 AI Agent Selector
 ///
@@ -117,15 +119,15 @@ class _AgentItemState extends State<_AgentItem> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
+          duration: AnimationTokens.durationQuick,
+          curve: AnimationTokens.curveSmooth,
           padding: EdgeInsets.symmetric(
             horizontal: ResponsiveTokens.cardGap(width),
             vertical: ResponsiveTokens.cardGap(width) * 0.5,
           ),
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderTokens.mediumRadius(),
             border: Border.all(color: borderColor, width: 1),
           ),
           child: Row(
@@ -202,7 +204,7 @@ class _Badge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderTokens.smallRadius(),
       ),
       child: Text(
         label,

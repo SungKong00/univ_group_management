@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/customer_card_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../../features/component_showcase/data/models/customer_model.dart';
 
 /// Customer Card - 고객 사례 카드
 class CustomerCard extends StatelessWidget {
-  final Map<String, dynamic> data;
+  final Customer customer;
   final VoidCallback? onTap;
 
-  const CustomerCard({super.key, required this.data, this.onTap});
+  const CustomerCard({super.key, required this.customer, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -16,11 +18,6 @@ class CustomerCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final customerCardColors = CustomerCardColors.standard(colorExt);
     final width = MediaQuery.sizeOf(context).width;
-    final company = data['company'] as String? ?? '';
-    final title = data['title'] as String? ?? '';
-    final hasImage = data['hasImage'] as bool? ?? false;
-    final cta = data['cta'] as Map<String, dynamic>?;
-    final ctaText = cta?['text'] as String? ?? 'Read story';
 
     return GestureDetector(
       onTap: onTap,
@@ -28,22 +25,24 @@ class CustomerCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: customerCardColors.background,
           border: Border.all(color: customerCardColors.border),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderTokens.xxlRadius(),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image Placeholder
-            if (hasImage)
-              Container(
-                height: 180,
-                color: customerCardColors.logoBg,
-                child: Center(
-                  child: Icon(
-                    Icons.image_outlined,
-                    size: 48,
-                    color: colorExt.textQuaternary,
+            if (customer.hasImage)
+              AspectRatio(
+                aspectRatio: 16 / 10,
+                child: Container(
+                  color: customerCardColors.logoBg,
+                  child: Center(
+                    child: Icon(
+                      Icons.image_outlined,
+                      size: 48,
+                      color: colorExt.textQuaternary,
+                    ),
                   ),
                 ),
               ),
@@ -56,7 +55,7 @@ class CustomerCard extends StatelessWidget {
                 children: [
                   // Company Name
                   Text(
-                    company,
+                    customer.company,
                     style: textTheme.bodySmall!.copyWith(
                       color: customerCardColors.meta,
                       fontWeight: FontWeight.w600,
@@ -67,7 +66,7 @@ class CustomerCard extends StatelessWidget {
 
                   // Title
                   Text(
-                    title,
+                    customer.title,
                     style: textTheme.headlineSmall!.copyWith(
                       color: customerCardColors.companyName,
                       fontWeight: FontWeight.w600,
@@ -81,7 +80,7 @@ class CustomerCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        ctaText,
+                        customer.ctaText,
                         style: textTheme.bodyMedium!.copyWith(
                           color: colorExt.brandPrimary,
                           fontWeight: FontWeight.w600,

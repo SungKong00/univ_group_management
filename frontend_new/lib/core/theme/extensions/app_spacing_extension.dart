@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// 디자인 시스템 간격(Spacing) 토큰
 ///
-/// 4dp 그리드 시스템을 기반으로 한 일관된 간격 체계를 제공합니다.
-/// JSON의 responsive.spacing.scales를 기반으로 구성되었습니다.
+/// 4dp 그리드 시스템을 기반으로 한 일관된 간격 체계를 const로 정의합니다.
+/// xs(4px)부터 gargantuan(128px)까지 10개 계층의 간격과 특수 용도 간격을 제공합니다.
 class AppSpacingExtension extends ThemeExtension<AppSpacingExtension> {
   /// 4px - 최소 간격
   final double xs;
@@ -138,25 +138,21 @@ class AppSpacingExtension extends ThemeExtension<AppSpacingExtension> {
     if (other is! AppSpacingExtension) return this;
 
     return AppSpacingExtension(
-      xs: lerpDouble(xs, other.xs, t)!,
-      small: lerpDouble(small, other.small, t)!,
-      medium: lerpDouble(medium, other.medium, t)!,
-      large: lerpDouble(large, other.large, t)!,
-      xl: lerpDouble(xl, other.xl, t)!,
-      xxl: lerpDouble(xxl, other.xxl, t)!,
-      xxxl: lerpDouble(xxxl, other.xxxl, t)!,
-      huge: lerpDouble(huge, other.huge, t)!,
-      massive: lerpDouble(massive, other.massive, t)!,
-      gargantuan: lerpDouble(gargantuan, other.gargantuan, t)!,
-      formLabelGap: lerpDouble(formLabelGap, other.formLabelGap, t)!,
-      formHelperGap: lerpDouble(formHelperGap, other.formHelperGap, t)!,
-      componentIconGap: lerpDouble(
-        componentIconGap,
-        other.componentIconGap,
-        t,
-      )!,
-      scrollbarGap: lerpDouble(scrollbarGap, other.scrollbarGap, t)!,
-      minTapSize: lerpDouble(minTapSize, other.minTapSize, t)!,
+      xs: lerpDouble(xs, other.xs, t),
+      small: lerpDouble(small, other.small, t),
+      medium: lerpDouble(medium, other.medium, t),
+      large: lerpDouble(large, other.large, t),
+      xl: lerpDouble(xl, other.xl, t),
+      xxl: lerpDouble(xxl, other.xxl, t),
+      xxxl: lerpDouble(xxxl, other.xxxl, t),
+      huge: lerpDouble(huge, other.huge, t),
+      massive: lerpDouble(massive, other.massive, t),
+      gargantuan: lerpDouble(gargantuan, other.gargantuan, t),
+      formLabelGap: lerpDouble(formLabelGap, other.formLabelGap, t),
+      formHelperGap: lerpDouble(formHelperGap, other.formHelperGap, t),
+      componentIconGap: lerpDouble(componentIconGap, other.componentIconGap, t),
+      scrollbarGap: lerpDouble(scrollbarGap, other.scrollbarGap, t),
+      minTapSize: lerpDouble(minTapSize, other.minTapSize, t),
     );
   }
 

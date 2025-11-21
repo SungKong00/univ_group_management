@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
-import '../theme/extensions/app_typography_extension.dart';
 import '../theme/colors/editor_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 /// 댓글 입력 컴포넌트
 ///
@@ -81,7 +82,6 @@ class _CommentInputState extends State<CommentInput> {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final typographyExt = context.appTypography;
     final width = MediaQuery.sizeOf(context).width;
 
     // ========================================================
@@ -110,7 +110,7 @@ class _CommentInputState extends State<CommentInput> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: borderColor, width: 1),
+        border: Border.all(color: borderColor, width: BorderTokens.widthThin),
         color: editorColors.background,
       ),
       padding: padding,
@@ -171,7 +171,7 @@ class _CommentInputState extends State<CommentInput> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: _handleSubmit,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderTokens.smallRadius(),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

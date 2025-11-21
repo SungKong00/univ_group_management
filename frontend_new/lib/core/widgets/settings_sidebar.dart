@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
-import '../theme/extensions/app_typography_extension.dart';
 import '../theme/colors/sidebar_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 // Export sidebar style for convenience
 export '../theme/colors/sidebar_colors.dart' show SidebarStyle;
@@ -68,7 +69,6 @@ class SettingsSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final typographyExt = context.appTypography;
     final width = MediaQuery.sizeOf(context).width;
 
     // ========================================================
@@ -131,10 +131,10 @@ class SettingsSidebar extends StatelessWidget {
                             Icon(
                               setting.icon,
                               color: sidebarColors.icon,
-                              size: 18,
+                              size: ComponentSizeTokens.iconSmall,
                             ),
 
-                            const SizedBox(width: 12.0),
+                            SizedBox(width: ComponentSizeTokens.avatarInfoGap),
 
                             // 텍스트 정보
                             Expanded(
@@ -190,7 +190,7 @@ class SettingsSidebar extends StatelessWidget {
                   ),
               ],
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -206,7 +206,10 @@ class SettingsSidebar extends StatelessWidget {
       decoration: BoxDecoration(
         color: sidebarColors.background,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: sidebarColors.divider, width: 1),
+        border: Border.all(
+          color: sidebarColors.divider,
+          width: BorderTokens.widthThin,
+        ),
       ),
       child: content,
     );

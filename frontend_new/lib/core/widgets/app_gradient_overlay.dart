@@ -39,61 +39,61 @@ class AppGradientOverlay extends StatelessWidget {
     // Hardcoded gradients (from GradientTokens)
     return switch (type) {
       GradientType.subtleTopFade => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
-            Color(0x00FFFFFF), // rgba(255,255,255,0)
-          ],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
+          Color(0x00FFFFFF), // rgba(255,255,255,0)
+        ],
+      ),
       GradientType.lightTopFade => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0x14FFFFFF), // rgba(255,255,255,0.08)
-            Color(0x00FFFFFF), // rgba(255,255,255,0)
-          ],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0x14FFFFFF), // rgba(255,255,255,0.08)
+          Color(0x00FFFFFF), // rgba(255,255,255,0)
+        ],
+      ),
       GradientType.extraLightTopFade => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0x08FFFFFF), // rgba(255,255,255,0.03)
-            Color(0x00FFFFFF), // rgba(255,255,255,0)
-          ],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0x08FFFFFF), // rgba(255,255,255,0.03)
+          Color(0x00FFFFFF), // rgba(255,255,255,0)
+        ],
+      ),
       GradientType.subtleBottomFade => const LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [
-            Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
-            Color(0x00FFFFFF), // rgba(255,255,255,0)
-          ],
-        ),
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [
+          Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
+          Color(0x00FFFFFF), // rgba(255,255,255,0)
+        ],
+      ),
       GradientType.subtleLeftFade => const LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
-            Color(0x00FFFFFF), // rgba(255,255,255,0)
-          ],
-        ),
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
+          Color(0x00FFFFFF), // rgba(255,255,255,0)
+        ],
+      ),
       GradientType.subtleRightFade => const LinearGradient(
-          begin: Alignment.centerRight,
-          end: Alignment.centerLeft,
-          colors: [
-            Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
-            Color(0x00FFFFFF), // rgba(255,255,255,0)
-          ],
-        ),
+        begin: Alignment.centerRight,
+        end: Alignment.centerLeft,
+        colors: [
+          Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
+          Color(0x00FFFFFF), // rgba(255,255,255,0)
+        ],
+      ),
       GradientType.radialFade => const RadialGradient(
-          center: Alignment.center,
-          radius: 1.0,
-          colors: [
-            Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
-            Color(0x00FFFFFF), // rgba(255,255,255,0)
-          ],
-        ),
+        center: Alignment.center,
+        radius: 1.0,
+        colors: [
+          Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
+          Color(0x00FFFFFF), // rgba(255,255,255,0)
+        ],
+      ),
     };
   }
 }

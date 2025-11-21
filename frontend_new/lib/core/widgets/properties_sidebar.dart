@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
-import '../theme/extensions/app_typography_extension.dart';
 import '../theme/colors/sidebar_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 // Export sidebar style for convenience
 export '../theme/colors/sidebar_colors.dart' show SidebarStyle;
@@ -60,7 +61,6 @@ class PropertiesSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final typographyExt = context.appTypography;
     final width = MediaQuery.sizeOf(context).width;
 
     // ========================================================
@@ -85,7 +85,10 @@ class PropertiesSidebar extends StatelessWidget {
         borderRadius: BorderRadius.circular(
           ResponsiveTokens.componentBorderRadius(width),
         ),
-        border: Border.all(color: sidebarColors.divider, width: 1),
+        border: Border.all(
+          color: sidebarColors.divider,
+          width: BorderTokens.widthThin,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -136,7 +139,7 @@ class PropertiesSidebar extends StatelessWidget {
                                 if (property.icon != null) ...[
                                   Icon(
                                     property.icon,
-                                    size: 14,
+                                    size: ComponentSizeTokens.badgeMedium,
                                     color: sidebarColors.icon,
                                   ),
                                   const SizedBox(width: 6.0),
@@ -165,18 +168,18 @@ class PropertiesSidebar extends StatelessWidget {
                         Container(
                           decoration: BoxDecoration(
                             color: sidebarColors.editButtonBg,
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderTokens.smallRadius(),
                           ),
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
                               onTap: property.onEdit,
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderTokens.smallRadius(),
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
                                 child: Icon(
                                   Icons.edit,
-                                  size: 16,
+                                  size: ComponentSizeTokens.iconXSmall,
                                   color: sidebarColors.editButtonText,
                                 ),
                               ),
@@ -195,7 +198,7 @@ class PropertiesSidebar extends StatelessWidget {
                   ),
               ],
             );
-          }).toList(),
+          }),
         ],
       ),
     );

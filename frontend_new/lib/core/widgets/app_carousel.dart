@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/carousel_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/animation_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 /// Linear 스타일 수평 스크롤 Carousel
 ///
@@ -71,8 +74,8 @@ class _AppCarouselState extends State<AppCarousel> {
 
     _scrollController.animateTo(
       targetPosition,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOutCubic,
+      duration: AnimationTokens.durationSmooth,
+      curve: AnimationTokens.curveDefault,
     );
   }
 
@@ -85,8 +88,8 @@ class _AppCarouselState extends State<AppCarousel> {
 
     _scrollController.animateTo(
       targetPosition,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOutCubic,
+      duration: AnimationTokens.durationSmooth,
+      curve: AnimationTokens.curveDefault,
     );
   }
 
@@ -169,24 +172,24 @@ class _NavButtonState extends State<_NavButton> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 150),
+        duration: AnimationTokens.durationQuick,
         opacity: opacity,
         child: Material(
           color: carouselColors.navButtonBackground,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderTokens.roundRadius(),
           child: InkWell(
             onTap: widget.onPressed,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderTokens.roundRadius(),
             child: Container(
-              width: 40,
-              height: 40,
+              width: ComponentSizeTokens.boxSmall,
+              height: ComponentSizeTokens.boxSmall,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderTokens.roundRadius(),
                 border: Border.all(color: colorExt.borderPrimary, width: 1),
               ),
               child: Icon(
                 widget.icon,
-                size: 20,
+                size: ComponentSizeTokens.iconSmall,
                 color: carouselColors.navButtonIcon,
               ),
             ),

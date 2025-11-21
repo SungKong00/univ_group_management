@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
-import '../theme/extensions/app_typography_extension.dart';
 import '../theme/colors/editor_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/component_size_tokens.dart';
 
 // Export editor style for convenience
 export '../theme/colors/editor_colors.dart' show EditorType;
@@ -72,7 +73,6 @@ class _IssueTitleEditorState extends State<IssueTitleEditor> {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final typographyExt = context.appTypography;
     final width = MediaQuery.sizeOf(context).width;
 
     // ========================================================
@@ -119,15 +119,24 @@ class _IssueTitleEditorState extends State<IssueTitleEditor> {
         fillColor: editorColors.background,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
-          borderSide: BorderSide(color: borderColor, width: 1),
+          borderSide: BorderSide(
+            color: borderColor,
+            width: BorderTokens.widthThin,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
-          borderSide: BorderSide(color: editorColors.border, width: 1),
+          borderSide: BorderSide(
+            color: editorColors.border,
+            width: BorderTokens.widthThin,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
-          borderSide: BorderSide(color: editorColors.borderFocus, width: 2),
+          borderSide: BorderSide(
+            color: editorColors.borderFocus,
+            width: BorderTokens.widthFocus,
+          ),
         ),
         contentPadding: padding,
         counterText: '',
@@ -138,7 +147,7 @@ class _IssueTitleEditorState extends State<IssueTitleEditor> {
                 child: Icon(
                   Icons.check_circle,
                   color: editorColors.text,
-                  size: 20,
+                  size: ComponentSizeTokens.iconSmall,
                 ),
               )
             : null,

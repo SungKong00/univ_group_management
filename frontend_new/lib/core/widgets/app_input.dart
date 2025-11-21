@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/colors/input_colors.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
 
 /// App 스타일 입력 필드
 ///
@@ -153,26 +154,38 @@ class AppInput extends StatelessWidget {
                 : inputColors.backgroundDisabled,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(borderRadius),
-              borderSide: BorderSide(color: inputColors.border, width: 1),
+              borderSide: BorderSide(
+                color: inputColors.border,
+                width: BorderTokens.widthThin,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(borderRadius),
-              borderSide: BorderSide(color: inputColors.border, width: 1),
+              borderSide: BorderSide(
+                color: inputColors.border,
+                width: BorderTokens.widthThin,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(borderRadius),
               borderSide: BorderSide(
                 color: inputColors.borderFocused,
-                width: 2,
+                width: BorderTokens.widthFocus,
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(borderRadius),
-              borderSide: BorderSide(color: inputColors.borderError, width: 1),
+              borderSide: BorderSide(
+                color: inputColors.borderError,
+                width: BorderTokens.widthThin,
+              ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(borderRadius),
-              borderSide: BorderSide(color: inputColors.borderError, width: 2),
+              borderSide: BorderSide(
+                color: inputColors.borderError,
+                width: BorderTokens.widthFocus,
+              ),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(borderRadius),
@@ -180,7 +193,7 @@ class AppInput extends StatelessWidget {
                 color: inputColors.border.withValues(
                   alpha: disabledOpacityValue,
                 ),
-                width: 1,
+                width: BorderTokens.widthThin,
               ),
             ),
             contentPadding: contentPadding,

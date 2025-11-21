@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
-import '../theme/extensions/app_typography_extension.dart';
 import '../theme/colors/breadcrumb_colors.dart';
 import '../theme/responsive_tokens.dart';
 
@@ -49,8 +48,6 @@ class _PageBreadcrumbState extends State<PageBreadcrumb> {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final typographyExt = context.appTypography;
-    final width = MediaQuery.sizeOf(context).width;
 
     // ========================================================
     // Step 1: 스타일에 따른 색상 결정

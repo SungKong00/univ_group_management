@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/responsive_tokens.dart';
+import '../theme/border_tokens.dart';
+import '../theme/component_size_tokens.dart';
+import '../../features/component_showcase/data/models/customer_company_model.dart';
 
 /// Customer Logo Grid - 필터링 가능한 로고 그리드
 class CustomerLogoGrid extends StatelessWidget {
-  final List<Map<String, dynamic>> companies;
+  final List<CustomerCompany> companies;
   final String? selectedFilter;
-  final Function(Map<String, dynamic>)? onCompanyTap;
+  final Function(CustomerCompany)? onCompanyTap;
 
   const CustomerLogoGrid({
     super.key,
@@ -34,7 +37,7 @@ class CustomerLogoGrid extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: gap,
             mainAxisSpacing: gap,
-            childAspectRatio: 1.2,
+            childAspectRatio: 1.1,
           ),
           itemCount: filteredCompanies.length,
           itemBuilder: (context, index) {
@@ -46,14 +49,13 @@ class CustomerLogoGrid extends StatelessWidget {
   }
 
   /// Filter companies by selected category
-  List<Map<String, dynamic>> _filterCompanies() {
+  List<CustomerCompany> _filterCompanies() {
     if (selectedFilter == null || selectedFilter == 'featured') {
       return companies;
     }
 
     return companies.where((company) {
-      final categories = (company['categories'] as List?)?.cast<String>() ?? [];
-      return categories.any(
+      return company.categories.any(
         (cat) => cat.toLowerCase() == selectedFilter!.toLowerCase(),
       );
     }).toList();
@@ -67,13 +69,7 @@ class CustomerLogoGrid extends StatelessWidget {
   }
 
   /// Company Card
-  Widget _buildCompanyCard(Map<String, dynamic> company) {
-    final name = company['name'] as String? ?? '';
-    final categories = (company['categories'] as List?)?.cast<String>() ?? [];
-    final cta = company['cta'] as Map<String, dynamic>?;
-    final ctaText = cta?['text'] as String? ?? 'Visit site';
-    final isExternal = cta?['external'] as bool? ?? false;
-
+  Widget _buildCompanyCard(CustomerCompany company) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final colorExt = context.appColors;
@@ -86,7 +82,7 @@ class CustomerLogoGrid extends StatelessWidget {
             decoration: BoxDecoration(
               color: colorExt.surfaceSecondary,
               border: Border.all(color: colorExt.borderPrimary),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderTokens.xlRadius(),
             ),
             padding: EdgeInsets.all(ResponsiveTokens.cardPadding(width)),
             child: Column(
@@ -95,16 +91,16 @@ class CustomerLogoGrid extends StatelessWidget {
               children: [
                 // Logo Placeholder
                 Container(
-                  width: 48.0,
-                  height: 48.0,
+                  width: ComponentSizeTokens.avatarLarge,
+                  height: ComponentSizeTokens.avatarLarge,
                   decoration: BoxDecoration(
                     color: colorExt.surfaceTertiary,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderTokens.largeRadius(),
                   ),
                   child: Center(
                     child: Text(
-                      name.isNotEmpty
-                          ? name.substring(0, 1).toUpperCase()
+                      company.name.isNotEmpty
+                          ? company.name.substring(0, 1).toUpperCase()
                           : '?',
                       style: textTheme.headlineMedium!.copyWith(
                         color: colorExt.textPrimary,
@@ -116,7 +112,7 @@ class CustomerLogoGrid extends StatelessWidget {
 
                 // Company Name
                 Text(
-                  name,
+                  company.name,
                   style: textTheme.bodyMedium!.copyWith(
                     color: colorExt.textPrimary,
                     fontWeight: FontWeight.w600,
@@ -126,11 +122,11 @@ class CustomerLogoGrid extends StatelessWidget {
                 ),
 
                 // Categories
-                if (categories.isNotEmpty)
+                if (company.categories.isNotEmpty)
                   Wrap(
                     spacing: 4,
                     runSpacing: 4,
-                    children: categories.take(2).map((cat) {
+                    children: company.categories.take(2).map((cat) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -138,7 +134,7 @@ class CustomerLogoGrid extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: colorExt.surfaceTertiary,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderTokens.smallRadius(),
                         ),
                         child: Text(
                           cat,
@@ -154,15 +150,17 @@ class CustomerLogoGrid extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      ctaText,
+                      company.ctaText,
                       style: textTheme.bodySmall!.copyWith(
                         color: colorExt.brandPrimary,
                       ),
                     ),
                     const SizedBox(width: 4.0),
                     Icon(
-                      isExternal ? Icons.open_in_new : Icons.arrow_forward,
-                      size: 14,
+                      company.isExternal
+                          ? Icons.open_in_new
+                          : Icons.arrow_forward,
+                      size: ComponentSizeTokens.badgeMedium,
                       color: colorExt.brandPrimary,
                     ),
                   ],

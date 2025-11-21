@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
+import '../theme/animation_tokens.dart';
+import '../../features/component_showcase/data/models/billing_cycle_model.dart';
 
 /// Billing Toggle - 월간/연간 청구 토글
 class BillingToggle extends StatelessWidget {
-  final Map<String, dynamic> data;
+  final BillingCycle cycle;
   final bool isYearly;
   final ValueChanged<bool> onChanged;
 
   const BillingToggle({
     super.key,
-    required this.data,
+    required this.cycle,
     required this.isYearly,
     required this.onChanged,
   });
@@ -18,20 +20,6 @@ class BillingToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
     final textTheme = Theme.of(context).textTheme;
-    final options =
-        (data['options'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    final monthlyLabel =
-        options.firstWhere(
-              (opt) => opt['value'] == 'monthly',
-              orElse: () => {'label': 'Billed monthly'},
-            )['label']
-            as String;
-    final yearlyLabel =
-        options.firstWhere(
-              (opt) => opt['value'] == 'yearly',
-              orElse: () => {'label': 'Billed yearly'},
-            )['label']
-            as String;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -40,12 +28,12 @@ class BillingToggle extends StatelessWidget {
         GestureDetector(
           onTap: () => onChanged(false),
           child: AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
+            duration: AnimationTokens.durationStandard,
             style: textTheme.bodyMedium!.copyWith(
               color: isYearly ? colorExt.textTertiary : colorExt.textPrimary,
               fontWeight: isYearly ? FontWeight.normal : FontWeight.w600,
             ),
-            child: Text(monthlyLabel),
+            child: Text(cycle.monthlyLabel),
           ),
         ),
 
@@ -65,8 +53,8 @@ class BillingToggle extends StatelessWidget {
             ),
             padding: const EdgeInsets.all(3),
             child: AnimatedAlign(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
+              duration: AnimationTokens.durationStandard,
+              curve: AnimationTokens.curveSmooth,
               alignment: isYearly
                   ? Alignment.centerRight
                   : Alignment.centerLeft,
@@ -95,12 +83,12 @@ class BillingToggle extends StatelessWidget {
         GestureDetector(
           onTap: () => onChanged(true),
           child: AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
+            duration: AnimationTokens.durationStandard,
             style: textTheme.bodyMedium!.copyWith(
               color: isYearly ? colorExt.textPrimary : colorExt.textTertiary,
               fontWeight: isYearly ? FontWeight.w600 : FontWeight.normal,
             ),
-            child: Text(yearlyLabel),
+            child: Text(cycle.yearlyLabel),
           ),
         ),
       ],
