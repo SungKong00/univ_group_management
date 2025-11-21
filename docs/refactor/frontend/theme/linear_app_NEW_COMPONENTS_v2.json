@@ -1,0 +1,1179 @@
+{
+  "metadata": {
+    "version": "v2",
+    "source": "https://linear.app",
+    "pages_analyzed": ["pricing", "customers"],
+    "extraction_method": "Playwright + Browser CSS Analysis",
+    "new_components_v2": true,
+    "date": "2025-11-21",
+    "description": "Pricing과 Customers 페이지에서 새로 발견된 컴포넌트들 (V2)"
+  },
+  "pricing_page_components": {
+    "pricing_plan_cards": {
+      "description": "가격 책정 플랜 카드 - 4가지 플랜",
+      "count": 4,
+      "components": [
+        {
+          "id": "pricing_plan_free",
+          "name": "Free Plan Card",
+          "type": "Pricing Card",
+          "tier": "free",
+          "price": "$0",
+          "priceLabel": "Free for everyone",
+          "features": [
+            {
+              "text": "Unlimited members",
+              "icon": true,
+              "enabled": true
+            },
+            {
+              "text": "2 teams",
+              "icon": true,
+              "enabled": true
+            },
+            {
+              "text": "250 issues",
+              "icon": true,
+              "enabled": true
+            },
+            {
+              "text": "Slack and GitHub",
+              "icon": true,
+              "links": ["Slack", "GitHub"],
+              "enabled": true
+            },
+            {
+              "text": "AI agents",
+              "icon": true,
+              "link": "/agents",
+              "enabled": true
+            }
+          ],
+          "cta": {
+            "text": "Get started",
+            "url": "/settings/plans",
+            "variant": "primary"
+          },
+          "styling": {
+            "background": "transparent",
+            "border": "subtle",
+            "borderRadius": "16px",
+            "padding": "24px",
+            "highlighted": false
+          }
+        },
+        {
+          "id": "pricing_plan_basic",
+          "name": "Basic Plan Card",
+          "type": "Pricing Card",
+          "tier": "basic",
+          "price": "$10",
+          "priceFormat": "per user/month",
+          "billingToggle": {
+            "enabled": true,
+            "label": "Billed yearly",
+            "options": ["Billed monthly", "Billed yearly"]
+          },
+          "features": [
+            {
+              "text": "All Free features +",
+              "icon": true
+            },
+            {
+              "text": "5 teams",
+              "icon": true
+            },
+            {
+              "text": "Unlimited issues",
+              "icon": true
+            },
+            {
+              "text": "Unlimited file uploads",
+              "icon": true
+            },
+            {
+              "text": "Admin roles",
+              "icon": true
+            }
+          ],
+          "cta": {
+            "text": "Get started",
+            "url": "/settings/plans"
+          },
+          "styling": {
+            "background": "rgb(15, 16, 17)",
+            "border": "1px solid",
+            "borderRadius": "16px",
+            "padding": "24px",
+            "highlighted": false
+          }
+        },
+        {
+          "id": "pricing_plan_business",
+          "name": "Business Plan Card",
+          "type": "Pricing Card",
+          "tier": "business",
+          "price": "$16",
+          "priceFormat": "per user/month",
+          "billingToggle": {
+            "enabled": true,
+            "label": "Billed yearly"
+          },
+          "features": [
+            {
+              "text": "All Basic features +",
+              "icon": true
+            },
+            {
+              "text": "Unlimited teams",
+              "icon": true
+            },
+            {
+              "text": "Private teams and guests",
+              "icon": true
+            },
+            {
+              "text": "Triage Intelligence",
+              "icon": true,
+              "link": "/ai"
+            },
+            {
+              "text": "Linear Insights",
+              "icon": true,
+              "link": "/insights"
+            },
+            {
+              "text": "Linear Asks",
+              "icon": true,
+              "link": "/asks"
+            },
+            {
+              "text": "Issue SLAs",
+              "icon": true,
+              "tooltip": "Set time-based deadlines with service level agreements."
+            }
+          ],
+          "ctas": [
+            {
+              "text": "Get started",
+              "url": "/settings/plans"
+            },
+            {
+              "text": "contact sales",
+              "url": "/contact/sales",
+              "variant": "secondary"
+            }
+          ],
+          "styling": {
+            "background": "rgb(15, 16, 17)",
+            "border": "accent",
+            "borderRadius": "16px",
+            "highlighted": true,
+            "recommended": true,
+            "borderAccent": "blue"
+          }
+        },
+        {
+          "id": "pricing_plan_enterprise",
+          "name": "Enterprise Plan Card",
+          "type": "Pricing Card",
+          "tier": "enterprise",
+          "price": "Custom",
+          "billingNote": "Annual billing only",
+          "features": [
+            {
+              "text": "All Business features +",
+              "icon": true
+            },
+            {
+              "text": "Sub-initiatives",
+              "icon": true,
+              "tooltip": "Split large initiatives into smaller, nested initiatives."
+            },
+            {
+              "text": "Advanced Linear Asks",
+              "icon": true
+            },
+            {
+              "text": "Dashboards",
+              "icon": true
+            },
+            {
+              "text": "SAML and SCIM",
+              "icon": true,
+              "tooltips": [
+                "Enable SAML authentication for your workspace.",
+                "Automate user provisioning and deprovisioning with SCIM."
+              ]
+            },
+            {
+              "text": "Advanced security",
+              "icon": true
+            },
+            {
+              "text": "Migration and onboarding support",
+              "icon": true
+            }
+          ],
+          "cta": {
+            "text": "Request trial",
+            "url": "/contact/sales"
+          },
+          "styling": {
+            "background": "premium",
+            "highlighted": true,
+            "special": true
+          }
+        }
+      ]
+    },
+    "pricing_comparison_table": {
+      "description": "가격 책정 비교 테이블 - 40행 이상",
+      "count": 1,
+      "components": [
+        {
+          "id": "pricing_table",
+          "name": "Pricing Comparison Table",
+          "type": "Data Table",
+          "columns": 4,
+          "columnHeaders": [
+            {
+              "text": "Free",
+              "tier": "free"
+            },
+            {
+              "text": "Basic",
+              "tier": "basic"
+            },
+            {
+              "text": "Business",
+              "tier": "business"
+            },
+            {
+              "text": "Enterprise",
+              "tier": "enterprise"
+            }
+          ],
+          "rowCount": 40,
+          "sections": [
+            {
+              "name": "Account Features",
+              "rows": [
+                {
+                  "feature": "Unlimited members",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "File uploads",
+                  "cells": ["10MB", "Unlimited", "Unlimited", "Unlimited"]
+                },
+                {
+                  "feature": "Issues",
+                  "cells": ["250", "Unlimited", "Unlimited", "Unlimited"]
+                },
+                {
+                  "feature": "Teams",
+                  "cells": ["2", "5", "Unlimited", "Unlimited"]
+                }
+              ]
+            },
+            {
+              "name": "Core Features",
+              "rows": [
+                {
+                  "feature": "Issues, projects, cycles, and initiatives",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Customer requests",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "API and webhook access",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Import and export",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Triage",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Pulse",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Issue sync",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Issue SLAs",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Triage responsibility",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Triage routing",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Sub-initiatives",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                }
+              ]
+            },
+            {
+              "name": "Artificial Intelligence",
+              "rows": [
+                {
+                  "feature": "Agent platform",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "MCP access",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Triage Intelligence",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Issue discussion summaries",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Linear Agent for Slack",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                }
+              ]
+            },
+            {
+              "name": "Integrations",
+              "rows": [
+                {
+                  "feature": "Integrations",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Support integrations",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Salesforce integration*",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                }
+              ]
+            },
+            {
+              "name": "Team Management",
+              "rows": [
+                {
+                  "feature": "Sub-teams",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Private teams",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Guest accounts",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                }
+              ]
+            },
+            {
+              "name": "Analytics & Reporting",
+              "rows": [
+                {
+                  "feature": "Progress reports",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Insights",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Dashboards",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Data warehouse sync",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                }
+              ]
+            },
+            {
+              "name": "Linear Asks",
+              "rows": [
+                {
+                  "feature": "Slack intake",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Email intake",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Multiple Slack workspaces",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Private Slack channels",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Per-channel configurations",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                }
+              ]
+            },
+            {
+              "name": "Security",
+              "rows": [
+                {
+                  "feature": "Google SSO",
+                  "cells": ["✓", "✓", "✓", "Google SSO + SAML"]
+                },
+                {
+                  "feature": "Admin roles",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Advanced authentication",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "IP restrictions",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "SCIM provisioning",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Domain claiming",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Audit log",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Third-party app management",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "HIPAA compliance",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                }
+              ]
+            },
+            {
+              "name": "Support",
+              "rows": [
+                {
+                  "feature": "Priority support",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Account manager",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Custom terms",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                },
+                {
+                  "feature": "Uptime SLA",
+                  "cells": ["✓", "✓", "✓", "✓"]
+                }
+              ]
+            }
+          ],
+          "styling": {
+            "background": "dark",
+            "borderColor": "subtle",
+            "rowHeight": "auto",
+            "responsiveColumns": true,
+            "stickyHeader": false
+          },
+          "interactions": {
+            "scrollable": true,
+            "highlightOnHover": true,
+            "expandableRows": false
+          }
+        }
+      ]
+    },
+    "billing_toggle_component": {
+      "description": "청구 방식 토글 - 월간/연간",
+      "count": 1,
+      "components": [
+        {
+          "id": "billing_toggle",
+          "name": "Billing Period Toggle",
+          "type": "Checkbox Input",
+          "checked": true,
+          "label": "Billed yearly",
+          "options": [
+            {
+              "value": "monthly",
+              "label": "Billed monthly"
+            },
+            {
+              "value": "yearly",
+              "label": "Billed yearly",
+              "default": true
+            }
+          ],
+          "behavior": "Updates pricing dynamically",
+          "styling": {
+            "display": "inline",
+            "label": true,
+            "margin": "8px"
+          }
+        }
+      ]
+    }
+  },
+  "customers_page_components": {
+    "customer_hero_section": {
+      "description": "고객 페이지 히어로 섹션",
+      "count": 1,
+      "components": [
+        {
+          "id": "customers_hero",
+          "name": "Customers Hero Section",
+          "type": "Hero Section",
+          "content": {
+            "heading": "Meet the teams who build the future",
+            "subheading": "Trusted by more than 20,000 organizations, from ambitious startups to major enterprises.",
+            "cta": {
+              "text": "Make the switch",
+              "url": "/switch",
+              "icon": true
+            }
+          },
+          "styling": {
+            "background": "dark or gradient",
+            "textAlign": "center",
+            "padding": "60px 24px",
+            "maxWidth": "100%"
+          }
+        }
+      ]
+    },
+    "featured_customer_cards": {
+      "description": "고객 사례 카드 - Featured 섹션",
+      "count": 8,
+      "cards": [
+        {
+          "id": "customer_openai",
+          "company": "OpenAI",
+          "title": "Moving fast and tackling complexity: building systems that scale at OpenAI",
+          "type": "Featured Customer Card",
+          "hasLogo": true,
+          "hasImage": true,
+          "cta": {
+            "text": "Read story",
+            "url": "/customers/openai"
+          },
+          "styling": {
+            "layout": "grid",
+            "columns": 2,
+            "aspectRatio": "4:3"
+          }
+        },
+        {
+          "id": "customer_ramp",
+          "company": "Ramp",
+          "title": "Why Ramp chose the fastest-moving product tool",
+          "type": "Featured Customer Card",
+          "cta": {
+            "text": "Read story",
+            "url": "/customers/ramp"
+          }
+        },
+        {
+          "id": "customer_brex",
+          "company": "Brex",
+          "title": ""One roadmap": How Brex consolidated their fragmented planning",
+          "type": "Featured Customer Card",
+          "cta": {
+            "text": "Read story",
+            "url": "/customers/brex"
+          }
+        },
+        {
+          "id": "customer_scale",
+          "company": "Scale",
+          "title": "Linear accelerates Scale's high velocity",
+          "type": "Featured Customer Card",
+          "cta": {
+            "text": "Read story",
+            "url": "/customers/scale"
+          }
+        },
+        {
+          "id": "customer_mercury",
+          "company": "Mercury",
+          "title": "Linear Projects give Mercury a source-of-truth across all their work",
+          "type": "Featured Customer Card",
+          "cta": {
+            "text": "Read story",
+            "url": "/customers/mercury"
+          }
+        },
+        {
+          "id": "customer_retool",
+          "company": "Retool",
+          "title": "Linear keeps Retool's teams customer-focused",
+          "type": "Featured Customer Card",
+          "cta": {
+            "text": "Read story",
+            "url": "/customers/retool"
+          }
+        },
+        {
+          "id": "customer_cashapp",
+          "company": "Cash App",
+          "title": "Linear helps Cash App manage aggressive roadmaps",
+          "type": "Featured Customer Card",
+          "cta": {
+            "text": "Read story",
+            "url": "/customers/cashapp"
+          }
+        },
+        {
+          "id": "customer_sierra",
+          "company": "Sierra",
+          "title": "From project updates to accountability, Sierra moves as one company in Linear",
+          "type": "Featured Customer Card",
+          "cta": {
+            "text": "Read story",
+            "url": "/customers/sierra"
+          }
+        }
+      ]
+    },
+    "pricing_stats_section": {
+      "description": "가격 책정 통계 섹션",
+      "count": 1,
+      "components": [
+        {
+          "id": "pricing_stats",
+          "name": "Pricing Stats Section",
+          "type": "Statistics Display",
+          "layout": "side-by-side",
+          "stats": [
+            {
+              "value": "2x",
+              "label": "Increase in filed issues",
+              "styling": {
+                "fontSize": "48px",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": "1.6x",
+              "label": "Faster issue resolution",
+              "styling": {
+                "fontSize": "48px",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          "statement": "Teams that switch to Linear create more issues and close them faster",
+          "statementStyling": {
+            "fontSize": "16px",
+            "color": "secondary"
+          },
+          "expandButton": true
+        }
+      ]
+    },
+    "customer_filter_tabs": {
+      "description": "고객 카테고리 필터 탭",
+      "count": 1,
+      "components": [
+        {
+          "id": "customer_category_tabs",
+          "name": "Customer Category Tabs",
+          "type": "Tab Navigation",
+          "tabCount": 8,
+          "tabs": [
+            {
+              "id": "tab_featured",
+              "label": "Featured",
+              "filter": "featured",
+              "default": true,
+              "companies": 4
+            },
+            {
+              "id": "tab_saas",
+              "label": "SaaS",
+              "filter": "saas",
+              "companies": 3
+            },
+            {
+              "id": "tab_ai",
+              "label": "AI",
+              "filter": "ai",
+              "companies": 5
+            },
+            {
+              "id": "tab_fintech",
+              "label": "Fintech",
+              "filter": "fintech",
+              "companies": 6
+            },
+            {
+              "id": "tab_consumer",
+              "label": "Consumer",
+              "filter": "consumer",
+              "companies": 4
+            },
+            {
+              "id": "tab_hardware",
+              "label": "Hardware",
+              "filter": "hardware",
+              "companies": 1
+            },
+            {
+              "id": "tab_health",
+              "label": "Health",
+              "filter": "health",
+              "companies": 0
+            },
+            {
+              "id": "tab_enterprise",
+              "label": "Enterprise",
+              "filter": "enterprise",
+              "companies": 8
+            }
+          ],
+          "styling": {
+            "layout": "horizontal scroll",
+            "gap": "12px",
+            "tabStyle": "rounded-pill",
+            "padding": "12px"
+          },
+          "interactions": {
+            "clickable": true,
+            "scrollable": true,
+            "filterContent": true,
+            "animation": "fade"
+          }
+        }
+      ]
+    },
+    "customer_logo_grid": {
+      "description": "고객 로고 그리드 - 필터링 가능",
+      "count": 1,
+      "components": [
+        {
+          "id": "customer_grid",
+          "name": "Customer Logo Grid",
+          "type": "Responsive Grid",
+          "layout": {
+            "desktop": 4,
+            "tablet": 3,
+            "mobile": 2
+          },
+          "itemCount": 20,
+          "companies": [
+            {
+              "id": "openai",
+              "name": "OpenAI",
+              "logo": "openai_logo",
+              "categories": ["AI", "Enterprise"],
+              "cta": {
+                "text": "Read story",
+                "url": "/customers/openai"
+              }
+            },
+            {
+              "id": "coinbase",
+              "name": "Coinbase",
+              "logo": "coinbase_logo",
+              "categories": ["Fintech", "Enterprise"],
+              "cta": {
+                "text": "Visit site",
+                "url": "https://www.coinbase.com/",
+                "external": true
+              }
+            },
+            {
+              "id": "cursor",
+              "name": "Cursor",
+              "logo": "cursor_logo",
+              "categories": ["AI"],
+              "cta": {
+                "text": "Visit site",
+                "url": "https://www.cursor.com/",
+                "external": true
+              }
+            },
+            {
+              "id": "ramp",
+              "name": "Ramp",
+              "logo": "ramp_logo",
+              "categories": ["Fintech", "Enterprise"],
+              "cta": {
+                "text": "Read story",
+                "url": "/customers/ramp"
+              }
+            },
+            {
+              "id": "vercel",
+              "name": "Vercel",
+              "logo": "vercel_logo",
+              "categories": ["SaaS", "AI"],
+              "cta": {
+                "text": "Visit site",
+                "url": "https://vercel.com",
+                "external": true
+              }
+            },
+            {
+              "id": "automattic",
+              "name": "Automattic",
+              "logo": "automattic_logo",
+              "categories": ["Consumer", "SaaS", "Enterprise"],
+              "cta": {
+                "text": "Visit site",
+                "url": "https://automattic.com/",
+                "external": true
+              }
+            },
+            {
+              "id": "brex",
+              "name": "Brex",
+              "logo": "brex_logo",
+              "categories": ["Fintech"],
+              "cta": {
+                "text": "Read story",
+                "url": "/customers/brex"
+              }
+            },
+            {
+              "id": "scale",
+              "name": "Scale",
+              "logo": "scale_logo",
+              "categories": ["AI", "Enterprise"],
+              "cta": {
+                "text": "Read story",
+                "url": "/customers/scale"
+              }
+            },
+            {
+              "id": "mercury",
+              "name": "Mercury",
+              "logo": "mercury_logo",
+              "categories": ["Fintech", "Enterprise"],
+              "cta": {
+                "text": "Read story",
+                "url": "/customers/mercury"
+              }
+            },
+            {
+              "id": "cashapp",
+              "name": "Cash App",
+              "logo": "cashapp_logo",
+              "categories": ["Fintech", "Consumer", "Enterprise"],
+              "cta": {
+                "text": "Read story",
+                "url": "/customers/cashapp"
+              }
+            },
+            {
+              "id": "sierra",
+              "name": "Sierra",
+              "logo": "sierra_logo",
+              "categories": ["AI"],
+              "cta": {
+                "text": "Read story",
+                "url": "/customers/sierra"
+              }
+            },
+            {
+              "id": "perplexity",
+              "name": "Perplexity",
+              "logo": "perplexity_logo",
+              "categories": ["AI", "Consumer"],
+              "cta": {
+                "text": "Visit site",
+                "url": "https://www.perplexity.ai/",
+                "external": true
+              }
+            },
+            {
+              "id": "substack",
+              "name": "Substack",
+              "logo": "substack_logo",
+              "categories": ["Consumer"],
+              "cta": {
+                "text": "Visit site",
+                "url": "https://substack.com/",
+                "external": true
+              }
+            },
+            {
+              "id": "watershed",
+              "name": "Watershed",
+              "logo": "watershed_logo",
+              "categories": ["SaaS"],
+              "cta": {
+                "text": "Read story",
+                "url": "/customers/watershed"
+              }
+            },
+            {
+              "id": "lovable",
+              "name": "Lovable",
+              "logo": "lovable_logo",
+              "categories": ["AI"],
+              "cta": {
+                "text": "Visit site",
+                "url": "https://lovable.dev/",
+                "external": true
+              }
+            },
+            {
+              "id": "remote",
+              "name": "Remote",
+              "logo": "remote_logo",
+              "categories": ["SaaS", "Enterprise"],
+              "cta": {
+                "text": "Read story",
+                "url": "/customers/remote"
+              }
+            },
+            {
+              "id": "polymarket",
+              "name": "Polymarket",
+              "logo": "polymarket_logo",
+              "categories": ["Consumer"],
+              "cta": {
+                "text": "Visit site",
+                "url": "https://polymarket.com/",
+                "external": true
+              }
+            },
+            {
+              "id": "boom",
+              "name": "Boom",
+              "logo": "boom_logo",
+              "categories": ["Hardware"],
+              "cta": {
+                "text": "Visit site",
+                "url": "https://boomsupersonic.com/",
+                "external": true
+              }
+            }
+          ],
+          "emptyState": {
+            "company": "Your company",
+            "cta": {
+              "text": "Make the switch",
+              "url": "/switch"
+            }
+          },
+          "styling": {
+            "cardBackground": "rgb(15, 16, 17)",
+            "cardBorder": "1px solid",
+            "borderRadius": "12px",
+            "padding": "16px",
+            "gap": "16px",
+            "hoverEffect": "background_change + shadow"
+          }
+        }
+      ]
+    },
+    "category_tags": {
+      "description": "카테고리 태그 - 고객 카드에서 사용",
+      "count": 8,
+      "tags": [
+        {
+          "id": "tag_saas",
+          "text": "SaaS",
+          "styling": {
+            "fontSize": "12px",
+            "color": "secondary",
+            "separator": ","
+          }
+        },
+        {
+          "id": "tag_ai",
+          "text": "AI",
+          "styling": {
+            "fontSize": "12px"
+          }
+        },
+        {
+          "id": "tag_fintech",
+          "text": "Fintech",
+          "styling": {
+            "fontSize": "12px"
+          }
+        },
+        {
+          "id": "tag_consumer",
+          "text": "Consumer",
+          "styling": {
+            "fontSize": "12px"
+          }
+        },
+        {
+          "id": "tag_hardware",
+          "text": "Hardware",
+          "styling": {
+            "fontSize": "12px"
+          }
+        },
+        {
+          "id": "tag_health",
+          "text": "Health",
+          "styling": {
+            "fontSize": "12px"
+          }
+        },
+        {
+          "id": "tag_enterprise",
+          "text": "Enterprise",
+          "styling": {
+            "fontSize": "12px"
+          }
+        }
+      ]
+    }
+  },
+  "shared_components": {
+    "external_link_button": {
+      "description": "외부 링크 버튼 - 방문/읽기",
+      "count": 2,
+      "components": [
+        {
+          "id": "link_visit_site",
+          "name": "Visit Site Link",
+          "type": "Text Link with Icon",
+          "text": "Visit site",
+          "icon": "external_link",
+          "iconPosition": "right",
+          "target": "_blank",
+          "styling": {
+            "color": "secondary",
+            "textDecoration": "none",
+            "hoverEffect": "color_change"
+          }
+        },
+        {
+          "id": "link_read_story",
+          "name": "Read Story Link",
+          "type": "Text Link with Icon",
+          "text": "Read story",
+          "icon": "arrow_right",
+          "iconPosition": "right",
+          "styling": {
+            "color": "primary",
+            "textDecoration": "none",
+            "hoverEffect": "arrow_animation"
+          }
+        }
+      ]
+    },
+    "feature_list_item": {
+      "description": "기능 리스트 항목 - 아이콘 + 텍스트",
+      "count": 1,
+      "components": [
+        {
+          "id": "feature_list_item",
+          "name": "Feature List Item",
+          "type": "List Item with Icon",
+          "structure": [
+            {
+              "element": "icon",
+              "type": "checkmark or feature icon",
+              "size": "16px",
+              "color": "accent"
+            },
+            {
+              "element": "text",
+              "type": "feature name",
+              "fontSize": "14px"
+            },
+            {
+              "element": "link",
+              "type": "optional link",
+              "icon": "arrow_right"
+            }
+          ],
+          "styling": {
+            "gap": "12px",
+            "padding": "8px 0",
+            "display": "flex",
+            "alignItems": "center"
+          }
+        }
+      ]
+    }
+  },
+  "summary": {
+    "pricing_page": {
+      "components": 3,
+      "details": {
+        "pricing_cards": 4,
+        "comparison_table": 1,
+        "billing_toggle": 1
+      }
+    },
+    "customers_page": {
+      "components": 6,
+      "details": {
+        "hero_section": 1,
+        "featured_cards": 8,
+        "filter_tabs": 1,
+        "logo_grid": 20,
+        "category_tags": 8,
+        "stats_section": 1
+      }
+    },
+    "shared": {
+      "components": 2,
+      "details": {
+        "external_links": 2,
+        "feature_lists": 1
+      }
+    },
+    "total_new_components_v2": 28,
+    "total_cards": 4,
+    "total_companies": 20,
+    "total_categories": 8
+  },
+  "implementation_guidance": {
+    "pricing_cards": {
+      "framework": "React/Vue/Flutter",
+      "responsive": "Stack on mobile",
+      "interaction": "Billing toggle updates prices dynamically"
+    },
+    "pricing_table": {
+      "framework": "HTML <table> or CSS Grid",
+      "responsive": "Horizontal scroll on mobile",
+      "features": "Sticky header, expandable rows"
+    },
+    "customer_grid": {
+      "framework": "CSS Grid or Flexbox",
+      "filtering": "JavaScript/React state management",
+      "responsive": "4 cols (desktop) → 3 (tablet) → 2 (mobile)"
+    },
+    "customer_tabs": {
+      "framework": "Tab component (native or library)",
+      "behavior": "Click tab to filter grid",
+      "animation": "Fade in/out on filter change"
+    }
+  }
+}

@@ -108,6 +108,7 @@ Impact:
 - `backend/`: 기술 설계, 파일 경로 + 클래스명만
 - `CLAUDE.md`: 마스터 인덱스, 모든 문서 링크 관리
 - `specs/*/`: speckit 생성 문서 (spec.md, plan.md, tasks.md 등)는 100줄 제한 예외
+- `docs/refactor/`: 리팩터링 설계 원칙 (plan, analysis, progress)은 100줄 제한 예외 (AI agent 참고 문서)
 
 **검증**:
 - 문서 커밋 전 `markdown-guidelines.md` 체크리스트 확인 필수
@@ -278,9 +279,16 @@ Impact:
 ### 런타임 가이던스
 일상적인 개발 가이던스는 `CLAUDE.md`를 참조한다. 헌법은 변경 불가능한 원칙만 정의하며, 구현 세부사항은 각 도메인 문서에서 관리한다.
 
-**Version**: 1.2.0 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-11-10
+**Version**: 1.2.1 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-11-20
 
 ## 변경 이력 (Change History)
+
+### v1.2.1 (2025-11-20)
+- **수정**: 원칙 IV "문서화 100줄 원칙" 예외 범위 추가
+  - `docs/refactor/` 디렉토리의 리팩터링 설계 문서를 100줄 제한 예외로 추가
+  - 목적: AI agent(Claude Code)가 참고하는 리팩터링 원칙 문서의 가독성 보장
+  - 포함: domain-boundaries.md, api-simplification.md, permission-guard.md, state-lifecycle.md 등
+- **근거**: 초기 설계 단계에서 명확한 아키텍처 원칙 제시 필요
 
 ### v1.2.0 (2025-11-10)
 - **추가**: "Speckit 작업 진행 관리" 섹션 신설

@@ -149,7 +149,8 @@
 
 ### 주요 가이드
 - **백엔드**: [구현 가이드 인덱스](docs/implementation/backend/README.md)
-- **프론트엔드**: [구현 가이드 인덱스](docs/implementation/frontend/README.md)
+- **프론트엔드 개발**: [구현 가이드 인덱스](docs/implementation/frontend/README.md) + [frontend-specialist](.claude/agents/frontend-specialist.md)
+- **프론트엔드 디버깅**: [frontend-debugger](.claude/agents/frontend-debugger.md)
 - **디자인 시스템**: [디자인 시스템 개요](docs/ui-ux/concepts/design-system.md)
 - **문서 관리**: [markdown-guidelines.md](markdown-guidelines.md)
 

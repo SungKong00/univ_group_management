@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/color_tokens.dart';
-import '../theme/typography_tokens.dart';
-import '../theme/shadow_tokens.dart';
-import '../theme/animation_tokens.dart';
+import '../theme/extensions/app_color_extension.dart';
+import '../theme/responsive_tokens.dart';
 
 /// Linear 스타일 Feature Card (대형 클릭 가능 카드)
 ///
@@ -40,7 +38,28 @@ class _AppFeatureCardState extends State<AppFeatureCard> {
 
   @override
   Widget build(BuildContext context) {
-    final shadow = _isHovered ? ShadowTokens.medium : ShadowTokens.low;
+    final colorExt = context.appColors;
+    final textTheme = Theme.of(context).textTheme;
+    final width = MediaQuery.sizeOf(context).width;
+
+    // Hardcoded shadow values (ShadowTokens.low and ShadowTokens.medium)
+    final shadow = _isHovered
+        ? [
+            BoxShadow(
+              color: Colors.white.withValues(alpha: 0.08), // medium
+              blurRadius: 24.0,
+              spreadRadius: 0.0,
+              offset: const Offset(0, 4),
+            ),
+          ]
+        : [
+            BoxShadow(
+              color: Colors.white.withValues(alpha: 0.05), // low
+              blurRadius: 4.0,
+              spreadRadius: 0.0,
+              offset: const Offset(0, 2),
+            ),
+          ];
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -48,13 +67,13 @@ class _AppFeatureCardState extends State<AppFeatureCard> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: AnimationTokens.regular,
-          curve: AnimationTokens.easeOutCubic,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
           width: widget.width,
           height: widget.height,
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(ResponsiveTokens.cardPadding(width)),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F1011), // rgb(15, 16, 17)
+            color: colorExt.surfaceSecondary,
             borderRadius: BorderRadius.circular(16),
             boxShadow: shadow,
           ),
@@ -73,13 +92,13 @@ class _AppFeatureCardState extends State<AppFeatureCard> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: ColorTokens.backgroundLevel2,
+                    color: colorExt.surfaceTertiary,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     widget.icon,
                     size: 32,
-                    color: ColorTokens.accent,
+                    color: colorExt.brandPrimary,
                   ),
                 ),
 
@@ -88,9 +107,9 @@ class _AppFeatureCardState extends State<AppFeatureCard> {
               // 제목
               Text(
                 widget.title,
-                style: TypographyTokens.textLarge.copyWith(
-                  color: ColorTokens.textPrimary,
-                  fontWeight: TypographyTokens.semibold,
+                style: textTheme.bodyLarge!.copyWith(
+                  color: colorExt.textPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
 
@@ -99,8 +118,8 @@ class _AppFeatureCardState extends State<AppFeatureCard> {
               // 부제목
               Text(
                 widget.subtitle,
-                style: TypographyTokens.textRegular.copyWith(
-                  color: ColorTokens.textSecondary,
+                style: textTheme.bodyMedium!.copyWith(
+                  color: colorExt.textSecondary,
                   height: 1.5,
                 ),
               ),

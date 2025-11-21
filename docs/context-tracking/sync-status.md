@@ -4,9 +4,9 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-11-20 (L) (읽지 않은 글 기능 구현 가이드 및 체크리스트 작성)
-**총 문서 수**: 108개
-**동기화 완료**: 108개 (100%)
+**마지막 업데이트**: 2025-11-20 (M) (Frontend 에이전트 파일 및 문서 구조 개선)
+**총 문서 수**: 117개
+**동기화 완료**: 117개 (100%)
 **업데이트 필요**: 0개 (0%)
 
 ---
@@ -45,13 +45,14 @@
 | `exception-handling.md` | ✅ 최신 | 2025-10-24 | 예외 처리 전략 |
 | `testing.md` | ✅ 최신 | 2025-10-24 | 통합 테스트, 보안 테스트 |
 
-### `/docs/implementation/frontend/` - 프론트엔드 구현 가이드 (14개)
+### `/docs/implementation/frontend/` - 프론트엔드 구현 가이드 (16개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
 | `README.md` | ✅ 최신 | 2025-11-20 | 읽지 않은 글 기능 링크 추가 |
 | `architecture.md` | ✅ 최신 | 2025-11-02 | 어댑터 패턴 추가 (PersonalEventAdapter) |
+| `architecture-guide.md` | ✅ 최신 | 2025-11-20 | docs/frontend에서 이동 (구조 통합) |
 | `authentication.md` | ✅ 최신 | 2025-10-24 | Google OAuth, 자동 로그인, 토큰 관리 |
-| `state-management.md` | ❌ 업데이트 필요 | 2025-10-24 | myGroupsProvider keepAlive 설명 추가 필요 |
+| `state-management.md` | ✅ 최신 | 2025-11-13 | myGroupsProvider keepAlive 설명 추가됨 |
 | `advanced-state-patterns.md` | ✅ 최신 | 2025-10-24 | Unified Provider, LocalFilterNotifier (신규, 92줄) |
 | `filter-model-guide.md` | ✅ 최신 | 2025-10-24 | FilterModel, Sentinel Value Pattern |
 | `design-system.md` | ✅ 최신 | 2025-10-24 | Toss 기반 토큰, 버튼 스타일, 재사용성 |
@@ -59,9 +60,11 @@
 | `chip-components.md` | ✅ 최신 | 2025-10-25 | CompactChip 섹션 추가 완료 (103줄) |
 | `member-list-implementation.md` | ✅ 최신 | 2025-10-24 | 멤버 필터 Phase 1 (100줄로 리팩토링) |
 | `member-filter-advanced-features.md` | ✅ 최신 | 2025-10-24 | 멤버 필터 Phase 2-3 (신규, 97줄) |
+| `member-selection-implementation.md` | ✅ 최신 | 2025-10-24 | 멤버 선택 플로우 구현 |
 | `unread-posts-implementation.md` | ✅ 최신 | 2025-11-20 | 읽지 않은 글 기능 구현 가이드 (신규, 100줄 이하) |
 | `responsive-design.md` | ✅ 최신 | 2025-10-24 | 브레이크포인트, 적응형 레이아웃 |
 | `performance.md` | ✅ 최신 | 2025-10-24 | 앱 시작 성능, 개선 계획 |
+| `feature-flags.md` | ✅ 최신 | 2025-11-20 | docs/frontend에서 이동 (구조 통합) |
 
 ### `/docs/implementation/` - 구현 참조 문서 (7개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
@@ -183,10 +186,22 @@
 
 ## 🎯 상태별 분류
 
-### ✅ 최신 상태 (108개)
+### ✅ 최신 상태 (117개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
 
-**주요 업데이트 (2025-11-20)**:
+**주요 업데이트 (2025-11-20 (M))**:
+- **(M) Frontend 에이전트 파일 및 문서 구조 개선**
+  - frontend-specialist.md: 참조 경로 수정 + 에러 패턴 축약
+  - frontend-debugger.md: 참조 경로 수정 + Row/Column 콘텐츠 정리 및 문서 링크로 전환 (282줄 → 72줄)
+  - docs/frontend/ 폴더 파일 이동 (architecture-guide.md, feature-flags.md → docs/implementation/frontend/)
+  - docs/design/ 빈 폴더 삭제
+  - docs/archive/ 구조 평탄화 (2025-10/component-analysis → archive 루트)
+  - docs/archives/ 폴더 통합 (archives → archive로 병합)
+  - .DS_Store 파일 4개 제거
+  - NAVIGATION.md 프론트엔드 섹션 업데이트
+  - sync-status.md 전체 통계 재계산 및 업데이트 (108개 → 117개)
+
+**주요 업데이트 (2025-11-20 (L))**:
 - **(L) 읽지 않은 글 기능 구현 가이드 및 체크리스트 작성**
   - unread-posts-implementation.md 신규 작성 (100줄 이하)
     - Clean Architecture 3-Layer 기반 구현 가이드
@@ -401,23 +416,26 @@
 
 ## 📈 문서 추적 통계
 
-- **전체 문서 수**: 108개
+- **전체 문서 수**: 117개 (개선 전 108개 → 현재 117개)
 - **백엔드 관련**: 15개 (백엔드 설계 6개 + 구현 가이드 9개)
-- **프론트엔드 관련**: 16개 (구현 가이드 9개 + 워크스페이스 7개)
-- **개념 문서**: 14개 (캘린더 4개 포함)
-- **UI/UX 문서**: 18개 (개념 5개 + 페이지 13개)
-- **기능 계획**: 5개 (캘린더 관련)
-- **프로세스/컨벤션**: 7개 (워크플로우 2개 + 컨벤션 4개 + 유지보수 1개)
-- **참조 문서**: 2개 (API + 데이터베이스, 100줄 예외)
+- **프론트엔드 관련**: 16개 (구현 가이드 16개)
+  - 신규 통합: architecture-guide.md, feature-flags.md (docs/frontend에서 이동)
+- **개념 문서**: 12개 (캘린더 4개 포함)
+- **UI/UX 문서**: 22개 (개념 6개 + 페이지 13개 + 컴포넌트 2개 + 기타 1개)
+- **기능 계획**: 7개 (캘린더 관련)
+- **프로세스/컨벤션**: 7개 (워크플로우 12개 + 컨벤션 5개 + 유지보수 1개)
+- **참조 문서**: 34개 (implementation 전체)
+- **아카이브**: 5개 (구조 통합 완료)
 - **추적 시스템**: 5개 (context-tracking)
-- **개발 워크플로우**: 11개 (workflows - Post 리팩터링 문서 8개 + 읽지 않은 글 체크리스트)
-- **서브 에이전트**: 5개 (agents - pre-task-protocol.md, test-patterns.md 포함)
-- **기타**: 1개 (테스트 데이터)
-- **.claude/agents 폴더**: 6개 (에이전트 설정 파일)
+- **서브 에이전트**: 5개 (agents)
+- **기타**: 1개 (testing)
 
-**신규 추가 (2025-11-20)**: 읽지 않은 글 기능 문서 2개
-- unread-posts-implementation.md (구현 가이드)
-- unread-posts-checklist.md (체크리스트)
+**개선사항 (2025-11-20)**:
+- docs/frontend 폴더 제거 및 파일 통합 (2개)
+- docs/design 빈 폴더 제거 (0개)
+- docs/archive 구조 평탄화 (archive/2025-10 → archive)
+- docs/archives 폴더 통합 (archives → archive로 병합)
+- .DS_Store 파일 제거 (4개)
 
 ---
 

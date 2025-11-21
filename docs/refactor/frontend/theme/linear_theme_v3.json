@@ -1,0 +1,919 @@
+{
+  "metadata": {
+    "version": "v3",
+    "source": "https://linear.app (Live Extraction via Playwright MCP)",
+    "extraction_date": "2025-11-21",
+    "extraction_method": "Playwright Browser Automation - Multiple page crawl",
+    "pages_analyzed": [
+      "https://linear.app/testcastlekong/team/TES/active",
+      "https://linear.app/testcastlekong/issue/TES-1/get-familiar-with-linear-1",
+      "https://linear.app/testcastlekong/projects/all",
+      "https://linear.app/testcastlekong/settings/account/preferences"
+    ],
+    "new_components_found": 37,
+    "description": "Complete Linear.app theme extracted from live DOM with all NEW components found across multiple pages"
+  },
+  "base_theme": {
+    "name": "Linear Dark",
+    "mode": "dark",
+    "color_space": "LCH (Perceptually uniform)",
+    "primary_colors": {
+      "text_primary": "lch(100% 0 272 / 1)",
+      "text_secondary": "lch(90.65% 1.35 272 / 1)",
+      "text_tertiary": "lch(62.6% 1.35 272 / 1)",
+      "text_quaternary": "lch(38.29% 1.35 272 / 1)",
+      "background_primary": "lch(4.8% 0.7 272)",
+      "background_secondary": "lch(10.633% 3.033 272 / 1)",
+      "background_tertiary": "lch(14.133% 4.2 272 / 1)",
+      "background_quaternary": "lch(7.133% 1.867 272 / 1)",
+      "border_primary": "lch(9.77% 3.54 272 / 1)",
+      "border_secondary": "lch(14.74% 3.54 272 / 1)",
+      "border_tertiary": "lch(19% 3.54 272 / 1)",
+      "focus_ring": "lch(47.918% 59.303 288.421)",
+      "accent": "lch(55 60 300)",
+      "accent_bright": "rgb(0, 143, 255)"
+    }
+  },
+  "new_components_v3": {
+    "page_breadcrumb": {
+      "id": "page_breadcrumb",
+      "name": "Page Breadcrumb",
+      "type": "Navigation",
+      "description": "Shows hierarchical navigation path to current page",
+      "location": "Issue detail page",
+      "structure": {
+        "type": "flex",
+        "gap": "4px",
+        "align_items": "center",
+        "components": [
+          {
+            "name": "parent_link",
+            "type": "link",
+            "color": "lch(90.65% 1.35 272)",
+            "font_size": "0.9375rem",
+            "hover_color": "lch(100 0 272)"
+          },
+          {
+            "name": "separator",
+            "type": "text",
+            "content": "›",
+            "color": "lch(62.6% 1.35 272)",
+            "margin": "0 4px"
+          },
+          {
+            "name": "current_page",
+            "type": "text",
+            "color": "lch(90.65% 1.35 272)",
+            "font_size": "0.9375rem",
+            "font_weight": 500
+          }
+        ]
+      }
+    },
+    "issue_navigation_counter": {
+      "id": "issue_navigation_counter",
+      "name": "Issue Navigation Counter",
+      "type": "Display",
+      "description": "Shows current issue position in list (e.g., 1 / 4)",
+      "location": "Issue detail header",
+      "structure": {
+        "layout": "flex",
+        "gap": "4px",
+        "current": {
+          "font_size": "0.9375rem",
+          "font_weight": 500,
+          "color": "lch(100 0 272)"
+        },
+        "separator": {
+          "color": "lch(62.6% 1.35 272)"
+        },
+        "total": {
+          "font_size": "0.9375rem",
+          "color": "lch(62.6% 1.35 272)"
+        }
+      }
+    },
+    "issue_navigation_buttons": {
+      "id": "issue_navigation_buttons",
+      "name": "Issue Navigation Buttons",
+      "type": "Navigation",
+      "description": "Previous/Next buttons for navigating between issues",
+      "location": "Issue detail header",
+      "states": {
+        "enabled": {
+          "background": "transparent",
+          "icon_color": "lch(90.65% 1.35 272)",
+          "cursor": "pointer"
+        },
+        "disabled": {
+          "background": "transparent",
+          "icon_color": "lch(62.6% 1.35 272)",
+          "opacity": 0.5,
+          "cursor": "not-allowed"
+        },
+        "hover": {
+          "background": "lch(10.633% 3.033 272 / 1)",
+          "icon_color": "lch(100 0 272)"
+        }
+      }
+    },
+    "issue_favorite_toggle": {
+      "id": "issue_favorite_toggle",
+      "name": "Issue Favorite Toggle",
+      "type": "Interactive",
+      "description": "Switch to add/remove issue from favorites",
+      "location": "Issue detail header",
+      "structure": {
+        "type": "switch",
+        "width": "40px",
+        "height": "24px",
+        "border_radius": "4px",
+        "states": {
+          "default": {
+            "background": "lch(10.633% 3.033 272 / 1)",
+            "icon_color": "lch(90.65% 1.35 272)"
+          },
+          "active": {
+            "background": "lch(55 60 300)",
+            "icon_color": "lch(100 0 272)"
+          }
+        }
+      }
+    },
+    "issue_options_menu": {
+      "id": "issue_options_menu",
+      "name": "Issue Options Menu",
+      "type": "Menu",
+      "description": "Dropdown menu for issue actions (duplicate, delete, etc.)",
+      "location": "Issue detail header",
+      "trigger": "button with three dots icon",
+      "items": [
+        "Edit issue",
+        "Duplicate issue",
+        "Move to project",
+        "Archive",
+        "Delete"
+      ]
+    },
+    "issue_title_editor": {
+      "id": "issue_title_editor",
+      "name": "Issue Title Editor",
+      "type": "Input",
+      "description": "Editable issue title with contenteditable",
+      "location": "Issue detail content",
+      "structure": {
+        "type": "textbox",
+        "placeholder": "Issue title",
+        "font_size": "1.5rem",
+        "font_weight": 600,
+        "color": "lch(100 0 272)",
+        "background": "transparent",
+        "border": "none",
+        "focus_style": "outline 1px solid lch(47.918% 59.303 288.421)",
+        "padding": "8px 0"
+      }
+    },
+    "issue_description_editor": {
+      "id": "issue_description_editor",
+      "name": "Issue Description Editor",
+      "type": "Rich Editor",
+      "description": "Rich text editor for issue description with formatting support",
+      "location": "Issue detail content",
+      "features": [
+        "bold (Cmd+B)",
+        "italic (Cmd+I)",
+        "strikethrough",
+        "code",
+        "links (Cmd+K)",
+        "headings",
+        "lists",
+        "blockquotes",
+        "code blocks",
+        "checkboxes",
+        "mentions (@user)",
+        "emoji picker"
+      ],
+      "toolbar": {
+        "position": "floating",
+        "alignment": "left",
+        "actions": [
+          "text formatting",
+          "list toggle",
+          "block type change"
+        ]
+      }
+    },
+    "media_player_video": {
+      "id": "media_player_video",
+      "name": "Media Player (Video)",
+      "type": "Media",
+      "description": "Embedded HTML5 video player in issue description",
+      "location": "Issue description content",
+      "controls": [
+        {
+          "name": "play_pause",
+          "icon": "play/pause"
+        },
+        {
+          "name": "mute",
+          "keyboard": "m"
+        },
+        {
+          "name": "seek_slider",
+          "type": "slider",
+          "shows": "current_position"
+        },
+        {
+          "name": "time_display",
+          "shows": "elapsed_time / total_time"
+        },
+        {
+          "name": "playback_rate",
+          "type": "combobox",
+          "options": ["0.25×", "0.5×", "0.75×", "1×", "1.25×", "1.5×", "1.75×", "2×"],
+          "keyboard": "> or <"
+        },
+        {
+          "name": "download",
+          "icon": "download"
+        },
+        {
+          "name": "picture_in_picture",
+          "keyboard": "p"
+        },
+        {
+          "name": "fullscreen",
+          "keyboard": "f"
+        }
+      ],
+      "styling": {
+        "background": "lch(4.8% 0.7 272)",
+        "border": "1px solid lch(14.74% 3.54 272)",
+        "border_radius": "8px",
+        "control_color": "lch(90.65% 1.35 272)",
+        "control_hover_color": "lch(100 0 272)"
+      }
+    },
+    "heading_with_actions": {
+      "id": "heading_with_actions",
+      "name": "Heading with Actions",
+      "type": "Content",
+      "description": "Heading with copy and more options button",
+      "location": "Issue description",
+      "structure": {
+        "layout": "flex",
+        "gap": "8px",
+        "heading": {
+          "type": "h3",
+          "font_size": "1.125rem",
+          "font_weight": 600,
+          "color": "lch(100 0 272)"
+        },
+        "actions_button": {
+          "type": "icon_button",
+          "icon": "more_horizontal",
+          "tooltip": "Actions",
+          "states": {
+            "default": "transparent",
+            "hover": "lch(10.633% 3.033 272 / 1)"
+          }
+        }
+      }
+    },
+    "reaction_button": {
+      "id": "reaction_button",
+      "name": "Reaction Button (Add Reaction)",
+      "type": "Interactive",
+      "description": "Button to add emoji reactions to issue",
+      "location": "Issue detail content bottom",
+      "structure": {
+        "type": "button",
+        "icon": "smile",
+        "tooltip": "Add reaction",
+        "on_click": "opens emoji picker",
+        "styling": {
+          "background": "transparent",
+          "border": "1px solid lch(14.74% 3.54 272)",
+          "border_radius": "6px",
+          "padding": "8px 12px",
+          "hover_background": "lch(10.633% 3.033 272 / 1)"
+        }
+      }
+    },
+    "attachment_button": {
+      "id": "attachment_button",
+      "name": "Attachment Button",
+      "type": "Interactive",
+      "description": "Button to attach images, files, or videos",
+      "location": "Issue detail content",
+      "structure": {
+        "type": "button",
+        "icon": "paperclip",
+        "tooltip": "Attach images, files or videos",
+        "file_types": ["image/*", "video/*", ".pdf", ".doc", ".docx"],
+        "max_size": "100MB"
+      }
+    },
+    "sub_issues_button": {
+      "id": "sub_issues_button",
+      "name": "Sub-Issues Button",
+      "type": "Interactive",
+      "description": "Button to create sub-issues",
+      "location": "Issue detail content",
+      "structure": {
+        "type": "button",
+        "icon": "plus",
+        "text": "Add sub-issues",
+        "styling": {
+          "background": "lch(10.633% 3.033 272 / 1)",
+          "border": "1px solid lch(14.74% 3.54 272)",
+          "border_radius": "6px",
+          "padding": "12px 16px",
+          "font_size": "0.9375rem"
+        }
+      }
+    },
+    "activity_section_header": {
+      "id": "activity_section_header",
+      "name": "Activity Section Header",
+      "type": "Section",
+      "description": "Header for activity/comment section",
+      "location": "Issue detail bottom",
+      "structure": {
+        "layout": "flex",
+        "justify_content": "space-between",
+        "align_items": "center",
+        "title": {
+          "font_size": "0.9375rem",
+          "font_weight": 600,
+          "color": "lch(100 0 272)"
+        },
+        "actions": [
+          {
+            "name": "subscribe",
+            "type": "button",
+            "text": "Subscribe"
+          },
+          {
+            "name": "change_subscribers",
+            "type": "icon_button",
+            "icon": "users"
+          }
+        ]
+      }
+    },
+    "activity_item": {
+      "id": "activity_item",
+      "name": "Activity Item",
+      "type": "Display",
+      "description": "Single activity/history item (issue created, updated, commented)",
+      "location": "Activity section",
+      "structure": {
+        "layout": "flex",
+        "gap": "12px",
+        "avatar": {
+          "size": "32px",
+          "border_radius": "4px"
+        },
+        "content": {
+          "flex": 1,
+          "description": {
+            "font_size": "0.9375rem",
+            "color": "lch(100 0 272)"
+          },
+          "timestamp": {
+            "font_size": "0.8125rem",
+            "color": "lch(62.6% 1.35 272)",
+            "cursor": "pointer"
+          }
+        }
+      }
+    },
+    "comment_input": {
+      "id": "comment_input",
+      "name": "Comment Input",
+      "type": "Rich Editor",
+      "description": "Contenteditable input for leaving comments",
+      "location": "Issue detail bottom",
+      "structure": {
+        "type": "textbox",
+        "placeholder": "Leave a comment…",
+        "background": "lch(10.633% 3.033 272 / 1)",
+        "border": "1px solid lch(14.74% 3.54 272)",
+        "border_radius": "6px",
+        "padding": "12px 16px",
+        "min_height": "80px",
+        "font_size": "0.9375rem",
+        "focus_border": "1px solid lch(47.918% 59.303 288.421)"
+      },
+      "actions": [
+        {
+          "name": "submit",
+          "type": "icon_button",
+          "icon": "send"
+        },
+        {
+          "name": "attach",
+          "type": "icon_button",
+          "icon": "paperclip"
+        }
+      ]
+    },
+    "properties_sidebar": {
+      "id": "properties_sidebar",
+      "name": "Properties Sidebar",
+      "type": "Panel",
+      "description": "Right sidebar showing issue properties and metadata",
+      "location": "Issue detail right",
+      "width": "300px",
+      "background": "lch(4.8% 0.7 272)",
+      "border_left": "1px solid lch(14.74% 3.54 272)",
+      "sections": [
+        {
+          "name": "header",
+          "title": "Properties",
+          "actions": [
+            {
+              "name": "copy_url",
+              "icon": "link"
+            },
+            {
+              "name": "copy_id",
+              "icon": "copy"
+            },
+            {
+              "name": "copy_branch",
+              "icon": "git_branch"
+            }
+          ]
+        }
+      ]
+    },
+    "status_button": {
+      "id": "status_button",
+      "name": "Status Button",
+      "type": "Interactive",
+      "description": "Dropdown button to change issue status",
+      "location": "Properties sidebar",
+      "structure": {
+        "type": "button",
+        "layout": "flex",
+        "gap": "8px",
+        "icon": {
+          "size": "16px"
+        },
+        "label": {
+          "font_size": "0.9375rem",
+          "color": "lch(90.65% 1.35 272)"
+        },
+        "states": {
+          "default": {
+            "background": "lch(10.633% 3.033 272 / 1)",
+            "border": "1px solid lch(14.74% 3.54 272)"
+          },
+          "hover": {
+            "background": "lch(14.133% 4.2 272 / 1)"
+          },
+          "active": {
+            "border": "1px solid lch(47.918% 59.303 288.421)"
+          }
+        }
+      }
+    },
+    "priority_button": {
+      "id": "priority_button",
+      "name": "Priority Button",
+      "type": "Interactive",
+      "description": "Dropdown button to set issue priority",
+      "location": "Properties sidebar",
+      "options": ["No Priority", "Low", "Medium", "High", "Urgent"],
+      "structure": {
+        "type": "button",
+        "icon": "priority_indicator",
+        "label": "Set priority"
+      }
+    },
+    "assignee_button": {
+      "id": "assignee_button",
+      "name": "Assignee Button",
+      "type": "Interactive",
+      "description": "Button to assign issue to team member",
+      "location": "Properties sidebar",
+      "structure": {
+        "type": "button",
+        "icon": "user",
+        "label": "Assign",
+        "shows_current_assignee": true
+      }
+    },
+    "labels_section": {
+      "id": "labels_section",
+      "name": "Labels Section",
+      "type": "Interactive",
+      "description": "Section for adding/managing issue labels",
+      "location": "Properties sidebar",
+      "structure": {
+        "title": {
+          "font_size": "0.75rem",
+          "font_weight": 600,
+          "color": "lch(62.6% 1.35 272)",
+          "text_transform": "uppercase"
+        },
+        "button": {
+          "type": "button",
+          "icon": "plus",
+          "text": "Add label",
+          "background": "lch(10.633% 3.033 272 / 1)",
+          "border": "1px solid lch(14.74% 3.54 272)",
+          "border_radius": "4px",
+          "padding": "8px 12px"
+        },
+        "labels_list": {
+          "gap": "8px",
+          "wrap": true
+        }
+      }
+    },
+    "project_section": {
+      "id": "project_section",
+      "name": "Project Section",
+      "type": "Interactive",
+      "description": "Section for adding issue to project",
+      "location": "Properties sidebar",
+      "structure": {
+        "title": {
+          "font_size": "0.75rem",
+          "font_weight": 600,
+          "color": "lch(62.6% 1.35 272)"
+        },
+        "button": {
+          "type": "button",
+          "icon": "plus",
+          "text": "Add to project"
+        }
+      }
+    },
+    "empty_state_illustration": {
+      "id": "empty_state_illustration",
+      "name": "Empty State Illustration",
+      "type": "Display",
+      "description": "Illustration shown when no projects exist",
+      "location": "Projects page",
+      "structure": {
+        "image": "SVG illustration",
+        "title": {
+          "font_size": "1.125rem",
+          "font_weight": 600,
+          "color": "lch(100 0 272)"
+        },
+        "description": {
+          "font_size": "0.9375rem",
+          "color": "lch(62.6% 1.35 272)",
+          "max_width": "400px"
+        },
+        "cta_button": {
+          "text": "Create new project",
+          "background": "lch(55 60 300)",
+          "color": "lch(100 0 272)"
+        }
+      }
+    },
+    "settings_sidebar": {
+      "id": "settings_sidebar",
+      "name": "Settings Sidebar",
+      "type": "Navigation",
+      "description": "Left sidebar in settings with grouped navigation",
+      "location": "Settings page left",
+      "width": "250px",
+      "background": "lch(4.8% 0.7 272)",
+      "border_right": "1px solid lch(14.74% 3.54 272)",
+      "sections": [
+        {
+          "title": "Account",
+          "items": ["Preferences", "Profile", "Notifications", "Security & access", "Connected accounts"]
+        },
+        {
+          "title": "Issues",
+          "items": ["Labels", "Templates", "SLAs"]
+        },
+        {
+          "title": "Projects",
+          "items": ["Labels", "Templates", "Statuses", "Updates"]
+        },
+        {
+          "title": "Features",
+          "items": ["Initiatives", "Documents", "Customer requests", "Pulse", "AI", "Agents", "Asks", "Emojis", "Integrations"]
+        },
+        {
+          "title": "Administration",
+          "items": ["Workspace", "Teams", "Members", "Security", "API", "Applications", "Billing", "Import / Export"]
+        }
+      ]
+    },
+    "settings_group": {
+      "id": "settings_group",
+      "name": "Settings Group",
+      "type": "Container",
+      "description": "Grouped section of related settings",
+      "location": "Settings page content",
+      "structure": {
+        "title": {
+          "font_size": "0.9375rem",
+          "font_weight": 600,
+          "color": "lch(100 0 272)",
+          "margin_bottom": "16px"
+        },
+        "items": {
+          "layout": "flex-column",
+          "gap": "16px"
+        }
+      }
+    },
+    "settings_item": {
+      "id": "settings_item",
+      "name": "Settings Item",
+      "type": "Form Control",
+      "description": "Single setting with label and control",
+      "location": "Settings page",
+      "structure": {
+        "layout": "flex",
+        "justify_content": "space-between",
+        "align_items": "center",
+        "label_section": {
+          "flex_direction": "column",
+          "gap": "4px",
+          "title": {
+            "font_size": "0.9375rem",
+            "font_weight": 500,
+            "color": "lch(100 0 272)"
+          },
+          "description": {
+            "font_size": "0.8125rem",
+            "color": "lch(62.6% 1.35 272)"
+          }
+        },
+        "control": {
+          "types": ["checkbox", "select", "combobox", "text_input", "button"]
+        }
+      }
+    },
+    "theme_selector_dropdown": {
+      "id": "theme_selector_dropdown",
+      "name": "Theme Selector Dropdown",
+      "type": "Combobox",
+      "description": "Dropdown to select UI theme",
+      "location": "Settings > Preferences > Interface theme",
+      "options": [
+        "System preference",
+        "Light",
+        "Pure Light",
+        "Dark",
+        "Magic Blue",
+        "Classic Dark",
+        "Custom"
+      ],
+      "option_structure": {
+        "layout": "flex",
+        "gap": "12px",
+        "color_preview": {
+          "type": "text",
+          "content": "• Aa",
+          "font_size": "1rem"
+        },
+        "label": {
+          "font_size": "0.9375rem",
+          "color": "lch(100 0 272)"
+        }
+      },
+      "selected_indicator": "checkmark icon"
+    },
+    "checkbox_control": {
+      "id": "checkbox_control",
+      "name": "Checkbox Control",
+      "type": "Form Input",
+      "description": "Checkbox for boolean settings",
+      "structure": {
+        "size": "20px",
+        "border": "1px solid lch(14.74% 3.54 272)",
+        "border_radius": "4px",
+        "background_unchecked": "lch(10.633% 3.033 272 / 1)",
+        "background_checked": "lch(55 60 300)",
+        "checkmark_color": "lch(100 0 272)"
+      }
+    },
+    "combobox_select": {
+      "id": "combobox_select",
+      "name": "Combobox Select",
+      "type": "Form Input",
+      "description": "Dropdown select with search",
+      "structure": {
+        "background": "lch(10.633% 3.033 272 / 1)",
+        "border": "1px solid lch(14.74% 3.54 272)",
+        "border_radius": "6px",
+        "padding": "8px 12px",
+        "text_color": "lch(90.65% 1.35 272)",
+        "icon_color": "lch(62.6% 1.35 272)",
+        "focus_border": "1px solid lch(47.918% 59.303 288.421)"
+      }
+    },
+    "listbox_menu": {
+      "id": "listbox_menu",
+      "name": "Listbox Menu (Dropdown)",
+      "type": "Menu",
+      "description": "Dropdown menu with selectable options",
+      "location": "Theme selector, font size, etc.",
+      "structure": {
+        "background": "lch(10.633% 3.033 272 / 1)",
+        "border": "1px solid lch(14.74% 3.54 272)",
+        "border_radius": "8px",
+        "shadow": "0px 4px 24px rgba(0, 0, 0, 0.2)",
+        "padding": "8px",
+        "max_height": "300px",
+        "overflow": "auto"
+      },
+      "option_item": {
+        "padding": "12px 16px",
+        "hover_background": "lch(14.133% 4.2 272 / 1)",
+        "active_background": "lch(14.133% 4.2 272 / 1)",
+        "active_border_left": "3px solid lch(55 60 300)"
+      }
+    },
+    "back_to_app_button": {
+      "id": "back_to_app_button",
+      "name": "Back to App Button",
+      "type": "Navigation",
+      "description": "Button to navigate back from settings",
+      "location": "Settings page header",
+      "structure": {
+        "type": "button",
+        "icon": "arrow_left",
+        "text": "Back to app",
+        "background": "transparent",
+        "hover_background": "lch(10.633% 3.033 272 / 1)",
+        "padding": "8px 12px"
+      }
+    },
+    "changelog_button": {
+      "id": "changelog_button",
+      "name": "Changelog Button",
+      "type": "Interactive",
+      "description": "Button to view changelog in right panel",
+      "location": "Top right corner",
+      "structure": {
+        "type": "button",
+        "text": "View changelog",
+        "icon": "document",
+        "background": "lch(10.633% 3.033 272 / 1)",
+        "border": "1px solid lch(14.74% 3.54 272)",
+        "border_radius": "6px",
+        "padding": "8px 12px"
+      }
+    },
+    "changelog_panel": {
+      "id": "changelog_panel",
+      "name": "Changelog Panel",
+      "type": "Panel",
+      "description": "Right-side panel showing what's new",
+      "location": "Top right",
+      "width": "300px",
+      "background": "lch(4.8% 0.7 272)",
+      "border_left": "1px solid lch(14.74% 3.54 272)",
+      "sticky": true,
+      "content": [
+        {
+          "name": "title",
+          "text": "What's new"
+        },
+        {
+          "name": "changelog_item",
+          "title": "Form templates and mermaid diagrams",
+          "date": "Today"
+        }
+      ]
+    },
+    "help_menu": {
+      "id": "help_menu",
+      "name": "Help Menu",
+      "type": "Menu",
+      "description": "Floating menu in bottom right for help and changelog",
+      "location": "Bottom right",
+      "items": [
+        "View changelog",
+        "Contact support",
+        "Documentation"
+      ]
+    },
+    "form_section_heading": {
+      "id": "form_section_heading",
+      "name": "Form Section Heading",
+      "type": "Typography",
+      "description": "Heading for grouped form sections",
+      "structure": {
+        "level": "h3",
+        "font_size": "0.9375rem",
+        "font_weight": 600,
+        "color": "lch(100 0 272)",
+        "margin_top": "24px",
+        "margin_bottom": "16px",
+        "padding_bottom": "8px",
+        "border_bottom": "1px solid lch(14.74% 3.54 272)"
+      }
+    }
+  },
+  "comprehensive_spacing": {
+    "gap_4px": "4px",
+    "gap_8px": "8px",
+    "gap_12px": "12px",
+    "gap_16px": "16px",
+    "gap_24px": "24px",
+    "padding_4px": "4px",
+    "padding_8px": "8px",
+    "padding_12px": "12px",
+    "padding_16px": "16px",
+    "padding_24px": "24px",
+    "margin_4px": "4px",
+    "margin_8px": "8px",
+    "margin_12px": "12px",
+    "margin_16px": "16px",
+    "margin_24px": "24px"
+  },
+  "typography_system": {
+    "heading_1": {
+      "font_size": "2.25rem",
+      "font_weight": 600,
+      "line_height": 1.2,
+      "letter_spacing": "-0.022em"
+    },
+    "heading_2": {
+      "font_size": "1.5rem",
+      "font_weight": 600,
+      "line_height": 1.3,
+      "letter_spacing": "-0.012em"
+    },
+    "heading_3": {
+      "font_size": "1.125rem",
+      "font_weight": 600,
+      "line_height": 1.3,
+      "letter_spacing": "-0.01em"
+    },
+    "body_regular": {
+      "font_size": "0.9375rem",
+      "font_weight": 400,
+      "line_height": 1.6,
+      "letter_spacing": "-0.008em"
+    },
+    "body_small": {
+      "font_size": "0.8125rem",
+      "font_weight": 400,
+      "line_height": 1.5,
+      "letter_spacing": "-0.006em"
+    },
+    "caption": {
+      "font_size": "0.75rem",
+      "font_weight": 400,
+      "line_height": 1.4,
+      "letter_spacing": "0"
+    }
+  },
+  "z_index_hierarchy": {
+    "base": 1,
+    "elevated": 10,
+    "modal_backdrop": 699,
+    "modal": 700,
+    "popover": 600,
+    "tooltip": 1100,
+    "context_menu": 1200
+  },
+  "animation_system": {
+    "fast": {
+      "duration": "0.1s",
+      "easing": "cubic-bezier(0.215, 0.61, 0.355, 1)"
+    },
+    "normal": {
+      "duration": "0.25s",
+      "easing": "cubic-bezier(0.215, 0.61, 0.355, 1)"
+    },
+    "slow": {
+      "duration": "0.35s",
+      "easing": "cubic-bezier(0.215, 0.61, 0.355, 1)"
+    }
+  },
+  "implementation_notes": {
+    "flutter": {
+      "color_conversion": "LCH colors should be converted to RGB/Hex for Flutter compatibility",
+      "font_stack": "Use 'Inter' as primary font family",
+      "media_player": "Consider using video_player package for Flutter",
+      "rich_text_editor": "Consider using flutter_quill or similar for rich text editing"
+    },
+    "responsive": {
+      "mobile": "Hide sidebar, make full-width content",
+      "tablet": "Show collapsible sidebar",
+      "desktop": "Fixed sidebar at 244px width"
+    },
+    "accessibility": {
+      "keyboard_navigation": "All interactive elements must be keyboard accessible",
+      "screen_readers": "Use semantic HTML and ARIA labels",
+      "focus_indicator": "1px solid lch(47.918% 59.303 288.421)"
+    }
+  }
+}

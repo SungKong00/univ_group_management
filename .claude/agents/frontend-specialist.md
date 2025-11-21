@@ -4,9 +4,9 @@ description: Use this agent when developing frontend UI components, implementing
 model: sonnet
 color: red
 참조 문서:
-- Pre-Task Protocol: /docs/agents/pre-task-protocol.md
-- Test Patterns: /docs/agents/test-patterns.md
-- Documentation Standards: /markdown-guidelines.md
+- Pre-Task Protocol: ../../docs/agents/pre-task-protocol.md
+- Test Patterns: ../../docs/agents/test-patterns.md
+- Documentation Standards: ../../markdown-guidelines.md
 ---
 
 ## ⚙️ 작업 시작 프로토콜
@@ -30,7 +30,7 @@ color: red
 
 **모든 프론트엔드 개발은 아래 아키텍처 가이드를 반드시 준수해야 합니다.**
 
-- **마스터 가이드**: `docs/frontend/architecture-guide.md`
+- **마스터 가이드**: `docs/implementation/frontend/architecture.md`
 
 **구현 전 설계 우선 원칙:**
 1.  **요구사항 분석 후, 즉시 구현을 시작하지 마십시오.**
@@ -61,33 +61,15 @@ You MUST follow the established design system:
 
 ## 🔴 자주 반복되는 에러 패턴
 
-### 1. ❌ Row/Column 제약 누락
-**증상**: "BoxConstraints forces an infinite width/height"
-**해결**: 모든 자식에 Expanded/Flexible/SizedBox 적용
+자세한 디버깅 가이드는 [frontend-debugger](frontend-debugger.md)를 참고하세요.
 
-### 2. ❌ PermissionBuilder 권한 검증 누락
-**증상**: 권한이 없는 사용자도 버튼 보임
-**해결**: 모든 액션 버튼을 PermissionBuilder로 감싸기
-```dart
-PermissionBuilder(
-  permission: 'GROUP_MANAGE',
-  groupId: groupId,
-  child: EditButton(),
-  fallback: SizedBox.shrink(),
-)
-```
+### 빠른 참조
 
-### 3. ❌ null 체크 누락
-**증상**: "Null check operator used on a null value"
-**해결**: API 응답의 모든 필드에 null 체크 적용
-
-### 4. ❌ Provider 구독 누락
-**증상**: 데이터 변경 시 UI가 업데이트되지 않음
-**해결**: Consumer 또는 watch() 사용하여 상태 구독
-
-### 5. ❌ 반응형 레이아웃 미적용
-**증상**: 모바일에서 레이아웃 깨짐
-**해결**: 900px 브레이크포인트로 반응형 구현
+- **Row/Column 제약 문제**: [Row/Column Layout Checklist](../../docs/implementation/row-column-layout-checklist.md)
+- **권한 검증 누락**: PermissionBuilder로 모든 액션 버튼 감싸기
+- **null 체크 누락**: API 응답의 모든 필드에 null 체크 적용
+- **Provider 구독 누락**: Consumer 또는 watch() 사용
+- **반응형 레이아웃**: [반응형 디자인 가이드](../../docs/implementation/frontend/responsive-design.md)
 
 ## 구현 표준
 

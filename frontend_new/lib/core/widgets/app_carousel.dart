@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../theme/color_tokens.dart';
-import '../theme/animation_tokens.dart';
+import '../theme/extensions/app_color_extension.dart';
+import '../theme/colors/carousel_colors.dart';
+import '../theme/responsive_tokens.dart';
 
 /// Linear 스타일 수평 스크롤 Carousel
 ///
@@ -62,43 +63,49 @@ class _AppCarouselState extends State<AppCarousel> {
   }
 
   void _scrollLeft() {
-    final targetPosition = (_scrollController.offset - widget.itemWidth - widget.gap)
-        .clamp(0.0, _scrollController.position.maxScrollExtent);
+    final targetPosition =
+        (_scrollController.offset - widget.itemWidth - widget.gap).clamp(
+          0.0,
+          _scrollController.position.maxScrollExtent,
+        );
 
     _scrollController.animateTo(
       targetPosition,
-      duration: AnimationTokens.regular,
-      curve: AnimationTokens.easeOutCubic,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
     );
   }
 
   void _scrollRight() {
-    final targetPosition = (_scrollController.offset + widget.itemWidth + widget.gap)
-        .clamp(0.0, _scrollController.position.maxScrollExtent);
+    final targetPosition =
+        (_scrollController.offset + widget.itemWidth + widget.gap).clamp(
+          0.0,
+          _scrollController.position.maxScrollExtent,
+        );
 
     _scrollController.animateTo(
       targetPosition,
-      duration: AnimationTokens.regular,
-      curve: AnimationTokens.easeOutCubic,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
     return Stack(
       children: [
         // 스크롤 가능한 아이템 리스트
         SingleChildScrollView(
           controller: _scrollController,
           scrollDirection: Axis.horizontal,
-          padding: widget.padding ?? const EdgeInsets.all(24),
+          padding:
+              widget.padding ??
+              EdgeInsets.all(ResponsiveTokens.pagePadding(width)),
           child: Row(
             children: [
               for (int i = 0; i < widget.items.length; i++) ...[
-                SizedBox(
-                  width: widget.itemWidth,
-                  child: widget.items[i],
-                ),
+                SizedBox(width: widget.itemWidth, child: widget.items[i]),
                 if (i < widget.items.length - 1) SizedBox(width: widget.gap),
               ],
             ],
@@ -142,10 +149,7 @@ class _NavButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback? onPressed;
 
-  const _NavButton({
-    required this.icon,
-    this.onPressed,
-  });
+  const _NavButton({required this.icon, this.onPressed});
 
   @override
   State<_NavButton> createState() => _NavButtonState();
@@ -156,6 +160,8 @@ class _NavButtonState extends State<_NavButton> {
 
   @override
   Widget build(BuildContext context) {
+    final colorExt = context.appColors;
+    final carouselColors = CarouselColors.standard(colorExt);
     final isEnabled = widget.onPressed != null;
     final opacity = isEnabled ? (_isHovered ? 1.0 : 0.7) : 0.3;
 
@@ -163,10 +169,10 @@ class _NavButtonState extends State<_NavButton> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedOpacity(
-        duration: AnimationTokens.fast,
+        duration: const Duration(milliseconds: 150),
         opacity: opacity,
         child: Material(
-          color: ColorTokens.backgroundLevel2,
+          color: carouselColors.navButtonBackground,
           borderRadius: BorderRadius.circular(20),
           child: InkWell(
             onTap: widget.onPressed,
@@ -176,15 +182,12 @@ class _NavButtonState extends State<_NavButton> {
               height: 40,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: ColorTokens.borderPrimary,
-                  width: 1,
-                ),
+                border: Border.all(color: colorExt.borderPrimary, width: 1),
               ),
               child: Icon(
                 widget.icon,
                 size: 20,
-                color: ColorTokens.textPrimary,
+                color: carouselColors.navButtonIcon,
               ),
             ),
           ),

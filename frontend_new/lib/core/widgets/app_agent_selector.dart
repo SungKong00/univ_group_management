@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/color_tokens.dart';
-import '../theme/typography_tokens.dart';
-import '../theme/animation_tokens.dart';
+import '../theme/extensions/app_color_extension.dart';
+import '../theme/responsive_tokens.dart';
 
 /// Linear 스타일 AI Agent Selector
 ///
@@ -12,7 +11,7 @@ import '../theme/animation_tokens.dart';
 class AppAgentSelector extends StatefulWidget {
   final List<AppAgent> agents;
   final int? selectedIndex;
-  final ValueChanged<int>? onAgentSelected;
+  final ValueChanged<int?>? onAgentSelected;
   final double avatarSize;
   final AppBadgeStyle badgeStyle;
 
@@ -39,15 +38,25 @@ class _AppAgentSelectorState extends State<AppAgentSelector> {
   }
 
   void _selectAgent(int index) {
-    setState(() => _selectedIndex = index);
-    widget.onAgentSelected?.call(index);
+    setState(() {
+      // 이미 선택된 항목을 다시 클릭하면 선택 해제 (Radio.toggleable 패턴)
+      if (_selectedIndex == index) {
+        _selectedIndex = null;
+      } else {
+        _selectedIndex = index;
+      }
+    });
+    widget.onAgentSelected?.call(_selectedIndex);
   }
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.symmetric(
+        vertical: ResponsiveTokens.cardGap(width) * 0.5,
+      ),
       child: Row(
         children: [
           for (int i = 0; i < widget.agents.length; i++) ...[
@@ -58,7 +67,7 @@ class _AppAgentSelectorState extends State<AppAgentSelector> {
               avatarSize: widget.avatarSize,
               badgeStyle: widget.badgeStyle,
             ),
-            if (i < widget.agents.length - 1) const SizedBox(width: 8),
+            if (i < widget.agents.length - 1) const SizedBox(width: 8.0),
           ],
         ],
       ),
@@ -90,15 +99,17 @@ class _AgentItemState extends State<_AgentItem> {
 
   @override
   Widget build(BuildContext context) {
+    final colorExt = context.appColors;
+    final textTheme = Theme.of(context).textTheme;
+    final width = MediaQuery.sizeOf(context).width;
+
     final backgroundColor = widget.isSelected
-        ? ColorTokens.accent.withValues(alpha: 0.1)
-        : (_isHovered
-            ? ColorTokens.backgroundLevel2
-            : ColorTokens.backgroundLevel1);
+        ? colorExt.brandPrimary.withValues(alpha: 0.1)
+        : (_isHovered ? colorExt.surfaceTertiary : colorExt.surfaceSecondary);
 
     final borderColor = widget.isSelected
-        ? ColorTokens.accent
-        : (_isHovered ? ColorTokens.borderPrimary : Colors.transparent);
+        ? colorExt.brandPrimary
+        : (_isHovered ? colorExt.borderPrimary : Colors.transparent);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -106,9 +117,12 @@ class _AgentItemState extends State<_AgentItem> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: AnimationTokens.fast,
-          curve: AnimationTokens.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveTokens.cardGap(width),
+            vertical: ResponsiveTokens.cardGap(width) * 0.5,
+          ),
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(6),
@@ -120,42 +134,39 @@ class _AgentItemState extends State<_AgentItem> {
               // Avatar
               CircleAvatar(
                 radius: widget.avatarSize / 2,
-                backgroundColor: ColorTokens.accent,
+                backgroundColor: colorExt.brandPrimary,
                 child: widget.agent.icon != null
                     ? Icon(
                         widget.agent.icon,
                         size: widget.avatarSize * 0.6,
-                        color: ColorTokens.brandText,
+                        color: colorExt.brandText,
                       )
                     : Text(
                         widget.agent.name[0].toUpperCase(),
-                        style: TypographyTokens.textSmall.copyWith(
-                          color: ColorTokens.brandText,
-                          fontWeight: TypographyTokens.medium,
+                        style: textTheme.bodySmall!.copyWith(
+                          color: colorExt.brandText,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
               ),
 
-              const SizedBox(width: 8),
+              const SizedBox(width: 8.0),
 
               // Name
               Text(
                 widget.agent.name,
-                style: TypographyTokens.textSmall.copyWith(
-                  color: ColorTokens.textPrimary,
+                style: textTheme.bodySmall!.copyWith(
+                  color: colorExt.textPrimary,
                   fontWeight: widget.isSelected
-                      ? TypographyTokens.medium
+                      ? FontWeight.w600
                       : FontWeight.normal,
                 ),
               ),
 
               // Badge (optional)
               if (widget.agent.badge != null) ...[
-                const SizedBox(width: 6),
-                _Badge(
-                  label: widget.agent.badge!,
-                  style: widget.badgeStyle,
-                ),
+                const SizedBox(width: 6.0),
+                _Badge(label: widget.agent.badge!, style: widget.badgeStyle),
               ],
             ],
           ),
@@ -169,22 +180,22 @@ class _Badge extends StatelessWidget {
   final String label;
   final AppBadgeStyle style;
 
-  const _Badge({
-    required this.label,
-    required this.style,
-  });
+  const _Badge({required this.label, required this.style});
 
   @override
   Widget build(BuildContext context) {
+    final colorExt = context.appColors;
+    final textTheme = Theme.of(context).textTheme;
+
     final (bgColor, textColor) = switch (style) {
       AppBadgeStyle.subtle => (
-          ColorTokens.backgroundLevel3,
-          ColorTokens.textTertiary,
-        ),
+        colorExt.surfaceQuaternary,
+        colorExt.textTertiary,
+      ),
       AppBadgeStyle.prominent => (
-          ColorTokens.accent.withValues(alpha: 0.15),
-          ColorTokens.accent,
-        ),
+        colorExt.brandPrimary.withValues(alpha: 0.15),
+        colorExt.brandPrimary,
+      ),
     };
 
     return Container(
@@ -195,10 +206,7 @@ class _Badge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TypographyTokens.textSmall.copyWith(
-          color: textColor,
-          fontSize: 11,
-        ),
+        style: textTheme.bodySmall!.copyWith(color: textColor, fontSize: 11),
       ),
     );
   }
@@ -210,15 +218,7 @@ class AppAgent {
   final IconData? icon;
   final String? description;
 
-  const AppAgent({
-    required this.name,
-    this.badge,
-    this.icon,
-    this.description,
-  });
+  const AppAgent({required this.name, this.badge, this.icon, this.description});
 }
 
-enum AppBadgeStyle {
-  subtle,
-  prominent,
-}
+enum AppBadgeStyle { subtle, prominent }
