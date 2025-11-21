@@ -20,6 +20,7 @@ import '../../../../core/widgets/compact_card.dart';
 import '../../../../core/widgets/selectable_card.dart';
 import '../../../../core/widgets/wide_card.dart';
 import '../../../../core/widgets/app_tabs.dart';
+import '../../../../core/widgets/controlled_app_tabs.dart';
 import '../../data/models/pricing_plan_model.dart';
 import '../../data/models/billing_cycle_model.dart';
 import '../../data/models/customer_model.dart';
@@ -38,12 +39,25 @@ class V2ComponentsPage extends StatefulWidget {
   State<V2ComponentsPage> createState() => _V2ComponentsPageState();
 }
 
-class _V2ComponentsPageState extends State<V2ComponentsPage> {
-  int _selectedTabIndex = 0;
+class _V2ComponentsPageState extends State<V2ComponentsPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool _isYearly = false;
   String _selectedCustomerFilter = 'all';
-  List<bool> _selectedCards = List.filled(3, false);
+  final List<bool> _selectedCards = List.filled(3, false);
   GridPresetColumns _selectedPreset = GridPresetColumns.three;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +82,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage> {
           // Content
           Expanded(
             child: IndexedStack(
-              index: _selectedTabIndex,
+              index: _tabController.index,
               children: [
                 _buildPricingTab(),
                 _buildCustomersTab(),
@@ -127,20 +141,17 @@ class _V2ComponentsPageState extends State<V2ComponentsPage> {
           MediaQuery.sizeOf(context).width,
         ),
       ),
-      child: AppTabs(
+      child: ControlledAppTabs(
+        controller: _tabController,
         tabs: const [
           AppTabItem(label: 'Pricing'),
           AppTabItem(label: 'Customers'),
           AppTabItem(label: 'Design Cards'),
           AppTabItem(label: 'Grid Presets'),
         ],
-        initialIndex: _selectedTabIndex,
         indicatorHeight: 2.0,
         animationCurve: Curves.easeInOutQuart,
         animationDuration: const Duration(milliseconds: 350),
-        onTabChanged: (index) {
-          setState(() => _selectedTabIndex = index);
-        },
       ),
     );
   }

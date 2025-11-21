@@ -1,25 +1,26 @@
 /// Responsive Design Tokens
 ///
-/// Material Design 3 breakpoints(600/1024/1440px)와 Flutter best practices를 따르는 반응형 디자인 토큰의 정적 유틸리티 클래스
+/// Material Design 3 breakpoints(600/1440px) 및 1440px 기준 그리드 시스템을 따르는 반응형 디자인 토큰의 정적 유틸리티 클래스
 ///
 /// 핵심 원칙:
 /// - MediaQuery.sizeOf() 사용 (성능 최적화)
 /// - 디바이스 타입 체크 금지 (Platform.isAndroid 등)
 /// - 유연한 레이아웃 (Flexible, Expanded 기반)
+/// - 모든 그리드 계산은 1440px 기준 (GridLayoutTokens와 일관성)
 class ResponsiveTokens {
   ResponsiveTokens._();
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // Breakpoints (Material Design 3 기준)
+  // Breakpoints (Material Design 3 기준, 1440px 중심)
   // ═══════════════════════════════════════════════════════════════════════════
 
   /// Mobile breakpoint (< 600px)
   static const double mobile = 600.0;
 
-  /// Tablet breakpoint (600-1024px)
-  static const double tablet = 1024.0;
+  /// Tablet breakpoint (600-1440px)
+  static const double tablet = 1440.0;
 
-  /// Desktop breakpoint (>= 1024px)
+  /// Desktop breakpoint (>= 1440px)
   static const double desktop = 1440.0;
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -48,11 +49,16 @@ class ResponsiveTokens {
     return 32.0; // Desktop: 32px
   }
 
-  /// 화면 너비에 따른 그리드 컬럼 수 계산
+  /// 화면 너비에 따른 그리드 컬럼 수 계산 (1440px 기준)
+  ///
+  /// 계산 기준:
+  /// - Mobile (< 600px): 4개 컬럼
+  /// - Tablet (600-1440px): 12개 컬럼
+  /// - Desktop (>= 1440px): 16개 컬럼
   static int columnCount(double width) {
     if (width < mobile) return 4; // Mobile: 4 columns
-    if (width < tablet) return 8; // Tablet: 8 columns
-    return 12; // Desktop: 12 columns
+    if (width < tablet) return 12; // Tablet: 12 columns (600-1440px)
+    return 16; // Desktop: 16 columns (1440px+)
   }
 
   /// 화면 너비에 따른 폰트 스케일 계산
@@ -193,8 +199,8 @@ class ResponsiveTokens {
   /// 최소 터치 영역 크기 (iOS/Android 접근성 가이드라인)
   static const double minTapSize = 44.0;
 
-  /// 최대 컨텐츠 너비 (가독성을 위한 제한)
-  static const double maxContentWidth = 1024.0;
+  /// 최대 컨텐츠 너비 (가독성을 위한 제한, 1440px 기준)
+  static const double maxContentWidth = 1200.0;
 
   /// 최대 텍스트 컬럼 너비 (prose)
   static const double maxProseWidth = 624.0;
