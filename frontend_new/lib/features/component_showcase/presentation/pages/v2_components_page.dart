@@ -51,6 +51,9 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
