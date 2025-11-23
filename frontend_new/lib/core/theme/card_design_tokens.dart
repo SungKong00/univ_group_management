@@ -73,7 +73,7 @@ class CardDesignTokens {
 
   /// 수동 override: 특정 카드는 scale factor 대신 고정값 사용
   /// null이면 scale factor 자동 적용
-  static const Map<String, Map<String, Map<String, double>>>? _overrides = {
+  static const Map<String, Map<String, Map<String, double>>> _overrides = {
     // 예: 'compact' 카드는 XS에서 커스텀 크기 사용
     // 'compact': {
     //   'xs': {'min': 80, 'max': 140, 'preferred': 110},
@@ -89,8 +89,8 @@ class CardDesignTokens {
     final breakpoint = _getBreakpointName(width);
 
     // Override 확인 (있으면 override 값 사용)
-    if (_overrides?[cardType]?[breakpoint] != null) {
-      return _overrides![cardType]![breakpoint]!;
+    if (_overrides[cardType]?[breakpoint] != null) {
+      return _overrides[cardType]![breakpoint]!;
     }
 
     // Scale factor 적용

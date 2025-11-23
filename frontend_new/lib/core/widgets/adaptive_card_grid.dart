@@ -350,35 +350,27 @@ class _AdaptiveCardGridWithCardType extends AdaptiveCardGrid {
   final bool? enforceAspectRatioOverride;
 
   const _AdaptiveCardGridWithCardType({
-    Key? key,
+    super.key,
     required this.cardType,
     required this.columns,
-    required int itemCount,
-    required IndexedWidgetBuilder itemBuilder,
-    AdaptiveLayoutMode mode = AdaptiveLayoutMode.grid,
-    bool scrollOnOverflow = true,
-    EdgeInsetsGeometry? padding,
-    double? maxContentWidth,
-    AlignmentGeometry alignment = Alignment.center,
+    required super.itemCount,
+    required super.itemBuilder,
+    super.mode = AdaptiveLayoutMode.grid,
+    super.scrollOnOverflow = true,
+    super.padding,
+    super.maxContentWidth,
+    super.alignment = Alignment.center,
     this.aspectRatioOverride,
     this.enforceAspectRatioOverride,
   }) : super(
-    key: key,
-    itemCount: itemCount,
-    itemBuilder: itemBuilder,
-    minItemWidth: 240, // 임시값 (build에서 계산)
-    maxItemWidth: 380, // 임시값 (build에서 계산)
-    maxColumns: null,
-    spacing: null,
-    aspectRatio: null,
-    mode: mode,
-    scrollOnOverflow: scrollOnOverflow,
-    enforceAspectRatio: true,
-    padding: padding,
-    preferredItemWidth: null,
-    maxContentWidth: maxContentWidth,
-    alignment: alignment,
-  );
+         minItemWidth: 240, // 임시값 (build에서 계산)
+         maxItemWidth: 380, // 임시값 (build에서 계산)
+         maxColumns: null,
+         spacing: null,
+         aspectRatio: null,
+         enforceAspectRatio: true,
+         preferredItemWidth: null,
+       );
 
   @override
   Widget build(BuildContext context) {

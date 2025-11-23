@@ -145,15 +145,15 @@ class GridLayoutTokens {
 
     // 화면 너비에 따른 scale factor 적용
     if (width < 450) {
-      return basePreferred * 0.75;   // XS: 75%
+      return basePreferred * 0.75; // XS: 75%
     } else if (width < 768) {
-      return basePreferred * 0.85;   // SM: 85%
+      return basePreferred * 0.85; // SM: 85%
     } else if (width < 1024) {
-      return basePreferred * 1.0;    // MD: 100%
+      return basePreferred * 1.0; // MD: 100%
     } else if (width < 1440) {
-      return basePreferred * 1.1;    // LG: 110%
+      return basePreferred * 1.1; // LG: 110%
     }
-    return basePreferred * 1.2;      // XL: 120%
+    return basePreferred * 1.2; // XL: 120%
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -165,54 +165,39 @@ class GridLayoutTokens {
   /// 가격 비교 섹션용으로 최적화된 프리셋입니다.
   /// 세로 카드를 3열로 배치하며, 가격 선택이 용이한 간격으로 조정됩니다.
   ///
-  /// 사용 예시 (showcase):
+  /// 사용 예시:
   /// ```dart
-  /// // Pricing 섹션 (3개 가격 플랜)
-  /// AdaptiveCardGrid.fromPreset(
-  ///   config: GridLayoutTokens.pricingCards,
-  ///   itemCount: pricingPlans.length,
-  ///   itemBuilder: (context, index) => PricingCard(plan: pricingPlans[index]),
-  ///   maxContentWidth: ResponsiveTokens.maxContentWidth,
-  /// );
+  /// final width = MediaQuery.sizeOf(context).width;
+  /// final config = GridLayoutTokens.pricingCards(width);
   /// ```
-  static GridLayoutConfig get pricingCards =>
-      forCardType(CardVariant.vertical, GridPresetColumns.three);
+  static GridLayoutConfig pricingCards(double width) =>
+      forCardType(CardVariant.vertical, GridPresetColumns.three, width: width);
 
   /// 고객 추천사 2열 레이아웃
   ///
   /// 가로 카드를 2열로 배치합니다.
   /// 이미지와 텍스트가 나란히 배치되는 레이아웃에 최적화되어 있습니다.
   ///
-  /// 사용 예시 (showcase):
+  /// 사용 예시:
   /// ```dart
-  /// // Horizontal Cards 섹션 (추천사 또는 증언)
-  /// AdaptiveCardGrid.fromPreset(
-  ///   config: GridLayoutTokens.customerTestimonials,
-  ///   itemCount: testimonials.length,
-  ///   itemBuilder: (context, index) => HorizontalCard(...),
-  ///   maxContentWidth: ResponsiveTokens.maxContentWidth,
-  /// );
+  /// final width = MediaQuery.sizeOf(context).width;
+  /// final config = GridLayoutTokens.customerTestimonials(width);
   /// ```
-  static GridLayoutConfig get customerTestimonials =>
-      forCardType(CardVariant.horizontal, GridPresetColumns.two);
+  static GridLayoutConfig customerTestimonials(double width) =>
+      forCardType(CardVariant.horizontal, GridPresetColumns.two, width: width);
 
   /// 기능 하이라이트 4열 레이아웃
   ///
   /// 콤팩트 카드를 4열로 배치합니다.
   /// 아이콘 기반 기능 그리드에 최적화되어 있습니다.
   ///
-  /// 사용 예시 (showcase):
+  /// 사용 예시:
   /// ```dart
-  /// // Compact Cards 섹션 - 기능 목록
-  /// AdaptiveCardGrid.fromPreset(
-  ///   config: GridLayoutTokens.featureHighlights,
-  ///   itemCount: features.length,
-  ///   itemBuilder: (context, index) => CompactCard(...),
-  ///   maxContentWidth: ResponsiveTokens.maxContentWidth,
-  /// );
+  /// final width = MediaQuery.sizeOf(context).width;
+  /// final config = GridLayoutTokens.featureHighlights(width);
   /// ```
-  static GridLayoutConfig get featureHighlights =>
-      forCardType(CardVariant.compact, GridPresetColumns.four);
+  static GridLayoutConfig featureHighlights(double width) =>
+      forCardType(CardVariant.compact, GridPresetColumns.four, width: width);
 
   /// 태그/배지 그리드 6열 레이아웃
   ///
@@ -220,36 +205,26 @@ class GridLayoutTokens {
   /// 태그, 배지, 필터 등 작은 아이템의 밀도 높은 그리드에 최적화되어 있습니다.
   /// aspectRatio 강제가 비활성화되어 자동 높이를 지원합니다.
   ///
-  /// 사용 예시 (showcase):
+  /// 사용 예시:
   /// ```dart
-  /// // Compact Cards 섹션 - 6개 항목 그리드
-  /// AdaptiveCardGrid.fromPreset(
-  ///   config: GridLayoutTokens.tagGrid,
-  ///   itemCount: 6,
-  ///   itemBuilder: (context, index) => CompactCard(...),
-  ///   maxContentWidth: ResponsiveTokens.maxContentWidth,
-  /// );
+  /// final width = MediaQuery.sizeOf(context).width;
+  /// final config = GridLayoutTokens.tagGrid(width);
   /// ```
-  static GridLayoutConfig get tagGrid =>
-      forCardType(CardVariant.compact, GridPresetColumns.six);
+  static GridLayoutConfig tagGrid(double width) =>
+      forCardType(CardVariant.compact, GridPresetColumns.six, width: width);
 
   /// 고객 카드 4열 레이아웃
   ///
   /// 세로 카드를 4열로 배치합니다.
   /// 고객 로고, 팀 멤버 등 4개 항목 그리드에 최적화되어 있습니다.
   ///
-  /// 사용 예시 (showcase):
+  /// 사용 예시:
   /// ```dart
-  /// // Customer Cards 섹션 (4개 고객)
-  /// AdaptiveCardGrid.fromPreset(
-  ///   config: GridLayoutTokens.customerCards,
-  ///   itemCount: customers.length,
-  ///   itemBuilder: (context, index) => CustomerCard(customers[index]),
-  ///   maxContentWidth: ResponsiveTokens.maxContentWidth,
-  /// );
+  /// final width = MediaQuery.sizeOf(context).width;
+  /// final config = GridLayoutTokens.customerCards(width);
   /// ```
-  static GridLayoutConfig get customerCards =>
-      forCardType(CardVariant.vertical, GridPresetColumns.four);
+  static GridLayoutConfig customerCards(double width) =>
+      forCardType(CardVariant.vertical, GridPresetColumns.four, width: width);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Private Helpers
@@ -267,12 +242,8 @@ class GridLayoutTokens {
 
   static ResponsiveValue<double>? _getAspectRatioForCard(CardVariant cardType) {
     return switch (cardType) {
-      CardVariant.vertical => const ResponsiveValue<double>(
-        xs: 3 / 4,
-      ),
-      CardVariant.horizontal => const ResponsiveValue<double>(
-        xs: 4 / 3,
-      ),
+      CardVariant.vertical => const ResponsiveValue<double>(xs: 3 / 4),
+      CardVariant.horizontal => const ResponsiveValue<double>(xs: 4 / 3),
       CardVariant.compact => null, // 자동 높이
       CardVariant.selectable => const ResponsiveValue<double>(
         xs: 3 / 1,

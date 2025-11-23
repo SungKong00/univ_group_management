@@ -19,23 +19,23 @@ enum ScreenSize { xs, sm, md, lg, xl }
 
 // Legacy enum values (deprecated - for backward compatibility)
 extension ScreenSizeExtension on ScreenSize {
-  @deprecated
+  @Deprecated('Check against ScreenSize.xs instead of using isMobile')
   bool get isMobile => this == ScreenSize.xs;
 
-  @deprecated
+  @Deprecated('Check against ScreenSize.sm/md instead of using isTablet')
   bool get isTablet => this == ScreenSize.sm || this == ScreenSize.md;
 
-  @deprecated
+  @Deprecated('Check against ScreenSize.lg/xl instead of using isDesktop')
   bool get isDesktop => this == ScreenSize.lg || this == ScreenSize.xl;
 
   /// Breakpoint에 해당하는 Display 문자열
   String get displayName => switch (this) {
-        ScreenSize.xs => 'XS (< 450px)',
-        ScreenSize.sm => 'SM (450-768px)',
-        ScreenSize.md => 'MD (768-1024px)',
-        ScreenSize.lg => 'LG (1024-1440px)',
-        ScreenSize.xl => 'XL (≥ 1440px)',
-      };
+    ScreenSize.xs => 'XS (< 450px)',
+    ScreenSize.sm => 'SM (450-768px)',
+    ScreenSize.md => 'MD (768-1024px)',
+    ScreenSize.lg => 'LG (1024-1440px)',
+    ScreenSize.xl => 'XL (≥ 1440px)',
+  };
 }
 
 /// 그리드 레이아웃 열 수 프리셋

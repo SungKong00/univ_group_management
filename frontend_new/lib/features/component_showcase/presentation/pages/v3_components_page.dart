@@ -82,9 +82,9 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
           padding: EdgeInsets.all(spacing.xl),
           child: ResponsiveBuilder(
             builder: (context, screenSize, width) {
-              if (screenSize == ScreenSize.desktop) {
+              if (screenSize == ScreenSize.lg || screenSize == ScreenSize.xl) {
                 return _buildDesktopLayout(colorExt, typographyExt);
-              } else if (screenSize == ScreenSize.tablet) {
+              } else if (screenSize == ScreenSize.md) {
                 return _buildTabletLayout(colorExt, typographyExt);
               } else {
                 return _buildMobileLayout(colorExt, typographyExt);

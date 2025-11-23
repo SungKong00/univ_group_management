@@ -234,7 +234,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
 
                     // Pricing Cards - 3열 프리셋 사용
                     AdaptiveCardGrid.fromPreset(
-                      config: GridLayoutTokens.pricingCards,
+                      config: GridLayoutTokens.pricingCards(width),
                       itemCount: pricingPlans.length,
                       itemBuilder: (context, index) =>
                           PricingCard(plan: pricingPlans[index]),
@@ -318,6 +318,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                   config: GridLayoutTokens.forCardType(
                     CardVariant.vertical,
                     GridPresetColumns.three,
+                    width: width,
                   ),
                   itemCount: 3,
                   itemBuilder: (context, index) {
@@ -351,7 +352,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                 title: '2. Horizontal Card',
                 variant: SectionVariant.standard,
                 child: AdaptiveCardGrid.fromPreset(
-                  config: GridLayoutTokens.customerTestimonials,
+                  config: GridLayoutTokens.customerTestimonials(width),
                   itemCount: 3,
                   itemBuilder: (context, index) {
                     final variants = ['standard', 'featured', 'highlighted'];
@@ -384,7 +385,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                 title: '3. Compact Card',
                 variant: SectionVariant.standard,
                 child: AdaptiveCardGrid.fromPreset(
-                  config: GridLayoutTokens.tagGrid,
+                  config: GridLayoutTokens.tagGrid(width),
                   itemCount: 6,
                   itemBuilder: (context, index) {
                     final variants = ['standard', 'featured', 'highlighted'];
@@ -595,7 +596,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                 title: 'Featured Customers',
                 variant: SectionVariant.standard,
                 child: AdaptiveCardGrid.fromPreset(
-                  config: GridLayoutTokens.customerCards,
+                  config: GridLayoutTokens.customerCards(width),
                   itemCount: customers.length,
                   itemBuilder: (context, index) =>
                       CustomerCard(customer: customers[index]),
@@ -729,6 +730,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                   config: GridLayoutTokens.forCardType(
                     CardVariant.vertical,
                     _selectedPreset,
+                    width: width,
                   ),
                   itemCount: _selectedPreset.index + 3,
                   itemBuilder: (context, index) {
@@ -763,6 +765,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                   config: GridLayoutTokens.forCardType(
                     CardVariant.horizontal,
                     _selectedPreset,
+                    width: width,
                   ),
                   itemCount: _selectedPreset.index + 2,
                   itemBuilder: (context, index) {
@@ -797,6 +800,7 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                   config: GridLayoutTokens.forCardType(
                     CardVariant.compact,
                     _selectedPreset,
+                    width: width,
                   ),
                   itemCount: _selectedPreset.index + 4,
                   itemBuilder: (context, index) {

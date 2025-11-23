@@ -63,9 +63,9 @@ class CustomerLogoGrid extends StatelessWidget {
 
   /// Responsive column count
   int _getCrossAxisCount(double width) {
-    if (ResponsiveTokens.isDesktop(width)) return 4;
-    if (ResponsiveTokens.isTablet(width)) return 3;
-    return 2; // Mobile
+    if (width >= 1024) return 4; // lg, xl
+    if (width >= 768) return 3; // md
+    return 2; // xs, sm (Mobile)
   }
 
   /// Company Card

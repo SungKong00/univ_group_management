@@ -60,7 +60,6 @@ class _HorizontalCardState extends State<HorizontalCard> {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final width = MediaQuery.sizeOf(context).width;
 
     // 색상 선택
     final colors = switch (widget.variant) {
@@ -69,13 +68,14 @@ class _HorizontalCardState extends State<HorizontalCard> {
       _ => HorizontalCardColors.standard(colorExt),
     };
 
-    final padding = ResponsiveTokens.cardPadding(width);
-    final gap = ResponsiveTokens.cardGap(width);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final padding = ResponsiveTokens.cardPadding(screenWidth);
+    final gap = ResponsiveTokens.cardGap(screenWidth);
     final lineNumbers = CardDesignTokens.textLineNumbersByCard['horizontal']!;
 
     // 디자인 시스템 기반 이미지 너비 계산
-    final cardPreferredWidth =
-        CardDesignTokens.cardWidths['horizontal']!['preferred']!;
+    final cardSizes = CardDesignTokens.getCardWidths('horizontal', screenWidth);
+    final cardPreferredWidth = cardSizes['preferred']!;
     final imageWidth = cardPreferredWidth * widget.imageWidthRatio;
 
     // 이미지 비율 기반 최소 높이 자동 계산

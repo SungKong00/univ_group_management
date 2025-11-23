@@ -85,8 +85,14 @@ class _CompactCardState extends State<CompactCard> {
         child: AnimatedContainer(
           duration: CardDesignTokens.hoverAnimationDuration,
           constraints: BoxConstraints(
-            minWidth: CardDesignTokens.cardWidths['compact']!['min']!,
-            maxWidth: CardDesignTokens.cardWidths['compact']!['max']!,
+            minWidth: CardDesignTokens.getCardWidths(
+              'compact',
+              MediaQuery.sizeOf(context).width,
+            )['min']!,
+            maxWidth: CardDesignTokens.getCardWidths(
+              'compact',
+              MediaQuery.sizeOf(context).width,
+            )['max']!,
           ),
           decoration: BoxDecoration(
             color: widget.isSelected

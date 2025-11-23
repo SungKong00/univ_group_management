@@ -82,7 +82,7 @@ class ResponsiveTestPage extends StatelessWidget {
   ) {
     return Text(
       '반응형 디자인 테스트',
-      style: screenSize == ScreenSize.mobile
+      style: screenSize == ScreenSize.xs || screenSize == ScreenSize.sm
           ? Theme.of(context).textTheme.headlineMedium
           : Theme.of(context).textTheme.headlineSmall,
     );
@@ -94,10 +94,11 @@ class ResponsiveTestPage extends StatelessWidget {
     double width,
   ) {
     final colorExt = context.appColors;
-    final String sizeLabel = screenSize == ScreenSize.mobile
-        ? 'Mobile (< 600px)'
-        : screenSize == ScreenSize.tablet
-        ? 'Tablet (600-1024px)'
+    final String sizeLabel =
+        screenSize == ScreenSize.xs || screenSize == ScreenSize.sm
+        ? 'Mobile (< 768px)'
+        : screenSize == ScreenSize.md
+        ? 'Tablet (768-1024px)'
         : 'Desktop (>= 1024px)';
 
     return AppCard(
@@ -179,7 +180,7 @@ class ResponsiveTestPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ✅ 조건부 레이아웃 (기존 프로젝트 패턴)
-        screenSize == ScreenSize.mobile
+        screenSize == ScreenSize.xs || screenSize == ScreenSize.sm
             ? Column(
                 // Mobile: 세로 배치
                 children: cards
@@ -212,7 +213,7 @@ class ResponsiveTestPage extends StatelessWidget {
               ),
         SizedBox(height: spacing.small),
         Text(
-          screenSize == ScreenSize.mobile
+          screenSize == ScreenSize.xs || screenSize == ScreenSize.sm
               ? 'Mobile: 세로 배치 (Column)'
               : 'Desktop: 가로 배치 (Row with Flexible)',
           style: Theme.of(

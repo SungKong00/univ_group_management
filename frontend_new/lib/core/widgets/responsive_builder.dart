@@ -92,13 +92,7 @@ class ResponsiveValue<T> {
   /// [null이면 lg → md → sm → xs 순서로 폴백]
   final T? xl;
 
-  const ResponsiveValue({
-    required this.xs,
-    this.sm,
-    this.md,
-    this.lg,
-    this.xl,
-  });
+  const ResponsiveValue({required this.xs, this.sm, this.md, this.lg, this.xl});
 
   /// BuildContext로부터 화면 크기를 판단하여 적절한 값 반환
   T getValue(BuildContext context) {
@@ -226,17 +220,17 @@ class ShowOnScreenSize extends StatelessWidget {
 }
 
 // Legacy widget names (deprecated - use ShowOn[Size] instead)
-@deprecated
+@Deprecated('Use ShowOnXS instead of ShowOnMobile')
 class ShowOnMobile extends ShowOnXS {
   const ShowOnMobile({super.key, required super.child});
 }
 
-@deprecated
+@Deprecated('Use HideOnXS instead of HideOnMobile')
 class HideOnMobile extends HideOnXS {
   const HideOnMobile({super.key, required super.child});
 }
 
-@deprecated
+@Deprecated('Use ShowOnSM or ShowOnMD instead of ShowOnTablet')
 class ShowOnTablet extends StatelessWidget {
   final Widget child;
   const ShowOnTablet({super.key, required this.child});
@@ -250,7 +244,7 @@ class ShowOnTablet extends StatelessWidget {
   }
 }
 
-@deprecated
+@Deprecated('Use ShowOnLG or ShowOnXL instead of ShowOnDesktop')
 class ShowOnDesktop extends StatelessWidget {
   final Widget child;
   const ShowOnDesktop({super.key, required this.child});
@@ -278,8 +272,8 @@ class ShowOnDesktop extends StatelessWidget {
 /// ```
 class ResponsiveLayout extends StatelessWidget {
   final List<Widget> children;
-  final Axis compactDirection;     // XS/SM/MD용 (기본: vertical)
-  final Axis expandedDirection;    // LG/XL용 (기본: horizontal)
+  final Axis compactDirection; // XS/SM/MD용 (기본: vertical)
+  final Axis expandedDirection; // LG/XL용 (기본: horizontal)
   final MainAxisAlignment mainAxisAlignment;
   final CrossAxisAlignment crossAxisAlignment;
   final double spacing;
@@ -299,7 +293,8 @@ class ResponsiveLayout extends StatelessWidget {
     return ResponsiveBuilder(
       builder: (context, screenSize, width) {
         // XS/SM/MD는 compact, LG/XL은 expanded
-        final isCompact = screenSize == ScreenSize.xs ||
+        final isCompact =
+            screenSize == ScreenSize.xs ||
             screenSize == ScreenSize.sm ||
             screenSize == ScreenSize.md;
         final direction = isCompact ? compactDirection : expandedDirection;
