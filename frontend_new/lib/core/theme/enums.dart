@@ -5,9 +5,38 @@
 library;
 
 // ========================================================
-// 반응형 & 레이아웃
+// 반응형 & 레이아웃 (5-step responsive system)
 // ========================================================
-enum ScreenSize { mobile, tablet, desktop }
+
+/// 화면 크기 분류 (Material Design 3 기반)
+///
+/// XS (Extra Small): < 450px - 작은 폰 (iPhone SE)
+/// SM (Small): 450-768px - 큰 폰 (iPhone 14 Pro Max)
+/// MD (Medium): 768-1024px - 태블릿 세로 (iPad)
+/// LG (Large): 1024-1440px - 태블릿 가로 / 노트북
+/// XL (Extra Large): >= 1440px - 데스크톱 모니터
+enum ScreenSize { xs, sm, md, lg, xl }
+
+// Legacy enum values (deprecated - for backward compatibility)
+extension ScreenSizeExtension on ScreenSize {
+  @deprecated
+  bool get isMobile => this == ScreenSize.xs;
+
+  @deprecated
+  bool get isTablet => this == ScreenSize.sm || this == ScreenSize.md;
+
+  @deprecated
+  bool get isDesktop => this == ScreenSize.lg || this == ScreenSize.xl;
+
+  /// Breakpoint에 해당하는 Display 문자열
+  String get displayName => switch (this) {
+        ScreenSize.xs => 'XS (< 450px)',
+        ScreenSize.sm => 'SM (450-768px)',
+        ScreenSize.md => 'MD (768-1024px)',
+        ScreenSize.lg => 'LG (1024-1440px)',
+        ScreenSize.xl => 'XL (≥ 1440px)',
+      };
+}
 
 /// 그리드 레이아웃 열 수 프리셋
 ///

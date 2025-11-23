@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/grid_layout_tokens.dart';
+import '../theme/card_design_tokens.dart';
+import '../theme/enums.dart';
 import 'responsive_builder.dart';
 
 /// Adaptive card grid/wrap for reusable v2 components.
@@ -70,30 +72,22 @@ class AdaptiveCardGrid extends StatelessWidget {
     this.alignment = Alignment.center,
   });
 
-  /// 그리드 레이아웃 프리셋으로부터 생성합니다.
+  /// 그리드 레이아웃 프리셋으로부터 생성합니다 (정적 설정)
   ///
   /// [GridLayoutConfig]를 사용하여 그리드 파라미터를 자동으로 설정합니다.
   /// 이를 통해 반복적인 픽셀 계산을 제거하고 일관된 레이아웃을 보장합니다.
   ///
+  /// ⚠️ 주의: 이 factory는 기존 호환성을 위해 유지되지만, 반응형 카드 크기가 필요한 경우
+  /// [fromCardType()]을 사용하는 것이 권장됩니다.
+  ///
   /// 사용 예시:
   /// ```dart
-  /// // Named preset 사용
+  /// // Named preset 사용 (고정값 - 반응형 아님)
   /// AdaptiveCardGrid.fromPreset(
   ///   config: GridLayoutTokens.pricingCards,
   ///   itemCount: pricingPlans.length,
   ///   itemBuilder: (context, index) => PricingCard(pricingPlans[index]),
   ///   maxContentWidth: ResponsiveTokens.maxContentWidth,
-  /// );
-  ///
-  /// // 커스텀 프리셋
-  /// final config = GridLayoutTokens.forCardType(
-  ///   CardVariant.vertical,
-  ///   columns: GridPresetColumns.three,
-  /// );
-  /// AdaptiveCardGrid.fromPreset(
-  ///   config: config,
-  ///   itemCount: items.length,
-  ///   itemBuilder: (context, index) => MyCard(items[index]),
   /// );
   /// ```
   factory AdaptiveCardGrid.fromPreset({
@@ -127,6 +121,55 @@ class AdaptiveCardGrid extends StatelessWidget {
       padding: padding,
       maxContentWidth: maxContentWidth,
       alignment: alignment,
+    );
+  }
+
+  /// 카드 타입과 컬럼 수로부터 반응형 그리드를 생성합니다 (권장)
+  ///
+  /// 이 factory는 현재 화면 너비에 따라 GridLayoutTokens를 동적으로 계산합니다.
+  /// 5단계 반응형 시스템을 완벽하게 지원합니다.
+  ///
+  /// 사용 예시:
+  /// ```dart
+  /// // 반응형 카드 크기로 3열 그리드
+  /// AdaptiveCardGrid.fromCardType(
+  ///   cardType: CardVariant.vertical,
+  ///   columns: GridPresetColumns.three,
+  ///   itemCount: pricingPlans.length,
+  ///   itemBuilder: (context, index) => PricingCard(pricingPlans[index]),
+  ///   maxContentWidth: ResponsiveTokens.maxContentWidth,
+  /// );
+  /// ```
+  factory AdaptiveCardGrid.fromCardType({
+    Key? key,
+    required CardVariant cardType,
+    required GridPresetColumns columns,
+    required int itemCount,
+    required IndexedWidgetBuilder itemBuilder,
+    AdaptiveLayoutMode mode = AdaptiveLayoutMode.grid,
+    bool scrollOnOverflow = true,
+    EdgeInsetsGeometry? padding,
+    double? maxContentWidth,
+    AlignmentGeometry alignment = Alignment.center,
+    ResponsiveValue<double>? aspectRatioOverride,
+    bool? enforceAspectRatioOverride,
+  }) {
+    // build() 내에서 width를 받아 동적으로 config 계산
+    // 여기서는 기본값으로 빈 AdaptiveCardGrid를 반환하고,
+    // _cardTypeData를 저장했다가 build()에서 사용
+    return _AdaptiveCardGridWithCardType(
+      key: key,
+      cardType: cardType,
+      columns: columns,
+      itemCount: itemCount,
+      itemBuilder: itemBuilder,
+      mode: mode,
+      scrollOnOverflow: scrollOnOverflow,
+      padding: padding,
+      maxContentWidth: maxContentWidth,
+      alignment: alignment,
+      aspectRatioOverride: aspectRatioOverride,
+      enforceAspectRatioOverride: enforceAspectRatioOverride,
     );
   }
 
@@ -290,4 +333,82 @@ class _Layout {
   final double itemWidth;
 
   _Layout({required this.columns, required this.itemWidth});
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Helper: AdaptiveCardGrid with responsive CardType
+// ════════════════════════════════════════════════════════════════════════════
+
+/// 반응형 카드 타입 기반 적응형 그리드
+///
+/// fromCardType() factory에서 사용되는 helper 클래스입니다.
+/// build() 시점에 현재 화면 너비에 따라 GridLayoutTokens를 동적으로 계산합니다.
+class _AdaptiveCardGridWithCardType extends AdaptiveCardGrid {
+  final CardVariant cardType;
+  final GridPresetColumns columns;
+  final ResponsiveValue<double>? aspectRatioOverride;
+  final bool? enforceAspectRatioOverride;
+
+  const _AdaptiveCardGridWithCardType({
+    Key? key,
+    required this.cardType,
+    required this.columns,
+    required int itemCount,
+    required IndexedWidgetBuilder itemBuilder,
+    AdaptiveLayoutMode mode = AdaptiveLayoutMode.grid,
+    bool scrollOnOverflow = true,
+    EdgeInsetsGeometry? padding,
+    double? maxContentWidth,
+    AlignmentGeometry alignment = Alignment.center,
+    this.aspectRatioOverride,
+    this.enforceAspectRatioOverride,
+  }) : super(
+    key: key,
+    itemCount: itemCount,
+    itemBuilder: itemBuilder,
+    minItemWidth: 240, // 임시값 (build에서 계산)
+    maxItemWidth: 380, // 임시값 (build에서 계산)
+    maxColumns: null,
+    spacing: null,
+    aspectRatio: null,
+    mode: mode,
+    scrollOnOverflow: scrollOnOverflow,
+    enforceAspectRatio: true,
+    padding: padding,
+    preferredItemWidth: null,
+    maxContentWidth: maxContentWidth,
+    alignment: alignment,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+
+    // 현재 화면 너비에 따라 GridLayoutConfig 동적 계산
+    final config = GridLayoutTokens.forCardType(
+      cardType,
+      columns,
+      width: width,
+    );
+
+    // 계산된 config로 AdaptiveCardGrid 구성
+    return AdaptiveCardGrid(
+      key: key,
+      itemCount: itemCount,
+      itemBuilder: itemBuilder,
+      minItemWidth: config.minItemWidth,
+      maxItemWidth: config.maxItemWidth,
+      maxColumns: config.maxColumns,
+      spacing: spacing, // null로 ResponsiveTokens.cardGap 자동 사용
+      aspectRatio: aspectRatioOverride ?? config.aspectRatio,
+      mode: mode,
+      scrollOnOverflow: scrollOnOverflow,
+      enforceAspectRatio:
+          enforceAspectRatioOverride ?? config.enforceAspectRatio,
+      padding: padding,
+      preferredItemWidth: config.preferredItemWidth,
+      maxContentWidth: maxContentWidth,
+      alignment: alignment,
+    ).build(context);
+  }
 }

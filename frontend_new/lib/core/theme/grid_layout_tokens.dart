@@ -91,39 +91,69 @@ class GridLayoutTokens {
 
   /// 카드 타입과 열 수에 따른 최적화된 그리드 설정을 반환합니다.
   ///
-  /// [CardDesignTokens.cardWidths]에서 카드 타입별 min/max 너비를 가져오고,
+  /// [CardDesignTokens.getCardWidths]에서 현재 화면 너비에 맞는 카드 크기를 동적으로 가져오고,
   /// 열 수 프리셋과 결합하여 완전한 그리드 설정을 생성합니다.
+  ///
+  /// [width] - 화면 너비 (px) - CardDesignTokens.getCardWidths에 전달됨
   ///
   /// 예시:
   /// ```dart
-  /// // 세로 카드 3열
+  /// final width = MediaQuery.sizeOf(context).width;
+  ///
+  /// // 세로 카드 3열 - 화면 크기에 따라 자동 조정
   /// final config = GridLayoutTokens.forCardType(
   ///   CardVariant.vertical,
   ///   columns: GridPresetColumns.three,
+  ///   width: width,
   /// );
   ///
   /// // 가로 카드 2열
   /// final config = GridLayoutTokens.forCardType(
   ///   CardVariant.horizontal,
   ///   columns: GridPresetColumns.two,
+  ///   width: width,
   /// );
   /// ```
   static GridLayoutConfig forCardType(
     CardVariant cardType,
-    GridPresetColumns columns,
-  ) {
-    final cardWidths = CardDesignTokens.cardWidths[_cardTypeToKey(cardType)]!;
+    GridPresetColumns columns, {
+    required double width,
+  }) {
+    final cardTypeKey = _cardTypeToKey(cardType);
+    // 화면 너비에 따른 동적 카드 크기
+    final cardWidths = CardDesignTokens.getCardWidths(cardTypeKey, width);
     final aspectRatio = _getAspectRatioForCard(cardType);
     final enforceAspectRatio = _shouldEnforceAspectRatio(cardType);
+    // 화면 너비에 따른 선호 너비 (반응형)
+    final preferredWidth = _getPreferredWidth(columns, width);
 
     return GridLayoutConfig(
       minItemWidth: cardWidths['min']!,
       maxItemWidth: cardWidths['max']!,
       maxColumns: columns.index + 1, // enum index: 0=one → 1 column
-      preferredItemWidth: _preferredWidths[columns]!,
+      preferredItemWidth: preferredWidth,
       aspectRatio: aspectRatio,
       enforceAspectRatio: enforceAspectRatio,
     );
+  }
+
+  /// 화면 너비에 따른 선호 카드 너비 계산
+  /// 화면이 좁을수록 선호 너비도 줄어듦
+  static double _getPreferredWidth(GridPresetColumns columns, double width) {
+    // 기본 선호 너비 (MD breakpoint 기준)
+    final basePreferred = _preferredWidths[columns]!;
+
+    // 화면 너비에 따른 scale factor 적용
+    if (width < 450) {
+      return basePreferred * 0.75;   // XS: 75%
+    } else if (width < 768) {
+      return basePreferred * 0.85;   // SM: 85%
+    } else if (width < 1024) {
+      return basePreferred * 1.0;    // MD: 100%
+    } else if (width < 1440) {
+      return basePreferred * 1.1;    // LG: 110%
+    }
+    return basePreferred * 1.2;      // XL: 120%
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -238,20 +268,16 @@ class GridLayoutTokens {
   static ResponsiveValue<double>? _getAspectRatioForCard(CardVariant cardType) {
     return switch (cardType) {
       CardVariant.vertical => const ResponsiveValue<double>(
-        mobile: 3 / 4,
-        tablet: 3 / 4,
-        desktop: 3 / 4,
+        xs: 3 / 4,
       ),
       CardVariant.horizontal => const ResponsiveValue<double>(
-        mobile: 4 / 3,
-        tablet: 4 / 3,
-        desktop: 4 / 3,
+        xs: 4 / 3,
       ),
       CardVariant.compact => null, // 자동 높이
       CardVariant.selectable => const ResponsiveValue<double>(
-        mobile: 3 / 1,
-        tablet: 4 / 1,
-        desktop: 5 / 1,
+        xs: 3 / 1,
+        md: 4 / 1,
+        lg: 5 / 1,
       ),
       CardVariant.wide => null, // 고정 높이는 카드 자체에서 관리
     };

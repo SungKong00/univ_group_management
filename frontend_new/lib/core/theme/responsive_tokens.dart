@@ -13,17 +13,31 @@ class ResponsiveTokens {
   ResponsiveTokens._();
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // Breakpoints (Material Design 3 기준, 1440px 중심)
+  // Breakpoints (5-step responsive system: 450/768/1024/1440/1920px)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /// Mobile breakpoint (< 600px)
-  static const double mobile = 600.0;
+  /// XS breakpoint (< 450px) - Small mobile devices
+  static const double xs = 450.0;
 
-  /// Tablet breakpoint (600-1440px)
-  static const double tablet = 1440.0;
+  /// SM breakpoint (450-768px) - Large mobile devices
+  static const double sm = 768.0;
 
-  /// Desktop breakpoint (>= 1440px)
-  static const double desktop = 1440.0;
+  /// MD breakpoint (768-1024px) - Tablets (portrait)
+  static const double md = 1024.0;
+
+  /// LG breakpoint (1024-1440px) - Tablets (landscape) / Laptops
+  static const double lg = 1440.0;
+
+  /// XL breakpoint (>= 1440px) - Large laptops / Desktop monitors
+  static const double xl = 1920.0;
+
+  // Legacy breakpoints (deprecated - for backward compatibility)
+  @deprecated
+  static const double mobile = 450.0; // Use ScreenSize.xs instead
+  @deprecated
+  static const double tablet = 768.0; // Use ScreenSize.md instead
+  @deprecated
+  static const double desktop = 1440.0; // Use ScreenSize.lg instead
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Spacing Scale (8px grid system)
@@ -44,32 +58,41 @@ class ResponsiveTokens {
   // Responsive Helpers
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /// 화면 너비에 따른 페이지 패딩 계산
+  /// 화면 너비에 따른 페이지 패딩 계산 (사이드 마진)
+  ///
+  /// XS (< 450px): 16px - 작은 폰
+  /// SM (450-768px): 20px - 큰 폰
+  /// MD (768-1024px): 24px - 태블릿 세로
+  /// LG (1024-1440px): 28px - 태블릿 가로 / 노트북
+  /// XL (≥ 1440px): 32px - 데스크톱 모니터
   static double pagePadding(double width) {
-    if (width < mobile) return 16.0; // Mobile: 16px
-    if (width < tablet) return 24.0; // Tablet: 24px
-    return 32.0; // Desktop: 32px
+    if (width < sm) return 16.0;   // XS: 16px
+    if (width < md) return 20.0;   // SM: 20px
+    if (width < lg) return 24.0;   // MD: 24px
+    if (width < xl) return 28.0;   // LG: 28px
+    return 32.0;                    // XL: 32px
   }
 
-  /// 화면 너비에 따른 그리드 컬럼 수 계산 (1440px 기준)
+  /// 화면 너비에 따른 그리드 컬럼 수 계산 (Material Design 3 컬럼 시스템)
   ///
-  /// 계산 기준:
-  /// - Mobile (< 600px): 4개 컬럼
-  /// - Tablet (600-1440px): 12개 컬럼
-  /// - Desktop (>= 1440px): 16개 컬럼
+  /// XS (< 450px): 4개 컬럼 - 작은 폰
+  /// SM (450-768px): 8개 컬럼 - 큰 폰
+  /// MD (768-1024px): 12개 컬럼 - 태블릿 세로
+  /// LG (1024-1440px): 16개 컬럼 - 태블릿 가로 / 노트북
+  /// XL (≥ 1440px): 20개 컬럼 - 데스크톱 모니터
   static int columnCount(double width) {
-    if (width < mobile) return 4; // Mobile: 4 columns
-    if (width < tablet) return 12; // Tablet: 12 columns (600-1440px)
-    return 16; // Desktop: 16 columns (1440px+)
+    if (width < sm) return 4;    // XS: 4 columns
+    if (width < md) return 8;    // SM: 8 columns
+    if (width < lg) return 12;   // MD: 12 columns
+    if (width < xl) return 16;   // LG: 16 columns
+    return 20;                    // XL: 20 columns
   }
 
   /// 화면 너비에 따른 폰트 스케일 계산
-  ///
-  /// Mobile에서 약간 축소하여 가독성 유지
   static double fontScale(double width) {
-    if (width < mobile) return 0.9; // Mobile: 10% 축소
-    if (width < tablet) return 1.0; // Tablet: 기본
-    return 1.0; // Desktop: 기본
+    if (width < sm) return 0.85;    // XS: 15% 축소
+    if (width < md) return 0.9;     // SM: 10% 축소
+    return 1.0;                      // MD+: 기본 (100%)
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -78,38 +101,44 @@ class ResponsiveTokens {
 
   /// 버튼 높이 (iOS 최소 터치 영역 44px 권장)
   static double buttonHeight(double width) {
-    if (width < mobile) return 40.0;
-    return 44.0;
+    if (width < sm) return 40.0;     // XS/SM: 40px
+    if (width < lg) return 44.0;     // MD/LG: 44px (iOS min)
+    return 48.0;                      // XL: 48px
   }
 
   /// 입력 필드 높이
   static double inputHeight(double width) {
-    if (width < mobile) return 40.0;
-    return 44.0;
+    if (width < sm) return 40.0;     // XS/SM: 40px
+    if (width < lg) return 44.0;     // MD/LG: 44px
+    return 48.0;                      // XL: 48px
   }
 
   /// 카드 패딩 (Material Design 16dp 기준)
   static double cardPadding(double width) {
-    if (width < mobile) return 12.0;
-    return 16.0; // Material Design 권장: 16dp
+    if (width < sm) return 12.0;     // XS/SM: 12px
+    if (width < lg) return 16.0;     // MD/LG: 16px
+    return 20.0;                      // XL: 20px
   }
 
   /// 카드 사이 간격
   static double cardGap(double width) {
-    if (width < mobile) return 12.0;
-    return 16.0;
+    if (width < md) return 8.0;      // XS/SM: 8px
+    if (width < lg) return 12.0;     // MD: 12px
+    return 16.0;                      // LG/XL: 16px
   }
 
   /// 아이콘 크기
   static double iconSize(double width) {
-    if (width < mobile) return 20.0;
-    return 24.0;
+    if (width < sm) return 20.0;     // XS/SM: 20px
+    if (width < lg) return 24.0;     // MD/LG: 24px
+    return 28.0;                      // XL: 28px
   }
 
   /// 아바타 크기
   static double avatarSize(double width) {
-    if (width < mobile) return 32.0;
-    return 40.0;
+    if (width < sm) return 32.0;     // XS/SM: 32px
+    if (width < lg) return 40.0;     // MD/LG: 40px
+    return 48.0;                      // XL: 48px
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -118,38 +147,44 @@ class ResponsiveTokens {
 
   /// 버튼 Small - 가로 패딩
   static double buttonSmallPaddingH(double width) {
-    if (width < mobile) return 10.0;
-    return 12.0;
+    if (width < sm) return 10.0;     // XS/SM: 10px
+    if (width < lg) return 12.0;     // MD/LG: 12px
+    return 14.0;                      // XL: 14px
   }
 
   /// 버튼 Small - 세로 패딩
   static double buttonSmallPaddingV(double width) {
-    if (width < mobile) return 4.0;
-    return 6.0;
+    if (width < sm) return 4.0;      // XS/SM: 4px
+    if (width < lg) return 6.0;      // MD/LG: 6px
+    return 8.0;                       // XL: 8px
   }
 
   /// 버튼 Medium - 가로 패딩
   static double buttonMediumPaddingH(double width) {
-    if (width < mobile) return 14.0;
-    return 16.0;
+    if (width < sm) return 14.0;     // XS/SM: 14px
+    if (width < lg) return 16.0;     // MD/LG: 16px
+    return 18.0;                      // XL: 18px
   }
 
   /// 버튼 Medium - 세로 패딩
   static double buttonMediumPaddingV(double width) {
-    if (width < mobile) return 8.0;
-    return 10.0;
+    if (width < sm) return 8.0;      // XS/SM: 8px
+    if (width < lg) return 10.0;     // MD/LG: 10px
+    return 12.0;                      // XL: 12px
   }
 
   /// 버튼 Large - 가로 패딩
   static double buttonLargePaddingH(double width) {
-    if (width < mobile) return 18.0;
-    return 20.0;
+    if (width < sm) return 18.0;     // XS/SM: 18px
+    if (width < lg) return 20.0;     // MD/LG: 20px
+    return 24.0;                      // XL: 24px
   }
 
   /// 버튼 Large - 세로 패딩
   static double buttonLargePaddingV(double width) {
-    if (width < mobile) return 10.0;
-    return 12.0;
+    if (width < sm) return 10.0;     // XS/SM: 10px
+    if (width < lg) return 12.0;     // MD/LG: 12px
+    return 16.0;                      // XL: 16px
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -158,8 +193,8 @@ class ResponsiveTokens {
 
   /// 버튼/카드 border radius
   static double componentBorderRadius(double width) {
-    if (width < mobile) return 6.0;
-    return 6.0;
+    if (width < lg) return 6.0;      // XS-MD: 6px
+    return 8.0;                       // LG/XL: 8px
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -168,14 +203,16 @@ class ResponsiveTokens {
 
   /// 입력 필드 가로 패딩
   static double inputPaddingH(double width) {
-    if (width < mobile) return 10.0;
-    return 12.0;
+    if (width < sm) return 10.0;     // XS/SM: 10px
+    if (width < lg) return 12.0;     // MD/LG: 12px
+    return 14.0;                      // XL: 14px
   }
 
   /// 입력 필드 세로 패딩
   static double inputPaddingV(double width) {
-    if (width < mobile) return 10.0;
-    return 12.0;
+    if (width < sm) return 10.0;     // XS/SM: 10px
+    if (width < lg) return 12.0;     // MD/LG: 12px
+    return 14.0;                      // XL: 14px
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -184,19 +221,35 @@ class ResponsiveTokens {
 
   /// 화면 크기 타입 판단
   static ScreenSize getScreenSize(double width) {
-    if (width < mobile) return ScreenSize.mobile;
-    if (width < tablet) return ScreenSize.tablet;
-    return ScreenSize.desktop;
+    if (width < sm) return ScreenSize.xs;
+    if (width < md) return ScreenSize.sm;
+    if (width < lg) return ScreenSize.md;
+    if (width < xl) return ScreenSize.lg;
+    return ScreenSize.xl;
   }
 
-  /// Mobile 화면인지 확인
-  static bool isMobile(double width) => width < mobile;
+  /// XS 화면인지 확인 (< 450px)
+  static bool isXS(double width) => width < sm;
 
-  /// Tablet 화면인지 확인
-  static bool isTablet(double width) => width >= mobile && width < tablet;
+  /// SM 화면인지 확인 (450-768px)
+  static bool isSM(double width) => width >= sm && width < md;
 
-  /// Desktop 화면인지 확인
-  static bool isDesktop(double width) => width >= tablet;
+  /// MD 화면인지 확인 (768-1024px)
+  static bool isMD(double width) => width >= md && width < lg;
+
+  /// LG 화면인지 확인 (1024-1440px)
+  static bool isLG(double width) => width >= lg && width < xl;
+
+  /// XL 화면인지 확인 (>= 1440px)
+  static bool isXL(double width) => width >= xl;
+
+  // Legacy helpers (deprecated)
+  @deprecated
+  static bool isMobile(double width) => isXS(width);
+  @deprecated
+  static bool isTablet(double width) => isSM(width) || isMD(width);
+  @deprecated
+  static bool isDesktop(double width) => isLG(width) || isXL(width);
 
   /// 최소 터치 영역 크기 (iOS/Android 접근성 가이드라인)
   static const double minTapSize = 44.0;
@@ -213,13 +266,17 @@ class ResponsiveTokens {
 
   /// 섹션 간 세로 간격 (섹션 구분)
   ///
-  /// 반응형:
-  /// - Mobile (< 600px): 24px
-  /// - Tablet (600-1440px): 48px
-  /// - Desktop (>= 1440px): 48px
+  /// XS (< 450px): 16px
+  /// SM (450-768px): 24px
+  /// MD (768-1024px): 32px
+  /// LG (1024-1440px): 40px
+  /// XL (≥ 1440px): 48px
   static double sectionVerticalGap(double width) {
-    if (width < mobile) return 24.0;
-    return 48.0;
+    if (width < sm) return 16.0;    // XS: 16px
+    if (width < md) return 24.0;    // SM: 24px
+    if (width < lg) return 32.0;    // MD: 32px
+    if (width < xl) return 40.0;    // LG: 40px
+    return 48.0;                     // XL: 48px
   }
 
   /// 섹션 내부 콘텐츠 간격 (제목과 콘텐츠 사이)
@@ -229,11 +286,16 @@ class ResponsiveTokens {
 
   /// 섹션 최대 너비
   ///
-  /// 반응형:
-  /// - Mobile/Tablet: 제약 없음 (full-width)
-  /// - Desktop (>= 1440px): 1200px
+  /// XS (< 450px): 450px
+  /// SM (450-768px): 750px
+  /// MD (768-1024px): 1000px
+  /// LG (1024-1440px): 1200px
+  /// XL (≥ 1440px): 1400px
   static double sectionMaxWidth(double width) {
-    if (width < tablet) return double.infinity;
-    return 1200.0;
+    if (width < sm) return 450.0;   // XS: 450px
+    if (width < md) return 750.0;   // SM: 750px
+    if (width < lg) return 1000.0;  // MD: 1000px
+    if (width < xl) return 1200.0;  // LG: 1200px
+    return 1400.0;                   // XL: 1400px
   }
 }
