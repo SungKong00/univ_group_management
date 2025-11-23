@@ -66,17 +66,17 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                         itemWidth: 280,
                         showNavigation: false,
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('7개 아이템 (네비게이션 있음)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppCarousel(
                         items: _buildCarouselItems(7),
                         itemWidth: 280,
                         showNavigation: true,
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('12개 아이템 (gap 조절)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppCarousel(
                         items: _buildCarouselItems(12),
                         itemWidth: 250,
@@ -86,7 +86,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: spacing.xxxl),
+                const SizedBox(height: 48),
 
                 // Tabs 섹션
                 AppSection(
@@ -101,9 +101,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           color: context.appColors.textSecondary,
                         ),
                       ),
-                      SizedBox(height: spacing.large),
+                      const SizedBox(height: 16),
                       _buildSubtitle('2개 탭 (기본 - easeInOut)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppTabs(
                         tabs: const [
                           AppTabItem(label: '개요'),
@@ -114,9 +114,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           debugPrint('Tab changed: $index');
                         },
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('3개 탭 - easeOutCubic (더 자연스러운 감속)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppTabs(
                         tabs: const [
                           AppTabItem(label: 'Collaborative documents'),
@@ -131,9 +131,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           setState(() => _selectedTabIndex = index);
                         },
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('3개 탭 - easeInOutQuart (부드럽고 우아한)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppTabs(
                         tabs: const [
                           AppTabItem(label: 'Collaborative documents'),
@@ -144,11 +144,11 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                         animationCurve: Curves.easeInOutQuart,
                         animationDuration: const Duration(milliseconds: 350),
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle(
                         '3개 탭 - fastOutSlowIn (Material Design 스타일)',
                       ),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppTabs(
                         tabs: const [
                           AppTabItem(label: 'Collaborative documents'),
@@ -159,9 +159,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                         animationCurve: Curves.fastOutSlowIn,
                         animationDuration: const Duration(milliseconds: 300),
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('5개 탭 - easeOutExpo (급격한 감속)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppTabs(
                         tabs: const [
                           AppTabItem(label: '전체'),
@@ -173,9 +173,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                         animationCurve: Curves.easeOutExpo,
                         animationDuration: const Duration(milliseconds: 400),
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('5개 탭 - elasticOut (탄성 효과 - 약간 튕김)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppTabs(
                         tabs: const [
                           AppTabItem(label: '전체'),
@@ -187,9 +187,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                         animationCurve: Curves.elasticOut,
                         animationDuration: const Duration(milliseconds: 500),
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('5개 탭 - easeOutBack (살짝 오버슈트)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppTabs(
                         tabs: const [
                           AppTabItem(label: '전체'),
@@ -201,9 +201,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                         animationCurve: Curves.easeOutBack,
                         animationDuration: const Duration(milliseconds: 350),
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('5개 탭 - linear (선형 - 비교용)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppTabs(
                         tabs: const [
                           AppTabItem(label: '전체'),
@@ -218,7 +218,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: spacing.xxxl),
+                const SizedBox(height: 48),
 
                 // Definition List 섹션
                 AppSection(
@@ -233,9 +233,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           color: context.appColors.textSecondary,
                         ),
                       ),
-                      SizedBox(height: spacing.large),
+                      const SizedBox(height: 16),
                       _buildSubtitle('gap: 16px (촘촘)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppDefinitionList(
                         items: const [
                           AppDefinitionItem(
@@ -254,9 +254,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                         itemGap: 16,
                         padding: const EdgeInsets.all(24),
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('gap: 24px (기본)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppDefinitionList(
                         items: const [
                           AppDefinitionItem(
@@ -281,9 +281,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                         itemGap: 24,
                         padding: const EdgeInsets.all(24),
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('gap: 32px (여유)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppDefinitionList(
                         items: [
                           AppDefinitionItem(
@@ -308,7 +308,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: spacing.xxxl),
+                const SizedBox(height: 48),
 
                 // Agent Selector 섹션
                 AppSection(
@@ -323,9 +323,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           color: context.appColors.textSecondary,
                         ),
                       ),
-                      SizedBox(height: spacing.large),
+                      const SizedBox(height: 16),
                       _buildSubtitle('아바타 16px + subtle 배지'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppAgentSelector(
                         agents: const [
                           AppAgent(
@@ -357,9 +357,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           setState(() => _selectedAgentIndex = index);
                         },
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('아바타 18px + prominent 배지'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppAgentSelector(
                         agents: const [
                           AppAgent(
@@ -381,9 +381,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                         avatarSize: 18,
                         badgeStyle: AppBadgeStyle.prominent,
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('아바타 24px (큰 사이즈)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppAgentSelector(
                         agents: const [
                           AppAgent(
@@ -403,7 +403,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: spacing.xxxl),
+                const SizedBox(height: 48),
 
                 // Gradient Overlay 섹션
                 AppSection(
@@ -418,9 +418,9 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           color: context.appColors.textSecondary,
                         ),
                       ),
-                      SizedBox(height: spacing.large),
+                      const SizedBox(height: 16),
                       _buildSubtitle('Extra Light (0.03 opacity)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppGradientOverlay(
                         type: GradientType.extraLightTopFade,
                         child: Container(
@@ -437,7 +437,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                       ),
                       const SizedBox(height: 24),
                       _buildSubtitle('Subtle (0.05 opacity) - 기본값'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppGradientOverlay(
                         type: GradientType.subtleTopFade,
                         child: Container(
@@ -454,7 +454,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                       ),
                       const SizedBox(height: 24),
                       _buildSubtitle('Light (0.08 opacity) - hover 효과'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       AppGradientOverlay(
                         type: GradientType.lightTopFade,
                         child: Container(
@@ -471,7 +471,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                       ),
                       const SizedBox(height: 24),
                       _buildSubtitle('방향별 그래디언트'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
@@ -484,7 +484,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                               ),
                             ),
                           ),
-                          SizedBox(width: spacing.large),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: AppGradientOverlay(
                               type: GradientType.subtleLeftFade,
@@ -495,7 +495,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                               ),
                             ),
                           ),
-                          SizedBox(width: spacing.large),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: AppGradientOverlay(
                               type: GradientType.radialFade,
@@ -511,7 +511,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: spacing.xxxl),
+                const SizedBox(height: 48),
 
                 // Feature Card 섹션
                 AppSection(
@@ -526,12 +526,12 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           color: context.appColors.textSecondary,
                         ),
                       ),
-                      SizedBox(height: spacing.large),
+                      const SizedBox(height: 16),
                       _buildSubtitle('기본 크기 (아이콘 사용)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       Wrap(
-                        spacing: spacing.large,
-                        runSpacing: spacing.large,
+                        spacing: 16,
+                        runSpacing: 16,
                         children: [
                           AppFeatureCard(
                             title: 'Customer Requests',
@@ -563,12 +563,12 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           ),
                         ],
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('큰 크기 (이미지 영역 포함)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       Wrap(
-                        spacing: spacing.large,
-                        runSpacing: spacing.large,
+                        spacing: 16,
+                        runSpacing: 16,
                         children: [
                           AppFeatureCard(
                             title: 'Linear Asks',
@@ -618,12 +618,12 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           ),
                         ],
                       ),
-                      SizedBox(height: spacing.xxl),
+                      const SizedBox(height: 32),
                       _buildSubtitle('작은 크기 (컴팩트)'),
-                      SizedBox(height: spacing.medium),
+                      const SizedBox(height: 12),
                       Wrap(
-                        spacing: spacing.large,
-                        runSpacing: spacing.large,
+                        spacing: 16,
+                        runSpacing: 16,
                         children: [
                           AppFeatureCard(
                             title: 'Figma integration',
@@ -681,7 +681,6 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
 
   List<Widget> _buildCarouselItems(int count) {
     final colorExt = context.appColors;
-    final spacing = context.appSpacing;
     return List.generate(
       count,
       (index) => AppCard(
@@ -708,7 +707,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                 ),
               ),
             ),
-            SizedBox(height: spacing.large),
+            const SizedBox(height: 16),
             Text(
               'Feature ${index + 1}',
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -716,7 +715,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            SizedBox(height: spacing.xs),
+            const SizedBox(height: 4),
             Text(
               'Sample description for item ${index + 1}',
               style: Theme.of(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
+import '../theme/extensions/app_spacing_extension.dart';
 import '../theme/colors/activity_item_colors.dart';
 import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
@@ -71,6 +72,7 @@ class ActivitySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     final width = MediaQuery.sizeOf(context).width;
 
     final itemSpacing = ResponsiveTokens.cardPadding(width);
@@ -186,7 +188,7 @@ class ActivitySection extends StatelessWidget {
                               ],
                             ),
 
-                            const SizedBox(height: 4),
+                            SizedBox(height: spacing.xs),
 
                             // 설명
                             Text(
@@ -199,7 +201,7 @@ class ActivitySection extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
 
-                            const SizedBox(height: 4),
+                            SizedBox(height: spacing.xs),
 
                             // 작성자
                             Text(

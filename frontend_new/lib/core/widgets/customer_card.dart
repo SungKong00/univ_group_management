@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
+import '../theme/extensions/app_spacing_extension.dart';
 import '../theme/colors/customer_card_colors.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
@@ -15,6 +16,7 @@ class CustomerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     final textTheme = Theme.of(context).textTheme;
     final customerCardColors = CustomerCardColors.standard(colorExt);
     final width = MediaQuery.sizeOf(context).width;
@@ -62,7 +64,7 @@ class CustomerCard extends StatelessWidget {
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: spacing.medium),
 
                   // Title
                   Text(
@@ -74,7 +76,7 @@ class CustomerCard extends StatelessWidget {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: spacing.large),
 
                   // CTA
                   Row(

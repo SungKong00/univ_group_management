@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
+import '../theme/extensions/app_spacing_extension.dart';
 import '../theme/colors/pricing_card_colors.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
@@ -24,6 +25,7 @@ class PricingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     final textTheme = Theme.of(context).textTheme;
     final width = MediaQuery.sizeOf(context).width;
 
@@ -67,7 +69,7 @@ class PricingCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: spacing.large),
           ],
 
           // Price
@@ -79,7 +81,7 @@ class PricingCard extends StatelessWidget {
             ),
           ),
           if (plan.priceFormat.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: spacing.xs),
             Text(
               plan.priceFormat,
               style: textTheme.bodySmall!.copyWith(

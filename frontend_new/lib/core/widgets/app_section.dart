@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
+import '../theme/extensions/app_spacing_extension.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
 import '../theme/enums.dart';
@@ -10,9 +11,19 @@ import '../theme/enums.dart';
 ///
 /// **책임**:
 /// - 섹션 레이아웃 (제목 + 콘텐츠)
-/// - 반응형 패딩/간격
+/// - 반응형 패딩/간격 (ResponsiveTokens) + 고정 간격 (AppSpacingExtension)
 /// - 섹션 스타일 (standard/compact)
 /// - 배경색 관리
+///
+/// **Spacing 구조**:
+/// ```
+/// 수직 간격: ResponsiveTokens.sectionVerticalGap(width) [반응형]
+///   ↓ (모바일: 32px, 태블릿: 48px, 데스크톱: 64px)
+/// [섹션]
+///   ├─ 제목
+///   │  ↓ (고정: 12px)
+///   └─ 콘텐츠
+/// ```
 ///
 /// **사용 예시**:
 /// ```dart
@@ -68,11 +79,16 @@ class AppSection extends StatelessWidget {
     // Step 1: 토큰 추출
     // ========================================================
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     final width = MediaQuery.sizeOf(context).width;
 
-    // Responsive tokens
+    // Spacing tokens:
+    // - verticalGap: 반응형 (화면 크기별로 다름)
+    // - contentGap: 고정값 (4dp 그리드 기반)
+    // - horizontalPadding: 반응형
     final verticalGap = ResponsiveTokens.sectionVerticalGap(width);
-    final contentGap = ResponsiveTokens.sectionContentGap;
+    final contentGap =
+        spacing.medium; // 12px (ResponsiveTokens.sectionContentGap와 동일값)
     final horizontalPadding = ResponsiveTokens.pagePadding(width);
     final maxWidth = ResponsiveTokens.sectionMaxWidth(width);
 

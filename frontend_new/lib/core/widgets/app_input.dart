@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
+import '../theme/extensions/app_spacing_extension.dart';
 import '../theme/colors/input_colors.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
@@ -116,7 +117,8 @@ class AppInput extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 6.0),
+          // 라벨-입력필드 간격: formLabelGap (6px)
+          SizedBox(height: context.appSpacing.formLabelGap),
         ],
         TextField(
           controller: controller,

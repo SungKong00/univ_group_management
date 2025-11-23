@@ -4,6 +4,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/theme/responsive_tokens.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
+import '../../../../core/theme/extensions/app_spacing_extension.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_section.dart';
 import '../../../../core/theme/enums.dart';
@@ -142,6 +143,7 @@ class ResponsiveTestPage extends StatelessWidget {
     double width,
   ) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     // 카드들을 미리 정의
     final cards = [
       AppCard(
@@ -208,7 +210,7 @@ class ResponsiveTestPage extends StatelessWidget {
                     )
                     .toList(),
               ),
-        const SizedBox(height: 8),
+        SizedBox(height: spacing.small),
         Text(
           screenSize == ScreenSize.mobile
               ? 'Mobile: 세로 배치 (Column)'
@@ -227,6 +229,7 @@ class ResponsiveTestPage extends StatelessWidget {
     double width,
   ) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     final columnCount = ResponsiveTokens.columnCount(width);
 
     return Column(
@@ -266,7 +269,7 @@ class ResponsiveTestPage extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: spacing.small),
         Text(
           '$columnCount 컬럼 그리드',
           style: Theme.of(
@@ -283,12 +286,13 @@ class ResponsiveTestPage extends StatelessWidget {
     double width,
   ) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: spacing.medium,
+          runSpacing: spacing.medium,
           children: [
             AppButton(
               text: '작은 버튼',
@@ -307,7 +311,7 @@ class ResponsiveTestPage extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: spacing.small),
         Text(
           '최소 터치 영역: ${ResponsiveTokens.minTapSize}px',
           style: Theme.of(

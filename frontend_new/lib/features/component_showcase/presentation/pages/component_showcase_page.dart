@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
 import '../../../../core/theme/extensions/app_typography_extension.dart';
+import '../../../../core/theme/extensions/app_spacing_extension.dart';
 import '../../../../core/theme/responsive_tokens.dart';
 import '../../../../core/theme/enums.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -35,13 +36,26 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
 
+    // ================================================================
+    // 📐 Spacing 사용 패턴:
+    //
+    // - ResponsiveTokens: 화면 크기별로 다른 값
+    //   예: sectionVerticalGap(width), sectionContentGap, pagePadding(width)
+    //
+    // - context.appSpacing: 고정된 4dp 그리드 기반 (모든 화면에서 동일)
+    //   예: xs(4px), small(8px), medium(12px), large(16px)
+    //
+    // ⚠️ 주의: ResponsiveTokens.sectionContentGap는 고정값이지만,
+    //         ResponsiveTokens.sectionVerticalGap는 반응형이므로 주의!
+    // ================================================================
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('컴포넌트 쇼케이스'),
         backgroundColor: colorExt.surfaceSecondary,
         actions: [
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(context.appSpacing.xs),
             child: AppButton(
               text: 'V3 컴포넌트 →',
               size: AppButtonSize.small,
@@ -54,7 +68,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(context.appSpacing.xs),
             child: AppButton(
               text: '반응형 테스트 →',
               size: AppButtonSize.small,
@@ -67,7 +81,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(context.appSpacing.xs),
             child: AppButton(
               text: 'V2 컴포넌트 →',
               size: AppButtonSize.small,
@@ -78,7 +92,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(context.appSpacing.xs),
             child: AppButton(
               text: '고급 컴포넌트 →',
               size: AppButtonSize.small,
@@ -229,8 +243,8 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
           ),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: context.appSpacing.medium,
+            runSpacing: context.appSpacing.medium,
             children: [
               AppButton(
                 text: 'Primary Large',
@@ -300,8 +314,8 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
           ),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: context.appSpacing.medium,
+            runSpacing: context.appSpacing.medium,
             children: [
               AppButton(
                 text: 'Secondary Large',
@@ -371,8 +385,8 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
           ),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 0.5),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: context.appSpacing.medium,
+            runSpacing: context.appSpacing.medium,
             children: [
               AppButton(
                 text: 'Ghost Large',
@@ -503,7 +517,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: context.appSpacing.medium),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -547,7 +561,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: context.appSpacing.medium),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -607,7 +621,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: context.appSpacing.medium),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -644,7 +658,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: context.appSpacing.medium),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -681,7 +695,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: context.appSpacing.medium),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -711,6 +725,8 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
 
   Widget _buildColorRow(String label, List<(String, Color)> colors) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -720,10 +736,10 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
             context,
           ).textTheme.bodySmall!.copyWith(color: colorExt.textTertiary),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: spacing.small),
         Wrap(
-          spacing: 12,
-          runSpacing: 8,
+          spacing: spacing.medium,
+          runSpacing: spacing.small,
           children: colors.map((colorInfo) {
             final (name, color) = colorInfo;
             return Column(
@@ -737,7 +753,7 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
                     border: Border.all(color: colorExt.borderPrimary, width: 1),
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: spacing.xs),
                 SizedBox(
                   width: 60,
                   child: Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
+import '../theme/extensions/app_spacing_extension.dart';
 import '../theme/colors/sidebar_colors.dart';
 import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
@@ -62,6 +63,7 @@ class PropertiesSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     final width = MediaQuery.sizeOf(context).width;
 
     // ========================================================
@@ -134,7 +136,7 @@ class PropertiesSidebar extends StatelessWidget {
                                       ?.copyWith(color: sidebarColors.label) ??
                                   TextStyle(color: sidebarColors.label),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: spacing.xs),
                             Row(
                               children: [
                                 if (property.icon != null) ...[

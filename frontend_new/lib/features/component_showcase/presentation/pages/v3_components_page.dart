@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
+import '../../../../core/theme/extensions/app_spacing_extension.dart';
 import '../../../../core/theme/extensions/app_typography_extension.dart';
 import '../../../../core/theme/enums.dart';
 import '../../../../core/widgets/page_breadcrumb.dart';
@@ -65,6 +66,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     final typographyExt = context.appTypography;
 
     return Scaffold(
@@ -77,7 +79,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(spacing.xl),
           child: ResponsiveBuilder(
             builder: (context, screenSize, width) {
               if (screenSize == ScreenSize.desktop) {
@@ -135,6 +137,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
     AppColorExtension colorExt,
     AppTypographyExtension typographyExt,
   ) {
+    final spacing = context.appSpacing;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -153,7 +156,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
                 child: _buildButtonsSection(colorExt, typographyExt),
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: spacing.large),
             Expanded(
               child: AppSection(
                 title: 'Phase 6: Editor Components',
@@ -228,6 +231,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
     AppColorExtension colorExt,
     AppTypographyExtension typographyExt,
   ) {
+    final spacing = context.appSpacing;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -237,7 +241,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
           style: BreadcrumbStyle.default_,
           onItemTap: (index) => debugPrint('Tapped: $index'),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing.large),
 
         // Navigation Counter + Buttons
         Row(
@@ -263,6 +267,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
     AppColorExtension colorExt,
     AppTypographyExtension typographyExt,
   ) {
+    final spacing = context.appSpacing;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -275,12 +280,12 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
               ).textTheme.labelSmall?.copyWith(color: colorExt.textSecondary) ??
               TextStyle(color: colorExt.textSecondary),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: spacing.small),
         StatusButton(
           currentStatus: _status,
           onStatusChanged: (status) => setState(() => _status = status),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing.large),
 
         // Priority Button
         Text(
@@ -291,12 +296,12 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
               ).textTheme.labelSmall?.copyWith(color: colorExt.textSecondary) ??
               TextStyle(color: colorExt.textSecondary),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: spacing.small),
         PriorityButton(
           currentPriority: _priority,
           onPriorityChanged: (priority) => setState(() => _priority = priority),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing.large),
 
         // Assignee Button
         Text(
@@ -307,7 +312,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
               ).textTheme.labelSmall?.copyWith(color: colorExt.textSecondary) ??
               TextStyle(color: colorExt.textSecondary),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: spacing.small),
         AssigneeButton(
           state: _assigneeState,
           assignees: _assignees,
@@ -325,6 +330,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
     AppColorExtension colorExt,
     AppTypographyExtension typographyExt,
   ) {
+    final spacing = context.appSpacing;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -333,14 +339,14 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
           initialText: _title,
           onChanged: (text) => setState(() => _title = text),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing.large),
 
         // Description Editor
         IssueDescriptionEditor(
           initialText: _description,
           onChanged: (text) => setState(() => _description = text),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing.large),
 
         // Comment Input
         CommentInput(
@@ -359,6 +365,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
     AppColorExtension colorExt,
     AppTypographyExtension typographyExt,
   ) {
+    final spacing = context.appSpacing;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -381,7 +388,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing.large),
 
         // Activity Section
         ActivitySection(
@@ -406,7 +413,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing.large),
 
         // Labels Section
         LabelsSection(
@@ -415,7 +422,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
           labels: _labels,
           onAddLabel: () => debugPrint('Add label'),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing.large),
 
         // Settings Sidebar
         SettingsSidebar(

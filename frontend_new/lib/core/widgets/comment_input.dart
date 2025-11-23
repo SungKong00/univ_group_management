@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
+import '../theme/extensions/app_spacing_extension.dart';
 import '../theme/colors/editor_colors.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/border_tokens.dart';
@@ -81,6 +82,7 @@ class _CommentInputState extends State<CommentInput> {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     final width = MediaQuery.sizeOf(context).width;
 
     // ========================================================
@@ -148,7 +150,7 @@ class _CommentInputState extends State<CommentInput> {
           // ========================================================
           // 푸터: 제출 버튼 및 카운터
           // ========================================================
-          const SizedBox(height: 12),
+          SizedBox(height: spacing.medium),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
