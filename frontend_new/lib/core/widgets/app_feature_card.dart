@@ -116,7 +116,7 @@ class _AppFeatureCardState extends State<AppFeatureCard> {
                 ),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: ResponsiveTokens.space8),
 
               // 부제목
               Text(

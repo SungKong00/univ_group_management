@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
 import '../../../../core/theme/extensions/app_spacing_extension.dart';
 import '../../../../core/theme/extensions/app_typography_extension.dart';
+import '../../../../core/theme/responsive_tokens.dart';
 import '../../../../core/theme/enums.dart';
 import '../../../../core/widgets/page_breadcrumb.dart';
 import '../../../../core/widgets/issue_navigation_counter.dart';
@@ -210,7 +211,7 @@ class _V3ComponentsPageState extends State<V3ComponentsPage> {
                 ],
               ),
             ),
-            const SizedBox(width: 32),
+            const SizedBox(width: ResponsiveTokens.space32),
             Expanded(
               child: AppSection(
                 title: 'Phase 7: Sidebar/Section Components',

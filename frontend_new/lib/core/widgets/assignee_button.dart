@@ -343,7 +343,7 @@ class _AssigneeButtonState extends State<AssigneeButton> {
                   ) ??
                   TextStyle(color: assigneeColors.text),
             ),
-            const SizedBox(width: 4.0),
+            const SizedBox(width: ResponsiveTokens.space4),
             Icon(
               Icons.arrow_drop_down,
               color: assigneeColors.icon,

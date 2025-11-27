@@ -21,30 +21,21 @@ class CustomerFilterTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    return Container(
-      height: 48,
-      padding: EdgeInsets.symmetric(
-        vertical: ResponsiveTokens.cardGap(width) * 0.5,
-      ),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(
-          horizontal: ResponsiveTokens.pagePadding(width),
-        ),
-        itemCount: tabs.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 12.0),
-        itemBuilder: (context, index) {
-          final tab = tabs[index];
-          final isSelected = tab.filter == selectedTab;
+    final gap = ResponsiveTokens.cardGap(width);
 
-          return _buildTab(
-            context: context,
-            label: tab.label,
-            isSelected: isSelected,
-            onTap: () => onTabSelected(tab.filter),
-          );
-        },
-      ),
+    // Wrap 레이아웃: 가로로 배치, 넘치면 다음 줄로
+    return Wrap(
+      spacing: ResponsiveTokens.space12,
+      runSpacing: gap * 0.5,
+      children: tabs.map((tab) {
+        final isSelected = tab.filter == selectedTab;
+        return _buildTab(
+          context: context,
+          label: tab.label,
+          isSelected: isSelected,
+          onTap: () => onTabSelected(tab.filter),
+        );
+      }).toList(),
     );
   }
 

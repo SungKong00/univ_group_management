@@ -174,7 +174,7 @@ class ActivitySection extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const SizedBox(width: 8.0),
+                                const SizedBox(width: ResponsiveTokens.space8),
                                 Text(
                                   activity.time,
                                   style:

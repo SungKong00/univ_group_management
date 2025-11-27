@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
 import '../../../../core/theme/responsive_tokens.dart';
-import '../../../../core/theme/grid_layout_tokens.dart';
-import '../../../../core/theme/card_design_tokens.dart';
 import '../../../../core/theme/enums.dart';
 import '../../../../core/widgets/responsive_builder.dart';
 import '../../../../core/widgets/app_back_button.dart';
@@ -33,6 +31,21 @@ import '../../data/models/cta_model.dart';
 /// V2 Components Showcase Page - Pricing & Customers
 ///
 /// Displays migrated components from JSON-based to type-safe model system.
+///
+/// ## AdaptiveCardGrid 사용법 (권장)
+///
+/// ```dart
+/// // ✅ fromCardType (권장 - 반응형 자동)
+/// AdaptiveCardGrid.fromCardType(
+///   cardType: CardVariant.vertical,  // vertical, horizontal, compact
+///   columns: GridPresetColumns.three, // one, two, three, four, five, six
+///   itemCount: items.length,
+///   itemBuilder: (context, index) => VerticalCard(...),
+/// )
+///
+/// // Breakpoint별 열 수 자동 조정:
+/// // XS: 1열, SM: 2열, MD/LG/XL: 3열
+/// ```
 class V2ComponentsPage extends StatefulWidget {
   const V2ComponentsPage({super.key});
 
@@ -232,9 +245,10 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
                     ),
                     SizedBox(height: ResponsiveTokens.pagePadding(width)),
 
-                    // Pricing Cards - 3열 프리셋 사용
-                    AdaptiveCardGrid.fromPreset(
-                      config: GridLayoutTokens.pricingCards(width),
+                    // Pricing Cards - 3열 그리드 (권장 방식)
+                    AdaptiveCardGrid.fromCardType(
+                      cardType: CardVariant.vertical,
+                      columns: GridPresetColumns.three,
                       itemCount: pricingPlans.length,
                       itemBuilder: (context, index) =>
                           PricingCard(plan: pricingPlans[index]),
@@ -314,12 +328,9 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               AppSection(
                 title: '1. Vertical Card',
                 variant: SectionVariant.standard,
-                child: AdaptiveCardGrid.fromPreset(
-                  config: GridLayoutTokens.forCardType(
-                    CardVariant.vertical,
-                    GridPresetColumns.three,
-                    width: width,
-                  ),
+                child: AdaptiveCardGrid.fromCardType(
+                  cardType: CardVariant.vertical,
+                  columns: GridPresetColumns.three,
                   itemCount: 3,
                   itemBuilder: (context, index) {
                     final variants = ['standard', 'featured', 'highlighted'];
@@ -351,8 +362,9 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               AppSection(
                 title: '2. Horizontal Card',
                 variant: SectionVariant.standard,
-                child: AdaptiveCardGrid.fromPreset(
-                  config: GridLayoutTokens.customerTestimonials(width),
+                child: AdaptiveCardGrid.fromCardType(
+                  cardType: CardVariant.horizontal,
+                  columns: GridPresetColumns.two,
                   itemCount: 3,
                   itemBuilder: (context, index) {
                     final variants = ['standard', 'featured', 'highlighted'];
@@ -384,8 +396,9 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               AppSection(
                 title: '3. Compact Card',
                 variant: SectionVariant.standard,
-                child: AdaptiveCardGrid.fromPreset(
-                  config: GridLayoutTokens.tagGrid(width),
+                child: AdaptiveCardGrid.fromCardType(
+                  cardType: CardVariant.compact,
+                  columns: GridPresetColumns.six,
                   itemCount: 6,
                   itemBuilder: (context, index) {
                     final variants = ['standard', 'featured', 'highlighted'];
@@ -591,12 +604,13 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               ),
               SizedBox(height: ResponsiveTokens.pagePadding(width) * 2),
 
-              // Customer Cards - Horizontal Scroll (Carousel Pattern)
+              // Customer Cards - 4열 그리드
               AppSection(
                 title: 'Featured Customers',
                 variant: SectionVariant.standard,
-                child: AdaptiveCardGrid.fromPreset(
-                  config: GridLayoutTokens.customerCards(width),
+                child: AdaptiveCardGrid.fromCardType(
+                  cardType: CardVariant.vertical,
+                  columns: GridPresetColumns.four,
                   itemCount: customers.length,
                   itemBuilder: (context, index) =>
                       CustomerCard(customer: customers[index]),
@@ -624,9 +638,10 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
     return ResponsiveBuilder(
       builder: (context, screenSize, width) {
         final colorExt = context.appColors;
+        final pagePadding = ResponsiveTokens.pagePadding(width);
 
         return SingleChildScrollView(
-          padding: EdgeInsets.all(ResponsiveTokens.pagePadding(width)),
+          padding: EdgeInsets.all(pagePadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -726,13 +741,10 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               AppSection(
                 title: '1. Vertical Cards',
                 variant: SectionVariant.standard,
-                child: AdaptiveCardGrid.fromPreset(
-                  config: GridLayoutTokens.forCardType(
-                    CardVariant.vertical,
-                    _selectedPreset,
-                    width: width,
-                  ),
-                  itemCount: _selectedPreset.index + 3,
+                child: AdaptiveCardGrid.fromCardType(
+                  cardType: CardVariant.vertical,
+                  columns: _selectedPreset,
+                  itemCount: (_selectedPreset.index + 1) * 2,
                   itemBuilder: (context, index) {
                     return VerticalCard(
                       title: '카드 ${index + 1}',
@@ -761,13 +773,10 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               AppSection(
                 title: '2. Horizontal Cards',
                 variant: SectionVariant.standard,
-                child: AdaptiveCardGrid.fromPreset(
-                  config: GridLayoutTokens.forCardType(
-                    CardVariant.horizontal,
-                    _selectedPreset,
-                    width: width,
-                  ),
-                  itemCount: _selectedPreset.index + 2,
+                child: AdaptiveCardGrid.fromCardType(
+                  cardType: CardVariant.horizontal,
+                  columns: _selectedPreset,
+                  itemCount: (_selectedPreset.index + 1) * 2,
                   itemBuilder: (context, index) {
                     return HorizontalCard(
                       title: '카드 ${index + 1}',
@@ -796,13 +805,10 @@ class _V2ComponentsPageState extends State<V2ComponentsPage>
               AppSection(
                 title: '3. Compact Cards',
                 variant: SectionVariant.standard,
-                child: AdaptiveCardGrid.fromPreset(
-                  config: GridLayoutTokens.forCardType(
-                    CardVariant.compact,
-                    _selectedPreset,
-                    width: width,
-                  ),
-                  itemCount: _selectedPreset.index + 4,
+                child: AdaptiveCardGrid.fromCardType(
+                  cardType: CardVariant.compact,
+                  columns: _selectedPreset,
+                  itemCount: (_selectedPreset.index + 1) * 2,
                   itemBuilder: (context, index) {
                     return CompactCard(
                       title: '항목 ${index + 1}',

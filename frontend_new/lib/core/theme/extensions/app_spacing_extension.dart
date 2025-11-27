@@ -45,6 +45,9 @@ class AppSpacingExtension extends ThemeExtension<AppSpacingExtension> {
   /// 4px - 폼 Helper 텍스트 간격
   final double formHelperGap;
 
+  /// 2px - 제목과 설명 사이의 타이트한 그룹핑
+  final double labelDescriptionGap;
+
   /// 8px - 컴포넌트 내 아이콘 간격
   final double componentIconGap;
 
@@ -67,6 +70,7 @@ class AppSpacingExtension extends ThemeExtension<AppSpacingExtension> {
     required this.gargantuan,
     required this.formLabelGap,
     required this.formHelperGap,
+    required this.labelDescriptionGap,
     required this.componentIconGap,
     required this.scrollbarGap,
     required this.minTapSize,
@@ -87,6 +91,7 @@ class AppSpacingExtension extends ThemeExtension<AppSpacingExtension> {
       gargantuan: 128.0,
       formLabelGap: 6.0,
       formHelperGap: 4.0,
+      labelDescriptionGap: 2.0,
       componentIconGap: 8.0,
       scrollbarGap: 4.0,
       minTapSize: 44.0,
@@ -107,6 +112,7 @@ class AppSpacingExtension extends ThemeExtension<AppSpacingExtension> {
     double? gargantuan,
     double? formLabelGap,
     double? formHelperGap,
+    double? labelDescriptionGap,
     double? componentIconGap,
     double? scrollbarGap,
     double? minTapSize,
@@ -124,6 +130,7 @@ class AppSpacingExtension extends ThemeExtension<AppSpacingExtension> {
       gargantuan: gargantuan ?? this.gargantuan,
       formLabelGap: formLabelGap ?? this.formLabelGap,
       formHelperGap: formHelperGap ?? this.formHelperGap,
+      labelDescriptionGap: labelDescriptionGap ?? this.labelDescriptionGap,
       componentIconGap: componentIconGap ?? this.componentIconGap,
       scrollbarGap: scrollbarGap ?? this.scrollbarGap,
       minTapSize: minTapSize ?? this.minTapSize,
@@ -150,6 +157,11 @@ class AppSpacingExtension extends ThemeExtension<AppSpacingExtension> {
       gargantuan: lerpDouble(gargantuan, other.gargantuan, t),
       formLabelGap: lerpDouble(formLabelGap, other.formLabelGap, t),
       formHelperGap: lerpDouble(formHelperGap, other.formHelperGap, t),
+      labelDescriptionGap: lerpDouble(
+        labelDescriptionGap,
+        other.labelDescriptionGap,
+        t,
+      ),
       componentIconGap: lerpDouble(componentIconGap, other.componentIconGap, t),
       scrollbarGap: lerpDouble(scrollbarGap, other.scrollbarGap, t),
       minTapSize: lerpDouble(minTapSize, other.minTapSize, t),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'responsive_tokens.dart';
+import 'enums.dart';
 
 /// Card Design System Tokens
 ///
@@ -7,19 +9,18 @@ import 'package:flutter/material.dart';
 /// - 타이포그래피: 각 요소별 TextStyle
 /// - 애니메이션: Duration, Curve
 /// - 상태: Hover, Selected, Disabled
-enum CardVariant {
-  vertical, // 이미지 상단 + 텍스트
-  horizontal, // 이미지 좌측 + 텍스트 우측
-  compact, // 아이콘 + 제목 (정사각형)
-  selectable, // 체크박스 + 콘텐츠
-  wide, // Full-width 배너
-}
 
 /// Card Design Tokens (5-step responsive system)
 ///
 /// 카드 크기는 화면 크기에 따라 다르게 조정됩니다.
-/// Scale factor 기반으로 자동 계산되며, 특정 카드는 수동 override 가능합니다.
+/// [GridLayoutTokens]와 연동하여 정확한 열 수를 보장합니다.
 class CardDesignTokens {
+  CardDesignTokens._();
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // 고정 크기 토큰
+  // ════════════════════════════════════════════════════════════════════════════
+
   /// 카드 기본 높이 (WideCard)
   static const double wideCardHeight = 200;
 
@@ -43,87 +44,29 @@ class CardDesignTokens {
   };
 
   // ════════════════════════════════════════════════════════════════════════════
-  // 카드 너비 반응형 시스템 (Scale factor + Override)
+  // 텍스트 라인 수 제한
   // ════════════════════════════════════════════════════════════════════════════
 
-  /// 기준 breakpoint (MD = 1024px)에서의 카드 너비
-  /// 다른 breakpoint는 scale factor로 계산됩니다.
-  static const Map<String, Map<String, double>> _baseCardWidths = {
-    'vertical': {'min': 240, 'max': 380, 'preferred': 320},
-    'horizontal': {'min': 320, 'max': 500, 'preferred': 400},
-    'compact': {'min': 100, 'max': 200, 'preferred': 120},
-    'selectable': {'min': 280, 'max': 500, 'preferred': 350},
-    'wide': {'min': 600, 'max': 2000, 'preferred': double.infinity},
-  };
-
-  /// Breakpoint별 scale factor (기준: MD = 1.0)
-  ///
-  /// XS (< 450px): 0.75 - 더 작은 카드
-  /// SM (450-768px): 0.85 - 조금 작은 카드
-  /// MD (768-1024px): 1.0 - 기준값
-  /// LG (1024-1440px): 1.1 - 조금 큰 카드 (노트북)
-  /// XL (>= 1440px): 1.2 - 더 큰 카드 (데스크톱)
-  static const Map<String, double> _scaleFactors = {
-    'xs': 0.75,
-    'sm': 0.85,
-    'md': 1.0,
-    'lg': 1.1,
-    'xl': 1.2,
-  };
-
-  /// 수동 override: 특정 카드는 scale factor 대신 고정값 사용
-  /// null이면 scale factor 자동 적용
-  static const Map<String, Map<String, Map<String, double>>> _overrides = {
-    // 예: 'compact' 카드는 XS에서 커스텀 크기 사용
-    // 'compact': {
-    //   'xs': {'min': 80, 'max': 140, 'preferred': 110},
-    // },
-  };
-
-  /// 카드 너비 반응형 조회
-  ///
-  /// [cardType] - 카드 종류 ('vertical', 'horizontal', 'compact', 'selectable', 'wide')
-  /// [width] - 화면 너비 (px)
-  /// 반환값 - {'min': double, 'max': double, 'preferred': double}
-  static Map<String, double> getCardWidths(String cardType, double width) {
-    final breakpoint = _getBreakpointName(width);
-
-    // Override 확인 (있으면 override 값 사용)
-    if (_overrides[cardType]?[breakpoint] != null) {
-      return _overrides[cardType]![breakpoint]!;
-    }
-
-    // Scale factor 적용
-    final base = _baseCardWidths[cardType]!;
-    final scale = _scaleFactors[breakpoint]!;
-
-    return {
-      'min': (base['min']! * scale).roundToDouble(),
-      'max': (base['max']! * scale).roundToDouble(),
-      'preferred': (base['preferred']! * scale).roundToDouble(),
-    };
-  }
-
-  /// 화면 너비에 따른 breakpoint 이름 반환
-  static String _getBreakpointName(double width) {
-    if (width < 450) return 'xs';
-    if (width < 768) return 'sm';
-    if (width < 1024) return 'md';
-    if (width < 1440) return 'lg';
-    return 'xl';
-  }
-
-  /// 레거시 호환성: 기준값만 반환 (deprecated)
-  @Deprecated('Use getCardWidths(cardType, width) instead')
-  static const Map<String, Map<String, double>> cardWidths = _baseCardWidths;
-
-  /// 텍스트 라인 수 제한
+  /// 텍스트 라인 수 제한 (기본)
   static const Map<String, int> textLineNumbers = {
     'title': 3, // 제목: 3줄 최대
     'subtitle': 2, // 부제목: 2줄 최대
     'description': 3, // 설명: 3줄 최대
     'meta': 1, // 메타: 1줄
   };
+
+  /// 각 요소별 텍스트 줄 수 제한 (카드 타입별 상세)
+  static const Map<String, Map<String, int>> textLineNumbersByCard = {
+    'vertical': {'meta': 1, 'title': 3, 'subtitle': 2, 'description': 3},
+    'horizontal': {'meta': 1, 'title': 2, 'subtitle': 1, 'description': 2},
+    'compact': {'meta': 1, 'title': 2},
+    'selectable': {'title': 1, 'subtitle': 1},
+    'wide': {'title': 2, 'subtitle': 1, 'description': 2},
+  };
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // 애니메이션 & 상태
+  // ════════════════════════════════════════════════════════════════════════════
 
   /// 애니메이션 설정
   static const Duration hoverAnimationDuration = Duration(milliseconds: 200);
@@ -132,26 +75,190 @@ class CardDesignTokens {
   /// 배경 오버레이 강도
   static const double wideCardOverlayOpacity = 0.3;
 
-  /// WideCard 이미지 너비 비율 (HorizontalCard)
+  /// HorizontalCard 이미지 너비 비율
   static const double horizontalImageWidthRatio = 0.4;
 
   /// 선택 상태 테두리 굵기
   static const double selectedBorderWidth = 2.0;
   static const double normalBorderWidth = 1.0;
 
-  /// 반응형 패딩/간격 (ResponsiveTokens 메서드 사용)
-  /// - cardPadding(width): 12/16/20px
-  /// - cardGap(width): 12/16px
-  /// - pagePadding(width): 16/24/32px
+  /// Hover/Selected 상태 불투명도
+  static const double disabledOpacity = 0.6;
+  static const double hoverScale = 1.01;
 
-  /// 각 요소별 텍스트 줄 수 제한 (상세)
-  static const Map<String, Map<String, int>> textLineNumbersByCard = {
-    'vertical': {'meta': 1, 'title': 3, 'subtitle': 2, 'description': 3},
-    'horizontal': {'meta': 1, 'title': 2, 'subtitle': 1, 'description': 2},
-    'compact': {'meta': 1, 'title': 2},
-    'selectable': {'title': 1, 'subtitle': 1},
-    'wide': {'title': 2, 'subtitle': 1, 'description': 2},
+  /// 카드 높이 비율 (상태별)
+  static const Map<CardVariant, double> cardHeightRatios = {
+    CardVariant.vertical: 4 / 3, // 3:4 비율
+    CardVariant.horizontal: 3 / 4, // 4:3 비율 (높이는 더 짧음)
+    CardVariant.compact: 1, // 1:1 (정사각형)
+    CardVariant.selectable: 0.35, // 작은 높이 (가로 카드)
+    CardVariant.wide: 1, // 고정 높이 사용
   };
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // 반응형 카드 크기 (Breakpoint별)
+  // ════════════════════════════════════════════════════════════════════════════
+
+  /// 카드 너비 조회 (반응형)
+  ///
+  /// [cardType] - 카드 종류 ('vertical', 'horizontal', 'compact', 'selectable', 'wide')
+  /// [width] - 화면 너비 (px)
+  /// 반환값 - {'min': double, 'max': double, 'preferred': double}
+  ///
+  /// 주의: 이 메서드보다 [GridLayoutTokens.forCardType]을 사용하는 것이 권장됩니다.
+  /// GridLayoutTokens는 열 수까지 고려한 더 정확한 계산을 제공합니다.
+  static Map<String, double> getCardWidths(String cardType, double width) {
+    final screenSize = ResponsiveTokens.getScreenSize(width);
+    return _cardWidthsByBreakpoint[cardType]![screenSize]!;
+  }
+
+  /// Breakpoint별 카드 크기 테이블
+  ///
+  /// 각 breakpoint에서 카드 타입별 min/max/preferred 크기를 정의합니다.
+  /// GridLayoutTokens의 열 수 계산과 연동됩니다.
+  /// 모든 값은 8px 그리드 시스템을 따릅니다.
+  static const Map<String, Map<ScreenSize, Map<String, double>>>
+  _cardWidthsByBreakpoint = {
+    'vertical': {
+      ScreenSize.xs: {
+        'min': 280,
+        'max': 400,
+        'preferred': 320,
+      }, // 35×8, 50×8, 40×8
+      ScreenSize.sm: {
+        'min': 200,
+        'max': 320,
+        'preferred': 256,
+      }, // 25×8, 40×8, 32×8
+      ScreenSize.md: {
+        'min': 240,
+        'max': 360,
+        'preferred': 280,
+      }, // 30×8, 45×8, 35×8
+      ScreenSize.lg: {
+        'min': 280,
+        'max': 424,
+        'preferred': 344,
+      }, // 35×8, 53×8, 43×8
+      ScreenSize.xl: {
+        'min': 304,
+        'max': 480,
+        'preferred': 384,
+      }, // 38×8, 60×8, 48×8
+    },
+    'horizontal': {
+      ScreenSize.xs: {
+        'min': 304,
+        'max': 504,
+        'preferred': 400,
+      }, // 38×8, 63×8, 50×8
+      ScreenSize.sm: {
+        'min': 280,
+        'max': 400,
+        'preferred': 344,
+      }, // 35×8, 50×8, 43×8
+      ScreenSize.md: {
+        'min': 320,
+        'max': 456,
+        'preferred': 384,
+      }, // 40×8, 57×8, 48×8
+      ScreenSize.lg: {
+        'min': 400,
+        'max': 552,
+        'preferred': 480,
+      }, // 50×8, 69×8, 60×8
+      ScreenSize.xl: {
+        'min': 448,
+        'max': 648,
+        'preferred': 552,
+      }, // 56×8, 81×8, 69×8
+    },
+    'compact': {
+      ScreenSize.xs: {
+        'min': 80,
+        'max': 120,
+        'preferred': 96,
+      }, // 10×8, 15×8, 12×8
+      ScreenSize.sm: {
+        'min': 96,
+        'max': 136,
+        'preferred': 120,
+      }, // 12×8, 17×8, 15×8
+      ScreenSize.md: {
+        'min': 96,
+        'max': 160,
+        'preferred': 128,
+      }, // 12×8, 20×8, 16×8
+      ScreenSize.lg: {
+        'min': 120,
+        'max': 176,
+        'preferred': 152,
+      }, // 15×8, 22×8, 19×8
+      ScreenSize.xl: {
+        'min': 136,
+        'max': 200,
+        'preferred': 168,
+      }, // 17×8, 25×8, 21×8
+    },
+    'selectable': {
+      ScreenSize.xs: {
+        'min': 280,
+        'max': 504,
+        'preferred': 352,
+      }, // 35×8, 63×8, 44×8
+      ScreenSize.sm: {
+        'min': 280,
+        'max': 400,
+        'preferred': 344,
+      }, // 35×8, 50×8, 43×8
+      ScreenSize.md: {
+        'min': 304,
+        'max': 456,
+        'preferred': 368,
+      }, // 38×8, 57×8, 46×8
+      ScreenSize.lg: {
+        'min': 352,
+        'max': 504,
+        'preferred': 424,
+      }, // 44×8, 63×8, 53×8
+      ScreenSize.xl: {
+        'min': 400,
+        'max': 552,
+        'preferred': 480,
+      }, // 50×8, 69×8, 60×8
+    },
+    'wide': {
+      ScreenSize.xs: {
+        'min': 320,
+        'max': 600,
+        'preferred': 400,
+      }, // 40×8, 75×8, 50×8
+      ScreenSize.sm: {
+        'min': 400,
+        'max': 800,
+        'preferred': 600,
+      }, // 50×8, 100×8, 75×8
+      ScreenSize.md: {
+        'min': 600,
+        'max': 1200,
+        'preferred': 896,
+      }, // 75×8, 150×8, 112×8
+      ScreenSize.lg: {
+        'min': 800,
+        'max': 1600,
+        'preferred': 1200,
+      }, // 100×8, 200×8, 150×8
+      ScreenSize.xl: {
+        'min': 1000, // 125×8
+        'max': 2000, // 250×8
+        'preferred': double.infinity,
+      },
+    },
+  };
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // TextStyle 정의
+  // ════════════════════════════════════════════════════════════════════════════
 
   /// TextStyle 정의 (각 요소별)
   static TextStyle getTitleStyle(BuildContext context) {
@@ -178,16 +285,14 @@ class CardDesignTokens {
     );
   }
 
-  /// Hover/Selected 상태 불투명도
-  static const double disabledOpacity = 0.6;
-  static const double hoverScale = 1.01;
+  // ════════════════════════════════════════════════════════════════════════════
+  // 반응형 패딩/간격 헬퍼 (ResponsiveTokens 래퍼)
+  // ════════════════════════════════════════════════════════════════════════════
 
-  /// 카드 높이 비율 (상태별)
-  static const Map<CardVariant, double> cardHeightRatios = {
-    CardVariant.vertical: 4 / 3, // 3:4 비율
-    CardVariant.horizontal: 3 / 4, // 4:3 비율 (높이는 더 짧음)
-    CardVariant.compact: 1, // 1:1 (정사각형)
-    CardVariant.selectable: 0.35, // 작은 높이 (가로 카드)
-    CardVariant.wide: 1, // 고정 높이 사용
-  };
+  /// 카드 패딩 (ResponsiveTokens.cardPadding 래퍼)
+  static double cardPadding(double width) =>
+      ResponsiveTokens.cardPadding(width);
+
+  /// 카드 간격 (ResponsiveTokens.cardGap 래퍼)
+  static double cardGap(double width) => ResponsiveTokens.cardGap(width);
 }

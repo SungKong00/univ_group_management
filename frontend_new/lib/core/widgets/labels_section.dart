@@ -223,7 +223,7 @@ class _LabelsSectionState extends State<LabelsSection> {
                           size: ComponentSizeTokens.badgeMedium,
                           color: labelsColors.addButtonText,
                         ),
-                        const SizedBox(width: 4.0),
+                        const SizedBox(width: ResponsiveTokens.space4),
                         Text(
                           'Add label',
                           style:

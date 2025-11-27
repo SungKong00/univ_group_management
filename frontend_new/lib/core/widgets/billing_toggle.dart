@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
 import '../theme/animation_tokens.dart';
+import '../theme/responsive_tokens.dart';
 import '../../features/component_showcase/data/models/billing_cycle_model.dart';
 
 /// Billing Toggle - 월간/연간 청구 토글
@@ -37,7 +38,7 @@ class BillingToggle extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(width: 12.0),
+        const SizedBox(width: ResponsiveTokens.space12),
 
         // Toggle Switch
         GestureDetector(
@@ -77,7 +78,7 @@ class BillingToggle extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(width: 12.0),
+        const SizedBox(width: ResponsiveTokens.space12),
 
         // Yearly Label
         GestureDetector(

@@ -56,7 +56,7 @@ class _DefinitionListItem extends StatelessWidget {
         // Icon (optional)
         if (item.icon != null) ...[
           Icon(item.icon, size: 20, color: colorExt.brandPrimary),
-          const SizedBox(width: 12.0),
+          const SizedBox(width: ResponsiveTokens.space12),
         ],
 
         // Term + Definition
@@ -76,7 +76,7 @@ class _DefinitionListItem extends StatelessWidget {
               else
                 _TermText(term: item.term),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: ResponsiveTokens.space8),
 
               // Definition (설명)
               Text(

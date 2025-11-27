@@ -88,7 +88,7 @@ class CustomerCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(width: 8.0),
+                      const SizedBox(width: ResponsiveTokens.space8),
                       Icon(
                         Icons.arrow_forward,
                         size: 16,

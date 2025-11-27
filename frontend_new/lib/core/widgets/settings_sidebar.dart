@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/extensions/app_color_extension.dart';
+import '../theme/extensions/app_spacing_extension.dart';
 import '../theme/colors/sidebar_colors.dart';
 import '../theme/enums.dart';
 import '../theme/responsive_tokens.dart';
@@ -70,6 +71,7 @@ class SettingsSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
+    final spacing = context.appSpacing;
     final width = MediaQuery.sizeOf(context).width;
 
     // ========================================================
@@ -157,7 +159,7 @@ class SettingsSidebar extends StatelessWidget {
                                           fontWeight: FontWeight.w500,
                                         ),
                                   ),
-                                  const SizedBox(height: 2),
+                                  SizedBox(height: spacing.labelDescriptionGap),
                                   Text(
                                     setting.description,
                                     style:
@@ -172,7 +174,7 @@ class SettingsSidebar extends StatelessWidget {
                               ),
                             ),
 
-                            const SizedBox(width: 12.0),
+                            const SizedBox(width: ResponsiveTokens.space12),
 
                             // 컨트롤 (Toggle, Switch, etc.)
                             setting.control,

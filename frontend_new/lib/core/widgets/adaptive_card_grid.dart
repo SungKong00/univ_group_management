@@ -2,17 +2,51 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/responsive_tokens.dart';
 import '../theme/grid_layout_tokens.dart';
-import '../theme/card_design_tokens.dart';
 import '../theme/enums.dart';
 import 'responsive_builder.dart';
 
-/// Adaptive card grid/wrap for reusable v2 components.
+/// Adaptive Card Grid - 반응형 카드 그리드 레이아웃
 ///
-/// 특징:
-/// - min/max 카드 폭을 클램프하며 열 수를 자동 계산
-/// - 여백이 남을 때 가운데 정렬, 필요 시 가로 스크롤 옵션 제공
-/// - grid / wrap / list 모드 지원 (높이 제각각 카드도 대응)
-/// - breakpoint별 비율/간격을 design token으로 일관 관리
+/// 화면 너비에 따라 자동으로 열 수와 카드 크기를 조정하는 그리드 컴포넌트입니다.
+/// Material Design 3의 5단계 반응형 시스템(XS/SM/MD/LG/XL)을 따릅니다.
+///
+/// ## 특징
+/// - 화면 크기에 따라 열 수 자동 조정
+/// - min/max 카드 폭을 클램프하며 레이아웃 계산
+/// - 여백이 남을 때 가운데 정렬
+/// - grid / wrap / list 모드 지원
+///
+/// ## 사용법
+///
+/// ### 방법 1: fromCardType (권장)
+/// ```dart
+/// AdaptiveCardGrid.fromCardType(
+///   cardType: CardVariant.vertical,
+///   columns: GridPresetColumns.three,
+///   itemCount: items.length,
+///   itemBuilder: (context, index) => VerticalCard(...),
+/// )
+/// ```
+///
+/// ### 방법 2: fromPreset (Named preset)
+/// ```dart
+/// final width = MediaQuery.sizeOf(context).width;
+/// AdaptiveCardGrid.fromPreset(
+///   config: GridLayoutTokens.pricingCards(width),
+///   itemCount: items.length,
+///   itemBuilder: (context, index) => PricingCard(...),
+/// )
+/// ```
+///
+/// ## Breakpoint별 열 수 조정 예시 (3열 vertical 카드)
+///
+/// | Breakpoint | 화면너비 | 열 수 |
+/// |------------|---------|-------|
+/// | XS (<450)  | ~400px  | 1열   |
+/// | SM (450-768) | ~600px | 2열  |
+/// | MD (768-1024) | ~900px | 3열 |
+/// | LG (1024-1440) | ~1200px | 3열 |
+/// | XL (≥1440) | ~1440px | 3열   |
 class AdaptiveCardGrid extends StatelessWidget {
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
@@ -43,9 +77,6 @@ class AdaptiveCardGrid extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
 
   /// 열 계산 시 선호하는 아이템 폭 (null이면 maxItemWidth 사용)
-  ///
-  /// 실제 렌더링 폭은 min/max 클램프를 적용하며, 열 수를 결정할 때만
-  /// 이 값이 사용됩니다. (예: 1024px에서 3열을 강제하려면 320 등)
   final double? preferredItemWidth;
 
   /// 레이아웃 최대 폭 제한 (null이면 부모 제약 사용)
@@ -72,22 +103,17 @@ class AdaptiveCardGrid extends StatelessWidget {
     this.alignment = Alignment.center,
   });
 
-  /// 그리드 레이아웃 프리셋으로부터 생성합니다 (정적 설정)
+  /// 그리드 레이아웃 프리셋으로부터 생성합니다
   ///
   /// [GridLayoutConfig]를 사용하여 그리드 파라미터를 자동으로 설정합니다.
-  /// 이를 통해 반복적인 픽셀 계산을 제거하고 일관된 레이아웃을 보장합니다.
-  ///
-  /// ⚠️ 주의: 이 factory는 기존 호환성을 위해 유지되지만, 반응형 카드 크기가 필요한 경우
-  /// [fromCardType()]을 사용하는 것이 권장됩니다.
   ///
   /// 사용 예시:
   /// ```dart
-  /// // Named preset 사용 (고정값 - 반응형 아님)
+  /// final width = MediaQuery.sizeOf(context).width;
   /// AdaptiveCardGrid.fromPreset(
-  ///   config: GridLayoutTokens.pricingCards,
+  ///   config: GridLayoutTokens.pricingCards(width),
   ///   itemCount: pricingPlans.length,
   ///   itemBuilder: (context, index) => PricingCard(pricingPlans[index]),
-  ///   maxContentWidth: ResponsiveTokens.maxContentWidth,
   /// );
   /// ```
   factory AdaptiveCardGrid.fromPreset({
@@ -100,7 +126,6 @@ class AdaptiveCardGrid extends StatelessWidget {
     EdgeInsetsGeometry? padding,
     double? maxContentWidth,
     AlignmentGeometry alignment = Alignment.center,
-    // Optional overrides for preset configuration
     ResponsiveValue<double>? aspectRatioOverride,
     bool? enforceAspectRatioOverride,
   }) {
@@ -137,9 +162,19 @@ class AdaptiveCardGrid extends StatelessWidget {
   ///   columns: GridPresetColumns.three,
   ///   itemCount: pricingPlans.length,
   ///   itemBuilder: (context, index) => PricingCard(pricingPlans[index]),
-  ///   maxContentWidth: ResponsiveTokens.maxContentWidth,
   /// );
   /// ```
+  ///
+  /// ## Breakpoint별 열 수 조정
+  ///
+  /// | 프리셋 | XS | SM | MD | LG | XL |
+  /// |--------|----|----|----|----|-----|
+  /// | one    | 1  | 1  | 1  | 1  | 1   |
+  /// | two    | 1  | 2  | 2  | 2  | 2   |
+  /// | three  | 1  | 2  | 3  | 3  | 3   |
+  /// | four   | 2  | 2  | 3  | 4  | 4   |
+  /// | five   | 2  | 3  | 4  | 5  | 5   |
+  /// | six    | 3  | 4  | 5  | 6  | 6   |
   factory AdaptiveCardGrid.fromCardType({
     Key? key,
     required CardVariant cardType,
@@ -154,9 +189,6 @@ class AdaptiveCardGrid extends StatelessWidget {
     ResponsiveValue<double>? aspectRatioOverride,
     bool? enforceAspectRatioOverride,
   }) {
-    // build() 내에서 width를 받아 동적으로 config 계산
-    // 여기서는 기본값으로 빈 AdaptiveCardGrid를 반환하고,
-    // _cardTypeData를 저장했다가 build()에서 사용
     return _AdaptiveCardGridWithCardType(
       key: key,
       cardType: cardType,
@@ -235,27 +267,44 @@ class AdaptiveCardGrid extends StatelessWidget {
   }
 
   _Layout _resolveLayout(double availableWidth, double gap) {
-    final targetWidth = preferredItemWidth ?? maxItemWidth;
     final isList = mode == AdaptiveLayoutMode.list;
-    int columns = isList
-        ? 1
-        : math.max(1, ((availableWidth + gap) / (targetWidth + gap)).floor());
 
-    if (maxColumns != null) {
-      columns = math.min(columns, maxColumns!);
+    // List 모드는 항상 1열, 전체 너비 사용
+    if (isList) {
+      return _Layout(columns: 1, itemWidth: availableWidth);
     }
 
+    // maxColumns가 설정되어 있으면 **강제 적용** (프리셋 기반)
+    // 카드 크기는 가용 너비에서 동적으로 계산
+    if (maxColumns != null) {
+      final columns = maxColumns!;
+      // 카드 너비 = (가용너비 - 간격합) / 열수
+      final itemWidth = _itemWidthFor(columns, availableWidth, gap);
+      // 카드가 너무 넓어지지 않도록만 제한 (minItemWidth 무시 - 열 수 우선)
+      return _Layout(
+        columns: columns,
+        itemWidth: math.min(itemWidth, maxItemWidth),
+      );
+    }
+
+    // maxColumns 미설정: 기존 자동 계산 로직
+    final targetWidth = preferredItemWidth ?? maxItemWidth;
+    int columns = math.max(
+      1,
+      ((availableWidth + gap) / (targetWidth + gap)).floor(),
+    );
+
+    // 카드 너비 계산
     double itemWidth = _itemWidthFor(columns, availableWidth, gap);
 
+    // minItemWidth를 만족하지 못하면 열 수 줄이기
     while (itemWidth < minItemWidth && columns > 1) {
       columns -= 1;
       itemWidth = _itemWidthFor(columns, availableWidth, gap);
     }
 
-    itemWidth = itemWidth.clamp(
-      mode == AdaptiveLayoutMode.list ? 0 : minItemWidth,
-      maxItemWidth,
-    );
+    // 최종 클램프
+    itemWidth = itemWidth.clamp(minItemWidth, maxItemWidth);
 
     return _Layout(columns: columns, itemWidth: itemWidth);
   }
@@ -326,7 +375,17 @@ class AdaptiveCardGrid extends StatelessWidget {
   }
 }
 
-enum AdaptiveLayoutMode { grid, wrap, list }
+/// 레이아웃 모드
+enum AdaptiveLayoutMode {
+  /// GridView 기반 (동일 높이)
+  grid,
+
+  /// Wrap 기반 (가변 높이)
+  wrap,
+
+  /// 단일 열 리스트
+  list,
+}
 
 class _Layout {
   final int columns;
@@ -363,8 +422,8 @@ class _AdaptiveCardGridWithCardType extends AdaptiveCardGrid {
     this.aspectRatioOverride,
     this.enforceAspectRatioOverride,
   }) : super(
-         minItemWidth: 240, // 임시값 (build에서 계산)
-         maxItemWidth: 380, // 임시값 (build에서 계산)
+         minItemWidth: 100, // 임시값 (build에서 계산)
+         maxItemWidth: 500, // 임시값 (build에서 계산)
          maxColumns: null,
          spacing: null,
          aspectRatio: null,
@@ -374,6 +433,8 @@ class _AdaptiveCardGridWithCardType extends AdaptiveCardGrid {
 
   @override
   Widget build(BuildContext context) {
+    if (itemCount == 0) return const SizedBox.shrink();
+
     final width = MediaQuery.sizeOf(context).width;
 
     // 현재 화면 너비에 따라 GridLayoutConfig 동적 계산
@@ -383,15 +444,15 @@ class _AdaptiveCardGridWithCardType extends AdaptiveCardGrid {
       width: width,
     );
 
-    // 계산된 config로 AdaptiveCardGrid 구성
-    return AdaptiveCardGrid(
+    // 계산된 config로 새 AdaptiveCardGrid 생성 후 build
+    final grid = AdaptiveCardGrid(
       key: key,
       itemCount: itemCount,
       itemBuilder: itemBuilder,
       minItemWidth: config.minItemWidth,
       maxItemWidth: config.maxItemWidth,
       maxColumns: config.maxColumns,
-      spacing: spacing, // null로 ResponsiveTokens.cardGap 자동 사용
+      spacing: spacing,
       aspectRatio: aspectRatioOverride ?? config.aspectRatio,
       mode: mode,
       scrollOnOverflow: scrollOnOverflow,
@@ -401,6 +462,8 @@ class _AdaptiveCardGridWithCardType extends AdaptiveCardGrid {
       preferredItemWidth: config.preferredItemWidth,
       maxContentWidth: maxContentWidth,
       alignment: alignment,
-    ).build(context);
+    );
+
+    return grid.build(context);
   }
 }

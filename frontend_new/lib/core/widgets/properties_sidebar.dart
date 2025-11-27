@@ -145,7 +145,9 @@ class PropertiesSidebar extends StatelessWidget {
                                     size: ComponentSizeTokens.badgeMedium,
                                     color: sidebarColors.icon,
                                   ),
-                                  const SizedBox(width: 6.0),
+                                  const SizedBox(
+                                    width: ResponsiveTokens.space4,
+                                  ),
                                 ],
                                 Expanded(
                                   child: Text(
@@ -165,7 +167,7 @@ class PropertiesSidebar extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8.0),
+                      const SizedBox(width: ResponsiveTokens.space8),
                       // 편집 버튼
                       if (property.onEdit != null)
                         Container(

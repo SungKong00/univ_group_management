@@ -155,7 +155,7 @@ class CustomerLogoGrid extends StatelessWidget {
                         color: colorExt.brandPrimary,
                       ),
                     ),
-                    const SizedBox(width: 4.0),
+                    const SizedBox(width: ResponsiveTokens.space4),
                     Icon(
                       company.isExternal
                           ? Icons.open_in_new

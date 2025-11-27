@@ -61,7 +61,6 @@ class _CompactCardState extends State<CompactCard> {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final width = MediaQuery.sizeOf(context).width;
 
     // 색상 선택
     final colors = switch (widget.variant) {
@@ -70,105 +69,103 @@ class _CompactCardState extends State<CompactCard> {
       _ => CompactCardColors.standard(colorExt),
     };
 
-    final padding = ResponsiveTokens.cardPadding(width);
-    final gap = ResponsiveTokens.cardGap(width);
-    final lineNumbers = CardDesignTokens.textLineNumbersByCard['compact']!;
-    final compactSize = widget.contentSize > 0
-        ? widget.contentSize
-        : CardDesignTokens.iconSizes['compact']!;
+    // LayoutBuilder: 실제 할당된 카드 너비 기준으로 레이아웃 결정
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 화면 너비는 반응형 토큰(padding, gap)에만 사용
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final padding = ResponsiveTokens.cardPadding(screenWidth);
+        final gap = ResponsiveTokens.cardGap(screenWidth);
+        final lineNumbers = CardDesignTokens.textLineNumbersByCard['compact']!;
+        final compactSize = widget.contentSize > 0
+            ? widget.contentSize
+            : CardDesignTokens.iconSizes['compact']!;
 
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: AnimatedContainer(
-          duration: CardDesignTokens.hoverAnimationDuration,
-          constraints: BoxConstraints(
-            minWidth: CardDesignTokens.getCardWidths(
-              'compact',
-              MediaQuery.sizeOf(context).width,
-            )['min']!,
-            maxWidth: CardDesignTokens.getCardWidths(
-              'compact',
-              MediaQuery.sizeOf(context).width,
-            )['max']!,
-          ),
-          decoration: BoxDecoration(
-            color: widget.isSelected
-                ? colorExt.brandPrimary.withValues(alpha: 0.1)
-                : _isHovered
-                ? colors.backgroundHover
-                : colors.background,
-            border: Border.all(
-              color: widget.isSelected ? colors.border : colors.border,
-              width: widget.isSelected ? 2 : 1,
-            ),
-            borderRadius: BorderTokens.largeRadius(),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Padding(
-            padding: EdgeInsets.all(padding),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Icon or Image
-                if (widget.image != null)
-                  SizedBox(
-                    width: compactSize,
-                    height: compactSize,
-                    child: widget.image!,
-                  )
-                else if (widget.icon != null)
-                  Icon(
-                    widget.icon!,
-                    size: compactSize,
-                    color: widget.iconColor ?? colorExt.brandPrimary,
-                  )
-                else
-                  SizedBox(
-                    width: compactSize,
-                    height: compactSize,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorExt.surfaceTertiary,
-                        borderRadius: BorderTokens.mediumRadius(),
-                      ),
-                    ),
-                  ),
-
-                SizedBox(height: gap),
-
-                // Meta (optional)
-                if (widget.meta != null)
-                  Text(
-                    widget.meta!,
-                    style: CardDesignTokens.getMetaStyle(
-                      context,
-                    ).copyWith(color: colors.meta),
-                    textAlign: TextAlign.center,
-                    maxLines: lineNumbers['meta'],
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                if (widget.meta != null) SizedBox(height: gap * 0.5),
-
-                // Title
-                Text(
-                  widget.title,
-                  style: CardDesignTokens.getSubtitleStyle(
-                    context,
-                  ).copyWith(color: colors.title),
-                  textAlign: TextAlign.center,
-                  maxLines: lineNumbers['title'],
-                  overflow: TextOverflow.ellipsis,
+        return GestureDetector(
+          onTap: widget.onTap,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _isHovered = true),
+            onExit: (_) => setState(() => _isHovered = false),
+            child: AnimatedContainer(
+              duration: CardDesignTokens.hoverAnimationDuration,
+              // 크기 제약은 AdaptiveCardGrid가 담당 - 카드는 부모 크기에 맞춤
+              decoration: BoxDecoration(
+                color: widget.isSelected
+                    ? colorExt.brandPrimary.withValues(alpha: 0.1)
+                    : _isHovered
+                    ? colors.backgroundHover
+                    : colors.background,
+                border: Border.all(
+                  color: widget.isSelected ? colors.border : colors.border,
+                  width: widget.isSelected ? 2 : 1,
                 ),
-              ],
+                borderRadius: BorderTokens.largeRadius(),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Icon or Image
+                    if (widget.image != null)
+                      SizedBox(
+                        width: compactSize,
+                        height: compactSize,
+                        child: widget.image!,
+                      )
+                    else if (widget.icon != null)
+                      Icon(
+                        widget.icon!,
+                        size: compactSize,
+                        color: widget.iconColor ?? colorExt.brandPrimary,
+                      )
+                    else
+                      SizedBox(
+                        width: compactSize,
+                        height: compactSize,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: colorExt.surfaceTertiary,
+                            borderRadius: BorderTokens.mediumRadius(),
+                          ),
+                        ),
+                      ),
+
+                    SizedBox(height: gap),
+
+                    // Meta (optional)
+                    if (widget.meta != null)
+                      Text(
+                        widget.meta!,
+                        style: CardDesignTokens.getMetaStyle(
+                          context,
+                        ).copyWith(color: colors.meta),
+                        textAlign: TextAlign.center,
+                        maxLines: lineNumbers['meta'],
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    if (widget.meta != null) SizedBox(height: gap * 0.5),
+
+                    // Title
+                    Text(
+                      widget.title,
+                      style: CardDesignTokens.getSubtitleStyle(
+                        context,
+                      ).copyWith(color: colors.title),
+                      textAlign: TextAlign.center,
+                      maxLines: lineNumbers['title'],
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

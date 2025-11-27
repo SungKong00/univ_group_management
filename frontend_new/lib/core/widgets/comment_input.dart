@@ -198,7 +198,7 @@ class _CommentInputState extends State<CommentInput> {
                               size: 16,
                               color: editorColors.text,
                             ),
-                          const SizedBox(width: 6.0),
+                          SizedBox(width: spacing.formLabelGap),
                           Text(
                             'Comment',
                             style:

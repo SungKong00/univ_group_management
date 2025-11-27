@@ -90,6 +90,33 @@ enum AppInputCursorColor { primary }
 // ========================================================
 // 카드 & 컨테이너
 // ========================================================
+
+/// 카드 타입 (레이아웃 방향별)
+///
+/// 각 타입은 이미지 위치와 전체 레이아웃 방향을 결정합니다.
+/// [GridLayoutTokens] 및 [CardDesignTokens]와 연동됩니다.
+enum CardVariant {
+  /// 세로 카드: 이미지(상단) → 텍스트(하단)
+  /// 용도: 상품, 가격표, 팀 멤버
+  vertical,
+
+  /// 가로 카드: 이미지(좌측) → 텍스트(우측)
+  /// 용도: 추천사, 고객 사례, 블로그 미리보기
+  horizontal,
+
+  /// 콤팩트 카드: 아이콘/이미지(중앙) + 제목
+  /// 용도: 기능 선택, 태그, 카테고리, 필터
+  compact,
+
+  /// 선택 가능 카드: 체크박스 + 콘텐츠
+  /// 용도: 옵션 선택, 설정 항목
+  selectable,
+
+  /// 와이드 카드: Full-width 배너
+  /// 용도: 프로모션, 광고, 중요 공지
+  wide,
+}
+
 enum AppCardElevation { none, low }
 
 enum BreadcrumbStyle { default_, dark, compact }

@@ -35,14 +35,14 @@ class ResponsiveTestPage extends StatelessWidget {
               children: [
                 // 헤더
                 _buildHeader(context, screenSize, width),
-                const SizedBox(height: 32.0), // sectionSpacingMedium
+                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width)),
                 // 화면 크기 정보
                 AppSection(
                   title: '현재 화면 크기',
                   variant: SectionVariant.standard,
                   child: _buildScreenSizeInfo(context, screenSize, width),
                 ),
-                const SizedBox(height: 32.0), // sectionSpacingMedium
+                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width)),
                 // 반응형 레이아웃 예시
                 AppSection(
                   title: '반응형 레이아웃',
@@ -53,14 +53,14 @@ class ResponsiveTestPage extends StatelessWidget {
                     width,
                   ),
                 ),
-                const SizedBox(height: 32.0), // sectionSpacingMedium
+                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width)),
                 // 그리드 시스템 예시
                 AppSection(
                   title: '그리드 시스템',
                   variant: SectionVariant.standard,
                   child: _buildGridExample(context, screenSize, width),
                 ),
-                const SizedBox(height: 32.0), // sectionSpacingMedium
+                SizedBox(height: ResponsiveTokens.sectionVerticalGap(width)),
                 // 버튼 크기 예시
                 AppSection(
                   title: '버튼 크기',
@@ -112,21 +112,21 @@ class ResponsiveTestPage extends StatelessWidget {
               context,
             ).textTheme.bodyMedium!.copyWith(color: colorExt.brandSecondary),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: ResponsiveTokens.space4),
           Text(
             '너비: ${width.toStringAsFixed(0)}px',
             style: Theme.of(
               context,
             ).textTheme.bodySmall!.copyWith(color: colorExt.textSecondary),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: ResponsiveTokens.space4),
           Text(
             '그리드 컬럼: ${ResponsiveTokens.columnCount(width)}개',
             style: Theme.of(
               context,
             ).textTheme.bodySmall!.copyWith(color: colorExt.textSecondary),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: ResponsiveTokens.space4),
           Text(
             '페이지 패딩: ${ResponsiveTokens.pagePadding(width)}px',
             style: Theme.of(

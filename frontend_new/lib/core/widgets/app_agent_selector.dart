@@ -70,7 +70,8 @@ class _AppAgentSelectorState extends State<AppAgentSelector> {
               avatarSize: widget.avatarSize,
               badgeStyle: widget.badgeStyle,
             ),
-            if (i < widget.agents.length - 1) const SizedBox(width: 8.0),
+            if (i < widget.agents.length - 1)
+              const SizedBox(width: ResponsiveTokens.space8),
           ],
         ],
       ),

@@ -90,14 +90,14 @@ class PricingCard extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 24),
+          const SizedBox(height: ResponsiveTokens.space24),
 
           // Features
           ...plan.features.map(
             (feature) => _buildFeatureItem(pricingColors, textTheme, feature),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: ResponsiveTokens.space24),
 
           // CTA Button(s)
           ...plan.ctas.asMap().entries.map((entry) {

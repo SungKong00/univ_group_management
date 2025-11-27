@@ -64,7 +64,6 @@ class _VerticalCardState extends State<VerticalCard> {
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final width = MediaQuery.sizeOf(context).width;
 
     // 색상 선택
     final colors = switch (widget.variant) {
@@ -73,102 +72,110 @@ class _VerticalCardState extends State<VerticalCard> {
       _ => VerticalCardColors.standard(colorExt),
     };
 
-    final padding = ResponsiveTokens.cardPadding(width);
-    final gap = ResponsiveTokens.cardGap(width);
-    final lineNumbers = CardDesignTokens.textLineNumbersByCard['vertical']!;
+    // LayoutBuilder: 실제 할당된 카드 너비 기준으로 레이아웃 결정
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 화면 너비는 반응형 토큰(padding, gap)에만 사용
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final padding = ResponsiveTokens.cardPadding(screenWidth);
+        final gap = ResponsiveTokens.cardGap(screenWidth);
+        final lineNumbers = CardDesignTokens.textLineNumbersByCard['vertical']!;
 
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: AnimatedContainer(
-          duration: CardDesignTokens.hoverAnimationDuration,
-          decoration: BoxDecoration(
-            color: _isHovered ? colors.backgroundHover : colors.background,
-            border: Border.all(color: colors.border),
-            borderRadius: BorderTokens.largeRadius(),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image Section
-              if (widget.image != null)
-                AspectRatio(
-                  aspectRatio: widget.imageAspectRatio,
-                  child: widget.image!,
-                ),
+        return GestureDetector(
+          onTap: widget.onTap,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _isHovered = true),
+            onExit: (_) => setState(() => _isHovered = false),
+            child: AnimatedContainer(
+              duration: CardDesignTokens.hoverAnimationDuration,
+              decoration: BoxDecoration(
+                color: _isHovered ? colors.backgroundHover : colors.background,
+                border: Border.all(color: colors.border),
+                borderRadius: BorderTokens.largeRadius(),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Image Section
+                  if (widget.image != null)
+                    AspectRatio(
+                      aspectRatio: widget.imageAspectRatio,
+                      child: widget.image!,
+                    ),
 
-              // Content Section
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.all(padding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Meta
-                      if (widget.meta != null)
-                        Text(
-                          widget.meta!,
-                          style: CardDesignTokens.getMetaStyle(
-                            context,
-                          ).copyWith(color: colors.meta),
-                        ),
-                      if (widget.meta != null) SizedBox(height: gap * 0.5),
+                  // Content Section
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.all(padding),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Meta
+                          if (widget.meta != null)
+                            Text(
+                              widget.meta!,
+                              style: CardDesignTokens.getMetaStyle(
+                                context,
+                              ).copyWith(color: colors.meta),
+                            ),
+                          if (widget.meta != null) SizedBox(height: gap * 0.5),
 
-                      // Title
-                      Text(
-                        widget.title,
-                        style: CardDesignTokens.getTitleStyle(
-                          context,
-                        ).copyWith(color: colors.title),
-                        maxLines: lineNumbers['title'],
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: gap * 0.5),
-
-                      // Subtitle
-                      if (widget.subtitle != null)
-                        Text(
-                          widget.subtitle!,
-                          style: CardDesignTokens.getSubtitleStyle(
-                            context,
-                          ).copyWith(color: colors.subtitle),
-                          maxLines: lineNumbers['subtitle'],
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      if (widget.subtitle != null) SizedBox(height: gap),
-
-                      // Description
-                      if (widget.description != null)
-                        Expanded(
-                          child: Text(
-                            widget.description!,
-                            style: CardDesignTokens.getDescriptionStyle(
+                          // Title
+                          Text(
+                            widget.title,
+                            style: CardDesignTokens.getTitleStyle(
                               context,
-                            ).copyWith(color: colors.description),
-                            maxLines: lineNumbers['description'],
+                            ).copyWith(color: colors.title),
+                            maxLines: lineNumbers['title'],
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      if (widget.description != null) SizedBox(height: gap),
+                          SizedBox(height: gap * 0.5),
 
-                      // Actions
-                      if (widget.actions != null && widget.actions!.isNotEmpty)
-                        Wrap(
-                          spacing: gap * 0.5,
-                          runSpacing: gap * 0.5,
-                          children: widget.actions!,
-                        ),
-                    ],
+                          // Subtitle
+                          if (widget.subtitle != null)
+                            Text(
+                              widget.subtitle!,
+                              style: CardDesignTokens.getSubtitleStyle(
+                                context,
+                              ).copyWith(color: colors.subtitle),
+                              maxLines: lineNumbers['subtitle'],
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          if (widget.subtitle != null) SizedBox(height: gap),
+
+                          // Description
+                          if (widget.description != null)
+                            Expanded(
+                              child: Text(
+                                widget.description!,
+                                style: CardDesignTokens.getDescriptionStyle(
+                                  context,
+                                ).copyWith(color: colors.description),
+                                maxLines: lineNumbers['description'],
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          if (widget.description != null) SizedBox(height: gap),
+
+                          // Actions
+                          if (widget.actions != null &&
+                              widget.actions!.isNotEmpty)
+                            Wrap(
+                              spacing: gap * 0.5,
+                              runSpacing: gap * 0.5,
+                              children: widget.actions!,
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
