@@ -106,7 +106,7 @@ class AppDialog extends StatelessWidget {
         ? DialogColors.destructive(colorExt)
         : DialogColors.standard(colorExt);
 
-    final maxWidth = switch (ResponsiveTokens.screenSize(width)) {
+    final maxWidth = switch (ResponsiveTokens.getScreenSize(width)) {
       ScreenSize.xs => width - spacingExt.xl,
       ScreenSize.sm => width - spacingExt.large,
       ScreenSize.md => 420.0,

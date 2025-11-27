@@ -16,7 +16,7 @@ class AppAgentSelector extends StatefulWidget {
   final int? selectedIndex;
   final ValueChanged<int?>? onAgentSelected;
   final double avatarSize;
-  final AppBadgeStyle badgeStyle;
+  final AppBadgeVariant badgeStyle;
 
   const AppAgentSelector({
     super.key,
@@ -24,7 +24,7 @@ class AppAgentSelector extends StatefulWidget {
     this.selectedIndex,
     this.onAgentSelected,
     this.avatarSize = 18,
-    this.badgeStyle = AppBadgeStyle.subtle,
+    this.badgeStyle = AppBadgeVariant.subtle,
   });
 
   @override
@@ -84,7 +84,7 @@ class _AgentItem extends StatefulWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final double avatarSize;
-  final AppBadgeStyle badgeStyle;
+  final AppBadgeVariant badgeStyle;
 
   const _AgentItem({
     required this.agent,
@@ -182,7 +182,7 @@ class _AgentItemState extends State<_AgentItem> {
 
 class _Badge extends StatelessWidget {
   final String label;
-  final AppBadgeStyle style;
+  final AppBadgeVariant style;
 
   const _Badge({required this.label, required this.style});
 
@@ -192,11 +192,11 @@ class _Badge extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     final (bgColor, textColor) = switch (style) {
-      AppBadgeStyle.subtle => (
+      AppBadgeVariant.subtle => (
         colorExt.surfaceQuaternary,
         colorExt.textTertiary,
       ),
-      AppBadgeStyle.prominent => (
+      AppBadgeVariant.prominent => (
         colorExt.brandPrimary.withValues(alpha: 0.15),
         colorExt.brandPrimary,
       ),

@@ -351,7 +351,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           ),
                         ],
                         avatarSize: 16,
-                        badgeStyle: AppBadgeStyle.subtle,
+                        badgeStyle: AppBadgeVariant.subtle,
                         selectedIndex: _selectedAgentIndex,
                         onAgentSelected: (index) {
                           setState(() => _selectedAgentIndex = index);
@@ -379,7 +379,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           ),
                         ],
                         avatarSize: 18,
-                        badgeStyle: AppBadgeStyle.prominent,
+                        badgeStyle: AppBadgeVariant.prominent,
                       ),
                       SizedBox(height: spacing.xxl),
                       _buildSubtitle('아바타 24px (큰 사이즈)'),
@@ -398,7 +398,7 @@ class _AdvancedComponentsPageState extends State<AdvancedComponentsPage> {
                           ),
                         ],
                         avatarSize: 24,
-                        badgeStyle: AppBadgeStyle.prominent,
+                        badgeStyle: AppBadgeVariant.prominent,
                       ),
                     ],
                   ),

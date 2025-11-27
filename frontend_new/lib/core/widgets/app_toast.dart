@@ -268,7 +268,7 @@ class _ToastContent extends StatelessWidget {
     final colors = ToastColors.from(colorExt, type);
 
     final displayIcon = icon ?? ToastColors.getDefaultIcon(type);
-    final maxWidth = switch (ResponsiveTokens.screenSize(width)) {
+    final maxWidth = switch (ResponsiveTokens.getScreenSize(width)) {
       ScreenSize.xs => width - spacingExt.xl,
       ScreenSize.sm => width - spacingExt.large,
       ScreenSize.md => 400.0,

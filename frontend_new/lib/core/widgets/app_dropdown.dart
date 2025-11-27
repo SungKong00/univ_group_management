@@ -315,7 +315,6 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
                       child: Text(
                         _selectedItem?.label ?? widget.placeholder ?? '',
                         style: textTheme.bodyMedium?.copyWith(
-                          fontSize: fontSize,
                           color: _selectedItem != null
                               ? colors.triggerText
                               : colors.triggerPlaceholder,
@@ -414,7 +413,7 @@ class _DropdownMenu<T> extends StatelessWidget {
       groupedItems.putIfAbsent(item.group, () => []).add(item);
     }
 
-    final menuWidth = switch (ResponsiveTokens.screenSize(width)) {
+    final menuWidth = switch (ResponsiveTokens.getScreenSize(width)) {
       ScreenSize.xs => width - spacingExt.large,
       ScreenSize.sm => width - spacingExt.large,
       ScreenSize.md => 320.0,
@@ -422,7 +421,7 @@ class _DropdownMenu<T> extends StatelessWidget {
       ScreenSize.xl => 400.0,
     };
 
-    final maxMenuHeight = switch (ResponsiveTokens.screenSize(width)) {
+    final maxMenuHeight = switch (ResponsiveTokens.getScreenSize(width)) {
       ScreenSize.xs => 240.0,
       ScreenSize.sm => 280.0,
       ScreenSize.md => 320.0,

@@ -253,7 +253,7 @@ class _TooltipOverlay extends StatelessWidget {
             color: Colors.transparent,
             child: Container(
               constraints: BoxConstraints(
-                maxWidth: switch (ResponsiveTokens.screenSize(width)) {
+                maxWidth: switch (ResponsiveTokens.getScreenSize(width)) {
                   ScreenSize.xs => width - spacingExt.large,
                   ScreenSize.sm => 280.0,
                   ScreenSize.md => 300.0,
