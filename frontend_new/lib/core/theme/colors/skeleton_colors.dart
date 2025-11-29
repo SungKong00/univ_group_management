@@ -12,10 +12,7 @@ class SkeletonColors {
   /// 하이라이트 색상 (shimmer 효과)
   final Color highlight;
 
-  const SkeletonColors({
-    required this.base,
-    required this.highlight,
-  });
+  const SkeletonColors({required this.base, required this.highlight});
 
   /// 표준 스켈레톤 색상
   factory SkeletonColors.standard(AppColorExtension c) {

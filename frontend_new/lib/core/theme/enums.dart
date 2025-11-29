@@ -473,3 +473,894 @@ enum AppTimePickerPrecision {
   /// 시간 + 분 + 초
   second,
 }
+
+// ========================================================
+// Phase 3: 고급 UI 컴포넌트
+// ========================================================
+
+/// Menu 아이템 타입
+///
+/// 메뉴 아이템의 종류를 정의합니다.
+enum AppMenuItemType {
+  /// 일반 항목 (클릭 가능)
+  item,
+
+  /// 구분선
+  divider,
+
+  /// 그룹 헤더
+  header,
+
+  /// 서브메뉴 (하위 메뉴 포함)
+  submenu,
+}
+
+/// Pagination 스타일
+///
+/// 페이지네이션의 표시 스타일을 정의합니다.
+enum AppPaginationStyle {
+  /// 기본 번호 스타일 (1, 2, 3, ... 10)
+  numbered,
+
+  /// 간단 스타일 (< 1/10 >)
+  simple,
+
+  /// 컴팩트 스타일 (< >)
+  compact,
+}
+
+/// Accordion 스타일
+///
+/// 아코디언의 스타일을 정의합니다.
+enum AppAccordionStyle {
+  /// 기본 스타일 (테두리 있음)
+  bordered,
+
+  /// 구분선 스타일 (항목 사이 구분선)
+  separated,
+
+  /// 플레인 스타일 (테두리 없음)
+  plain,
+}
+
+/// Stepper 방향
+///
+/// 스테퍼의 레이아웃 방향을 정의합니다.
+enum AppStepperOrientation {
+  /// 가로 방향
+  horizontal,
+
+  /// 세로 방향
+  vertical,
+}
+
+/// Stepper 단계 상태
+///
+/// 각 단계의 상태를 정의합니다.
+enum AppStepStatus {
+  /// 완료됨
+  completed,
+
+  /// 현재 활성
+  active,
+
+  /// 대기 중
+  pending,
+
+  /// 에러
+  error,
+}
+
+/// ProgressBar 스타일
+///
+/// 진행률 표시의 스타일을 정의합니다.
+enum AppProgressBarStyle {
+  /// 기본 스타일 (막대형)
+  linear,
+
+  /// 원형 스타일
+  circular,
+
+  /// 반원형 스타일
+  semicircular,
+}
+
+/// ProgressBar 색상
+///
+/// 진행률 표시의 색상을 정의합니다.
+enum AppProgressBarColor {
+  /// 브랜드 색상
+  brand,
+
+  /// 성공 색상
+  success,
+
+  /// 경고 색상
+  warning,
+
+  /// 에러 색상
+  error,
+
+  /// 정보 색상
+  info,
+}
+
+/// Divider 스타일
+///
+/// 구분선의 스타일을 정의합니다.
+enum AppDividerStyle {
+  /// 실선
+  solid,
+
+  /// 점선
+  dashed,
+
+  /// 도트
+  dotted,
+}
+
+/// Divider 두께
+///
+/// 구분선의 두께를 정의합니다.
+enum AppDividerThickness {
+  /// 얇음 (1px)
+  thin,
+
+  /// 보통 (2px)
+  medium,
+
+  /// 두꺼움 (4px)
+  thick,
+}
+
+/// Divider 색상 스타일
+///
+/// 구분선의 색상 변형을 정의합니다.
+enum AppDividerColorStyle {
+  /// 표준 색상
+  standard,
+
+  /// 강조 색상
+  prominent,
+
+  /// 미묘한 색상
+  subtle,
+}
+
+// ========================================================
+// Phase 4: 네비게이션 & 레이아웃 컴포넌트
+// ========================================================
+
+/// BottomSheet 타입
+///
+/// 바텀시트의 동작 방식을 정의합니다.
+enum AppBottomSheetType {
+  /// 모달 (배경 어둡게, 외부 탭으로 닫힘)
+  modal,
+
+  /// 지속 (배경과 상호작용 가능)
+  persistent,
+}
+
+/// Drawer 위치
+///
+/// 드로어가 나타나는 위치를 정의합니다.
+enum AppDrawerPosition {
+  /// 좌측
+  left,
+
+  /// 우측
+  right,
+}
+
+/// Navigation Sidebar 스타일
+///
+/// 사이드바 네비게이션의 스타일을 정의합니다.
+/// - standard: 일반 스타일 (라벨 표시, 너비 240px)
+/// - compact: 컴팩트 스타일 (아이콘만, 너비 72px)
+/// - expandable: 확장 가능 스타일 (토글 버튼으로 standard ↔ compact 전환)
+///
+/// **용도**: 대시보드 네비게이션, 관리자 메뉴, 앱 주요 메뉴
+/// **색상 정의**: NavSidebarColors (모든 스타일이 동일한 색상 사용, AppSidebar가 너비/레이아웃으로 구분)
+enum AppSidebarStyle {
+  /// 일반 스타일 (라벨 표시, 너비 240px)
+  standard,
+
+  /// 컴팩트 스타일 (아이콘만, 너비 72px)
+  compact,
+
+  /// 확장 가능 스타일 (토글 버튼으로 standard ↔ compact 전환)
+  expandable,
+}
+
+/// BottomNav 스타일
+///
+/// 하단 네비게이션의 스타일을 정의합니다.
+enum AppBottomNavStyle {
+  /// 기본 스타일 (아이콘 + 라벨)
+  standard,
+
+  /// 컴팩트 스타일 (아이콘만)
+  compact,
+
+  /// 쉬프팅 스타일 (활성 아이템만 라벨 표시)
+  shifting,
+}
+
+/// Breadcrumb 구분자
+///
+/// 브레드크럼 항목 간 구분자를 정의합니다.
+enum AppBreadcrumbSeparator {
+  /// 슬래시 (/)
+  slash,
+
+  /// 화살표 (>)
+  arrow,
+
+  /// 쉐브론 (›)
+  chevron,
+
+  /// 도트 (•)
+  dot,
+}
+
+/// Navbar 스타일
+///
+/// 상단 네비게이션 바의 스타일을 정의합니다.
+enum AppNavbarStyle {
+  /// 기본 스타일
+  standard,
+
+  /// 투명 스타일
+  transparent,
+
+  /// 고정 스타일 (스크롤 시 고정)
+  sticky,
+}
+
+/// NavigationRail 정렬
+///
+/// 네비게이션 레일의 아이템 정렬을 정의합니다.
+enum AppNavigationRailAlignment {
+  /// 상단 정렬
+  start,
+
+  /// 중앙 정렬
+  center,
+
+  /// 하단 정렬
+  end,
+}
+
+// ========================================================
+// Phase 5: 데이터 & 폼 확장 컴포넌트
+// ========================================================
+
+/// Switch 크기
+///
+/// 토글 스위치의 크기를 정의합니다.
+enum AppSwitchSize {
+  /// 작은 스위치 (너비 36px, 높이 20px)
+  small,
+
+  /// 기본 스위치 (너비 48px, 높이 26px)
+  medium,
+
+  /// 큰 스위치 (너비 60px, 높이 32px)
+  large,
+}
+
+/// RadioGroup 방향
+///
+/// 라디오 버튼 그룹의 레이아웃 방향을 정의합니다.
+enum AppRadioOrientation {
+  /// 세로 배치
+  vertical,
+
+  /// 가로 배치
+  horizontal,
+}
+
+/// RadioGroup 크기
+///
+/// 라디오 버튼의 크기를 정의합니다.
+enum AppRadioSize {
+  /// 작은 라디오 (16px)
+  small,
+
+  /// 기본 라디오 (20px)
+  medium,
+
+  /// 큰 라디오 (24px)
+  large,
+}
+
+/// CheckboxGroup 방향
+///
+/// 체크박스 그룹의 레이아웃 방향을 정의합니다.
+enum AppCheckboxOrientation {
+  /// 세로 배치
+  vertical,
+
+  /// 가로 배치
+  horizontal,
+}
+
+/// CheckboxGroup 크기
+///
+/// 체크박스의 크기를 정의합니다.
+enum AppCheckboxSize {
+  /// 작은 체크박스 (16px)
+  small,
+
+  /// 기본 체크박스 (20px)
+  medium,
+
+  /// 큰 체크박스 (24px)
+  large,
+}
+
+/// Slider 크기
+///
+/// 슬라이더의 크기를 정의합니다.
+enum AppSliderSize {
+  /// 작은 슬라이더
+  small,
+
+  /// 기본 슬라이더
+  medium,
+
+  /// 큰 슬라이더
+  large,
+}
+
+/// Slider 스타일
+///
+/// 슬라이더의 표시 스타일을 정의합니다.
+enum AppSliderStyle {
+  /// 기본 스타일
+  standard,
+
+  /// 범위 마크 표시
+  marked,
+
+  /// 단계별 스타일
+  stepped,
+}
+
+// ========================================================
+// Phase 5 추가: 색상 선택 & OTP 입력
+// ========================================================
+
+/// ColorPicker 모드
+///
+/// 색상 선택기의 동작 모드를 정의합니다.
+enum AppColorPickerMode {
+  /// 프리셋 팔레트만 표시
+  palette,
+
+  /// HEX 입력 가능
+  hex,
+
+  /// HSV 슬라이더 (향후 확장)
+  // hsv,
+}
+
+/// FileUpload 타입
+///
+/// 파일 업로드의 선택 모드를 정의합니다.
+enum AppFileUploadType {
+  /// 단일 파일
+  single,
+
+  /// 다중 파일
+  multiple,
+
+  /// 드래그 앤 드롭 영역
+  dropzone,
+}
+
+/// FileUpload 상태
+///
+/// 업로드 상태를 정의합니다.
+enum AppFileUploadStatus {
+  /// 기본 상태
+  idle,
+
+  /// 업로드 중
+  uploading,
+
+  /// 업로드 완료
+  completed,
+
+  /// 에러 발생
+  error,
+}
+
+/// FileUpload 크기
+///
+/// 컴포넌트의 크기를 정의합니다.
+enum AppFileUploadSize {
+  /// 작은 크기
+  small,
+
+  /// 기본 크기
+  medium,
+
+  /// 큰 크기
+  large,
+}
+
+// ========================================================
+// Phase 5 추가: 데이터 테이블
+// ========================================================
+
+/// DataTable 정렬 방향
+///
+/// 컬럼 정렬 방향을 정의합니다.
+enum AppDataTableSortDirection {
+  /// 오름차순
+  ascending,
+
+  /// 내림차순
+  descending,
+}
+
+/// DataTable 크기
+///
+/// 테이블의 밀도를 정의합니다.
+enum AppDataTableDensity {
+  /// 컴팩트 (작은 패딩)
+  compact,
+
+  /// 기본
+  standard,
+
+  /// 여유로움 (큰 패딩)
+  comfortable,
+}
+
+/// DataTable 선택 모드
+///
+/// 행 선택 모드를 정의합니다.
+enum AppDataTableSelectionMode {
+  /// 선택 없음
+  none,
+
+  /// 단일 선택
+  single,
+
+  /// 다중 선택
+  multiple,
+}
+
+// ========================================================
+// Phase 6: 고급 피드백 & 오버레이 컴포넌트
+// ========================================================
+
+/// Spinner 크기
+///
+/// 스피너의 크기를 정의합니다.
+enum AppSpinnerSize {
+  /// 초소형 (12px)
+  xs,
+
+  /// 소형 (16px)
+  small,
+
+  /// 중형 (24px)
+  medium,
+
+  /// 대형 (32px)
+  large,
+
+  /// 초대형 (48px)
+  xl,
+}
+
+/// Spinner 스타일
+///
+/// 스피너의 스타일을 정의합니다.
+enum AppSpinnerStyle {
+  /// 기본 원형
+  circular,
+
+  /// 점 스타일
+  dots,
+
+  /// 펄스 스타일
+  pulse,
+}
+
+/// Alert 타입
+///
+/// 알림 배너의 타입을 정의합니다.
+enum AppAlertType {
+  /// 정보 (파랑)
+  info,
+
+  /// 성공 (초록)
+  success,
+
+  /// 경고 (주황)
+  warning,
+
+  /// 에러 (빨강)
+  error,
+}
+
+/// Alert 스타일
+///
+/// 알림 배너의 스타일을 정의합니다.
+enum AppAlertStyle {
+  /// 채워진 스타일
+  filled,
+
+  /// 아웃라인 스타일
+  outlined,
+
+  /// 미묘한 스타일
+  subtle,
+}
+
+/// Sheet 위치
+///
+/// 시트가 나타나는 위치를 정의합니다.
+enum AppSheetPosition {
+  /// 우측
+  right,
+
+  /// 좌측
+  left,
+
+  /// 상단
+  top,
+
+  /// 하단
+  bottom,
+}
+
+/// Sheet 크기
+///
+/// 시트의 크기를 정의합니다.
+enum AppSheetSize {
+  /// 작은 크기 (320px)
+  small,
+
+  /// 중간 크기 (480px)
+  medium,
+
+  /// 큰 크기 (640px)
+  large,
+
+  /// 전체 크기
+  full,
+}
+
+/// Popover 위치
+///
+/// 팝오버가 나타나는 위치를 정의합니다.
+enum AppPopoverPosition {
+  /// 상단
+  top,
+
+  /// 하단
+  bottom,
+
+  /// 좌측
+  left,
+
+  /// 우측
+  right,
+
+  /// 상단 시작
+  topStart,
+
+  /// 상단 끝
+  topEnd,
+
+  /// 하단 시작
+  bottomStart,
+
+  /// 하단 끝
+  bottomEnd,
+}
+
+/// HoverCard 크기
+///
+/// 호버 카드의 크기를 정의합니다.
+enum AppHoverCardSize {
+  /// 작은 크기
+  small,
+
+  /// 중간 크기
+  medium,
+
+  /// 큰 크기
+  large,
+}
+
+// ========================================================
+// Phase 7: 특수 컴포넌트
+// ========================================================
+
+/// Collapsible 스타일
+///
+/// 접기/펼치기 컴포넌트의 스타일을 정의합니다.
+enum AppCollapsibleStyle {
+  /// 기본 스타일 (테두리 없음)
+  plain,
+
+  /// 테두리 스타일
+  bordered,
+
+  /// 카드 스타일
+  card,
+}
+
+/// Timeline 방향
+///
+/// 타임라인의 레이아웃 방향을 정의합니다.
+enum AppTimelineOrientation {
+  /// 세로 방향
+  vertical,
+
+  /// 가로 방향
+  horizontal,
+}
+
+/// Timeline 아이템 상태
+///
+/// 타임라인 아이템의 상태를 정의합니다.
+enum AppTimelineItemStatus {
+  /// 완료됨
+  completed,
+
+  /// 현재 활성
+  active,
+
+  /// 대기 중
+  pending,
+
+  /// 에러
+  error,
+}
+
+/// Timeline 위치
+///
+/// 세로 타임라인에서 콘텐츠 위치를 정의합니다.
+enum AppTimelinePosition {
+  /// 좌측
+  left,
+
+  /// 우측
+  right,
+
+  /// 번갈아 배치
+  alternate,
+}
+
+/// Calendar 뷰 타입
+///
+/// 캘린더의 표시 모드를 정의합니다.
+enum AppCalendarView {
+  /// 월간 뷰
+  month,
+
+  /// 주간 뷰
+  week,
+
+  /// 년간 뷰
+  year,
+}
+
+/// Calendar 스타일
+///
+/// 캘린더의 스타일을 정의합니다.
+enum AppCalendarStyle {
+  /// 기본 스타일
+  standard,
+
+  /// 컴팩트 스타일
+  compact,
+
+  /// 미니 스타일
+  mini,
+}
+
+/// ImageGallery 레이아웃
+///
+/// 이미지 갤러리의 레이아웃을 정의합니다.
+enum AppImageGalleryLayout {
+  /// 그리드 레이아웃
+  grid,
+
+  /// 메이슨리 레이아웃
+  masonry,
+
+  /// 캐러셀 레이아웃
+  carousel,
+}
+
+/// Rating 스타일
+///
+/// 별점 표시 스타일을 정의합니다.
+enum AppRatingStyle {
+  /// 별 스타일
+  star,
+
+  /// 하트 스타일
+  heart,
+
+  /// 숫자 스타일
+  numeric,
+}
+
+/// Rating 크기
+///
+/// 별점의 크기를 정의합니다.
+enum AppRatingSize {
+  /// 작은 크기 (16px)
+  small,
+
+  /// 중간 크기 (24px)
+  medium,
+
+  /// 큰 크기 (32px)
+  large,
+}
+
+/// Chart 타입
+///
+/// 차트의 종류를 정의합니다.
+enum AppChartType {
+  /// 라인 차트
+  line,
+
+  /// 바 차트
+  bar,
+
+  /// 파이 차트
+  pie,
+
+  /// 도넛 차트
+  doughnut,
+
+  /// 영역 차트
+  area,
+}
+
+/// CodeBlock 언어
+///
+/// 코드 블록의 프로그래밍 언어를 정의합니다.
+enum AppCodeBlockLanguage {
+  /// Dart
+  dart,
+
+  /// JavaScript
+  javascript,
+
+  /// TypeScript
+  typescript,
+
+  /// Python
+  python,
+
+  /// Java
+  java,
+
+  /// Kotlin
+  kotlin,
+
+  /// JSON
+  json,
+
+  /// YAML
+  yaml,
+
+  /// Markdown
+  markdown,
+
+  /// Bash
+  bash,
+
+  /// 일반 텍스트
+  plaintext,
+}
+
+/// CodeBlock 테마
+///
+/// 코드 블록의 테마를 정의합니다.
+enum AppCodeBlockTheme {
+  /// 라이트 테마
+  light,
+
+  /// 다크 테마
+  dark,
+
+  /// 시스템 테마 따라감
+  auto,
+}
+
+/// Resizable 방향
+///
+/// 리사이즈 가능 방향을 정의합니다.
+enum AppResizeDirection {
+  /// 가로 방향만
+  horizontal,
+
+  /// 세로 방향만
+  vertical,
+
+  /// 모든 방향
+  both,
+}
+
+/// KanbanBoard 카드 크기
+///
+/// 칸반 카드의 크기를 정의합니다.
+enum AppKanbanCardSize {
+  /// 컴팩트
+  compact,
+
+  /// 기본
+  standard,
+
+  /// 상세
+  detailed,
+}
+
+// ========================================================
+// RichTextEditor
+// ========================================================
+
+/// 리치 텍스트 에디터 서식 타입
+enum RichTextFormat {
+  /// 굵게
+  bold,
+
+  /// 기울임
+  italic,
+
+  /// 밑줄
+  underline,
+
+  /// 취소선
+  strikethrough,
+
+  /// 제목 1
+  heading1,
+
+  /// 제목 2
+  heading2,
+
+  /// 제목 3
+  heading3,
+
+  /// 불릿 리스트
+  bulletList,
+
+  /// 번호 리스트
+  numberedList,
+
+  /// 인용
+  blockquote,
+
+  /// 코드
+  code,
+
+  /// 링크
+  link,
+}
+
+/// 리치 텍스트 에디터 크기
+enum AppRichTextEditorSize {
+  /// 작은 크기
+  small,
+
+  /// 중간 크기
+  medium,
+
+  /// 큰 크기
+  large,
+}

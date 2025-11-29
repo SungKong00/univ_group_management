@@ -121,7 +121,10 @@ class AppDialog extends StatelessWidget {
         constraints: BoxConstraints(maxWidth: maxWidth),
         decoration: BoxDecoration(
           color: colors.background,
-          border: Border.all(color: colors.border, width: BorderTokens.widthThin),
+          border: Border.all(
+            color: colors.border,
+            width: BorderTokens.widthThin,
+          ),
           borderRadius: BorderTokens.largeRadius(),
           boxShadow: [
             BoxShadow(
@@ -182,7 +185,8 @@ class AppDialog extends StatelessWidget {
                     SizedBox(height: spacingExt.medium),
                   if (content != null) content!,
                   if (type == AppDialogType.prompt) ...[
-                    if (description != null) SizedBox(height: spacingExt.medium),
+                    if (description != null)
+                      SizedBox(height: spacingExt.medium),
                     TextField(
                       controller: textController,
                       autofocus: true,

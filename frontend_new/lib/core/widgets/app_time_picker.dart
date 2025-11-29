@@ -148,7 +148,9 @@ class _AppTimePickerState extends State<AppTimePicker> {
 
     if (widget.format == AppTimePickerFormat.hour12) {
       _isPM = _tempHour >= 12;
-      _tempHour = _tempHour > 12 ? _tempHour - 12 : (_tempHour == 0 ? 12 : _tempHour);
+      _tempHour = _tempHour > 12
+          ? _tempHour - 12
+          : (_tempHour == 0 ? 12 : _tempHour);
     } else {
       _isPM = false;
     }
@@ -286,8 +288,8 @@ class _AppTimePickerState extends State<AppTimePicker> {
     final borderColor = hasError
         ? colorExt.stateErrorText
         : _isOpen
-            ? colorExt.borderFocus
-            : colorExt.borderPrimary;
+        ? colorExt.borderFocus
+        : colorExt.borderPrimary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -675,7 +677,9 @@ class _TimeSpinner extends StatelessWidget {
             padding: EdgeInsets.all(spacingExt.xs),
             child: Icon(
               Icons.keyboard_arrow_up,
-              color: isDisabled ? colors.spinnerText.withValues(alpha: 0.5) : colors.spinnerText,
+              color: isDisabled
+                  ? colors.spinnerText.withValues(alpha: 0.5)
+                  : colors.spinnerText,
             ),
           ),
         ),
@@ -711,7 +715,9 @@ class _TimeSpinner extends StatelessWidget {
             padding: EdgeInsets.all(spacingExt.xs),
             child: Icon(
               Icons.keyboard_arrow_down,
-              color: isDisabled ? colors.spinnerText.withValues(alpha: 0.5) : colors.spinnerText,
+              color: isDisabled
+                  ? colors.spinnerText.withValues(alpha: 0.5)
+                  : colors.spinnerText,
             ),
           ),
         ),
@@ -754,7 +760,9 @@ class _PeriodToggle extends StatelessWidget {
               width: 48,
               height: 36,
               decoration: BoxDecoration(
-                color: !isPM ? colors.periodSelectedBackground : Colors.transparent,
+                color: !isPM
+                    ? colors.periodSelectedBackground
+                    : Colors.transparent,
                 borderRadius: BorderRadius.only(
                   topLeft: BorderTokens.smallRadius().topLeft,
                   topRight: BorderTokens.smallRadius().topRight,
@@ -778,7 +786,9 @@ class _PeriodToggle extends StatelessWidget {
               width: 48,
               height: 36,
               decoration: BoxDecoration(
-                color: isPM ? colors.periodSelectedBackground : Colors.transparent,
+                color: isPM
+                    ? colors.periodSelectedBackground
+                    : Colors.transparent,
                 borderRadius: BorderRadius.only(
                   bottomLeft: BorderTokens.smallRadius().bottomLeft,
                   bottomRight: BorderTokens.smallRadius().bottomRight,

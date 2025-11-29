@@ -26,41 +26,38 @@ class EmptyStateColors {
   });
 
   /// 타입별 팩토리 메서드
-  factory EmptyStateColors.from(
-    AppColorExtension c,
-    AppEmptyStateType type,
-  ) {
+  factory EmptyStateColors.from(AppColorExtension c, AppEmptyStateType type) {
     return switch (type) {
       AppEmptyStateType.general => EmptyStateColors(
-          icon: c.textTertiary,
-          title: c.textPrimary,
-          description: c.textSecondary,
-        ),
+        icon: c.textTertiary,
+        title: c.textPrimary,
+        description: c.textSecondary,
+      ),
       AppEmptyStateType.search => EmptyStateColors(
-          icon: c.stateInfoText,
-          title: c.textPrimary,
-          description: c.textSecondary,
-        ),
+        icon: c.stateInfoText,
+        title: c.textPrimary,
+        description: c.textSecondary,
+      ),
       AppEmptyStateType.filter => EmptyStateColors(
-          icon: c.stateWarningText,
-          title: c.textPrimary,
-          description: c.textSecondary,
-        ),
+        icon: c.stateWarningText,
+        title: c.textPrimary,
+        description: c.textSecondary,
+      ),
       AppEmptyStateType.noData => EmptyStateColors(
-          icon: c.textTertiary,
-          title: c.textPrimary,
-          description: c.textSecondary,
-        ),
+        icon: c.textTertiary,
+        title: c.textPrimary,
+        description: c.textSecondary,
+      ),
       AppEmptyStateType.noFavorites => EmptyStateColors(
-          icon: c.stateWarningText,
-          title: c.textPrimary,
-          description: c.textSecondary,
-        ),
+        icon: c.stateWarningText,
+        title: c.textPrimary,
+        description: c.textSecondary,
+      ),
       AppEmptyStateType.noNotifications => EmptyStateColors(
-          icon: c.textTertiary,
-          title: c.textPrimary,
-          description: c.textSecondary,
-        ),
+        icon: c.textTertiary,
+        title: c.textPrimary,
+        description: c.textSecondary,
+      ),
     };
   }
 }

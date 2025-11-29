@@ -36,15 +36,15 @@ class BadgeColors {
 
     return switch (variant) {
       AppBadgeVariant.subtle => BadgeColors(
-          background: Colors.transparent,
-          text: text,
-          border: border,
-        ),
+        background: Colors.transparent,
+        text: text,
+        border: border,
+      ),
       AppBadgeVariant.prominent => BadgeColors(
-          background: bg.withValues(alpha: 0.15),
-          text: text,
-          border: Colors.transparent,
-        ),
+        background: bg.withValues(alpha: 0.15),
+        text: text,
+        border: Colors.transparent,
+      ),
     };
   }
 
@@ -55,65 +55,71 @@ class BadgeColors {
   ) {
     return switch (color) {
       AppBadgeColor.success => (
-          c.stateSuccessBg,
-          c.stateSuccessText,
-          c.stateSuccessBg.withValues(alpha: 0.3),
-        ),
+        c.stateSuccessBg,
+        c.stateSuccessText,
+        c.stateSuccessBg.withValues(alpha: 0.3),
+      ),
       AppBadgeColor.warning => (
-          c.stateWarningBg,
-          c.stateWarningText,
-          c.stateWarningBg.withValues(alpha: 0.3),
-        ),
+        c.stateWarningBg,
+        c.stateWarningText,
+        c.stateWarningBg.withValues(alpha: 0.3),
+      ),
       AppBadgeColor.error => (
-          c.stateErrorBg,
-          c.stateErrorText,
-          c.stateErrorBg.withValues(alpha: 0.3),
-        ),
+        c.stateErrorBg,
+        c.stateErrorText,
+        c.stateErrorBg.withValues(alpha: 0.3),
+      ),
       AppBadgeColor.info => (
-          c.stateInfoBg,
-          c.stateInfoText,
-          c.stateInfoBg.withValues(alpha: 0.3),
-        ),
+        c.stateInfoBg,
+        c.stateInfoText,
+        c.stateInfoBg.withValues(alpha: 0.3),
+      ),
       AppBadgeColor.neutral => (
-          c.surfaceTertiary,
-          c.textSecondary,
-          c.borderSecondary,
-        ),
+        c.surfaceTertiary,
+        c.textSecondary,
+        c.borderSecondary,
+      ),
       AppBadgeColor.brand => (
-          c.brandPrimary,
-          c.brandPrimary,
-          c.brandPrimary.withValues(alpha: 0.3),
-        ),
+        c.brandPrimary,
+        c.brandPrimary,
+        c.brandPrimary.withValues(alpha: 0.3),
+      ),
     };
   }
 
   /// Success 색상 (편의 팩토리)
-  factory BadgeColors.success(AppColorExtension c,
-          {AppBadgeVariant variant = AppBadgeVariant.prominent}) =>
-      BadgeColors.from(c, variant, AppBadgeColor.success);
+  factory BadgeColors.success(
+    AppColorExtension c, {
+    AppBadgeVariant variant = AppBadgeVariant.prominent,
+  }) => BadgeColors.from(c, variant, AppBadgeColor.success);
 
   /// Warning 색상 (편의 팩토리)
-  factory BadgeColors.warning(AppColorExtension c,
-          {AppBadgeVariant variant = AppBadgeVariant.prominent}) =>
-      BadgeColors.from(c, variant, AppBadgeColor.warning);
+  factory BadgeColors.warning(
+    AppColorExtension c, {
+    AppBadgeVariant variant = AppBadgeVariant.prominent,
+  }) => BadgeColors.from(c, variant, AppBadgeColor.warning);
 
   /// Error 색상 (편의 팩토리)
-  factory BadgeColors.error(AppColorExtension c,
-          {AppBadgeVariant variant = AppBadgeVariant.prominent}) =>
-      BadgeColors.from(c, variant, AppBadgeColor.error);
+  factory BadgeColors.error(
+    AppColorExtension c, {
+    AppBadgeVariant variant = AppBadgeVariant.prominent,
+  }) => BadgeColors.from(c, variant, AppBadgeColor.error);
 
   /// Info 색상 (편의 팩토리)
-  factory BadgeColors.info(AppColorExtension c,
-          {AppBadgeVariant variant = AppBadgeVariant.prominent}) =>
-      BadgeColors.from(c, variant, AppBadgeColor.info);
+  factory BadgeColors.info(
+    AppColorExtension c, {
+    AppBadgeVariant variant = AppBadgeVariant.prominent,
+  }) => BadgeColors.from(c, variant, AppBadgeColor.info);
 
   /// Neutral 색상 (편의 팩토리)
-  factory BadgeColors.neutral(AppColorExtension c,
-          {AppBadgeVariant variant = AppBadgeVariant.prominent}) =>
-      BadgeColors.from(c, variant, AppBadgeColor.neutral);
+  factory BadgeColors.neutral(
+    AppColorExtension c, {
+    AppBadgeVariant variant = AppBadgeVariant.prominent,
+  }) => BadgeColors.from(c, variant, AppBadgeColor.neutral);
 
   /// Brand 색상 (편의 팩토리)
-  factory BadgeColors.brand(AppColorExtension c,
-          {AppBadgeVariant variant = AppBadgeVariant.prominent}) =>
-      BadgeColors.from(c, variant, AppBadgeColor.brand);
+  factory BadgeColors.brand(
+    AppColorExtension c, {
+    AppBadgeVariant variant = AppBadgeVariant.prominent,
+  }) => BadgeColors.from(c, variant, AppBadgeColor.brand);
 }

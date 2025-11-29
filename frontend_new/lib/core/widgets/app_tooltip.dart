@@ -207,27 +207,31 @@ class _TooltipOverlay extends StatelessWidget {
     final colors = TooltipColors.standard(colorExt);
 
     // 위치에 따른 offset 계산
-    final (alignment, targetAnchor, followerAnchor) = switch (preferredPosition) {
+    final (
+      alignment,
+      targetAnchor,
+      followerAnchor,
+    ) = switch (preferredPosition) {
       AppTooltipPosition.top => (
-          Alignment.bottomCenter,
-          Alignment.topCenter,
-          Alignment.bottomCenter,
-        ),
+        Alignment.bottomCenter,
+        Alignment.topCenter,
+        Alignment.bottomCenter,
+      ),
       AppTooltipPosition.bottom => (
-          Alignment.topCenter,
-          Alignment.bottomCenter,
-          Alignment.topCenter,
-        ),
+        Alignment.topCenter,
+        Alignment.bottomCenter,
+        Alignment.topCenter,
+      ),
       AppTooltipPosition.left => (
-          Alignment.centerRight,
-          Alignment.centerLeft,
-          Alignment.centerRight,
-        ),
+        Alignment.centerRight,
+        Alignment.centerLeft,
+        Alignment.centerRight,
+      ),
       AppTooltipPosition.right => (
-          Alignment.centerLeft,
-          Alignment.centerRight,
-          Alignment.centerLeft,
-        ),
+        Alignment.centerLeft,
+        Alignment.centerRight,
+        Alignment.centerLeft,
+      ),
     };
 
     // 위치에 따른 offset (spacingExt.small = 8px)
@@ -282,9 +286,7 @@ class _TooltipOverlay extends StatelessWidget {
               ),
               child: Text(
                 message,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colors.text,
-                ),
+                style: textTheme.bodySmall?.copyWith(color: colors.text),
                 textAlign: TextAlign.center,
               ),
             ),

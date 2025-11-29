@@ -125,7 +125,8 @@ class _HorizontalCardState extends State<HorizontalCard> {
         final imageAspectRatio =
             CardDesignTokens.imageAspectRatios['horizontal']!;
         final minHeight = hideImage
-            ? ResponsiveTokens.space64 * fontScale // 이미지 없을 때도 스케일링
+            ? ResponsiveTokens.space64 *
+                  fontScale // 이미지 없을 때도 스케일링
             : imageWidth / imageAspectRatio;
 
         return GestureDetector(
@@ -309,8 +310,6 @@ class _HorizontalCardState extends State<HorizontalCard> {
   /// 스케일이 적용된 텍스트 스타일 반환
   TextStyle _scaledTextStyle(TextStyle baseStyle, double scale) {
     final fontSize = baseStyle.fontSize ?? 14.0;
-    return baseStyle.copyWith(
-      fontSize: fontSize * scale,
-    );
+    return baseStyle.copyWith(fontSize: fontSize * scale);
   }
 }

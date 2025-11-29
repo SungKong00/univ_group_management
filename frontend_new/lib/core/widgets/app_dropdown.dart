@@ -213,12 +213,14 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
     if (_searchQuery.isEmpty) return widget.items;
 
     return widget.items
-        .where((item) =>
-            item.label.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            (item.description
-                    ?.toLowerCase()
-                    .contains(_searchQuery.toLowerCase()) ??
-                false))
+        .where(
+          (item) =>
+              item.label.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              (item.description?.toLowerCase().contains(
+                    _searchQuery.toLowerCase(),
+                  ) ??
+                  false),
+        )
         .toList();
   }
 
@@ -261,19 +263,20 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
     final backgroundColor = widget.isDisabled
         ? colors.triggerBackgroundDisabled
         : _isOpen
-            ? colors.triggerBackgroundFocus
-            : _isHovered
-                ? colors.triggerBackgroundHover
-                : colors.triggerBackground;
+        ? colors.triggerBackgroundFocus
+        : _isHovered
+        ? colors.triggerBackgroundHover
+        : colors.triggerBackground;
 
     final borderColor = hasError
         ? colors.errorBorder
         : _isOpen
-            ? colors.triggerBorderFocus
-            : colors.triggerBorder;
+        ? colors.triggerBorderFocus
+        : colors.triggerBorder;
 
-    final borderWidth =
-        _isOpen ? BorderTokens.widthFocus : BorderTokens.widthThin;
+    final borderWidth = _isOpen
+        ? BorderTokens.widthFocus
+        : BorderTokens.widthThin;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -505,7 +508,9 @@ class _DropdownMenu<T> extends StatelessWidget {
                       Flexible(
                         child: ListView(
                           shrinkWrap: true,
-                          padding: EdgeInsets.symmetric(vertical: spacingExt.xs),
+                          padding: EdgeInsets.symmetric(
+                            vertical: spacingExt.xs,
+                          ),
                           children: [
                             for (final entry in groupedItems.entries) ...[
                               // Group header
@@ -597,16 +602,16 @@ class _DropdownMenuItemState<T> extends State<_DropdownMenuItem<T>> {
     final backgroundColor = widget.item.isDisabled
         ? colors.itemBackground
         : widget.isSelected
-            ? colors.itemBackgroundSelected
-            : _isHovered
-                ? colors.itemBackgroundHover
-                : colors.itemBackground;
+        ? colors.itemBackgroundSelected
+        : _isHovered
+        ? colors.itemBackgroundHover
+        : colors.itemBackground;
 
     final textColor = widget.item.isDisabled
         ? colors.itemTextDisabled
         : widget.isSelected
-            ? colors.itemTextSelected
-            : colors.itemText;
+        ? colors.itemTextSelected
+        : colors.itemText;
 
     // Custom builder
     if (widget.itemBuilder != null) {
@@ -636,7 +641,11 @@ class _DropdownMenuItemState<T> extends State<_DropdownMenuItem<T>> {
             children: [
               // Icon
               if (widget.item.icon != null) ...[
-                Icon(widget.item.icon, size: ResponsiveTokens.iconSize(width) - 2, color: textColor),
+                Icon(
+                  widget.item.icon,
+                  size: ResponsiveTokens.iconSize(width) - 2,
+                  color: textColor,
+                ),
                 SizedBox(width: spacingExt.componentIconGap),
               ],
 
@@ -650,8 +659,7 @@ class _DropdownMenuItemState<T> extends State<_DropdownMenuItem<T>> {
                       widget.item.label,
                       style: textTheme.bodyMedium?.copyWith(
                         color: textColor,
-                        fontWeight:
-                            widget.isSelected ? FontWeight.w500 : null,
+                        fontWeight: widget.isSelected ? FontWeight.w500 : null,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),

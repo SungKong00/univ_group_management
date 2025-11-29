@@ -100,4 +100,143 @@ class ComponentSizeTokens {
   /// 최소 터치 영역 (44px)
   /// 사용: 모바일 버튼, 클릭 가능한 요소
   static const double minTouchTarget = 44.0;
+
+  // ============================================================
+  // Switch Sizes (Phase 5)
+  // ============================================================
+
+  /// 스위치 트랙 너비 - 소형 (36px)
+  static const double switchSmallTrackWidth = 36.0;
+
+  /// 스위치 트랙 높이 - 소형 (20px)
+  static const double switchSmallTrackHeight = 20.0;
+
+  /// 스위치 썸 크기 - 소형 (14px)
+  static const double switchSmallThumbSize = 14.0;
+
+  /// 스위치 썸 패딩 - 소형 (3px)
+  static const double switchSmallThumbPadding = 3.0;
+
+  /// 스위치 트랙 너비 - 중형 (48px)
+  static const double switchMediumTrackWidth = 48.0;
+
+  /// 스위치 트랙 높이 - 중형 (26px)
+  static const double switchMediumTrackHeight = 26.0;
+
+  /// 스위치 썸 크기 - 중형 (20px)
+  static const double switchMediumThumbSize = 20.0;
+
+  /// 스위치 썸 패딩 - 중형 (3px)
+  static const double switchMediumThumbPadding = 3.0;
+
+  /// 스위치 트랙 너비 - 대형 (60px)
+  static const double switchLargeTrackWidth = 60.0;
+
+  /// 스위치 트랙 높이 - 대형 (32px)
+  static const double switchLargeTrackHeight = 32.0;
+
+  /// 스위치 썸 크기 - 대형 (26px)
+  static const double switchLargeThumbSize = 26.0;
+
+  /// 스위치 썸 패딩 - 대형 (3px)
+  static const double switchLargeThumbPadding = 3.0;
+
+  /// 스위치 Box Shadow Blur Radius (4px)
+  static const double switchShadowBlur = 4.0;
+
+  /// 스위치 Box Shadow Offset Y (2px)
+  static const double switchShadowOffsetY = 2.0;
+
+  /// 스위치 Box Shadow Offset X (0px)
+  static const double switchShadowOffsetX = 0.0;
+
+  /// 스위치 Box Shadow Alpha (0.2)
+  static const double switchShadowAlpha = 0.2;
+
+  // ============================================================
+  // Radio Button Sizes (Phase 5)
+  // ============================================================
+
+  /// 라디오 버튼 크기 - 소형 (16px)
+  static const double radioSmallSize = 16.0;
+
+  /// 라디오 버튼 내부 원 크기 - 소형 (8px)
+  static const double radioSmallIndicatorSize = 8.0;
+
+  /// 라디오 버튼 크기 - 중형 (20px)
+  static const double radioMediumSize = 20.0;
+
+  /// 라디오 버튼 내부 원 크기 - 중형 (10px)
+  static const double radioMediumIndicatorSize = 10.0;
+
+  /// 라디오 버튼 크기 - 대형 (24px)
+  static const double radioLargeSize = 24.0;
+
+  /// 라디오 버튼 내부 원 크기 - 대형 (12px)
+  static const double radioLargeIndicatorSize = 12.0;
+
+  /// 라디오 버튼 테두리 두께 (2px)
+  static const double radioBorderWidth = 2.0;
+
+  /// 라디오 버튼 포커스 테두리 두께 (3px)
+  static const double radioFocusBorderWidth = 3.0;
+
+  // ============================================================
+  // Checkbox Sizes (Phase 5)
+  // ============================================================
+
+  /// 체크박스 크기 - 소형 (16px)
+  static const double checkboxSmallSize = 16.0;
+
+  /// 체크박스 아이콘 크기 - 소형 (12px)
+  static const double checkboxSmallIconSize = 12.0;
+
+  /// 체크박스 크기 - 중형 (20px)
+  static const double checkboxMediumSize = 20.0;
+
+  /// 체크박스 아이콘 크기 - 중형 (14px)
+  static const double checkboxMediumIconSize = 14.0;
+
+  /// 체크박스 크기 - 대형 (24px)
+  static const double checkboxLargeSize = 24.0;
+
+  /// 체크박스 아이콘 크기 - 대형 (18px)
+  static const double checkboxLargeIconSize = 18.0;
+
+  /// 체크박스 테두리 두께 (2px)
+  static const double checkboxBorderWidth = 2.0;
+
+  /// 체크박스 포커스 테두리 두께 (3px)
+  static const double checkboxFocusBorderWidth = 3.0;
+
+  /// 체크박스 모서리 반경 (4px)
+  static const double checkboxBorderRadius = 4.0;
+
+  // ============================================================
+  // Slider Sizes (Phase 5)
+  // ============================================================
+
+  /// 슬라이더 트랙 높이 - 소형 (4px)
+  static const double sliderSmallTrackHeight = 4.0;
+
+  /// 슬라이더 썸 크기 - 소형 (12px)
+  static const double sliderSmallThumbSize = 12.0;
+
+  /// 슬라이더 트랙 높이 - 중형 (6px)
+  static const double sliderMediumTrackHeight = 6.0;
+
+  /// 슬라이더 썸 크기 - 중형 (16px)
+  static const double sliderMediumThumbSize = 16.0;
+
+  /// 슬라이더 트랙 높이 - 대형 (8px)
+  static const double sliderLargeTrackHeight = 8.0;
+
+  /// 슬라이더 썸 크기 - 대형 (20px)
+  static const double sliderLargeThumbSize = 20.0;
+
+  /// 슬라이더 마크 크기 (8px)
+  static const double sliderMarkSize = 8.0;
+
+  /// 슬라이더 포커스 링 크기 (4px)
+  static const double sliderFocusRingWidth = 4.0;
 }

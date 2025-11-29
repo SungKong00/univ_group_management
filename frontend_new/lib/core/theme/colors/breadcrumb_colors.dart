@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../extensions/app_color_extension.dart';
+import '../enums.dart';
 
 /// Breadcrumb 컴포넌트 전용 색상 구조
 ///
@@ -36,42 +37,54 @@ class BreadcrumbColors {
     required this.icon,
   });
 
-  /// 기본 스타일
+  /// Style별 팩토리 메서드
+  factory BreadcrumbColors.from(AppColorExtension c, BreadcrumbStyle style) {
+    return switch (style) {
+      BreadcrumbStyle.default_ => BreadcrumbColors(
+        text: c.textSecondary,
+        textHover: c.brandPrimary,
+        textActive: c.textPrimary,
+        separator: c.textTertiary,
+        background: Colors.transparent,
+        backgroundHover: c.overlayLight,
+        icon: c.textSecondary,
+      ),
+      BreadcrumbStyle.dark => BreadcrumbColors(
+        text: c.textSecondary,
+        textHover: c.brandSecondary,
+        textActive: c.textPrimary,
+        separator: c.textQuaternary,
+        background: Colors.transparent,
+        backgroundHover: c.overlayMedium,
+        icon: c.textSecondary,
+      ),
+      BreadcrumbStyle.compact => BreadcrumbColors(
+        text: c.textTertiary,
+        textHover: c.brandSecondary,
+        textActive: c.textSecondary,
+        separator: c.borderTertiary,
+        background: Colors.transparent,
+        backgroundHover: c.overlayLight,
+        icon: c.textTertiary,
+      ),
+    };
+  }
+
+  /// 기본 스타일 (하위 호환성)
+  @Deprecated('Use BreadcrumbColors.from() instead')
   factory BreadcrumbColors.default_(AppColorExtension c) {
-    return BreadcrumbColors(
-      text: c.textSecondary,
-      textHover: c.brandPrimary,
-      textActive: c.textPrimary,
-      separator: c.textTertiary,
-      background: Colors.transparent,
-      backgroundHover: c.overlayLight,
-      icon: c.textSecondary,
-    );
+    return BreadcrumbColors.from(c, BreadcrumbStyle.default_);
   }
 
-  /// 역시 가능한 색상 - darker variant
+  /// 다크 스타일 (하위 호환성)
+  @Deprecated('Use BreadcrumbColors.from() instead')
   factory BreadcrumbColors.dark(AppColorExtension c) {
-    return BreadcrumbColors(
-      text: c.textSecondary,
-      textHover: c.brandSecondary,
-      textActive: c.textPrimary,
-      separator: c.textQuaternary,
-      background: Colors.transparent,
-      backgroundHover: c.overlayMedium,
-      icon: c.textSecondary,
-    );
+    return BreadcrumbColors.from(c, BreadcrumbStyle.dark);
   }
 
-  /// Compact 스타일 (더 작은 간격)
+  /// 콤팩트 스타일 (하위 호환성)
+  @Deprecated('Use BreadcrumbColors.from() instead')
   factory BreadcrumbColors.compact(AppColorExtension c) {
-    return BreadcrumbColors(
-      text: c.textTertiary,
-      textHover: c.brandSecondary,
-      textActive: c.textSecondary,
-      separator: c.borderTertiary,
-      background: Colors.transparent,
-      backgroundHover: c.overlayLight,
-      icon: c.textTertiary,
-    );
+    return BreadcrumbColors.from(c, BreadcrumbStyle.compact);
   }
 }

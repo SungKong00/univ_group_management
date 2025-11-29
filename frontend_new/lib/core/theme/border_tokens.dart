@@ -80,4 +80,16 @@ class BorderTokens {
 
   /// 완전 둥근 모서리 BorderRadius
   static BorderRadius roundRadius() => BorderRadius.circular(radiusRound);
+
+  // ============================================================
+  // Switch Border Width (Phase 5)
+  // ============================================================
+
+  /// 스위치 기본 테두리 너비 (1px)
+  /// 사용: 비활성 스위치, 호버 상태
+  static const double switchBorderThin = widthThin;
+
+  /// 스위치 포커스 테두리 너비 (2px)
+  /// 사용: 포커스된 스위치
+  static const double switchBorderFocus = widthFocus;
 }

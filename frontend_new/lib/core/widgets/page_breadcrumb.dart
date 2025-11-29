@@ -53,11 +53,7 @@ class _PageBreadcrumbState extends State<PageBreadcrumb> {
     // ========================================================
     // Step 1: 스타일에 따른 색상 결정
     // ========================================================
-    final breadcrumbColors = switch (widget.style) {
-      BreadcrumbStyle.default_ => BreadcrumbColors.default_(colorExt),
-      BreadcrumbStyle.dark => BreadcrumbColors.dark(colorExt),
-      BreadcrumbStyle.compact => BreadcrumbColors.compact(colorExt),
-    };
+    final breadcrumbColors = BreadcrumbColors.from(colorExt, widget.style);
 
     final itemSpacing = ResponsiveTokens.space12;
     final separatorSpacing = ResponsiveTokens.space8;

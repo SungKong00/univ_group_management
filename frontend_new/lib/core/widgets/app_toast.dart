@@ -171,19 +171,18 @@ class _ToastOverlayState extends State<_ToastOverlay>
     // Position에 따른 슬라이드 방향
     final slideBegin = switch (widget.position) {
       AppToastPosition.topCenter ||
-      AppToastPosition.topRight =>
-        const Offset(0, -1),
+      AppToastPosition.topRight => const Offset(0, -1),
       AppToastPosition.bottomCenter ||
-      AppToastPosition.bottomRight =>
-        const Offset(0, 1),
+      AppToastPosition.bottomRight => const Offset(0, 1),
     };
 
-    _slideAnimation = Tween<Offset>(
-      begin: slideBegin,
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: AnimationTokens.curveSlide),
-    );
+    _slideAnimation = Tween<Offset>(begin: slideBegin, end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: AnimationTokens.curveSlide,
+          ),
+        );
 
     _controller.forward();
   }
@@ -208,8 +207,16 @@ class _ToastOverlayState extends State<_ToastOverlay>
     final (top, bottom, alignment) = switch (widget.position) {
       AppToastPosition.topCenter => (padding + 48, null, Alignment.topCenter),
       AppToastPosition.topRight => (padding + 48, null, Alignment.topRight),
-      AppToastPosition.bottomCenter => (null, padding + 48, Alignment.bottomCenter),
-      AppToastPosition.bottomRight => (null, padding + 48, Alignment.bottomRight),
+      AppToastPosition.bottomCenter => (
+        null,
+        padding + 48,
+        Alignment.bottomCenter,
+      ),
+      AppToastPosition.bottomRight => (
+        null,
+        padding + 48,
+        Alignment.bottomRight,
+      ),
     };
 
     return Positioned(
@@ -286,7 +293,10 @@ class _ToastContent extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: colors.background,
-          border: Border.all(color: colors.border, width: BorderTokens.widthThin),
+          border: Border.all(
+            color: colors.border,
+            width: BorderTokens.widthThin,
+          ),
           borderRadius: BorderTokens.mediumRadius(),
           boxShadow: [
             BoxShadow(
@@ -300,7 +310,11 @@ class _ToastContent extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Icon
-            Icon(displayIcon, size: ResponsiveTokens.iconSize(width), color: colors.icon),
+            Icon(
+              displayIcon,
+              size: ResponsiveTokens.iconSize(width),
+              color: colors.icon,
+            ),
             SizedBox(width: spacingExt.medium),
 
             // Message
@@ -333,7 +347,11 @@ class _ToastContent extends StatelessWidget {
             SizedBox(width: spacingExt.xs),
             GestureDetector(
               onTap: onDismiss,
-              child: Icon(Icons.close, size: ResponsiveTokens.iconSize(width) - 2, color: colors.dismiss),
+              child: Icon(
+                Icons.close,
+                size: ResponsiveTokens.iconSize(width) - 2,
+                color: colors.dismiss,
+              ),
             ),
           ],
         ),

@@ -90,10 +90,7 @@ class AppBadge extends StatelessWidget {
   /// ```dart
   /// AppBadge.dot(color: AppBadgeColor.error)
   /// ```
-  factory AppBadge.dot({
-    Key? key,
-    AppBadgeColor color = AppBadgeColor.error,
-  }) {
+  factory AppBadge.dot({Key? key, AppBadgeColor color = AppBadgeColor.error}) {
     return _DotBadge(key: key, color: color);
   }
 
@@ -110,14 +107,14 @@ class AppBadge extends StatelessWidget {
     // 사이즈별 스타일
     final (paddingH, paddingV, iconSize) = switch (size) {
       AppBadgeSize.small => (
-        spacingExt.small,                  // 6px의 소수점은 medium(12px)이 맞으니 small(8px) 사용
-        spacingExt.xs,                     // 2px는 없으므로 xs(4px) 사용
-        ResponsiveTokens.iconSize(width) - 4,  // 기본 아이콘 크기에서 축소
+        spacingExt.small, // 6px의 소수점은 medium(12px)이 맞으니 small(8px) 사용
+        spacingExt.xs, // 2px는 없으므로 xs(4px) 사용
+        ResponsiveTokens.iconSize(width) - 4, // 기본 아이콘 크기에서 축소
       ),
       AppBadgeSize.medium => (
-        spacingExt.medium,                 // 12px = medium(12px)
-        spacingExt.xs,                     // 4px = xs(4px)
-        ResponsiveTokens.iconSize(width),  // 기본 아이콘 크기
+        spacingExt.medium, // 12px = medium(12px)
+        spacingExt.xs, // 4px = xs(4px)
+        ResponsiveTokens.iconSize(width), // 기본 아이콘 크기
       ),
     };
 
@@ -129,10 +126,7 @@ class AppBadge extends StatelessWidget {
     return Semantics(
       label: label,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: paddingH,
-          vertical: paddingV,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: paddingH, vertical: paddingV),
         decoration: BoxDecoration(
           color: colors.background,
           border: variant == AppBadgeVariant.subtle
@@ -144,11 +138,7 @@ class AppBadge extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(
-                icon,
-                size: iconSize,
-                color: colors.text,
-              ),
+              Icon(icon, size: iconSize, color: colors.text),
               SizedBox(width: spacingExt.componentIconGap / 2),
             ],
             Text(label, style: textStyle),
@@ -161,14 +151,12 @@ class AppBadge extends StatelessWidget {
 
 /// 내부 전용: 도트 배지 위젯
 class _DotBadge extends AppBadge {
-  const _DotBadge({
-    super.key,
-    required super.color,
-  }) : super(
-          label: '',
-          variant: AppBadgeVariant.prominent,
-          size: AppBadgeSize.small,
-        );
+  const _DotBadge({super.key, required super.color})
+    : super(
+        label: '',
+        variant: AppBadgeVariant.prominent,
+        size: AppBadgeSize.small,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +165,7 @@ class _DotBadge extends AppBadge {
     final spacingExt = context.appSpacing;
 
     // 도트 배지 크기: xs(4px) + xs(4px) = 8px
-    final dotSize = spacingExt.small;  // 8px
+    final dotSize = spacingExt.small; // 8px
 
     return Semantics(
       label: '알림',

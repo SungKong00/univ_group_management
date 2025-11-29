@@ -159,10 +159,7 @@ class AppEmptyState extends StatelessWidget {
   }
 
   /// 알림 없음 팩토리
-  factory AppEmptyState.noNotifications({
-    Key? key,
-    bool isCompact = false,
-  }) {
+  factory AppEmptyState.noNotifications({Key? key, bool isCompact = false}) {
     return AppEmptyState(
       key: key,
       title: '알림이 없습니다',
@@ -200,14 +197,12 @@ class AppEmptyState extends StatelessWidget {
             if (illustration != null)
               illustration!
             else if (icon != null)
-              Icon(
-                icon,
-                size: iconSize,
-                color: colors.icon,
-              ),
+              Icon(icon, size: iconSize, color: colors.icon),
 
             if (illustration != null || icon != null)
-              SizedBox(height: isCompact ? spacingExt.medium : spacingExt.large),
+              SizedBox(
+                height: isCompact ? spacingExt.medium : spacingExt.large,
+              ),
 
             // 제목
             Text(
@@ -244,7 +239,9 @@ class AppEmptyState extends StatelessWidget {
 
             // 액션 버튼
             if (actionLabel != null && onAction != null) ...[
-              SizedBox(height: isCompact ? spacingExt.medium : spacingExt.large),
+              SizedBox(
+                height: isCompact ? spacingExt.medium : spacingExt.large,
+              ),
               AppButton(
                 text: actionLabel!,
                 variant: AppButtonVariant.primary,

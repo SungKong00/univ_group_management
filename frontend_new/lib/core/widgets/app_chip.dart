@@ -113,22 +113,22 @@ class _AppChipState extends State<AppChip> {
     final backgroundColor = widget.isDisabled
         ? colors.background.withValues(alpha: 0.5)
         : widget.isSelected
-            ? colors.backgroundSelected
-            : _isHovered
-                ? colors.backgroundHover
-                : colors.background;
+        ? colors.backgroundSelected
+        : _isHovered
+        ? colors.backgroundHover
+        : colors.background;
 
     final textColor = widget.isDisabled
         ? colors.text.withValues(alpha: 0.5)
         : widget.isSelected
-            ? colors.textSelected
-            : widget.customColor ?? colors.text;
+        ? colors.textSelected
+        : widget.customColor ?? colors.text;
 
     final borderColor = widget.isDisabled
         ? colors.border.withValues(alpha: 0.5)
         : widget.isSelected
-            ? colors.borderSelected
-            : colors.border;
+        ? colors.borderSelected
+        : colors.border;
 
     return Semantics(
       label: widget.label,
@@ -158,11 +158,7 @@ class _AppChipState extends State<AppChip> {
               children: [
                 // Leading icon
                 if (widget.leadingIcon != null) ...[
-                  Icon(
-                    widget.leadingIcon,
-                    size: iconSize,
-                    color: textColor,
-                  ),
+                  Icon(widget.leadingIcon, size: iconSize, color: textColor),
                   SizedBox(width: spacingExt.componentIconGap / 2),
                 ],
 
@@ -194,11 +190,7 @@ class _AppChipState extends State<AppChip> {
                 // Checkmark (filter type, selected)
                 if (widget.type == AppChipType.filter && widget.isSelected) ...[
                   SizedBox(width: spacingExt.componentIconGap / 2),
-                  Icon(
-                    Icons.check,
-                    size: iconSize - 2,
-                    color: textColor,
-                  ),
+                  Icon(Icons.check, size: iconSize - 2, color: textColor),
                 ],
               ],
             ),

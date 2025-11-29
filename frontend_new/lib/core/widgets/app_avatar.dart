@@ -117,43 +117,43 @@ class AppAvatar extends StatelessWidget {
 
   /// 크기별 픽셀 값
   double get _sizeValue => switch (size) {
-        AppAvatarSize.xs => 24.0,
-        AppAvatarSize.sm => 32.0,
-        AppAvatarSize.md => 40.0,
-        AppAvatarSize.lg => 48.0,
-        AppAvatarSize.xl => 64.0,
-        AppAvatarSize.xxl => 96.0,
-      };
+    AppAvatarSize.xs => 24.0,
+    AppAvatarSize.sm => 32.0,
+    AppAvatarSize.md => 40.0,
+    AppAvatarSize.lg => 48.0,
+    AppAvatarSize.xl => 64.0,
+    AppAvatarSize.xxl => 96.0,
+  };
 
   /// 크기별 폰트 크기
   double get _fontSize => switch (size) {
-        AppAvatarSize.xs => 10.0,
-        AppAvatarSize.sm => 12.0,
-        AppAvatarSize.md => 14.0,
-        AppAvatarSize.lg => 16.0,
-        AppAvatarSize.xl => 20.0,
-        AppAvatarSize.xxl => 28.0,
-      };
+    AppAvatarSize.xs => 10.0,
+    AppAvatarSize.sm => 12.0,
+    AppAvatarSize.md => 14.0,
+    AppAvatarSize.lg => 16.0,
+    AppAvatarSize.xl => 20.0,
+    AppAvatarSize.xxl => 28.0,
+  };
 
   /// 크기별 상태 표시기 크기
   double get _statusSize => switch (size) {
-        AppAvatarSize.xs => 6.0,
-        AppAvatarSize.sm => 8.0,
-        AppAvatarSize.md => 10.0,
-        AppAvatarSize.lg => 12.0,
-        AppAvatarSize.xl => 14.0,
-        AppAvatarSize.xxl => 18.0,
-      };
+    AppAvatarSize.xs => 6.0,
+    AppAvatarSize.sm => 8.0,
+    AppAvatarSize.md => 10.0,
+    AppAvatarSize.lg => 12.0,
+    AppAvatarSize.xl => 14.0,
+    AppAvatarSize.xxl => 18.0,
+  };
 
   /// 크기별 아이콘 크기
   double get _iconSize => switch (size) {
-        AppAvatarSize.xs => 14.0,
-        AppAvatarSize.sm => 18.0,
-        AppAvatarSize.md => 22.0,
-        AppAvatarSize.lg => 26.0,
-        AppAvatarSize.xl => 34.0,
-        AppAvatarSize.xxl => 50.0,
-      };
+    AppAvatarSize.xs => 14.0,
+    AppAvatarSize.sm => 18.0,
+    AppAvatarSize.md => 22.0,
+    AppAvatarSize.lg => 26.0,
+    AppAvatarSize.xl => 34.0,
+    AppAvatarSize.xxl => 50.0,
+  };
 
   /// 이니셜 생성
   String _getInitials() {
@@ -171,7 +171,8 @@ class AppAvatar extends StatelessWidget {
     final colorExt = context.appColors;
     final colors = AvatarColors.standard(colorExt);
 
-    final effectiveBackgroundColor = backgroundColor ??
+    final effectiveBackgroundColor =
+        backgroundColor ??
         (name != null
             ? AvatarColors.backgroundForName(colorExt, name!)
             : colors.background);
@@ -293,23 +294,26 @@ class AppAvatarGroup extends StatelessWidget {
   });
 
   double get _sizeValue => switch (size) {
-        AppAvatarSize.xs => 24.0,
-        AppAvatarSize.sm => 32.0,
-        AppAvatarSize.md => 40.0,
-        AppAvatarSize.lg => 48.0,
-        AppAvatarSize.xl => 64.0,
-        AppAvatarSize.xxl => 96.0,
-      };
+    AppAvatarSize.xs => 24.0,
+    AppAvatarSize.sm => 32.0,
+    AppAvatarSize.md => 40.0,
+    AppAvatarSize.lg => 48.0,
+    AppAvatarSize.xl => 64.0,
+    AppAvatarSize.xxl => 96.0,
+  };
 
   @override
   Widget build(BuildContext context) {
     final colorExt = context.appColors;
-    final displayCount = avatars.length > maxDisplay ? maxDisplay : avatars.length;
+    final displayCount = avatars.length > maxDisplay
+        ? maxDisplay
+        : avatars.length;
     final remaining = avatars.length - maxDisplay;
     final offsetAmount = _sizeValue * (1 - overlap);
 
     return SizedBox(
-      width: offsetAmount * displayCount +
+      width:
+          offsetAmount * displayCount +
           (remaining > 0 ? offsetAmount : 0) +
           _sizeValue * overlap,
       height: _sizeValue,
@@ -382,9 +386,5 @@ class AvatarData {
   /// 온라인 상태
   final AppAvatarStatus? status;
 
-  const AvatarData({
-    this.imageUrl,
-    this.name,
-    this.status,
-  });
+  const AvatarData({this.imageUrl, this.name, this.status});
 }

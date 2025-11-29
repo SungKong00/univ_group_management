@@ -240,14 +240,12 @@ class AppErrorState extends StatelessWidget {
             if (illustration != null)
               illustration!
             else if (icon != null)
-              Icon(
-                icon,
-                size: iconSize,
-                color: colors.icon,
-              ),
+              Icon(icon, size: iconSize, color: colors.icon),
 
             if (illustration != null || icon != null)
-              SizedBox(height: isCompact ? spacingExt.medium : spacingExt.large),
+              SizedBox(
+                height: isCompact ? spacingExt.medium : spacingExt.large,
+              ),
 
             // 제목
             Text(
@@ -297,7 +295,9 @@ class AppErrorState extends StatelessWidget {
 
             // 재시도 버튼
             if (onRetry != null) ...[
-              SizedBox(height: isCompact ? spacingExt.medium : spacingExt.large),
+              SizedBox(
+                height: isCompact ? spacingExt.medium : spacingExt.large,
+              ),
               AppButton(
                 text: retryLabel,
                 variant: AppButtonVariant.primary,

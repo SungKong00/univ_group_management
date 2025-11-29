@@ -196,7 +196,8 @@ class _AppDatePickerState extends State<AppDatePicker> {
   @override
   void initState() {
     super.initState();
-    _displayMonth = widget.initialDisplayMonth ??
+    _displayMonth =
+        widget.initialDisplayMonth ??
         widget.selectedDate ??
         widget.startDate ??
         DateTime.now();
@@ -283,11 +284,17 @@ class _AppDatePickerState extends State<AppDatePicker> {
 
       case AppDatePickerMode.multiple:
         final dates = List<DateTime>.from(widget.selectedDates ?? []);
-        final exists = dates.any((d) =>
-            d.year == date.year && d.month == date.month && d.day == date.day);
+        final exists = dates.any(
+          (d) =>
+              d.year == date.year && d.month == date.month && d.day == date.day,
+        );
         if (exists) {
-          dates.removeWhere((d) =>
-              d.year == date.year && d.month == date.month && d.day == date.day);
+          dates.removeWhere(
+            (d) =>
+                d.year == date.year &&
+                d.month == date.month &&
+                d.day == date.day,
+          );
         } else {
           dates.add(date);
         }
@@ -361,8 +368,8 @@ class _AppDatePickerState extends State<AppDatePicker> {
     final borderColor = hasError
         ? colorExt.stateErrorText
         : _isOpen
-            ? colorExt.borderFocus
-            : colorExt.borderPrimary;
+        ? colorExt.borderFocus
+        : colorExt.borderPrimary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,7 +426,8 @@ class _AppDatePickerState extends State<AppDatePicker> {
                     child: Text(
                       _getDisplayText(),
                       style: textTheme.bodyMedium?.copyWith(
-                        color: widget.selectedDate != null ||
+                        color:
+                            widget.selectedDate != null ||
                                 widget.startDate != null ||
                                 (widget.selectedDates?.isNotEmpty ?? false)
                             ? colorExt.textPrimary
@@ -653,8 +661,18 @@ class _DatePickerCalendar extends StatelessWidget {
 
   static const _weekdays = ['일', '월', '화', '수', '목', '금', '토'];
   static const _months = [
-    '1월', '2월', '3월', '4월', '5월', '6월',
-    '7월', '8월', '9월', '10월', '11월', '12월'
+    '1월',
+    '2월',
+    '3월',
+    '4월',
+    '5월',
+    '6월',
+    '7월',
+    '8월',
+    '9월',
+    '10월',
+    '11월',
+    '12월',
   ];
 
   @override
@@ -675,9 +693,24 @@ class _DatePickerCalendar extends StatelessWidget {
 
           // 본문
           switch (currentView) {
-            AppDatePickerView.day => _buildDayView(context, colors, spacingExt, textTheme),
-            AppDatePickerView.month => _buildMonthView(context, colors, spacingExt, textTheme),
-            AppDatePickerView.year => _buildYearView(context, colors, spacingExt, textTheme),
+            AppDatePickerView.day => _buildDayView(
+              context,
+              colors,
+              spacingExt,
+              textTheme,
+            ),
+            AppDatePickerView.month => _buildMonthView(
+              context,
+              colors,
+              spacingExt,
+              textTheme,
+            ),
+            AppDatePickerView.year => _buildYearView(
+              context,
+              colors,
+              spacingExt,
+              textTheme,
+            ),
           },
         ],
       ),
@@ -716,15 +749,17 @@ class _DatePickerCalendar extends StatelessWidget {
                     currentView == AppDatePickerView.day
                         ? AppDatePickerView.month
                         : currentView == AppDatePickerView.month
-                            ? AppDatePickerView.year
-                            : AppDatePickerView.day,
+                        ? AppDatePickerView.year
+                        : AppDatePickerView.day,
                   );
                 },
           child: Text(
             switch (currentView) {
-              AppDatePickerView.day => '${displayMonth.year}년 ${_months[displayMonth.month - 1]}',
+              AppDatePickerView.day =>
+                '${displayMonth.year}년 ${_months[displayMonth.month - 1]}',
               AppDatePickerView.month => '${displayMonth.year}년',
-              AppDatePickerView.year => '${(displayMonth.year ~/ 10) * 10} - ${(displayMonth.year ~/ 10) * 10 + 9}',
+              AppDatePickerView.year =>
+                '${(displayMonth.year ~/ 10) * 10} - ${(displayMonth.year ~/ 10) * 10 + 9}',
             },
             style: textTheme.titleSmall?.copyWith(
               color: colors.headerText,
@@ -814,7 +849,9 @@ class _DatePickerCalendar extends StatelessWidget {
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime(displayMonth.year, displayMonth.month, day);
       final isToday =
-          date.year == today.year && date.month == today.month && date.day == today.day;
+          date.year == today.year &&
+          date.month == today.month &&
+          date.day == today.day;
       final isSelected = _isDateSelected(date);
       final isInRange = _isDateInRange(date);
       final isRangeStart = _isRangeStart(date);
@@ -842,17 +879,19 @@ class _DatePickerCalendar extends StatelessWidget {
         // 요일 헤더
         Row(
           children: orderedWeekdays
-              .map((day) => Expanded(
-                    child: Center(
-                      child: Text(
-                        day,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colors.weekdayText,
-                          fontWeight: FontWeight.w500,
-                        ),
+              .map(
+                (day) => Expanded(
+                  child: Center(
+                    child: Text(
+                      day,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.weekdayText,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ))
+                  ),
+                ),
+              )
               .toList(),
         ),
         SizedBox(height: spacingExt.small),
@@ -883,7 +922,9 @@ class _DatePickerCalendar extends StatelessWidget {
       crossAxisSpacing: spacingExt.small,
       children: List.generate(12, (index) {
         final month = index + 1;
-        final isSelected = selectedDate?.month == month && selectedDate?.year == displayMonth.year;
+        final isSelected =
+            selectedDate?.month == month &&
+            selectedDate?.year == displayMonth.year;
 
         return GestureDetector(
           onTap: isDisabled
@@ -894,7 +935,9 @@ class _DatePickerCalendar extends StatelessWidget {
                 },
           child: Container(
             decoration: BoxDecoration(
-              color: isSelected ? colors.selectedBackground : colors.hoverBackground.withValues(alpha: 0),
+              color: isSelected
+                  ? colors.selectedBackground
+                  : colors.hoverBackground.withValues(alpha: 0),
               borderRadius: BorderTokens.smallRadius(),
             ),
             alignment: Alignment.center,
@@ -940,7 +983,9 @@ class _DatePickerCalendar extends StatelessWidget {
                 },
           child: Container(
             decoration: BoxDecoration(
-              color: isSelected ? colors.selectedBackground : colors.hoverBackground.withValues(alpha: 0),
+              color: isSelected
+                  ? colors.selectedBackground
+                  : colors.hoverBackground.withValues(alpha: 0),
               borderRadius: BorderTokens.smallRadius(),
             ),
             alignment: Alignment.center,
@@ -950,8 +995,8 @@ class _DatePickerCalendar extends StatelessWidget {
                 color: isOutOfRange
                     ? colors.dayTextDisabled
                     : isSelected
-                        ? colors.selectedText
-                        : colors.dayText,
+                    ? colors.selectedText
+                    : colors.dayText,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -971,8 +1016,12 @@ class _DatePickerCalendar extends StatelessWidget {
       return _isRangeStart(date) || _isRangeEnd(date);
     }
     if (mode == AppDatePickerMode.multiple) {
-      return selectedDates?.any((d) =>
-              d.year == date.year && d.month == date.month && d.day == date.day) ??
+      return selectedDates?.any(
+            (d) =>
+                d.year == date.year &&
+                d.month == date.month &&
+                d.day == date.day,
+          ) ??
           false;
     }
     return false;
@@ -1008,8 +1057,10 @@ class _DatePickerCalendar extends StatelessWidget {
     if (minDate != null && date.isBefore(minDate!)) return true;
     if (maxDate != null && date.isAfter(maxDate!)) return true;
     if (disabledWeekdays?.contains(date.weekday) ?? false) return true;
-    if (disabledDates?.any((d) =>
-            d.year == date.year && d.month == date.month && d.day == date.day) ??
+    if (disabledDates?.any(
+          (d) =>
+              d.year == date.year && d.month == date.month && d.day == date.day,
+        ) ??
         false) {
       return true;
     }
@@ -1055,18 +1106,18 @@ class _DayCellState extends State<_DayCell> {
     final backgroundColor = widget.isSelected
         ? widget.colors.selectedBackground
         : widget.isInRange
-            ? widget.colors.rangeBackground
-            : _isHovered && !widget.isDisabled
-                ? widget.colors.hoverBackground
-                : Colors.transparent;
+        ? widget.colors.rangeBackground
+        : _isHovered && !widget.isDisabled
+        ? widget.colors.hoverBackground
+        : Colors.transparent;
 
     final textColor = widget.isDisabled
         ? widget.colors.dayTextDisabled
         : widget.isSelected
-            ? widget.colors.selectedText
-            : widget.isToday
-                ? widget.colors.todayText
-                : widget.colors.dayText;
+        ? widget.colors.selectedText
+        : widget.isToday
+        ? widget.colors.todayText
+        : widget.colors.dayText;
 
     return MouseRegion(
       onEnter: (_) {

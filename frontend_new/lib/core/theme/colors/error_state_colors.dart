@@ -30,47 +30,44 @@ class ErrorStateColors {
   });
 
   /// 타입별 팩토리 메서드
-  factory ErrorStateColors.from(
-    AppColorExtension c,
-    AppErrorStateType type,
-  ) {
+  factory ErrorStateColors.from(AppColorExtension c, AppErrorStateType type) {
     return switch (type) {
       AppErrorStateType.general => ErrorStateColors(
-          icon: c.stateErrorText,
-          title: c.textPrimary,
-          description: c.textSecondary,
-          errorCode: c.textTertiary,
-        ),
+        icon: c.stateErrorText,
+        title: c.textPrimary,
+        description: c.textSecondary,
+        errorCode: c.textTertiary,
+      ),
       AppErrorStateType.network => ErrorStateColors(
-          icon: c.stateWarningText,
-          title: c.textPrimary,
-          description: c.textSecondary,
-          errorCode: c.textTertiary,
-        ),
+        icon: c.stateWarningText,
+        title: c.textPrimary,
+        description: c.textSecondary,
+        errorCode: c.textTertiary,
+      ),
       AppErrorStateType.server => ErrorStateColors(
-          icon: c.stateErrorText,
-          title: c.textPrimary,
-          description: c.textSecondary,
-          errorCode: c.textTertiary,
-        ),
+        icon: c.stateErrorText,
+        title: c.textPrimary,
+        description: c.textSecondary,
+        errorCode: c.textTertiary,
+      ),
       AppErrorStateType.unauthorized => ErrorStateColors(
-          icon: c.stateErrorText,
-          title: c.textPrimary,
-          description: c.textSecondary,
-          errorCode: c.textTertiary,
-        ),
+        icon: c.stateErrorText,
+        title: c.textPrimary,
+        description: c.textSecondary,
+        errorCode: c.textTertiary,
+      ),
       AppErrorStateType.notFound => ErrorStateColors(
-          icon: c.stateInfoText,
-          title: c.textPrimary,
-          description: c.textSecondary,
-          errorCode: c.textTertiary,
-        ),
+        icon: c.stateInfoText,
+        title: c.textPrimary,
+        description: c.textSecondary,
+        errorCode: c.textTertiary,
+      ),
       AppErrorStateType.timeout => ErrorStateColors(
-          icon: c.stateWarningText,
-          title: c.textPrimary,
-          description: c.textSecondary,
-          errorCode: c.textTertiary,
-        ),
+        icon: c.stateWarningText,
+        title: c.textPrimary,
+        description: c.textSecondary,
+        errorCode: c.textTertiary,
+      ),
     };
   }
 }

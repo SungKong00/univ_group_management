@@ -128,10 +128,7 @@ class _AppSkeletonState extends State<AppSkeleton>
       vsync: this,
     );
     _animation = Tween<double>(begin: -1.0, end: 2.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: AnimationTokens.curveSmooth,
-      ),
+      CurvedAnimation(parent: _controller, curve: AnimationTokens.curveSmooth),
     );
     if (widget.enableShimmer) {
       _controller.repeat();
@@ -163,16 +160,19 @@ class _AppSkeletonState extends State<AppSkeleton>
     final colors = SkeletonColors.standard(colorExt);
 
     // 타입별 테두리 반경
-    final effectiveBorderRadius = widget.borderRadius ??
+    final effectiveBorderRadius =
+        widget.borderRadius ??
         switch (widget.type) {
           AppSkeletonType.text => BorderTokens.smallRadius(),
           AppSkeletonType.circle => BorderRadius.circular(1000),
-          AppSkeletonType.rectangle =>
-            BorderRadius.circular(ResponsiveTokens.componentBorderRadius(width)),
+          AppSkeletonType.rectangle => BorderRadius.circular(
+            ResponsiveTokens.componentBorderRadius(width),
+          ),
         };
 
     // 기본 높이
-    final effectiveHeight = widget.height ??
+    final effectiveHeight =
+        widget.height ??
         switch (widget.type) {
           AppSkeletonType.text => 16.0,
           AppSkeletonType.circle => 48.0,
@@ -180,7 +180,8 @@ class _AppSkeletonState extends State<AppSkeleton>
         };
 
     // 기본 너비
-    final effectiveWidth = widget.width ??
+    final effectiveWidth =
+        widget.width ??
         switch (widget.type) {
           AppSkeletonType.text => double.infinity,
           AppSkeletonType.circle => effectiveHeight,
@@ -201,11 +202,7 @@ class _AppSkeletonState extends State<AppSkeleton>
                   ? LinearGradient(
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
-                      colors: [
-                        colors.base,
-                        colors.highlight,
-                        colors.base,
-                      ],
+                      colors: [colors.base, colors.highlight, colors.base],
                       stops: [
                         (_animation.value - 1).clamp(0.0, 1.0),
                         _animation.value.clamp(0.0, 1.0),
@@ -256,14 +253,10 @@ class AppSkeletonLines extends StatelessWidget {
       children: List.generate(lines, (index) {
         final isLast = index == lines - 1;
         return Padding(
-          padding: EdgeInsets.only(
-            bottom: isLast ? 0 : spacingExt.small,
-          ),
+          padding: EdgeInsets.only(bottom: isLast ? 0 : spacingExt.small),
           child: FractionallySizedBox(
             widthFactor: isLast ? lastLineWidthRatio : 1.0,
-            child: AppSkeleton.text(
-              enableShimmer: enableShimmer,
-            ),
+            child: AppSkeleton.text(enableShimmer: enableShimmer),
           ),
         );
       }),
@@ -297,10 +290,7 @@ class AppSkeletonCard extends StatelessWidget {
   });
 
   /// 세로 카드 스켈레톤
-  factory AppSkeletonCard.vertical({
-    Key? key,
-    bool enableShimmer = true,
-  }) {
+  factory AppSkeletonCard.vertical({Key? key, bool enableShimmer = true}) {
     return AppSkeletonCard(
       key: key,
       variant: CardVariant.vertical,
@@ -309,10 +299,7 @@ class AppSkeletonCard extends StatelessWidget {
   }
 
   /// 가로 카드 스켈레톤
-  factory AppSkeletonCard.horizontal({
-    Key? key,
-    bool enableShimmer = true,
-  }) {
+  factory AppSkeletonCard.horizontal({Key? key, bool enableShimmer = true}) {
     return AppSkeletonCard(
       key: key,
       variant: CardVariant.horizontal,
@@ -321,10 +308,7 @@ class AppSkeletonCard extends StatelessWidget {
   }
 
   /// 컴팩트 카드 스켈레톤
-  factory AppSkeletonCard.compact({
-    Key? key,
-    bool enableShimmer = true,
-  }) {
+  factory AppSkeletonCard.compact({Key? key, bool enableShimmer = true}) {
     return AppSkeletonCard(
       key: key,
       variant: CardVariant.compact,
@@ -341,7 +325,9 @@ class AppSkeletonCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: colorExt.surfaceSecondary,
-        borderRadius: BorderRadius.circular(ResponsiveTokens.componentBorderRadius(screenWidth)),
+        borderRadius: BorderRadius.circular(
+          ResponsiveTokens.componentBorderRadius(screenWidth),
+        ),
         border: Border.all(
           color: colorExt.borderPrimary,
           width: BorderTokens.widthThin,
@@ -382,10 +368,7 @@ class AppSkeletonCard extends StatelessWidget {
                 enableShimmer: enableShimmer,
               ),
               SizedBox(height: spacingExt.small),
-              AppSkeletonLines(
-                lines: 2,
-                enableShimmer: enableShimmer,
-              ),
+              AppSkeletonLines(lines: 2, enableShimmer: enableShimmer),
             ],
           ),
         ),
@@ -420,10 +403,7 @@ class AppSkeletonCard extends StatelessWidget {
                   enableShimmer: enableShimmer,
                 ),
                 SizedBox(height: spacingExt.small),
-                AppSkeletonLines(
-                  lines: 2,
-                  enableShimmer: enableShimmer,
-                ),
+                AppSkeletonLines(lines: 2, enableShimmer: enableShimmer),
               ],
             ),
           ),
@@ -438,16 +418,9 @@ class AppSkeletonCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AppSkeleton.circle(
-            size: 48,
-            enableShimmer: enableShimmer,
-          ),
+          AppSkeleton.circle(size: 48, enableShimmer: enableShimmer),
           SizedBox(height: spacingExt.small),
-          AppSkeleton.text(
-            width: 80,
-            height: 14,
-            enableShimmer: enableShimmer,
-          ),
+          AppSkeleton.text(width: 80, height: 14, enableShimmer: enableShimmer),
         ],
       ),
     );
