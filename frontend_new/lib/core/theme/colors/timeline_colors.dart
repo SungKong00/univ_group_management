@@ -51,7 +51,10 @@ class TimelineColors {
   }
 
   /// 상태별 노드 색상
-  Color getNodeColorForStatus(AppTimelineItemStatus status, AppColorExtension c) {
+  Color getNodeColorForStatus(
+    AppTimelineItemStatus status,
+    AppColorExtension c,
+  ) {
     return switch (status) {
       AppTimelineItemStatus.completed => c.stateSuccessBg,
       AppTimelineItemStatus.active => c.brandPrimary,
@@ -61,7 +64,10 @@ class TimelineColors {
   }
 
   /// 상태별 아이콘 색상
-  Color getIconColorForStatus(AppTimelineItemStatus status, AppColorExtension c) {
+  Color getIconColorForStatus(
+    AppTimelineItemStatus status,
+    AppColorExtension c,
+  ) {
     return switch (status) {
       AppTimelineItemStatus.completed => c.stateSuccessText,
       AppTimelineItemStatus.active => c.textOnBrand,

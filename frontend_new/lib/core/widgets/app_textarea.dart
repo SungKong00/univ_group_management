@@ -295,7 +295,9 @@ class _AppTextareaState extends State<AppTextarea> {
               disabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(borderRadius),
                 borderSide: BorderSide(
-                  color: textareaColors.border.withValues(alpha: disabledOpacity),
+                  color: textareaColors.border.withValues(
+                    alpha: disabledOpacity,
+                  ),
                   width: BorderTokens.widthThin,
                 ),
               ),

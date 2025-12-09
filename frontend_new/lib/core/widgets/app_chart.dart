@@ -156,126 +156,121 @@ class _AppChartState extends State<AppChart>
               builder: (context, child) {
                 return switch (widget.type) {
                   AppChartType.line => _LineChart(
-                      data: widget.data,
-                      labels: widget.labels,
-                      colors: colors,
-                      showGrid: widget.showGrid,
-                      showValues: widget.showValues,
-                      animationValue: _animation.value,
-                      minY: widget.minY,
-                      maxY: widget.maxY,
-                      hoveredIndex: _hoveredIndex,
-                      hoveredSeriesIndex: _hoveredSeriesIndex,
-                      onHover: widget.showTooltip
-                          ? (index, seriesIndex) {
-                              setState(() {
-                                _hoveredIndex = index;
-                                _hoveredSeriesIndex = seriesIndex;
-                              });
-                            }
-                          : null,
-                      onHoverExit: widget.showTooltip
-                          ? () {
-                              setState(() {
-                                _hoveredIndex = null;
-                                _hoveredSeriesIndex = null;
-                              });
-                            }
-                          : null,
-                    ),
+                    data: widget.data,
+                    labels: widget.labels,
+                    colors: colors,
+                    showGrid: widget.showGrid,
+                    showValues: widget.showValues,
+                    animationValue: _animation.value,
+                    minY: widget.minY,
+                    maxY: widget.maxY,
+                    hoveredIndex: _hoveredIndex,
+                    hoveredSeriesIndex: _hoveredSeriesIndex,
+                    onHover: widget.showTooltip
+                        ? (index, seriesIndex) {
+                            setState(() {
+                              _hoveredIndex = index;
+                              _hoveredSeriesIndex = seriesIndex;
+                            });
+                          }
+                        : null,
+                    onHoverExit: widget.showTooltip
+                        ? () {
+                            setState(() {
+                              _hoveredIndex = null;
+                              _hoveredSeriesIndex = null;
+                            });
+                          }
+                        : null,
+                  ),
                   AppChartType.bar => _BarChart(
-                      data: widget.data,
-                      labels: widget.labels,
-                      colors: colors,
-                      showGrid: widget.showGrid,
-                      showValues: widget.showValues,
-                      animationValue: _animation.value,
-                      minY: widget.minY,
-                      maxY: widget.maxY,
-                      hoveredIndex: _hoveredIndex,
-                      hoveredSeriesIndex: _hoveredSeriesIndex,
-                      onHover: widget.showTooltip
-                          ? (index, seriesIndex) {
-                              setState(() {
-                                _hoveredIndex = index;
-                                _hoveredSeriesIndex = seriesIndex;
-                              });
-                            }
-                          : null,
-                      onHoverExit: widget.showTooltip
-                          ? () {
-                              setState(() {
-                                _hoveredIndex = null;
-                                _hoveredSeriesIndex = null;
-                              });
-                            }
-                          : null,
-                    ),
-                  AppChartType.pie ||
-                  AppChartType.doughnut =>
-                    _PieChart(
-                      data: widget.data,
-                      labels: widget.labels,
-                      colors: colors,
-                      isDoughnut: widget.type == AppChartType.doughnut,
-                      showValues: widget.showValues,
-                      animationValue: _animation.value,
-                      hoveredIndex: _hoveredIndex,
-                      onHover: widget.showTooltip
-                          ? (index) {
-                              setState(() {
-                                _hoveredIndex = index;
-                                _hoveredSeriesIndex = 0;
-                              });
-                            }
-                          : null,
-                      onHoverExit: widget.showTooltip
-                          ? () {
-                              setState(() {
-                                _hoveredIndex = null;
-                                _hoveredSeriesIndex = null;
-                              });
-                            }
-                          : null,
-                    ),
+                    data: widget.data,
+                    labels: widget.labels,
+                    colors: colors,
+                    showGrid: widget.showGrid,
+                    showValues: widget.showValues,
+                    animationValue: _animation.value,
+                    minY: widget.minY,
+                    maxY: widget.maxY,
+                    hoveredIndex: _hoveredIndex,
+                    hoveredSeriesIndex: _hoveredSeriesIndex,
+                    onHover: widget.showTooltip
+                        ? (index, seriesIndex) {
+                            setState(() {
+                              _hoveredIndex = index;
+                              _hoveredSeriesIndex = seriesIndex;
+                            });
+                          }
+                        : null,
+                    onHoverExit: widget.showTooltip
+                        ? () {
+                            setState(() {
+                              _hoveredIndex = null;
+                              _hoveredSeriesIndex = null;
+                            });
+                          }
+                        : null,
+                  ),
+                  AppChartType.pie || AppChartType.doughnut => _PieChart(
+                    data: widget.data,
+                    labels: widget.labels,
+                    colors: colors,
+                    isDoughnut: widget.type == AppChartType.doughnut,
+                    showValues: widget.showValues,
+                    animationValue: _animation.value,
+                    hoveredIndex: _hoveredIndex,
+                    onHover: widget.showTooltip
+                        ? (index) {
+                            setState(() {
+                              _hoveredIndex = index;
+                              _hoveredSeriesIndex = 0;
+                            });
+                          }
+                        : null,
+                    onHoverExit: widget.showTooltip
+                        ? () {
+                            setState(() {
+                              _hoveredIndex = null;
+                              _hoveredSeriesIndex = null;
+                            });
+                          }
+                        : null,
+                  ),
                   AppChartType.area => _AreaChart(
-                      data: widget.data,
-                      labels: widget.labels,
-                      colors: colors,
-                      showGrid: widget.showGrid,
-                      showValues: widget.showValues,
-                      animationValue: _animation.value,
-                      minY: widget.minY,
-                      maxY: widget.maxY,
-                      hoveredIndex: _hoveredIndex,
-                      hoveredSeriesIndex: _hoveredSeriesIndex,
-                      onHover: widget.showTooltip
-                          ? (index, seriesIndex) {
-                              setState(() {
-                                _hoveredIndex = index;
-                                _hoveredSeriesIndex = seriesIndex;
-                              });
-                            }
-                          : null,
-                      onHoverExit: widget.showTooltip
-                          ? () {
-                              setState(() {
-                                _hoveredIndex = null;
-                                _hoveredSeriesIndex = null;
-                              });
-                            }
-                          : null,
-                    ),
+                    data: widget.data,
+                    labels: widget.labels,
+                    colors: colors,
+                    showGrid: widget.showGrid,
+                    showValues: widget.showValues,
+                    animationValue: _animation.value,
+                    minY: widget.minY,
+                    maxY: widget.maxY,
+                    hoveredIndex: _hoveredIndex,
+                    hoveredSeriesIndex: _hoveredSeriesIndex,
+                    onHover: widget.showTooltip
+                        ? (index, seriesIndex) {
+                            setState(() {
+                              _hoveredIndex = index;
+                              _hoveredSeriesIndex = seriesIndex;
+                            });
+                          }
+                        : null,
+                    onHoverExit: widget.showTooltip
+                        ? () {
+                            setState(() {
+                              _hoveredIndex = null;
+                              _hoveredSeriesIndex = null;
+                            });
+                          }
+                        : null,
+                  ),
                 };
               },
             ),
           ),
           if (widget.showLegend) ...[
             SizedBox(height: spacingExt.medium),
-            _ChartLegend(
-              data: widget.data,
-              colors: colors,
-            ),
+            _ChartLegend(data: widget.data, colors: colors),
           ],
         ],
       ),
@@ -294,11 +289,7 @@ class ChartSeries {
   /// 커스텀 색상 (null이면 자동)
   final Color? color;
 
-  const ChartSeries({
-    required this.name,
-    required this.values,
-    this.color,
-  });
+  const ChartSeries({required this.name, required this.values, this.color});
 }
 
 /// 라인 차트
@@ -442,16 +433,16 @@ class _LineChartPainter extends CustomPainter {
         final textPainter = TextPainter(
           text: TextSpan(
             text: value.toStringAsFixed(0),
-            style: TextStyle(
-              color: colors.axisLabel,
-              fontSize: 10,
-            ),
+            style: TextStyle(color: colors.axisLabel, fontSize: 10),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
         textPainter.paint(
           canvas,
-          Offset(leftPadding - textPainter.width - 8, y - textPainter.height / 2),
+          Offset(
+            leftPadding - textPainter.width - 8,
+            y - textPainter.height / 2,
+          ),
         );
       }
     }
@@ -463,10 +454,7 @@ class _LineChartPainter extends CustomPainter {
       final textPainter = TextPainter(
         text: TextSpan(
           text: labels[i],
-          style: TextStyle(
-            color: colors.axisLabel,
-            fontSize: 10,
-          ),
+          style: TextStyle(color: colors.axisLabel, fontSize: 10),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -480,7 +468,8 @@ class _LineChartPainter extends CustomPainter {
     for (int seriesIndex = 0; seriesIndex < data.length; seriesIndex++) {
       final series = data[seriesIndex];
       final seriesColor =
-          series.color ?? colors.seriesColors[seriesIndex % colors.seriesColors.length];
+          series.color ??
+          colors.seriesColors[seriesIndex % colors.seriesColors.length];
 
       final linePaint = Paint()
         ..color = seriesColor
@@ -491,10 +480,9 @@ class _LineChartPainter extends CustomPainter {
       final path = Path();
       for (int i = 0; i < series.values.length && i < labels.length; i++) {
         final x = leftPadding + stepX * i;
-        final normalizedValue =
-            (series.values[i] - effectiveMinY) / valueRange;
-        final y = topPadding +
-            chartHeight * (1 - normalizedValue * animationValue);
+        final normalizedValue = (series.values[i] - effectiveMinY) / valueRange;
+        final y =
+            topPadding + chartHeight * (1 - normalizedValue * animationValue);
 
         if (i == 0) {
           path.moveTo(x, y);
@@ -595,9 +583,15 @@ class _BarChart extends StatelessWidget {
     final barWidth = groupWidth / (data.length + 1);
 
     final relativeX = event.localPosition.dx - leftPadding;
-    final groupIndex = (relativeX / groupWidth).floor().clamp(0, labels.length - 1);
+    final groupIndex = (relativeX / groupWidth).floor().clamp(
+      0,
+      labels.length - 1,
+    );
     final withinGroup = relativeX - groupIndex * groupWidth;
-    final seriesIndex = ((withinGroup - barWidth / 2) / barWidth).floor().clamp(0, data.length - 1);
+    final seriesIndex = ((withinGroup - barWidth / 2) / barWidth).floor().clamp(
+      0,
+      data.length - 1,
+    );
 
     onHover!(groupIndex, seriesIndex);
   }
@@ -668,16 +662,16 @@ class _BarChartPainter extends CustomPainter {
         final textPainter = TextPainter(
           text: TextSpan(
             text: value.toStringAsFixed(0),
-            style: TextStyle(
-              color: colors.axisLabel,
-              fontSize: 10,
-            ),
+            style: TextStyle(color: colors.axisLabel, fontSize: 10),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
         textPainter.paint(
           canvas,
-          Offset(leftPadding - textPainter.width - 8, y - textPainter.height / 2),
+          Offset(
+            leftPadding - textPainter.width - 8,
+            y - textPainter.height / 2,
+          ),
         );
       }
     }
@@ -693,10 +687,7 @@ class _BarChartPainter extends CustomPainter {
       final textPainter = TextPainter(
         text: TextSpan(
           text: labels[labelIndex],
-          style: TextStyle(
-            color: colors.axisLabel,
-            fontSize: 10,
-          ),
+          style: TextStyle(color: colors.axisLabel, fontSize: 10),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -714,14 +705,16 @@ class _BarChartPainter extends CustomPainter {
         final normalizedValue = (value - effectiveMinY) / valueRange;
         final barHeight = chartHeight * normalizedValue * animationValue;
 
-        final barX = leftPadding +
+        final barX =
+            leftPadding +
             groupWidth * labelIndex +
             barGap +
             (barWidth + barGap) * seriesIndex;
         final barY = topPadding + chartHeight - barHeight;
 
         final seriesColor =
-            series.color ?? colors.seriesColors[seriesIndex % colors.seriesColors.length];
+            series.color ??
+            colors.seriesColors[seriesIndex % colors.seriesColors.length];
 
         final isHovered =
             hoveredIndex == labelIndex && hoveredSeriesIndex == seriesIndex;
@@ -920,17 +913,17 @@ class _PieChartPainter extends CustomPainter {
         final textPainter = TextPainter(
           text: TextSpan(
             text: showValues ? '$label\n$percentage%' : label,
-            style: TextStyle(
-              color: colors.axisLabel,
-              fontSize: 11,
-            ),
+            style: TextStyle(color: colors.axisLabel, fontSize: 11),
           ),
           textDirection: TextDirection.ltr,
           textAlign: TextAlign.center,
         )..layout();
         textPainter.paint(
           canvas,
-          Offset(labelX - textPainter.width / 2, labelY - textPainter.height / 2),
+          Offset(
+            labelX - textPainter.width / 2,
+            labelY - textPainter.height / 2,
+          ),
         );
       }
 
@@ -1086,16 +1079,16 @@ class _AreaChartPainter extends CustomPainter {
         final textPainter = TextPainter(
           text: TextSpan(
             text: value.toStringAsFixed(0),
-            style: TextStyle(
-              color: colors.axisLabel,
-              fontSize: 10,
-            ),
+            style: TextStyle(color: colors.axisLabel, fontSize: 10),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
         textPainter.paint(
           canvas,
-          Offset(leftPadding - textPainter.width - 8, y - textPainter.height / 2),
+          Offset(
+            leftPadding - textPainter.width - 8,
+            y - textPainter.height / 2,
+          ),
         );
       }
     }
@@ -1107,10 +1100,7 @@ class _AreaChartPainter extends CustomPainter {
       final textPainter = TextPainter(
         text: TextSpan(
           text: labels[i],
-          style: TextStyle(
-            color: colors.axisLabel,
-            fontSize: 10,
-          ),
+          style: TextStyle(color: colors.axisLabel, fontSize: 10),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -1124,16 +1114,16 @@ class _AreaChartPainter extends CustomPainter {
     for (int seriesIndex = 0; seriesIndex < data.length; seriesIndex++) {
       final series = data[seriesIndex];
       final seriesColor =
-          series.color ?? colors.seriesColors[seriesIndex % colors.seriesColors.length];
+          series.color ??
+          colors.seriesColors[seriesIndex % colors.seriesColors.length];
 
       // Area fill
       final areaPath = Path();
       for (int i = 0; i < series.values.length && i < labels.length; i++) {
         final x = leftPadding + stepX * i;
-        final normalizedValue =
-            (series.values[i] - effectiveMinY) / valueRange;
-        final y = topPadding +
-            chartHeight * (1 - normalizedValue * animationValue);
+        final normalizedValue = (series.values[i] - effectiveMinY) / valueRange;
+        final y =
+            topPadding + chartHeight * (1 - normalizedValue * animationValue);
 
         if (i == 0) {
           areaPath.moveTo(x, chartBottom);
@@ -1143,7 +1133,8 @@ class _AreaChartPainter extends CustomPainter {
         }
       }
       areaPath.lineTo(
-        leftPadding + stepX * (series.values.length - 1).clamp(0, labels.length - 1),
+        leftPadding +
+            stepX * (series.values.length - 1).clamp(0, labels.length - 1),
         chartBottom,
       );
       areaPath.close();
@@ -1163,10 +1154,9 @@ class _AreaChartPainter extends CustomPainter {
       final linePath = Path();
       for (int i = 0; i < series.values.length && i < labels.length; i++) {
         final x = leftPadding + stepX * i;
-        final normalizedValue =
-            (series.values[i] - effectiveMinY) / valueRange;
-        final y = topPadding +
-            chartHeight * (1 - normalizedValue * animationValue);
+        final normalizedValue = (series.values[i] - effectiveMinY) / valueRange;
+        final y =
+            topPadding + chartHeight * (1 - normalizedValue * animationValue);
 
         if (i == 0) {
           linePath.moveTo(x, y);
@@ -1204,10 +1194,7 @@ class _ChartLegend extends StatelessWidget {
   final List<ChartSeries> data;
   final ChartColors colors;
 
-  const _ChartLegend({
-    required this.data,
-    required this.colors,
-  });
+  const _ChartLegend({required this.data, required this.colors});
 
   @override
   Widget build(BuildContext context) {
@@ -1220,7 +1207,8 @@ class _ChartLegend extends StatelessWidget {
         final index = entry.key;
         final series = entry.value;
         final color =
-            series.color ?? colors.seriesColors[index % colors.seriesColors.length];
+            series.color ??
+            colors.seriesColors[index % colors.seriesColors.length];
 
         return Row(
           mainAxisSize: MainAxisSize.min,
@@ -1236,10 +1224,7 @@ class _ChartLegend extends StatelessWidget {
             SizedBox(width: spacingExt.xs),
             Text(
               series.name,
-              style: TextStyle(
-                color: colors.legendText,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: colors.legendText, fontSize: 12),
             ),
           ],
         );

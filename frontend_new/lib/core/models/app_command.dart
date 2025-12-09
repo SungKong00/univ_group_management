@@ -36,5 +36,6 @@ class AppCommand {
   });
 
   @override
-  String toString() => 'AppCommand(id: $id, label: $label, category: $category)';
+  String toString() =>
+      'AppCommand(id: $id, label: $label, category: $category)';
 }

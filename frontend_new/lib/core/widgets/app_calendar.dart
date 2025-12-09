@@ -150,10 +150,7 @@ class _AppCalendarState extends State<AppCalendar> {
       decoration: BoxDecoration(
         color: colors.background,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: colors.border,
-          width: BorderTokens.widthThin,
-        ),
+        border: Border.all(color: colors.border, width: BorderTokens.widthThin),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -219,8 +216,8 @@ class _CalendarHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final spacingExt = context.appSpacing;
-    final isCompact = style == AppCalendarStyle.compact ||
-        style == AppCalendarStyle.mini;
+    final isCompact =
+        style == AppCalendarStyle.compact || style == AppCalendarStyle.mini;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -244,9 +241,9 @@ class _CalendarHeader extends StatelessWidget {
           Text(
             _monthYearText,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colors.headerText,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: colors.headerText,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           _NavButton(
             icon: Icons.chevron_right,
@@ -290,7 +287,9 @@ class _NavButtonState extends State<_NavButton> {
           duration: AnimationTokens.durationQuick,
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: _isHovered ? widget.colors.hoverBackground : Colors.transparent,
+            color: _isHovered
+                ? widget.colors.hoverBackground
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(BorderTokens.radiusSmall),
           ),
           child: Icon(
@@ -371,8 +370,8 @@ class _CalendarGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final spacingExt = context.appSpacing;
-    final isCompact = style == AppCalendarStyle.compact ||
-        style == AppCalendarStyle.mini;
+    final isCompact =
+        style == AppCalendarStyle.compact || style == AppCalendarStyle.mini;
     final cellSize = isCompact ? 32.0 : 40.0;
 
     return Padding(
@@ -389,9 +388,9 @@ class _CalendarGrid extends StatelessWidget {
                   child: Text(
                     label,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.weekdayText,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      color: colors.weekdayText,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               );
@@ -400,7 +399,10 @@ class _CalendarGrid extends StatelessWidget {
           SizedBox(height: spacingExt.small),
           // 날짜 그리드
           ...List.generate(6, (weekIndex) {
-            final weekDays = _calendarDays.sublist(weekIndex * 7, (weekIndex + 1) * 7);
+            final weekDays = _calendarDays.sublist(
+              weekIndex * 7,
+              (weekIndex + 1) * 7,
+            );
             return Padding(
               padding: EdgeInsets.only(bottom: spacingExt.xs),
               child: Row(
@@ -413,7 +415,8 @@ class _CalendarGrid extends StatelessWidget {
                     date: date,
                     colors: colors,
                     size: cellSize,
-                    isSelected: selectedDate != null &&
+                    isSelected:
+                        selectedDate != null &&
                         date.year == selectedDate!.year &&
                         date.month == selectedDate!.month &&
                         date.day == selectedDate!.day,
@@ -506,11 +509,11 @@ class _DayCellState extends State<_DayCell> {
               Text(
                 '${widget.date.day}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: _textColor,
-                      fontWeight: widget.isToday || widget.isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                    ),
+                  color: _textColor,
+                  fontWeight: widget.isToday || widget.isSelected
+                      ? FontWeight.w600
+                      : FontWeight.normal,
+                ),
               ),
               if (widget.hasEvent)
                 Positioned(

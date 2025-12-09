@@ -42,11 +42,16 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
   // Radio group states
   String? _selectedPayment = 'card';
   String? _selectedNotification = 'all';
+  String? _selectedSize = 'medium';
+  String? _selectedSizeSmall = 'a';
+  String? _selectedSizeLarge = 'a';
+  String? _selectedDisabled = 'a';
 
   // Checkbox group states
   List<String> _selectedInterests = ['tech'];
   List<String> _selectedColors = [];
   bool _agreeTerms = false;
+  List<String> _selectedNotificationTypes = ['email'];
 
   // Search input states
   final TextEditingController _searchController = TextEditingController();
@@ -67,6 +72,9 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
   double _brightness = 75;
   double _rating = 3;
   RangeValues _priceRange = const RangeValues(100, 500);
+  double _sliderSizeSmall = 50;
+  double _sliderSizeLarge = 50;
+  RangeValues _percentRange = const RangeValues(20, 80);
 
   // Textarea states
   final TextEditingController _bioController = TextEditingController();
@@ -642,8 +650,8 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
               AppRadioItem(value: 'medium', label: 'Medium'),
               AppRadioItem(value: 'large', label: 'Large'),
             ],
-            value: 'medium',
-            onChanged: (value) {},
+            value: _selectedSize,
+            onChanged: (value) => setState(() => _selectedSize = value),
           ),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 2),
           Wrap(
@@ -666,8 +674,9 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
                       AppRadioItem(value: 'a', label: '옵션 A'),
                       AppRadioItem(value: 'b', label: '옵션 B'),
                     ],
-                    value: 'a',
-                    onChanged: (value) {},
+                    value: _selectedSizeSmall,
+                    onChanged: (value) =>
+                        setState(() => _selectedSizeSmall = value),
                   ),
                 ],
               ),
@@ -687,8 +696,9 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
                       AppRadioItem(value: 'a', label: '옵션 A'),
                       AppRadioItem(value: 'b', label: '옵션 B'),
                     ],
-                    value: 'a',
-                    onChanged: (value) {},
+                    value: _selectedSizeLarge,
+                    onChanged: (value) =>
+                        setState(() => _selectedSizeLarge = value),
                   ),
                 ],
               ),
@@ -708,8 +718,9 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
                       AppRadioItem(value: 'a', label: '옵션 A'),
                       AppRadioItem(value: 'b', label: '옵션 B'),
                     ],
-                    value: 'a',
-                    onChanged: (value) {},
+                    value: _selectedDisabled,
+                    onChanged: (value) =>
+                        setState(() => _selectedDisabled = value),
                   ),
                 ],
               ),
@@ -815,8 +826,9 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
               AppCheckboxItem(value: 'sms', label: 'SMS'),
               AppCheckboxItem(value: 'push', label: '푸시'),
             ],
-            values: const ['email'],
-            onChanged: (values) {},
+            values: _selectedNotificationTypes,
+            onChanged: (values) =>
+                setState(() => _selectedNotificationTypes = values),
           ),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 2),
           Wrap(
@@ -1039,8 +1051,9 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
                     ),
                     SizedBox(height: context.appSpacing.small),
                     AppSlider(
-                      value: 50,
-                      onChanged: (value) {},
+                      value: _sliderSizeSmall,
+                      onChanged: (value) =>
+                          setState(() => _sliderSizeSmall = value),
                       size: AppSliderSize.small,
                     ),
                   ],
@@ -1059,8 +1072,9 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
                     ),
                     SizedBox(height: context.appSpacing.small),
                     AppSlider(
-                      value: 50,
-                      onChanged: (value) {},
+                      value: _sliderSizeLarge,
+                      onChanged: (value) =>
+                          setState(() => _sliderSizeLarge = value),
                       size: AppSliderSize.large,
                     ),
                   ],
@@ -1110,8 +1124,8 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
           ),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 2),
           AppRangeSlider(
-            values: const RangeValues(20, 80),
-            onChanged: (values) {},
+            values: _percentRange,
+            onChanged: (values) => setState(() => _percentRange = values),
             min: 0,
             max: 100,
             divisions: 10,
@@ -1596,57 +1610,62 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
             ),
           ),
           SizedBox(height: ResponsiveTokens.sectionContentGap),
-          AppDataTable<_SampleUser>(
-            columns: [
-              AppTableColumn(
-                id: 'name',
-                label: '이름',
-                width: 150,
-                cellBuilder: (user, _) => Text(user.name),
-              ),
-              AppTableColumn(
-                id: 'email',
-                label: '이메일',
-                width: 200,
-                cellBuilder: (user, _) => Text(user.email),
-              ),
-              AppTableColumn(
-                id: 'role',
-                label: '역할',
-                width: 100,
-                cellBuilder: (user, _) => Text(user.role),
-              ),
-              AppTableColumn(
-                id: 'status',
-                label: '상태',
-                width: 100,
-                cellBuilder: (user, _) => Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: user.isActive
-                        ? context.appColors.stateSuccessBg.withValues(
-                            alpha: 0.2,
-                          )
-                        : context.appColors.stateErrorBg.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    user.isActive ? '활성' : '비활성',
-                    style: TextStyle(
+          SizedBox(
+            width: width,
+            child: AppDataTable<_SampleUser>(
+              columns: [
+                AppTableColumn(
+                  id: 'name',
+                  label: '이름',
+                  width: 150,
+                  cellBuilder: (user, _) => Text(user.name),
+                ),
+                AppTableColumn(
+                  id: 'email',
+                  label: '이메일',
+                  width: 200,
+                  cellBuilder: (user, _) => Text(user.email),
+                ),
+                AppTableColumn(
+                  id: 'role',
+                  label: '역할',
+                  width: 100,
+                  cellBuilder: (user, _) => Text(user.role),
+                ),
+                AppTableColumn(
+                  id: 'status',
+                  label: '상태',
+                  width: 100,
+                  cellBuilder: (user, _) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
                       color: user.isActive
-                          ? context.appColors.stateSuccessText
-                          : context.appColors.stateErrorText,
-                      fontSize: 12,
+                          ? context.appColors.stateSuccessBg.withValues(
+                              alpha: 0.2,
+                            )
+                          : context.appColors.stateErrorBg.withValues(
+                              alpha: 0.2,
+                            ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      user.isActive ? '활성' : '비활성',
+                      style: TextStyle(
+                        color: user.isActive
+                            ? context.appColors.stateSuccessText
+                            : context.appColors.stateErrorText,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-            data: sampleData,
-            showBorder: true,
+              ],
+              data: sampleData,
+              showBorder: true,
+            ),
           ),
           SizedBox(height: ResponsiveTokens.sectionContentGap * 2),
           Text(
@@ -1657,42 +1676,45 @@ class _DataFormComponentsPageState extends State<DataFormComponentsPage> {
             ),
           ),
           SizedBox(height: ResponsiveTokens.sectionContentGap),
-          AppDataTable<_SampleUser>(
-            columns: [
-              AppTableColumn(
-                id: 'name',
-                label: '이름',
-                width: 150,
-                cellBuilder: (user, _) => Text(user.name),
-              ),
-              AppTableColumn(
-                id: 'email',
-                label: '이메일',
-                width: 200,
-                cellBuilder: (user, _) => Text(user.email),
-              ),
-              AppTableColumn(
-                id: 'role',
-                label: '역할',
-                width: 100,
-                cellBuilder: (user, _) => Text(user.role),
-              ),
-            ],
-            data: sampleData,
-            selectionMode: AppDataTableSelectionMode.multiple,
-            selectedRows: _selectedUsers,
-            onSelectionChanged: (selected) {
-              setState(() => _selectedUsers = selected);
-            },
-            sortColumnId: _sortColumnId,
-            sortDirection: _sortDirection,
-            onSort: (columnId, direction) {
-              setState(() {
-                _sortColumnId = columnId;
-                _sortDirection = direction;
-              });
-            },
-            showStripes: true,
+          SizedBox(
+            width: width,
+            child: AppDataTable<_SampleUser>(
+              columns: [
+                AppTableColumn(
+                  id: 'name',
+                  label: '이름',
+                  width: 150,
+                  cellBuilder: (user, _) => Text(user.name),
+                ),
+                AppTableColumn(
+                  id: 'email',
+                  label: '이메일',
+                  width: 200,
+                  cellBuilder: (user, _) => Text(user.email),
+                ),
+                AppTableColumn(
+                  id: 'role',
+                  label: '역할',
+                  width: 100,
+                  cellBuilder: (user, _) => Text(user.role),
+                ),
+              ],
+              data: sampleData,
+              selectionMode: AppDataTableSelectionMode.multiple,
+              selectedRows: _selectedUsers,
+              onSelectionChanged: (selected) {
+                setState(() => _selectedUsers = selected);
+              },
+              sortColumnId: _sortColumnId,
+              sortDirection: _sortDirection,
+              onSort: (columnId, direction) {
+                setState(() {
+                  _sortColumnId = columnId;
+                  _sortDirection = direction;
+                });
+              },
+              showStripes: true,
+            ),
           ),
           if (_selectedUsers.isNotEmpty) ...[
             SizedBox(height: context.appSpacing.small),

@@ -131,7 +131,8 @@ class _AppResizableState extends State<AppResizable> {
     final colorExt = context.appColors;
     final colors = ResizableColors.from(colorExt);
 
-    final handle = widget.customHandle ??
+    final handle =
+        widget.customHandle ??
         _ResizeHandle(
           direction: widget.direction,
           size: widget.handleSize,
@@ -140,34 +141,25 @@ class _AppResizableState extends State<AppResizable> {
         );
 
     final handleWidget = GestureDetector(
-      onHorizontalDragStart:
-          widget.direction != AppResizeDirection.vertical
-              ? _handleDragStart
-              : null,
-      onHorizontalDragUpdate:
-          widget.direction != AppResizeDirection.vertical
-              ? _handleDragUpdate
-              : null,
-      onHorizontalDragEnd:
-          widget.direction != AppResizeDirection.vertical
-              ? _handleDragEnd
-              : null,
-      onVerticalDragStart:
-          widget.direction != AppResizeDirection.horizontal
-              ? _handleDragStart
-              : null,
-      onVerticalDragUpdate:
-          widget.direction != AppResizeDirection.horizontal
-              ? _handleDragUpdate
-              : null,
-      onVerticalDragEnd:
-          widget.direction != AppResizeDirection.horizontal
-              ? _handleDragEnd
-              : null,
-      child: MouseRegion(
-        cursor: _cursor,
-        child: handle,
-      ),
+      onHorizontalDragStart: widget.direction != AppResizeDirection.vertical
+          ? _handleDragStart
+          : null,
+      onHorizontalDragUpdate: widget.direction != AppResizeDirection.vertical
+          ? _handleDragUpdate
+          : null,
+      onHorizontalDragEnd: widget.direction != AppResizeDirection.vertical
+          ? _handleDragEnd
+          : null,
+      onVerticalDragStart: widget.direction != AppResizeDirection.horizontal
+          ? _handleDragStart
+          : null,
+      onVerticalDragUpdate: widget.direction != AppResizeDirection.horizontal
+          ? _handleDragUpdate
+          : null,
+      onVerticalDragEnd: widget.direction != AppResizeDirection.horizontal
+          ? _handleDragEnd
+          : null,
+      child: MouseRegion(cursor: _cursor, child: handle),
     );
 
     if (widget.direction == AppResizeDirection.horizontal ||
@@ -175,27 +167,15 @@ class _AppResizableState extends State<AppResizable> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: widget.handleAtEnd
-            ? [
-                SizedBox(width: _size, child: widget.child),
-                handleWidget,
-              ]
-            : [
-                handleWidget,
-                SizedBox(width: _size, child: widget.child),
-              ],
+            ? [SizedBox(width: _size, child: widget.child), handleWidget]
+            : [handleWidget, SizedBox(width: _size, child: widget.child)],
       );
     } else {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: widget.handleAtEnd
-            ? [
-                SizedBox(height: _size, child: widget.child),
-                handleWidget,
-              ]
-            : [
-                handleWidget,
-                SizedBox(height: _size, child: widget.child),
-              ],
+            ? [SizedBox(height: _size, child: widget.child), handleWidget]
+            : [handleWidget, SizedBox(height: _size, child: widget.child)],
       );
     }
   }
@@ -235,7 +215,8 @@ class _ResizeHandleState extends State<_ResizeHandle> {
 
   @override
   Widget build(BuildContext context) {
-    final isHorizontal = widget.direction == AppResizeDirection.horizontal ||
+    final isHorizontal =
+        widget.direction == AppResizeDirection.horizontal ||
         widget.direction == AppResizeDirection.both;
 
     return MouseRegion(
@@ -243,8 +224,8 @@ class _ResizeHandleState extends State<_ResizeHandle> {
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: AnimationTokens.durationQuick,
-        width: isHorizontal ? widget.size : double.infinity,
-        height: isHorizontal ? double.infinity : widget.size,
+        width: isHorizontal ? widget.size : null,
+        height: isHorizontal ? null : widget.size,
         decoration: BoxDecoration(
           color: _backgroundColor,
           border: Border(
@@ -263,10 +244,7 @@ class _ResizeHandleState extends State<_ResizeHandle> {
           ),
         ),
         child: Center(
-          child: _GripIndicator(
-            direction: widget.direction,
-            color: _gripColor,
-          ),
+          child: _GripIndicator(direction: widget.direction, color: _gripColor),
         ),
       ),
     );
@@ -278,14 +256,12 @@ class _GripIndicator extends StatelessWidget {
   final AppResizeDirection direction;
   final Color color;
 
-  const _GripIndicator({
-    required this.direction,
-    required this.color,
-  });
+  const _GripIndicator({required this.direction, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    final isHorizontal = direction == AppResizeDirection.horizontal ||
+    final isHorizontal =
+        direction == AppResizeDirection.horizontal ||
         direction == AppResizeDirection.both;
 
     return isHorizontal
@@ -374,7 +350,10 @@ class _AppSplitPanelState extends State<AppSplitPanel> {
     _ratio = widget.initialRatio.clamp(widget.minRatio, widget.maxRatio);
   }
 
-  void _handleDragUpdate(DragUpdateDetails details, BoxConstraints constraints) {
+  void _handleDragUpdate(
+    DragUpdateDetails details,
+    BoxConstraints constraints,
+  ) {
     setState(() {
       final totalSize = widget.direction == AppResizeDirection.horizontal
           ? constraints.maxWidth
@@ -384,7 +363,10 @@ class _AppSplitPanelState extends State<AppSplitPanel> {
           ? details.delta.dx
           : details.delta.dy;
 
-      _ratio = (_ratio + delta / totalSize).clamp(widget.minRatio, widget.maxRatio);
+      _ratio = (_ratio + delta / totalSize).clamp(
+        widget.minRatio,
+        widget.maxRatio,
+      );
     });
     widget.onRatioChanged?.call(_ratio);
   }
@@ -412,24 +394,21 @@ class _AppSplitPanelState extends State<AppSplitPanel> {
         final handle = GestureDetector(
           onHorizontalDragStart:
               widget.direction == AppResizeDirection.horizontal
-                  ? (_) => setState(() => _isDragging = true)
-                  : null,
+              ? (_) => setState(() => _isDragging = true)
+              : null,
           onHorizontalDragUpdate:
               widget.direction == AppResizeDirection.horizontal
-                  ? (d) => _handleDragUpdate(d, constraints)
-                  : null,
-          onHorizontalDragEnd:
-              widget.direction == AppResizeDirection.horizontal
-                  ? (_) => setState(() => _isDragging = false)
-                  : null,
-          onVerticalDragStart:
-              widget.direction == AppResizeDirection.vertical
-                  ? (_) => setState(() => _isDragging = true)
-                  : null,
-          onVerticalDragUpdate:
-              widget.direction == AppResizeDirection.vertical
-                  ? (d) => _handleDragUpdate(d, constraints)
-                  : null,
+              ? (d) => _handleDragUpdate(d, constraints)
+              : null,
+          onHorizontalDragEnd: widget.direction == AppResizeDirection.horizontal
+              ? (_) => setState(() => _isDragging = false)
+              : null,
+          onVerticalDragStart: widget.direction == AppResizeDirection.vertical
+              ? (_) => setState(() => _isDragging = true)
+              : null,
+          onVerticalDragUpdate: widget.direction == AppResizeDirection.vertical
+              ? (d) => _handleDragUpdate(d, constraints)
+              : null,
           onVerticalDragEnd: widget.direction == AppResizeDirection.vertical
               ? (_) => setState(() => _isDragging = false)
               : null,

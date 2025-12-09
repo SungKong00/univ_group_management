@@ -170,10 +170,7 @@ class _AppCollapsibleState extends State<AppCollapsible>
           child: AnimatedBuilder(
             animation: _heightFactor,
             builder: (context, child) {
-              return Align(
-                heightFactor: _heightFactor.value,
-                child: child,
-              );
+              return Align(heightFactor: _heightFactor.value, child: child);
             },
             child: Padding(
               padding: EdgeInsets.all(spacingExt.medium),
@@ -187,26 +184,26 @@ class _AppCollapsibleState extends State<AppCollapsible>
     return switch (widget.style) {
       AppCollapsibleStyle.plain => content,
       AppCollapsibleStyle.bordered => Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: colors.border,
-              width: BorderTokens.widthThin,
-            ),
-            borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: colors.border,
+            width: BorderTokens.widthThin,
           ),
-          child: content,
+          borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
         ),
+        child: content,
+      ),
       AppCollapsibleStyle.card => Container(
-          decoration: BoxDecoration(
-            color: colors.background,
-            borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-            border: Border.all(
-              color: colors.border,
-              width: BorderTokens.widthThin,
-            ),
+        decoration: BoxDecoration(
+          color: colors.background,
+          borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+          border: Border.all(
+            color: colors.border,
+            width: BorderTokens.widthThin,
           ),
-          child: content,
         ),
+        child: content,
+      ),
     };
   }
 }
@@ -273,16 +270,16 @@ class _HeaderState extends State<_Header> {
                     Text(
                       widget.title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: widget.colors.headerText,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: widget.colors.headerText,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     if (widget.subtitle != null)
                       Text(
                         widget.subtitle!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: widget.colors.icon,
-                            ),
+                          color: widget.colors.icon,
+                        ),
                       ),
                   ],
                 ),
@@ -307,10 +304,7 @@ class _HeaderState extends State<_Header> {
     if (widget.iconRotation != null && widget.expandIcon == null) {
       return RotationTransition(
         turns: widget.iconRotation!,
-        child: Icon(
-          Icons.expand_more,
-          color: widget.colors.icon,
-        ),
+        child: Icon(Icons.expand_more, color: widget.colors.icon),
       );
     }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/extensions/app_color_extension.dart';
 import '../../../../core/theme/extensions/app_spacing_extension.dart';
+import '../../../../core/theme/border_tokens.dart';
+import '../../../../core/theme/enums.dart';
 import '../../../../core/widgets/app_collapsible.dart';
 import '../../../../core/widgets/app_timeline.dart';
 import '../../../../core/widgets/app_calendar.dart';
@@ -11,10 +13,33 @@ import '../../../../core/widgets/app_resizable.dart';
 import '../../../../core/widgets/app_chart.dart';
 import '../../../../core/widgets/app_rich_text_editor.dart';
 import '../../../../core/widgets/app_kanban_board.dart';
+import '../../../../core/widgets/app_carousel.dart';
+import '../../../../core/widgets/app_card.dart';
 
 /// Phase 7: 특수 컴포넌트 쇼케이스 페이지
-class SpecialComponentsPage extends StatelessWidget {
+class SpecialComponentsPage extends StatefulWidget {
   const SpecialComponentsPage({super.key});
+
+  @override
+  State<SpecialComponentsPage> createState() => _SpecialComponentsPageState();
+}
+
+class _SpecialComponentsPageState extends State<SpecialComponentsPage> {
+  late RichTextEditorController _readOnlyController;
+
+  @override
+  void initState() {
+    super.initState();
+    _readOnlyController = RichTextEditorController(
+      initialText: '이것은 읽기 전용 에디터입니다. 내용을 수정할 수 없습니다.',
+    );
+  }
+
+  @override
+  void dispose() {
+    _readOnlyController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,9 +100,9 @@ class SpecialComponentsPage extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: colorExt.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
+          color: colorExt.textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -232,10 +257,7 @@ class SpecialComponentsPage extends StatelessWidget {
       children: [
         Text('기본 캘린더:', style: Theme.of(context).textTheme.titleSmall),
         SizedBox(height: spacingExt.small),
-        SizedBox(
-          width: 350,
-          child: _CalendarDemo(),
-        ),
+        SizedBox(width: 350, child: _CalendarDemo()),
         SizedBox(height: spacingExt.medium),
 
         Text('컴팩트 캘린더:', style: Theme.of(context).textTheme.titleSmall),
@@ -246,9 +268,16 @@ class SpecialComponentsPage extends StatelessWidget {
             style: AppCalendarStyle.compact,
             selectedDate: DateTime.now(),
             events: {
-              DateTime(DateTime.now().year, DateTime.now().month, 10): ['Event 1'],
-              DateTime(DateTime.now().year, DateTime.now().month, 15): ['Event 2'],
-              DateTime(DateTime.now().year, DateTime.now().month, 20): ['Event 3', 'Event 4'],
+              DateTime(DateTime.now().year, DateTime.now().month, 10): [
+                'Event 1',
+              ],
+              DateTime(DateTime.now().year, DateTime.now().month, 15): [
+                'Event 2',
+              ],
+              DateTime(DateTime.now().year, DateTime.now().month, 20): [
+                'Event 3',
+                'Event 4',
+              ],
             },
           ),
         ),
@@ -292,24 +321,157 @@ class SpecialComponentsPage extends StatelessWidget {
       children: [
         Text('그리드 갤러리:', style: Theme.of(context).textTheme.titleSmall),
         SizedBox(height: spacingExt.small),
-        AppImageGallery(
-          images: sampleImages,
-          crossAxisCount: 3,
-          spacing: 8,
-        ),
+        AppImageGallery(images: sampleImages, crossAxisCount: 3, spacing: 8),
         SizedBox(height: spacingExt.large),
 
-        Text('캐러셀 갤러리:', style: Theme.of(context).textTheme.titleSmall),
+        Text('풀 와이드 이미지 캐러셀:', style: Theme.of(context).textTheme.titleSmall),
         SizedBox(height: spacingExt.small),
-        SizedBox(
-          height: 250,
-          child: AppImageGallery(
-            images: sampleImages.take(4).toList(),
-            layout: AppImageGalleryLayout.carousel,
-            aspectRatio: 16 / 9,
-          ),
-        ),
+        // 전체 너비를 사용하는 큰 이미지 캐러셀
+        _buildFullWidthImageCarousel(context, sampleImages),
       ],
+    );
+  }
+
+  /// 전체 너비를 사용하는 이미지 캐러셀
+  Widget _buildFullWidthImageCarousel(
+    BuildContext context,
+    List<AppGalleryImage> images,
+  ) {
+    final colorExt = context.appColors;
+    final spacingExt = context.appSpacing;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 전체 너비에서 패딩 제외한 크기
+        final fullWidth = constraints.maxWidth;
+        // 카드 내부 패딩(AppCard 기본 패딩 16px * 2)을 고려한 이미지 너비
+        final cardPadding = 32.0;
+        final imageWidth = fullWidth - 48 - cardPadding;
+        // 16:9 비율로 이미지 높이 계산
+        final imageHeight = imageWidth * 9 / 16;
+
+        return AppCarousel(
+          items: images.asMap().entries.map((entry) {
+            final index = entry.key;
+            final image = entry.value;
+
+            return AppCard(
+              elevation: AppCardElevation.low,
+              onTap: () {
+                debugPrint('Full width image ${index + 1} tapped');
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 큰 이미지 영역 (16:9 비율)
+                  Container(
+                    height: imageHeight,
+                    decoration: BoxDecoration(
+                      color: colorExt.surfaceQuaternary,
+                      borderRadius: BorderRadius.circular(BorderTokens.radiusSmall),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.network(
+                      image.url,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            size: 80,
+                            color: colorExt.textTertiary,
+                          ),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(height: spacingExt.large),
+                  // 제목
+                  Text(
+                    image.caption ?? 'Image ${index + 1}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: colorExt.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: spacingExt.small),
+                  // 설명
+                  Text(
+                    '고해상도 이미지 샘플입니다. 전체 너비를 활용한 대형 캐러셀로, 갤러리나 포트폴리오 등에 적합합니다.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorExt.textSecondary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: spacingExt.medium),
+                  // 메타 정보
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.photo_size_select_actual,
+                        size: 16,
+                        color: colorExt.textTertiary,
+                      ),
+                      SizedBox(width: spacingExt.xs),
+                      Text(
+                        '1920 x 1080',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorExt.textTertiary,
+                        ),
+                      ),
+                      SizedBox(width: spacingExt.large),
+                      Icon(
+                        Icons.visibility_outlined,
+                        size: 16,
+                        color: colorExt.textTertiary,
+                      ),
+                      SizedBox(width: spacingExt.xs),
+                      Text(
+                        '${(index + 1) * 234}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorExt.textTertiary,
+                        ),
+                      ),
+                      SizedBox(width: spacingExt.large),
+                      Icon(
+                        Icons.favorite_border,
+                        size: 16,
+                        color: colorExt.textTertiary,
+                      ),
+                      SizedBox(width: spacingExt.xs),
+                      Text(
+                        '${(index + 1) * 42}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorExt.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          // 전체 너비에서 약간의 여백만 남기고 사용
+          itemWidth: fullWidth - 48,
+          gap: 24,
+          showNavigation: true,
+          padding: EdgeInsets.symmetric(horizontal: 24),
+        );
+      },
     );
   }
 
@@ -346,12 +508,12 @@ class SpecialComponentsPage extends StatelessWidget {
 
         Text('크기 비교:', style: Theme.of(context).textTheme.titleSmall),
         SizedBox(height: spacingExt.small),
-        Row(
+        Wrap(
+          spacing: spacingExt.medium,
+          runSpacing: spacingExt.small,
           children: [
             AppRating(value: 3.5, size: AppRatingSize.small, readOnly: true),
-            SizedBox(width: spacingExt.medium),
             AppRating(value: 3.5, size: AppRatingSize.medium, readOnly: true),
-            SizedBox(width: spacingExt.medium),
             AppRating(value: 3.5, size: AppRatingSize.large, readOnly: true),
           ],
         ),
@@ -493,14 +655,8 @@ void main() {
           child: AppChart(
             type: AppChartType.line,
             data: [
-              ChartSeries(
-                name: '매출',
-                values: [120, 180, 150, 200, 250, 220],
-              ),
-              ChartSeries(
-                name: '비용',
-                values: [80, 100, 90, 130, 150, 140],
-              ),
+              ChartSeries(name: '매출', values: [120, 180, 150, 200, 250, 220]),
+              ChartSeries(name: '비용', values: [80, 100, 90, 130, 150, 140]),
             ],
             labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
             showLegend: true,
@@ -515,14 +671,8 @@ void main() {
           child: AppChart(
             type: AppChartType.bar,
             data: [
-              ChartSeries(
-                name: '2023',
-                values: [30, 50, 40],
-              ),
-              ChartSeries(
-                name: '2024',
-                values: [45, 60, 55],
-              ),
+              ChartSeries(name: '2023', values: [30, 50, 40]),
+              ChartSeries(name: '2024', values: [45, 60, 55]),
             ],
             labels: ['Q1', 'Q2', 'Q3'],
             showLegend: true,
@@ -533,7 +683,9 @@ void main() {
 
         Text('파이 차트:', style: Theme.of(context).textTheme.titleSmall),
         SizedBox(height: spacingExt.small),
-        Row(
+        Wrap(
+          spacing: spacingExt.large,
+          runSpacing: spacingExt.large,
           children: [
             SizedBox(
               width: 300,
@@ -541,26 +693,19 @@ void main() {
               child: AppChart(
                 type: AppChartType.pie,
                 data: [
-                  ChartSeries(
-                    name: '카테고리',
-                    values: [40, 30, 20, 10],
-                  ),
+                  ChartSeries(name: '카테고리', values: [40, 30, 20, 10]),
                 ],
                 labels: ['A', 'B', 'C', 'D'],
                 showValues: true,
               ),
             ),
-            SizedBox(width: spacingExt.large),
             SizedBox(
               width: 300,
               height: 300,
               child: AppChart(
                 type: AppChartType.doughnut,
                 data: [
-                  ChartSeries(
-                    name: '카테고리',
-                    values: [35, 25, 25, 15],
-                  ),
+                  ChartSeries(name: '카테고리', values: [35, 25, 25, 15]),
                 ],
                 labels: ['제품 A', '제품 B', '제품 C', '제품 D'],
                 showValues: true,
@@ -603,9 +748,7 @@ void main() {
         Text('읽기 전용:', style: Theme.of(context).textTheme.titleSmall),
         SizedBox(height: spacingExt.small),
         AppRichTextEditor(
-          controller: RichTextEditorController(
-            initialText: '이것은 읽기 전용 에디터입니다. 내용을 수정할 수 없습니다.',
-          ),
+          controller: _readOnlyController,
           readOnly: true,
           showToolbar: false,
           minHeight: 80,
@@ -650,7 +793,10 @@ void main() {
                     description: 'OAuth 2.0 기반 로그인 시스템 개발',
                     labels: [
                       KanbanLabel(text: '기능', color: colorExt.stateInfoBg),
-                      KanbanLabel(text: '우선순위 높음', color: colorExt.stateErrorBg),
+                      KanbanLabel(
+                        text: '우선순위 높음',
+                        color: colorExt.stateErrorBg,
+                      ),
                     ],
                     dueDate: DateTime.now().add(const Duration(days: 3)),
                     commentCount: 5,
@@ -706,10 +852,7 @@ void main() {
                       KanbanLabel(text: '설정', color: colorExt.textTertiary),
                     ],
                   ),
-                  KanbanCard(
-                    id: '6',
-                    title: '개발 환경 구축',
-                  ),
+                  KanbanCard(id: '6', title: '개발 환경 구축'),
                 ],
               ),
             ],

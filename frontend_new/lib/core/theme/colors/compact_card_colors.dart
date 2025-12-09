@@ -12,6 +12,11 @@ class CompactCardColors {
   final Color meta;
   final Color divider;
 
+  /// 선택 상태 전용 색상
+  final Color selectedBackground;
+  final Color selectedBorder;
+  final Color selectedTitle;
+
   CompactCardColors({
     required this.background,
     required this.backgroundHover,
@@ -19,6 +24,9 @@ class CompactCardColors {
     required this.title,
     required this.meta,
     required this.divider,
+    required this.selectedBackground,
+    required this.selectedBorder,
+    required this.selectedTitle,
   });
 
   /// Standard variant (기본 스타일 - 중립적인 카드)
@@ -30,6 +38,10 @@ class CompactCardColors {
       title: colors.textPrimary,
       meta: colors.textTertiary,
       divider: colors.dividerPrimary,
+      // 선택 상태: Brand Primary 강조
+      selectedBackground: colors.brandPrimary.withValues(alpha: 0.15),
+      selectedBorder: colors.brandPrimary,
+      selectedTitle: colors.brandPrimary,
     );
   }
 
@@ -42,6 +54,10 @@ class CompactCardColors {
       title: colors.brandSecondary,
       meta: colors.textTertiary,
       divider: colors.brandPrimary.withValues(alpha: 0.2),
+      // 선택 상태: Brand Primary 더 강하게 강조
+      selectedBackground: colors.brandPrimary.withValues(alpha: 0.25),
+      selectedBorder: colors.brandPrimary,
+      selectedTitle: colors.brandPrimary,
     );
   }
 
@@ -54,6 +70,10 @@ class CompactCardColors {
       title: colors.stateSuccessText,
       meta: colors.textTertiary,
       divider: colors.stateSuccessBg.withValues(alpha: 0.2),
+      // 선택 상태: Success 색상 강조
+      selectedBackground: colors.stateSuccessBg.withValues(alpha: 0.25),
+      selectedBorder: colors.stateSuccessText,
+      selectedTitle: colors.stateSuccessText,
     );
   }
 }

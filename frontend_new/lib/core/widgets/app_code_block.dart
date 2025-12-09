@@ -158,10 +158,7 @@ class _AppCodeBlockState extends State<AppCodeBlock> {
       decoration: BoxDecoration(
         color: colors.background,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: colors.border,
-          width: BorderTokens.widthThin,
-        ),
+        border: Border.all(color: colors.border, width: BorderTokens.widthThin),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -192,12 +189,12 @@ class _AppCodeBlockState extends State<AppCodeBlock> {
       final isHighlighted = widget.highlightLines?.contains(i + 1) ?? false;
 
       if (isHighlighted) {
-        spans.add(TextSpan(
-          text: line,
-          style: TextStyle(
-            backgroundColor: colors.selectionBackground,
+        spans.add(
+          TextSpan(
+            text: line,
+            style: TextStyle(backgroundColor: colors.selectionBackground),
           ),
-        ));
+        );
       } else {
         spans.add(TextSpan(text: line));
       }
@@ -253,17 +250,13 @@ class _CodeHeader extends StatelessWidget {
             child: Text(
               filename ?? languageLabel,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.headerText,
-                    fontFamily: 'monospace',
-                  ),
+                color: colors.headerText,
+                fontFamily: 'monospace',
+              ),
             ),
           ),
           if (showCopyButton)
-            _CopyButton(
-              copied: copied,
-              colors: colors,
-              onCopy: onCopy,
-            ),
+            _CopyButton(copied: copied, colors: colors, onCopy: onCopy),
         ],
       ),
     );
@@ -370,17 +363,14 @@ class _CopyButtonState extends State<_CopyButton> {
                 color: widget.copied
                     ? Colors.green
                     : (_isHovered
-                        ? widget.colors.copyButtonHover
-                        : widget.colors.copyButton),
+                          ? widget.colors.copyButtonHover
+                          : widget.colors.copyButton),
               ),
               if (widget.copied) ...[
                 const SizedBox(width: 4),
                 Text(
                   '복사됨',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.green,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.green),
                 ),
               ],
             ],
@@ -396,10 +386,7 @@ class AppInlineCode extends StatelessWidget {
   /// 코드 문자열
   final String code;
 
-  const AppInlineCode({
-    super.key,
-    required this.code,
-  });
+  const AppInlineCode({super.key, required this.code});
 
   @override
   Widget build(BuildContext context) {

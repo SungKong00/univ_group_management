@@ -111,23 +111,42 @@ class _AppImageGalleryState extends State<AppImageGallery> {
       );
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: widget.crossAxisCount,
-        crossAxisSpacing: widget.spacing,
-        mainAxisSpacing: widget.spacing,
-        childAspectRatio: widget.aspectRatio,
-      ),
-      itemCount: widget.images.length,
-      itemBuilder: (context, index) {
-        return _GalleryItem(
-          image: widget.images[index],
-          colors: colors,
-          onTap: () => _openLightbox(index),
-          errorBuilder: widget.errorBuilder,
-          loadingBuilder: widget.loadingBuilder,
+    // LayoutBuilder를 사용하여 부모 크기 기반으로 높이 계산
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 부모 너비 기반으로 각 아이템 크기 계산
+        final availableWidth = constraints.maxWidth;
+        final totalSpacing = widget.spacing * (widget.crossAxisCount - 1);
+        final itemWidth =
+            (availableWidth - totalSpacing) / widget.crossAxisCount;
+        final itemHeight = itemWidth / widget.aspectRatio;
+
+        // 그리드의 행 수 계산
+        final rowCount = (widget.images.length / widget.crossAxisCount).ceil();
+        final totalHeight =
+            rowCount * itemHeight + (rowCount - 1) * widget.spacing;
+
+        return SizedBox(
+          height: totalHeight,
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: widget.crossAxisCount,
+              crossAxisSpacing: widget.spacing,
+              mainAxisSpacing: widget.spacing,
+              childAspectRatio: widget.aspectRatio,
+            ),
+            itemCount: widget.images.length,
+            itemBuilder: (context, index) {
+              return _GalleryItem(
+                image: widget.images[index],
+                colors: colors,
+                onTap: () => _openLightbox(index),
+                errorBuilder: widget.errorBuilder,
+                loadingBuilder: widget.loadingBuilder,
+              );
+            },
+          ),
         );
       },
     );
@@ -214,7 +233,10 @@ class _GalleryItemState extends State<_GalleryItem> {
   }
 
   Widget _defaultErrorBuilder(
-      BuildContext context, Object error, StackTrace? stack) {
+    BuildContext context,
+    Object error,
+    StackTrace? stack,
+  ) {
     return Container(
       color: widget.colors.imageBackground,
       child: Icon(
@@ -225,7 +247,10 @@ class _GalleryItemState extends State<_GalleryItem> {
   }
 
   Widget _defaultLoadingBuilder(
-      BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+    BuildContext context,
+    Widget child,
+    ImageChunkEvent? loadingProgress,
+  ) {
     if (loadingProgress == null) return child;
     return Container(
       color: widget.colors.imageBackground,
@@ -233,7 +258,7 @@ class _GalleryItemState extends State<_GalleryItem> {
         child: CircularProgressIndicator(
           value: loadingProgress.expectedTotalBytes != null
               ? loadingProgress.cumulativeBytesLoaded /
-                  loadingProgress.expectedTotalBytes!
+                    loadingProgress.expectedTotalBytes!
               : null,
         ),
       ),
@@ -470,14 +495,15 @@ class _LightboxState extends State<_Lightbox> {
                   ),
                   decoration: BoxDecoration(
                     color: colors.captionBackground,
-                    borderRadius:
-                        BorderRadius.circular(BorderTokens.radiusMedium),
+                    borderRadius: BorderRadius.circular(
+                      BorderTokens.radiusMedium,
+                    ),
                   ),
                   child: Text(
                     '${_currentIndex + 1} / ${widget.images.length}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colors.captionText,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: colors.captionText),
                   ),
                 ),
               ),
@@ -497,14 +523,15 @@ class _LightboxState extends State<_Lightbox> {
                     ),
                     decoration: BoxDecoration(
                       color: colors.captionBackground,
-                      borderRadius:
-                          BorderRadius.circular(BorderTokens.radiusMedium),
+                      borderRadius: BorderRadius.circular(
+                        BorderTokens.radiusMedium,
+                      ),
                     ),
                     child: Text(
                       widget.images[_currentIndex].caption!,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: colors.captionText,
-                          ),
+                        color: colors.captionText,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),

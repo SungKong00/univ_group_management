@@ -77,7 +77,7 @@ class BottomNavColors {
         icon: c.textSecondary,
         iconActive: c.brandPrimary,
         border: c.borderPrimary,
-        indicator: c.brandPrimary,
+        indicator: c.brandPrimary.withValues(alpha: 0.15),
         badgeBackground: c.stateErrorBg,
         badgeText: Colors.white,
       ),

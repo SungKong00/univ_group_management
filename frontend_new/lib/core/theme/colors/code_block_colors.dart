@@ -92,14 +92,14 @@ class CodeBlockColors {
         copyButton: c.textTertiary,
         copyButtonHover: c.textPrimary,
         // 기본값: 밝은 톤으로 다크 배경에 보이도록
-        syntaxKeyword: c.stateInfoBg,      // Blue (Info)
-        syntaxString: c.stateWarningBg,    // Orange (Warning)
-        syntaxNumber: c.stateSuccessBg,    // Green (Success)
-        syntaxComment: c.textTertiary,     // Muted
-        syntaxFunction: c.brandPrimary,    // Brand
-        syntaxClass: c.textSecondary,      // Secondary text
-        syntaxVariable: c.brandSecondary,  // Brand secondary
-        syntaxOperator: c.textPrimary,     // Primary text
+        syntaxKeyword: c.stateInfoBg, // Blue (Info)
+        syntaxString: c.stateWarningBg, // Orange (Warning)
+        syntaxNumber: c.stateSuccessBg, // Green (Success)
+        syntaxComment: c.textTertiary, // Muted
+        syntaxFunction: c.brandPrimary, // Brand
+        syntaxClass: c.textSecondary, // Secondary text
+        syntaxVariable: c.brandSecondary, // Brand secondary
+        syntaxOperator: c.textPrimary, // Primary text
       );
     } else {
       return CodeBlockColors(
@@ -114,14 +114,14 @@ class CodeBlockColors {
         copyButton: c.textTertiary,
         copyButtonHover: c.textPrimary,
         // 라이트 테마: 낮은 채도, 진한 톤
-        syntaxKeyword: c.stateInfoText,      // Dark blue
-        syntaxString: c.stateErrorText,      // Dark red
-        syntaxNumber: c.stateSuccessText,    // Dark green
-        syntaxComment: c.textQuaternary,     // Very light gray
-        syntaxFunction: c.textSecondary,     // Dark gray
-        syntaxClass: c.textSecondary,        // Dark gray
-        syntaxVariable: c.textPrimary,       // Black
-        syntaxOperator: c.textPrimary,       // Black
+        syntaxKeyword: c.stateInfoText, // Dark blue
+        syntaxString: c.stateErrorText, // Dark red
+        syntaxNumber: c.stateSuccessText, // Dark green
+        syntaxComment: c.textQuaternary, // Very light gray
+        syntaxFunction: c.textSecondary, // Dark gray
+        syntaxClass: c.textSecondary, // Dark gray
+        syntaxVariable: c.textPrimary, // Black
+        syntaxOperator: c.textPrimary, // Black
       );
     }
   }

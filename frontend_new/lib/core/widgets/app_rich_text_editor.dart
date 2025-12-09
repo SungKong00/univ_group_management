@@ -221,15 +221,12 @@ class _AppRichTextEditorState extends State<AppRichTextEditor> {
                 isDisabled: widget.isDisabled,
                 onFormatPressed: _toggleFormat,
               ),
-              Container(
-                height: 1,
-                color: colors.border,
-              ),
+              Container(height: 1, color: colors.border),
             ],
-            ConstrainedBox(
+            Container(
               constraints: BoxConstraints(
                 minHeight: _editorHeight,
-                maxHeight: widget.maxHeight ?? double.infinity,
+                maxHeight: widget.maxHeight ?? 500, // double.infinity 대신 기본 최대 높이 설정
               ),
               child: Container(
                 color: isDisabled
@@ -317,7 +314,7 @@ class RichTextEditorController extends ChangeNotifier {
   final Map<TextRange, Set<RichTextFormat>> _formatRanges = {};
 
   RichTextEditorController({String? initialText})
-      : _textController = TextEditingController(text: initialText) {
+    : _textController = TextEditingController(text: initialText) {
     _textController.addListener(notifyListeners);
   }
 
@@ -474,7 +471,12 @@ class _Toolbar extends StatelessWidget {
 
   // 포맷 그룹 정의
   static const List<List<RichTextFormat>> _formatGroups = [
-    [RichTextFormat.bold, RichTextFormat.italic, RichTextFormat.underline, RichTextFormat.strikethrough],
+    [
+      RichTextFormat.bold,
+      RichTextFormat.italic,
+      RichTextFormat.underline,
+      RichTextFormat.strikethrough,
+    ],
     [RichTextFormat.heading1, RichTextFormat.heading2, RichTextFormat.heading3],
     [RichTextFormat.bulletList, RichTextFormat.numberedList],
     [RichTextFormat.blockquote, RichTextFormat.code, RichTextFormat.link],
@@ -494,8 +496,9 @@ class _Toolbar extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: _formatGroups.map((group) {
-            final enabledInGroup =
-                group.where((f) => enabledFormats.contains(f)).toList();
+            final enabledInGroup = group
+                .where((f) => enabledFormats.contains(f))
+                .toList();
             if (enabledInGroup.isEmpty) return const SizedBox.shrink();
 
             return Row(
@@ -555,7 +558,9 @@ class _ToolbarButtonState extends State<_ToolbarButton> {
   Widget build(BuildContext context) {
     Color backgroundColor = Colors.transparent;
     if (widget.isActive) {
-      backgroundColor = widget.colors.toolbarButtonActive.withValues(alpha: 0.15);
+      backgroundColor = widget.colors.toolbarButtonActive.withValues(
+        alpha: 0.15,
+      );
     } else if (_isHovered && !widget.isDisabled) {
       backgroundColor = widget.colors.toolbarButtonHover;
     }
@@ -582,8 +587,8 @@ class _ToolbarButtonState extends State<_ToolbarButton> {
               color: widget.isDisabled
                   ? widget.colors.toolbarButton.withValues(alpha: 0.4)
                   : widget.isActive
-                      ? widget.colors.toolbarButtonActive
-                      : widget.colors.toolbarButton,
+                  ? widget.colors.toolbarButtonActive
+                  : widget.colors.toolbarButton,
             ),
           ),
         ),

@@ -164,9 +164,13 @@ class _AppSearchInputState extends State<AppSearchInput> {
     if (widget.controller == null) {
       _controller.dispose();
     }
+    _focusNode.removeListener(_onFocusChanged);
     _focusNode.dispose();
     _debounceTimer?.cancel();
-    _removeOverlay();
+    // 오버레이 안전하게 제거
+    _overlayEntry?.remove();
+    _overlayEntry?.dispose();
+    _overlayEntry = null;
     super.dispose();
   }
 

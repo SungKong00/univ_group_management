@@ -210,21 +210,19 @@ class _AppRatingState extends State<AppRating> {
           if (widget.showValue || widget.auxiliaryText != null) ...[
             SizedBox(width: 8),
             Text(
-              widget.showValue
-                  ? '${widget.value}'
-                  : '',
+              widget.showValue ? '${widget.value}' : '',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colors.text,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: colors.text,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             if (widget.auxiliaryText != null) ...[
               SizedBox(width: 4),
               Text(
                 widget.auxiliaryText!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colors.secondaryText,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: colors.secondaryText),
               ),
             ],
           ],
@@ -286,17 +284,11 @@ class _RatingIcon extends StatelessWidget {
       onHover: (event) => onHover(event.localPosition),
       onExit: (_) => onHoverExit(),
       child: GestureDetector(
-        onTapDown: readOnly
-            ? null
-            : (details) => onTap(details.localPosition),
+        onTapDown: readOnly ? null : (details) => onTap(details.localPosition),
         child: AnimatedContainer(
           duration: AnimationTokens.durationQuick,
           padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Icon(
-            _icon,
-            size: iconSize,
-            color: _color,
-          ),
+          child: Icon(_icon, size: iconSize, color: _color),
         ),
       ),
     );

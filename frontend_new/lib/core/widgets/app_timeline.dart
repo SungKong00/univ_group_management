@@ -104,52 +104,52 @@ class _VerticalTimeline extends StatelessWidget {
     final spacingExt = context.appSpacing;
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: items.asMap().entries.map((entry) {
         final index = entry.key;
         final item = entry.value;
         final isFirst = index == 0;
         final isLast = index == items.length - 1;
 
-        final isLeft = position == AppTimelinePosition.left ||
+        final isLeft =
+            position == AppTimelinePosition.left ||
             (position == AppTimelinePosition.alternate && index.isEven);
 
-        return IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!isLeft) ...[
-                Expanded(
-                  child: _TimelineContent(
-                    item: item,
-                    colors: colors,
-                    colorExt: colorExt,
-                    alignment: CrossAxisAlignment.end,
-                  ),
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!isLeft) ...[
+              Expanded(
+                child: _TimelineContent(
+                  item: item,
+                  colors: colors,
+                  colorExt: colorExt,
+                  alignment: CrossAxisAlignment.end,
                 ),
-                SizedBox(width: spacingExt.medium),
-              ],
-              _TimelineNode(
-                item: item,
-                colors: colors,
-                colorExt: colorExt,
-                lineWidth: lineWidth,
-                nodeSize: nodeSize,
-                isFirst: isFirst,
-                isLast: isLast,
               ),
-              if (isLeft) ...[
-                SizedBox(width: spacingExt.medium),
-                Expanded(
-                  child: _TimelineContent(
-                    item: item,
-                    colors: colors,
-                    colorExt: colorExt,
-                    alignment: CrossAxisAlignment.start,
-                  ),
-                ),
-              ],
+              SizedBox(width: spacingExt.medium),
             ],
-          ),
+            _TimelineNodeSimple(
+              item: item,
+              colors: colors,
+              colorExt: colorExt,
+              lineWidth: lineWidth,
+              nodeSize: nodeSize,
+              isFirst: isFirst,
+              isLast: isLast,
+            ),
+            if (isLeft) ...[
+              SizedBox(width: spacingExt.medium),
+              Expanded(
+                child: _TimelineContent(
+                  item: item,
+                  colors: colors,
+                  colorExt: colorExt,
+                  alignment: CrossAxisAlignment.start,
+                ),
+              ),
+            ],
+          ],
         );
       }).toList(),
     );
@@ -224,8 +224,8 @@ class _HorizontalTimeline extends StatelessWidget {
   }
 }
 
-/// 타임라인 노드 (세로)
-class _TimelineNode extends StatelessWidget {
+/// 타임라인 노드 (세로) - 간소화된 버전 (Expanded 없음)
+class _TimelineNodeSimple extends StatelessWidget {
   final AppTimelineItem item;
   final TimelineColors colors;
   final AppColorExtension colorExt;
@@ -234,7 +234,7 @@ class _TimelineNode extends StatelessWidget {
   final bool isFirst;
   final bool isLast;
 
-  const _TimelineNode({
+  const _TimelineNodeSimple({
     required this.item,
     required this.colors,
     required this.colorExt,
@@ -250,14 +250,11 @@ class _TimelineNode extends StatelessWidget {
     final iconColor = colors.getIconColorForStatus(item.status, colorExt);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         // 상단 라인
         if (!isFirst)
-          Container(
-            width: lineWidth,
-            height: 16,
-            color: colors.line,
-          ),
+          Container(width: lineWidth, height: 16, color: colors.line),
         // 노드
         Container(
           width: nodeSize,
@@ -271,21 +268,12 @@ class _TimelineNode extends StatelessWidget {
             ),
           ),
           child: item.icon != null
-              ? Icon(
-                  item.icon,
-                  size: nodeSize * 0.6,
-                  color: iconColor,
-                )
+              ? Icon(item.icon, size: nodeSize * 0.6, color: iconColor)
               : null,
         ),
-        // 하단 라인
+        // 하단 라인 (고정 높이)
         if (!isLast)
-          Expanded(
-            child: Container(
-              width: lineWidth,
-              color: colors.line,
-            ),
-          ),
+          Container(width: lineWidth, height: 40, color: colors.line),
       ],
     );
   }
@@ -322,11 +310,7 @@ class _HorizontalNode extends StatelessWidget {
         ),
       ),
       child: item.icon != null
-          ? Icon(
-              item.icon,
-              size: nodeSize * 0.6,
-              color: iconColor,
-            )
+          ? Icon(item.icon, size: nodeSize * 0.6, color: iconColor)
           : null,
     );
   }
@@ -360,9 +344,9 @@ class _TimelineContent extends StatelessWidget {
           Text(
             item.title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: colors.contentText,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: colors.contentText,
+              fontWeight: FontWeight.w600,
+            ),
             textAlign: alignment == CrossAxisAlignment.center
                 ? TextAlign.center
                 : null,
@@ -371,9 +355,9 @@ class _TimelineContent extends StatelessWidget {
             SizedBox(height: spacingExt.xs),
             Text(
               item.description!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorExt.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colorExt.textSecondary),
               textAlign: alignment == CrossAxisAlignment.center
                   ? TextAlign.center
                   : null,
@@ -383,9 +367,9 @@ class _TimelineContent extends StatelessWidget {
             SizedBox(height: spacingExt.xs),
             Text(
               _formatTimestamp(item.timestamp!),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.timestamp,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colors.timestamp),
             ),
           ],
           if (item.content != null && !compact) ...[

@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_input.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/responsive_builder.dart';
 import '../../../../core/widgets/app_section.dart';
+import '../../../../core/widgets/app_top_bar.dart';
 import 'advanced_components_page.dart';
 import 'responsive_test_page.dart';
 import 'v3_components_page.dart';
@@ -56,153 +57,18 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
     // ================================================================
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('컴포넌트 쇼케이스'),
-        backgroundColor: colorExt.surfaceSecondary,
-        actions: [
-          Padding(
-            padding: EdgeInsets.all(context.appSpacing.xs),
-            child: AppButton(
-              text: '데이터/폼 →',
-              size: AppButtonSize.small,
-              variant: AppButtonVariant.primary,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const DataFormComponentsPage(),
-                  ),
-                );
-              },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: AppTopBar(
+          title: Text(
+            '컴포넌트 쇼케이스',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: colorExt.textPrimary,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          Padding(
-            padding: EdgeInsets.all(context.appSpacing.xs),
-            child: AppButton(
-              text: '네비게이션 →',
-              size: AppButtonSize.small,
-              variant: AppButtonVariant.primary,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const NavigationComponentsPage(),
-                  ),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(context.appSpacing.xs),
-            child: AppButton(
-              text: '고급 UI →',
-              size: AppButtonSize.small,
-              variant: AppButtonVariant.primary,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AdvancedUIComponentsPage(),
-                  ),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(context.appSpacing.xs),
-            child: AppButton(
-              text: '피드백/유틸 →',
-              size: AppButtonSize.small,
-              variant: AppButtonVariant.primary,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const FeedbackComponentsPage(),
-                  ),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(context.appSpacing.xs),
-            child: AppButton(
-              text: '오버레이 →',
-              size: AppButtonSize.small,
-              variant: AppButtonVariant.primary,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const FeedbackOverlayComponentsPage(),
-                  ),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(context.appSpacing.xs),
-            child: AppButton(
-              text: '특수 →',
-              size: AppButtonSize.small,
-              variant: AppButtonVariant.primary,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const SpecialComponentsPage(),
-                  ),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(context.appSpacing.xs),
-            child: AppButton(
-              text: 'V3 컴포넌트 →',
-              size: AppButtonSize.small,
-              variant: AppButtonVariant.secondary,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const V3ComponentsPage()),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(context.appSpacing.xs),
-            child: AppButton(
-              text: '반응형 테스트 →',
-              size: AppButtonSize.small,
-              variant: AppButtonVariant.ghost,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ResponsiveTestPage()),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(context.appSpacing.xs),
-            child: AppButton(
-              text: 'V2 컴포넌트 →',
-              size: AppButtonSize.small,
-              variant: AppButtonVariant.ghost,
-              onPressed: () {
-                context.go('/v2');
-              },
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(context.appSpacing.xs),
-            child: AppButton(
-              text: '고급 컴포넌트 →',
-              size: AppButtonSize.small,
-              variant: AppButtonVariant.secondary,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AdvancedComponentsPage(),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+          trailing: _PageNavigationMenu(),
+        ),
       ),
       body: ResponsiveBuilder(
         builder: (context, screenSize, width) {
@@ -865,6 +731,132 @@ class _ComponentShowcasePageState extends State<ComponentShowcasePage> {
           }).toList(),
         ),
       ],
+    );
+  }
+}
+
+/// 페이지 네비게이션 메뉴
+///
+/// 다른 쇼케이스 페이지로 이동하는 메뉴를 표시합니다.
+/// PopupMenuButton을 사용하여 오버플로우 문제를 해결합니다.
+class _PageNavigationMenu extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final colorExt = context.appColors;
+
+    return PopupMenuButton<void>(
+      icon: Icon(Icons.apps, color: colorExt.textPrimary),
+      tooltip: '다른 쇼케이스 페이지',
+      offset: const Offset(0, 48),
+      itemBuilder: (context) => [
+        _buildMenuItem(
+          context,
+          '데이터/폼 컴포넌트',
+          Icons.input,
+          () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const DataFormComponentsPage()),
+          ),
+        ),
+        _buildMenuItem(
+          context,
+          '네비게이션 컴포넌트',
+          Icons.navigation,
+          () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const NavigationComponentsPage()),
+          ),
+        ),
+        _buildMenuItem(
+          context,
+          '고급 UI 컴포넌트',
+          Icons.dashboard_customize,
+          () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AdvancedUIComponentsPage()),
+          ),
+        ),
+        _buildMenuItem(
+          context,
+          '피드백/유틸 컴포넌트',
+          Icons.feedback,
+          () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const FeedbackComponentsPage()),
+          ),
+        ),
+        _buildMenuItem(
+          context,
+          '오버레이 컴포넌트',
+          Icons.layers,
+          () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const FeedbackOverlayComponentsPage(),
+            ),
+          ),
+        ),
+        _buildMenuItem(
+          context,
+          '특수 컴포넌트',
+          Icons.auto_awesome,
+          () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SpecialComponentsPage()),
+          ),
+        ),
+        const PopupMenuDivider(),
+        _buildMenuItem(
+          context,
+          'V3 컴포넌트',
+          Icons.new_releases,
+          () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const V3ComponentsPage())),
+        ),
+        _buildMenuItem(
+          context,
+          '반응형 테스트',
+          Icons.settings_overscan,
+          () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ResponsiveTestPage())),
+        ),
+        _buildMenuItem(
+          context,
+          'V2 컴포넌트',
+          Icons.archive,
+          () => context.go('/v2'),
+        ),
+        _buildMenuItem(
+          context,
+          '고급 컴포넌트',
+          Icons.extension,
+          () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AdvancedComponentsPage()),
+          ),
+        ),
+      ],
+    );
+  }
+
+  PopupMenuItem<void> _buildMenuItem(
+    BuildContext context,
+    String title,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    final colorExt = context.appColors;
+    final spacing = context.appSpacing;
+
+    return PopupMenuItem(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: colorExt.textSecondary),
+          SizedBox(width: spacing.medium),
+          Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: colorExt.textPrimary),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -58,7 +58,8 @@ class AppKanbanBoard extends StatefulWidget {
     String fromColumnId,
     String toColumnId,
     int newIndex,
-  )? onCardMoved;
+  )?
+  onCardMoved;
 
   /// 카드 탭 콜백
   final void Function(KanbanCard card)? onCardTap;
@@ -297,10 +298,7 @@ class KanbanLabel {
   final String text;
   final Color color;
 
-  const KanbanLabel({
-    required this.text,
-    required this.color,
-  });
+  const KanbanLabel({required this.text, required this.color});
 }
 
 /// 칸반 컬럼 위젯
@@ -397,8 +395,9 @@ class _KanbanColumnWidget extends StatelessWidget {
               ],
             ),
           ),
-          // 카드 목록
-          Flexible(
+          // 카드 목록 - DragTarget을 Column 밖으로 분리하여 unbounded 제약 문제 해결
+          Padding(
+            padding: EdgeInsets.all(spacingExt.small),
             child: DragTarget<KanbanCard>(
               onWillAcceptWithDetails: (details) => true,
               onAcceptWithDetails: (details) {
@@ -406,80 +405,75 @@ class _KanbanColumnWidget extends StatelessWidget {
               },
               onMove: (details) {
                 // 드롭 위치 계산
-                final index = _calculateDropIndex(
-                  context,
-                  details.offset,
-                );
+                final index = _calculateDropIndex(context, details.offset);
                 onDragUpdate(index);
               },
               builder: (context, candidateData, rejectedData) {
-                return Padding(
-                  padding: EdgeInsets.all(spacingExt.small),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ...column.cards.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final card = entry.value;
-                        final isDragging = card.id == draggingCardId;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ...column.cards.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final card = entry.value;
+                      final isDragging = card.id == draggingCardId;
 
-                        return Column(
-                          children: [
-                            if (isDropTarget && dropTargetIndex == index)
-                              _DropIndicator(color: colors.dropIndicator),
-                            Opacity(
-                              opacity: isDragging ? 0.5 : 1.0,
-                              child: Draggable<KanbanCard>(
-                                data: card,
-                                onDragStarted: () => onDragStart(card),
-                                onDragEnd: (_) => onDragEnd(),
-                                feedback: Material(
-                                  elevation: 8,
-                                  borderRadius: BorderRadius.circular(
-                                    BorderTokens.radiusMedium,
-                                  ),
-                                  child: SizedBox(
-                                    width: width - spacingExt.medium * 2,
-                                    child: _KanbanCardWidget(
-                                      card: card,
-                                      size: cardSize,
-                                      colors: colors,
-                                      isDragging: true,
-                                    ),
-                                  ),
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isDropTarget && dropTargetIndex == index)
+                            _DropIndicator(color: colors.dropIndicator),
+                          Opacity(
+                            opacity: isDragging ? 0.5 : 1.0,
+                            child: Draggable<KanbanCard>(
+                              data: card,
+                              onDragStarted: () => onDragStart(card),
+                              onDragEnd: (_) => onDragEnd(),
+                              feedback: Material(
+                                elevation: 8,
+                                borderRadius: BorderRadius.circular(
+                                  BorderTokens.radiusMedium,
                                 ),
-                                childWhenDragging: Opacity(
-                                  opacity: 0.3,
+                                child: SizedBox(
+                                  width: width - spacingExt.medium * 2,
                                   child: _KanbanCardWidget(
                                     card: card,
                                     size: cardSize,
                                     colors: colors,
-                                    isDragging: false,
-                                  ),
-                                ),
-                                child: GestureDetector(
-                                  onTap: onCardTap != null
-                                      ? () => onCardTap!(card)
-                                      : null,
-                                  child: _KanbanCardWidget(
-                                    card: card,
-                                    size: cardSize,
-                                    colors: colors,
-                                    isDragging: false,
+                                    isDragging: true,
                                   ),
                                 ),
                               ),
+                              childWhenDragging: Opacity(
+                                opacity: 0.3,
+                                child: _KanbanCardWidget(
+                                  card: card,
+                                  size: cardSize,
+                                  colors: colors,
+                                  isDragging: false,
+                                ),
+                              ),
+                              child: GestureDetector(
+                                onTap: onCardTap != null
+                                    ? () => onCardTap!(card)
+                                    : null,
+                                child: _KanbanCardWidget(
+                                  card: card,
+                                  size: cardSize,
+                                  colors: colors,
+                                  isDragging: false,
+                                ),
+                              ),
                             ),
-                            SizedBox(height: spacingExt.small),
-                          ],
-                        );
-                      }),
-                      if (isDropTarget &&
-                          (dropTargetIndex == null ||
-                              dropTargetIndex! >= column.cards.length))
-                        _DropIndicator(color: colors.dropIndicator),
-                    ],
-                  ),
+                          ),
+                          SizedBox(height: spacingExt.small),
+                        ],
+                      );
+                    }),
+                    if (isDropTarget &&
+                        (dropTargetIndex == null ||
+                            dropTargetIndex! >= column.cards.length))
+                      _DropIndicator(color: colors.dropIndicator),
+                  ],
                 );
               },
             ),
@@ -488,10 +482,7 @@ class _KanbanColumnWidget extends StatelessWidget {
           if (showAddCard && onAddCard != null)
             Padding(
               padding: EdgeInsets.all(spacingExt.small),
-              child: _AddCardButton(
-                colors: colors,
-                onPressed: onAddCard!,
-              ),
+              child: _AddCardButton(colors: colors, onPressed: onAddCard!),
             ),
         ],
       ),
@@ -551,8 +542,8 @@ class _KanbanCardWidgetState extends State<_KanbanCardWidget> {
           color: widget.isDragging
               ? widget.colors.cardBackgroundDrag
               : _isHovered
-                  ? widget.colors.cardBackgroundHover
-                  : widget.colors.cardBackground,
+              ? widget.colors.cardBackgroundHover
+              : widget.colors.cardBackground,
           borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
           border: Border.all(
             color: widget.colors.cardBorder,
@@ -747,10 +738,7 @@ class _AssigneeAvatars extends StatelessWidget {
   final List<String> avatars;
   final double size;
 
-  const _AssigneeAvatars({
-    required this.avatars,
-    this.size = 24,
-  });
+  const _AssigneeAvatars({required this.avatars, this.size = 24});
 
   @override
   Widget build(BuildContext context) {
@@ -773,10 +761,7 @@ class _AssigneeAvatars extends StatelessWidget {
                 height: size,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
+                  border: Border.all(color: Colors.white, width: 2),
                   image: DecorationImage(
                     image: NetworkImage(url),
                     fit: BoxFit.cover,
@@ -799,10 +784,7 @@ class _AssigneeAvatars extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.grey.shade400,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
                 child: Center(
                   child: Text(
@@ -846,10 +828,7 @@ class _AddCardButton extends StatefulWidget {
   final KanbanColors colors;
   final VoidCallback onPressed;
 
-  const _AddCardButton({
-    required this.colors,
-    required this.onPressed,
-  });
+  const _AddCardButton({required this.colors, required this.onPressed});
 
   @override
   State<_AddCardButton> createState() => _AddCardButtonState();
@@ -875,11 +854,7 @@ class _AddCardButtonState extends State<_AddCardButton> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.add,
-                size: 16,
-                color: widget.colors.addButtonText,
-              ),
+              Icon(Icons.add, size: 16, color: widget.colors.addButtonText),
               const SizedBox(width: 4),
               Text(
                 '카드 추가',
@@ -941,11 +916,7 @@ class _AddColumnButtonState extends State<_AddColumnButton> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.add,
-                size: 20,
-                color: widget.colors.addButtonText,
-              ),
+              Icon(Icons.add, size: 20, color: widget.colors.addButtonText),
               const SizedBox(width: 8),
               Text(
                 '컬럼 추가',

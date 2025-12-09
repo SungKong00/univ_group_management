@@ -91,12 +91,14 @@ class _CompactCardState extends State<CompactCard> {
               // 크기 제약은 AdaptiveCardGrid가 담당 - 카드는 부모 크기에 맞춤
               decoration: BoxDecoration(
                 color: widget.isSelected
-                    ? colorExt.brandPrimary.withValues(alpha: 0.1)
+                    ? colors.selectedBackground
                     : _isHovered
-                    ? colors.backgroundHover
-                    : colors.background,
+                        ? colors.backgroundHover
+                        : colors.background,
                 border: Border.all(
-                  color: widget.isSelected ? colors.border : colors.border,
+                  color: widget.isSelected
+                      ? colors.selectedBorder
+                      : colors.border,
                   width: widget.isSelected ? 2 : 1,
                 ),
                 borderRadius: BorderTokens.largeRadius(),
@@ -120,7 +122,9 @@ class _CompactCardState extends State<CompactCard> {
                       Icon(
                         widget.icon!,
                         size: compactSize,
-                        color: widget.iconColor ?? colorExt.brandPrimary,
+                        color: widget.isSelected
+                            ? colors.selectedTitle
+                            : (widget.iconColor ?? colorExt.brandPrimary),
                       )
                     else
                       SizedBox(
@@ -154,7 +158,14 @@ class _CompactCardState extends State<CompactCard> {
                       widget.title,
                       style: CardDesignTokens.getSubtitleStyle(
                         context,
-                      ).copyWith(color: colors.title),
+                      ).copyWith(
+                        color: widget.isSelected
+                            ? colors.selectedTitle
+                            : colors.title,
+                        fontWeight: widget.isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                      ),
                       textAlign: TextAlign.center,
                       maxLines: lineNumbers['title'],
                       overflow: TextOverflow.ellipsis,

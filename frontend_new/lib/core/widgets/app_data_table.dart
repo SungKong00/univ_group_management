@@ -322,13 +322,22 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
     }
 
     // 가로 스크롤 지원
+    // IntrinsicWidth 대신 고정 너비 계산 (ListView와의 충돌 방지)
+    final hasSelection = widget.selectionMode != AppDataTableSelectionMode.none;
+    final selectionWidth = hasSelection ? 48.0 : 0.0;
+    final columnsWidth = widget.columns.fold<double>(
+      0.0,
+      (sum, col) => sum + (col.width ?? col.minWidth ?? 80.0),
+    );
+    final totalWidth = selectionWidth + columnsWidth;
+
     return Scrollbar(
       controller: _horizontalController,
       thumbVisibility: true,
       child: SingleChildScrollView(
         controller: _horizontalController,
         scrollDirection: Axis.horizontal,
-        child: IntrinsicWidth(child: table),
+        child: SizedBox(width: totalWidth, child: table),
       ),
     );
   }

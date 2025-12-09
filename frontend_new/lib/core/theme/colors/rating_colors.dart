@@ -31,9 +31,9 @@ class RatingColors {
   /// 기본 색상 팩토리 (별 스타일)
   factory RatingColors.from(AppColorExtension c) {
     return RatingColors(
-      active: c.stateWarningBg,    // 노란색 상태 사용
+      active: c.stateWarningBg, // 노란색 상태 사용
       inactive: c.borderSecondary,
-      hover: c.stateWarningText,   // 호버는 더 진한 노란색
+      hover: c.stateWarningText, // 호버는 더 진한 노란색
       text: c.textPrimary,
       secondaryText: c.textTertiary,
     );
@@ -42,7 +42,7 @@ class RatingColors {
   /// 하트 스타일 색상
   factory RatingColors.heart(AppColorExtension c) {
     return RatingColors(
-      active: c.stateErrorBg,  // Red for hearts
+      active: c.stateErrorBg, // Red for hearts
       inactive: c.borderSecondary,
       hover: c.stateErrorText,
       text: c.textPrimary,
