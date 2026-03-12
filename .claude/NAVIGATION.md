@@ -44,6 +44,7 @@
 ### 프론트엔드
 - [가이드 인덱스](../docs/implementation/frontend/README.md)
 - [아키텍처](../docs/implementation/frontend/architecture.md)
+- [아키텍처 가이드](../docs/implementation/frontend/architecture-guide.md)
 - [인증 시스템](../docs/implementation/frontend/authentication.md)
 - [상태 관리](../docs/implementation/frontend/state-management.md)
 - [고급 상태 패턴](../docs/implementation/frontend/advanced-state-patterns.md)
@@ -55,8 +56,10 @@
 - [멤버 필터 Phase 1](../docs/implementation/frontend/member-list-implementation.md)
 - [멤버 필터 Phase 2-3](../docs/implementation/frontend/member-filter-advanced-features.md)
 - [멤버 선택 구현](../docs/implementation/frontend/member-selection-implementation.md)
+- [읽지 않은 글 기능](../docs/implementation/frontend/unread-posts-implementation.md)
 - [반응형 디자인](../docs/implementation/frontend/responsive-design.md)
 - [성능 최적화](../docs/implementation/frontend/performance.md)
+- [기능 플래그](../docs/implementation/frontend/feature-flags.md)
 
 ### 워크스페이스 페이지
 - [구현 가이드](../docs/implementation/workspace-page-implementation-guide.md)
@@ -122,10 +125,20 @@
 - [대기 목록](../docs/context-tracking/pending-updates.md)
 - [동기화 상태](../docs/context-tracking/sync-status.md)
 
-## 서브 에이전트
-- [커밋 관리](../docs/agents/commit-management-agent.md)
-- [컨텍스트 동기화](../docs/agents/context-sync-agent.md)
-- [프론트엔드 개발](../docs/agents/frontend-development-agent.md)
+## 서브 에이전트 (9개)
+
+### 핵심 개발 에이전트
+- [Backend Architect](./agents/backend-architect.md) - Spring Boot 아키텍처 설계
+- [Frontend Specialist](./agents/frontend-specialist.md) - UI/UX 구현
+- [Frontend Debugger](./agents/frontend-debugger.md) - 프론트엔드 에러 해결
+- [Permission Engineer](./agents/permission-engineer.md) - 권한 시스템 설계
+- [API Integrator](./agents/api-integrator.md) - 백엔드-프론트엔드 연동
+
+### 지원 및 품질 에이전트
+- [Database Optimizer](./agents/database-optimizer.md) - DB 쿼리 최적화
+- [Backend Debugger](./agents/backend-debugger.md) - 백엔드 에러 해결
+- [Context Manager](./agents/context-manager.md) - 문서 및 컨텍스트 관리
+- [Test Automation Specialist](./agents/test-automation-specialist.md) - 테스트 자동화
 
 ## 유지보수 가이드
 - [그룹 관리 권한](../docs/maintenance/group-management-permissions.md)

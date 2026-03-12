@@ -97,11 +97,56 @@ Future<void> logout() async {
 }
 ```
 
+## keepAlive + 로그아웃 가드를 이용한 세션 스코프 캐싱
+
+탭 전환/네비게이션 중에는 캐시를 유지하되, 로그아웃 중 Race Condition을 차단하는 패턴:
+
+```dart
+// ✅ 권장: keepAlive로 세션 캐시 유지
+final myGroupsProvider = FutureProvider<List<GroupMembership>>((ref) async {
+  // keepAlive: 탭 전환 시 provider dispose 방지 (세션 스코프 유지)
+  ref.keepAlive();
+
+  final groupService = GroupService();
+  return await groupService.getMyGroups();
+});
+```
+
+**로그아웃 시 처리** (`provider_reset.dart`):
+```dart
+void resetAllUserDataProviders(Ref ref) {
+  // 모든 사용자 데이터 Provider 일괄 invalidate
+  for (final provider in _providersToInvalidateOnLogout) {
+    ref.invalidate(provider);  // myGroupsProvider도 포함
+  }
+}
+```
+
+**Race Condition 차단** (`workspace_state_provider.dart`):
+```dart
+Future<GroupMembership?> _resolveGroupMembership(String groupId) async {
+  // ⭐ 로그아웃 중 워크스페이스 진입 시도 차단
+  if (_ref.read(authProvider).isLoggingOut) {
+    throw LogoutInProgressException();
+  }
+
+  // 일반 그룹 조회
+  final memberships = await _ref.read(myGroupsProvider.future);
+  return memberships.firstWhere((group) => group.id.toString() == groupId);
+}
+```
+
+**동작 원리**:
+1. **keepAlive()**: 탭 전환 시 provider dispose 방지 (세션 스코프 유지)
+2. **로그아웃 시 invalidate()**: 캐시 표시
+3. **workspace_state_provider의 isLoggingOut 가드**: 로그아웃 중 myGroupsProvider 접근 차단
+4. **새 로그인 시**: 다음 read에서 새 API 호출로 새 데이터 로드
+
 ## 새 Provider 추가 시
 
 1. `_providersToInvalidateOnLogout`에 등록 (invalidate 보장)
-2. 메모리 캐시 정리 함수를 `LogoutResetCallback`에 등록
-3. `autoDispose` 적용 (메모리 효율성)
+2. 특별한 정리 필요 시 `_customLogoutCallbacks`에 콜백 등록
+3. keepAlive가 필요한 경우만 `ref.keepAlive()` 사용
 
 ## 관련 문서
 

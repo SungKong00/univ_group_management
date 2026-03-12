@@ -27,6 +27,12 @@ class GroupHomeView extends ConsumerWidget {
       workspaceHasAnyGroupPermissionProvider,
     );
 
+    // 공지 채널 찾기 (없으면 null)
+    final workspaceState = ref.watch(workspaceStateProvider);
+    final announcementChannel = workspaceState.channels
+        .where((channel) => channel.type == 'ANNOUNCEMENT')
+        .firstOrNull;
+
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -37,8 +43,18 @@ class GroupHomeView extends ConsumerWidget {
             child: SingleChildScrollView(
               padding: EdgeInsets.all(AppSpacing.md),
               child: isWide
-                  ? _buildWideLayout(context, hasAnyGroupPermission, ref)
-                  : _buildNarrowLayout(context, hasAnyGroupPermission, ref),
+                  ? _buildWideLayout(
+                      context,
+                      hasAnyGroupPermission,
+                      ref,
+                      announcementChannel?.id,
+                    )
+                  : _buildNarrowLayout(
+                      context,
+                      hasAnyGroupPermission,
+                      ref,
+                      announcementChannel?.id,
+                    ),
             ),
           );
         },
@@ -51,12 +67,18 @@ class GroupHomeView extends ConsumerWidget {
     BuildContext context,
     bool hasAnyGroupPermission,
     WidgetRef ref,
+    int? announcementChannelId,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header with button
-        _buildHeader(context, hasAnyGroupPermission, ref),
+        _buildHeader(
+          context,
+          hasAnyGroupPermission,
+          ref,
+          announcementChannelId,
+        ),
         SizedBox(height: AppSpacing.md),
 
         // Two-column layout
@@ -89,12 +111,18 @@ class GroupHomeView extends ConsumerWidget {
     BuildContext context,
     bool hasAnyGroupPermission,
     WidgetRef ref,
+    int? announcementChannelId,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header with button
-        _buildHeader(context, hasAnyGroupPermission, ref),
+        _buildHeader(
+          context,
+          hasAnyGroupPermission,
+          ref,
+          announcementChannelId,
+        ),
         SizedBox(height: AppSpacing.md),
 
         // Unread posts
@@ -115,6 +143,7 @@ class GroupHomeView extends ConsumerWidget {
     BuildContext context,
     bool hasAnyGroupPermission,
     WidgetRef ref,
+    int? announcementChannelId,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -145,10 +174,10 @@ class GroupHomeView extends ConsumerWidget {
                   ),
                 ],
               ),
-              // Button with Description (if has permission)
+              // Buttons (if has permission)
               if (hasAnyGroupPermission) ...[
                 SizedBox(height: AppSpacing.sm),
-                _buildCreateSubgroupSection(context, ref),
+                _buildActionButtons(context, ref, announcementChannelId),
               ],
             ],
           );
@@ -179,15 +208,23 @@ class GroupHomeView extends ConsumerWidget {
                 ],
               ),
             ),
-            // Button with Description (if has permission)
+            // Buttons (if has permission)
             if (hasAnyGroupPermission) ...[
-              SizedBox(width: AppSpacing.md),
-              _buildCreateSubgroupSection(context, ref),
+              _buildActionButtons(context, ref, announcementChannelId),
             ],
           ],
         );
       },
     );
+  }
+
+  /// 액션 버튼 영역 (하위 그룹 만들기)
+  Widget _buildActionButtons(
+    BuildContext context,
+    WidgetRef ref,
+    int? announcementChannelId,
+  ) {
+    return _buildCreateSubgroupSection(context, ref);
   }
 
   /// 하위 그룹 만들기 버튼 + 설명 (Title + Description 패턴)

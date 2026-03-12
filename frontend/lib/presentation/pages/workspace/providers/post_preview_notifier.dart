@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/models/post_models.dart';
-import '../../../../core/services/post_service.dart';
+import '../../../../features/post/domain/entities/post.dart';
+import '../../../../features/post/presentation/providers/post_usecase_providers.dart';
 
 /// 게시글 미리보기 상태
 class PostPreviewState {
@@ -36,9 +36,9 @@ class PostPreviewState {
 ///
 /// 워크스페이스 웹 버전에서 게시글 선택 시 우측 패널에 표시될 게시글 데이터 관리
 class PostPreviewNotifier extends StateNotifier<PostPreviewState> {
-  final PostService _postService;
+  final Ref _ref;
 
-  PostPreviewNotifier(this._postService) : super(const PostPreviewState());
+  PostPreviewNotifier(this._ref) : super(const PostPreviewState());
 
   /// 게시글 로드
   Future<void> loadPost(String postId) async {
@@ -51,7 +51,8 @@ class PostPreviewNotifier extends StateNotifier<PostPreviewState> {
 
     try {
       final postIdInt = int.parse(postId);
-      final post = await _postService.getPost(postIdInt);
+      final useCase = _ref.read(getPostUseCaseProvider);
+      final post = await useCase(postIdInt);
 
       state = PostPreviewState(
         post: post,
@@ -73,20 +74,10 @@ class PostPreviewNotifier extends StateNotifier<PostPreviewState> {
   }
 }
 
-// ============================================================================
-// Providers
-// ============================================================================
-
-/// PostService Provider (Singleton)
-final postServiceProvider = Provider<PostService>((ref) {
-  return PostService();
-});
-
 /// 게시글 미리보기 Provider (autoDispose)
 final postPreviewProvider =
     StateNotifierProvider.autoDispose<PostPreviewNotifier, PostPreviewState>((
       ref,
     ) {
-      final postService = ref.watch(postServiceProvider);
-      return PostPreviewNotifier(postService);
+      return PostPreviewNotifier(ref);
     });

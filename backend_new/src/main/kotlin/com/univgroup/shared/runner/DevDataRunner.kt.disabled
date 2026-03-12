@@ -1,0 +1,206 @@
+package com.univgroup.shared.runner
+
+import com.univgroup.domain.group.entity.Group
+import com.univgroup.domain.group.entity.GroupMember
+import com.univgroup.domain.group.entity.GroupType
+import com.univgroup.domain.group.entity.GroupVisibility
+import com.univgroup.domain.group.repository.GroupMemberRepository
+import com.univgroup.domain.group.repository.GroupRepository
+import com.univgroup.domain.group.service.GroupRoleService
+import com.univgroup.domain.permission.SystemRole
+import com.univgroup.domain.user.entity.GlobalRole
+import com.univgroup.domain.user.entity.User
+import com.univgroup.domain.user.repository.UserRepository
+import com.univgroup.domain.workspace.entity.Channel
+import com.univgroup.domain.workspace.entity.ChannelType
+import com.univgroup.domain.workspace.entity.Workspace
+import com.univgroup.domain.workspace.repository.ChannelRepository
+import com.univgroup.domain.workspace.repository.WorkspaceRepository
+import org.slf4j.LoggerFactory
+import org.springframework.boot.ApplicationArguments
+import org.springframework.boot.ApplicationRunner
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
+
+/**
+ * 개발 환경 데이터 초기화
+ *
+ * 최소한의 데이터로 개발/테스트 진행:
+ * - 대학 구조 (한신대학교 → IT대학 → 컴퓨터공학부)
+ * - 테스트 사용자 3명 (관리자, 교수, 학생)
+ * - 샘플 그룹 1개
+ */
+@Component
+@Profile("dev")
+class DevDataRunner(
+    private val userRepository: UserRepository,
+    private val groupRepository: GroupRepository,
+    private val groupMemberRepository: GroupMemberRepository,
+    private val groupRoleService: GroupRoleService,
+    private val workspaceRepository: WorkspaceRepository,
+    private val channelRepository: ChannelRepository,
+) : ApplicationRunner {
+
+    private val logger = LoggerFactory.getLogger(DevDataRunner::class.java)
+
+    @Transactional
+    override fun run(args: ApplicationArguments) {
+        logger.info("=== DevDataRunner: 개발 데이터 초기화 시작 ===")
+
+        // 이미 데이터가 있으면 건너뛰기
+        if (userRepository.count() > 0) {
+            logger.info("데이터가 이미 존재합니다. 초기화를 건너뜁니다.")
+            return
+        }
+
+        // 1. 사용자 생성
+        val admin = createUser("admin@hanshin.ac.kr", "시스템관리자", GlobalRole.ADMIN)
+        val professor = createUser("prof@hanshin.ac.kr", "김교수", GlobalRole.PROFESSOR)
+        val student = createUser("student@hanshin.ac.kr", "이학생", GlobalRole.STUDENT)
+
+        logger.info("사용자 생성 완료: admin, professor, student")
+
+        // 2. 대학 구조 생성
+        val university = createUniversityStructure(admin)
+        logger.info("대학 구조 생성 완료: ${university.name}")
+
+        // 3. 샘플 그룹 생성
+        val sampleGroup = createSampleGroup(professor, student, university)
+        logger.info("샘플 그룹 생성 완료: ${sampleGroup.name}")
+
+        logger.info("=== DevDataRunner: 개발 데이터 초기화 완료 ===")
+    }
+
+    private fun createUser(
+        email: String,
+        name: String,
+        role: GlobalRole,
+    ): User {
+        return userRepository.save(
+            User(
+                email = email,
+                name = name,
+                globalRole = role,
+                profileCompleted = true,
+            ),
+        )
+    }
+
+    private fun createUniversityStructure(owner: User): Group {
+        // 대학교
+        val university = groupRepository.save(
+            Group(
+                name = "한신대학교",
+                description = "한신대학교 공식 그룹",
+                owner = owner,
+                groupType = GroupType.UNIVERSITY,
+                visibility = GroupVisibility.PUBLIC,
+                university = "한신대학교",
+            ),
+        )
+        groupRoleService.createDefaultRoles(university)
+
+        // IT대학
+        val college = groupRepository.save(
+            Group(
+                name = "IT대학",
+                description = "IT대학 공식 그룹",
+                owner = owner,
+                parent = university,
+                groupType = GroupType.COLLEGE,
+                visibility = GroupVisibility.PUBLIC,
+                university = "한신대학교",
+                college = "IT대학",
+            ),
+        )
+        groupRoleService.createDefaultRoles(college)
+
+        // 컴퓨터공학부
+        val department = groupRepository.save(
+            Group(
+                name = "컴퓨터공학부",
+                description = "컴퓨터공학부 공식 그룹",
+                owner = owner,
+                parent = college,
+                groupType = GroupType.DEPARTMENT,
+                visibility = GroupVisibility.PUBLIC,
+                university = "한신대학교",
+                college = "IT대학",
+                department = "컴퓨터공학부",
+            ),
+        )
+        groupRoleService.createDefaultRoles(department)
+
+        return university
+    }
+
+    private fun createSampleGroup(
+        professor: User,
+        student: User,
+        university: Group,
+    ): Group {
+        // 샘플 동아리 그룹
+        val group = groupRepository.save(
+            Group(
+                name = "알고리즘 스터디",
+                description = "알고리즘 문제 풀이 스터디 그룹",
+                owner = professor,
+                groupType = GroupType.AUTONOMOUS,
+                visibility = GroupVisibility.PUBLIC,
+                university = "한신대학교",
+                tags = mutableSetOf("알고리즘", "코딩테스트", "스터디"),
+            ),
+        )
+
+        // 역할 생성
+        val roles = groupRoleService.createDefaultRoles(group)
+        val ownerRole = roles.find { it.name == SystemRole.OWNER.name }!!
+        val memberRole = roles.find { it.name == SystemRole.MEMBER.name }!!
+
+        // 멤버 추가
+        groupMemberRepository.save(GroupMember(group = group, user = professor, role = ownerRole))
+        groupMemberRepository.save(GroupMember(group = group, user = student, role = memberRole))
+
+        // 워크스페이스 생성
+        val workspace = workspaceRepository.save(
+            Workspace(
+                group = group,
+                name = "기본 워크스페이스",
+                description = "기본 워크스페이스입니다",
+                isDefault = true,
+            ),
+        )
+
+        // 채널 생성
+        channelRepository.save(
+            Channel(
+                workspace = workspace,
+                group = group,
+                name = "공지사항",
+                description = "공지사항 채널",
+                type = ChannelType.ANNOUNCEMENT,
+                displayOrder = 0,
+                isDefault = true,
+            ),
+        )
+
+        channelRepository.save(
+            Channel(
+                workspace = workspace,
+                group = group,
+                name = "자유게시판",
+                description = "자유롭게 소통하는 공간",
+                type = ChannelType.TEXT,
+                displayOrder = 1,
+                isDefault = true,
+            ),
+        )
+
+        // 그룹 초기화 완료 표시
+        group.defaultChannelsCreated = true
+        groupRepository.save(group)
+
+        return group
+    }
+}

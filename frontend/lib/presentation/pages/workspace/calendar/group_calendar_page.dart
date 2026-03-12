@@ -202,10 +202,8 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
           allowEventOverlap: true,
           weekStart: weekStart,
           initialEvents: events,
-          onEventCreate: (event) =>
-              _handleEventCreate(event, weekStart),
-          onEventUpdate: (event) =>
-              _handleEventUpdate(event, weekStart),
+          onEventCreate: (event) => _handleEventCreate(event, weekStart),
+          onEventUpdate: (event) => _handleEventUpdate(event, weekStart),
           onEventDelete: (event) => _handleEventDelete(event),
         ),
       );
@@ -549,7 +547,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
 
   /// Check if the current user can modify the given event.
   bool _canModifyEvent(GroupEvent event) {
-    final currentUser = ref.read(currentUserProvider);
+    final currentUser = ref.read(currentUserProvider).valueOrNull;
     if (currentUser == null) return false;
 
     // Check if user has CALENDAR_MANAGE permission
@@ -904,10 +902,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   // --- CRUD Handlers for WeeklyScheduleEditor ---
 
   /// Handle event creation from drag gesture
-  Future<bool> _handleEventCreate(
-    Event event,
-    DateTime weekStart,
-  ) async {
+  Future<bool> _handleEventCreate(Event event, DateTime weekStart) async {
     // Step 1: Check permissions
     final permissions = await ref.read(
       groupPermissionsProvider(widget.groupId).future,
@@ -1016,10 +1011,7 @@ class _GroupCalendarPageState extends ConsumerState<GroupCalendarPage>
   }
 
   /// Handle event update from drag gesture or click
-  Future<bool> _handleEventUpdate(
-    Event event,
-    DateTime weekStart,
-  ) async {
+  Future<bool> _handleEventUpdate(Event event, DateTime weekStart) async {
     // Step 1: Find original GroupEvent
     final eventId = GroupEventAdapter.extractEventId(event.id);
     if (eventId == null) {

@@ -127,38 +127,12 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Save read position when app goes to background or terminates
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
-      _saveCurrentReadPosition();
-    }
+    // 읽음 위치 기능 제거됨 - 아무 동작도 수행하지 않음
+    // paused/detached: No action needed
     // resumed: No action needed - state is preserved in memory
-    // Removed _restoreSessionAfterInterruption() to prevent unnecessary API calls
   }
 
-  Future<void> _saveCurrentReadPosition() async {
-    if (!mounted) return; // 안전장치 1: dispose 후 실행 방지
-
-    final workspaceState = ref.read(workspaceStateProvider);
-    final channelId = workspaceState.selectedChannelId;
-    final postId = workspaceState.currentVisiblePostId;
-
-    if (channelId != null && postId != null) {
-      final channelIdInt = int.tryParse(channelId);
-      if (channelIdInt != null) {
-        if (!mounted) return; // 안전장치 2: await 전 체크
-
-        try {
-          await ref
-              .read(workspaceStateProvider.notifier)
-              .saveReadPosition(channelIdInt, postId);
-        } catch (e) {
-          // Silently ignore errors (Best-Effort)
-          if (!mounted) return; // 안전장치 3: await 후 체크
-        }
-      }
-    }
-  }
+  // _saveCurrentReadPosition removed - 읽음 위치 기능 제거됨
 
   @override
   Widget build(BuildContext context) {

@@ -27,6 +27,8 @@ WorkspaceRoute _$WorkspaceRouteFromJson(Map<String, dynamic> json) {
       return AdminRoute.fromJson(json);
     case 'memberManagement':
       return MemberManagementRoute.fromJson(json);
+    case 'announcementManagement':
+      return AnnouncementManagementRoute.fromJson(json);
 
     default:
       throw CheckedFromJsonException(
@@ -48,6 +50,7 @@ mixin _$WorkspaceRoute {
     required TResult Function(int groupId) calendar,
     required TResult Function(int groupId) admin,
     required TResult Function(int groupId) memberManagement,
+    required TResult Function(int groupId) announcementManagement,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
@@ -56,6 +59,7 @@ mixin _$WorkspaceRoute {
     TResult? Function(int groupId)? calendar,
     TResult? Function(int groupId)? admin,
     TResult? Function(int groupId)? memberManagement,
+    TResult? Function(int groupId)? announcementManagement,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
@@ -64,6 +68,7 @@ mixin _$WorkspaceRoute {
     TResult Function(int groupId)? calendar,
     TResult Function(int groupId)? admin,
     TResult Function(int groupId)? memberManagement,
+    TResult Function(int groupId)? announcementManagement,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -73,6 +78,8 @@ mixin _$WorkspaceRoute {
     required TResult Function(CalendarRoute value) calendar,
     required TResult Function(AdminRoute value) admin,
     required TResult Function(MemberManagementRoute value) memberManagement,
+    required TResult Function(AnnouncementManagementRoute value)
+    announcementManagement,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
@@ -81,6 +88,8 @@ mixin _$WorkspaceRoute {
     TResult? Function(CalendarRoute value)? calendar,
     TResult? Function(AdminRoute value)? admin,
     TResult? Function(MemberManagementRoute value)? memberManagement,
+    TResult? Function(AnnouncementManagementRoute value)?
+    announcementManagement,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
@@ -89,6 +98,7 @@ mixin _$WorkspaceRoute {
     TResult Function(CalendarRoute value)? calendar,
     TResult Function(AdminRoute value)? admin,
     TResult Function(MemberManagementRoute value)? memberManagement,
+    TResult Function(AnnouncementManagementRoute value)? announcementManagement,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
 
@@ -224,6 +234,7 @@ class _$HomeRouteImpl implements HomeRoute {
     required TResult Function(int groupId) calendar,
     required TResult Function(int groupId) admin,
     required TResult Function(int groupId) memberManagement,
+    required TResult Function(int groupId) announcementManagement,
   }) {
     return home(groupId);
   }
@@ -236,6 +247,7 @@ class _$HomeRouteImpl implements HomeRoute {
     TResult? Function(int groupId)? calendar,
     TResult? Function(int groupId)? admin,
     TResult? Function(int groupId)? memberManagement,
+    TResult? Function(int groupId)? announcementManagement,
   }) {
     return home?.call(groupId);
   }
@@ -248,6 +260,7 @@ class _$HomeRouteImpl implements HomeRoute {
     TResult Function(int groupId)? calendar,
     TResult Function(int groupId)? admin,
     TResult Function(int groupId)? memberManagement,
+    TResult Function(int groupId)? announcementManagement,
     required TResult orElse(),
   }) {
     if (home != null) {
@@ -264,6 +277,8 @@ class _$HomeRouteImpl implements HomeRoute {
     required TResult Function(CalendarRoute value) calendar,
     required TResult Function(AdminRoute value) admin,
     required TResult Function(MemberManagementRoute value) memberManagement,
+    required TResult Function(AnnouncementManagementRoute value)
+    announcementManagement,
   }) {
     return home(this);
   }
@@ -276,6 +291,8 @@ class _$HomeRouteImpl implements HomeRoute {
     TResult? Function(CalendarRoute value)? calendar,
     TResult? Function(AdminRoute value)? admin,
     TResult? Function(MemberManagementRoute value)? memberManagement,
+    TResult? Function(AnnouncementManagementRoute value)?
+    announcementManagement,
   }) {
     return home?.call(this);
   }
@@ -288,6 +305,7 @@ class _$HomeRouteImpl implements HomeRoute {
     TResult Function(CalendarRoute value)? calendar,
     TResult Function(AdminRoute value)? admin,
     TResult Function(MemberManagementRoute value)? memberManagement,
+    TResult Function(AnnouncementManagementRoute value)? announcementManagement,
     required TResult orElse(),
   }) {
     if (home != null) {
@@ -415,6 +433,7 @@ class _$ChannelRouteImpl implements ChannelRoute {
     required TResult Function(int groupId) calendar,
     required TResult Function(int groupId) admin,
     required TResult Function(int groupId) memberManagement,
+    required TResult Function(int groupId) announcementManagement,
   }) {
     return channel(groupId, channelId);
   }
@@ -427,6 +446,7 @@ class _$ChannelRouteImpl implements ChannelRoute {
     TResult? Function(int groupId)? calendar,
     TResult? Function(int groupId)? admin,
     TResult? Function(int groupId)? memberManagement,
+    TResult? Function(int groupId)? announcementManagement,
   }) {
     return channel?.call(groupId, channelId);
   }
@@ -439,6 +459,7 @@ class _$ChannelRouteImpl implements ChannelRoute {
     TResult Function(int groupId)? calendar,
     TResult Function(int groupId)? admin,
     TResult Function(int groupId)? memberManagement,
+    TResult Function(int groupId)? announcementManagement,
     required TResult orElse(),
   }) {
     if (channel != null) {
@@ -455,6 +476,8 @@ class _$ChannelRouteImpl implements ChannelRoute {
     required TResult Function(CalendarRoute value) calendar,
     required TResult Function(AdminRoute value) admin,
     required TResult Function(MemberManagementRoute value) memberManagement,
+    required TResult Function(AnnouncementManagementRoute value)
+    announcementManagement,
   }) {
     return channel(this);
   }
@@ -467,6 +490,8 @@ class _$ChannelRouteImpl implements ChannelRoute {
     TResult? Function(CalendarRoute value)? calendar,
     TResult? Function(AdminRoute value)? admin,
     TResult? Function(MemberManagementRoute value)? memberManagement,
+    TResult? Function(AnnouncementManagementRoute value)?
+    announcementManagement,
   }) {
     return channel?.call(this);
   }
@@ -479,6 +504,7 @@ class _$ChannelRouteImpl implements ChannelRoute {
     TResult Function(CalendarRoute value)? calendar,
     TResult Function(AdminRoute value)? admin,
     TResult Function(MemberManagementRoute value)? memberManagement,
+    TResult Function(AnnouncementManagementRoute value)? announcementManagement,
     required TResult orElse(),
   }) {
     if (channel != null) {
@@ -599,6 +625,7 @@ class _$CalendarRouteImpl implements CalendarRoute {
     required TResult Function(int groupId) calendar,
     required TResult Function(int groupId) admin,
     required TResult Function(int groupId) memberManagement,
+    required TResult Function(int groupId) announcementManagement,
   }) {
     return calendar(groupId);
   }
@@ -611,6 +638,7 @@ class _$CalendarRouteImpl implements CalendarRoute {
     TResult? Function(int groupId)? calendar,
     TResult? Function(int groupId)? admin,
     TResult? Function(int groupId)? memberManagement,
+    TResult? Function(int groupId)? announcementManagement,
   }) {
     return calendar?.call(groupId);
   }
@@ -623,6 +651,7 @@ class _$CalendarRouteImpl implements CalendarRoute {
     TResult Function(int groupId)? calendar,
     TResult Function(int groupId)? admin,
     TResult Function(int groupId)? memberManagement,
+    TResult Function(int groupId)? announcementManagement,
     required TResult orElse(),
   }) {
     if (calendar != null) {
@@ -639,6 +668,8 @@ class _$CalendarRouteImpl implements CalendarRoute {
     required TResult Function(CalendarRoute value) calendar,
     required TResult Function(AdminRoute value) admin,
     required TResult Function(MemberManagementRoute value) memberManagement,
+    required TResult Function(AnnouncementManagementRoute value)
+    announcementManagement,
   }) {
     return calendar(this);
   }
@@ -651,6 +682,8 @@ class _$CalendarRouteImpl implements CalendarRoute {
     TResult? Function(CalendarRoute value)? calendar,
     TResult? Function(AdminRoute value)? admin,
     TResult? Function(MemberManagementRoute value)? memberManagement,
+    TResult? Function(AnnouncementManagementRoute value)?
+    announcementManagement,
   }) {
     return calendar?.call(this);
   }
@@ -663,6 +696,7 @@ class _$CalendarRouteImpl implements CalendarRoute {
     TResult Function(CalendarRoute value)? calendar,
     TResult Function(AdminRoute value)? admin,
     TResult Function(MemberManagementRoute value)? memberManagement,
+    TResult Function(AnnouncementManagementRoute value)? announcementManagement,
     required TResult orElse(),
   }) {
     if (calendar != null) {
@@ -780,6 +814,7 @@ class _$AdminRouteImpl implements AdminRoute {
     required TResult Function(int groupId) calendar,
     required TResult Function(int groupId) admin,
     required TResult Function(int groupId) memberManagement,
+    required TResult Function(int groupId) announcementManagement,
   }) {
     return admin(groupId);
   }
@@ -792,6 +827,7 @@ class _$AdminRouteImpl implements AdminRoute {
     TResult? Function(int groupId)? calendar,
     TResult? Function(int groupId)? admin,
     TResult? Function(int groupId)? memberManagement,
+    TResult? Function(int groupId)? announcementManagement,
   }) {
     return admin?.call(groupId);
   }
@@ -804,6 +840,7 @@ class _$AdminRouteImpl implements AdminRoute {
     TResult Function(int groupId)? calendar,
     TResult Function(int groupId)? admin,
     TResult Function(int groupId)? memberManagement,
+    TResult Function(int groupId)? announcementManagement,
     required TResult orElse(),
   }) {
     if (admin != null) {
@@ -820,6 +857,8 @@ class _$AdminRouteImpl implements AdminRoute {
     required TResult Function(CalendarRoute value) calendar,
     required TResult Function(AdminRoute value) admin,
     required TResult Function(MemberManagementRoute value) memberManagement,
+    required TResult Function(AnnouncementManagementRoute value)
+    announcementManagement,
   }) {
     return admin(this);
   }
@@ -832,6 +871,8 @@ class _$AdminRouteImpl implements AdminRoute {
     TResult? Function(CalendarRoute value)? calendar,
     TResult? Function(AdminRoute value)? admin,
     TResult? Function(MemberManagementRoute value)? memberManagement,
+    TResult? Function(AnnouncementManagementRoute value)?
+    announcementManagement,
   }) {
     return admin?.call(this);
   }
@@ -844,6 +885,7 @@ class _$AdminRouteImpl implements AdminRoute {
     TResult Function(CalendarRoute value)? calendar,
     TResult Function(AdminRoute value)? admin,
     TResult Function(MemberManagementRoute value)? memberManagement,
+    TResult Function(AnnouncementManagementRoute value)? announcementManagement,
     required TResult orElse(),
   }) {
     if (admin != null) {
@@ -966,6 +1008,7 @@ class _$MemberManagementRouteImpl implements MemberManagementRoute {
     required TResult Function(int groupId) calendar,
     required TResult Function(int groupId) admin,
     required TResult Function(int groupId) memberManagement,
+    required TResult Function(int groupId) announcementManagement,
   }) {
     return memberManagement(groupId);
   }
@@ -978,6 +1021,7 @@ class _$MemberManagementRouteImpl implements MemberManagementRoute {
     TResult? Function(int groupId)? calendar,
     TResult? Function(int groupId)? admin,
     TResult? Function(int groupId)? memberManagement,
+    TResult? Function(int groupId)? announcementManagement,
   }) {
     return memberManagement?.call(groupId);
   }
@@ -990,6 +1034,7 @@ class _$MemberManagementRouteImpl implements MemberManagementRoute {
     TResult Function(int groupId)? calendar,
     TResult Function(int groupId)? admin,
     TResult Function(int groupId)? memberManagement,
+    TResult Function(int groupId)? announcementManagement,
     required TResult orElse(),
   }) {
     if (memberManagement != null) {
@@ -1006,6 +1051,8 @@ class _$MemberManagementRouteImpl implements MemberManagementRoute {
     required TResult Function(CalendarRoute value) calendar,
     required TResult Function(AdminRoute value) admin,
     required TResult Function(MemberManagementRoute value) memberManagement,
+    required TResult Function(AnnouncementManagementRoute value)
+    announcementManagement,
   }) {
     return memberManagement(this);
   }
@@ -1018,6 +1065,8 @@ class _$MemberManagementRouteImpl implements MemberManagementRoute {
     TResult? Function(CalendarRoute value)? calendar,
     TResult? Function(AdminRoute value)? admin,
     TResult? Function(MemberManagementRoute value)? memberManagement,
+    TResult? Function(AnnouncementManagementRoute value)?
+    announcementManagement,
   }) {
     return memberManagement?.call(this);
   }
@@ -1030,6 +1079,7 @@ class _$MemberManagementRouteImpl implements MemberManagementRoute {
     TResult Function(CalendarRoute value)? calendar,
     TResult Function(AdminRoute value)? admin,
     TResult Function(MemberManagementRoute value)? memberManagement,
+    TResult Function(AnnouncementManagementRoute value)? announcementManagement,
     required TResult orElse(),
   }) {
     if (memberManagement != null) {
@@ -1059,5 +1109,201 @@ abstract class MemberManagementRoute implements WorkspaceRoute {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$MemberManagementRouteImplCopyWith<_$MemberManagementRouteImpl>
+  get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$AnnouncementManagementRouteImplCopyWith<$Res>
+    implements $WorkspaceRouteCopyWith<$Res> {
+  factory _$$AnnouncementManagementRouteImplCopyWith(
+    _$AnnouncementManagementRouteImpl value,
+    $Res Function(_$AnnouncementManagementRouteImpl) then,
+  ) = __$$AnnouncementManagementRouteImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({int groupId});
+}
+
+/// @nodoc
+class __$$AnnouncementManagementRouteImplCopyWithImpl<$Res>
+    extends
+        _$WorkspaceRouteCopyWithImpl<$Res, _$AnnouncementManagementRouteImpl>
+    implements _$$AnnouncementManagementRouteImplCopyWith<$Res> {
+  __$$AnnouncementManagementRouteImplCopyWithImpl(
+    _$AnnouncementManagementRouteImpl _value,
+    $Res Function(_$AnnouncementManagementRouteImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of WorkspaceRoute
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? groupId = null}) {
+    return _then(
+      _$AnnouncementManagementRouteImpl(
+        groupId: null == groupId
+            ? _value.groupId
+            : groupId // ignore: cast_nullable_to_non_nullable
+                  as int,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$AnnouncementManagementRouteImpl implements AnnouncementManagementRoute {
+  const _$AnnouncementManagementRouteImpl({
+    required this.groupId,
+    final String? $type,
+  }) : $type = $type ?? 'announcementManagement';
+
+  factory _$AnnouncementManagementRouteImpl.fromJson(
+    Map<String, dynamic> json,
+  ) => _$$AnnouncementManagementRouteImplFromJson(json);
+
+  @override
+  final int groupId;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'WorkspaceRoute.announcementManagement(groupId: $groupId)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AnnouncementManagementRouteImpl &&
+            (identical(other.groupId, groupId) || other.groupId == groupId));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, groupId);
+
+  /// Create a copy of WorkspaceRoute
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AnnouncementManagementRouteImplCopyWith<_$AnnouncementManagementRouteImpl>
+  get copyWith =>
+      __$$AnnouncementManagementRouteImplCopyWithImpl<
+        _$AnnouncementManagementRouteImpl
+      >(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(int groupId) home,
+    required TResult Function(int groupId, int channelId) channel,
+    required TResult Function(int groupId) calendar,
+    required TResult Function(int groupId) admin,
+    required TResult Function(int groupId) memberManagement,
+    required TResult Function(int groupId) announcementManagement,
+  }) {
+    return announcementManagement(groupId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(int groupId)? home,
+    TResult? Function(int groupId, int channelId)? channel,
+    TResult? Function(int groupId)? calendar,
+    TResult? Function(int groupId)? admin,
+    TResult? Function(int groupId)? memberManagement,
+    TResult? Function(int groupId)? announcementManagement,
+  }) {
+    return announcementManagement?.call(groupId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(int groupId)? home,
+    TResult Function(int groupId, int channelId)? channel,
+    TResult Function(int groupId)? calendar,
+    TResult Function(int groupId)? admin,
+    TResult Function(int groupId)? memberManagement,
+    TResult Function(int groupId)? announcementManagement,
+    required TResult orElse(),
+  }) {
+    if (announcementManagement != null) {
+      return announcementManagement(groupId);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(HomeRoute value) home,
+    required TResult Function(ChannelRoute value) channel,
+    required TResult Function(CalendarRoute value) calendar,
+    required TResult Function(AdminRoute value) admin,
+    required TResult Function(MemberManagementRoute value) memberManagement,
+    required TResult Function(AnnouncementManagementRoute value)
+    announcementManagement,
+  }) {
+    return announcementManagement(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(HomeRoute value)? home,
+    TResult? Function(ChannelRoute value)? channel,
+    TResult? Function(CalendarRoute value)? calendar,
+    TResult? Function(AdminRoute value)? admin,
+    TResult? Function(MemberManagementRoute value)? memberManagement,
+    TResult? Function(AnnouncementManagementRoute value)?
+    announcementManagement,
+  }) {
+    return announcementManagement?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(HomeRoute value)? home,
+    TResult Function(ChannelRoute value)? channel,
+    TResult Function(CalendarRoute value)? calendar,
+    TResult Function(AdminRoute value)? admin,
+    TResult Function(MemberManagementRoute value)? memberManagement,
+    TResult Function(AnnouncementManagementRoute value)? announcementManagement,
+    required TResult orElse(),
+  }) {
+    if (announcementManagement != null) {
+      return announcementManagement(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$AnnouncementManagementRouteImplToJson(this);
+  }
+}
+
+abstract class AnnouncementManagementRoute implements WorkspaceRoute {
+  const factory AnnouncementManagementRoute({required final int groupId}) =
+      _$AnnouncementManagementRouteImpl;
+
+  factory AnnouncementManagementRoute.fromJson(Map<String, dynamic> json) =
+      _$AnnouncementManagementRouteImpl.fromJson;
+
+  @override
+  int get groupId;
+
+  /// Create a copy of WorkspaceRoute
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$AnnouncementManagementRouteImplCopyWith<_$AnnouncementManagementRouteImpl>
   get copyWith => throw _privateConstructorUsedError;
 }

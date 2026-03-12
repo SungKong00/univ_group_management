@@ -63,6 +63,9 @@ class WorkspaceNavigationHelper {
       case WorkspaceView.calendar:
         return WorkspaceView.calendar;
 
+      case WorkspaceView.announcementManagement:
+        return WorkspaceView.announcementManagement;
+
       case WorkspaceView.channel:
         // Channel view: will select first channel in loadChannels
         return WorkspaceView.channel;

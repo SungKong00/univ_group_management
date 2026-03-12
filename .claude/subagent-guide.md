@@ -1,19 +1,21 @@
 # 서브 에이전트 마스터 가이드
 
 ## 개요
-대학교 그룹 관리 시스템을 위한 7개 전문 서브 에이전트의 역할, 협업 방식, 그리고 효과적인 활용 방법을 안내합니다.
+대학교 그룹 관리 시스템을 위한 9개 전문 서브 에이전트의 역할, 협업 방식, 그리고 효과적인 활용 방법을 안내합니다.
 
 ## 서브 에이전트 구성
 
-### 핵심 개발 에이전트 (4개)
+### 핵심 개발 에이전트 (5개)
 - **backend-architect**: Spring Boot 백엔드 아키텍처 전문가
 - **frontend-specialist**: Flutter/React UI/UX 구현 전문가
+- **frontend-debugger**: 프론트엔드 디버깅 및 에러 해결 전문가
 - **permission-engineer**: RBAC 권한 시스템 전문가
 - **api-integrator**: 백엔드-프론트엔드 연동 전문가
 
-### 지원 및 품질 에이전트 (3개)
+### 지원 및 품질 에이전트 (4개)
 - **database-optimizer**: JPA 쿼리 최적화 및 성능 전문가
-- **test-automation**: 통합 테스트 및 자동화 전문가
+- **backend-debugger**: 백엔드 디버깅 및 에러 해결 전문가
+- **test-automation-specialist**: 통합 테스트 및 자동화 전문가
 - **context-manager**: 문서 구조 관리 및 최적화 전문가
 
 ## 서브 에이전트 활용 방법
@@ -58,7 +60,7 @@
 - Spring Security 통합
 
 ### frontend-specialist
-**전문 분야**: Flutter/React 반응형 UI/UX
+**전문 분야**: Flutter/React 반응형 UI/UX 구현
 - 900px 브레이크포인트 반응형 설계
 - Provider/Zustand 상태 관리
 - 권한 기반 UI 렌더링
@@ -69,6 +71,19 @@
 - 상태 관리 리팩토링
 - 반응형 레이아웃 구현
 - 사용자 경험 개선
+
+### frontend-debugger
+**전문 분야**: 프론트엔드 디버깅 및 에러 해결
+- UI 버그 진단 및 수정
+- State management 이슈 해결
+- 레이아웃 에러 (BoxConstraints 등) 디버깅
+- 성능 병목 분석
+
+**활용 시나리오**:
+- UI 렌더링 에러 해결
+- State 불일치 문제 해결
+- Row/Column 레이아웃 에러
+- 성능 최적화
 
 ### permission-engineer
 **전문 분야**: RBAC + 개인 오버라이드 권한 시스템
@@ -109,7 +124,20 @@
 - 쿼리 최적화
 - 데이터베이스 모니터링
 
-### test-automation
+### backend-debugger
+**전문 분야**: 백엔드 디버깅 및 에러 해결
+- API 에러 진단 및 수정
+- 비즈니스 로직 버그 해결
+- 데이터베이스 관련 에러
+- 권한 검증 이슈
+
+**활용 시나리오**:
+- API 응답 에러 해결
+- 비즈니스 로직 버그 수정
+- 데이터 일관성 문제 해결
+- 권한 검증 문제 진단
+
+### test-automation-specialist
 **전문 분야**: 통합 테스트 및 자동화
 - Spring Boot 통합 테스트
 - Flutter Widget/E2E 테스트
@@ -157,17 +185,24 @@ Support: test-automation
 ```
 Primary: frontend-specialist
 Secondary: api-integrator
-Support: test-automation
+Support: test-automation-specialist
 ```
 
-#### 4. 권한 시스템 확장
+#### 4. 프론트엔드 버그 해결
+```
+Primary: frontend-debugger
+Secondary: frontend-specialist
+Support: test-automation-specialist
+```
+
+#### 5. 권한 시스템 확장
 ```
 Primary: permission-engineer
 Secondary: backend-architect, frontend-specialist
-Support: test-automation
+Support: test-automation-specialist
 ```
 
-#### 5. 문서화 및 리팩토링
+#### 6. 문서화 및 리팩토링
 ```
 Primary: context-manager
 Secondary: All agents (각자 전문 분야)
@@ -239,11 +274,11 @@ Secondary: All agents (각자 전문 분야)
 #### 성능 이슈
 1. **database-optimizer**에게 쿼리 분석 요청
 2. **backend-architect**와 비즈니스 로직 최적화 협의
-3. **test-automation**으로 성능 테스트 설정
+3. **test-automation-specialist**으로 성능 테스트 설정
 
 #### 권한 관련 버그
 1. **permission-engineer**에게 권한 로직 디버깅 요청
-2. **backend-architect**와 API 레벨 체크 확인
+2. **backend-debugger**와 API 레벨 체크 확인
 3. **frontend-specialist**와 UI 권한 표시 검토
 
 #### API 연동 문제
@@ -251,10 +286,15 @@ Secondary: All agents (각자 전문 분야)
 2. **backend-architect**와 API 스펙 확인
 3. **frontend-specialist**와 클라이언트 구현 검토
 
-#### 복잡한 UI 버그
-1. **frontend-specialist**에게 컴포넌트 분석 요청
-2. **api-integrator**와 데이터 흐름 확인
-3. **test-automation**으로 시나리오 테스트 작성
+#### 프론트엔드 UI 버그
+1. **frontend-debugger**에게 에러 진단 요청 (우선)
+2. **frontend-specialist**와 UI 구조 개선 협의
+3. **test-automation-specialist**으로 시나리오 테스트 작성
+
+#### 백엔드 API 버그
+1. **backend-debugger**에게 에러 분석 요청 (우선)
+2. **backend-architect**와 비즈니스 로직 검토
+3. **test-automation-specialist**으로 통합 테스트 작성
 
 ## 지속적 개선
 

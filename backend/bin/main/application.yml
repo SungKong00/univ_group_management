@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: univ-group-backend
+
+  # 데이터베이스 설정
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  
+  # H2 Console 설정 (개발용)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        # 배치 처리 최적화 (그룹 캘린더 반복 일정 생성 최적화)
+        jdbc:
+          batch_size: 50                    # 배치 크기 (반복 일정 최적화용)
+          batch_versioned_data: true        # 버전 데이터 배치 처리
+        order_inserts: true                 # INSERT 순서 최적화
+        order_updates: true                 # UPDATE 순서 최적화
+        # 커넥션 최적화
+        connection:
+          provider_disables_autocommit: true
+        # 쿼리 계획 캐시
+        query:
+          plan_cache_max_size: 2048
+          plan_parameter_metadata_max_size: 128
+        # 통계 최적화
+        generate_statistics: false
+        # 2차 캐시 설정 (JCache 의존성 없음으로 비활성화)
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+    defer-datasource-initialization: true
+
+  # Validation 설정
+  validation:
+    fail-fast: true
+
+# JWT 설정
+jwt:
+  secret: mySecretKeyForJWTTokenGenerationWhichShouldBeVeryLongAndSecureInProduction
+  expiration: 86400000 # 24시간 (밀리초)
+  refresh-expiration: 604800000 # 7일 (밀리초)
+
+# Google OAuth2 설정
+app:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+    additional-client-ids: "${GOOGLE_SERVER_CLIENT_ID:},${GOOGLE_WEB_CLIENT_ID:},${GOOGLE_IOS_CLIENT_ID:},${GOOGLE_ANDROID_CLIENT_ID:},${GOOGLE_ADDITIONAL_CLIENT_IDS:}"
+  school-email:
+    # 콤마로 구분된 허용 도메인 목록 (하위 도메인 허용)
+    allowed-domains: hs.ac.kr
+
+# 로깅 설정
+logging:
+  level:
+    org.castlekong.backend: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Swagger/OpenAPI 설정
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method

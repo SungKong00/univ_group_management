@@ -11,6 +11,7 @@ void main() {
         home: (groupId) => expect(groupId, 1),
         channel: (_, __) => fail('Should be home route'),
         calendar: (_) => fail('Should be home route'),
+        announcementManagement: (_) => fail('Should be home route'),
         admin: (_) => fail('Should be home route'),
         memberManagement: (_) => fail('Should be home route'),
       );
@@ -27,6 +28,7 @@ void main() {
           expect(channelId, 5);
         },
         calendar: (_) => fail('Should be channel route'),
+        announcementManagement: (_) => fail('Should be channel route'),
         admin: (_) => fail('Should be channel route'),
         memberManagement: (_) => fail('Should be channel route'),
       );
@@ -40,6 +42,7 @@ void main() {
         home: (_) => fail('Should be calendar route'),
         channel: (_, __) => fail('Should be calendar route'),
         calendar: (groupId) => expect(groupId, 1),
+        announcementManagement: (_) => fail('Should be calendar route'),
         admin: (_) => fail('Should be calendar route'),
         memberManagement: (_) => fail('Should be calendar route'),
       );
@@ -53,6 +56,7 @@ void main() {
         home: (_) => fail('Should be admin route'),
         channel: (_, __) => fail('Should be admin route'),
         calendar: (_) => fail('Should be admin route'),
+        announcementManagement: (_) => fail('Should be admin route'),
         admin: (groupId) => expect(groupId, 1),
         memberManagement: (_) => fail('Should be admin route'),
       );
@@ -66,6 +70,7 @@ void main() {
         home: (_) => fail('Should be memberManagement route'),
         channel: (_, __) => fail('Should be memberManagement route'),
         calendar: (_) => fail('Should be memberManagement route'),
+        announcementManagement: (_) => fail('Should be memberManagement route'),
         admin: (_) => fail('Should be memberManagement route'),
         memberManagement: (groupId) => expect(groupId, 1),
       );

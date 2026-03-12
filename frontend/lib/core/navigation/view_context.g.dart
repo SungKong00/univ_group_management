@@ -24,6 +24,7 @@ const _$ViewTypeEnumMap = {
   ViewType.home: 'home',
   ViewType.channel: 'channel',
   ViewType.calendar: 'calendar',
+  ViewType.announcementManagement: 'announcementManagement',
   ViewType.admin: 'admin',
   ViewType.memberManagement: 'memberManagement',
 };

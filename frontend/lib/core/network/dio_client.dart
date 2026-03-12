@@ -35,14 +35,33 @@ class DioClient {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await _storage.getAccessToken();
+          developer.log(
+            '[DioClient] Request: ${options.path}, Token: ${token != null ? "YES" : "NO"} (${DateTime.now()})',
+            name: 'DioClient',
+          );
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
+            developer.log(
+              '[DioClient] Authorization header set (${DateTime.now()})',
+              name: 'DioClient',
+            );
+          } else {
+            developer.log(
+              '[DioClient] ⚠️ NO TOKEN - Request will proceed without Authorization (${DateTime.now()})',
+              name: 'DioClient',
+              level: 900,
+            );
           }
           handler.next(options);
         },
         onError: (error, handler) async {
           // 401 Unauthorized 에러 처리
           if (error.response?.statusCode == 401) {
+            developer.log(
+              '[DioClient] ❌ 401 Unauthorized - ${error.requestOptions.path} (${DateTime.now()})',
+              name: 'DioClient',
+              level: 900,
+            );
             final requestOptions = error.requestOptions;
 
             // 이미 재시도한 요청이면 에러 반환 (무한 루프 방지)
@@ -129,12 +148,12 @@ class DioClient {
 
       if (response.statusCode == 200) {
         final newAccessToken = response.data['accessToken'];
-        final newRefreshToken = response.data['refreshToken'];
+        if (newAccessToken is! String || newAccessToken.isEmpty) {
+          throw Exception('Invalid access token in refresh response');
+        }
 
-        await _storage.saveTokens(
-          accessToken: newAccessToken,
-          refreshToken: newRefreshToken,
-        );
+        // ✅ 리프레시 응답은 accessToken만 반환. 기존 refreshToken은 보존한다.
+        await _storage.saveAccessToken(newAccessToken);
 
         developer.log('Token refresh successful', name: 'Dio');
       } else {

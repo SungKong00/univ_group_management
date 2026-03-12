@@ -16,6 +16,7 @@ class LoginResponse {
   final int expiresIn;
   final UserInfo user;
   final bool firstLogin;
+  final String? refreshToken; // ✅ 추가: 백엔드 전달 리프레시 토큰
 
   LoginResponse({
     required this.accessToken,
@@ -23,15 +24,26 @@ class LoginResponse {
     required this.expiresIn,
     required this.user,
     required this.firstLogin,
+    this.refreshToken,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) => LoginResponse(
     accessToken: json['accessToken'] as String,
     tokenType: json['tokenType'] as String? ?? 'Bearer',
-    expiresIn: json['expiresIn'] as int,
+    expiresIn: (json['expiresIn'] as num).toInt(),
     user: UserInfo.fromJson(json['user'] as Map<String, dynamic>),
     firstLogin: json['firstLogin'] as bool? ?? false,
+    refreshToken: json['refreshToken'] as String?, // ✅ 파싱 추가
   );
+
+  Map<String, dynamic> toJson() => {
+    'accessToken': accessToken,
+    'tokenType': tokenType,
+    'expiresIn': expiresIn,
+    'user': user.toJson(),
+    'firstLogin': firstLogin,
+    if (refreshToken != null) 'refreshToken': refreshToken,
+  };
 }
 
 class UserInfo {

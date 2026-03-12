@@ -105,6 +105,7 @@ class _ChannelContentViewState extends ConsumerState<ChannelContentView> {
                 );
                 final isNarrowDesktop = responsive.isNarrowDesktop;
 
+                // 읽음 위치 기능 제거됨 - 바로 PostList 렌더링
                 return PostList(
                   key: ValueKey(
                     'post_list_${widget.selectedChannelId}_${widget.postReloadTick}_$_postListKey',

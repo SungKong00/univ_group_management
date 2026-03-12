@@ -94,11 +94,12 @@ final pageBreadcrumbFromPathProvider = Provider.autoDispose
         final groupName = groupsAsync.maybeWhen(
           data: (groups) {
             if (selectedGroupId == null) return null;
-            final currentGroup = groups.firstWhere(
+            if (groups.isEmpty) return null; // ✅ 안전 가드: 빈 리스트
+            final idx = groups.indexWhere(
               (g) => g.id.toString() == selectedGroupId,
-              orElse: () => groups.first,
             );
-            return currentGroup.name;
+            if (idx == -1) return null; // ✅ 안전 가드: 매칭 없음
+            return groups[idx].name;
           },
           orElse: () => null,
         );
@@ -185,6 +186,8 @@ PageBreadcrumb _buildDesktopBreadcrumb(WorkspaceBreadcrumbContext context) {
       return const PageBreadcrumb(title: '장소 시간 관리');
     case WorkspaceView.calendar:
       return const PageBreadcrumb(title: '캘린더');
+    case WorkspaceView.announcementManagement:
+      return const PageBreadcrumb(title: '공지 관리');
     case WorkspaceView.groupHome:
       return const PageBreadcrumb(title: '그룹 홈');
     case WorkspaceView.channel:

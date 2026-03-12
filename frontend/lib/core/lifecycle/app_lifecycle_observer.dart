@@ -95,12 +95,10 @@ class AppLifecycleObserver with WidgetsBindingObserver {
     );
 
     try {
-      // Save read position only, preserve current channel state
-      // This follows FR-011: "update unread badge counts only when user exits"
-      ref.read(workspaceStateProvider.notifier).saveReadPositionOnly();
-
+      // 읽음 위치 기능 제거됨 - saveReadPositionOnly는 더 이상 존재하지 않음
+      // 현재는 아무 동작도 수행하지 않음
       developer.log(
-        'Read position saved successfully on app pause',
+        'App paused (no action - read position feature removed)',
         name: 'AppLifecycleObserver',
       );
     } catch (e) {

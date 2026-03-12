@@ -1,5 +1,84 @@
 # 대학 그룹 관리 시스템 (University Group Management)
 
+## 🚧 백엔드 리팩터링 진행 중 (Backend Refactoring)
+
+**CRITICAL**: 현재 `backend_new` 디렉토리에서 백엔드를 Clean Architecture 기반으로 재구성 중입니다.
+
+### 리팩터링 상태
+
+**현재 작업 디렉토리**: `backend_new/` (기존 `backend/`는 유지)
+
+**참고 문서 위치**: `docs/refactor/backend/`
+- 📘 **[마스터플랜](docs/refactor/backend/masterplan.md)** - 전체 리팩터링 계획 (Phase 0-7)
+- 📗 **[API 단순화](docs/refactor/backend/api-simplification.md)** - REST API 표준화
+- 📙 **[도메인 경계](docs/refactor/backend/domain-boundaries.md)** - Bounded Contexts
+- 📕 **[권한 검증 패턴](docs/refactor/backend/permission-guard.md)** - 역함수 패턴
+- 📄 **[Entity 설계서](docs/refactor/backend/entity-design.md)** - 29개 Entity 구조 (Phase 0 ✅)
+- 📄 **[API 엔드포인트 목록](docs/refactor/backend/api-endpoints.md)** - 47개 API 설계 (Phase 0 ✅)
+- 📄 **[도메인 의존성 그래프](docs/refactor/backend/domain-dependencies.md)** - 6개 Domain 의존성 (Phase 0 ✅)
+- 📄 **[마이그레이션 매핑표](docs/refactor/backend/migration-mapping.md)** - 호환성 레이어 설계 (Phase 0 ✅)
+
+### Phase 진행 상황
+
+- [x] **Phase 0**: 준비 단계 (Entity 설계, API 목록 작성) - ✅ **완료** (2025-12-03)
+  - [x] Entity 설계서 작성 (`entity-design.md`) - 29개 Entity, 6개 Domain
+  - [x] API 엔드포인트 목록 작성 (`api-endpoints.md`) - 47개 엔드포인트
+  - [x] 도메인 의존성 그래프 (`domain-dependencies.md`) - 순환 참조 없음
+  - [x] 마이그레이션 매핑표 (`migration-mapping.md`) - 호환성 레이어 설계
+
+- [x] **Phase 1**: Domain Layer (29개 Entity + Repository) - ✅ **완료** (2025-12-03)
+  - [x] User Domain (Entity + Repository)
+  - [x] Group Domain (5개 Entity)
+  - [x] Permission Domain
+  - [x] Workspace Domain (4개 Entity)
+  - [x] Content Domain (Post, Comment)
+  - [x] Calendar Domain (12개 Entity)
+
+- [x] **Phase 2**: Service Layer (6개 도메인 Service) - ✅ **완료** (2025-12-03)
+  - [x] UserService (IUserService + 구현)
+  - [x] GroupService
+  - [x] WorkspaceService
+  - [x] ContentService
+  - [x] CalendarService
+  - [x] Repository 29개 완성
+
+- [x] **Phase 3**: Permission System (권한 시스템) - ✅ **완료** (2025-12-03)
+  - [x] PermissionEvaluator 구현
+  - [x] 권한 캐싱 (PermissionCacheManager)
+  - [x] 감사 로깅 (AuditLogger)
+  - [ ] 권한 테스트 (20개 이상) - Phase 6으로 연기
+
+- [x] **Phase 4**: Controller Layer (REST API) - ✅ **완료** (2025-12-03)
+  - [x] UserController
+  - [x] GroupController
+  - [x] ContentController (Post, Comment)
+  - [x] WorkspaceController
+  - [x] 컴파일 에러 해결
+
+- [x] **Phase 5**: Security & Auth (OAuth2 + JWT) - ✅ **완료** (2025-12-09)
+  - [x] JwtTokenProvider (Access + Refresh Token)
+  - [x] JwtAuthenticationFilter
+  - [x] Google OAuth2 검증 (ID Token + Access Token)
+  - [x] SecurityConfig (Stateless, CORS)
+  - [x] AuthController + AuthService (6개 엔드포인트)
+
+- [x] **Phase 6**: 테스트 및 검증 - ✅ **완료** (2025-12-09)
+  - [x] 단위 테스트 155개 작성 (133개 통과, 86%)
+  - [x] 권한 시스템 테스트 21개 (PermissionEvaluatorTest)
+  - [x] 통합 테스트 설정 (Spring Context 이슈 일부)
+  - [ ] 성능 측정 - 후속 작업
+
+- [x] **Phase 7**: 마이그레이션 준비 - ✅ **완료** (2025-12-09)
+  - [x] 마이그레이션 3단계 전략 수립 (읽기 → 쓰기 → 완전 전환)
+  - [x] 호환성 레이어 설계 (DTO 변환기, Controller Adapter, Feature Flag)
+  - [x] Entity/API 호환성 검증 (29개 Entity, 47개 API)
+  - [x] 롤백 전략 수립
+
+**Phase 완료 시 작업**:
+각 Phase 완료 후 위 체크박스를 `[x]`로 변경하고, `docs/context-tracking/` 폴더에 완료 보고서를 작성하세요.
+
+---
+
 ## ⚠️ MCP 자동 사용 규칙 (AI AUTO-ENFORCE)
 
 **CRITICAL**: AI는 사용자 요청을 받으면 **자동으로 MCP를 우선 사용**합니다.
@@ -149,8 +228,10 @@
 
 ### 주요 가이드
 - **백엔드**: [구현 가이드 인덱스](docs/implementation/backend/README.md)
-- **프론트엔드**: [구현 가이드 인덱스](docs/implementation/frontend/README.md)
+- **프론트엔드 개발**: [구현 가이드 인덱스](docs/implementation/frontend/README.md) + [frontend-specialist](.claude/agents/frontend-specialist.md)
+- **프론트엔드 디버깅**: [frontend-debugger](.claude/agents/frontend-debugger.md)
 - **디자인 시스템**: [디자인 시스템 개요](docs/ui-ux/concepts/design-system.md)
+- **컴포넌트 개발 계획**: [COMPONENT_DEVELOPMENT_PLAN.md](frontend_new/docs/COMPONENT_DEVELOPMENT_PLAN.md) ⭐ NEW
 - **문서 관리**: [markdown-guidelines.md](markdown-guidelines.md)
 
 ---
@@ -247,6 +328,19 @@ flutter run -d chrome --web-hostname localhost --web-port 5173  # .env가 이미
 ---
 
 ## 🚀 현재 구현 상태
+
+### 2025-11-18 Clean Architecture 마이그레이션 진행 중
+- ✅ **Comment Feature Phase 2 완료** (Domain/Data/Presentation Layer 전체 구현)
+  - 29/29 테스트 통과 (dart-flutter MCP)
+  - 3-Layer Architecture 완벽 준수
+  - AsyncNotifier 패턴 + Optimistic UI Updates
+  - Legacy 호환성 유지 (CommentConverter)
+- 🚧 **Channel Feature Phase 1.10-1.11 완료** (Widget 구현)
+  - 86/86 테스트 통과
+  - ChannelView + ChannelErrorState 위젯
+- 🚧 **Post Feature Phase 3 진행 중** (Presentation Layer)
+  - AsyncNotifier 패턴 적용
+  - Sticky Header 타이밍 이슈 해결
 
 ### 2025-11-10 Navigator 2.0 리팩터링 완료
 - ✅ **001-workspace-navigation-refactor 브랜치 develop 병합**

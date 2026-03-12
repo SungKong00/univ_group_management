@@ -3,6 +3,7 @@ import '../../models/member_models.dart';
 import '../../repositories/repository_providers.dart';
 import '../extensions/ref_extensions.dart';
 import 'member_filter_provider.dart';
+import '../../../presentation/providers/auth_provider.dart';
 
 /// 필터가 적용된 그룹 멤버 목록 조회 Provider
 ///
@@ -14,6 +15,10 @@ import 'member_filter_provider.dart';
 /// - autoDispose: 사용하지 않을 때 자동 해제
 final filteredGroupMembersProvider = FutureProvider.autoDispose
     .family<List<GroupMember>, int>((ref, groupId) async {
+      // currentUserProvider 의존성 추가 (로그아웃 시 자동 무효화)
+      final user = ref.watch(currentUserProvider).valueOrNull;
+      if (user == null) return [];
+
       // 5분간 캐시 유지
       ref.cacheFor(const Duration(minutes: 5));
 
@@ -39,6 +44,10 @@ final filteredGroupMembersProvider = FutureProvider.autoDispose
 /// 주로 통계나 역할 할당 시 사용됩니다.
 final allGroupMembersProvider = FutureProvider.autoDispose
     .family<List<GroupMember>, int>((ref, groupId) async {
+      // currentUserProvider 의존성 추가 (로그아웃 시 자동 무효화)
+      final user = ref.watch(currentUserProvider).valueOrNull;
+      if (user == null) return [];
+
       final memberRepository = ref.watch(memberRepositoryProvider);
       return memberRepository.getGroupMembers(groupId);
     });

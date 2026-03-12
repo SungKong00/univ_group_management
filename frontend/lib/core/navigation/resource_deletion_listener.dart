@@ -39,6 +39,7 @@ class ResourceDeletionListener {
         },
         home: (_) {},
         calendar: (_) {},
+        announcementManagement: (_) {},
         admin: (_) {},
         memberManagement: (_) {},
       );
@@ -68,6 +69,7 @@ class ResourceDeletionListener {
         home: (gId) => gId,
         channel: (gId, _) => gId,
         calendar: (gId) => gId,
+        announcementManagement: (gId) => gId,
         admin: (gId) => gId,
         memberManagement: (gId) => gId,
       );

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/group_models.dart';
 import '../../../../core/services/group_service.dart';
+import '../../../providers/auth_provider.dart';
 
 /// GroupService Provider
 final groupServiceProvider = Provider<GroupService>((ref) {
@@ -10,6 +11,10 @@ final groupServiceProvider = Provider<GroupService>((ref) {
 /// 하위 그룹 생성 요청 목록 Provider
 final subGroupRequestListProvider = FutureProvider.autoDispose
     .family<List<SubGroupRequestResponse>, int>((ref, groupId) async {
+      // currentUserProvider 의존성 추가 (로그아웃 시 자동 무효화)
+      final user = ref.watch(currentUserProvider).valueOrNull;
+      if (user == null) return [];
+
       final service = ref.watch(groupServiceProvider);
       return await service.getSubGroupRequests(groupId);
     });

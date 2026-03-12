@@ -32,6 +32,7 @@ class WorkspaceRouterDelegate extends RouterDelegate<WorkspaceRoute>
       home: (groupId) => '홈 페이지로 이동했습니다',
       channel: (groupId, channelId) => '채널 $channelId로 이동했습니다',
       calendar: (groupId) => '캘린더 페이지로 이동했습니다',
+      announcementManagement: (groupId) => '공지 관리 페이지로 이동했습니다',
       admin: (groupId) => '관리 페이지로 이동했습니다',
       memberManagement: (groupId) => '멤버 관리 페이지로 이동했습니다',
     );
@@ -251,6 +252,10 @@ class WorkspaceRouterDelegate extends RouterDelegate<WorkspaceRoute>
         key: ValueKey('calendar-$groupId'),
         child: _buildCalendarView(groupId),
       ),
+      announcementManagement: (groupId) => MaterialPage(
+        key: ValueKey('announcement-management-$groupId'),
+        child: _buildAnnouncementManagementView(groupId),
+      ),
       admin: (groupId) => MaterialPage(
         key: ValueKey('admin-$groupId'),
         child: _buildAdminView(groupId),
@@ -298,6 +303,7 @@ class WorkspaceRouterDelegate extends RouterDelegate<WorkspaceRoute>
       home: (_) => ViewType.home,
       channel: (_, __) => ViewType.channel,
       calendar: (_) => ViewType.calendar,
+      announcementManagement: (_) => ViewType.announcementManagement,
       admin: (_) => ViewType.admin,
       memberManagement: (_) => ViewType.memberManagement,
     );
@@ -403,6 +409,25 @@ class WorkspaceRouterDelegate extends RouterDelegate<WorkspaceRoute>
         automaticallyImplyLeading: false,
       ),
       body: Center(child: Text('Calendar View for Group $groupId')),
+    );
+
+    if (isTestMode) return content;
+
+    return ResponsiveNavigationWrapper(
+      navigationItems: _buildNavigationItems(groupId),
+      child: content,
+    );
+  }
+
+  Widget _buildAnnouncementManagementView(int groupId) {
+    final content = Scaffold(
+      appBar: AppBar(
+        title: Text('Announcement Management - Group $groupId'),
+        automaticallyImplyLeading: false,
+      ),
+      body: Center(
+        child: Text('Announcement Management View for Group $groupId'),
+      ),
     );
 
     if (isTestMode) return content;

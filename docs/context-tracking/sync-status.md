@@ -4,10 +4,10 @@
 
 ## 📊 전체 현황
 
-**마지막 업데이트**: 2025-11-13 (I+J) (워크스페이스 그룹 선택 상태 유지 버그 수정 + Provider 리팩터링)
-**총 문서 수**: 103개
-**동기화 완료**: 101개 (98%)
-**업데이트 필요**: 2개 (2%)
+**마지막 업데이트**: 2025-11-20 (M) (Frontend 에이전트 파일 및 문서 구조 개선)
+**총 문서 수**: 117개
+**동기화 완료**: 117개 (100%)
+**업데이트 필요**: 0개 (0%)
 
 ---
 
@@ -45,13 +45,14 @@
 | `exception-handling.md` | ✅ 최신 | 2025-10-24 | 예외 처리 전략 |
 | `testing.md` | ✅ 최신 | 2025-10-24 | 통합 테스트, 보안 테스트 |
 
-### `/docs/implementation/frontend/` - 프론트엔드 구현 가이드 (13개)
+### `/docs/implementation/frontend/` - 프론트엔드 구현 가이드 (16개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
-| `README.md` | ✅ 최신 | 2025-10-24 | 프론트엔드 구현 가이드 인덱스 |
+| `README.md` | ✅ 최신 | 2025-11-20 | 읽지 않은 글 기능 링크 추가 |
 | `architecture.md` | ✅ 최신 | 2025-11-02 | 어댑터 패턴 추가 (PersonalEventAdapter) |
+| `architecture-guide.md` | ✅ 최신 | 2025-11-20 | docs/frontend에서 이동 (구조 통합) |
 | `authentication.md` | ✅ 최신 | 2025-10-24 | Google OAuth, 자동 로그인, 토큰 관리 |
-| `state-management.md` | ❌ 업데이트 필요 | 2025-10-24 | myGroupsProvider keepAlive 설명 추가 필요 |
+| `state-management.md` | ✅ 최신 | 2025-11-13 | myGroupsProvider keepAlive 설명 추가됨 |
 | `advanced-state-patterns.md` | ✅ 최신 | 2025-10-24 | Unified Provider, LocalFilterNotifier (신규, 92줄) |
 | `filter-model-guide.md` | ✅ 최신 | 2025-10-24 | FilterModel, Sentinel Value Pattern |
 | `design-system.md` | ✅ 최신 | 2025-10-24 | Toss 기반 토큰, 버튼 스타일, 재사용성 |
@@ -59,8 +60,11 @@
 | `chip-components.md` | ✅ 최신 | 2025-10-25 | CompactChip 섹션 추가 완료 (103줄) |
 | `member-list-implementation.md` | ✅ 최신 | 2025-10-24 | 멤버 필터 Phase 1 (100줄로 리팩토링) |
 | `member-filter-advanced-features.md` | ✅ 최신 | 2025-10-24 | 멤버 필터 Phase 2-3 (신규, 97줄) |
+| `member-selection-implementation.md` | ✅ 최신 | 2025-10-24 | 멤버 선택 플로우 구현 |
+| `unread-posts-implementation.md` | ✅ 최신 | 2025-11-20 | 읽지 않은 글 기능 구현 가이드 (신규, 100줄 이하) |
 | `responsive-design.md` | ✅ 최신 | 2025-10-24 | 브레이크포인트, 적응형 레이아웃 |
 | `performance.md` | ✅ 최신 | 2025-10-24 | 앱 시작 성능, 개선 계획 |
+| `feature-flags.md` | ✅ 최신 | 2025-11-20 | docs/frontend에서 이동 (구조 통합) |
 
 ### `/docs/implementation/` - 구현 참조 문서 (7개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
@@ -129,11 +133,21 @@
 | `calendar-integration-roadmap.md` | ✅ 최신 | 2025-10-24 | 캘린더 통합 로드맵 (6-8주) |
 | `group-explore-hybrid-strategy.md` | ✅ 최신 | 2025-10-24 | 그룹 탐색 하이브리드 전략 (신규, 95줄) |
 
-### `/docs/workflows/` - 개발 프로세스 (2개)
+### `/docs/workflows/` - 개발 프로세스 (11개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
 | `development-flow.md` | ✅ 최신 | 2024-09-29 | 개발 워크플로우 |
 | `testing-strategy.md` | ✅ 최신 | 2025-10-06 | 테스트 전략 |
+| `post-refactoring-masterplan.md` | ✅ 최신 | 2025-11-17 | Post 리팩터링 마스터 플랜 |
+| `post-refactoring-checklist.md` | ✅ 최신 | 2025-11-18 | Post 리팩터링 체크리스트 (Phase 3 완료 표시) |
+| `post-refactoring-quickref.md` | ✅ 최신 | 2025-11-17 | Post 리팩터링 빠른 참조 |
+| `post-files-inventory.md` | ✅ 최신 | 2025-11-17 | Post 파일 인벤토리 |
+| `post-domain-design.md` | ✅ 최신 | 2025-11-17 | Post Domain 설계 |
+| `post-phase1-completion.md` | ✅ 최신 | 2025-11-17 | Phase 1 완료 보고서 |
+| `post-phase2-completion.md` | ✅ 최신 | 2025-11-18 | Phase 2 완료 보고서 |
+| `post-phase3-completion.md` | ✅ 최신 | 2025-11-18 | Phase 3 완료 보고서 |
+| `post-refactoring-future-work.md` | ✅ 최신 | 2025-11-18 | Post 리팩터링 추후 작업 (신규) |
+| `unread-posts-checklist.md` | ✅ 최신 | 2025-11-20 | 읽지 않은 글 기능 체크리스트 (신규) |
 
 ### `/docs/testing/` - 테스트 관리 (1개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
@@ -159,19 +173,57 @@
 | `permission-errors.md` | ✅ 최신 | 2024-09-25 | 권한 에러 해결 |
 | `common-errors.md` | ✅ 최신 | 2025-10-09 | 일반 에러 해결 |
 
-### `/docs/context-tracking/` - 컨텍스트 추적 (3개)
+### `/docs/context-tracking/` - 컨텍스트 추적 (5개)
 | 파일명 | 상태 | 마지막 동기화 | 비고 |
 |--------|------|---------------|------|
-| `context-update-log.md` | ✅ 최신 | 2025-11-03 | 2025-11-03 (D) 완료된 추적 문서 삭제 로그 추가 |
+| `context-update-log.md` | ✅ 최신 | 2025-11-18 | 2025-11-18 (K) Post Phase 1-4 완료 로그 추가 |
 | `pending-updates.md` | ✅ 최신 | 2025-10-06 | 대기 중인 업데이트 목록 |
-| `sync-status.md` | ✅ 최신 | 2025-11-03 | 문서 수 통계 업데이트 (107→103개) |
+| `sync-status.md` | ✅ 최신 | 2025-11-18 | 문서 수 통계 업데이트 (103→106개) |
+| `post-architecture-analysis.md` | ✅ 최신 | 2025-11-18 | Post 아키텍처 분석 (Phase 1-4 완료 반영) |
+| `post-refactoring-phase1-4-completion.md` | ✅ 최신 | 2025-11-18 | Post Phase 1-4 통합 완료 보고서 (신규) |
 
 ---
 
 ## 🎯 상태별 분류
 
-### ✅ 최신 상태 (98개)
+### ✅ 최신 상태 (117개)
 모든 코드 변경사항이 반영되어 동기화된 문서들
+
+**주요 업데이트 (2025-11-20 (M))**:
+- **(M) Frontend 에이전트 파일 및 문서 구조 개선**
+  - frontend-specialist.md: 참조 경로 수정 + 에러 패턴 축약
+  - frontend-debugger.md: 참조 경로 수정 + Row/Column 콘텐츠 정리 및 문서 링크로 전환 (282줄 → 72줄)
+  - docs/frontend/ 폴더 파일 이동 (architecture-guide.md, feature-flags.md → docs/implementation/frontend/)
+  - docs/design/ 빈 폴더 삭제
+  - docs/archive/ 구조 평탄화 (2025-10/component-analysis → archive 루트)
+  - docs/archives/ 폴더 통합 (archives → archive로 병합)
+  - .DS_Store 파일 4개 제거
+  - NAVIGATION.md 프론트엔드 섹션 업데이트
+  - sync-status.md 전체 통계 재계산 및 업데이트 (108개 → 117개)
+
+**주요 업데이트 (2025-11-20 (L))**:
+- **(L) 읽지 않은 글 기능 구현 가이드 및 체크리스트 작성**
+  - unread-posts-implementation.md 신규 작성 (100줄 이하)
+    - Clean Architecture 3-Layer 기반 구현 가이드
+    - 이전 실패 원인 분석 및 회피 전략
+    - Domain/Data/Presentation 계층별 아키텍처 설계
+    - 5단계 구현 로드맵 (Phase 1-5, 총 15일)
+  - unread-posts-checklist.md 신규 작성 (체크리스트 예외)
+    - Phase별 상세 태스크 목록 (체크박스 형태)
+    - 각 Phase별 체크포인트 및 검증 기준
+    - 정량적/정성적 성공 지표
+  - frontend/README.md 업데이트 (읽지 않은 글 기능 링크 추가)
+  - sync-status.md 업데이트 (총 문서 수 106→108개)
+  - 기능 목표: 채널 배지, 자동 스크롤, 구분선, 읽음 처리, 배치 업데이트
+
+**주요 업데이트 (2025-11-18)**:
+- **(K) Post Clean Architecture Phase 1-4 완료 및 문서화**
+  - Phase 1-4: Domain/Data/Presentation Layer 전체 마이그레이션 완료
+  - 신규 문서 2개: post-refactoring-phase1-4-completion.md, post-refactoring-future-work.md
+  - 업데이트 문서 2개: post-refactoring-checklist.md, post-architecture-analysis.md
+  - 코드 품질: 830줄 → 507줄 (39% 감소), 테스트 21/21 통과
+  - 아키텍처: 3-Layer 완벽 준수, AsyncNotifier 패턴, Provider 관심사 분리
+  - 추후 작업: Provider 테스트, 기능 복원, post_list.dart 추가 분리
 
 **주요 업데이트 (2025-11-13)**:
 - **(I+J) 워크스페이스 그룹 선택 상태 유지 버그 수정 + Provider 리팩터링**
@@ -349,18 +401,13 @@
 ### 🔄 업데이트 진행 중 (0개)
 없음
 
-### ❌ 업데이트 필요 (2개)
+### ❌ 업데이트 필요 (0개)
+**모든 문서 동기화 완료! 🎉**
 
-**2025-11-13 - Provider 리팩터링 반영 필요**:
-1. **state-management.md**:
-   - myGroupsProvider keepAlive 설명 추가
-   - autoDispose 제거 → keepAlive 사용 이유 설명
-   - 세션 스코프 유지 패턴 추가
-
-2. **workspace-state-management.md**:
-   - currentGroupProvider 리팩터링 설명 추가
-   - selectedGroupId 검색 → selectedGroup 직접 읽기 변경사항 반영
-   - GroupMembership Equatable 구현 효과 설명
+최근 해결:
+- ✅ state-management.md: myGroupsProvider keepAlive 설명 추가 (2025-11-13)
+- ✅ workspace-state-management.md: currentGroupProvider 리팩터링 반영 (2025-11-13)
+- ✅ Post 리팩터링 문서화 완료 (2025-11-18)
 
 ### ❓ 확인 필요 (0개)
 없음
@@ -369,18 +416,26 @@
 
 ## 📈 문서 추적 통계
 
-- **전체 문서 수**: 103개
+- **전체 문서 수**: 117개 (개선 전 108개 → 현재 117개)
 - **백엔드 관련**: 15개 (백엔드 설계 6개 + 구현 가이드 9개)
-- **프론트엔드 관련**: 15개 (구현 가이드 8개 + 워크스페이스 7개)
-- **개념 문서**: 14개 (캘린더 4개 포함)
-- **UI/UX 문서**: 18개 (개념 5개 + 페이지 13개)
-- **기능 계획**: 4개 (캘린더 관련)
-- **프로세스/컨벤션**: 7개 (워크플로우 2개 + 컨벤션 4개 + 유지보수 1개)
-- **참조 문서**: 2개 (API + 데이터베이스, 100줄 예외)
-- **추적 시스템**: 3개 (context-tracking - 4개 문서 삭제)
-- **서브 에이전트**: 5개 (agents - pre-task-protocol.md, test-patterns.md 포함)
-- **기타**: 1개 (테스트 데이터)
-- **.claude/agents 폴더**: 6개 (에이전트 설정 파일)
+- **프론트엔드 관련**: 16개 (구현 가이드 16개)
+  - 신규 통합: architecture-guide.md, feature-flags.md (docs/frontend에서 이동)
+- **개념 문서**: 12개 (캘린더 4개 포함)
+- **UI/UX 문서**: 22개 (개념 6개 + 페이지 13개 + 컴포넌트 2개 + 기타 1개)
+- **기능 계획**: 7개 (캘린더 관련)
+- **프로세스/컨벤션**: 7개 (워크플로우 12개 + 컨벤션 5개 + 유지보수 1개)
+- **참조 문서**: 34개 (implementation 전체)
+- **아카이브**: 5개 (구조 통합 완료)
+- **추적 시스템**: 5개 (context-tracking)
+- **서브 에이전트**: 5개 (agents)
+- **기타**: 1개 (testing)
+
+**개선사항 (2025-11-20)**:
+- docs/frontend 폴더 제거 및 파일 통합 (2개)
+- docs/design 빈 폴더 제거 (0개)
+- docs/archive 구조 평탄화 (archive/2025-10 → archive)
+- docs/archives 폴더 통합 (archives → archive로 병합)
+- .DS_Store 파일 제거 (4개)
 
 ---
 

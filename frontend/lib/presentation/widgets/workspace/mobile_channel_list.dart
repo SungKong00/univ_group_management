@@ -145,10 +145,8 @@ class MobileChannelList extends ConsumerWidget {
   }
 
   Widget _buildChannelList(WidgetRef ref) {
-    // Read unread count map from workspace state (real API data)
-    final unreadCountMap = ref.watch(
-      workspaceStateProvider.select((state) => state.unreadCountMap),
-    );
+    // Unread count 기능 제거됨
+    final unreadCountMap = <int, int>{}; // 빈 맵으로 대체
 
     return Expanded(
       child: ListView.builder(

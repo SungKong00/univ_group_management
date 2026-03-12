@@ -78,12 +78,19 @@
 - **logoRadius**: 16px - 로고 모서리
 - **logoIconSize**: 28px - 내부 아이콘
 
-## 7. 반응형 브레이크포인트
+## 7. 반응형 브레이크포인트 (5-Step System)
 
-- **MOBILE**: 0-450px
-- **TABLET**: 451-800px
-- **DESKTOP**: 801-1920px
-- **4K**: 1921px+
+### Breakpoint 정의
+- **XS (Extra Small)**: 0-450px - 소형 모바일 기기
+- **SM (Small)**: 450-768px - 대형 모바일 기기
+- **MD (Medium)**: 768-1024px - 태블릿 (세로)
+- **LG (Large)**: 1024-1440px - 태블릿 (가로) / 노트북
+- **XL (Extra Large)**: 1440px+ - 데스크톱 모니터
+
+### 레거시 매핑 (deprecated)
+- **MOBILE** (deprecated): XS + SM (0-768px)
+- **TABLET** (deprecated): SM + MD (450-1024px)
+- **DESKTOP** (deprecated): LG + XL (1024px+)
 
 자세한 반응형 패턴: [반응형 가이드](responsive-design-guide.md)
 

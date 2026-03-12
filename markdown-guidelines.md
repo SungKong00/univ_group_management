@@ -39,10 +39,16 @@
 - `pr-guidelines.md` - PR 가이드라인
 - `git-strategy.md` - Git 전략
 
-**서브에이전트 문서 (Sub-Agents)**:
-- `frontend-development-agent.md` - 프론트엔드 개발 에이전트
-- `context-sync-agent.md` - 컨텍스트 동기화 에이전트
-- `commit-management-agent.md` - 커밋 관리 에이전트
+**서브에이전트 문서 (Sub-Agents)** (`.claude/agents/` 디렉토리):
+- `frontend-specialist.md` - 프론트엔드 UI/UX 개발
+- `frontend-debugger.md` - 프론트엔드 에러 디버깅
+- `backend-architect.md` - 백엔드 아키텍처 설계
+- `backend-debugger.md` - 백엔드 에러 디버깅
+- `permission-engineer.md` - 권한 시스템 설계
+- `api-integrator.md` - 백엔드-프론트엔드 연동
+- `database-optimizer.md` - 데이터베이스 최적화
+- `test-automation-specialist.md` - 테스트 자동화
+- `context-manager.md` - 문서 및 컨텍스트 관리
 
 **특수 추적 문서 (Tracking Documents)**:
 - `sync-status.md` - 동기화 상태 추적 테이블 (자동 업데이트)
@@ -269,12 +275,12 @@ fun findRootGroups(): List<Group> {
 ### 4. 컨텍스트 추적 문서 업데이트
 코드 변경 및 문서 수정 사항을 체계적으로 추적하기 위해, 다음 두 관리 문서를 업데이트합니다. 이 작업은 주로 자동화된 에이전트가 수행하지만, 수동으로 작업할 때의 규칙은 다음과 같습니다.
 
-#### [`context-update-log.md`](docs/context-tracking/context-update-log.md) 업데이트
+#### [`context-update-log.md`](../docs/context-tracking/context-update-log.md) 업데이트
 - **시점**: 문서 수정 내용을 **커밋(Commit)할 때마다** 진행합니다.
 - **방법**: 파일 최상단에 새로운 로그 항목을 **추가(Append)**합니다.
 - **내용**: 어떤 커밋에서 어떤 문서가 왜 업데이트되었는지, 그리고 그로 인해 새로 업데이트가 필요해진 문서는 무엇인지 형식에 맞게 기록합니다.
 
-#### [`sync-status.md`](docs/context-tracking/sync-status.md) 업데이트
+#### [`sync-status.md`](../docs/context-tracking/sync-status.md) 업데이트
 - **시점**: 특정 문서의 **동기화 상태가 변경될 때마다** 진행합니다.
 - **방법**: 테이블에서 해당 파일의 상태 표시자(예: `✅`, `❌`)를 **수정(Modify)**하고, 상단의 전체 동기화율을 다시 계산하여 갱신합니다.
 - **주요 변경 사례**:

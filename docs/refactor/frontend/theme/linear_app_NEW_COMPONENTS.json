@@ -1,0 +1,595 @@
+{
+  "metadata": {
+    "source": "https://linear.app",
+    "pages_analyzed": ["homepage", "features"],
+    "extraction_method": "Playwright + Browser CSS Analysis",
+    "new_components_only": true,
+    "date": "2025-11-21",
+    "description": "이전 추출물에 없던 새로운 컴포넌트들만 모은 파일"
+  },
+  "new_components": {
+    "carousels": {
+      "description": "수평 스크롤 카루셀 컴포넌트",
+      "count": 1,
+      "components": [
+        {
+          "id": "carousel_integrations",
+          "name": "Integration Carousel",
+          "type": "Horizontal Scrolling Carousel",
+          "layout": "flex, row direction",
+          "overflow": "auto / scroll",
+          "itemCount": 7,
+          "hasNavigation": true,
+          "navigationButtons": {
+            "previous": {
+              "label": "Previous slide",
+              "state": "disabled when at start",
+              "icon": "arrow_left"
+            },
+            "next": {
+              "label": "Next slide",
+              "state": "enabled when not at end",
+              "icon": "arrow_right"
+            }
+          },
+          "items": [
+            {
+              "id": "integration_1",
+              "title": "Customer Requests",
+              "subtitle": "Build what customers actually want",
+              "image": "integration_thumbnail",
+              "link": "/customer-requests",
+              "type": "Feature Card"
+            },
+            {
+              "id": "integration_2",
+              "title": "Powerful git workflows",
+              "subtitle": "Automate pull requests and commit workflows",
+              "image": "integration_thumbnail",
+              "link": "button_action",
+              "type": "Feature Card"
+            },
+            {
+              "id": "integration_3",
+              "title": "Linear Mobile",
+              "subtitle": "Move product work forward from anywhere",
+              "image": "integration_thumbnail",
+              "link": "/mobile",
+              "type": "Feature Card"
+            },
+            {
+              "id": "integration_4",
+              "title": "Linear Asks",
+              "subtitle": "Turn workplace requests into actionable issues",
+              "image": "integration_thumbnail",
+              "link": "/asks",
+              "type": "Feature Card"
+            },
+            {
+              "id": "integration_5",
+              "title": "Linear integrations",
+              "subtitle": "100+ ways to enhance your Linear experience",
+              "image": "integration_thumbnail",
+              "link": "/integrations",
+              "type": "Feature Card"
+            },
+            {
+              "id": "integration_6",
+              "title": "Figma integration",
+              "subtitle": "Bridge the gap between engineering and design",
+              "image": "integration_thumbnail",
+              "link": "/integrations/figma",
+              "type": "Feature Card"
+            },
+            {
+              "id": "integration_7",
+              "title": "Built for developers",
+              "subtitle": "Build your own add-ons with the Linear API",
+              "image": "integration_thumbnail",
+              "link": "https://developers.linear.app",
+              "type": "Feature Card"
+            }
+          ],
+          "styling": {
+            "background": "transparent",
+            "gap": "16px",
+            "scrollBehavior": "smooth",
+            "padding": "24px"
+          },
+          "interactions": {
+            "autoScroll": false,
+            "clickToScroll": true,
+            "keyboardNavigation": true,
+            "touchSupport": true
+          }
+        }
+      ]
+    },
+    "ai_agent_selector": {
+      "description": "AI 에이전트 선택 컴포넌트",
+      "count": 1,
+      "components": [
+        {
+          "id": "agent_selector",
+          "name": "AI Agent Selector",
+          "type": "Horizontal List / Grid",
+          "layout": "flex, horizontal",
+          "purpose": "사용자가 사용할 AI 에이전트를 선택",
+          "totalAgents": 6,
+          "agents": [
+            {
+              "id": "cursor",
+              "name": "Cursor",
+              "type": "Agent",
+              "hasAvatar": true,
+              "avatarSize": 18,
+              "badge": "Agent",
+              "badgeColor": "subtle",
+              "icon": true,
+              "description": "AI-powered code editor"
+            },
+            {
+              "id": "github_copilot",
+              "name": "GitHub Copilot",
+              "type": "Agent",
+              "hasAvatar": true,
+              "avatarSize": 16,
+              "badge": "Agent",
+              "badgeColor": "subtle",
+              "icon": true,
+              "description": "Code completion AI"
+            },
+            {
+              "id": "sentry",
+              "name": "Sentry",
+              "type": "Agent",
+              "hasAvatar": true,
+              "avatarSize": 16,
+              "badge": "Agent",
+              "badgeColor": "subtle",
+              "icon": true,
+              "description": "Error tracking"
+            },
+            {
+              "id": "leela",
+              "name": "Leela",
+              "type": "Regular",
+              "hasAvatar": true,
+              "avatarSize": 16,
+              "badge": null,
+              "icon": false,
+              "description": "AI assistant"
+            },
+            {
+              "id": "devin",
+              "name": "Devin",
+              "type": "Agent",
+              "hasAvatar": true,
+              "avatarSize": 16,
+              "badge": "Agent",
+              "badgeColor": "subtle",
+              "icon": true,
+              "description": "Engineering AI"
+            },
+            {
+              "id": "conor",
+              "name": "Conor",
+              "type": "Regular",
+              "hasAvatar": true,
+              "avatarSize": 16,
+              "badge": null,
+              "icon": false,
+              "description": "AI collaborator"
+            }
+          ],
+          "styling": {
+            "gap": "8px",
+            "padding": "variable",
+            "avatarBorderRadius": "50%",
+            "textSize": "13px-14px",
+            "badgeStyle": "inline"
+          },
+          "interactions": {
+            "clickable": true,
+            "selectable": true,
+            "scrollable": true,
+            "hoverEffect": "color change or background"
+          },
+          "context": "AI-assisted product development 섹션에서 에이전트 선택"
+        }
+      ]
+    },
+    "content_tabs": {
+      "description": "콘텐츠 탭 / 라디오 버튼 인터페이스",
+      "count": 1,
+      "components": [
+        {
+          "id": "feature_tabs",
+          "name": "Content Tabs",
+          "type": "Radio Button Group / Tab Interface",
+          "layout": "horizontal, flex",
+          "purpose": "다양한 콘텐츠 옵션 중 하나 선택",
+          "tabCount": 3,
+          "tabs": [
+            {
+              "id": "tab_1",
+              "label": "Collaborative documents",
+              "value": "collaborative_documents",
+              "isChecked": true,
+              "indicator": "underline",
+              "content": "Document editing interface with multiple users"
+            },
+            {
+              "id": "tab_2",
+              "label": "Inline comments",
+              "value": "inline_comments",
+              "isChecked": false,
+              "indicator": "underline",
+              "content": "Comments embedded in content"
+            },
+            {
+              "id": "tab_3",
+              "label": "Text-to-issue commands",
+              "value": "text_to_issue_commands",
+              "isChecked": false,
+              "indicator": "underline",
+              "content": "Text-based issue creation"
+            }
+          ],
+          "styling": {
+            "background": "transparent",
+            "textSize": "17px",
+            "textWeight": 400,
+            "textColor": {
+              "active": "rgb(247, 248, 248)",
+              "inactive": "rgb(98, 102, 109)"
+            },
+            "indicator": {
+              "type": "underline",
+              "color": "accent_blue",
+              "height": "2px",
+              "width": "match_text"
+            },
+            "gap": "0px (no gap, tabs close together)",
+            "padding": "0px (no padding)"
+          },
+          "interactions": {
+            "clickable": true,
+            "keyboardNavigation": "arrow keys",
+            "radioButton": true,
+            "mutuallyExclusive": true,
+            "animation": "smooth underline movement"
+          },
+          "relatedComponent": "Content displayed changes based on selected tab",
+          "example": "\"Ideate and specify what to build next\" 섹션에서 사용"
+        }
+      ]
+    },
+    "definition_list": {
+      "description": "용어 정의 리스트 - 메타데이터 표현",
+      "count": 1,
+      "components": [
+        {
+          "id": "definition_list",
+          "name": "Definition List",
+          "htmlElement": "<dl>, <dt>, <dd>",
+          "type": "Semantic List",
+          "purpose": "용어와 그 정의를 구조화된 방식으로 표시",
+          "itemCount": 3,
+          "items": [
+            {
+              "id": "item_1",
+              "term": "Linear Sync Engine",
+              "termStyling": {
+                "fontSize": "14px",
+                "fontWeight": 510,
+                "color": "rgb(247, 248, 248)"
+              },
+              "definition": "Built with a high-performance architecture and an obsessive focus on speed.",
+              "definitionStyling": {
+                "fontSize": "14px",
+                "fontWeight": 400,
+                "color": "rgb(138, 143, 152)",
+                "lineHeight": "1.6"
+              },
+              "icon": "gear_icon"
+            },
+            {
+              "id": "item_2",
+              "term": "Enterprise-ready security",
+              "termStyling": {
+                "fontSize": "14px",
+                "fontWeight": 510,
+                "color": "rgb(247, 248, 248)",
+                "hasLink": true,
+                "linkTo": "/security"
+              },
+              "definition": "Best-in-class security practices keep your work safe and secure at every layer.",
+              "definitionStyling": {
+                "fontSize": "14px",
+                "fontWeight": 400,
+                "color": "rgb(138, 143, 152)"
+              },
+              "icon": "shield_icon"
+            },
+            {
+              "id": "item_3",
+              "term": "Engineered for scale",
+              "termStyling": {
+                "fontSize": "14px",
+                "fontWeight": 510,
+                "color": "rgb(247, 248, 248)"
+              },
+              "definition": "Built for teams of all sizes. From early-stage startups to global enterprises.",
+              "definitionStyling": {
+                "fontSize": "14px",
+                "fontWeight": 400,
+                "color": "rgb(138, 143, 152)"
+              },
+              "icon": "scale_icon"
+            }
+          ],
+          "layout": {
+            "type": "vertical stack",
+            "gap": "24px",
+            "padding": "32px",
+            "maxWidth": "800px"
+          },
+          "styling": {
+            "background": "transparent",
+            "borderTop": "none",
+            "borderBottom": "none"
+          },
+          "section": "Built on strong foundations - Under the hood",
+          "accessibility": {
+            "semanticHTML": "<dl>/<dt>/<dd>",
+            "ariaLabels": "optional",
+            "screenReaderFriendly": true
+          }
+        }
+      ]
+    },
+    "feature_cards_advanced": {
+      "description": "고급 기능 카드 - 대형 클릭 가능 카드",
+      "count": 7,
+      "cards": [
+        {
+          "id": "feature_card_1",
+          "title": "Customer Requests",
+          "subtitle": "Build what customers actually want",
+          "icon": null,
+          "image": true,
+          "imageDimensions": "336x320",
+          "hasLink": true,
+          "linkTo": "/customer-requests",
+          "linkType": "internal",
+          "styling": {
+            "background": "rgb(15, 16, 17)",
+            "border": "none",
+            "borderRadius": "16px",
+            "padding": "32px 24px",
+            "minHeight": "auto"
+          },
+          "layout": "vertical",
+          "components": ["icon_or_image", "title", "subtitle"],
+          "hoverEffect": "shadow_increase"
+        },
+        {
+          "id": "feature_card_2",
+          "title": "Powerful git workflows",
+          "subtitle": "Automate pull requests and commit workflows",
+          "icon": null,
+          "image": true,
+          "imageDimensions": "336x320",
+          "hasLink": true,
+          "linkType": "button",
+          "isButton": true,
+          "styling": {
+            "background": "rgb(15, 16, 17)",
+            "border": "none",
+            "borderRadius": "16px",
+            "padding": "32px 24px"
+          }
+        },
+        {
+          "id": "feature_card_3",
+          "title": "Linear Mobile",
+          "subtitle": "Move product work forward from anywhere",
+          "icon": null,
+          "image": true,
+          "imageDimensions": "336x320",
+          "hasLink": true,
+          "linkTo": "/mobile",
+          "linkType": "internal"
+        },
+        {
+          "id": "feature_card_4",
+          "title": "Linear Asks",
+          "subtitle": "Turn workplace requests into actionable issues",
+          "icon": null,
+          "image": true,
+          "imageDimensions": "336x320",
+          "hasLink": true,
+          "linkTo": "/asks"
+        },
+        {
+          "id": "feature_card_5",
+          "title": "Linear integrations",
+          "subtitle": "100+ ways to enhance your Linear experience",
+          "icon": null,
+          "image": true,
+          "imageDimensions": "336x320",
+          "hasLink": true,
+          "linkTo": "/integrations"
+        },
+        {
+          "id": "feature_card_6",
+          "title": "Figma integration",
+          "subtitle": "Bridge the gap between engineering and design",
+          "icon": null,
+          "image": true,
+          "imageDimensions": "336x320",
+          "hasLink": true,
+          "linkTo": "/integrations/figma"
+        },
+        {
+          "id": "feature_card_7",
+          "title": "Built for developers",
+          "subtitle": "Build your own add-ons with the Linear API",
+          "icon": null,
+          "image": true,
+          "imageDimensions": "336x320",
+          "hasLink": true,
+          "linkTo": "https://developers.linear.app",
+          "linkType": "external"
+        }
+      ]
+    },
+    "gradient_overlays": {
+      "description": "그래디언트 오버레이 효과",
+      "count": 10,
+      "gradients": [
+        {
+          "id": "gradient_1",
+          "name": "Subtle Top Fade",
+          "type": "Linear Gradient",
+          "direction": "to bottom",
+          "colors": [
+            {
+              "color": "rgba(255, 255, 255, 0.05)",
+              "position": "0%"
+            },
+            {
+              "color": "rgba(0, 0, 0, 0)",
+              "position": "100%"
+            }
+          ],
+          "cssValue": "linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 100%)",
+          "usage": "카드 위에 오버레이, 깊이 효과",
+          "element": "div",
+          "zIndex": "higher than content"
+        },
+        {
+          "id": "gradient_2",
+          "name": "Subtle Top Fade",
+          "type": "Linear Gradient",
+          "cssValue": "linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 100%)",
+          "usage": "반복되는 오버레이",
+          "frequency": "여러 위치에서 사용"
+        },
+        {
+          "id": "gradient_3",
+          "name": "Subtle Top Fade",
+          "type": "Linear Gradient",
+          "cssValue": "linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 100%)",
+          "usage": "깊이감 추가"
+        },
+        {
+          "id": "gradient_4",
+          "name": "Subtle Top Fade",
+          "type": "Linear Gradient",
+          "cssValue": "linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 100%)",
+          "usage": "시각적 계층 구조"
+        },
+        {
+          "id": "gradient_5",
+          "name": "Subtle Top Fade",
+          "type": "Linear Gradient",
+          "cssValue": "linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 100%)",
+          "usage": "카드 호버 효과"
+        },
+        {
+          "id": "gradient_6",
+          "name": "Subtle Top Fade",
+          "type": "Linear Gradient",
+          "cssValue": "linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 100%)",
+          "usage": "텍스트 위 오버레이"
+        },
+        {
+          "id": "gradient_7",
+          "name": "Subtle Top Fade",
+          "type": "Linear Gradient",
+          "cssValue": "linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 100%)",
+          "usage": "이미지 오버레이"
+        },
+        {
+          "id": "gradient_8",
+          "name": "Subtle Top Fade",
+          "type": "Linear Gradient",
+          "cssValue": "linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 100%)",
+          "usage": "시각적 구분선"
+        },
+        {
+          "id": "gradient_9",
+          "name": "Subtle Top Fade",
+          "type": "Linear Gradient",
+          "cssValue": "linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 100%)",
+          "usage": "카드 상단 장식"
+        },
+        {
+          "id": "gradient_10",
+          "name": "Subtle Top Fade",
+          "type": "Linear Gradient",
+          "cssValue": "linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 100%)",
+          "usage": "최상단 효과"
+        }
+      ],
+      "commonPattern": {
+        "type": "Linear Gradient",
+        "direction": "to bottom",
+        "startOpacity": 0.05,
+        "endOpacity": 0,
+        "effect": "subtle light-to-dark fade",
+        "purpose": "깊이감 추가 및 시각적 분리"
+      }
+    }
+  },
+  "summary": {
+    "new_component_categories": 5,
+    "carousel": 1,
+    "ai_agent_selector": 1,
+    "content_tabs": 1,
+    "definition_list": 1,
+    "feature_cards_advanced": 7,
+    "gradient_overlays": 10,
+    "total_new_components": 21
+  },
+  "implementation_notes": {
+    "carousel": {
+      "framework_agnostic": true,
+      "libraries": ["Swiper.js", "Embla Carousel", "Custom CSS Scroll Snap"],
+      "flutter_implementation": "ListView.builder with scroll controller",
+      "web_implementation": "CSS Grid + Scroll Snap or JS carousel library"
+    },
+    "ai_agent_selector": {
+      "framework_agnostic": true,
+      "pattern": "Radio button group or button group",
+      "accessibility": "ARIA roles for selection",
+      "flutter_implementation": "SingleChildScrollView + Row with Radio buttons",
+      "web_implementation": "Horizontal list with hover states"
+    },
+    "content_tabs": {
+      "html": "<input type='radio'> or <button role='tab'>",
+      "accessibility": "Native radio buttons or ARIA tabs",
+      "flutter_implementation": "Radio buttons in a Row or TabBar",
+      "web_implementation": "Native radio input or custom tab implementation"
+    },
+    "definition_list": {
+      "html": "<dl>, <dt>, <dd>",
+      "semantic": true,
+      "accessibility": "Screen reader friendly",
+      "flutter_implementation": "Column of Row widgets with custom styling",
+      "web_implementation": "Standard HTML definition list"
+    },
+    "feature_cards": {
+      "responsive": true,
+      "grid_layout": "3 columns on desktop, 2 on tablet, 1 on mobile",
+      "image_optimization": "lazy loading, responsive srcset"
+    },
+    "gradients": {
+      "performance": "CSS native, no JavaScript required",
+      "browser_support": "All modern browsers",
+      "animation": "Can be animated with CSS transitions"
+    }
+  }
+}

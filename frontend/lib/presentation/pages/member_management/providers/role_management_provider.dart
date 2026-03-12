@@ -1,10 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/member_models.dart';
 import '../../../../core/repositories/repository_providers.dart';
+import '../../../providers/auth_provider.dart';
 
 /// 그룹 역할 목록 Provider
 final roleListProvider = FutureProvider.autoDispose
     .family<List<GroupRole>, int>((ref, groupId) async {
+      // currentUserProvider 의존성 추가 (로그아웃 시 자동 무효화)
+      final user = ref.watch(currentUserProvider).valueOrNull;
+      if (user == null) return [];
+
       final repository = ref.watch(roleRepositoryProvider);
       return await repository.getGroupRoles(groupId);
     });

@@ -10,7 +10,6 @@ import 'package:responsive_framework/responsive_framework.dart';
 import 'core/theme/theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/router/app_router.dart';
-import 'core/services/auth_service.dart';
 import 'core/services/local_storage.dart';
 import 'core/constants/app_constants.dart';
 import 'core/lifecycle/app_lifecycle_observer.dart';
@@ -59,22 +58,13 @@ void main() async {
     // access token만 즉시 로드하고 나머지는 백그라운드에서 프리로드
     await LocalStorage.instance.initEagerData();
 
-    // Initialize services
-    final authService = AuthService();
-    authService.initialize();
-
-    // Try auto login (블로킹 방식으로 변경, 인증 상태 확인 후 앱 실행)
-    try {
-      await authService.tryAutoLogin();
-      developer.log('Auto login completed', name: 'main');
-    } catch (error) {
-      developer.log(
-        'Auto login failed, continuing with manual login: $error',
-        name: 'main',
-        level: 900,
-      );
-      // 실패해도 앱은 계속 실행
-    }
+    // ✅ Phase 2: AuthService 제거
+    // Auto login은 currentUserProvider의 build()에서 자동으로 실행됩니다.
+    // 더 이상 main()에서 수동으로 tryAutoLogin()을 호출할 필요가 없습니다.
+    developer.log(
+      'Auto login will be handled by currentUserProvider',
+      name: 'main',
+    );
   } catch (error) {
     developer.log('Initialization error: $error', name: 'main');
     // 초기화 실패해도 앱은 실행
@@ -125,6 +115,10 @@ class _UniversityGroupAppState extends ConsumerState<UniversityGroupApp> {
     // 테마 모드 감시 (다크모드 전환 대응)
     final themeMode = ref.watch(themeModeProvider);
 
+    // ✅ Phase 2: goRouterProvider 사용
+    // currentUserProvider와 연결된 GoRouter를 사용합니다.
+    final router = ref.watch(goRouterProvider);
+
     return MaterialApp.router(
       title: AppConstants.appName,
 
@@ -133,7 +127,7 @@ class _UniversityGroupAppState extends ConsumerState<UniversityGroupApp> {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode, // 현재 선택된 테마 모드
 
-      routerConfig: appRouter,
+      routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) => ResponsiveBreakpoints.builder(
         child: child!,

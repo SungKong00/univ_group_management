@@ -94,6 +94,49 @@ class ApiService {
 - 네트워크 오류 자동 재시도
 - 타입 안전한 응답 처리
 
+## Riverpod Provider 패턴
+
+### StateNotifier vs AsyncNotifier
+
+**StateNotifier** (기존 방식):
+- Widget이 데이터 로딩 제어 (`initState()`)
+- 수동 로딩 상태 관리
+- Race Condition 가능성
+
+**AsyncNotifier** (권장 방식):
+- Provider가 데이터 로딩 제어 (`build()` 메서드)
+- AsyncValue 자동 상태 관리 (loading/data/error)
+- Clean Architecture 준수 (ViewModel이 로직 제어)
+
+**사용 예시**:
+
+```dart
+// Provider 정의
+class PostListAsyncNotifier
+    extends AutoDisposeFamilyAsyncNotifier<PostListState, String> {
+
+  @override
+  Future<PostListState> build(String channelId) async {
+    // Provider 생성 시 자동 실행
+    return await _loadInitialPosts(channelId);
+  }
+}
+
+// Widget에서 사용
+final postListAsync = ref.watch(postListAsyncNotifierProvider(channelId));
+
+return postListAsync.when(
+  data: (state) => _buildList(state),
+  loading: () => const Skeleton(),
+  error: (err, stack) => ErrorWidget(error: err),
+);
+```
+
+**장점**:
+- 선언형 UI (when 패턴)
+- 자동 로딩/에러 처리
+- 테스트 용이성
+
 ## 라우팅 시스템
 
 **GoRouter 기반 선언적 라우팅**:

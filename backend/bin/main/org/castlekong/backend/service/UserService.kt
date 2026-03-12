@@ -1,0 +1,423 @@
+package org.castlekong.backend.service
+
+import org.castlekong.backend.dto.GroupJoinRequestResponse
+import org.castlekong.backend.dto.ProfileUpdateRequest
+import org.castlekong.backend.dto.SignupProfileRequest
+import org.castlekong.backend.dto.SubGroupRequestResponse
+import org.castlekong.backend.dto.UserResponse
+import org.castlekong.backend.dto.UserSummaryResponse
+import org.castlekong.backend.entity.GlobalRole
+import org.castlekong.backend.entity.Group
+import org.castlekong.backend.entity.GroupJoinRequestStatus
+import org.castlekong.backend.entity.GroupType
+import org.castlekong.backend.entity.ProfessorStatus
+import org.castlekong.backend.entity.SubGroupRequestStatus
+import org.castlekong.backend.entity.User
+import org.castlekong.backend.repository.GroupJoinRequestRepository
+import org.castlekong.backend.repository.GroupMemberRepository
+import org.castlekong.backend.repository.GroupRepository
+import org.castlekong.backend.repository.SubGroupRequestRepository
+import org.castlekong.backend.repository.UserRepository
+import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+
+@Service
+@Transactional(readOnly = true)
+class UserService(
+    private val userRepository: UserRepository,
+    private val groupRepository: GroupRepository,
+    private val groupMemberService: GroupMemberService,
+    private val groupJoinRequestRepository: GroupJoinRequestRepository,
+    private val subGroupRequestRepository: SubGroupRequestRepository,
+    private val groupMemberRepository: GroupMemberRepository,
+    // GroupMapper 추가
+    private val groupMapper: GroupMapper,
+) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    fun findByEmail(email: String): User? {
+        return userRepository.findByEmail(email).orElse(null)
+    }
+
+    fun findAll(): List<User> {
+        return userRepository.findAll()
+    }
+
+    @Transactional
+    fun save(user: User): User {
+        return userRepository.save(user)
+    }
+
+    @Transactional
+    fun ensureUserByEmail(email: String): User {
+        findByEmail(email)?.let { return it }
+        val name = email.substringBefore("@", email)
+        val user =
+            User(
+                name = name.ifBlank { email },
+                email = email,
+                password = "",
+                globalRole = GlobalRole.STUDENT,
+                profileCompleted = false,
+            )
+        return try {
+            userRepository.saveAndFlush(user)
+        } catch (e: DataIntegrityViolationException) {
+            // 동시 생성으로 인한 제약 위반이면 기존 사용자 재조회 후 반환
+            findByEmail(email)
+                ?: throw e
+        }
+    }
+
+    @Transactional
+    fun findOrCreateUser(googleUserInfo: GoogleUserInfo): User {
+        // 기존 사용자 조회
+        val existingUser = findByEmail(googleUserInfo.email)
+
+        return if (existingUser != null) {
+            // 기존 사용자 반환
+            existingUser
+        } else {
+            // 새 사용자 생성
+            val user =
+                User(
+                    name = googleUserInfo.name,
+                    email = googleUserInfo.email,
+                    // Google OAuth2 사용자는 비밀번호 불필요
+                    password = "",
+                    globalRole = GlobalRole.STUDENT,
+                    // 명시적으로 false 설정
+                    profileCompleted = false,
+                )
+            try {
+                val savedUser = userRepository.saveAndFlush(user)
+                savedUser
+            } catch (e: DataIntegrityViolationException) {
+                // 제약 위반 발생 시 기존 사용자 재조회하여 반환 (로그인 성공으로 처리)
+                findByEmail(googleUserInfo.email)
+                    ?: throw e
+            }
+        }
+    }
+
+    @Transactional
+    fun completeProfile(
+        userId: Long,
+        request: ProfileUpdateRequest,
+    ): User {
+        val user =
+            userRepository.findById(userId)
+                .orElseThrow { IllegalArgumentException("사용자를 찾을 수 없습니다: $userId") }
+
+        val updatedUser =
+            User(
+                id = user.id,
+                name = user.name,
+                email = user.email,
+                password = user.password,
+                globalRole = GlobalRole.valueOf(request.globalRole),
+                isActive = user.isActive,
+                nickname = request.nickname,
+                profileImageUrl = request.profileImageUrl,
+                bio = request.bio,
+                profileCompleted = true,
+                emailVerified = user.emailVerified,
+                college = user.college,
+                department = user.department,
+                studentNo = user.studentNo,
+                schoolEmail = user.schoolEmail,
+                professorStatus = user.professorStatus,
+                academicYear = user.academicYear,
+                createdAt = user.createdAt,
+                updatedAt = user.updatedAt,
+            )
+
+        return userRepository.save(updatedUser)
+    }
+
+    @Transactional
+    fun submitSignupProfile(
+        userId: Long,
+        req: SignupProfileRequest,
+    ): User {
+        val user =
+            userRepository.findById(userId)
+                .orElseThrow { IllegalArgumentException("사용자를 찾을 수 없습니다: $userId") }
+
+        // MVP: 이메일 OTP는 후순위이므로 강제하지 않음
+
+        // 닉네임 중복 검사
+        if (req.nickname.isBlank()) {
+            throw IllegalArgumentException("VALIDATION_ERROR: 닉네임은 필수입니다")
+        }
+        val dup = userRepository.existsByNicknameIgnoreCase(req.nickname)
+        if (dup && !req.nickname.equals(user.nickname, ignoreCase = true)) {
+            throw IllegalArgumentException("E_DUP_NICK: 이미 사용 중인 닉네임입니다")
+        }
+
+        val desiredRole =
+            try {
+                GlobalRole.valueOf(req.role)
+            } catch (e: Exception) {
+                GlobalRole.STUDENT
+            }
+
+        // 교수 지원은 PENDING 상태로 표시하고 실제 role은 STUDENT 유지
+        val (finalRole, professorStatus) =
+            if (desiredRole == GlobalRole.PROFESSOR) {
+                GlobalRole.STUDENT to ProfessorStatus.PENDING
+            } else {
+                desiredRole to null
+            }
+
+        // 계열 또는 학과 정보 업데이트
+        val updated =
+            User(
+                id = user.id,
+                name = req.name,
+                email = user.email,
+                password = user.password,
+                globalRole = finalRole,
+                isActive = user.isActive,
+                nickname = req.nickname,
+                profileImageUrl = user.profileImageUrl,
+                bio = user.bio,
+                profileCompleted = true,
+                emailVerified = user.emailVerified,
+                college = req.college,
+                department = req.dept,
+                studentNo = req.studentNo,
+                schoolEmail = req.schoolEmail,
+                professorStatus = professorStatus,
+                academicYear = req.academicYear,
+                createdAt = user.createdAt,
+                updatedAt = user.updatedAt,
+            )
+
+        val saved = userRepository.save(updated)
+
+        // [수정] 사용자가 선택한 학과 또는 계열에 자동 가입 (상위 그룹 포함)
+        try {
+            val university = "한신대학교" // 이 부분은 향후 확장 가능
+            var targetGroup: Group? = null
+
+            // 1. 학과를 선택했다면 학과 그룹을 우선으로 찾음
+            if (!req.college.isNullOrBlank() && !req.dept.isNullOrBlank()) {
+                targetGroup =
+                    groupRepository
+                        .findByUniversityAndCollegeAndDepartment(university, req.college, req.dept)
+                        .firstOrNull()
+            }
+
+            // 2. 학과 그룹을 못찾았거나, 학과를 선택하지 않았다면 계열 그룹을 찾음
+            if (targetGroup == null && !req.college.isNullOrBlank()) {
+                targetGroup =
+                    groupRepository
+                        .findByUniversityAndCollegeAndDepartment(university, req.college, null)
+                        .firstOrNull { it.groupType == GroupType.COLLEGE }
+            }
+
+            if (targetGroup != null) {
+                // 선택한 그룹과 모든 상위 그룹에 자동 가입
+                val groupsToJoin = collectAncestorGroups(targetGroup)
+                groupsToJoin.forEach { group ->
+                    // 이미 멤버인지 사전 체크하여 불필요한 예외 발생 방지
+                    val alreadyMember = groupMemberRepository.findByGroupIdAndUserId(group.id, saved.id).isPresent
+                    if (!alreadyMember) {
+                        runCatching { groupMemberService.joinGroup(group.id, saved.id) }
+                            .onFailure { e ->
+                                logger.warn(
+                                    "Auto-join failed for user {} to group {}: {}",
+                                    saved.id,
+                                    group.id,
+                                    e.message,
+                                )
+                            }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // 개발 중 자동 가입 실패는 에러를 발생시키지 않음
+            logger.warn("Auto-join process failed with an exception: {}", e.message)
+        }
+
+        return saved
+    }
+
+    /**
+     * 주어진 그룹부터 최상위 그룹까지 모든 상위 그룹을 수집합니다.
+     * 예: AI/SW학과 → [AI/SW학과, AI/SW계열, 한신대학교]
+     */
+    private fun collectAncestorGroups(group: Group): List<Group> {
+        val groups = mutableListOf(group)
+        var current = group.parent
+        while (current != null) {
+            groups.add(current)
+            current = current.parent
+        }
+        return groups
+    }
+
+    fun convertToUserResponse(user: User): UserResponse {
+        return UserResponse(
+            id = user.id,
+            name = user.name,
+            email = user.email,
+            globalRole = user.globalRole.name,
+            isActive = user.isActive,
+            nickname = user.nickname,
+            profileImageUrl = user.profileImageUrl,
+            bio = user.bio,
+            profileCompleted = user.profileCompleted,
+            emailVerified = user.emailVerified,
+            professorStatus = user.professorStatus?.name,
+            department = user.department,
+            studentNo = user.studentNo,
+            academicYear = user.academicYear,
+            schoolEmail = user.schoolEmail,
+            createdAt = user.createdAt,
+            updatedAt = user.updatedAt,
+        )
+    }
+
+    fun convertToUserSummary(user: User): UserSummaryResponse {
+        return UserSummaryResponse(
+            id = user.id,
+            name = user.name,
+            email = user.email,
+            profileImageUrl = user.profileImageUrl,
+        )
+    }
+
+    fun searchUsers(
+        query: String,
+        role: String?,
+    ): List<User> {
+        val roleEnum =
+            try {
+                role?.let { GlobalRole.valueOf(it) }
+            } catch (e: Exception) {
+                null
+            }
+        return userRepository.searchUsers(query, roleEnum)
+    }
+
+    fun nicknameExists(nickname: String): Boolean {
+        return userRepository.existsByNicknameIgnoreCase(nickname)
+    }
+
+    fun getMyJoinRequests(
+        userId: Long,
+        status: String,
+    ): List<GroupJoinRequestResponse> {
+        val st =
+            try {
+                GroupJoinRequestStatus.valueOf(status)
+            } catch (e: Exception) {
+                null
+            }
+        val requests =
+            if (st != null) {
+                groupJoinRequestRepository.findByUserIdAndStatus(userId, st)
+            } else {
+                groupJoinRequestRepository.findByUserIdAndStatus(
+                    userId,
+                    GroupJoinRequestStatus.PENDING,
+                )
+            }
+        return requests.map { r ->
+            val memberCount = groupMemberRepository.countByGroupId(r.group.id).toInt()
+            groupMapper.toGroupJoinRequestResponse(r, memberCount)
+        }
+    }
+
+    fun getMySubGroupRequests(
+        userId: Long,
+        status: String,
+    ): List<SubGroupRequestResponse> {
+        val st =
+            try {
+                SubGroupRequestStatus.valueOf(status)
+            } catch (e: Exception) {
+                null
+            }
+        val requests =
+            if (st != null) {
+                subGroupRequestRepository.findByRequesterIdAndStatus(userId, st)
+            } else {
+                subGroupRequestRepository.findByRequesterIdAndStatus(
+                    userId,
+                    SubGroupRequestStatus.PENDING,
+                )
+            }
+        return requests.map { r ->
+            val memberCount = groupMemberRepository.countByGroupId(r.parentGroup.id).toInt()
+            groupMapper.toSubGroupRequestResponse(r, memberCount)
+        }
+    }
+
+    @Transactional
+    fun applyRole(
+        userId: Long,
+        role: String,
+    ) {
+        val user =
+            userRepository.findById(userId)
+                .orElseThrow { IllegalArgumentException("사용자를 찾을 수 없습니다: $userId") }
+        val desiredRole =
+            try {
+                GlobalRole.valueOf(role)
+            } catch (e: Exception) {
+                GlobalRole.STUDENT
+            }
+        val updated =
+            if (desiredRole == GlobalRole.PROFESSOR) {
+                User(
+                    id = user.id,
+                    name = user.name,
+                    email = user.email,
+                    password = user.password,
+                    globalRole = user.globalRole,
+                    isActive = user.isActive,
+                    nickname = user.nickname,
+                    profileImageUrl = user.profileImageUrl,
+                    bio = user.bio,
+                    profileCompleted = user.profileCompleted,
+                    emailVerified = user.emailVerified,
+                    college = user.college,
+                    department = user.department,
+                    studentNo = user.studentNo,
+                    schoolEmail = user.schoolEmail,
+                    professorStatus = ProfessorStatus.PENDING,
+                    academicYear = user.academicYear,
+                    createdAt = user.createdAt,
+                    updatedAt = user.updatedAt,
+                )
+            } else {
+                User(
+                    id = user.id,
+                    name = user.name,
+                    email = user.email,
+                    password = user.password,
+                    globalRole = desiredRole,
+                    isActive = user.isActive,
+                    nickname = user.nickname,
+                    profileImageUrl = user.profileImageUrl,
+                    bio = user.bio,
+                    profileCompleted = user.profileCompleted,
+                    emailVerified = user.emailVerified,
+                    college = user.college,
+                    department = user.department,
+                    studentNo = user.studentNo,
+                    schoolEmail = user.schoolEmail,
+                    professorStatus = null,
+                    academicYear = user.academicYear,
+                    createdAt = user.createdAt,
+                    updatedAt = user.updatedAt,
+                )
+            }
+        userRepository.save(updated)
+    }
+}

@@ -15,29 +15,25 @@ void main() {
     testWidgets('should provide scaffold messenger key for banners', (
       tester,
     ) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      // Initialize navigation state before building
+      container
+          .read(navigationStateProvider.notifier)
+          .resetToRoot(WorkspaceRoute.home(groupId: 1));
+
       await tester.pumpWidget(
-        ProviderScope(
+        UncontrolledProviderScope(
+          container: container,
           child: MaterialApp(
             scaffoldMessengerKey: scaffoldKey,
-            home: Scaffold(
-              body: Consumer(
-                builder: (context, ref, child) {
-                  // Initialize navigation state
-                  Future.microtask(() {
-                    ref
-                        .read(navigationStateProvider.notifier)
-                        .resetToRoot(WorkspaceRoute.home(groupId: 1));
-                  });
-
-                  return const Center(child: Text('Test'));
-                },
-              ),
-            ),
+            home: const Scaffold(body: Center(child: Text('Test'))),
           ),
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       // Verify scaffold messenger key is accessible
       expect(scaffoldKey.currentState, isNotNull);
@@ -46,19 +42,21 @@ void main() {
     testWidgets('should allow navigation to home (always accessible)', (
       tester,
     ) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      // Set home route before building
+      container
+          .read(navigationStateProvider.notifier)
+          .resetToRoot(WorkspaceRoute.home(groupId: 1));
+
       await tester.pumpWidget(
-        ProviderScope(
+        UncontrolledProviderScope(
+          container: container,
           child: MaterialApp(
             home: Scaffold(
               body: Consumer(
                 builder: (context, ref, child) {
-                  // Set home route
-                  Future.microtask(() {
-                    ref
-                        .read(navigationStateProvider.notifier)
-                        .resetToRoot(WorkspaceRoute.home(groupId: 1));
-                  });
-
                   final state = ref.watch(navigationStateProvider);
                   return Text('Current route: ${state.current}');
                 },
@@ -68,7 +66,7 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       // Home route should be set
       expect(find.textContaining('Current route:'), findsOneWidget);
@@ -77,17 +75,22 @@ void main() {
     testWidgets('should navigate to calendar (accessible to all)', (
       tester,
     ) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      // Initialize navigation state before building
+      container
+          .read(navigationStateProvider.notifier)
+          .resetToRoot(WorkspaceRoute.home(groupId: 1));
+
       await tester.pumpWidget(
-        ProviderScope(
+        UncontrolledProviderScope(
+          container: container,
           child: MaterialApp(
             home: Scaffold(
               body: Consumer(
                 builder: (context, ref, child) {
-                  // Initialize and navigate
                   final notifier = ref.read(navigationStateProvider.notifier);
-                  if (ref.watch(navigationStateProvider).stack.isEmpty) {
-                    notifier.resetToRoot(WorkspaceRoute.home(groupId: 1));
-                  }
 
                   return ElevatedButton(
                     onPressed: () {
@@ -108,8 +111,9 @@ void main() {
       await tester.tap(find.text('Go to Calendar'));
       await tester.pump(const Duration(milliseconds: 350)); // Wait for debounce
 
-      // Verify navigation occurred
-      // (In production, verify calendar view is shown)
+      // Verify navigation occurred (stack should have 2 items now)
+      final state = container.read(navigationStateProvider);
+      expect(state.stack.length, 2);
     });
   });
 }
