@@ -216,6 +216,45 @@ univ_group_management/
 
 ---
 
+## 개발 마일스톤 (분기 이력)
+
+프로젝트가 진행되면서 크게 3번의 방향 전환이 있었다. git tag로도 기록되어 있다.
+
+```
+v0.1-backend-foundation          v0.2-workspace-launch          v0.3-clean-arch-migration
+         │                                │                                │
+43d28d8 ──────────── 978e4ae ─────────── c6fe39c ──────────── 71d2a92 ───► 현재 (014 브랜치)
+  │                      │                   │                    │
+  │                      │                   │                    └── backend_new/ 도입
+  │                      │                   │                        Clean Architecture
+  │                      │                   │                        6 도메인 분리
+  │                      │                   │                        frontend: CA 전환
+  │                      │                   │
+  │                      │                   └── feat(004): 공지 관리 기능
+  │                      │                       PR #32 머지
+  │                      │
+  │                      └── feat: 워크스페이스 채널/권한 시스템
+  │                           그룹 계층 구조 완성
+  │                           플러터 로그인 구현
+  │
+  └── chore: Spring Boot 초기 설정
+       로그인 API 초안
+```
+
+### 분기 상세
+
+| 태그 | 시점 | 무슨 변화였나 |
+|------|------|--------------|
+| `v0.1-backend-foundation` | 프로젝트 시작 | Spring Boot 세팅 + Google OAuth + 그룹/멤버 API 기초 설계 |
+| `v0.2-workspace-launch` | 워크스페이스 오픈 | 채널·권한·게시글·댓글 1차 구현. Flutter 로그인부터 워크스페이스 화면까지 연결. 백엔드만 하다가 처음으로 풀스택으로 동작하는 순간 |
+| `v0.3-clean-arch-migration` | 아키텍처 전환 결정 | 코드가 커지면서 backend_new/ 에 Clean Architecture 재설계 시작. 동시에 Flutter 프론트도 Feature-first + Clean Arch로 전환. 기존 코드와 공존하면서 점진적 마이그레이션 전략 수립 |
+| `v0.4-design-system` | 디자인 시스템 실험 | UI 일관성 문제로 frontend_new/ 에서 디자인 토큰 + 컴포넌트 라이브러리 실험. 비즈니스 앱은 아니고 쇼케이스 |
+| `v1.0-current` | 현재 (2026.03) | 모든 파일 추적 시작, 전체 코드베이스 정리 완료 |
+
+→ [프로젝트 변천사 상세](docs/portfolio/development-journey.md)
+
+---
+
 ## 시작 가이드
 
 ### 사전 요구사항
