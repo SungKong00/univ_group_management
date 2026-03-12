@@ -262,10 +262,3 @@ context/_meta/backup_*
 ####################################
 # 끝
 ####################################
-####################################
-# backend_new (Clean Architecture 재설계)
-####################################
-/backend_new/build/
-/backend_new/.gradle/
-/backend_new/out/
-/backend_new/*.log
