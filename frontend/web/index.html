@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="frontend">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>University Group Management</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Sign-In -->
+  <meta name="google-signin-client_id" content="264783921782-imbndkfntp44qurjvjdlrk0r342ojp83.apps.googleusercontent.com">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+
+  <!-- 브라우저 닫기/새로고침 시 읽음 위치 저장 -->
+  <script>
+    // 읽음 위치 캐시 (Flutter에서 업데이트)
+    window._readPositionCache = {
+      channelId: null,
+      postId: null,
+      token: null,
+      apiBaseUrl: null
+    };
+
+    // beforeunload: 브라우저 닫기, 새로고침, 다른 사이트 이동 감지
+    window.addEventListener('beforeunload', function(e) {
+      const cache = window._readPositionCache;
+
+      if (cache.channelId && cache.postId && cache.token && cache.apiBaseUrl) {
+        // sendBeacon으로 동기 전송 (브라우저가 전송 보장)
+        const url = cache.apiBaseUrl + '/api/channels/' + cache.channelId + '/read-position?token=' + encodeURIComponent(cache.token);
+        // ✅ text/plain으로 변경하여 CORS preflight 방지
+        const data = new Blob(
+          [JSON.stringify({ lastReadPostId: cache.postId })],
+          { type: 'text/plain' }
+        );
+
+        const sent = navigator.sendBeacon(url, data);
+        console.log('[beforeunload] Read position save attempt:', sent ? 'SUCCESS' : 'FAILED', '(channel:', cache.channelId, 'post:', cache.postId + ')');
+      }
+    });
+
+    // pagehide: 모바일 Safari 및 일부 브라우저 대응 (beforeunload 백업)
+    window.addEventListener('pagehide', function(e) {
+      const cache = window._readPositionCache;
+
+      if (cache.channelId && cache.postId && cache.token && cache.apiBaseUrl) {
+        const url = cache.apiBaseUrl + '/api/channels/' + cache.channelId + '/read-position?token=' + encodeURIComponent(cache.token);
+        // ✅ text/plain으로 변경하여 CORS preflight 방지
+        const data = new Blob(
+          [JSON.stringify({ lastReadPostId: cache.postId })],
+          { type: 'text/plain' }
+        );
+
+        navigator.sendBeacon(url, data);
+        console.log('[pagehide] Read position save sent (channel:', cache.channelId, 'post:', cache.postId + ')');
+      }
+    });
+  </script>
+</body>
+</html>

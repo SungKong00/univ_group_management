@@ -82,6 +82,15 @@ $RECYCLE.BIN/
 !/backend/.idea/codeStyles
 !/backend/.idea/runConfigurations
 
+# backend_new (Clean Architecture 재설계)
+/backend_new/build/
+/backend_new/.gradle/
+/backend_new/out/
+/backend_new/*.log
+/backend_new/.classpath
+/backend_new/.project
+/backend_new/.settings/
+
 ####################################
 # Frontend (Flutter)
 ####################################
@@ -253,3 +262,10 @@ context/_meta/backup_*
 ####################################
 # 끝
 ####################################
+####################################
+# backend_new (Clean Architecture 재설계)
+####################################
+/backend_new/build/
+/backend_new/.gradle/
+/backend_new/out/
+/backend_new/*.log

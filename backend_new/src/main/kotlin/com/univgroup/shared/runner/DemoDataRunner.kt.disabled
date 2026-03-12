@@ -1,0 +1,426 @@
+package com.univgroup.shared.runner
+
+import com.univgroup.domain.content.entity.Comment
+import com.univgroup.domain.content.entity.Post
+import com.univgroup.domain.content.entity.PostType
+import com.univgroup.domain.content.repository.CommentRepository
+import com.univgroup.domain.content.repository.PostRepository
+import com.univgroup.domain.group.entity.Group
+import com.univgroup.domain.group.entity.GroupMember
+import com.univgroup.domain.group.entity.GroupType
+import com.univgroup.domain.group.entity.GroupVisibility
+import com.univgroup.domain.group.repository.GroupMemberRepository
+import com.univgroup.domain.group.repository.GroupRepository
+import com.univgroup.domain.group.service.GroupRoleService
+import com.univgroup.domain.permission.SystemRole
+import com.univgroup.domain.user.entity.GlobalRole
+import com.univgroup.domain.user.entity.User
+import com.univgroup.domain.user.repository.UserRepository
+import com.univgroup.domain.workspace.entity.Channel
+import com.univgroup.domain.workspace.entity.ChannelType
+import com.univgroup.domain.workspace.entity.Workspace
+import com.univgroup.domain.workspace.repository.ChannelRepository
+import com.univgroup.domain.workspace.repository.WorkspaceRepository
+import org.slf4j.LoggerFactory
+import org.springframework.boot.ApplicationArguments
+import org.springframework.boot.ApplicationRunner
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
+
+/**
+ * 데모 환경 데이터 초기화
+ *
+ * 풍부한 데이터로 데모/프레젠테이션 진행:
+ * - 대학 구조 (한신대학교 전체)
+ * - 다양한 페르소나 사용자
+ * - 여러 그룹 및 게시글
+ */
+@Component
+@Profile("demo")
+class DemoDataRunner(
+    private val userRepository: UserRepository,
+    private val groupRepository: GroupRepository,
+    private val groupMemberRepository: GroupMemberRepository,
+    private val groupRoleService: GroupRoleService,
+    private val workspaceRepository: WorkspaceRepository,
+    private val channelRepository: ChannelRepository,
+    private val postRepository: PostRepository,
+    private val commentRepository: CommentRepository,
+) : ApplicationRunner {
+
+    private val logger = LoggerFactory.getLogger(DemoDataRunner::class.java)
+
+    @Transactional
+    override fun run(args: ApplicationArguments) {
+        logger.info("=== DemoDataRunner: 데모 데이터 초기화 시작 ===")
+
+        if (userRepository.count() > 0) {
+            logger.info("데이터가 이미 존재합니다. 초기화를 건너뜁니다.")
+            return
+        }
+
+        // 1. 페르소나 사용자 생성
+        val users = createPersonaUsers()
+        logger.info("페르소나 사용자 생성 완료: ${users.size}명")
+
+        // 2. 대학 구조 생성
+        val universityStructure = createUniversityStructure(users["admin"]!!)
+        logger.info("대학 구조 생성 완료")
+
+        // 3. 다양한 그룹 생성
+        val groups = createDemoGroups(users, universityStructure)
+        logger.info("데모 그룹 생성 완료: ${groups.size}개")
+
+        // 4. 샘플 게시글 및 댓글 생성
+        createDemoContent(users, groups)
+        logger.info("데모 콘텐츠 생성 완료")
+
+        logger.info("=== DemoDataRunner: 데모 데이터 초기화 완료 ===")
+    }
+
+    private fun createPersonaUsers(): Map<String, User> {
+        val users = mutableMapOf<String, User>()
+
+        // 관리자
+        users["admin"] = userRepository.save(
+            User(
+                email = "admin@hanshin.ac.kr",
+                name = "시스템관리자",
+                globalRole = GlobalRole.ADMIN,
+                profileCompleted = true,
+            ),
+        )
+
+        // 교수들
+        users["prof_kim"] = userRepository.save(
+            User(
+                email = "kimcs@hanshin.ac.kr",
+                name = "김철수",
+                nickname = "김교수",
+                globalRole = GlobalRole.PROFESSOR,
+                college = "IT대학",
+                department = "컴퓨터공학부",
+                profileCompleted = true,
+            ),
+        )
+
+        users["prof_lee"] = userRepository.save(
+            User(
+                email = "leejs@hanshin.ac.kr",
+                name = "이지선",
+                nickname = "이교수",
+                globalRole = GlobalRole.PROFESSOR,
+                college = "IT대학",
+                department = "소프트웨어학부",
+                profileCompleted = true,
+            ),
+        )
+
+        // 학생들 - 다양한 학년과 학과
+        val studentData = listOf(
+            Triple("student1@hanshin.ac.kr", "박민준", "컴퓨터공학부"),
+            Triple("student2@hanshin.ac.kr", "최서연", "컴퓨터공학부"),
+            Triple("student3@hanshin.ac.kr", "정도윤", "소프트웨어학부"),
+            Triple("student4@hanshin.ac.kr", "강하은", "소프트웨어학부"),
+            Triple("student5@hanshin.ac.kr", "윤시우", "컴퓨터공학부"),
+        )
+
+        studentData.forEachIndexed { index, (email, name, dept) ->
+            users["student_${index + 1}"] = userRepository.save(
+                User(
+                    email = email,
+                    name = name,
+                    nickname = "${name.take(1)}학생",
+                    globalRole = GlobalRole.STUDENT,
+                    college = "IT대학",
+                    department = dept,
+                    studentNo = "202${index + 1}0001",
+                    academicYear = listOf(1, 2, 3, 4)[index % 4],
+                    profileCompleted = true,
+                ),
+            )
+        }
+
+        return users
+    }
+
+    private fun createUniversityStructure(owner: User): Map<String, Group> {
+        val structure = mutableMapOf<String, Group>()
+
+        // 한신대학교
+        structure["university"] = createGroupWithRoles(
+            name = "한신대학교",
+            description = "한신대학교 공식 커뮤니티",
+            owner = owner,
+            groupType = GroupType.UNIVERSITY,
+            university = "한신대학교",
+        )
+
+        // IT대학
+        structure["it_college"] = createGroupWithRoles(
+            name = "IT대학",
+            description = "IT대학 커뮤니티",
+            owner = owner,
+            parent = structure["university"],
+            groupType = GroupType.COLLEGE,
+            university = "한신대학교",
+            college = "IT대학",
+        )
+
+        // 학과들
+        structure["cs_dept"] = createGroupWithRoles(
+            name = "컴퓨터공학부",
+            description = "컴퓨터공학부 공식 커뮤니티",
+            owner = owner,
+            parent = structure["it_college"],
+            groupType = GroupType.DEPARTMENT,
+            university = "한신대학교",
+            college = "IT대학",
+            department = "컴퓨터공학부",
+        )
+
+        structure["sw_dept"] = createGroupWithRoles(
+            name = "소프트웨어학부",
+            description = "소프트웨어학부 공식 커뮤니티",
+            owner = owner,
+            parent = structure["it_college"],
+            groupType = GroupType.DEPARTMENT,
+            university = "한신대학교",
+            college = "IT대학",
+            department = "소프트웨어학부",
+        )
+
+        return structure
+    }
+
+    private fun createDemoGroups(
+        users: Map<String, User>,
+        structure: Map<String, Group>,
+    ): Map<String, Group> {
+        val groups = mutableMapOf<String, Group>()
+
+        // 1. 알고리즘 스터디
+        groups["algo_study"] = createGroupWithWorkspace(
+            name = "알고리즘 마스터",
+            description = "코딩테스트 대비 알고리즘 스터디",
+            owner = users["prof_kim"]!!,
+            groupType = GroupType.AUTONOMOUS,
+            tags = setOf("알고리즘", "코딩테스트", "PS"),
+            members = listOf(
+                users["student_1"]!! to SystemRole.MEMBER,
+                users["student_2"]!! to SystemRole.MEMBER,
+                users["student_5"]!! to SystemRole.MEMBER,
+            ),
+        )
+
+        // 2. 웹개발 동아리
+        groups["web_club"] = createGroupWithWorkspace(
+            name = "웹마스터즈",
+            description = "웹 개발 동아리 - React, Spring Boot",
+            owner = users["student_1"]!!,
+            groupType = GroupType.CLUB,
+            tags = setOf("웹개발", "React", "SpringBoot"),
+            members = listOf(
+                users["student_2"]!! to SystemRole.MEMBER,
+                users["student_3"]!! to SystemRole.MEMBER,
+            ),
+        )
+
+        // 3. AI 연구실
+        groups["ai_lab"] = createGroupWithWorkspace(
+            name = "AI연구실",
+            description = "인공지능 및 머신러닝 연구",
+            owner = users["prof_lee"]!!,
+            groupType = GroupType.LAB,
+            tags = setOf("AI", "ML", "딥러닝"),
+            members = listOf(
+                users["student_3"]!! to SystemRole.MEMBER,
+                users["student_4"]!! to SystemRole.MEMBER,
+            ),
+        )
+
+        return groups
+    }
+
+    private fun createGroupWithRoles(
+        name: String,
+        description: String,
+        owner: User,
+        parent: Group? = null,
+        groupType: GroupType,
+        university: String? = null,
+        college: String? = null,
+        department: String? = null,
+    ): Group {
+        val group = groupRepository.save(
+            Group(
+                name = name,
+                description = description,
+                owner = owner,
+                parent = parent,
+                groupType = groupType,
+                visibility = GroupVisibility.PUBLIC,
+                university = university,
+                college = college,
+                department = department,
+            ),
+        )
+        groupRoleService.createDefaultRoles(group)
+        return group
+    }
+
+    private fun createGroupWithWorkspace(
+        name: String,
+        description: String,
+        owner: User,
+        groupType: GroupType,
+        tags: Set<String>,
+        members: List<Pair<User, SystemRole>>,
+    ): Group {
+        val group = groupRepository.save(
+            Group(
+                name = name,
+                description = description,
+                owner = owner,
+                groupType = groupType,
+                visibility = GroupVisibility.PUBLIC,
+                university = "한신대학교",
+                tags = tags.toMutableSet(),
+            ),
+        )
+
+        // 역할 생성
+        val roles = groupRoleService.createDefaultRoles(group)
+        val ownerRole = roles.find { it.name == SystemRole.OWNER.name }!!
+        val memberRole = roles.find { it.name == SystemRole.MEMBER.name }!!
+
+        // Owner 멤버 추가
+        groupMemberRepository.save(GroupMember(group = group, user = owner, role = ownerRole))
+
+        // 멤버 추가
+        members.forEach { (user, _) ->
+            groupMemberRepository.save(GroupMember(group = group, user = user, role = memberRole))
+        }
+
+        // 워크스페이스 생성
+        val workspace = workspaceRepository.save(
+            Workspace(
+                group = group,
+                name = "기본 워크스페이스",
+                isDefault = true,
+            ),
+        )
+
+        // 채널 생성
+        channelRepository.save(
+            Channel(
+                workspace = workspace,
+                group = group,
+                name = "공지사항",
+                type = ChannelType.ANNOUNCEMENT,
+                displayOrder = 0,
+                isDefault = true,
+            ),
+        )
+
+        channelRepository.save(
+            Channel(
+                workspace = workspace,
+                group = group,
+                name = "자유게시판",
+                type = ChannelType.TEXT,
+                displayOrder = 1,
+                isDefault = true,
+            ),
+        )
+
+        channelRepository.save(
+            Channel(
+                workspace = workspace,
+                group = group,
+                name = "Q&A",
+                type = ChannelType.QNA,
+                displayOrder = 2,
+                isDefault = false,
+            ),
+        )
+
+        group.defaultChannelsCreated = true
+        return groupRepository.save(group)
+    }
+
+    private fun createDemoContent(
+        users: Map<String, User>,
+        groups: Map<String, Group>,
+    ) {
+        val algoGroup = groups["algo_study"]!!
+        val channels = channelRepository.findByGroupId(algoGroup.id!!)
+        val announcementChannel = channels.find { it.type == ChannelType.ANNOUNCEMENT }!!
+        val freeChannel = channels.find { it.type == ChannelType.TEXT }!!
+
+        // 공지사항 게시글
+        val notice = postRepository.save(
+            Post(
+                channel = announcementChannel,
+                author = users["prof_kim"]!!,
+                content = """
+                    # 알고리즘 스터디 운영 안내
+
+                    안녕하세요, 알고리즘 마스터 스터디에 오신 것을 환영합니다!
+
+                    ## 스터디 일정
+                    - 매주 화요일, 목요일 19:00 ~ 21:00
+                    - 장소: 온라인 (Zoom)
+
+                    ## 준비물
+                    - 백준 계정
+                    - IDE (VS Code 추천)
+
+                    열심히 해봅시다! 🔥
+                """.trimIndent(),
+                type = PostType.ANNOUNCEMENT,
+                isPinned = true,
+            ),
+        )
+
+        // 자유게시판 게시글
+        val post1 = postRepository.save(
+            Post(
+                channel = freeChannel,
+                author = users["student_1"]!!,
+                content = """
+                    오늘 풀었던 BFS 문제 공유합니다.
+
+                    백준 1926번 - 그림
+                    https://www.acmicpc.net/problem/1926
+
+                    처음에 DFS로 풀었다가 스택 오버플로우 나서 BFS로 바꿨어요.
+                    혹시 다른 분들은 어떻게 푸셨나요?
+                """.trimIndent(),
+                type = PostType.NORMAL,
+            ),
+        )
+
+        // 댓글 추가
+        commentRepository.save(
+            Comment(
+                post = post1,
+                author = users["student_2"]!!,
+                content = "저도 같은 문제 풀었어요! BFS가 확실히 안전하더라고요.",
+            ),
+        )
+
+        commentRepository.save(
+            Comment(
+                post = post1,
+                author = users["student_5"]!!,
+                content = "저는 sys.setrecursionlimit으로 해결했어요 ㅎㅎ",
+            ),
+        )
+
+        // 댓글 수 업데이트
+        post1.commentCount = 2
+        postRepository.save(post1)
+    }
+}

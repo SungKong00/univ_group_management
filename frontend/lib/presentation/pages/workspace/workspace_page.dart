@@ -1,0 +1,248 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/theme/app_colors.dart';
+import '../../../core/constants/app_constants.dart';
+
+import '../../providers/workspace_state_provider.dart' hide MobileWorkspaceView;
+import '../../../core/navigation/navigation_controller.dart';
+import '../../../core/navigation/layout_mode.dart';
+
+import '../../widgets/workspace/comments_sidebar_view.dart';
+
+import '../../utils/responsive_layout_helper.dart';
+import 'widgets/desktop_workspace_layout.dart';
+import 'widgets/mobile_workspace_view.dart';
+import 'widgets/desktop_main_content.dart';
+import 'providers/post_preview_notifier.dart';
+import 'mixins/workspace_back_navigation_mixin.dart';
+import 'mixins/workspace_responsive_mixin.dart';
+import 'helpers/post_comment_actions.dart';
+
+class WorkspacePage extends ConsumerStatefulWidget {
+  final String? groupId;
+  final String? channelId;
+
+  const WorkspacePage({super.key, this.groupId, this.channelId});
+
+  @override
+  ConsumerState<WorkspacePage> createState() => _WorkspacePageState();
+}
+
+class _WorkspacePageState extends ConsumerState<WorkspacePage>
+    with
+        WidgetsBindingObserver,
+        WorkspaceBackNavigationMixin,
+        WorkspaceResponsiveMixin {
+  int _postListKey = 0;
+  int _commentListKey = 0;
+  late final WorkspaceStateNotifier _workspaceNotifier;
+  late final NavigationController _navigationController;
+
+  // 스크롤 위치 보존을 위한 ScrollController (선택사항)
+  final ScrollController _postScrollController = ScrollController();
+  final ScrollController _commentScrollController = ScrollController();
+
+  // 중복 로드 방지용 이전 게시글 ID
+  String? _previousSelectedPostId;
+
+  @override
+  void initState() {
+    super.initState();
+    _workspaceNotifier = ref.read(workspaceStateProvider.notifier);
+    _navigationController = ref.read(navigationControllerProvider.notifier);
+
+    // Add lifecycle observer for app state changes
+    WidgetsBinding.instance.addObserver(this);
+
+    // 워크스페이스 진입 시 상태 초기화
+    // ✅ groupId가 null이어도 _initializeWorkspace() 호출 (세션 상태 보존)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _initializeWorkspace();
+    });
+  }
+
+  @override
+  void didUpdateWidget(WorkspacePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // groupId 변경 감지 및 상태 관리
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      if (widget.groupId != oldWidget.groupId) {
+        // groupId가 변경된 경우
+        if (widget.groupId != null) {
+          _initializeWorkspace();
+        } else {
+          // groupId가 null로 변경된 경우 상태 초기화
+          _workspaceNotifier.exitWorkspace();
+        }
+      }
+    });
+  }
+
+  void _initializeWorkspace() {
+    // GroupDropdown이나 다른 곳에서 이미 enterWorkspace()를 호출했는지 확인
+    final currentGroupId = ref.read(currentGroupIdProvider);
+    final targetGroupId = widget.groupId;
+
+    // ✅ 세션 기반 상태 보존: 글로벌 네비게이션 복귀 시 처리
+    // Case 1: URL에 groupId가 있고, 현재 상태와 다르면 → enterWorkspace 호출
+    // Case 2: URL에 groupId가 없지만, 메모리에 currentGroupId가 있으면 → 상태 유지 (아무것도 안 함)
+    // Case 3: URL에 groupId가 없고, 메모리에도 없으면 → 앱 첫 진입 (처리 안 함)
+    if (targetGroupId != null && currentGroupId != targetGroupId) {
+      // 워크스페이스 상태 설정 (URL 직접 접근 시 또는 그룹 전환 시)
+      _workspaceNotifier.enterWorkspace(
+        targetGroupId,
+        channelId: widget.channelId,
+      );
+    }
+    // else: targetGroupId == null이면 currentGroupId가 메모리에 유지됨 (세션 보존)
+
+    // 워크스페이스 진입 시 사이드바를 즉시 축소
+    _navigationController.enterWorkspace();
+  }
+
+  @override
+  void dispose() {
+    // Remove lifecycle observer
+    WidgetsBinding.instance.removeObserver(this);
+
+    // ⚠️ dispose에서 ref 사용 불가능 (Riverpod 제약)
+    // 대신 PostList dispose에서 JS 캐시를 업데이트하므로
+    // 브라우저 닫기 시 beforeunload가 최신 읽음 위치를 전송함
+    // 로그아웃은 auth_provider에서 별도 처리
+
+    _workspaceNotifier.cacheCurrentWorkspaceState();
+    _postScrollController.dispose();
+    _commentScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 읽음 위치 기능 제거됨 - 아무 동작도 수행하지 않음
+    // paused/detached: No action needed
+    // resumed: No action needed - state is preserved in memory
+  }
+
+  // _saveCurrentReadPosition removed - 읽음 위치 기능 제거됨
+
+  @override
+  Widget build(BuildContext context) {
+    final isCommentsVisible = ref.watch(isCommentsVisibleProvider);
+    final selectedPostId = ref.watch(workspaceSelectedPostIdProvider);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // ResponsiveLayoutHelper로 반응형 계산 로직 중앙화
+        final responsive = ResponsiveLayoutHelper(
+          context: context,
+          constraints: constraints,
+        );
+        final isDesktop = responsive.isDesktop;
+        final isMobile = responsive.isMobile;
+        final isNarrowDesktop = responsive.isNarrowDesktop;
+
+        // 반응형 전환 감지 및 상태 보존
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+
+          handleResponsiveTransition(
+            isMobile,
+            isNarrowDesktop,
+            _workspaceNotifier,
+          );
+
+          // 데스크톱에서 댓글창이 열릴 때 게시글 로드
+          if (isDesktop && isCommentsVisible) {
+            final currentPostId = selectedPostId;
+            if (currentPostId != null &&
+                currentPostId != _previousSelectedPostId) {
+              ref.read(postPreviewProvider.notifier).loadPost(currentPostId);
+              _previousSelectedPostId = currentPostId;
+            }
+          } else if (isDesktop && !isCommentsVisible) {
+            // 댓글창 닫힐 때 상태 초기화
+            _previousSelectedPostId = null;
+          }
+        });
+
+        // 뒤로가기 핸들링: LayoutMode 기반 통합 처리
+        final layoutMode = LayoutModeExtension.fromContext(context);
+        final canHandleBack = canHandleBackForMode(layoutMode);
+
+        return PopScope(
+          canPop: !canHandleBack,
+          // onPopInvoked was deprecated; use onPopInvokedWithResult which provides the pop result as well.
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop) {
+              handleBackPressForMode(layoutMode, _workspaceNotifier);
+            }
+          },
+          child: Container(
+            color: AppColors.lightBackground,
+            child: isDesktop
+                ? _buildDesktopWorkspace(isNarrowDesktop: isNarrowDesktop)
+                : MobileWorkspaceView(
+                    onRetryLoadWorkspace: _retryLoadWorkspace,
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopWorkspace({bool isNarrowDesktop = false}) {
+    return DesktopWorkspaceLayout(
+      isNarrowDesktop: isNarrowDesktop,
+      mainContent: DesktopMainContent(
+        onRetryLoadWorkspace: _retryLoadWorkspace,
+        onSubmitPost: (content) => PostCommentActions.handleSubmitPost(
+          context: context,
+          ref: ref,
+          content: content,
+          onSuccess: () => setState(() {
+            _postListKey++;
+          }),
+        ),
+        postReloadTick: _postListKey,
+      ),
+      commentsView: CommentsSidebarView(
+        onClose: _workspaceNotifier.hideComments,
+        commentListKey: _commentListKey,
+        onCommentSubmitted: () => setState(() {
+          _commentListKey++; // 댓글 목록 새로고침
+          _postListKey++; // 게시글 목록도 새로고침하여 댓글 개수/시간 업데이트
+        }),
+      ),
+    );
+  }
+
+  void _retryLoadWorkspace() {
+    // Clear error and try again
+    _workspaceNotifier.clearError();
+
+    // If we have a groupId, re-initialize workspace
+    if (widget.groupId != null) {
+      _initializeWorkspace();
+    } else {
+      // Otherwise, just trigger workspace navigation again
+      // by navigating back and forth (simulating a fresh workspace tab click)
+      context.go(AppConstants.homeRoute);
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          context.go(AppConstants.workspaceRoute);
+        }
+      });
+    }
+  }
+}
