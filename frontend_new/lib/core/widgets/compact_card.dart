@@ -93,8 +93,8 @@ class _CompactCardState extends State<CompactCard> {
                 color: widget.isSelected
                     ? colors.selectedBackground
                     : _isHovered
-                        ? colors.backgroundHover
-                        : colors.background,
+                    ? colors.backgroundHover
+                    : colors.background,
                 border: Border.all(
                   color: widget.isSelected
                       ? colors.selectedBorder
@@ -156,16 +156,15 @@ class _CompactCardState extends State<CompactCard> {
                     // Title
                     Text(
                       widget.title,
-                      style: CardDesignTokens.getSubtitleStyle(
-                        context,
-                      ).copyWith(
-                        color: widget.isSelected
-                            ? colors.selectedTitle
-                            : colors.title,
-                        fontWeight: widget.isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                      ),
+                      style: CardDesignTokens.getSubtitleStyle(context)
+                          .copyWith(
+                            color: widget.isSelected
+                                ? colors.selectedTitle
+                                : colors.title,
+                            fontWeight: widget.isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                          ),
                       textAlign: TextAlign.center,
                       maxLines: lineNumbers['title'],
                       overflow: TextOverflow.ellipsis,

@@ -369,7 +369,10 @@ class _ColorCellState extends State<_ColorCell> {
   Widget build(BuildContext context) {
     // 밝은 색상에는 어두운 체크, 어두운 색상에는 밝은 체크
     final luminance = widget.color.computeLuminance();
-    final checkColor = luminance > 0.5 ? Colors.black : Colors.white;
+    final colorExt = context.appColors;
+    final checkColor = luminance > 0.5
+        ? colorExt.surfacePrimary
+        : colorExt.textOnBrand;
 
     return Semantics(
       selected: widget.isSelected,

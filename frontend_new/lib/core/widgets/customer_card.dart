@@ -26,17 +26,29 @@ class CustomerCard extends StatelessWidget {
         final isSmall = cardWidth < 250;
 
         // 카드 너비 기반 패딩/간격
-        final cardPadding = isTiny ? 8.0 : (isCompact ? 10.0 : (isSmall ? 12.0 : 16.0));
-        final cardGap = isTiny ? 4.0 : (isCompact ? 6.0 : (isSmall ? 8.0 : 12.0));
+        final cardPadding = isTiny
+            ? 8.0
+            : (isCompact ? 10.0 : (isSmall ? 12.0 : 16.0));
+        final cardGap = isTiny
+            ? 4.0
+            : (isCompact ? 6.0 : (isSmall ? 8.0 : 12.0));
 
         // 카드 너비 기반 아이콘 크기
-        final iconSize = isTiny ? 20.0 : (isCompact ? 28.0 : (isSmall ? 36.0 : 48.0));
+        final iconSize = isTiny
+            ? 20.0
+            : (isCompact ? 28.0 : (isSmall ? 36.0 : 48.0));
         final ctaIconSize = isTiny ? 10.0 : (isCompact ? 12.0 : 14.0);
 
         // 카드 너비 기반 폰트 크기
-        final companyFontSize = isTiny ? 8.0 : (isCompact ? 9.0 : (isSmall ? 10.0 : 12.0));
-        final titleFontSize = isTiny ? 11.0 : (isCompact ? 13.0 : (isSmall ? 15.0 : 18.0));
-        final ctaFontSize = isTiny ? 9.0 : (isCompact ? 10.0 : (isSmall ? 11.0 : 13.0));
+        final companyFontSize = isTiny
+            ? 8.0
+            : (isCompact ? 9.0 : (isSmall ? 10.0 : 12.0));
+        final titleFontSize = isTiny
+            ? 11.0
+            : (isCompact ? 13.0 : (isSmall ? 15.0 : 18.0));
+        final ctaFontSize = isTiny
+            ? 9.0
+            : (isCompact ? 10.0 : (isSmall ? 11.0 : 13.0));
 
         return GestureDetector(
           onTap: onTap,

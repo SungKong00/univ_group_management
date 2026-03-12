@@ -120,7 +120,7 @@ class AppNotificationBadge extends StatelessWidget {
               text: _displayText,
               showDot: showDot,
               backgroundColor: _getBadgeColor(colorExt),
-              textColor: customTextColor ?? Colors.white,
+              textColor: customTextColor ?? colorExt.textOnBrand,
             ),
           ),
       ],

@@ -552,7 +552,7 @@ class _KanbanCardWidgetState extends State<_KanbanCardWidget> {
           boxShadow: widget.isDragging
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
+                    color: context.appColors.shadow,
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -742,6 +742,7 @@ class _AssigneeAvatars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorExt = context.appColors;
     final displayAvatars = avatars.take(3).toList();
     final remaining = avatars.length - 3;
 
@@ -761,16 +762,23 @@ class _AssigneeAvatars extends StatelessWidget {
                 height: size,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(
+                    color: colorExt.surfaceSecondary,
+                    width: 2,
+                  ),
                   image: DecorationImage(
                     image: NetworkImage(url),
                     fit: BoxFit.cover,
                     onError: (_, __) {},
                   ),
-                  color: Colors.grey.shade300,
+                  color: colorExt.surfaceTertiary,
                 ),
                 child: url.isEmpty
-                    ? Icon(Icons.person, size: size - 8, color: Colors.grey)
+                    ? Icon(
+                        Icons.person,
+                        size: size - 8,
+                        color: colorExt.textTertiary,
+                      )
                     : null,
               ),
             );
@@ -783,14 +791,17 @@ class _AssigneeAvatars extends StatelessWidget {
                 height: size,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.grey.shade400,
-                  border: Border.all(color: Colors.white, width: 2),
+                  color: colorExt.surfaceQuaternary,
+                  border: Border.all(
+                    color: colorExt.surfaceSecondary,
+                    width: 2,
+                  ),
                 ),
                 child: Center(
                   child: Text(
                     '+$remaining',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: colorExt.textPrimary,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),

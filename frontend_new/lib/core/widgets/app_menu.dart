@@ -121,7 +121,7 @@ class AppMenu extends StatelessWidget {
         border: Border.all(color: colors.border, width: BorderTokens.widthThin),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: colorExt.shadow,
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),

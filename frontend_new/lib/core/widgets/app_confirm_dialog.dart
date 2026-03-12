@@ -39,7 +39,7 @@ Future<bool> showAppConfirmDialog({
     context: context,
     barrierDismissible: true,
     barrierLabel: '다이얼로그 닫기',
-    barrierColor: Colors.black54,
+    barrierColor: const Color(0x8A000000), // 54% black - 다이얼로그 스크림
     transitionDuration: AnimationTokens.durationStandard,
     pageBuilder: (context, animation, secondaryAnimation) {
       return _AppConfirmDialog(
@@ -113,7 +113,7 @@ class _AppConfirmDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(BorderTokens.radiusLarge),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: colorExt.shadow,
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -182,7 +182,7 @@ class _AppConfirmDialog extends StatelessWidget {
                           label: confirmLabel,
                           onTap: () => Navigator.of(context).pop(true),
                           backgroundColor: confirmBgColor,
-                          textColor: Colors.white,
+                          textColor: colorExt.textOnBrand,
                         ),
                       ),
                     ],

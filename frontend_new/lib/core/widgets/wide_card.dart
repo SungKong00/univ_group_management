@@ -105,7 +105,9 @@ class _WideCardState extends State<WideCard> {
               // Overlay (Dark/Light)
               Positioned.fill(
                 child: Container(
-                  color: Colors.black.withValues(alpha: widget.overlayOpacity),
+                  color: context.appColors.shadow.withValues(
+                    alpha: widget.overlayOpacity,
+                  ),
                 ),
               ),
 

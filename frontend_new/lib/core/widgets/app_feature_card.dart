@@ -45,11 +45,11 @@ class _AppFeatureCardState extends State<AppFeatureCard> {
     final textTheme = Theme.of(context).textTheme;
     final width = MediaQuery.sizeOf(context).width;
 
-    // Hardcoded shadow values (ShadowTokens.low and ShadowTokens.medium)
+    // Shadow using semantic overlay tokens
     final shadow = _isHovered
         ? [
             BoxShadow(
-              color: Colors.white.withValues(alpha: 0.08), // medium
+              color: colorExt.overlayMedium, // rgba(255,255,255,0.08)
               blurRadius: 24.0,
               spreadRadius: 0.0,
               offset: const Offset(0, 4),
@@ -57,7 +57,7 @@ class _AppFeatureCardState extends State<AppFeatureCard> {
           ]
         : [
             BoxShadow(
-              color: Colors.white.withValues(alpha: 0.05), // low
+              color: colorExt.overlayLight, // rgba(255,255,255,0.05)
               blurRadius: 4.0,
               spreadRadius: 0.0,
               offset: const Offset(0, 2),

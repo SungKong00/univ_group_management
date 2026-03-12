@@ -367,8 +367,8 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
               ),
               child: Text(
                 item.badge!,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.appColors.textOnBrand,
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),

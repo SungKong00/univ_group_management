@@ -186,7 +186,7 @@ class _AppButtonState extends State<AppButton>
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: colorExt.shadow,
                   blurRadius: _elevationAnimation.value,
                   offset: Offset(0, _elevationAnimation.value * 0.5),
                 ),

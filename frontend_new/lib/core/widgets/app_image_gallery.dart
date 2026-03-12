@@ -204,7 +204,7 @@ class _GalleryItemState extends State<_GalleryItem> {
                   child: Center(
                     child: Icon(
                       Icons.zoom_in,
-                      color: Colors.white,
+                      color: context.appColors.textOnBrand,
                       size: ComponentSizeTokens.iconLarge,
                     ),
                   ),

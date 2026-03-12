@@ -98,12 +98,13 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
           offset: Offset(0, 0),
         ),
       ],
-      AppCardElevation.low => [
+      // overlayLight: rgba(255,255,255,0.05) 사용
+      AppCardElevation.low => const [
         BoxShadow(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: Color(0x0DFFFFFF), // overlayLight
           blurRadius: 4.0,
           spreadRadius: 0.0,
-          offset: const Offset(0, 2),
+          offset: Offset(0, 2),
         ),
       ],
     };
@@ -112,21 +113,22 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
   List<BoxShadow> _getHoverShadow() {
     // hover 시 약간 더 진한 shadow 사용
     return switch (widget.elevation) {
-      AppCardElevation.none => [
+      // overlayLight 사용
+      AppCardElevation.none => const [
         BoxShadow(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: Color(0x0DFFFFFF), // overlayLight
           blurRadius: 4.0,
           spreadRadius: 0.0,
-          offset: const Offset(0, 2),
+          offset: Offset(0, 2),
         ),
       ],
-      AppCardElevation.low => [
-        // medium shadow
+      // overlayMedium: rgba(255,255,255,0.08) 사용
+      AppCardElevation.low => const [
         BoxShadow(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: Color(0x14FFFFFF), // overlayMedium
           blurRadius: 24.0,
           spreadRadius: 0.0,
-          offset: const Offset(0, 4),
+          offset: Offset(0, 4),
         ),
       ],
     };

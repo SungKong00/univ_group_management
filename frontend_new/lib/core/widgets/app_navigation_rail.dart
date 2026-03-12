@@ -254,8 +254,8 @@ class _NavigationRailItemWidgetState extends State<_NavigationRailItemWidget> {
                   child: Text(
                     item.badge! > 99 ? '99+' : '${item.badge}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.appColors.textOnBrand,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
@@ -312,8 +312,8 @@ class _NavigationRailItemWidgetState extends State<_NavigationRailItemWidget> {
                   child: Text(
                     item.badge! > 99 ? '99+' : '${item.badge}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.appColors.textOnBrand,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),

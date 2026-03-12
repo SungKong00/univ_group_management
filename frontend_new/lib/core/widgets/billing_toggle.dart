@@ -63,11 +63,11 @@ class BillingToggle extends StatelessWidget {
                 width: 22,
                 height: 22,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colorExt.textOnBrand,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
+                      color: colorExt.shadow,
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),

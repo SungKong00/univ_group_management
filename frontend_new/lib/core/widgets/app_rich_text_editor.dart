@@ -226,7 +226,8 @@ class _AppRichTextEditorState extends State<AppRichTextEditor> {
             Container(
               constraints: BoxConstraints(
                 minHeight: _editorHeight,
-                maxHeight: widget.maxHeight ?? 500, // double.infinity 대신 기본 최대 높이 설정
+                maxHeight:
+                    widget.maxHeight ?? 500, // double.infinity 대신 기본 최대 높이 설정
               ),
               child: Container(
                 color: isDisabled

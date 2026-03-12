@@ -369,7 +369,9 @@ class _SpecialComponentsPageState extends State<SpecialComponentsPage> {
                     height: imageHeight,
                     decoration: BoxDecoration(
                       color: colorExt.surfaceQuaternary,
-                      borderRadius: BorderRadius.circular(BorderTokens.radiusSmall),
+                      borderRadius: BorderRadius.circular(
+                        BorderTokens.radiusSmall,
+                      ),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Image.network(
@@ -391,7 +393,7 @@ class _SpecialComponentsPageState extends State<SpecialComponentsPage> {
                           child: CircularProgressIndicator(
                             value: loadingProgress.expectedTotalBytes != null
                                 ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
+                                      loadingProgress.expectedTotalBytes!
                                 : null,
                           ),
                         );
