@@ -45,8 +45,7 @@
 - **그룹 독립성 원칙**: 상위 그룹의 간섭 없는 독립적 운영 보장
 - [상세 설계 보기](docs/portfolio/features.md#1-그룹-계층-구조)
 - <img width="1014" height="1206" alt="Image" src="https://github.com/user-attachments/assets/1cb585d0-4148-47f9-ba6e-a70fd41d6fdf" />
-<img width="1010" height="1078" alt="Image" src="https://github.com/user-attachments/assets/3f8bc7b7-dae5-416f-a25d-173b85558e89" />
-<img width="1150" height="1230" alt="Image" src="https://github.com/user-attachments/assets/e39a8007-9e35-402d-ad88-55e62b63d3af" />
+<img width="1010" height="1078" alt="Image" src="https://github.com/user-attachments/assets/237bd5cd-9220-403e-b2f5-07329dfae5cf" />
 ### 2️⃣ 워크스페이스 & 채널 시스템
 - 그룹 생성 시 자동 워크스페이스 할당
 - **Secure by Default**: 권한 기반의 폐쇄형/공개형 채널 관리
