@@ -95,12 +95,12 @@ data class GoogleUserInfo(
 
 | 메서드 | 경로 | 설명 |
 |--------|------|------|
-| POST | `/api/v1/auth/google` | Google OAuth2 로그인 |
-| POST | `/api/v1/auth/google/callback` | Google OAuth2 콜백 |
-| GET | `/api/v1/auth/verify` | 토큰 검증 |
-| POST | `/api/v1/auth/refresh` | 토큰 갱신 |
-| POST | `/api/v1/auth/logout` | 로그아웃 |
-| POST | `/api/v1/auth/debug/generate-token` | [DEBUG] 개발 토큰 생성 |
+| POST | `/api/auth/google` | Google OAuth2 로그인 |
+| POST | `/api/auth/google/callback` | Google OAuth2 콜백 |
+| GET | `/api/auth/verify` | 토큰 검증 |
+| POST | `/api/auth/refresh` | 토큰 갱신 |
+| POST | `/api/auth/logout` | 로그아웃 |
+| POST | `/api/auth/debug/generate-token` | [DEBUG] 개발 토큰 생성 |
 
 **AuthService 기능**:
 - `authenticateWithGoogle(idToken)` - Google ID Token 인증
