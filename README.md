@@ -52,7 +52,7 @@
 - **Secure by Default**: 권한 기반의 폐쇄형/공개형 채널 관리
 - [상세 설계 보기](docs/portfolio/features.md#2-워크스페이스--채널)
 <img width="1275" height="1299" alt="Image" src="https://github.com/user-attachments/assets/212ac18a-f3f8-4e7b-8f8c-f16713a4280d" />
-<img width="1275" height="1299" alt="Image" src="https://github.com/user-attachments/assets/645ffb8f-a387-4d7e-ba45-c3f10f57338f" />
+<img width="1150" height="1230" alt="Image" src="https://github.com/user-attachments/assets/146fea38-5c2c-433f-a1ee-11c78b0e6da2" />
 ### 3️⃣ 2-Layer 권한 시스템 (RBAC+)
 - **1계층**: 시스템 역할 (그룹장, 교수, 멤버)
 - **2계층**: 채널별 오버라이드 권한 (조회/읽기/쓰기/파일 등 세분화)
