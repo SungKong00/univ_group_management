@@ -33,7 +33,7 @@ class SecurityConfig(
             .authorizeHttpRequests { auth ->
                 auth
                     // 인증 관련 엔드포인트
-                    .requestMatchers("/api/v1/auth/**").permitAll()
+                    .requestMatchers("/api/auth/**").permitAll()
                     // Swagger UI
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     // H2 Console (개발용)
@@ -41,16 +41,16 @@ class SecurityConfig(
                     // OPTIONS 요청 (CORS preflight)
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     // 공개 그룹 탐색 엔드포인트
-                    .requestMatchers(HttpMethod.GET, "/api/v1/groups/explore").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/groups/hierarchy").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/groups/explore").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/groups/hierarchy").permitAll()
                     // 공개 모집 조회 엔드포인트
-                    .requestMatchers(HttpMethod.GET, "/api/v1/groups/*/recruitments").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/recruitments/public").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/groups/*/recruitments").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/recruitments/public").permitAll()
                     // 공개 장소 조회 엔드포인트
-                    .requestMatchers(HttpMethod.GET, "/api/v1/places").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/places/*").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/places/*/operating-hours").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/places/*/reservations").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*/operating-hours").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/places/*/reservations").permitAll()
                     // 나머지 요청은 인증 필요
                     .anyRequest().authenticated()
             }

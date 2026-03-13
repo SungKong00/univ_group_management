@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "Google OAuth2 인증 관련 API")
 class AuthController(
     private val authService: AuthService,
