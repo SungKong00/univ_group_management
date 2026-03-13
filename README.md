@@ -44,23 +44,30 @@
 - 대학 실정에 맞는 6가지 그룹 유형 제공 (대학, 단과대, 학과, 연구실, 공식, 자율)
 - **그룹 독립성 원칙**: 상위 그룹의 간섭 없는 독립적 운영 보장
 - [상세 설계 보기](docs/portfolio/features.md#1-그룹-계층-구조)
-
+- <img width="1014" height="1206" alt="Image" src="https://github.com/user-attachments/assets/1cb585d0-4148-47f9-ba6e-a70fd41d6fdf" />
+<img width="1010" height="1078" alt="Image" src="https://github.com/user-attachments/assets/3f8bc7b7-dae5-416f-a25d-173b85558e89" />
+<img width="1150" height="1230" alt="Image" src="https://github.com/user-attachments/assets/e39a8007-9e35-402d-ad88-55e62b63d3af" />
 ### 2️⃣ 워크스페이스 & 채널 시스템
 - 그룹 생성 시 자동 워크스페이스 할당
 - **Secure by Default**: 권한 기반의 폐쇄형/공개형 채널 관리
 - [상세 설계 보기](docs/portfolio/features.md#2-워크스페이스--채널)
-
+<img width="1275" height="1299" alt="Image" src="https://github.com/user-attachments/assets/212ac18a-f3f8-4e7b-8f8c-f16713a4280d" />
+<img width="1275" height="1299" alt="Image" src="https://github.com/user-attachments/assets/645ffb8f-a387-4d7e-ba45-c3f10f57338f" />
 ### 3️⃣ 2-Layer 권한 시스템 (RBAC+)
 - **1계층**: 시스템 역할 (그룹장, 교수, 멤버)
 - **2계층**: 채널별 오버라이드 권한 (조회/읽기/쓰기/파일 등 세분화)
 - **최적화**: Caffeine Cache를 통한 권한 체크 성능 극대화
 - [상세 설계 보기](docs/portfolio/features.md#3-2-layer-권한-시스템)
-
+- 
+<img width="1100" height="645" alt="Image" src="https://github.com/user-attachments/assets/7e2c9c77-ec85-4e71-bb7c-0301de5952aa" />
+<img width="1271" height="1321" alt="Image" src="https://github.com/user-attachments/assets/bf691844-926b-4f94-bf98-87a5fce1911a" />
+<img width="1224" height="899" alt="Image" src="https://github.com/user-attachments/assets/9d4a9717-69db-431d-a88c-088e7259fc15" />
 ### 4️⃣ 스마트 캘린더 & 예약 시스템
 - 개인/그룹/장소예약 캘린더의 3중 레이어 구조
 - 실제 대학 환경을 고려한 강의실/동아리방 예약 충돌 방지 로직
 - [상세 설계 보기](docs/portfolio/features.md#5-캘린더-3종-개인--그룹--장소예약)
-
+<img width="1246" height="1000" alt="Image" src="https://github.com/user-attachments/assets/4a177ba2-f749-488d-ba09-ec2bb17917a1" />
+<img width="948" height="1083" alt="Image" src="https://github.com/user-attachments/assets/66dec35b-9b83-4527-a430-134278177f15" />
 ---
 
 ## 🏗 아키텍처 & 기술적 도전
