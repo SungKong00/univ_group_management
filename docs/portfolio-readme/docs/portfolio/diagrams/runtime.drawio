@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="로컬에서 웹과 백엔드를 실행하는 구성" id="runtime" alt="로컬에서 웹과 백엔드를 실행하는 구성">
+    <mxGraphModel page="1" pageWidth="950" pageHeight="545" grid="1" gridSize="10" pageScale="1" background="#FFFFFF">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="canvas" value="" style="fillColor=#FFFFFF;strokeColor=none;movable=0;resizable=0;editable=0;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0" width="950" height="545" as="geometry" />
+        </mxCell>
+        <mxCell id="project" value="UNIV GROUP MANAGEMENT  /  RUNTIME" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=left;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=15;fontStyle=1;fontColor=#0C766C;" vertex="1" parent="1">
+          <mxGeometry x="37" y="23" width="850" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="로컬에서 웹과 백엔드를 실행하는 구성" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=left;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=33;fontStyle=1;fontColor=#142e42;" vertex="1" parent="1">
+          <mxGeometry x="36" y="53" width="880" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="실행 환경  ·  외부 로그인 연결은 선택한 구성에 따름" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=left;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=16;fontStyle=0;fontColor=#526675;" vertex="1" parent="1">
+          <mxGeometry x="37" y="106" width="880" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="rule" value="" style="fillColor=#CFDEE7;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="37" y="144" width="875" height="1" as="geometry" />
+        </mxCell>
+        <mxCell id="host" value="" style="rounded=0;fillColor=#F8FBFD;strokeColor=#CBD9E4;strokeWidth=1.3;dashed=1;dashPattern=8 5;html=0;" vertex="1" parent="1">
+          <mxGeometry x="34" y="271" width="881" height="194" as="geometry" />
+        </mxCell>
+        <mxCell id="hosttitle" value="로컬 개발 · 브라우저와 애플리케이션" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=left;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=15;fontStyle=1;fontColor=#526675;" vertex="1" parent="1">
+          <mxGeometry x="48" y="284" width="853" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="web" value="" style="rounded=0;fillColor=none;strokeColor=none;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry x="55" y="326" width="130" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="webtile" value="" style="rounded=1;arcSize=17;fillColor=#ffffff;strokeColor=#D9E4EA;strokeWidth=1.4;html=0;" vertex="1" parent="web">
+          <mxGeometry x="35" y="0" width="60" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="webicon" value="" style="shape=image;imageAspect=1;verticalLabelPosition=bottom;verticalAlign=top;image=data:image/svg+xml,PHN2ZwogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMjQiCiAgaGVpZ2h0PSIyNCIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9IiMyNzVFOTQiCiAgc3Ryb2tlLXdpZHRoPSIyIgogIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICBzdHJva2UtbGluZWpvaW49InJvdW5kIgo+CiAgPHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjE0IiB4PSIyIiB5PSIzIiByeD0iMiIgLz4KICA8bGluZSB4MT0iOCIgeDI9IjE2IiB5MT0iMjEiIHkyPSIyMSIgLz4KICA8bGluZSB4MT0iMTIiIHgyPSIxMiIgeTE9IjE3IiB5Mj0iMjEiIC8+Cjwvc3ZnPgo=;" vertex="1" parent="web">
+          <mxGeometry x="49" y="11" width="32" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="webcaption" value="개발 브라우저" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=17;fontStyle=1;fontColor=#142e42;" vertex="1" parent="web">
+          <mxGeometry x="0" y="61" width="130" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="webmeta" value="Flutter 정적 웹" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=13;fontStyle=0;fontColor=#526675;" vertex="1" parent="web">
+          <mxGeometry x="0" y="85" width="130" height="19" as="geometry" />
+        </mxCell>
+        <mxCell id="spring" value="" style="rounded=0;fillColor=none;strokeColor=none;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry x="367" y="326" width="130" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="springtile" value="" style="rounded=1;arcSize=17;fillColor=#ffffff;strokeColor=#D9E4EA;strokeWidth=1.4;html=0;" vertex="1" parent="spring">
+          <mxGeometry x="35" y="0" width="60" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="springicon" value="" style="shape=image;imageAspect=1;verticalLabelPosition=bottom;verticalAlign=top;image=data:image/svg+xml,PHN2ZwogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMjQiCiAgaGVpZ2h0PSIyNCIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9IiMwQzc2NkMiCiAgc3Ryb2tlLXdpZHRoPSIyIgogIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICBzdHJva2UtbGluZWpvaW49InJvdW5kIgo+CiAgPHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHg9IjIiIHk9IjIiIHJ4PSIyIiByeT0iMiIgLz4KICA8cmVjdCB3aWR0aD0iMjAiIGhlaWdodD0iOCIgeD0iMiIgeT0iMTQiIHJ4PSIyIiByeT0iMiIgLz4KICA8bGluZSB4MT0iNiIgeDI9IjYuMDEiIHkxPSI2IiB5Mj0iNiIgLz4KICA8bGluZSB4MT0iNiIgeDI9IjYuMDEiIHkxPSIxOCIgeTI9IjE4IiAvPgo8L3N2Zz4K;" vertex="1" parent="spring">
+          <mxGeometry x="49" y="11" width="32" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="springcaption" value="Spring Boot" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=17;fontStyle=1;fontColor=#142e42;" vertex="1" parent="spring">
+          <mxGeometry x="0" y="61" width="130" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="springmeta" value="API · JWT" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=13;fontStyle=0;fontColor=#526675;" vertex="1" parent="spring">
+          <mxGeometry x="0" y="85" width="130" height="19" as="geometry" />
+        </mxCell>
+        <mxCell id="db" value="" style="rounded=0;fillColor=none;strokeColor=none;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry x="729" y="326" width="130" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="dbtile" value="" style="rounded=1;arcSize=17;fillColor=#ffffff;strokeColor=#D9E4EA;strokeWidth=1.4;html=0;" vertex="1" parent="db">
+          <mxGeometry x="35" y="0" width="60" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="dbicon" value="" style="shape=image;imageAspect=1;verticalLabelPosition=bottom;verticalAlign=top;image=data:image/svg+xml,PHN2ZwogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMjQiCiAgaGVpZ2h0PSIyNCIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9IiMwQzc2NkMiCiAgc3Ryb2tlLXdpZHRoPSIyIgogIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICBzdHJva2UtbGluZWpvaW49InJvdW5kIgo+CiAgPGVsbGlwc2UgY3g9IjEyIiBjeT0iNSIgcng9IjkiIHJ5PSIzIiAvPgogIDxwYXRoIGQ9Ik0zIDVWMTlBOSAzIDAgMCAwIDIxIDE5VjUiIC8+CiAgPHBhdGggZD0iTTMgMTJBOSAzIDAgMCAwIDIxIDEyIiAvPgo8L3N2Zz4K;" vertex="1" parent="db">
+          <mxGeometry x="49" y="11" width="32" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="dbcaption" value="H2 메모리 DB" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=17;fontStyle=1;fontColor=#142e42;" vertex="1" parent="db">
+          <mxGeometry x="0" y="61" width="130" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="dbmeta" value="JPA · 개발 데이터" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=13;fontStyle=0;fontColor=#526675;" vertex="1" parent="db">
+          <mxGeometry x="0" y="85" width="130" height="19" as="geometry" />
+        </mxCell>
+        <mxCell id="oauth" value="" style="rounded=0;fillColor=none;strokeColor=none;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry x="714" y="159" width="130" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="oauthtile" value="" style="rounded=1;arcSize=17;fillColor=#ffffff;strokeColor=#D9E4EA;strokeWidth=1.4;html=0;" vertex="1" parent="oauth">
+          <mxGeometry x="35" y="0" width="60" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="oauthicon" value="" style="shape=image;imageAspect=1;verticalLabelPosition=bottom;verticalAlign=top;image=data:image/svg+xml,PHN2ZwogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMjQiCiAgaGVpZ2h0PSIyNCIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9IiMyNzVFOTQiCiAgc3Ryb2tlLXdpZHRoPSIyIgogIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICBzdHJva2UtbGluZWpvaW49InJvdW5kIgo+CiAgPHBhdGggZD0iTTE3LjUgMTlIOWE3IDcgMCAxIDEgNi43MS05aDEuNzlhNC41IDQuNSAwIDEgMSAwIDlaIiAvPgo8L3N2Zz4K;" vertex="1" parent="oauth">
+          <mxGeometry x="49" y="11" width="32" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="oauthcaption" value="Google OAuth" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=17;fontStyle=1;fontColor=#142e42;" vertex="1" parent="oauth">
+          <mxGeometry x="0" y="61" width="130" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="wb" value="로컬 HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=blockThin;endFill=1;strokeWidth=2;strokeColor=#0C766C;fontColor=#142e42;fontSize=13;fontFamily=Arial;labelBackgroundColor=#ffffff;exitX=1;exitY=0.27;entryX=0;entryY=0.27;" edge="1" parent="1" source="web" target="spring">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sd" value="JDBC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=blockThin;endFill=1;strokeWidth=2;strokeColor=#0C766C;fontColor=#142e42;fontSize=13;fontFamily=Arial;labelBackgroundColor=#ffffff;exitX=1;exitY=0.27;entryX=0;entryY=0.27;" edge="1" parent="1" source="spring" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="so" value="일반 로그인 설정" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=blockThin;endFill=1;strokeWidth=2;strokeColor=#7E91A0;fontColor=#142e42;fontSize=13;fontFamily=Arial;labelBackgroundColor=#ffffff;dashed=1;dashPattern=5 4;exitX=0.5;exitY=0;entryX=0;entryY=0.26;" edge="1" parent="1" source="spring" target="oauth">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="432" y="191" />
+            </Array>
+            <mxPoint x="0" y="-8" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="runtime-label" value="시연: 별도 세션과 로컬 데이터 사용" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=left;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=14;fontStyle=0;fontColor=#526675;" vertex="1" parent="1">
+          <mxGeometry x="58" y="433" width="812" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="foot" value="PostgreSQL은 운영 대상으로 검토했습니다. 이 그림의 실행 DB는 H2입니다." style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=left;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=14;fontStyle=0;fontColor=#526675;" vertex="1" parent="1">
+          <mxGeometry x="37" y="496" width="880" height="29" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
