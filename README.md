@@ -61,7 +61,7 @@
 
 ### 5. 멤버 · 그룹 캘린더에 스터디 모임 등록
 
-개인 시간이 아닌 소속 그룹 안에서 ‘오픈소스 스터디 첫 모임’을 만듭니다. 저장 후 그룹 달력의 선택 날짜에 모임이 표시됩니다.
+그룹 달력에서 ‘오픈소스 스터디 첫 모임’을 등록합니다. 저장하면 선택한 날짜에 모임이 나타납니다.
 
 ![멤버가 그룹 캘린더에서 스터디 모임을 만드는 화면](docs/portfolio-readme/docs/portfolio/media/group-event.gif)
 
@@ -187,8 +187,6 @@
 
 ![iPhone 앱 · 그룹의 공식 일반 일정 등록](docs/portfolio-readme/docs/portfolio/media/organization/iphone-org_official.gif)
 
-**그룹별 공지와 일정:** 운영자가 등록한 공지와 공식 일정을 그룹 화면에서 확인합니다.
-
 [조직 운영과 권한 상세](docs/portfolio-readme/docs/portfolio/organization-operations.md)
 
 ## 시설 운영과 반복 일정
@@ -197,11 +195,13 @@
 
 ### 시설 운영 · 세미나실 운영시간과 임시 휴무
 
-학생회가 관리하는 세미나실에서 요일별 운영시간과 브레이크 타임을 확인합니다. 장비 점검일을 전일 휴무로 저장한 뒤, 그날의 가용시간 목록이 비는 것까지 확인했습니다. 매주 반복되는 제한 시간과 특정 날짜의 휴무를 나눠 관리합니다.
+학생회가 웹에서 장비 점검일을 전일 휴무로 저장하면 그날의 예약 가능 시간이 목록에서 빠집니다.
 
 ![웹에서 세미나실의 전일 휴무를 설정하는 화면](docs/portfolio-readme/docs/portfolio/media/facility/more_facility.gif)
 
 **iPhone 앱**
+
+장비 점검일을 전일 휴무로 등록하고 달력으로 돌아갑니다.
 
 ![iPhone 앱에서 세미나실 임시 휴무를 등록하는 화면](docs/portfolio-readme/docs/portfolio/media/facility/iphone-more_facility.gif)
 
@@ -215,16 +215,16 @@
 
 ![iPhone 앱에서 매일 반복되는 스터디 일정을 등록하는 화면](docs/portfolio-readme/docs/portfolio/media/facility/iphone-more_repeat.gif)
 
-### API에서 찾은 다른 기능
+### 시설과 일정 API
 
-다른 그룹의 시설 사용 신청과 승인·회수, 개인 일정과 수업 시간표의 개별 편집, 채널의 읽은 위치와 읽지 않은 글 수, 공고 마감·보관과 지원 철회까지 확인했습니다. 아래 인덱스에 실제 앱 화면에서 연결된 흐름과 API·위젯으로만 확인한 기능을 구분했습니다.
+시설 관리에는 다른 그룹의 사용 신청·승인, 개인 일정에는 시간표 편집을 위한 API를 마련했습니다.
 
 - [시설·일정 및 추가 기능 근거](docs/portfolio-readme/docs/portfolio/facilities-and-scheduling.md)
 - [백엔드 HTTP API 인덱스](docs/portfolio-readme/docs/portfolio/api-inventory.md)
 
 ## 시스템 구조
 
-![시스템 구조: Flutter Web, Spring Boot API, 권한 평가, JPA 데이터](docs/portfolio-readme/docs/portfolio/diagrams/system.png)
+![시스템 구조: Flutter 웹·iPhone 앱, Spring Boot API, 권한 평가, JPA 데이터](docs/portfolio-readme/docs/portfolio/diagrams/system.png)
 
 Flutter 앱의 URL과 화면 상태는 GoRouter와 Riverpod으로 관리합니다. Spring Boot에서는 요청을 받은 뒤에 그룹·콘텐츠·일정별 서비스가 조직 규칙과 권한을 판단하고 JPA로 데이터를 조회하거나 저장합니다. 화면에서 작성 버튼을 숨기더라도 서버가 요청의 권한을 다시 판단합니다.
 
@@ -308,7 +308,6 @@ flutter run -d chrome --web-hostname 127.0.0.1 --web-port 5173
 
 - [기술 결정과 개발 과정](docs/portfolio-readme/docs/portfolio/engineering-notes.md)
 - 편집 가능한 draw.io 원본: [시스템](docs/portfolio-readme/docs/portfolio/diagrams/system.drawio) · [실행 환경](docs/portfolio-readme/docs/portfolio/diagrams/runtime.drawio) · [채널 권한](docs/portfolio-readme/docs/portfolio/diagrams/workspace-policy.drawio) · [AI 작업 흐름](docs/portfolio-readme/docs/portfolio/diagrams/agent-workflow.drawio)
-
 
 <details>
 <summary>기존 설치·개발 안내</summary>

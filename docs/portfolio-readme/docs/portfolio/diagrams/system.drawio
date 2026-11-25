@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <mxfile host="app.diagrams.net" type="device">
-  <diagram name="대학 조직의 규칙을 웹과 API로 나눈 구조" id="system" alt="대학 조직의 규칙을 웹과 API로 나눈 구조">
+  <diagram name="대학 조직의 규칙을 앱과 API로 나눈 구조" id="system" alt="대학 조직의 규칙을 앱과 API로 나눈 구조">
     <mxGraphModel page="1" pageWidth="950" pageHeight="545" grid="1" gridSize="10" pageScale="1" background="#FFFFFF">
       <root>
         <mxCell id="0" />
@@ -11,7 +11,7 @@
         <mxCell id="project" value="UNIV GROUP MANAGEMENT  /  SYSTEM" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=left;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=15;fontStyle=1;fontColor=#0C766C;" vertex="1" parent="1">
           <mxGeometry x="37" y="23" width="850" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="title" value="대학 조직의 규칙을 웹과 API로 나눈 구조" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=left;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=33;fontStyle=1;fontColor=#142e42;" vertex="1" parent="1">
+        <mxCell id="title" value="대학 조직의 규칙을 앱과 API로 나눈 구조" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=left;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=33;fontStyle=1;fontColor=#142e42;" vertex="1" parent="1">
           <mxGeometry x="36" y="53" width="880" height="46" as="geometry" />
         </mxCell>
         <mxCell id="subtitle" value="제품 코드 기준  ·  frontend/ + backend/" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=left;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=16;fontStyle=0;fontColor=#526675;" vertex="1" parent="1">
@@ -35,10 +35,10 @@
         <mxCell id="clienticon" value="" style="shape=image;imageAspect=1;verticalLabelPosition=bottom;verticalAlign=top;image=data:image/svg+xml,PHN2ZwogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMjQiCiAgaGVpZ2h0PSIyNCIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9IiMyNzVFOTQiCiAgc3Ryb2tlLXdpZHRoPSIyIgogIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICBzdHJva2UtbGluZWpvaW49InJvdW5kIgo+CiAgPHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjE0IiB4PSIyIiB5PSIzIiByeD0iMiIgLz4KICA8bGluZSB4MT0iOCIgeDI9IjE2IiB5MT0iMjEiIHkyPSIyMSIgLz4KICA8bGluZSB4MT0iMTIiIHgyPSIxMiIgeTE9IjE3IiB5Mj0iMjEiIC8+Cjwvc3ZnPgo=;" vertex="1" parent="client">
           <mxGeometry x="49" y="11" width="32" height="32" as="geometry" />
         </mxCell>
-        <mxCell id="clientcaption" value="Flutter Web" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=17;fontStyle=1;fontColor=#142e42;" vertex="1" parent="client">
+        <mxCell id="clientcaption" value="Flutter 앱" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=17;fontStyle=1;fontColor=#142e42;" vertex="1" parent="client">
           <mxGeometry x="0" y="61" width="130" height="24" as="geometry" />
         </mxCell>
-        <mxCell id="clientmeta" value="GoRouter · Riverpod" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=13;fontStyle=0;fontColor=#526675;" vertex="1" parent="client">
+        <mxCell id="clientmeta" value="웹 · iPhone" style="text;html=0;rounded=0;strokeColor=none;fillColor=none;verticalAlign=middle;align=center;whiteSpace=wrap;spacing=0;fontFamily=Arial;fontSize=13;fontStyle=0;fontColor=#526675;" vertex="1" parent="client">
           <mxGeometry x="0" y="85" width="130" height="19" as="geometry" />
         </mxCell>
         <mxCell id="api" value="" style="rounded=0;fillColor=none;strokeColor=none;whiteSpace=wrap;html=0;" vertex="1" parent="1">
