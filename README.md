@@ -187,7 +187,7 @@
 
 ![iPhone 앱 · 그룹의 공식 일반 일정 등록](docs/portfolio-readme/docs/portfolio/media/organization/iphone-org_official.gif)
 
-**투표와 통합 공지:** 회의 일정 투표는 기획과 화면 예시에 남아 있고, 선택지 등록·투표·집계까지 이어지는 기능은 확인되지 않았습니다. 아래 상세 문서에 현재 동작하는 그룹별 공지·일정과 별도로 정리했습니다.
+**그룹별 공지와 일정:** 운영자가 등록한 공지와 공식 일정을 그룹 화면에서 확인합니다.
 
 [조직 운영과 권한 상세](docs/portfolio-readme/docs/portfolio/organization-operations.md)
 
